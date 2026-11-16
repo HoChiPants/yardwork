@@ -79,7 +79,7 @@ No account or API key is needed for the built-in **local command parser**. It su
 For natural-language interpretation with a local model, run Ollama separately and configure:
 
 ```sh
-OLLAMA_URL=http://127.0.0.1:11434 OLLAMA_MODEL=qwen2.5:1.5b npm run dev
+OLLAMA_URL=http://127.0.0.1:11434 OLLAMA_MODEL=qwen2.5:3b npm run dev
 ```
 
 The model must already be installed in your Ollama instance. In Docker Desktop, use a host reachable by the container, commonly `http://host.docker.internal:11434`; Podman commonly uses `host.containers.internal`. Configure the environment in compose. Do not use `127.0.0.1` to reach a host service from inside a container.
@@ -90,7 +90,7 @@ For a Docker-managed local model, use the optional overlay:
 docker compose -f compose.yaml -f compose.ai.yaml up --build -d --wait
 ```
 
-This starts the application, an Ollama CPU service, and a one-time model pull. The default model is [Qwen2.5 1.5B](https://ollama.com/library/qwen2.5:1.5b), approximately 986 MB of weights; the engine image is an additional download. The AI service has no published host port. The `ai-models` volume keeps model weights between restarts. Override the model with `YARDWORK_AI_MODEL` when using another compatible local model. Base `docker compose up` does not start or download a model. The optional engine and weights stay in containers and the named volume; a global host installation is not required.
+This starts the application, an Ollama CPU service, and a one-time model pull. The default model is [Qwen2.5 3B](https://ollama.com/library/qwen2.5:3b), approximately 1.9 GB of weights; the engine image is an additional download. The AI service has no published host port. The `ai-models` volume keeps model weights between restarts. Override the model with `YARDWORK_AI_MODEL` when using another compatible local model. Base `docker compose up` does not start or download a model. The optional engine and weights stay in containers and the named volume; a global host installation is not required.
 
 Use the same `-f compose.yaml -f compose.ai.yaml` options for stop/restart/down. Adding `-v` deletes the model and project volumes. This uses the official [Ollama Docker service](https://docs.ollama.com/docker); structured commands require a local engine that supports [JSON-schema outputs](https://docs.ollama.com/capabilities/structured-outputs).
 

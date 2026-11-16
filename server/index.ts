@@ -96,7 +96,7 @@ app.post("/api/assistant", async (req, res) => {
     headers: { "content-type": "application/json" },
     signal: AbortSignal.timeout(60000),
     body: JSON.stringify({
-      model: process.env.OLLAMA_MODEL ?? "qwen2.5:1.5b",
+      model: process.env.OLLAMA_MODEL ?? "qwen2.5:3b",
       stream: false,
       format: commandSchema.toJSONSchema(),
       options: { temperature: 0, seed: 0, num_ctx: 2048, num_predict: 256 },

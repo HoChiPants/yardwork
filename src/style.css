@@ -2495,3 +2495,87 @@ small {
   align-items: flex-start;
   gap: 6px;
 }
+.handoff-steps {
+  padding-left: 19px;
+  margin: 19px 0;
+  color: #82936f;
+  font-size: 11px;
+  line-height: 1.9;
+}
+.handoff-steps li + li {
+  margin-top: 8px;
+}
+.stock-incomplete {
+  background: #faf0df;
+  border-color: #ebd7b7;
+}
+.stock-incomplete p {
+  color: #a48056;
+}
+.roll-layout > p {
+  font-size: 8px;
+  line-height: 1.7;
+  margin-top: 9px;
+}
+.roll-plan {
+  margin-top: 13px;
+}
+.roll-plan > strong {
+  font-size: 9px !important;
+}
+.roll-strip {
+  height: 62px;
+  border: 1px solid #c8d3b7;
+  position: relative;
+  background: repeating-linear-gradient(
+    -45deg,
+    #eef1e5 0,
+    #eef1e5 2px,
+    #fafbf3 2px,
+    #fafbf3 6px
+  );
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 3px;
+}
+.roll-strip > span {
+  position: absolute;
+  border: 1px solid #899d70;
+  background: #b5c79a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: #4c6337;
+  min-width: 0;
+  overflow: hidden;
+}
+.roll-plan ol {
+  padding-left: 17px;
+  font-size: 8px;
+  line-height: 1.8;
+  color: #8b9b77;
+  margin: 7px 0;
+}
+.roll-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  margin: 12px 0 22px;
+}
+.roll-print-table th,
+.roll-print-table td {
+  padding: 6px 8px;
+  border: 1px solid #d5dccb;
+  text-align: left;
+}
+.roll-print-table th {
+  background: #f0f3e8;
+}
+@media print {
+  html,
+  body,
+  #root {
+    background: #fff !important;
+  }
+}

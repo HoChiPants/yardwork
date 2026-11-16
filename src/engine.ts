@@ -12,6 +12,7 @@ import {
   type Project,
   type V3,
 } from "./model";
+import { packRectangles, type StockPlan } from "./packing";
 export const KERF = 0.125;
 export { rotate } from "./spatial";
 import { rotate } from "./spatial";
@@ -109,29 +110,35 @@ export type BomRow = {
   total: number;
   bins: CutBin[];
   oversize: number;
+  oversizedParts: Piece[];
+  rolls: StockPlan[];
   inventory?: Inventory;
   verified: boolean;
 };
 export function usableInventory(p: Project, id: MaterialId, now = Date.now()) {
-  return p.inventory.find(
-    (i) =>
-      i.material === id &&
-      i.zip === p.zip &&
-      !!p.store &&
-      i.store === p.store &&
-      Date.parse(i.checkedAt) <= now &&
-      now - Date.parse(i.checkedAt) < 86400000,
-  );
+  return p.inventory
+    .filter(
+      (i) =>
+        i.material === id &&
+        i.zip === p.zip &&
+        !!p.store &&
+        i.store === p.store &&
+        Date.parse(i.checkedAt) <= now &&
+        now - Date.parse(i.checkedAt) < 86400000,
+    )
+    .sort((a, b) => Date.parse(b.checkedAt) - Date.parse(a.checkedAt))[0];
 }
 export function bom(p: Project): BomRow[] {
   return catalog
     .map((m) => {
       const parts = p.pieces.filter((x) => x.material === m.id),
-        bins: CutBin[] = [];
+        bins: CutBin[] = [],
+        oversizedParts: Piece[] = [];
+      let rolls: StockPlan[] = [];
       let quantity = 0,
         oversize = 0;
       if (["stud", "treated", "post"].includes(m.id)) {
-        const stock = [...m.size].sort((a, b) => a - b),
+        const stock = [...(m.stockSize ?? m.size)].sort((a, b) => a - b),
           length = stock[2];
         for (const piece of [...parts].sort(
           (a, b) => Math.max(...b.size) - Math.max(...a.size),
@@ -143,6 +150,7 @@ export function bom(p: Project): BomRow[] {
             s[2] > length + 0.001
           ) {
             oversize++;
+            oversizedParts.push(piece);
             continue;
           }
           let bin = bins.find((b) => b.remaining >= s[2] - 0.001);
@@ -160,27 +168,35 @@ export function bom(p: Project): BomRow[] {
             100,
         );
       else if (m.id === "mesh") {
-        quantity = Math.ceil(
-          parts.reduce(
-            (n, x) =>
-              n +
-              [...x.size]
-                .sort((a, b) => b - a)
-                .slice(0, 2)
-                .reduce((a, b) => a * b, 1),
-            0,
-          ) /
-            (24 * 300),
+        const [thickness, width, length] = [...(m.stockSize ?? m.size)].sort(
+          (a, b) => a - b,
         );
-        oversize = parts.filter(
-          (x) => [...x.size].sort((a, b) => a - b)[1] > 24,
-        ).length;
+        const rectangles = [];
+        for (const piece of parts) {
+          const sizes = [...piece.size].sort((a, b) => a - b);
+          if (sizes[0] > thickness + 1e-8) oversizedParts.push(piece);
+          else
+            rectangles.push({
+              id: piece.id,
+              name: piece.name,
+              width: sizes[1],
+              length: sizes[2],
+            });
+        }
+        const packed = packRectangles(rectangles, width, length);
+        rolls = packed.plans;
+        const rejected = new Set(packed.rejected.map((p) => p.id));
+        oversizedParts.push(...parts.filter((p) => rejected.has(p.id)));
+        oversize = oversizedParts.length;
+        quantity = rolls.length;
       } else {
-        const stock = [...m.size].sort((a, b) => a - b);
+        const stock = [...(m.stockSize ?? m.size)].sort((a, b) => a - b);
         for (const x of parts) {
           const s = [...x.size].sort((a, b) => a - b);
-          if (s.some((v, i) => v > stock[i] + 0.001)) oversize++;
-          else quantity++;
+          if (s.some((v, i) => v > stock[i] + 0.001)) {
+            oversize++;
+            oversizedParts.push(x);
+          } else quantity++;
         }
       }
       const inventory = usableInventory(p, m.id),
@@ -193,6 +209,8 @@ export function bom(p: Project): BomRow[] {
         total: price * quantity,
         bins,
         oversize,
+        oversizedParts,
+        rolls,
         inventory,
         verified: !!inventory,
       };
@@ -499,7 +517,33 @@ export function guideMarkdown(p: Project) {
             .map((h) => `- Operation: ${h.message}`)
             .join("\n"),
       )
-      .join("\n")
+      .join("\n") +
+    rollGuideMarkdown(p)
+  );
+}
+export function rollGuideMarkdown(project: Project) {
+  const rolls = bom(project).flatMap((row) =>
+    row.rolls.map((roll, i) => ({
+      material: material(row.id).name,
+      roll,
+      number: i + 1,
+    })),
+  );
+  if (!rolls.length) return "";
+  return (
+    "\n\n## Roll cutting layouts\n\nDimensions are inches. X is across the roll width; Y is along its length from the starting edge. Snip cuts use zero kerf. This is a feasible layout, not a guarantee of minimum waste.\n\n" +
+    rolls
+      .map(
+        ({ material, roll, number }) =>
+          `### ${material} — roll ${number} (${roll.width} × ${roll.length} in)\n` +
+          roll.placements
+            .map(
+              (c) =>
+                `- ${c.name}: ${c.width} × ${c.length} in; start X ${c.x} in, Y ${c.y} in.`,
+            )
+            .join("\n"),
+      )
+      .join("\n\n")
   );
 }
 export function parseInventory(text: string): Inventory[] {

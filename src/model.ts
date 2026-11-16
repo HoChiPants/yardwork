@@ -66,10 +66,26 @@ export const inventorySchema = z.object({
 });
 export const commandSchema = z.object({
   type: z.enum(["wall", "coop", "foundation"]),
-  width: z.number().min(24).max(192),
-  height: z.number().min(12).max(120),
-  depth: z.number().min(24).max(192),
-  spacing: z.union([z.literal(12), z.literal(16), z.literal(24)]),
+  width: z
+    .number()
+    .min(24)
+    .max(192)
+    .describe("Overall width in inches; multiply feet by 12."),
+  height: z
+    .number()
+    .min(12)
+    .max(120)
+    .describe(
+      "Overall wall height in inches including plates; use 48 for a new foundation.",
+    ),
+  depth: z
+    .number()
+    .min(24)
+    .max(192)
+    .describe("Foundation depth in inches; use 48 for a new wall."),
+  spacing: z
+    .union([z.literal(12), z.literal(16), z.literal(24)])
+    .describe("Stud/joist spacing in inches; default 16."),
 });
 export type Command = z.infer<typeof commandSchema>;
 export const sectionSchema = z.object({
@@ -176,6 +192,7 @@ export type Material = {
   subtitle: string;
   category: string;
   size: V3;
+  stockSize?: V3;
   color: string;
   price: number;
   unit: string;
@@ -254,6 +271,7 @@ export const catalog: Material[] = [
     subtitle: "24 in × 25 ft roll",
     category: "Roof & wire",
     size: [24, 36, 0.04],
+    stockSize: [24, 300, 0.04],
     color: "#a0aaa2",
     price: 39.9,
     unit: "roll",

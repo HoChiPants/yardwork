@@ -68,6 +68,28 @@ function woodTexture() {
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   return tex;
 }
+function wireTexture(size: V3) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 64;
+  const ctx = canvas.getContext("2d")!;
+  ctx.clearRect(0, 0, 64, 64);
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 1;
+  for (let n = 0; n <= 64; n += 8) {
+    ctx.beginPath();
+    ctx.moveTo(n, 0);
+    ctx.lineTo(n, 64);
+    ctx.moveTo(0, n);
+    ctx.lineTo(64, n);
+    ctx.stroke();
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  const thin = size.indexOf(Math.min(...size));
+  const axes = thin === 0 ? [2, 1] : thin === 1 ? [0, 2] : [0, 1];
+  texture.repeat.set(size[axes[0]] / 4, size[axes[1]] / 4);
+  return texture;
+}
 function PartMesh({
   piece,
   selected,
@@ -88,6 +110,11 @@ function PartMesh({
   const mesh = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
   const unitScale = useMemo(() => new THREE.Vector3(1, 1, 1), []);
+  const wire = useMemo(
+    () => (piece.material === "mesh" ? wireTexture(piece.size) : null),
+    [piece.material, ...piece.size],
+  );
+  useEffect(() => () => wire?.dispose(), [wire]);
   const m = material(piece.material);
   const wood = ["stud", "treated", "post", "plywood"].includes(piece.material);
   useEffect(() => {
@@ -132,7 +159,8 @@ function PartMesh({
         <boxGeometry args={piece.size.map((v) => v / 12) as V3} />
         <meshStandardMaterial
           color={selected ? "#f2a16b" : piece.offcut ? "#b5ada0" : m.color}
-          map={wood ? texture : null}
+          map={wire ?? (wood ? texture : null)}
+          alphaTest={wire ? 0.15 : 0}
           roughness={piece.material === "roof" ? 0.6 : 0.9}
           metalness={piece.material === "roof" ? 0.4 : 0}
           transparent={xray || piece.offcut || piece.material === "mesh"}
@@ -142,10 +170,10 @@ function PartMesh({
               : xray && ["siding", "roof"].includes(piece.material)
                 ? 0.16
                 : piece.material === "mesh"
-                  ? 0.4
+                  ? 0.85
                   : 1
           }
-          wireframe={piece.material === "mesh"}
+          wireframe={false}
         />
         <Edges
           threshold={25}

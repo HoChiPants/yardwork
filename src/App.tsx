@@ -59,6 +59,7 @@ import {
 import * as THREE from "three";
 import { Scene } from "./Scene";
 import { InventoryForm } from "./InventoryForm";
+import { HomeDepotHandoff } from "./HomeDepotHandoff";
 import { SectionsPanel } from "./SectionsPanel";
 import {
   reconcileSections,
@@ -100,6 +101,7 @@ import {
   type V3,
 } from "./model";
 type Modal =
+  | "handoff"
   | "inventory"
   | "projects"
   | "settings"
@@ -1752,6 +1754,51 @@ export function App() {
                   >
                     Find at Home Depot <ExternalLink size={11} />
                   </a>
+                  {r.rolls.length > 0 && (
+                    <details className="roll-layout">
+                      <summary>Roll layout · {r.rolls.length} rolls</summary>
+                      <p>
+                        24 in × 25 ft stock. Feasible shelf layout; snip cuts
+                        use zero kerf. Not a global waste optimum.
+                      </p>
+                      {r.rolls.map((roll, i) => (
+                        <div className="roll-plan" key={i}>
+                          <strong>
+                            Roll {i + 1} ·{" "}
+                            {format(roll.length - roll.usedLength)} uncut tail
+                          </strong>
+                          <div
+                            className="roll-strip"
+                            role="img"
+                            aria-label={`Roll ${i + 1} cutting layout`}
+                          >
+                            {roll.placements.map((cut, j) => (
+                              <span
+                                key={cut.id}
+                                title={`${cut.name}: ${format(cut.width)} × ${format(cut.length)}`}
+                                style={{
+                                  left: `${(cut.y / roll.length) * 100}%`,
+                                  top: `${(cut.x / roll.width) * 100}%`,
+                                  width: `${(cut.length / roll.length) * 100}%`,
+                                  height: `${(cut.width / roll.width) * 100}%`,
+                                }}
+                              >
+                                {j + 1}
+                              </span>
+                            ))}
+                          </div>
+                          <ol>
+                            {roll.placements.map((cut) => (
+                              <li key={cut.id}>
+                                {cut.name} · {format(cut.width)} ×{" "}
+                                {format(cut.length)}
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      ))}
+                    </details>
+                  )}
                   {r.bins.length > 0 && (
                     <details>
                       <summary>Cut layout · {r.bins.length} boards</summary>
@@ -1792,6 +1839,13 @@ export function App() {
               >
                 <Download size={14} />
                 Export shopping list
+              </button>
+              <button
+                className="button secondary full"
+                onClick={() => setModal("handoff")}
+              >
+                <ExternalLink size={14} />
+                Prepare Home Depot list
               </button>
               <p className="small-note">
                 This CSV is a shopping handoff. Direct import into Home Depot
@@ -2027,7 +2081,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "handoff" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -2613,6 +2667,14 @@ export function App() {
                 </button>
               </>
             )}
+            {modal === "handoff" && (
+              <HomeDepotHandoff
+                project={project}
+                onDownload={(text) =>
+                  download(`${baseName}-home-depot.txt`, text, "text/plain")
+                }
+              />
+            )}
             {modal === "export" && (
               <>
                 <h2 id="modal-title">From screen to workbench.</h2>
@@ -2644,6 +2706,13 @@ export function App() {
                         shoppingCsv(project),
                         "text/csv",
                       ),
+                  },
+                  {
+                    title: "Prepare Home Depot list",
+                    description:
+                      "Copy/paste handoff · stock quantities and product matches",
+                    icon: ExternalLink,
+                    action: () => setModal("handoff"),
                   },
                   {
                     title: "Build guide",
@@ -2797,12 +2866,55 @@ export function App() {
         <ul>
           {rows.map((r) => (
             <li key={r.id}>
-              {r.quantity} {material(r.id).unit} × {material(r.id).name} ·{" "}
+              {r.quantity} {material(r.id).unit}
+              {r.quantity === 1 ? "" : "s"} × {material(r.id).name} ·{" "}
               {money(r.total)} ·{" "}
               {r.verified ? "snapshot available" : "stock unverified"}
             </li>
           ))}
         </ul>
+        {rows.some((r) => r.rolls.length > 0) && (
+          <section>
+            <h2>Roll cutting layouts</h2>
+            <p>
+              Dimensions are inches. X is across the roll; Y is along its length
+              from the starting edge. Snip cuts use zero kerf. This is a
+              feasible layout, not a minimum-waste guarantee.
+            </p>
+            {rows.flatMap((r) =>
+              r.rolls.map((roll, i) => (
+                <div key={`${r.id}-${i}`}>
+                  <h3>
+                    {material(r.id).name} · Roll {i + 1} · {roll.width} ×{" "}
+                    {roll.length} in
+                  </h3>
+                  <table className="roll-print-table">
+                    <thead>
+                      <tr>
+                        <th>Cut piece</th>
+                        <th>Width × length</th>
+                        <th>Start X</th>
+                        <th>Start Y</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {roll.placements.map((c) => (
+                        <tr key={c.id}>
+                          <td>{c.name}</td>
+                          <td>
+                            {c.width} × {c.length} in
+                          </td>
+                          <td>{c.x} in</td>
+                          <td>{c.y} in</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )),
+            )}
+          </section>
+        )}
       </article>
     </div>
   );

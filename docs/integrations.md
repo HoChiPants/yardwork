@@ -30,13 +30,15 @@ Return store-specific **available purchase units**, not a generic in-stock flag 
 
 ## Ollama
 
-`OLLAMA_URL` points to the server reachable from the app process. `OLLAMA_MODEL` defaults to `llama3.2`. The app posts to `/api/chat`, asks for non-streamed schema-constrained JSON, and validates the returned command. Timeout: 60 seconds.
+`OLLAMA_URL` points to the server reachable from the app process. `OLLAMA_MODEL` defaults to `llama3.2`. The app posts to `/api/chat`, asks for non-streamed schema-constrained JSON, and validates the returned command. Timeout: 60 seconds. Requests use temperature 0, a fixed seed, a 2,048-token context, and a bounded 256-token structured response. The schema and unit/default instructions are included in the prompt as well as the format field. The optional `compose.ai.yaml` overlay provisions a local engine/model without exposing the model port on the host.
 
 Commands contain `type` (`wall`, `foundation`, `coop`), `width`, `height`, `depth` (inches), and `spacing` (12/16/24 inches). Width/depth are bounded to 24–192 inches and height to 12–120 inches. A coop command loads the fixed concept; it does not invent a custom coop for arbitrary dimensions. A targeted request includes `context: { sectionId, name, command, pieceCount }`. The selected section's parameters let the local parser or model retain unspecified dimensions. The server rejects an AI response that changes the targeted section type. Whole-project coop replacement cannot target an individual section. The user previews part and connection changes, pricing limitations and geometric findings before applying the resulting assembly. No execution tool or arbitrary code path is exposed to the model.
 
-## Native Home Depot projects
+## Home Depot material-list handoff
 
-Not connected. The app exports its own editable JSON and a generic shopping CSV. It does not claim the retailer accepts those files, and does not sign in, change retailer lists, or add items to a cart.
+[Home Depot’s own help](https://www.homedepot.com/c/create-a-list) documents a **Paste an Existing List** route within its Lists tool and moving a list into a Project. Yardwork prepares stock-unit quantities and product references as text for that route. It provides a clipboard action and a text download, with a selected-text fallback when clipboard permission is blocked.
+
+This is a user-operated handoff, not an account API. It does not sign in, create lists, accept retailer-generated substitutions, add items to a cart, or submit orders. Retailer-side import/acceptance has not been verified in a signed-in account. The JSON model and full build guide stay in Yardwork. CSV upload compatibility is not assumed.
 
 ## Privacy and network use
 

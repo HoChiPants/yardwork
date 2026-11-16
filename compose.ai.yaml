@@ -1,0 +1,35 @@
+# Optional local-model overlay. No model ports are published on the host.
+services:
+  yardwork:
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${YARDWORK_AI_MODEL:-qwen2.5:0.5b}
+    depends_on:
+      ollama:
+        condition: service_healthy
+      ollama-pull:
+        condition: service_completed_successfully
+  ollama:
+    image: ollama/ollama:0.40.16
+    volumes:
+      - ai-models:/root/.ollama
+    environment:
+      OLLAMA_NUM_PARALLEL: "1"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+  ollama-pull:
+    image: ollama/ollama:0.40.16
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["ollama", "pull"]
+    command: ["${YARDWORK_AI_MODEL:-qwen2.5:0.5b}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+volumes:
+  ai-models:

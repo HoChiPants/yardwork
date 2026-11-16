@@ -64,9 +64,13 @@ In **List → Record store snapshot**, enter the exact Home Depot product URL/In
 
 JSON inventory snapshots can also be imported. [Format example](public/examples/inventory.json) deliberately contains an old timestamp, zero availability, and a placeholder product number. Replace all example values with actual observations. The app never treats the example as current inventory.
 
-Changing the store or ZIP invalidates mismatched inventory. Price fallbacks remain explicitly labeled examples. Lumber uses first-fit decreasing stock packing with saw kerf; panels conservatively use **one sheet per fitting part**, without sheet nesting. Roof lap allowances, material grade, fastener compatibility, tax, delivery, and waste allowances are not calculated. Oversized parts are flagged and excluded from the cost, so a displayed total is not a complete quote when errors exist.
+Changing the store or ZIP invalidates mismatched inventory. Price fallbacks remain explicitly labeled examples. Lumber uses first-fit decreasing stock packing with saw kerf; panels conservatively use **one sheet per fitting part**, without sheet nesting. Hardware cloth uses a feasible 2D shelf layout on 24 × 300 in rolls, with rotation and zero-kerf snip cuts. It does not use area alone or claim globally minimum waste. The List panel and exported build guide include the actual cutting layout/coordinates. Oversized mesh is excluded from quantities and cost. Roof lap allowances, material grade, fastener compatibility, tax, delivery, and waste allowances are not calculated. Oversized parts are flagged and excluded from the cost, so a displayed total is not a complete quote when errors exist.
 
-**Home Depot handoff:** export the shopping CSV with quantities and product links, then add the items to your Home Depot project manually. Native Home Depot project synchronization, CSV upload compatibility, and checkout have **not** been implemented or verified.
+**Home Depot handoff:** choose **List → Prepare Home Depot list** or the same option in Export. Copy or download the prepared stock purchase list. In the retailer’s **My Account → Lists**, create a list, choose **Add Materials → Paste an Existing List**, review its draft and product matches, then move the resulting list into a Project. These steps are documented in [Home Depot’s list help](https://www.homedepot.com/c/create-a-list). The export retains fresh user-recorded product references, marks unverified products, and lists oversized parts separately as unresolved. Quantities refer to purchase units; cut pieces are not added a second time.
+
+[See the prepared handoff](docs/home-depot-handoff.png) · [See a roll layout](docs/roll-layout.png)
+
+The app does not sign in or create retailer lists, submit orders, synchronize accounts, or import its 3D JSON into Home Depot. The clipboard/download flow is browser-tested; accepting the resulting list inside an actual Home Depot account remains a separate verification step. Keep the Yardwork JSON for the editable model. Generic shopping CSV export remains available.
 
 ## AI
 
@@ -80,14 +84,25 @@ OLLAMA_URL=http://127.0.0.1:11434 OLLAMA_MODEL=llama3.2 npm run dev
 
 The model must already be installed in your Ollama instance. In Docker Desktop, use a host reachable by the container, commonly `http://host.docker.internal:11434`; Podman commonly uses `host.containers.internal`. Configure the environment in compose. Do not use `127.0.0.1` to reach a host service from inside a container.
 
-The selected section summary (name, dimensions, spacing, part count and section identifier) is sent with targeted requests. AI responses are constrained to the same `wall`, `foundation`, and fixed `coop` command schema; dimensions are validated and proposals require an explicit Apply action. AI cannot execute arbitrary code, purchase materials, or certify construction. No hosted AI service is called by default. The optional Ollama path has protocol-level mock coverage; inference with a real installed model is a separate configuration check.
+For a Docker-managed local model, use the optional overlay:
+
+```sh
+docker compose -f compose.yaml -f compose.ai.yaml up --build -d --wait
+```
+
+This starts the application, an Ollama CPU service, and a one-time model pull. The default model is [Qwen2.5 0.5B](https://ollama.com/library/qwen2.5:0.5b), approximately 398 MB of weights; the engine image is an additional download. The AI service has no published host port. The `ai-models` volume keeps model weights between restarts. Override the model with `YARDWORK_AI_MODEL` (for example `qwen2.5:1.5b`). Base `docker compose up` does not start or download a model. The optional engine and weights stay in containers and the named volume; a global host installation is not required.
+
+Use the same `-f compose.yaml -f compose.ai.yaml` options for stop/restart/down. Adding `-v` deletes the model and project volumes. This uses the official [Ollama Docker service](https://docs.ollama.com/docker); structured commands require a local engine that supports [JSON-schema outputs](https://docs.ollama.com/capabilities/structured-outputs).
+
+The selected section summary (name, dimensions, spacing, part count and section identifier) is sent with targeted requests. AI responses are constrained to the same `wall`, `foundation`, and fixed `coop` command schema; dimensions are validated and proposals require an explicit Apply action. AI cannot execute arbitrary code, purchase materials, or certify construction. No hosted AI service is called by default. The optional Ollama path has protocol-level mock coverage. The manually dispatched **Real AI qualification** workflow runs the actual engine/model, checks novel word-number wall/base prompts and targeted dimension retention, and saves/restores the generated geometry. Check that workflow’s latest result for real-model qualification; green mock tests alone do not prove inference works.
 
 ## Plan import and export
 
 - **Yardwork JSON:** versioned, validated editable project files containing materials, transforms, offcuts, joints, ordered steps, history, inventory snapshots, and reference linework. Imports create a new project ID so they cannot overwrite saved originals.
 - **ASCII DXF:** exploded `LINE` entities import as ground-plane references with explicit inches/feet/mm/meters selection. Use drawings near the origin. [Example 6 × 4 ft outline](public/examples/base-plan.dxf).
 - **Shopping CSV:** quantities, sample/snapshot prices, availability evidence, product/search links, and excluded oversized-part counts. This is not a native Home Depot project file.
-- **Build guide:** Markdown or browser print/PDF, including part dimensions, manual instructions, specified screw quantities, and recorded operations.
+- **Build guide:** Markdown or browser print/PDF, including part dimensions, manual instructions, specified screw quantities, recorded operations, and roll cutting coordinates.
+- **Home Depot handoff:** prepared text for the retailer’s documented paste-in material list workflow; manual review and retailer-side acceptance remain required.
 - PDF/image-to-framing inference, DWG, IFC, arbitrary 3D model import, and automatic engineering interpretation are future work.
 
 ## What validation covers

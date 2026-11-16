@@ -1,0 +1,16 @@
+services:
+  yardwork:
+    build: .
+    ports:
+      - "127.0.0.1:4173:4173"
+    volumes:
+      - projects:/app/data
+    environment:
+      NODE_ENV: production
+      # Optional: an Ollama host reachable from inside the container.
+      # OLLAMA_URL: http://host.docker.internal:11434
+      # OLLAMA_MODEL: llama3.2
+      # CATALOG_URL: https://your-authorized-provider.example/inventory
+    restart: unless-stopped
+volumes:
+  projects:

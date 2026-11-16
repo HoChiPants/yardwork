@@ -1,0 +1,13 @@
+[
+  {
+    "material": "stud",
+    "internetNumber": "123456789",
+    "name": "FORMAT EXAMPLE ONLY — replace with an actual matching product",
+    "price": 4.25,
+    "available": 0,
+    "store": "REPLACE_WITH_REAL_STORE",
+    "zip": "84121",
+    "checkedAt": "2020-01-01T00:00:00.000Z",
+    "url": "https://www.homedepot.com/"
+  }
+]

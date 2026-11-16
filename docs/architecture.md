@@ -4,7 +4,7 @@
 
 All persisted lengths are **inches**, with actual physical dimensions. Three.js renders in feet. Every part has a material ID, local XYZ dimensions, world position, XYZ Euler rotation in radians, assembly label, and build-step reference. The renderer uses actual box geometry, rather than a single prebuilt coop mesh.
 
-`src/model.ts` owns Zod validation, schema version 1, sample material definitions, templates, and constrained generator commands. `src/engine.ts` owns cuts, bounds, material packing, connection checks, validation, operation records, and exports. `src/Scene.tsx` owns rendering, object transforms, camera controls, and assembly animations. `src/App.tsx` owns interaction, undo/redo, panels, and persistence requests. `src/InventoryForm.tsx` records explicitly user-supplied store observations.
+`src/model.ts` owns Zod validation, schema version 1, sample material definitions, templates, constrained generator commands, and persistent section records. A section owns a disjoint set of part IDs, an anchor/rotation, and optional generator dimensions. Existing version 1 files default to an empty section list; the app does not guess generator dimensions for imported loose parts. `src/spatial.ts` keeps XYZ rotation/composition consistent across generators and transforms. `src/sections.ts` owns grouping, whole-section transforms, regeneration previews, duplication, and membership reconciliation. `src/SectionsPanel.tsx` provides the section inspector. `src/engine.ts` owns cuts, bounds, material packing, connection checks, validation, operation records, and exports. `src/Scene.tsx` owns rendering, object transforms, camera controls, and assembly animations. `src/App.tsx` owns interaction, undo/redo, panels, and persistence requests. `src/InventoryForm.tsx` records explicitly user-supplied store observations.
 
 The server owns atomic file persistence and optional integration calls. It never accepts an arbitrary request URL from a client. Catalog/AI endpoints are configured by the self-hosting operator. Default outbound operations are disabled. The UI font uses Google Fonts with system fallbacks; browsers can request those font assets. No analytics is installed.
 
@@ -28,7 +28,7 @@ Browser storage retains one draft, separate from the server library. A browser d
 
 1. Qualify an authorized retailer catalog adapter and exact product mappings; preserve stock dimensions, grade, material/environment suitability, price units, store, and timestamp. Qualify native retailer handoff only against a supported interface.
 2. Add openings, headers, sheathing, rafter assemblies, 2D dimensions, connector families, richer attachment constraints, and sheet nesting.
-3. Expand the command system with validated assembly generators, per-section edits, repair proposals, and richer context for the optional AI provider.
+3. Expand beyond the implemented targeted wall/base revisions into openings, roof/coop generators, multi-section repair proposals, and richer project context for the optional AI provider.
 4. Add plan image/PDF underlays with explicit calibration and user-verified tracing; later consider IFC/model imports. Never infer safety from a visual plan alone.
 5. Model site features as typed constraints: polygons/excavation volumes, fixed drains and utilities, grades, clearances, setbacks, waterproofing zones, service access, and jurisdiction-specific review requirements.
 6. Build bathroom and pool project families around these constraints, rather than representing plumbing or excavation as generic lumber.

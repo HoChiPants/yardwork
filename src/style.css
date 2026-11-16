@@ -2416,3 +2416,82 @@ small {
   letter-spacing: -0.7px;
   padding-right: 15px;
 }
+.section-picker {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+.section-picker > button {
+  padding: 12px 3px;
+  border-bottom: 1px solid var(--line);
+  justify-content: flex-start;
+  text-align: left;
+  color: #7c8d6d;
+  gap: 10px;
+}
+.section-picker > button > span {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.section-picker strong {
+  font-size: 11px;
+  font-weight: 550;
+}
+.section-picker small {
+  font-size: 9px;
+  color: #95a386;
+  line-height: 1.7;
+}
+.section-description {
+  margin-top: 18px;
+}
+.section-description > p {
+  font-size: 10px;
+  margin-top: 10px;
+  color: #899b75;
+  line-height: 1.7;
+}
+.section-material-counts p {
+  font-size: 10px;
+  line-height: 1.8;
+  color: #8c9d77;
+}
+.target-section-field {
+  margin: 4px 0 15px;
+}
+.target-section-field + .notice {
+  margin: 0 0 15px;
+}
+.inspector-tabs > button {
+  font-size: 8px;
+  gap: 3px;
+}
+.inspector-tabs > button > svg {
+  width: 14px;
+}
+@media (max-width: 900px) {
+  .inspector-tabs > button {
+    width: auto;
+    flex: 1;
+  }
+}
+.proposal-impact {
+  display: flex !important;
+  align-items: stretch !important;
+  flex-direction: column;
+  gap: 4px !important;
+  margin: 12px 0;
+  padding: 12px;
+  background: #fffdf1;
+  border: 1px solid #dfe5cf;
+  border-radius: 6px;
+}
+.proposal-impact p {
+  margin: 0 !important;
+  font-size: 10px !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}

@@ -59,6 +59,15 @@ import {
 import * as THREE from "three";
 import { Scene } from "./Scene";
 import { InventoryForm } from "./InventoryForm";
+import { SectionsPanel } from "./SectionsPanel";
+import {
+  reconcileSections,
+  previewSectionCommand,
+  sectionContext,
+  transformSection,
+  snapSectionOrigin,
+} from "./sections";
+import { composeRotation } from "./spatial";
 import {
   addMaterial,
   bom,
@@ -251,13 +260,20 @@ export function App() {
     [mode, setMode] = useState<"select" | "move" | "rotate" | "screw">(
       "select",
     );
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
+    null,
+  );
+  const [selectionScope, setSelectionScope] = useState<"part" | "section">(
+    "part",
+  );
+  const [assistantTarget, setAssistantTarget] = useState("");
   const [snap, setSnap] = useState(true),
     [explode, setExplode] = useState(false),
     [xray, setXray] = useState(false),
     [view, setView] = useState({ preset: "iso", nonce: 0 });
-  const [panel, setPanel] = useState<"part" | "checks" | "materials" | "step">(
-      "checks",
-    ),
+  const [panel, setPanel] = useState<
+      "part" | "checks" | "materials" | "step" | "sections"
+    >("checks"),
     [library, setLibrary] = useState<"parts" | "assemblies">("parts"),
     [filter, setFilter] = useState("All"),
     [search, setSearch] = useState("");
@@ -286,6 +302,7 @@ export function App() {
       command: Command;
       provider: string;
       message: string;
+      targetSectionId?: string;
     } | null>(null);
   const [importKind, setImportKind] = useState("project"),
     [dxfScale, setDxfScale] = useState(1),
@@ -305,7 +322,7 @@ export function App() {
   const change = useCallback((update: Project | ((p: Project) => Project)) => {
     const proposal =
       typeof update === "function" ? update(current.current) : update;
-    const next = recordChanges(current.current, proposal);
+    const next = recordChanges(current.current, reconcileSections(proposal));
     projectSchema.parse(next);
     undoStack.current.push(current.current);
     if (undoStack.current.length > 60) undoStack.current.shift();
@@ -376,6 +393,7 @@ export function App() {
       setSaved(false);
       force((n) => n + 1);
       setSelected(null);
+      setSelectedSectionId(null);
       setStage(null);
     }
   };
@@ -387,6 +405,7 @@ export function App() {
       setSaved(false);
       force((n) => n + 1);
       setSelected(null);
+      setSelectedSectionId(null);
       setStage(null);
     }
   };
@@ -398,7 +417,8 @@ export function App() {
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        document.getElementById("save-project")?.click();
+        (document.activeElement as HTMLElement)?.blur();
+        setTimeout(() => document.getElementById("save-project")?.click(), 0);
       }
       if (
         (e.target as HTMLElement).closest(
@@ -411,7 +431,11 @@ export function App() {
         if (e.shiftKey) redo();
         else undo();
       }
-      if (e.key.toLowerCase() === "v") setMode("select");
+      if (e.key.toLowerCase() === "v") {
+        setMode("select");
+        setSelectionScope("part");
+        setSelectedSectionId(null);
+      }
       if (e.key.toLowerCase() === "m") setMode("move");
       if (e.key.toLowerCase() === "r") setMode("rotate");
     };
@@ -423,6 +447,24 @@ export function App() {
       project.steps.find((s) => s.id === stepId) ?? project.steps[0],
     findings = useMemo(() => validate(project), [project, inventoryTick]),
     rows = useMemo(() => bom(project), [project, inventoryTick]);
+  const preview = useMemo(() => {
+    if (!proposal) return null;
+    try {
+      return {
+        impact: previewSectionCommand(
+          project,
+          proposal.command,
+          proposal.targetSectionId,
+        ),
+        error: null,
+      };
+    } catch (e) {
+      return {
+        impact: null,
+        error: e instanceof Error ? e.message : "Invalid proposal",
+      };
+    }
+  }, [proposal, project]);
   const warnings = findings.filter((f) => f.severity !== "info"),
     total = rows.reduce((n, r) => n + r.total, 0),
     completed = project.steps.filter((s) => s.complete).length;
@@ -482,11 +524,43 @@ export function App() {
       }));
     });
   }
+  function selectSection(id: string | null) {
+    setSelectedSectionId(id);
+    setSelected(null);
+    setPanel("sections");
+    setSelectionScope("section");
+    setStage(null);
+  }
+  function reviseSection(id: string) {
+    const section = current.current.sections.find((s) => s.id === id);
+    if (!section?.generator) return;
+    setAssistantTarget(id);
+    setPrompt(
+      section.generator.type === "wall"
+        ? `Make this wall ${section.generator.width} inches wide and ${section.generator.height} inches tall, ${section.generator.spacing} inches on center`
+        : `Make this base ${section.generator.width} inches wide and ${section.generator.depth} inches deep, ${section.generator.spacing} inches on center`,
+    );
+    setProposal(null);
+    setModal("assistant");
+  }
   function select(id: string) {
     if (!id) {
+      setSelectedSectionId(null);
       setSelected(null);
       return;
     }
+    if (selectionScope === "section" && mode !== "screw") {
+      const section = current.current.sections.find((s) =>
+        s.pieceIds.includes(id),
+      );
+      if (section) selectSection(section.id);
+      else
+        notify(
+          "This part is ungrouped. Use Sections to group its assembly first.",
+        );
+      return;
+    }
+    setSelectedSectionId(null);
     if (mode === "screw" && selected && id !== selected) {
       safe(() => {
         change(
@@ -510,6 +584,8 @@ export function App() {
     safe(() => {
       const next = addMaterial(project, id, position, activeStepId);
       change(next);
+      setSelectionScope("part");
+      setSelectedSectionId(null);
       setSelected(next.pieces.at(-1)!.id);
       setPanel("part");
       setStage(null);
@@ -523,6 +599,9 @@ export function App() {
     setProject(p);
     setStepId(p.steps[0].id);
     setSelected(null);
+    setSelectedSectionId(null);
+    setAssistantTarget("");
+    setSelectionScope("part");
     setStage(null);
     setSaved(rev > 0);
     setModal(null);
@@ -573,9 +652,22 @@ export function App() {
       const p = await api("/api/assistant", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({
+          prompt,
+          context: project.sections.find((s) => s.id === assistantTarget)
+            ? sectionContext(
+                project.sections.find((s) => s.id === assistantTarget)!,
+              )
+            : undefined,
+        }),
       });
-      setProposal({ ...p, command: commandSchema.parse(p.command) });
+      if ((p.targetSectionId ?? "") !== assistantTarget)
+        throw Error("The proposal target changed. Preview it again.");
+      const command = commandSchema.parse(p.command);
+      const target = project.sections.find((s) => s.id === assistantTarget);
+      if (target?.generator && target.generator.type !== command.type)
+        throw Error("A targeted proposal must preserve the section type.");
+      setProposal({ ...p, command });
     } catch (e) {
       notify((e as Error).message, true);
     } finally {
@@ -671,14 +763,22 @@ export function App() {
       const copy = {
         ...structuredClone(piece),
         id: uid(),
-        name: `${piece.name} · copy`,
+        name: `${piece.name.slice(0, 110)} · copy`,
         position: [
           piece.position[0] + 6,
           piece.position[1],
           piece.position[2],
         ] as V3,
       };
-      change((p) => ({ ...p, pieces: [...p.pieces, copy] }));
+      change((p) => ({
+        ...p,
+        pieces: [...p.pieces, copy],
+        sections: p.sections.map((s) =>
+          s.pieceIds.includes(piece.id)
+            ? { ...s, pieceIds: [...s.pieceIds, copy.id] }
+            : s,
+        ),
+      }));
       setSelected(copy.id);
     }
   };
@@ -887,6 +987,7 @@ export function App() {
             <button
               className="assembly-card"
               onClick={() => {
+                setAssistantTarget("");
                 setPrompt("Build a base 6 by 4 ft");
                 setProposal(null);
                 setModal("assistant");
@@ -956,6 +1057,13 @@ export function App() {
             className="button ai-button"
             onClick={() => {
               setProposal(null);
+              setAssistantTarget(
+                selectedSectionId &&
+                  project.sections.find((s) => s.id === selectedSectionId)
+                    ?.generator
+                  ? selectedSectionId
+                  : "",
+              );
               setModal("assistant");
             }}
           >
@@ -973,6 +1081,30 @@ export function App() {
             <Scene
               project={project}
               selected={selected}
+              selectedSectionId={selectedSectionId}
+              onSectionMove={(id, origin, delta) =>
+                safe(() => {
+                  const section = current.current.sections.find(
+                    (s) => s.id === id,
+                  );
+                  if (section)
+                    change(
+                      transformSection(
+                        current.current,
+                        id,
+                        snap
+                          ? snapSectionOrigin(
+                              current.current,
+                              id,
+                              origin,
+                              composeRotation(delta, section.rotation),
+                            )
+                          : origin,
+                        composeRotation(delta, section.rotation),
+                      ),
+                    );
+                })
+              }
               onSelect={select}
               onMove={move}
               mode={mode}
@@ -1007,6 +1139,10 @@ export function App() {
                 className={mode === t.id ? "active" : ""}
                 onClick={() => {
                   setMode(t.id);
+                  if (t.id === "select" || t.id === "screw") {
+                    setSelectionScope("part");
+                    setSelectedSectionId(null);
+                  }
                   if (t.id === "screw")
                     notify(
                       "Select a first part, then click a touching second part to connect them.",
@@ -1016,6 +1152,19 @@ export function App() {
                 <t.icon size={18} />
               </button>
             ))}
+            <button
+              aria-label="Select whole sections"
+              title="Select and transform an entire section"
+              className={selectionScope === "section" ? "active" : ""}
+              onClick={() => {
+                setSelectionScope("section");
+                setPanel("sections");
+                setSelected(null);
+                setMode("select");
+              }}
+            >
+              <Cuboid size={18} />
+            </button>
             <i />
             <button
               aria-label="Undo"
@@ -1208,12 +1357,19 @@ export function App() {
               { id: "checks", icon: ShieldCheck, label: "Checks" },
               { id: "materials", icon: ClipboardList, label: "List" },
               { id: "step", icon: Layers3, label: "Step" },
+              { id: "sections", icon: Cuboid, label: "Sections" },
             ] as const
           ).map((t) => (
             <button
               key={t.id}
               className={panel === t.id ? "active" : ""}
-              onClick={() => setPanel(t.id)}
+              onClick={() => {
+                setPanel(t.id);
+                if (t.id === "part") {
+                  setSelectionScope("part");
+                  setSelectedSectionId(null);
+                }
+              }}
             >
               <t.icon size={16} />
               <span>{t.label}</span>
@@ -1224,6 +1380,22 @@ export function App() {
           ))}
         </div>
         <div className="inspector-scroll">
+          {panel === "sections" && (
+            <SectionsPanel
+              project={project}
+              selectedId={selectedSectionId}
+              onSelect={selectSection}
+              onChange={(p) => safe(() => change(p))}
+              onGenerate={reviseSection}
+              onMoveTool={() => setMode("move")}
+              onPartTool={() => {
+                setSelectionScope("part");
+                setSelectedSectionId(null);
+                setMode("select");
+                setPanel("part");
+              }}
+            />
+          )}
           {panel === "checks" && (
             <>
               <div className="panel-intro">
@@ -1245,6 +1417,8 @@ export function App() {
                     className={`finding ${f.severity}`}
                     onClick={() => {
                       if (f.pieceId) {
+                        setSelectionScope("part");
+                        setSelectedSectionId(null);
                         setSelected(f.pieceId);
                         setPanel("part");
                       }
@@ -1278,6 +1452,7 @@ export function App() {
                   className="button secondary"
                   onClick={() => {
                     setLibrary("assemblies");
+                    setAssistantTarget("");
                     setModal("assistant");
                   }}
                 >
@@ -1510,7 +1685,10 @@ export function App() {
                     ))}
                 </div>
                 <div className="inline part-actions">
-                  <button className="button secondary" onClick={clonePiece}>
+                  <button
+                    className="button secondary"
+                    onClick={() => safe(clonePiece)}
+                  >
                     <Copy size={14} />
                     Duplicate
                   </button>
@@ -1740,7 +1918,12 @@ export function App() {
                     <button
                       className="step-part"
                       key={x.id}
-                      onClick={() => select(x.id)}
+                      onClick={() => {
+                        setSelectionScope("part");
+                        setSelectedSectionId(null);
+                        setSelected(x.id);
+                        setPanel("part");
+                      }}
                     >
                       <Box size={14} />
                       <span>{x.name}</span>
@@ -1872,9 +2055,45 @@ export function App() {
                 <div className="provider-pill">
                   <span className="green-dot" />
                   {health?.ai === "ollama"
-                    ? "AI connected · Ollama"
+                    ? "AI configured · Ollama"
                     : "Local dimensioned templates · no AI model connected"}
                 </div>
+                <label className="field target-section-field">
+                  Apply to
+                  <select
+                    aria-label="Prompt target"
+                    value={assistantTarget}
+                    onChange={(e) => {
+                      setAssistantTarget(e.target.value);
+                      setProposal(null);
+                    }}
+                  >
+                    <option value="">Add a new assembly / start a coop</option>
+                    {project.sections
+                      .filter((s) => s.generator)
+                      .map((s) => (
+                        <option key={s.id} value={s.id}>
+                          Revise {s.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                {assistantTarget && (
+                  <div className="notice">
+                    <Info size={16} />
+                    <p>
+                      Revise only{" "}
+                      {
+                        project.sections.find((s) => s.id === assistantTarget)
+                          ?.name
+                      }
+                      . Placement and its build step are retained. New parts
+                      replace the existing section parts and remove their screw
+                      connections. Undo is available. Custom instructions are
+                      retained; recheck dimensions in your notes.
+                    </p>
+                  </div>
+                )}
                 <textarea
                   className="prompt-input"
                   aria-label="Describe your build"
@@ -1929,18 +2148,61 @@ export function App() {
                     <p>
                       {proposal.command.type === "coop"
                         ? "Fixed 6 × 4 ft footprint · elevated coop concept. This replaces the current canvas; undo is available."
-                        : `${format(proposal.command.width)} wide × ${format(proposal.command.type === "wall" ? proposal.command.height : proposal.command.depth)} ${proposal.command.type === "wall" ? "tall" : "deep"} · ${proposal.command.spacing} in spacing. Added beside existing parts.`}
+                        : `${format(proposal.command.width)} wide × ${format(proposal.command.type === "wall" ? proposal.command.height : proposal.command.depth)} ${proposal.command.type === "wall" ? "tall" : "deep"} · ${proposal.command.spacing} in spacing. ${proposal.targetSectionId ? "Replaces the selected section at its current placement." : "Added beside existing parts."}`}
                     </p>
+                    {preview?.impact && (
+                      <div className="proposal-impact">
+                        <p>
+                          {preview.impact.removed
+                            ? `Replace ${preview.impact.removed} parts with ${preview.impact.added} new parts.`
+                            : `Add ${preview.impact.added} individual parts.`}{" "}
+                          {preview.impact.removedConnections
+                            ? `Remove ${preview.impact.removedConnections} screw connection(s).`
+                            : ""}
+                        </p>
+                        <p>
+                          {preview.impact.incompleteEstimate
+                            ? "Estimate incomplete: some parts exceed the starter stock."
+                            : `Planning estimate: ${money(preview.impact.costBefore)} → ${money(preview.impact.costAfter)} (sample/snapshot prices)`}
+                        </p>
+                        {preview.impact.findings.slice(0, 3).map((f) => (
+                          <p key={f.id}>
+                            <AlertTriangle size={12} />
+                            {f.title}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {preview?.error && (
+                      <p className="form-error">{preview.error}</p>
+                    )}
                     <small>
                       {proposal.provider} · {proposal.message}
                     </small>
                     <button
                       className="button primary full"
+                      disabled={!!preview?.error}
                       onClick={() =>
                         safe(() => {
-                          const next = applyCommand(project, proposal.command);
+                          const next = applyCommand(
+                            project,
+                            proposal.command,
+                            proposal.targetSectionId,
+                          );
                           change(next);
-                          setStepId(next.steps.at(-1)!.id);
+                          const section = proposal.targetSectionId
+                            ? next.sections.find(
+                                (s) => s.id === proposal.targetSectionId,
+                              )
+                            : next.sections.at(-1);
+                          setStepId(
+                            section
+                              ? next.pieces.find((p) =>
+                                  section.pieceIds.includes(p.id),
+                                )!.stepId
+                              : next.steps.at(-1)!.id,
+                          );
+                          setSelectedSectionId(section?.id ?? null);
                           setStage(null);
                           setSelected(null);
                           setView((v) => ({
@@ -1948,14 +2210,22 @@ export function App() {
                             nonce: v.nonce + 1,
                           }));
                           setModal(null);
+                          if (section) {
+                            setPanel("sections");
+                            setSelectionScope("section");
+                          }
                           notify(
-                            "Assembly created. Each part and step is editable.",
+                            proposal.targetSectionId
+                              ? "Section regenerated. The rest of your project is preserved."
+                              : "Assembly created. Each part and step is editable.",
                           );
                         })
                       }
                     >
                       <Plus size={15} />
-                      Add to workspace
+                      {proposal.targetSectionId
+                        ? "Replace selected section"
+                        : "Add to workspace"}
                     </button>
                   </div>
                 )}

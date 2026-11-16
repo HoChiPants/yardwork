@@ -32,7 +32,7 @@ Return store-specific **available purchase units**, not a generic in-stock flag 
 
 `OLLAMA_URL` points to the server reachable from the app process. `OLLAMA_MODEL` defaults to `llama3.2`. The app posts to `/api/chat`, asks for non-streamed schema-constrained JSON, and validates the returned command. Timeout: 60 seconds.
 
-Commands contain `type` (`wall`, `foundation`, `coop`), `width`, `height`, `depth` (inches), and `spacing` (12/16/24 inches). Width/depth are bounded to 24–192 inches and height to 12–120 inches. A coop command loads the fixed concept; it does not invent a custom coop for arbitrary dimensions. The user previews and applies the resulting assembly. No execution tool or arbitrary code path is exposed to the model.
+Commands contain `type` (`wall`, `foundation`, `coop`), `width`, `height`, `depth` (inches), and `spacing` (12/16/24 inches). Width/depth are bounded to 24–192 inches and height to 12–120 inches. A coop command loads the fixed concept; it does not invent a custom coop for arbitrary dimensions. A targeted request includes `context: { sectionId, name, command, pieceCount }`. The selected section's parameters let the local parser or model retain unspecified dimensions. The server rejects an AI response that changes the targeted section type. Whole-project coop replacement cannot target an individual section. The user previews part and connection changes, pricing limitations and geometric findings before applying the resulting assembly. No execution tool or arbitrary code path is exposed to the model.
 
 ## Native Home Depot projects
 
@@ -40,4 +40,4 @@ Not connected. The app exports its own editable JSON and a generic shopping CSV.
 
 ## Privacy and network use
 
-Project files and browser drafts remain on the host/device unless exported or deliberately sent to an optional provider. AI requests contain only the prompt, not the full project. Catalog calls contain store and ZIP. Font assets may load from Google Fonts; system fonts are the fallback. Home Depot product links open separately when the user chooses them. No analytics or background retailer scraping is included.
+Project files and browser drafts remain on the host/device unless exported or deliberately sent to an optional provider. AI requests contain the prompt and, for targeted edits, the selected section summary (ID, name, dimensions, spacing, and part count). The full project is not sent. Catalog calls contain store and ZIP. Font assets may load from Google Fonts; system fonts are the fallback. Home Depot product links open separately when the user chooses them. No analytics or background retailer scraping is included.

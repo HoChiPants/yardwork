@@ -14,6 +14,7 @@ RUN npm ci --omit=dev --no-audit --no-fund && mkdir /app/data && chown node:node
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/server ./server
 COPY --from=build /app/src/model.ts ./src/model.ts
+COPY --from=build /app/src/spatial.ts ./src/spatial.ts
 USER node
 VOLUME ["/app/data"]
 EXPOSE 4173

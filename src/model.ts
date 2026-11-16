@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { composeRotation, rotate } from "./spatial";
 export const vec = z.tuple([
   z.number().finite().min(-12000).max(12000),
   z.number().finite().min(-12000).max(12000),
@@ -63,6 +64,23 @@ export const inventorySchema = z.object({
     );
   }, "Use a Home Depot HTTPS URL"),
 });
+export const commandSchema = z.object({
+  type: z.enum(["wall", "coop", "foundation"]),
+  width: z.number().min(24).max(192),
+  height: z.number().min(12).max(120),
+  depth: z.number().min(24).max(192),
+  spacing: z.union([z.literal(12), z.literal(16), z.literal(24)]),
+});
+export type Command = z.infer<typeof commandSchema>;
+export const sectionSchema = z.object({
+  id,
+  name: z.string().min(1).max(80),
+  pieceIds: z.array(id).min(1).max(2000),
+  origin: vec,
+  rotation: vec,
+  generator: commandSchema.nullable(),
+});
+export type Section = z.infer<typeof sectionSchema>;
 export const projectSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -78,6 +96,7 @@ export const projectSchema = z
     inventory: z.array(inventorySchema).max(100),
     planLines: z.array(planLineSchema).max(3000),
     notes: z.string().max(10000),
+    sections: z.array(sectionSchema).max(300).default([]),
     history: z
       .array(
         z.object({
@@ -99,6 +118,33 @@ export const projectSchema = z
       new Set(p.joints.map((j) => j.id)).size !== p.joints.length
     )
       ctx.addIssue({ code: "custom", message: "Duplicate identifiers" });
+    const buildPieceIds = new Set(
+      p.pieces.filter((p) => !p.offcut).map((p) => p.id),
+    );
+    const members = new Set<string>(),
+      sectionIds = new Set<string>();
+    for (const section of p.sections) {
+      if (sectionIds.has(section.id))
+        ctx.addIssue({
+          code: "custom",
+          message: "Duplicate section identifier",
+        });
+      sectionIds.add(section.id);
+      for (const pieceId of section.pieceIds) {
+        if (!buildPieceIds.has(pieceId) || members.has(pieceId))
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Section membership must reference existing build parts once",
+          });
+        members.add(pieceId);
+      }
+      if (section.generator?.type === "coop")
+        ctx.addIssue({
+          code: "custom",
+          message: "Coop generation cannot replace an individual section",
+        });
+    }
     for (const x of p.pieces)
       if (!stepIds.has(x.stepId))
         ctx.addIssue({
@@ -271,16 +317,9 @@ export function blank(name = "Untitled project"): Project {
     planLines: [],
     notes: "",
     history: [],
+    sections: [],
   };
 }
-export const commandSchema = z.object({
-  type: z.enum(["wall", "coop", "foundation"]),
-  width: z.number().min(24).max(192),
-  height: z.number().min(12).max(120),
-  depth: z.number().min(24).max(192),
-  spacing: z.union([z.literal(12), z.literal(16), z.literal(24)]),
-});
-export type Command = z.infer<typeof commandSchema>;
 export function wallParts(
   width: number,
   height: number,
@@ -399,7 +438,7 @@ export function coop(): Project {
       x < 0 ? "Left wall" : "Right wall",
     );
     for (const a of ps) {
-      a.position = [x, a.position[1], a.position[0]];
+      a.position = [x, a.position[1], -a.position[0] || 0];
       a.rotation = [0, Math.PI / 2, 0];
     }
     p.pieces.push(...ps);
@@ -531,11 +570,160 @@ export function coop(): Project {
         [0.58, 0, 0],
       ),
     );
+  const names = [...new Set(p.pieces.map((a) => a.assembly))];
+  p.sections = names.map((name) => {
+    const members = p.pieces.filter((a) => a.assembly === name);
+    let generator: Command | null = null,
+      origin: V3 = [0, 0, 0],
+      rotation: V3 = [0, 0, 0];
+    if (name === "Back wall") {
+      generator = {
+        type: "wall",
+        width: 72,
+        height: 48,
+        depth: 48,
+        spacing: 16,
+      };
+      origin = [0, 24.25, -22.25];
+    }
+    if (name === "Left wall" || name === "Right wall") {
+      generator = {
+        type: "wall",
+        width: 41,
+        height: 48,
+        depth: 48,
+        spacing: 16,
+      };
+      origin = [name === "Left wall" ? -34.25 : 34.25, 24.25, 0];
+      rotation = [0, Math.PI / 2, 0];
+    }
+    if (!generator)
+      origin = [0, 1, 2].map(
+        (i) =>
+          members.reduce((sum, a) => sum + a.position[i], 0) / members.length,
+      ) as V3;
+    return {
+      id: uid(),
+      name,
+      pieceIds: members.map((a) => a.id),
+      origin,
+      rotation,
+      generator,
+    };
+  });
   p.notes =
     "Concept study, not a finished construction plan. Openings, roof framing, gables, anchors, weatherproofing, predator protection, and connections need detailing.";
   return p;
 }
-export function applyCommand(project: Project, command: Command): Project {
+/** Generate a local assembly and transform every part into its section frame. */
+export function sectionParts(
+  command: Command,
+  stepId: string,
+  name: string,
+  origin: V3,
+  rotation: V3,
+): Piece[] {
+  let pieces: Piece[] = [];
+  if (command.type === "wall")
+    pieces = wallParts(
+      command.width,
+      command.height,
+      command.spacing,
+      stepId,
+      [0, 0, 0],
+      name,
+    );
+  else if (command.type === "foundation") {
+    for (const z of [-command.depth / 2 + 0.75, command.depth / 2 - 0.75])
+      pieces.push(
+        part(
+          `${name} · rim`,
+          "treated",
+          [command.width, 5.5, 1.5],
+          [0, 2.75, z],
+          stepId,
+          name,
+        ),
+      );
+    const xs = [-command.width / 2 + 0.75];
+    for (
+      let x = -command.width / 2 + command.spacing;
+      x < command.width / 2 - 1.5;
+      x += command.spacing
+    )
+      xs.push(x);
+    xs.push(command.width / 2 - 0.75);
+    for (const x of xs)
+      pieces.push(
+        part(
+          `${name} · joist`,
+          "treated",
+          [1.5, 5.5, command.depth - 3],
+          [x, 2.75, 0],
+          stepId,
+          name,
+        ),
+      );
+  } else
+    throw Error(
+      "Use the coop command for a whole project, not an individual section.",
+    );
+  return pieces.map((p) => ({
+    ...p,
+    position: rotate(p.position, rotation).map((v, i) => v + origin[i]) as V3,
+    rotation: composeRotation(rotation, p.rotation),
+  }));
+}
+export function commandStepTitle(command: Command) {
+  return command.type === "wall"
+    ? `Frame a ${format(command.width)} × ${format(command.height)} wall`
+    : `Lay a ${format(command.width)} × ${format(command.depth)} base`;
+}
+export function applyCommand(
+  project: Project,
+  raw: Command,
+  targetSectionId?: string,
+): Project {
+  const command = commandSchema.parse(raw);
+  if (targetSectionId) {
+    const section = project.sections.find((s) => s.id === targetSectionId);
+    if (!section?.generator)
+      throw Error("Choose a generated wall or base section to regenerate.");
+    if (command.type !== section.generator.type)
+      throw Error(
+        "A targeted command must keep the section type. Add a new section to change its type.",
+      );
+    const oldIds = new Set(section.pieceIds),
+      stepId = project.pieces.find((a) => oldIds.has(a.id))!.stepId;
+    const pieces = sectionParts(
+      command,
+      stepId,
+      section.name,
+      section.origin,
+      section.rotation,
+    );
+    return {
+      ...project,
+      pieces: [...project.pieces.filter((a) => !oldIds.has(a.id)), ...pieces],
+      joints: project.joints.filter(
+        (j) => !oldIds.has(j.a) && !oldIds.has(j.b),
+      ),
+      steps: project.steps.map((step) =>
+        step.id === stepId &&
+        step.title === commandStepTitle(section.generator!) &&
+        project.pieces
+          .filter((a) => a.stepId === stepId)
+          .every((a) => oldIds.has(a.id))
+          ? { ...step, title: commandStepTitle(command) }
+          : step,
+      ),
+      sections: project.sections.map((s) =>
+        s.id === section.id
+          ? { ...s, generator: command, pieceIds: pieces.map((a) => a.id) }
+          : s,
+      ),
+    };
+  }
   if (command.type === "coop") {
     const p = coop();
     p.id = project.id;
@@ -547,56 +735,53 @@ export function applyCommand(project: Project, command: Command): Project {
   }
   const p = structuredClone(project),
     s = step(
-      command.type === "wall"
-        ? `Frame a ${format(command.width)} × ${format(command.height)} wall`
-        : `Lay a ${format(command.width)} × ${format(command.depth)} base`,
+      commandStepTitle(command),
       "Generated concept. Review connections, support, bracing, and stock dimensions.",
     );
   p.steps.push(s);
+  // Rotated parts need their world bounds when finding free ground beside the project.
   const maxX = p.pieces.reduce(
-    (v, a) => Math.max(v, a.position[0] + a.size[0] / 2),
+    (max, a) =>
+      Math.max(
+        max,
+        ...[-1, 1].flatMap((x) =>
+          [-1, 1].flatMap((y) =>
+            [-1, 1].map(
+              (z) =>
+                a.position[0] +
+                rotate(
+                  [
+                    (x * a.size[0]) / 2,
+                    (y * a.size[1]) / 2,
+                    (z * a.size[2]) / 2,
+                  ],
+                  a.rotation,
+                )[0],
+            ),
+          ),
+        ),
+      ),
     -command.width / 2 - 12,
   );
-  const x = p.pieces.length ? maxX + command.width / 2 + 12 : 0;
-  if (command.type === "wall")
-    p.pieces.push(
-      ...wallParts(
-        command.width,
-        command.height,
-        command.spacing,
-        s.id,
-        [x, 0, 0],
-        `Wall ${p.steps.length}`,
-      ),
-    );
-  else {
-    for (const z of [-command.depth / 2 + 0.75, command.depth / 2 - 0.75])
-      p.pieces.push(
-        part(
-          "Base rim",
-          "treated",
-          [command.width, 5.5, 1.5],
-          [x, 2.75, z],
-          s.id,
-          "Base",
-        ),
-      );
-    for (
-      let a = -command.width / 2 + 0.75;
-      a < command.width / 2;
-      a += command.spacing
-    )
-      p.pieces.push(
-        part(
-          "Base joist",
-          "treated",
-          [1.5, 5.5, command.depth - 3],
-          [x + a, 2.75, 0],
-          s.id,
-          "Base",
-        ),
-      );
-  }
+  const origin: V3 = [
+    p.pieces.length ? maxX + command.width / 2 + 12 : 0,
+    0,
+    0,
+  ];
+  const prefix = command.type === "wall" ? "Wall" : "Base";
+  let n = 1;
+  while (p.sections.some((s) => s.name === `${prefix} ${n}`)) n++;
+  const name = `${prefix} ${n}`,
+    pieces = sectionParts(command, s.id, name, origin, [0, 0, 0]);
+  p.pieces.push(...pieces);
+  p.sections.push({
+    id: uid(),
+    name,
+    pieceIds: pieces.map((a) => a.id),
+    generator: command,
+    origin,
+    rotation: [0, 0, 0],
+  });
   return p;
 }
 export function format(inches: number) {
@@ -605,12 +790,13 @@ export function format(inches: number) {
     rem = Math.round((n - ft * 12) * 100) / 100;
   return ft ? `${ft}′${rem ? ` ${rem}″` : ""}` : `${rem}″`;
 }
-export function parsePrompt(prompt: string): Command {
+export function parsePrompt(prompt: string, context?: Command): Command {
   const text = prompt.toLowerCase();
   let type: Command["type"];
   if (/\b(coop|chicken)\b/.test(text)) type = "coop";
   else if (/\b(wall|frame|framed)\b/.test(text)) type = "wall";
   else if (/\b(base|floor|foundation)\b/.test(text)) type = "foundation";
+  else if (context) type = context.type;
   else
     throw new Error(
       "Try “a wall 8 ft wide and 6 ft tall, studs 16 inches on center”, “a 6 by 4 ft base”, or “a chicken coop”.",
@@ -643,21 +829,36 @@ export function parsePrompt(prompt: string): Command {
       : undefined);
   if (
     type !== "coop" &&
+    !context &&
     (w === undefined || (type === "wall" ? h === undefined : d === undefined))
   )
     throw new Error(
       "Include dimensions, for example “wall 8 ft wide, 6 ft tall” or “base 6 by 4 ft”.",
     );
+  if (
+    context &&
+    w === undefined &&
+    h === undefined &&
+    d === undefined &&
+    !/\b(12|16|24)\s*(?:inches|inch|in|["″])?\s*(?:on[ -]cent(?:er|re)|o\.?c\.?|spacing)/.test(
+      text,
+    )
+  )
+    throw Error(
+      "Include a new dimension or spacing, for example “make it 10 ft wide” or “24 inches on center”.",
+    );
   const spacing = Number(
     text.match(
       /\b(12|16|24)\s*(?:inches|inch|in|["″])?\s*(?:on[ -]cent(?:er|re)|o\.?c\.?|spacing)/,
-    )?.[1] || 16,
+    )?.[1] ||
+      context?.spacing ||
+      16,
   );
   return commandSchema.parse({
     type,
-    width: w ?? 72,
-    height: h ?? 48,
-    depth: d ?? 48,
+    width: w ?? context?.width ?? 72,
+    height: h ?? context?.height ?? 48,
+    depth: d ?? context?.depth ?? 48,
     spacing,
   });
 }

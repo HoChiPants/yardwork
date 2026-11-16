@@ -8,6 +8,7 @@ import os from "node:os";
 import path from "node:path";
 test("optional provider contracts validate AI proposals and exact-store catalog responses without exposing tokens", async () => {
   let badAI = false,
+    badType = false,
     badStore = false,
     providerFailure = false;
   const calls: { path: string; auth?: string; body?: any }[] = [];
@@ -31,7 +32,7 @@ test("optional provider contracts validate AI proposals and exact-store catalog 
         JSON.stringify({
           message: {
             content: JSON.stringify({
-              type: "wall",
+              type: badType ? "foundation" : "wall",
               width: badAI ? 5000 : 96,
               height: 72,
               depth: 48,
@@ -127,6 +128,44 @@ test("optional provider contracts validate AI proposals and exact-store catalog 
       calls.find((c) => c.path === "/inventory")?.auth,
       "Bearer protocol-test-token",
     );
+    const context = {
+      sectionId: crypto.randomUUID(),
+      name: "Rear wall",
+      command: { type: "wall", width: 120, height: 84, depth: 48, spacing: 24 },
+      pieceCount: 11,
+    };
+    const targeted = await fetch(`${base}/api/assistant`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt: "Make this wall 8 ft wide", context }),
+    });
+    assert.equal(targeted.status, 200);
+    assert.equal(
+      ((await targeted.json()) as any).targetSectionId,
+      context.sectionId,
+    );
+    assert.ok(
+      calls
+        .at(-1)!
+        .body.messages.some(
+          (m: any) =>
+            m.role === "system" &&
+            m.content.includes(context.sectionId) &&
+            m.content.includes("Keep unspecified dimensions"),
+        ),
+    );
+    badType = true;
+    assert.equal(
+      (
+        await fetch(`${base}/api/assistant`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ prompt: "Wrong type proposal", context }),
+        })
+      ).status,
+      400,
+    );
+    badType = false;
     badAI = true;
     assert.equal(
       (

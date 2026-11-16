@@ -5,6 +5,7 @@ import {
   material,
   part,
   uid,
+  wallParts,
   type Inventory,
   type MaterialId,
   type Piece,
@@ -12,23 +13,8 @@ import {
   type V3,
 } from "./model";
 export const KERF = 0.125;
-export function rotate(v: V3, r: V3): V3 {
-  let [x, y, z] = v;
-  const [a, b, c] = r;
-  [x, y] = [
-    x * Math.cos(c) - y * Math.sin(c),
-    x * Math.sin(c) + y * Math.cos(c),
-  ];
-  [x, z] = [
-    x * Math.cos(b) + z * Math.sin(b),
-    -x * Math.sin(b) + z * Math.cos(b),
-  ];
-  [y, z] = [
-    y * Math.cos(a) - z * Math.sin(a),
-    y * Math.sin(a) + z * Math.cos(a),
-  ];
-  return [x, y, z];
-}
+export { rotate } from "./spatial";
+import { rotate } from "./spatial";
 export function bounds(p: Piece) {
   const points: V3[] = [];
   for (const x of [-1, 1])
@@ -362,6 +348,43 @@ export function validate(p: Project): Finding[] {
         detail: `The ${j.length} in screw may not pass through ${a.name}. Direction, edge distances, shear, and pullout are not modeled.`,
         pieceId: a.id,
       });
+  }
+  for (const section of p.sections) {
+    const command = section.generator;
+    if (command?.type !== "wall") continue;
+    const count = section.pieceIds.filter((id) =>
+      active.some((p) => p.id === id && p.material === "stud"),
+    ).length;
+    const expected = wallParts(
+      command.width,
+      command.height,
+      command.spacing,
+      p.steps[0].id,
+    ).length;
+    if (count > expected)
+      findings.push({
+        id: `extra-frame-${section.id}`,
+        severity: "info",
+        title: `${section.name} has ${count - expected} extra framing part(s)`,
+        detail: `Its saved ${command.spacing} in layout uses ${expected} framing parts; this section contains ${count}. Review manually added or duplicated boards before purchasing.`,
+        pieceId: section.pieceIds[0],
+      });
+    if (command.spacing === 12) {
+      const alternate = wallParts(
+        command.width,
+        command.height,
+        16,
+        p.steps[0].id,
+      ).length;
+      const extra = expected - alternate;
+      if (extra > 0)
+        findings.push({
+          id: `spacing-quantity-${section.id}`,
+          severity: "info",
+          title: `${section.name}: closer spacing uses ${extra} extra stud(s)`,
+          detail: `A 12 in layout uses ${expected - 2} studs; a 16 in layout of the same width uses ${alternate - 2}. This compares quantities only. Loads, sheathing, and the design specification determine appropriate spacing.`,
+        });
+    }
   }
   const dense = p.pieces.filter(
     (x) => x.assembly.includes("Wall") && x.name.includes("stud"),

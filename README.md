@@ -42,9 +42,19 @@ Ports bind only to the local machine. This release has no user authentication; a
 2. Drag a material onto the ground, or press its **+** button. Select a part to inspect actual dimensions. **M** enables the move gizmo; **R** enables rotation. Snapping uses a 1 in grid, 15° rotation increments, and nearby faces.
 3. Cut lumber/plywood along its longest local axis. A ⅛ in kerf is removed and the remaining offcut stays in the project. Reuse an offcut from its inspector.
 4. Select two touching parts with the screw tool, or use the inspector to specify a connection. The plan records quantity and length. This is not physical fastener simulation or capacity verification.
-5. Use **Build with a prompt**: `wall 8 ft wide, 6 ft tall, 16 inches on center` or `base 6 by 4 ft`. Preview dimensions before applying. Generated parts stay individually editable.
+5. Use **Build with a prompt**: `wall 8 ft wide, 6 ft tall, 16 inches on center` or `base 6 by 4 ft`. Preview dimensions before applying. Generated parts stay individually editable. In **Sections**, select a generated wall or base and choose **Revise this section**. A targeted request such as `make it 10 ft wide` retains unspecified dimensions, placement, and its guide step. Preview part/connection changes and stock warnings before replacing it.
 6. Add, edit, reorder, and complete build steps. Assign parts to a step. Recorded layout/cut/connection operations are included in the guide; undo restores the previous plan and activity record. Activity retains the most recent 5,000 entries.
 7. Save, export JSON, take a CSV shopping list, or print the build guide / save it as PDF.
+
+## Sections and whole assemblies
+
+**Sections** groups parts into editable units. Use its numeric anchor/rotation fields or **Move section in 3D** to transform all members together. When snapping is enabled, section placement can align nearby bounding faces, such as a wall bottom on a base top. The whole-section selection tool lets you click a section in the scene; **V** returns to individual-part selection. Duplicating a section gives it independent part IDs, copies internal screw connections, and adds a build step. Removing a section is undoable.
+
+Generated walls/bases retain their dimensions and spacing for later prompt-based revision. The coop contains separate floor, walls, enclosure, roof and ramp groups; its back and side wall frames can be regenerated. Manual sections move as a group but have no inferred dimensioned generator. Older version 1 projects can group their existing assembly labels in the Sections panel.
+
+Regeneration **replaces the section's parts**, including manual geometry edits, and removes screw connections involving them. The preview shows those counts and incomplete stock estimates. Placement, the guide step, unrelated parts, project notes, and store settings remain. Automatically generated dimensional step titles update; custom instructions remain yours to review. Offcuts remain loose for reuse. Cloning an individual member keeps it in its section and makes the section a manually modified layout.
+
+[See the section editor](docs/sections.png) · [See a targeted proposal](docs/section-proposal.png)
 
 ## Store snapshots — the first-version sourcing workflow
 
@@ -70,7 +80,7 @@ OLLAMA_URL=http://127.0.0.1:11434 OLLAMA_MODEL=llama3.2 npm run dev
 
 The model must already be installed in your Ollama instance. In Docker Desktop, use a host reachable by the container, commonly `http://host.docker.internal:11434`; Podman commonly uses `host.containers.internal`. Configure the environment in compose. Do not use `127.0.0.1` to reach a host service from inside a container.
 
-AI responses are constrained to the same `wall`, `foundation`, and fixed `coop` command schema; dimensions are validated and proposals require an explicit Apply action. AI cannot execute arbitrary code, purchase materials, or certify construction. No hosted AI service is called by default. The optional Ollama path has protocol-level mock coverage; inference with a real installed model is a separate configuration check.
+The selected section summary (name, dimensions, spacing, part count and section identifier) is sent with targeted requests. AI responses are constrained to the same `wall`, `foundation`, and fixed `coop` command schema; dimensions are validated and proposals require an explicit Apply action. AI cannot execute arbitrary code, purchase materials, or certify construction. No hosted AI service is called by default. The optional Ollama path has protocol-level mock coverage; inference with a real installed model is a separate configuration check.
 
 ## Plan import and export
 
@@ -82,7 +92,7 @@ AI responses are constrained to the same `wall`, `foundation`, and fixed `coop` 
 
 ## What validation covers
 
-Actual dimensions (including a nominal 2×4 being 1½ × 3½ in), stock fit, saw kerf, axis-aligned overlaps, a vertical contact path to the ground, disconnected screw records, basic screw penetration prompts, unusually high stud counts, and inventory shortfalls/freshness.
+Actual dimensions (including a nominal 2×4 being 1½ × 3½ in), stock fit, saw kerf, axis-aligned overlaps, a vertical contact path to the ground, disconnected screw records, basic screw penetration prompts, unusually high stud counts, and inventory shortfalls/freshness. Section advice compares extra framing pieces and 12 versus 16 inch stud quantities without prescribing a structural spacing.
 
 Angled support uses conservative bounding boxes. Rotated collisions are not certified. No structural pass score is shown. Load paths, spans, snow/wind/seismic loads, foundation bearing/frost depth, corrosion, fastening capacity, local code, permits, and poultry welfare require appropriate external review. The coop is an intentionally incomplete **concept**, with roof framing, closures, ventilation, secure access, predator protection, and anchors still needing design. It is not a ready-to-build kit.
 
@@ -107,7 +117,7 @@ React 19 · React Three Fiber / Three.js · TypeScript · Express · Zod · Vite
 
 ## Next directions
 
-[Product research and scope](docs/research.md) · [Architecture and roadmap](docs/architecture.md) · [Integration contract](docs/integrations.md)
+[Product research and scope](docs/research.md) · [Architecture and roadmap](docs/architecture.md) · [Integration contract](docs/integrations.md) · [Requirement audit](docs/requirements-audit.md)
 
 Bathroom, pool, drain, excavation, and site constraints are planned extensions rather than supported construction systems in this release.
 

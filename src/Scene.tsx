@@ -14,12 +14,20 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 import { bounds } from "./engine";
-import { material, type Piece, type Project, type V3 } from "./model";
+import {
+  material,
+  type Piece,
+  type Project,
+  type Section,
+  type V3,
+} from "./model";
 export type SceneProps = {
   project: Project;
   selected: string | null;
   onSelect: (id: string) => void;
   onMove: (id: string, position: V3, rotation: V3) => void;
+  selectedSectionId: string | null;
+  onSectionMove: (id: string, origin: V3, deltaRotation: V3) => void;
   mode: "select" | "move" | "rotate" | "screw";
   snap: boolean;
   explode: boolean;
@@ -205,6 +213,70 @@ function PlacedPart({
     );
   return mesh;
 }
+function SectionGroup({
+  section,
+  pieces,
+  props,
+  texture,
+}: {
+  section: Section;
+  pieces: Piece[];
+  props: SceneProps;
+  texture: THREE.Texture;
+}) {
+  const group = useRef<THREE.Group>(null!);
+  const content = (
+    <group
+      ref={group}
+      position={section.origin.map((v) => v / 12) as V3}
+      rotation={[0, 0, 0]}
+    >
+      {pieces.map((p) => (
+        <group
+          key={p.id}
+          position={
+            p.position.map((v, i) => (v - section.origin[i]) / 12) as V3
+          }
+          rotation={p.rotation}
+        >
+          <PartMesh
+            piece={p}
+            selected
+            onSelect={props.onSelect}
+            xray={props.xray}
+            explode={false}
+            stepIndex={0}
+            texture={texture}
+          />
+        </group>
+      ))}
+    </group>
+  );
+  if (props.mode !== "move" && props.mode !== "rotate") return content;
+  return (
+    <TransformControls
+      object={group}
+      enabled
+      mode={props.mode === "move" ? "translate" : "rotate"}
+      size={0.8}
+      translationSnap={props.snap ? 1 / 12 : null}
+      rotationSnap={props.snap ? Math.PI / 12 : null}
+      onMouseUp={() => {
+        const obj = group.current;
+        if (obj)
+          props.onSectionMove(
+            section.id,
+            obj.position
+              .toArray()
+              .map((v) => Math.round(v * 12 * 1000) / 1000) as V3,
+            [obj.rotation.x, obj.rotation.y, obj.rotation.z],
+          );
+      }}
+    >
+      {content}
+    </TransformControls>
+  );
+}
 function JointMarker({ a, b }: { a: Piece; b: Piece }) {
   const invalidate = useThree((s) => s.invalidate);
   const ref = useRef<THREE.Group>(null);
@@ -324,6 +396,10 @@ function World(props: SceneProps) {
             props.project.steps.findIndex((s) => s.id === p.stepId) <=
             props.stage!,
         );
+  const section = props.project.sections.find(
+    (s) => s.id === props.selectedSectionId,
+  );
+  const grouped = new Set(section?.pieceIds ?? []);
   return (
     <>
       <color attach="background" args={["#eeeee5"]} />
@@ -362,9 +438,20 @@ function World(props: SceneProps) {
         fadeStrength={1.5}
         infiniteGrid
       />
-      {visible.map((p) => (
-        <PlacedPart key={p.id} p={p} props={props} texture={texture} />
-      ))}
+      {section && (
+        <SectionGroup
+          key={`${section.id}:${section.origin.join(",")}:${section.rotation.join(",")}`}
+          section={section}
+          pieces={visible.filter((p) => grouped.has(p.id))}
+          props={props}
+          texture={texture}
+        />
+      )}
+      {visible
+        .filter((p) => !grouped.has(p.id))
+        .map((p) => (
+          <PlacedPart key={p.id} p={p} props={props} texture={texture} />
+        ))}
       {props.project.planLines.map((l, i) => (
         <Line
           key={i}

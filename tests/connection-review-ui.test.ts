@@ -95,6 +95,9 @@ test("starting an empty plan leaves both actual task members without current int
       createElement(ConnectionReviewPanel, {
         project,
         bearingReview: { pairs: [], withoutContact: [] },
+        woodJointDetails: [],
+        onSaveWoodJointDetail: () => assert.fail("Rendering must not save a joint detail"),
+        onClearWoodJointDetail: () => assert.fail("Rendering must not clear a joint detail"),
         onSaveBearingDecision: () => assert.fail("Rendering must not save a decision"),
         onClearBearingDecision: () => assert.fail("Rendering must not clear a decision"),
         onTestRemoval: () => assert.fail("Rendering must not start motion"),
@@ -152,6 +155,9 @@ test("the explicit global review and unassigned-intent gap keep an all-missing W
       createElement(ConnectionReviewPanel, {
         project,
         bearingReview: { pairs: [], withoutContact: [] },
+        woodJointDetails: [],
+        onSaveWoodJointDetail: () => assert.fail("Rendering must not save a joint detail"),
+        onClearWoodJointDetail: () => assert.fail("Rendering must not clear a joint detail"),
         onSaveBearingDecision: () => assert.fail("Rendering must not save a decision"),
         onClearBearingDecision: () => assert.fail("Rendering must not clear a decision"),
         onTestRemoval: () => assert.fail("Rendering must not start motion"),

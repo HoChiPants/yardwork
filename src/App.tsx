@@ -1,5 +1,6 @@
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
+import { clearWoodJointDecision, saveWoodJointDecision, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
 import { browserWorkshop, workshopAsset, workshopRequest } from "./workshopTransport";
 import { ZodError } from "zod";
 import { FloorBaseFields } from "./FloorBaseFields";
@@ -1109,7 +1110,7 @@ export function App() {
     setSelectionScope("part"); setSelectedSectionId(null);
     setReturnToConnections(!!liveConnectionContext);
   }
-  function openConnectionReview(scope: ConnectionReviewScope, returnTo?: "prep") {
+  function openConnectionReview(scope: ConnectionReviewScope, returnTo?: NonNullable<typeof connectionContext>["backPanel"]) {
     const backPanel = returnTo ?? (panel === "part" || panel === "step" || panel === "sections" ? panel : "checks");
     setConnectionContext({projectId:project.id,scope:{...scope,memberIds:[...scope.memberIds]},backPanel});
     setBaseRailDraft(null);
@@ -1491,12 +1492,13 @@ export function App() {
   );
   const guideReady = guideIsCurrent(project);
   const connectionReview = useMemo(() => connectionCoverage(project), [project]);
+  const woodJointDetails = useMemo(() => woodJointDecisionEntries(project), [project]);
   const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
   const needsWoodContacts = panel === "prep" || modal === "export" || printingGuide ||
     (panel === "connections" && !!liveConnectionContext?.scope.modeledContactList);
   const modeledContacts = useMemo(() => needsWoodContacts
-    ? reviewModeledWoodContacts(project, connectionReview, bearingReview) : undefined,
-  [project, connectionReview, bearingReview, needsWoodContacts]);
+    ? reviewModeledWoodContacts(project, connectionReview, bearingReview, woodJointDetails) : undefined,
+  [project, connectionReview, bearingReview, woodJointDetails, needsWoodContacts]);
   const preparation = useMemo(() => buildPreparation(project, {
     stock: rows,
     supplies: supplyPurchases,
@@ -1611,6 +1613,7 @@ export function App() {
   const lidWeightSchedule = useMemo(() => lidWeightGuideRows(exportGuide), [exportGuide]);
   const lidStayFitSchedule = useMemo(() => lidStayFitGuideRows(exportGuide), [exportGuide]);
   const exportConnectionReview = useMemo(() => connectionCoverage(exportGuide), [exportGuide]);
+  const exportWoodJointDetails = useMemo(() => woodJointDecisionEntries(exportGuide), [exportGuide]);
   const printCutSources = useMemo(
     () => inspectCutStock(exportGuide),
     [exportGuide],
@@ -3095,9 +3098,14 @@ export function App() {
                 backLabel={liveConnectionContext.backPanel === "prep" ? "Back to build preparation" : liveConnectionContext.backPanel === "step" ? "Back to guide" : liveConnectionContext.backPanel === "part" ? "Back to part" : liveConnectionContext.backPanel === "sections" ? "Back to sections" : "Back to checks"}
                 onInspectPiece={inspectConnectionPiece} onPlanPair={(a,b,compareSides) => safe(() => planConnectionPair(a,b,compareSides))} onPlanConnectorPair={(a,b) => safe(() => planConnectorPair(a,b))} onReviewIntent={reviewConnectionIntent}
                 modeledContacts={modeledContacts}
+                woodJointDetails={woodJointDetails}
+                onSaveWoodJointDetail={(firstId, secondId, method, note) => safe(() =>
+                  change((p) => saveWoodJointDecision(p, firstId, secondId, method, note)))}
+                onClearWoodJointDetail={(firstId, secondId) => safe(() =>
+                  change((p) => clearWoodJointDecision(p, firstId, secondId)))}
                 onFocusModeledContact={({ title, memberIds }) => openConnectionReview(
                   { title, memberIds, focusPair: memberIds },
-                  liveConnectionContext.backPanel === "prep" ? "prep" : undefined,
+                  liveConnectionContext.backPanel,
                 )}
                 seatSpanActions={new Map(findings.flatMap((finding) => finding.area?.kind === "seat-span" && finding.pieceId
                   ? [[finding.pieceId, () => showFindingArea(finding)] as const] : []))}
@@ -6076,6 +6084,14 @@ export function App() {
             <h2>Bearing joints</h2>
             <p>{bearingConnectionScope}</p>
             <ul>{printBearingConnections.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {exportWoodJointDetails.length > 0 && (
+          <section className="wood-joint-details-print">
+            <h2>Recorded wood joint details</h2>
+            <p>{woodJointDecisionScope}</p>
+            <ul>{exportWoodJointDetails.map((entry) =>
+              <li key={entry.id}>{woodJointDecisionLine(entry)}</li>)}</ul>
           </section>
         )}
         {printRafterBearing.length > 0 && (

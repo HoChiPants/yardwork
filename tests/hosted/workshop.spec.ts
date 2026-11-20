@@ -183,6 +183,73 @@ test("build preparation opens the other touching pair when the first screw path 
   expect(section).not.toContain("Left rail");
 });
 
+test("glue and seam details follow actual parts into the saved project and both guides", async ({ page }) => {
+  const project = blank("Casework joint details");
+  const step = project.steps[0].id;
+  const panel = part("Front panel", "plytanium-703", [10, 10, 0.703], [0, 6, 0], step, "Casework");
+  const rail = part("Glue rail", "stud", [1.5, 4, 2], [-3, 4, -1.3515], step, "Casework");
+  const trim = part("Seam rail", "stud", [1.5, 4, 2], [3, 4, -1.414], step, "Casework");
+  project.pieces.push(panel, rail, trim);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "older-casework.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 81 })),
+  });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  async function openPair(label: string) {
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await page.getByRole("textbox", { name: "Describe your idea" }).fill(`Review screw joint between P001 and ${label}`);
+    await page.getByRole("button", { name: "Explore idea", exact: true }).click();
+    await page.getByRole("region", { name: "Workspace joint review" }).getByRole("button", { name: "Inspect joint", exact: true }).click();
+    return page.getByRole("region", { name: "Selected wood contact" });
+  }
+
+  const glue = await openPair("P002");
+  await glue.getByText("Record joint detail", { exact: true }).click();
+  await glue.getByLabel("Joint method").selectOption("glue");
+  await glue.getByLabel("Joint detail for the guide").fill("Dry-fit with the selected clamps.");
+  await glue.getByRole("button", { name: "Save joint detail", exact: true }).click();
+  await expect(glue.getByRole("status")).toContainText("Glue joint · Saved");
+
+  const seam = await openPair("P003");
+  await expect(seam).toContainText("0.0625 in gap");
+  await seam.getByText("Record joint detail", { exact: true }).click();
+  await expect(seam.getByLabel("Joint method").locator("option")).toHaveText([
+    "Choose a joint method", "Seal exposed seam",
+  ]);
+  await seam.getByLabel("Joint method").selectOption("sealant");
+  await seam.getByLabel("Joint detail for the guide").fill("Seal the exposed front edge only.");
+  await seam.getByRole("button", { name: "Save joint detail", exact: true }).click();
+  await expect(seam.getByRole("status")).toContainText("Seal exposed seam · Saved");
+
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = (await draft()).project;
+  expect(saved.schemaVersion).toBe(82);
+  expect(saved.woodJointDecisions.map(({ method }: { method: string }) => method)).toEqual(["glue", "sealant"]);
+  expect(saved.fastenerPlans).toEqual([]);
+  expect(saved.supplies).toEqual([]);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await page.getByRole("dialog").locator(".project-list > button").filter({ hasText: "Casework joint details" }).click();
+  await expect(await openPair("P002")).toContainText("Dry-fit with the selected clamps.");
+  expect((await draft()).project.woodJointDecisions).toEqual(saved.woodJointDecisions);
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("dialog").getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("## Recorded wood joint details");
+  expect(guide).toContain("Seal the exposed front edge only.");
+  await expect(page.locator(".print-guide .wood-joint-details-print")).toContainText("Dry-fit with the selected clamps.");
+});
+
 test("a crosscut practice plan reuses the first scrap on two blanks", async ({ page }) => {
   await page.goto("./");
   await page.getByRole("button", { name: "Cut pool (0)", exact: true }).click();

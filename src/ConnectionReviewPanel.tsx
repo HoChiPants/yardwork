@@ -11,6 +11,9 @@ import { FloorBaseConnectionsPanel } from "./FloorBaseConnectionsPanel";
 import type { FloorHangerPlan } from "./floorHangerSchema";
 import type { BearingConnectionReview } from "./bearingConnections";
 import { modeledWoodContactDetail, modeledWoodContactScope, type ModeledWoodContact, type ModeledWoodContactReview } from "./modeledWoodContacts";
+import { WoodJointDecisionPanel } from "./WoodJointDecisionPanel";
+import { woodPairKey, type WoodJointDecisionEntry } from "./woodJointDecisions";
+import type { WoodJointMethod } from "./woodJointDecisionSchema";
 import {
   connectionCoverage,
   type ConnectionIntent,
@@ -40,7 +43,10 @@ export type ConnectionReviewPanelProps = {
   seatSpanActions?: ReadonlyMap<string, () => void>;
   onPlanPair: (aId: string, bId: string, compareSides?: boolean) => void;
   modeledContacts?: ModeledWoodContactReview;
-  onFocusModeledContact?: (pair: ModeledWoodContact) => void;
+  onFocusModeledContact?: (pair: Pick<ModeledWoodContact, "title" | "memberIds">) => void;
+  woodJointDetails: readonly WoodJointDecisionEntry[];
+  onSaveWoodJointDetail: (firstId: string, secondId: string, method: WoodJointMethod, note: string) => void;
+  onClearWoodJointDetail: (firstId: string, secondId: string) => void;
   onPlanConnectorPair?: (baseId: string, postId: string) => void;
   onFitStockBetween?: (firstId: string, secondId: string) => void;
   fittedBlock?: { blockId: string; endpoints: [string, string] } | null;
@@ -80,6 +86,9 @@ export function ConnectionReviewPanel({
   onPlanPair,
   modeledContacts,
   onFocusModeledContact,
+  woodJointDetails,
+  onSaveWoodJointDetail,
+  onClearWoodJointDetail,
   onPlanConnectorPair,
   onFitStockBetween,
   fittedBlock,
@@ -212,6 +221,8 @@ export function ConnectionReviewPanel({
   }, [project, focusedPair]);
   const focusedIntents = focusedPair ? scopedIntents.filter(({ pieceIds }) =>
     pieceIds.length === 2 && focusedPair.every((id) => pieceIds.includes(id))) : [];
+  const focusedKey = focusedPair ? woodPairKey(...focusedPair) : "";
+  const focusedDetail = woodJointDetails.find(({ id }) => id === focusedKey);
   const frameMember = (id: string) => project.pieces.some((piece) => piece.id === id && !piece.offcut && material(piece.material).wood && material(piece.material).stockKind === "linear");
   const optionText = (id: string) => {
     const piece = project.pieces.find((part) => part.id === id)!;
@@ -286,6 +297,14 @@ export function ConnectionReviewPanel({
               )}
             </>
           ) : <p role="status">A member is unavailable. Select the current parts to continue.</p>}
+          <WoodJointDecisionPanel
+            key={JSON.stringify([focusedKey, focusedDetail?.decision])}
+            entry={focusedDetail}
+            canSave={focusedContact?.state === "face-contact" || focusedContact?.state === "near-face"}
+            sealantOnly={focusedContact?.state === "near-face"}
+            onSave={(method, note) => onSaveWoodJointDetail(focusedPair[0], focusedPair[1], method, note)}
+            onClear={() => onClearWoodJointDetail(focusedPair[0], focusedPair[1])}
+          />
         </section>
       )}
       {scope.modeledContactList && modeledContacts && onFocusModeledContact && (
@@ -489,6 +508,14 @@ export function ConnectionReviewPanel({
                 Plan wood screws for {partLabel(project, aId)} and{" "}
                 {partLabel(project, bId)}
               </button>
+              {onFocusModeledContact && (
+                <button type="button" className="text-button" onClick={() => onFocusModeledContact({
+                  title: `${optionText(aId)} ↔ ${optionText(bId)}`,
+                  memberIds: [aId, bId],
+                })}>
+                  Joint detail
+                </button>
+              )}
               {onPlanConnectorPair && frameMember(aId) && frameMember(bId) && (
                 <button type="button" className="text-button" onClick={() => onPlanConnectorPair(aId, bId)}>
                   Plan A21Z connector for {partLabel(project, aId)} and {partLabel(project, bId)}

@@ -194,6 +194,7 @@ function designInputs(project: Project) {
     ...(project.hingeStockSources.length ? { hingeStockSources: project.hingeStockSources.map((source) => ({ id: source.id, physicalFingerprint: sourceFingerprint(source) })) } : {}),
     ...(project.connectorPlans.length ? { connectorPlans: project.connectorPlans.map(connectorPhysicalIntent) } : {}),
     ...(project.bearingDecisions?.length ? { bearingDecisions: project.bearingDecisions } : {}),
+    ...(project.woodJointDecisions?.length ? { woodJointDecisions: project.woodJointDecisions } : {}),
     tools: project.toolSelections,
     supplies: project.supplies,
     inventory: project.inventory,

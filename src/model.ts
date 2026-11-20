@@ -50,6 +50,7 @@ import { hingeStockSourceSchema } from "./hingeStockSchema";
 import { connectorPlanSchema } from "./connectorSchema";
 import { guidePlacementSchema } from "./guidePlacementSchema";
 import { bearingDecisionsSchema } from "./bearingDecisionSchema";
+import { woodJointDecisionsSchema } from "./woodJointDecisionSchema";
 import { greenhouseBaseTimber, greenhouseBaseTimber12 } from "./greenhouseBaseReference";
 import { cedarDoorStop } from "./greenhouseDoorReference";
 import {
@@ -468,6 +469,7 @@ export const currentProjectSchema = z
     hingeStockSources: z.array(hingeStockSourceSchema).max(200).default([]),
     connectorPlans: z.array(connectorPlanSchema).max(100).default([]),
     bearingDecisions: bearingDecisionsSchema.optional(),
+    woodJointDecisions: woodJointDecisionsSchema.optional(),
     connectorPlanLabels: z.array(z.strictObject({ planId: id, label: z.string().regex(/^C[0-9]{3,6}$/) })).max(10000).default([]),
     hingePlanLabels: z.array(z.strictObject({ planId: id, label: z.string().regex(/^H[0-9]{3,6}$/) })).max(10000).default([]),
     fastenerPlanLabels: z.array(z.strictObject({

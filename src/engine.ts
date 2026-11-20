@@ -1,6 +1,7 @@
 import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
 import { buildPreparation, buildPreparationMarkdown } from "./buildPreparation";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
+import { woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
 import { offcutCutOrderMarkdown, offcutCutRows } from "./offcutCutGuide";
 import { beamSource, reviewShelfSag, shelfSagGuideLines, shelfSagScope, shelfSagSummary, stiffnessSource } from "./shelfSag";
 import { homeDepotShoppingList } from "./handoff";
@@ -1798,6 +1799,7 @@ export function guideMarkdown(p: Project) {
   const woodSupport = woodSupportGuideLines(p, woodSupportReview);
   const bearingReview = bearingConnections(p, woodSupportReview, connections);
   const bearingJoints = bearingConnectionGuideLines(p, bearingReview, connections);
+  const woodJointDetails = woodJointDecisionEntries(p);
   const roofBearing = reviewGreenhouseRafterBearing(p);
   const rafterBearing = rafterBearingGuideLines(p, roofBearing);
   const roofAttachments = greenhouseRoofAttachmentLines(p, greenhouseRoofAttachments(p, connections.intents, roofBearing));
@@ -1817,7 +1819,7 @@ export function guideMarkdown(p: Project) {
     supplies,
     sequences: stockCutSequences(p, materialRows),
     connections,
-    woodContacts: reviewModeledWoodContacts(p, connections, bearingReview),
+    woodContacts: reviewModeledWoodContacts(p, connections, bearingReview, woodJointDetails),
     findings: validate(p, woodSupportReview),
     motions: motionReviews,
     lids: projectLidTravelChecks(p),
@@ -1966,6 +1968,10 @@ export function guideMarkdown(p: Project) {
     (bearingJoints.length ? "\n\n## Bearing joints\n\n" + bearingConnectionScope + "\n\n" +
       bearingJoints.map((line) => "- " +
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
+      "\n" : "") +
+    (woodJointDetails.length ? "\n\n## Recorded wood joint details\n\n" + woodJointDecisionScope + "\n\n" +
+      woodJointDetails.map((entry) => "- " +
+        woodJointDecisionLine(entry).replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       "\n" : "") +
     (roofBacking.length ? "\n\n## SUNLITE roof seam backing\n\n" +
       roofBackingScope + "\n\n" +

@@ -186,9 +186,9 @@ function woodContactPreparation(project: Project, input: PreparationInputs): Bui
   return [{
     id: "wood-contacts",
     title: "Modeled wood contacts",
-    intro: `${count(review.pairs.length, "touching pair")} found. ${modeledWoodContactScope}`,
+    intro: `${count(review.touchingCount, "touching pair")} found. ${modeledWoodContactScope}`,
     reviewCount: review.needsReview.length,
-    empty: "The scanned contacts have reviewed locations or a removable bearing decision.",
+    empty: "The scanned contacts have a recorded joint detail, reviewed location or removable bearing decision.",
     items,
   }];
 }
@@ -198,7 +198,7 @@ export function buildPreparation(
   input: PreparationInputs,
 ): BuildPreparationGroup[] {
   const hasMotion = input.motions.length > 0 || input.lids.length > 0;
-  if (!project.pieces.some(({ offcut }) => !offcut) && !project.supplies.length && !hasMotion)
+  if (!project.pieces.some(({ offcut }) => !offcut) && !project.supplies.length && !hasMotion && !project.woodJointDecisions?.length)
     return [];
   const labels = new Map(
     ensurePartLabels(project).partLabels.map(({ partId, label }) => [

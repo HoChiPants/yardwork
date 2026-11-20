@@ -1,4 +1,5 @@
 import { RoofVentFields } from "./RoofVentFields";
+import { workshopRequest } from "./workshopTransport";
 import { formatPreciseInches } from "./measurement";
 import {
   Component,
@@ -315,7 +316,7 @@ export default function IdeaPlanner({
         .filter(
           (s) => s.min.every(Number.isFinite) && s.max.every(Number.isFinite),
         );
-      const response = await fetch("/api/planner", {
+      const response = await workshopRequest("/api/planner", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

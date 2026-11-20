@@ -16,6 +16,8 @@ For a closet with sourced Everbilt rods, open **Sections → Fit closet rods →
 
 Early working release. Not affiliated with The Home Depot or Lowe’s. See [product readiness and remaining work](docs/product-readiness.md) for the distinction between editable studies and complete builds.
 
+[Sealing wood joints and openings](docs/sealing-and-air-barrier.md) records construction references for air seals, drainage, panel spacing, and adhesive details.
+
 **Checks → Review connection decisions → Banquette construction** separates current closed-seat contacts from exact frame/shell connection pairs. Start a screw/connector plan for the actual members or resume its existing W/C record, then include the findings in Markdown and print. Small screens can **Expand inspector** without replacing the editor or resetting the workspace. [Banquette review workflow](docs/banquette-construction.md).
 
 The canvas starts with the assembly; **Show offcut stock** or select an O-labeled remnant to inspect retained stock, then **Back to assembly**. Successful fitted-stock previews bring Add/Cancel/Inspect into view. **Part → Build stage** keeps a custom part in its chosen task through guide regeneration; the guide also preserves deliberate Earlier/Later ordering. [Build stages and stock inspection](docs/guide-placement.md).
@@ -49,6 +51,10 @@ For board crosscuts, Yardwork can move or swap pieces between planned boards to 
 ![Blank Yardwork workspace](docs/blank-workspace.png)
 
 [See an idea proposal](docs/banquette-proposal.png) · [See the editable banquette](docs/banquette-workspace.png)
+
+## Use Yardwork online
+
+[Open the browser workshop](https://hochipants.github.io/yardwork/) to edit plans, use local planning presets, test movement, and export cut lists and guides. **Save project** keeps a library on the current device with up to three earlier saves. Export editable projects to move them between devices, or download a workshop backup to restore with the self-hosted app.
 
 ## Run locally
 

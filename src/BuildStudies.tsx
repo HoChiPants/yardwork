@@ -1,4 +1,5 @@
 import { purchaseUnitLabel } from "./purchaseUnits";
+import { workshopAsset } from "./workshopTransport";
 import { reviewedOfferForMaterial } from "./retailerCatalog";
 import { homeDepotStudyStock } from "./studyStock";
 import { reviewGreenhouseVentBacking, ventBackingSummary } from "./greenhouseVentBacking";
@@ -86,7 +87,7 @@ export default function BuildStudies({
   const [shelfPinId, setShelfPinId] = useState<HomeDepotShelfPinId>(everbiltShelfPin.productId);
   const [shelfInsets, setShelfInsets] = useState(defaultStudyShelfInsets);
   const exampleRequest = useRef<AbortController | null>(null);
-  const exampleFiles = `/examples/builds/${selected}`;
+  const exampleFiles = workshopAsset(`/examples/builds/${selected}`);
   const hasDraft =
     project.pieces.length > 0 ||
     project.planLines.length > 0 ||
@@ -333,7 +334,7 @@ export default function BuildStudies({
       <details className="field-section">
         <summary>Measured hinge software demo</summary>
         <p className="small-note">An optional three-seat project shows entered hinge cuts, mounting datums, motion and guide steps. Its measurement inputs are synthetic and do not describe purchased hardware.</p>
-        <a className="text-button" href="/examples/hinges/synthetic-measured-banquette.yardwork.json" download>Download synthetic hinge demo</a>
+        <a className="text-button" href={workshopAsset("/examples/hinges/synthetic-measured-banquette.yardwork.json")} download>Download synthetic hinge demo</a>
       </details>
       <label className="field">
         Choose a study

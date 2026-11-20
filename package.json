@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "tsx watch server/index.ts",
     "build": "tsc --noEmit && vite build",
+    "build:pages": "tsc --noEmit && vite build --mode pages",
+    "test:pages": "playwright test --config playwright.pages.config.ts",
     "start": "tsx server/index.ts",
     "restore-workshop": "tsx server/restoreWorkshop.ts",
     "test": "tsx --test --test-concurrency=4 tests/*.test.ts",

@@ -1,4 +1,5 @@
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
+import { browserWorkshop, workshopAsset, workshopRequest } from "./workshopTransport";
 import { ZodError } from "zod";
 import { FloorBaseFields } from "./FloorBaseFields";
 import { fittingBaseBoards } from "./homeDepotTreatedLumber";
@@ -388,13 +389,13 @@ function recoverableDrafts() {
   }
 }
 async function api(url: string, options?: RequestInit) {
-  const response = await fetch(url, options);
+  const response = await workshopRequest(url, options);
   const data = await response.json();
   if (!response.ok) throw Error(data.error || "Request failed");
   return data;
 }
-function download(name: string, body: string, type: string) {
-  const url = URL.createObjectURL(new Blob([body], { type }));
+function download(name: string, body: string | Blob, type: string) {
+  const url = URL.createObjectURL(body instanceof Blob ? body : new Blob([body], { type }));
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
@@ -1893,7 +1894,7 @@ export function App() {
           revision: revision.current,
         });
       } catch {}
-      notify("Saved to your self-hosted project library");
+      notify(browserWorkshop ? "Saved to this browser’s project library" : "Saved to your self-hosted project library");
     } catch (e) {
       notify((e as Error).message, true);
     } finally {
@@ -1906,6 +1907,16 @@ export function App() {
       setProjects(await api("/api/projects"));
     } catch (e) {
       notify((e as Error).message, true);
+    }
+  }
+  async function downloadLibraryFile(url: string, name: string) {
+    try {
+      const response = await workshopRequest(url);
+      if (!response.ok) throw Error((await response.json()).error);
+      const file = await response.blob();
+      download(name, file, file.type);
+    } catch (error) {
+      notify(error instanceof Error ? error.message : "The library file could not be downloaded.", true);
     }
   }
   async function openEarlierSave(id: string, number: number) {
@@ -5173,8 +5184,9 @@ export function App() {
               <>
                 <h2 id="modal-title">Your workshop.</h2>
                 <p>
-                  Projects saved on this server. Browser drafts stay on this
-                  device until you save or export them.
+                  {browserWorkshop
+                    ? "Projects and drafts are saved in this browser. Export an editable project to move it to another device."
+                    : "Projects saved on this server. Browser drafts stay on this device until you save or export them."}
                 </p>
                 <div className="inline">
                   <button
@@ -5193,9 +5205,15 @@ export function App() {
                   >
                     <ArrowDownToLine size={15} /> Import a plan
                   </button>
-                  <a className="button secondary" href="/api/workshop-backup" download>
-                    <Download size={15} /> Download workshop backup
-                  </a>
+                  {browserWorkshop ? (
+                    <button className="button secondary" onClick={() => void downloadLibraryFile("/api/workshop-backup", "yardwork-browser-workshop.yardwork-backup.gz")}>
+                      <Download size={15} /> Download workshop backup
+                    </button>
+                  ) : (
+                    <a className="button secondary" href="/api/workshop-backup" download>
+                      <Download size={15} /> Download workshop backup
+                    </a>
+                  )}
                 </div>
                 {resumeDraft && (
                   <button
@@ -5270,7 +5288,11 @@ export function App() {
                         >
                           <strong>{p.name}</strong>
                           <p>{p.loadError}</p>
-                          {p.originalAvailable !== false && (
+                          {browserWorkshop ? (
+                            <button className="text-button" onClick={() => void downloadLibraryFile(`/api/projects/${p.id}/original`, `yardwork-original-${p.id}.json`)}>
+                              Download original saved file
+                            </button>
+                          ) : p.originalAvailable !== false && (
                             <a className="text-button" href={`/api/projects/${p.id}/original`} download>
                               Download original saved file
                             </a>
@@ -5441,7 +5463,7 @@ export function App() {
                     </p>
                     <a
                       className="download-example"
-                      href="/examples/base-plan.dxf"
+                      href={workshopAsset("/examples/base-plan.dxf")}
                       download
                     >
                       Download example DXF <Download size={13} />
@@ -5460,7 +5482,7 @@ export function App() {
                     </div>
                     <a
                       className="download-example"
-                      href="/examples/inventory.json"
+                      href={workshopAsset("/examples/inventory.json")}
                       download
                     >
                       Download inventory format example <Download size={13} />

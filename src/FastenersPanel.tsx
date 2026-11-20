@@ -44,6 +44,7 @@ import {
   type FastenerContactRowPreview,
 } from "./fastenerContactRow";
 import { FastenerContactRowFields } from "./FastenerContactRowFields";
+import { FastenerEntryComparison } from "./FastenerEntryComparison";
 import { FastenerRepeatPanel } from "./FastenerRepeatPanel";
 
 export type FastenersPanelProps = {
@@ -1456,26 +1457,32 @@ export function FastenersPanel({
       setError(errorText(problem));
     }
   };
-  const previewCentered = () => {
+  const showCentered = (proposal: ReturnType<typeof suggestCenteredFastener>) => {
     setError("");
     setMessage("");
     clearContactRow();
+    setHeadId(proposal.plan.head.pieceId);
+    setReceiverId(proposal.plan.receiver.pieceId);
+    setCentered({ project, plan: proposal.plan });
+    onLayoutPreview?.({
+      kind: "centered-entry",
+      review: { ...proposal.review, plan: proposal.plan },
+      seedLocationId: proposal.plan.locations[0].id,
+      candidateIds: [],
+      selectedCandidateIds: [],
+    });
+  };
+  const previewCentered = () => {
     try {
-      const proposal = suggestCenteredFastener(
+      showCentered(suggestCenteredFastener(
         project,
         headId,
         receiverId,
         planOptions(),
-      );
-      setCentered({ project, plan: proposal.plan });
-      onLayoutPreview?.({
-        kind: "centered-entry",
-        review: proposal.review,
-        seedLocationId: proposal.plan.locations[0].id,
-        candidateIds: [],
-        selectedCandidateIds: [],
-      });
+      ));
     } catch (problem) {
+      setMessage("");
+      clearContactRow();
       setError(errorText(problem));
     }
   };
@@ -1687,6 +1694,15 @@ export function FastenersPanel({
                 </button>
               )}
             </div>
+          )}
+          {validPair && !selectedPlan && !centeredCurrent && !contactCurrent && (
+            <FastenerEntryComparison
+              project={project}
+              headId={headId}
+              receiverId={receiverId}
+              productId={productId}
+              onPreview={showCentered}
+            />
           )}
           {validPair && !selectedPlan && !centeredCurrent && (
             <FastenerContactRowFields

@@ -1260,6 +1260,15 @@ small {
   font-size: 9px;
   color: #a5ad97;
 }
+.connection-entry-options {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.connection-entry-options > li {
+  border-top: 1px solid #eaecdf;
+  padding: 8px 0;
+}
 .field-section {
   border-top: 1px solid #eaecdf;
   margin-top: 21px;

@@ -192,6 +192,54 @@ test("preview a centered screw entry on angled stock, then use and reopen it", a
   expect((await saveReopen(page, after)).fastenerPlans).toEqual(after.fastenerPlans);
 });
 
+test("compare entry sides and save the chosen direction and review in the build guide", async ({ page }) => {
+  const initial = blank(`Entry comparison ${uid().slice(0, 8)}`);
+  const step = initial.steps[0].id;
+  const panel = part("Panel entry", "plytanium-703", [10, 10, 0.703], [0, 6, 0], step, "Casework");
+  const rail = part("Rail entry", "stud", [1.5, 4, 2], [0.5, 4, -1.3515], step, "Casework");
+  initial.pieces.push(panel, rail);
+  const before = await load(page, initial);
+  await page.getByRole("button", { name: /^Checks/ }).first().click();
+  await page.getByRole("button", { name: "Review connection decisions", exact: true }).click();
+  const connections = page.getByRole("region", { name: "Connection review" });
+  await connections.getByRole("combobox", { name: "Connection contact focus" }).selectOption(rail.id);
+  await connections.locator(`[data-contact-a-id='${rail.id}'][data-contact-b-id='${panel.id}']`)
+    .getByRole("button", { name: /^Plan wood screws for/ }).click();
+
+  const fasteners = page.getByRole("region", { name: "Wood fastener plans" });
+  await fasteners.getByRole("combobox", { name: "New screw product" }).selectOption("grk-cabinet-114069");
+  await fasteners.getByText("Compare screw entry sides", { exact: true }).click();
+  const comparison = fasteners.getByRole("region", { name: "Screw entry comparison" });
+  await comparison.getByRole("spinbutton", { name: "Trial depth from entry surface (in)" }).fill("1.25");
+  const fromPanel = comparison.getByRole("listitem").filter({ hasText: "Enter from Panel entry" });
+  const fromRail = comparison.getByRole("listitem").filter({ hasText: "Enter from Rail entry" });
+  await expect(fromPanel).toContainText("Receiving wood starts at 0.703 in");
+  await expect(fromPanel).toContainText("Inside receiver · 1.453 in to the far face");
+  await expect(fromRail).toContainText("Receiving wood starts at 2 in");
+  await expect(fromRail).toContainText("Stops at or before the receiver");
+  expect(await editableExport(page)).toEqual(before);
+  await fromPanel.getByRole("button", { name: /^Preview from/ }).click();
+  await expect(fasteners.getByRole("combobox", { name: "Fastener head-side member" })).toHaveValue(panel.id);
+  await expect(page.getByTestId("fastener-centered-entry-marker")).toHaveCount(1);
+  await fasteners.getByRole("button", { name: "Use centered entry", exact: true }).click();
+  const after = await draft(page, (project) => project.fastenerPlans.length === 1);
+  const [plan] = after.fastenerPlans;
+  expect(plan.head.pieceId).toBe(panel.id);
+  expect(plan.receiver.pieceId).toBe(rail.id);
+  expect(plan.productId).toBe("grk-cabinet-114069");
+  expect(plan.measurements.surfaceToTipDepth).toBeNull();
+  expect(after.pieces).toEqual(before.pieces);
+  expect(after.supplies).toEqual(before.supplies);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: /^Build guide/ }).click();
+  const markdown = await readFile((await (await download).path())!, "utf8");
+  expect(markdown).toContain("Centered entry chosen after comparing both sides");
+  expect(markdown).toContain("receiving wood began at 0.703 in and ended at 2.703 in");
+  await page.getByRole("button", { name: "Close dialog", exact: true }).click();
+  expect((await saveReopen(page, after)).fastenerPlans).toEqual(after.fastenerPlans);
+});
+
 test("a real bookcase stage keeps its scope through explicit pair selection, an empty plan and a located screw review", async ({
   page,
 }) => {

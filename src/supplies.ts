@@ -12,6 +12,7 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
+import { trimSealant } from "./trimSealantReference";
 import { everbiltAngleShelfPinIds, everbiltAngleShelfPins, shelfPinProducts } from "./shelfPinReference";
 import {
   findRetailerProduct,
@@ -358,6 +359,14 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "2,000-nail box",
     contents: [{ name: paslodeFinishNails.name, quantity: paslodeFinishNails.packCount }],
     requirements: [paslodeFinishNails.requirement],
+  },
+  [trimSealant.id]: {
+    purchaseUnit: "cartridge",
+    contents: [{ name: "10.1 fl oz white sealant cartridge", quantity: 1 }],
+    requirements: [
+      trimSealant.scope,
+      "Use a compatible caulk gun. Dry-fit the trim and test the finish on a matching scrap before filling the seam.",
+    ],
   },
   "simpson-lus26z": {
     purchaseUnit: "hanger",

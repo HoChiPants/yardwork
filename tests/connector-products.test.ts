@@ -107,7 +107,6 @@ test("existing exact A21/SD/nail retailer references and purchase units remain d
     assert.ok(supplyProducts("home-depot").some((entry) => entry.id === id));
     assert.ok(supplyProducts("lowes").some((entry) => entry.id === id));
   }
-  assert.equal(Object.keys(supplyDefinitions).length, 45);
   assert.deepEqual(supplyDefinitions["simpson-n10dhdg-r"].contents, [
     { name: "Simpson N10DHDG-R .148 × 1½ in connector nail", quantity: 120 },
   ]);

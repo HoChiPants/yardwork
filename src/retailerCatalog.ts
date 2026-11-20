@@ -32,6 +32,7 @@ import { gafRoofShingle, shingleEdgeProducts } from "./shingleRoofReference";
 import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
+import { trimSealant } from "./trimSealantReference";
 
 export const retailerSchema = z.enum(["home-depot", "lowes"]);
 export type Retailer = z.infer<typeof retailerSchema>;
@@ -80,6 +81,7 @@ const sourceHosts = new Set([
   "www.gaf.com",
   "documents.gaf.com",
   "www.paslode.com",
+  "images.dap.com",
 ]);
 export const catalogSourceSchema = z.strictObject({
   url: z.url().refine((value) => {
@@ -218,6 +220,7 @@ export const retailerProductSchema = z
       "fastener",
       "connector",
       "equipment",
+      "consumable",
       "tool",
     ]),
     status: z.enum(["reviewed-specs", "candidate"]),
@@ -232,6 +235,7 @@ export const retailerProductSchema = z
         "fastener",
         "connector",
         "equipment",
+        "consumable",
         "tool",
       ]),
       stockSize: stockSize.nullable(),
@@ -394,6 +398,7 @@ export const retailerProductSchema = z
       fastener: ["fastener"],
       connector: ["connector"],
       equipment: ["equipment"],
+      consumable: ["consumable"],
       tool: ["tool"],
     };
     if (!kinds[product.category].includes(product.profile.stockKind))
@@ -4041,6 +4046,27 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       capabilities: [],
     };
   }),
+  {
+    id: trimSealant.id,
+    name: trimSealant.name,
+    manufacturer: "DAP",
+    manufacturerPartNumber: trimSealant.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: trimSealant.reviewedAt,
+    profile: profile("consumable", null, 1, {
+      materialFamily: "elastomeric-latex-sealant",
+      finish: "White",
+    }),
+    offers: [hd(trimSealant.internetNumber, trimSealant.model, trimSealant.storeSku)],
+    sources: [
+      { url: trimSealant.listing, verifiedAt: trimSealant.reviewedAt, note: "Single 10.1 fl oz white cartridge, exact Home Depot listing and model." },
+      { url: trimSealant.specification, verifiedAt: trimSealant.reviewedAt, note: "DAP publishes 55 linear ft at a 3/16 in bead for the 10.1 fl oz cartridge." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [trimSealant.listing, trimSealant.specification] },
+    discrepancies: ["Home Depot lists both 1 in and 2 in maximum widths. Yardwork screens at 1 in. Check the delivered label and gap preparation."],
+    capabilities: [],
+  },
   toolReference({
     id: edgeTrimmer.id,
     name: edgeTrimmer.name,

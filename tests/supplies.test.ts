@@ -22,6 +22,8 @@ import {
 import { homeDepotShoppingList, retailerHandoff } from "../src/handoff";
 import { toolChecklist } from "../src/tools";
 import { selectedToolsForProject } from "../src/toolGuide";
+import { trimSealant } from "../src/trimSealantReference";
+import { estimateTrimSealant } from "../src/trimSealantTakeoff";
 
 const hinge = "everbilt-29256-continuous-hinge";
 const drill = "dewalt-dcd771c2";
@@ -42,6 +44,29 @@ function observation() {
     url: "https://www.homedepot.com/p/314150989",
   };
 }
+
+test("measured trim sealant estimate respects the coverage basis and keeps the exact cartridge in project exports", () => {
+  const dimensions = { lengthInches: 660, gapWidth: 0.125, gapDepth: 0.125 };
+  assert.equal(estimateTrimSealant(dimensions).cartridges, 1);
+  assert.equal(estimateTrimSealant({ ...dimensions, lengthInches: 660.25 }).cartridges, 2);
+  assert.throws(() => estimateTrimSealant({ ...dimensions, gapWidth: 0.25 }), /coverage from a trial/);
+  assert.throws(() => estimateTrimSealant({ ...dimensions, gapDepth: 0.6, fieldCoverageFeet: 25 }), /1\/2 in deep/);
+  assert.throws(() => estimateTrimSealant({ ...dimensions, gapWidth: 1.25, fieldCoverageFeet: 25 }), /1 in wide/);
+  assert.throws(() => estimateTrimSealant({ ...dimensions, fieldCoverageFeet: 0 }), /positive coverage/);
+
+  const proposal = estimateTrimSealant({ ...dimensions, gapWidth: 0.25, fieldCoverageFeet: 30 });
+  const revised = addSupply(project(), trimSealant.id, proposal.cartridges, "Interior trim", proposal.note);
+  const saved = projectSchema.parse(JSON.parse(JSON.stringify(revised)));
+  const row = supplyRows(saved).find((entry) => entry.productId === trimSealant.id)!;
+  assert.equal(row.quantity, 2);
+  assert.equal(row.purchaseUnit, "cartridge");
+  assert.equal(row.total, null);
+  assert.equal(row.offer?.productId, "100035980");
+  assert.equal(row.storeSnapshotEligible, true);
+  assert.match(guideMarkdown(saved), /55 ft of dry interior trim seams.+30 ft per cartridge from a field trial/);
+  assert.match(homeDepotShoppingList(saved).text, /^2 cartridges .+#100035980$/m);
+  assert.deepEqual(saved.pieces, []);
+});
 
 test("explicit tool packages use their own snapshot and export lines without changing stock pricing or tool reviews", () => {
   const p = addSupply(project(), hinge, 1);

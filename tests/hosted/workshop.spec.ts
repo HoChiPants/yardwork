@@ -23,7 +23,7 @@ test("the hosted workshop plans locally, saves revisions and exports a restorabl
   const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
   const save = page.getByRole("button", { name: "Save project", exact: true });
   await save.click();
-  await expect.poll(async () => (await readDraft()).revision).toBe(1);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
   const id = (await readDraft()).project.id;
   await page.getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true }).click();
   await save.click();
@@ -95,4 +95,39 @@ test("a crosscut practice plan reuses the first scrap on two blanks", async ({ p
   await expect(dialog.getByRole("list", { name: "Purchase changes" })).toContainText("2 → 1 board");
   await dialog.getByRole("button", { name: "Apply offcut plan" }).click();
   await expect(pool).toContainText("29.625");
+});
+
+test("trim sealant estimates save the measured takeoff and the exact Home Depot cartridge", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const title = page.getByText("Estimate trim sealant", { exact: true });
+  await title.click();
+  const fields = page.locator("details").filter({ has: title });
+  await fields.getByLabel("Total seam length").fill("720");
+  await fields.getByLabel("Length unit").selectOption("in");
+  await fields.getByLabel("Widest gap (in)").fill("0.25");
+  await fields.getByLabel("Deepest gap (in)").fill("0.125");
+  await fields.getByLabel("Coverage basis").selectOption("dap");
+  const preview = fields.getByRole("button", { name: "Preview cartridge estimate" });
+  await preview.click();
+  await expect(fields.getByRole("alert")).toContainText("Use coverage from a trial");
+  await fields.getByLabel("Widest gap (in)").fill("0.125");
+  await preview.click();
+  await fields.getByRole("button", { name: "Add 2 cartridges", exact: true }).click();
+  await expect(fields.getByRole("status")).toContainText("Added 2 cartridges");
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  expect((await readDraft()).project.supplies[0]).toMatchObject({
+    productId: "dap-dynaflex-230-white-101", quantity: 2,
+    note: expect.stringContaining("60 ft of dry interior trim seams"),
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await page.getByRole("dialog").locator(".project-list > button").filter({ hasText: "Untitled project" }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list" }).click();
+  await expect(page.getByRole("dialog").getByRole("listitem").filter({ hasText: /#100035980/ }))
+    .toContainText("2 cartridges");
 });

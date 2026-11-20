@@ -159,6 +159,7 @@ import {
   browserDraftRecoveries,
 } from "./drafts";
 import { SuppliesPanel } from "./SuppliesPanel";
+import { TrimSealantPanel } from "./TrimSealantPanel";
 import { PrintSunliteProfiles, SunliteProfilePanel } from "./SunliteProfilePanel";
 import { reviewSunliteProfiles } from "./sunliteProfiles";
 import { SunliteTakeoffPanel } from "./SunliteTakeoffPanel";
@@ -4191,6 +4192,9 @@ export function App() {
                     </button>
                   )}
                 </details>
+              )}
+              {project.retailer === "home-depot" && (
+                <TrimSealantPanel key={project.id} project={project} onChange={change} />
               )}
               <SuppliesPanel
                 project={project}

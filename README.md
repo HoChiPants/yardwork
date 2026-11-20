@@ -267,6 +267,8 @@ Metal cutting, deburring and a separately reviewed 1/16 in pilot bit now have [s
 
 **List → Pricing coverage** shows a priced subtotal, separate observed/example contributions, unpriced product lines and their purchase quantities, and excluded/unresolved quantities. Unknown prices are excluded rather than treated as free; an explicitly recorded $0 snapshot stays observed. The same coverage appears in proposals, Markdown, print and retailer handoff. This covers calculated stock and selected supplies, not a complete project quote.
 
+**List → Estimate trim sealant** uses measured gaps and a chosen coverage basis to estimate cartridges for dry interior wood trim. Confirm the estimate to retain the measured takeoff in the shopping list and generated guide. [Sealing and air-barrier references](docs/sealing-and-air-barrier.md)
+
 The SD9112R100 purchase is an exact 100-screw box. Grip-Rite 16C5 is an advertised 5-lb box with unknown exact nail count; approximate source counts never determine required boxes, nail coverage or spares. Its former Lowe’s reference is retired/conflicting, so no current substitute is inferred. Purchases create no installed hardware or connector schedule. See [fastener purchase sources](docs/common-fastener-purchases.md).
 
 ## Store snapshots — the first-version sourcing workflow

@@ -4065,11 +4065,11 @@ export function App() {
                 />
               )}
               {glazingTape && (
-                <SunliteTapePanel key={project.id} project={project} review={glazingTape}
+                <SunliteTapePanel key={`glazing-tape-${project.id}`} project={project} review={glazingTape}
                   onChange={change} onShow={showGlazingRun} shownId={shownProfileRun?.id ?? null} />
               )}
               {(bandingGuide.length > 0 || project.pieces.some(isBandingPanel)) && (
-                <EdgeBandingPanel key={project.id} project={project} shown={shownBandingEdge} onChange={change}
+                <EdgeBandingPanel key={`edge-banding-${project.id}`} project={project} shown={shownBandingEdge} onChange={change}
                   onShow={(edge) => {
                     setBandingMark(edge ? { project, edge } : null);
                     if (edge) {
@@ -4129,7 +4129,7 @@ export function App() {
                 </details>
               )}
               {liningBackingLines.length > 0 && project.retailer === "home-depot" && (
-                <SaunaLiningPurchasePanel key={project.id} project={project} onChange={change} />
+                <SaunaLiningPurchasePanel key={`sauna-lining-purchases-${project.id}`} project={project} onChange={change} />
               )}
               {(rodSockets.needed > 0 || rodSockets.selected > 0) && (
                 <details className="field-section">
@@ -4194,7 +4194,7 @@ export function App() {
                 </details>
               )}
               {project.retailer === "home-depot" && (
-                <TrimSealantPanel key={project.id} project={project} onChange={change} />
+                <TrimSealantPanel key={`trim-sealant-${project.id}`} project={project} onChange={change} />
               )}
               <SuppliesPanel
                 project={project}

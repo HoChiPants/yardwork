@@ -164,7 +164,7 @@ test("a real seating response with unused zeros and undirected stock retains the
   assert.equal(preview.max[2] - preview.min[2], 60);
   assert.equal(preview.workZoneFits, true);
   assert.throws(() => wireIntentToPlan({ prompt }, { ...response, width: 0 }));
-  assert.throws(() => wireIntentToPlan({ prompt }, { ...response, family: "greenhouse" }));
+  assert.throws(() => wireIntentToPlan({ prompt }, { ...response, roofRise: -1 }));
   assert.throws(() => wireIntentToPlan({ prompt }, { ...response, panelMaterial: "unlisted-source" }));
 
   const explicit = wireIntentToPlan(
@@ -172,6 +172,22 @@ test("a real seating response with unused zeros and undirected stock retains the
     { ...response, panelMaterial: "plytanium-703" },
   );
   assert.ok(explicit.modules.every((bench) => bench.panelMaterial === "plytanium-703"));
+});
+
+test("a straight storage run ignores an inferred return and a greenhouse omits zero optional fields", () => {
+  const seating = wireIntentToPlan(
+    { prompt: "Build a straight three-section storage banquette, total width 6 feet, depth 24 inches and finished seat height 18 inches. Include opening seat lids and no back." },
+    { family: "banquette", operation: "create", shape: "l", returnLength: 12, roofRise: 0 },
+  );
+  assert.equal(seating.modules.length, 3);
+  assert.ok(seating.modules.every((bench) => bench.storage && bench.openingLid && bench.width === 24));
+
+  const greenhouse = wireIntentToPlan(
+    { prompt: "Plan a greenhouse 7 feet outside width, 8 feet outside depth and 7.5 feet outside eave height. Roof rise is 30 inches above the eave." },
+    { family: "greenhouse", operation: "create", sectionCount: 0, returnLength: 0, doorWidth: 0 },
+  );
+  assert.equal(greenhouse.structures[0].kind, "greenhouse");
+  assert.equal(greenhouse.structures[0].parameters.width, 84);
 });
 
 test("named section wire edits preserve entry IDs, selected sources and unrequested neighbor geometry", () => {

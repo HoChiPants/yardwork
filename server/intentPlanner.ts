@@ -120,15 +120,13 @@ export function wireIntentToPlan(
   raw: unknown,
 ): IdeaPlan {
   let input = raw;
-  if (
-    raw && typeof raw === "object" && "family" in raw &&
-    (raw.family === "banquette" || raw.family === "bench")
-  ) {
-    const seating = { ...raw } as Record<string, unknown>;
-    // Some model responses fill irrelevant opening and roof slots with zero.
-    for (const key of ["roofRise", "doorWidth", "doorHeight"])
-      if (seating[key] === 0) delete seating[key];
-    input = seating;
+  if (raw && typeof raw === "object" && "family" in raw && raw.family !== "clarify") {
+    const design = { ...raw } as Record<string, unknown>;
+    // A zero in an optional feature slot indicates an omitted provider value.
+    // Primary dimensions and user-supplied facts still need their own validation.
+    for (const key of ["returnLength", "sectionCount", "targetSection", "shelfCount", "roofRise", "doorWidth", "doorHeight"])
+      if (design[key] === 0) delete design[key];
+    input = design;
   }
   const wire = intentWireSchema.parse(input);
   if (wire.family === "clarify")
@@ -139,6 +137,13 @@ export function wireIntentToPlan(
     });
   if (!request.previousPlan) delete wire.targetSection;
   const prompt = normalizeIdeaText(request.prompt);
+  if (
+    (wire.family === "banquette" || wire.family === "bench") &&
+    /\bstraight\b/.test(prompt) && !/\b(?:l[ -]shap(?:e|ed)|corner|return)\b/.test(prompt)
+  ) {
+    wire.shape = "straight";
+    delete wire.returnLength;
+  }
   const explicitlyNamed = (id: (typeof materialIds)[number]) =>
     prompt.includes(id) || prompt.includes(normalizeIdeaText(material(id).name));
   const namesFramingStock =

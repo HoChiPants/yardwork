@@ -163,6 +163,7 @@ import {
 } from "./drafts";
 import { SuppliesPanel } from "./SuppliesPanel";
 import { TrimSealantPanel } from "./TrimSealantPanel";
+import { WoodGluePanel } from "./WoodGluePanel";
 import { PrintSunliteProfiles, SunliteProfilePanel } from "./SunliteProfilePanel";
 import { reviewSunliteProfiles } from "./sunliteProfiles";
 import { SunliteTakeoffPanel } from "./SunliteTakeoffPanel";
@@ -4243,7 +4244,10 @@ export function App() {
                 </details>
               )}
               {project.retailer === "home-depot" && (
-                <TrimSealantPanel key={`trim-sealant-${project.id}`} project={project} onChange={change} />
+                <>
+                  <TrimSealantPanel key={`trim-sealant-${project.id}`} project={project} onChange={change} />
+                  <WoodGluePanel key={`wood-glue-${project.id}`} project={project} joints={woodJointDetails} onChange={change} />
+                </>
               )}
               <SuppliesPanel
                 project={project}

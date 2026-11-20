@@ -13,6 +13,7 @@ import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
+import { woodGlue } from "./woodGlueReference";
 import { everbiltAngleShelfPinIds, everbiltAngleShelfPins, shelfPinProducts } from "./shelfPinReference";
 import {
   findRetailerProduct,
@@ -366,6 +367,14 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     requirements: [
       trimSealant.scope,
       "Use a compatible caulk gun. Dry-fit the trim and test the finish on a matching scrap before filling the seam.",
+    ],
+  },
+  [woodGlue.id]: {
+    purchaseUnit: "bottle",
+    contents: [{ name: "16 fl oz bottle of wood glue", quantity: 1 }],
+    requirements: [
+      woodGlue.scope,
+      "Dry-fit the joint and check clamp access, surface preparation and assembly time against the product instructions.",
     ],
   },
   "simpson-lus26z": {

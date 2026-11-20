@@ -33,6 +33,7 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
+import { woodGlue } from "./woodGlueReference";
 
 export const retailerSchema = z.enum(["home-depot", "lowes"]);
 export type Retailer = z.infer<typeof retailerSchema>;
@@ -82,6 +83,7 @@ const sourceHosts = new Set([
   "documents.gaf.com",
   "www.paslode.com",
   "images.dap.com",
+  "titebond.com",
 ]);
 export const catalogSourceSchema = z.strictObject({
   url: z.url().refine((value) => {
@@ -4065,6 +4067,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [trimSealant.listing, trimSealant.specification] },
     discrepancies: ["Home Depot lists both 1 in and 2 in maximum widths. Yardwork screens at 1 in. Check the delivered label and gap preparation."],
+    capabilities: [],
+  },
+  {
+    id: woodGlue.id,
+    name: woodGlue.name,
+    manufacturer: "Franklin International",
+    manufacturerPartNumber: woodGlue.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: woodGlue.reviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "wood-adhesive" }),
+    offers: [hd(woodGlue.internetNumber, woodGlue.model, woodGlue.storeSku)],
+    sources: [
+      { url: woodGlue.listing, verifiedAt: woodGlue.reviewedAt, note: "Single 16 oz bottle, exact Home Depot listing for model 1414." },
+      { url: woodGlue.specification, verifiedAt: woodGlue.reviewedAt, note: "Franklin's minimum spread equates to approximately 250 sq ft per gallon. Model 1414 is the 16 oz bottle." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [woodGlue.listing, woodGlue.specification] },
+    discrepancies: [],
     capabilities: [],
   },
   toolReference({

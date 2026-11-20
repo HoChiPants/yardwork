@@ -6,6 +6,7 @@ import { restoreWorkshopArchive } from "../../server/workshopArchive";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { blank, part } from "../../src/model";
 import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
+import { saveWoodJointDecision } from "../../src/woodJointDecisions";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
   const backendRequests: string[] = [];
@@ -311,4 +312,62 @@ test("trim sealant estimates save the measured takeoff and the exact Home Depot 
   await page.getByRole("button", { name: "Prepare Home Depot list" }).click();
   await expect(page.getByRole("dialog").getByRole("listitem").filter({ hasText: /#100035980/ }))
     .toContainText("2 cartridges");
+});
+
+test("wood glue takeoff shows modeled contact and saves a confirmed bottle estimate", async ({ page }) => {
+  const project = blank("Wood glue takeoff");
+  const step = project.steps[0].id;
+  const panel = part("Front panel", "plytanium-703", [10, 10, 0.703], [0, 6, 0], step, "Casework");
+  const rail = part("Glue rail", "stud", [1.5, 4, 2], [-3, 4, -1.3515], step, "Casework");
+  project.pieces.push(panel, rail);
+  const withJoint = saveWoodJointDecision(project, panel.id, rail.id, "glue", "Dry-fit before using glue.");
+
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "wood-glue.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(withJoint)),
+  });
+  await expect(dialog).toHaveCount(0);
+
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const title = page.getByText("Estimate wood glue", { exact: true });
+  await title.click();
+  const fields = page.locator("details.field-section").filter({ has: title });
+  await expect(fields.getByRole("listitem").filter({ hasText: "Glue rail" })).toContainText("6 sq in");
+  await fields.getByLabel("Total area to coat").fill("30");
+  await fields.getByLabel("Area unit").selectOption("ft");
+  await fields.getByLabel("Extra glue (%)").fill("10");
+  const preview = fields.getByRole("button", { name: "Preview bottle estimate" });
+  await preview.click();
+  await fields.getByRole("button", { name: "Add 2 bottles", exact: true }).click();
+  await expect(fields.getByRole("status")).toContainText("Saved 2 bottles");
+  await fields.getByLabel("Extra glue (%)").fill("0");
+  await preview.click();
+  await fields.getByRole("button", { name: "Replace estimate with 1 bottle", exact: true }).click();
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  expect((await readDraft()).project.supplies).toEqual([expect.objectContaining({
+    productId: "titebond-iii-1414", quantity: 1,
+    note: expect.stringContaining("4,320 sq in confirmed coated area"),
+  })]);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: "Wood glue takeoff" }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list" }).click();
+  await expect(dialog.getByRole("listitem").filter({ hasText: /#100522343/ })).toContainText("1 bottle");
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("4,320 sq in confirmed coated area");
+  expect(guide).toContain("Dry-fit before using glue.");
 });

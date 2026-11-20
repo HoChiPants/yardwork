@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { restoreWorkshopArchive } from "../../server/workshopArchive";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { blank, part } from "../../src/model";
+import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
   const backendRequests: string[] = [];
@@ -126,6 +127,60 @@ test("a joint question finds actual parts, previews a direction and reopens its 
   await page.getByRole("dialog").getByRole("button", { name: /^Build guide/ }).click();
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("Centered entry chosen after comparing both sides");
+});
+
+test("build preparation opens the other touching pair when the first screw path is reviewed", async ({ page }) => {
+  const project = blank("Casework contact review");
+  const step = project.steps[0].id;
+  const panel = part("Face panel", "plytanium-703", [10, 10, 0.703], [0, 6, 0], step, "Casework");
+  const left = part("Left rail", "stud", [1.5, 4, 2], [-3, 4, -1.3515], step, "Casework");
+  const right = part("Right rail", "stud", [1.5, 4, 2], [3, 4, -1.3515], step, "Casework");
+  project.pieces.push(panel, left, right);
+  const { plan } = suggestCenteredFastener(project, panel.id, left.id);
+  const fixture = saveFastenerPlan(project, {
+    ...plan,
+    measurements: {
+      ...plan.measurements,
+      surfaceToTipDepth: 1.25,
+      measuredAt: "2026-01-01T00:00:00.000Z",
+      basis: "Synthetic browser fixture",
+    },
+  });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "casework-contact-review.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(fixture)),
+  });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Guide", exact: true }).click();
+  await page.getByRole("button", { name: "Review build preparation", exact: true }).click();
+  const contacts = page.getByRole("region", { name: "Build preparation" })
+    .locator("details.preparation-group").filter({ hasText: "Modeled wood contacts" });
+  await contacts.locator(":scope > summary").click();
+  await expect(contacts).toContainText("Right rail");
+  await expect(contacts).not.toContainText("Left rail");
+  await contacts.getByRole("button", { name: /Face panel.*Right rail/ }).click();
+  const selected = page.getByRole("region", { name: "Selected wood contact" });
+  await expect(selected).toContainText("Retained faces meet · 0 in gap.");
+  await expect(selected.getByRole("button", { name: "Inspect P003", exact: true })).toBeVisible();
+  await selected.getByRole("button", { name: "Compare screw entry sides", exact: true }).click();
+  const fasteners = page.getByRole("region", { name: "Wood fastener plans" });
+  await expect(fasteners.getByRole("combobox", { name: "Fastener receiving member" })).toHaveValue(right.id);
+  await expect(fasteners.getByRole("region", { name: "Screw entry comparison" })).toBeVisible();
+  await fasteners.getByRole("button", { name: "Back to connections", exact: true }).click();
+  await page.getByRole("button", { name: "Back to build preparation", exact: true }).click();
+  await expect(contacts).toBeVisible();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("dialog").getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  const section = guide.split("### Modeled wood contacts")[1].split("### Shopping and availability")[0];
+  expect(section).toContain("P001 · Face panel ↔ P003 · Right rail");
+  expect(section).not.toContain("Left rail");
 });
 
 test("a crosscut practice plan reuses the first scrap on two blanks", async ({ page }) => {

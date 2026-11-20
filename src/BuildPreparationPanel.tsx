@@ -49,12 +49,13 @@ export function BuildPreparationPanel({
       </button>
       <h2 id="build-preparation-heading">Build preparation</h2>
       <p className="small-note">{buildPreparationScope}</p>
-      {groups.map(({ id, title, empty, items }) => (
+      {groups.map(({ id, title, empty, intro, reviewCount, items }) => (
         <details key={id} className="field-section preparation-group">
           <summary>
             <span>{title}</span>
-            <span className="preparation-count">{items.length} to review</span>
+            <span className="preparation-count">{reviewCount ?? items.length} to review</span>
           </summary>
+          {intro && <p className="small-note">{intro}</p>}
           {items.length ? (
             <>
               <ReviewRows items={items.slice(0, 6)} onOpen={onOpen} />
@@ -84,9 +85,10 @@ export function PrintBuildPreparation({
     <section className="build-preparation-print">
       <h2>Build preparation</h2>
       <p>{buildPreparationScope}</p>
-      {groups.map(({ id, title, empty, items }) => (
+      {groups.map(({ id, title, empty, intro, items }) => (
         <div key={id}>
           <h3>{title}</h3>
+          {intro && <p>{intro}</p>}
           {items.length ? (
             <ul>
               {items.map((item) => (

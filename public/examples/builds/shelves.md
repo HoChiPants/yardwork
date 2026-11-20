@@ -34,6 +34,24 @@ The current layouts have no listed stock conflicts.
 - Bookcase: Dry-fit the bookcase carcass · 5 parts without connection plans.
 - Bookcase: Set up supports and place shelves · 3 parts without connection plans.
 
+### Modeled wood contacts
+
+17 touching pairs found. These are modeled touching wood faces. Review how each pair is supported or joined. Hardware fit, loads and capacity require their own review.
+
+- P001 · Left side · panel ↔ P003 · Back · panel · No pair plan recorded.
+- P001 · Left side · panel ↔ P004 · Top · panel · No pair plan recorded.
+- P001 · Left side · panel ↔ P005 · Bottom · panel · No pair plan recorded.
+- P001 · Left side · panel ↔ P006 · Adjustable shelf 1 · panel · No pair plan recorded.
+- P001 · Left side · panel ↔ P007 · Adjustable shelf 2 · panel · No pair plan recorded.
+- P001 · Left side · panel ↔ P008 · Adjustable shelf 3 · panel · No pair plan recorded.
+- P002 · Right side · panel ↔ P003 · Back · panel · No pair plan recorded.
+- P002 · Right side · panel ↔ P004 · Top · panel · No pair plan recorded.
+- P002 · Right side · panel ↔ P005 · Bottom · panel · No pair plan recorded.
+- P002 · Right side · panel ↔ P006 · Adjustable shelf 1 · panel · No pair plan recorded.
+- P002 · Right side · panel ↔ P007 · Adjustable shelf 2 · panel · No pair plan recorded.
+- P002 · Right side · panel ↔ P008 · Adjustable shelf 3 · panel · No pair plan recorded.
+- Open scanned wood contacts · 17 found pairs to review. Focus on individual members for a closer search.
+
 ### Shopping and availability
 
 - Plytanium BC pine plywood · 23/32 category · 201428 · 47.938 × 95.938 in · .703 in actual · dry interior casework only · Choose a Home Depot store for ZIP 84121 and record a current snapshot.

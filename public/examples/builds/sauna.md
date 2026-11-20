@@ -40,6 +40,24 @@ The current layouts have no listed stock conflicts.
 - Sauna: Check the sauna rough opening · 14 parts without connection plans.
 - Sauna: Dry-fit the ceiling framing · 7 parts without connection plans.
 
+### Modeled wood contacts
+
+90 touching pairs found. These are modeled touching wood faces. Review how each pair is supported or joined. Hardware fit, loads and capacity require their own review.
+
+- P001 · Sauna exterior framing · bottom plate ↔ P003 · Sauna exterior framing · stud · No pair plan recorded.
+- P001 · Sauna exterior framing · bottom plate ↔ P004 · Sauna exterior framing · stud · No pair plan recorded.
+- P001 · Sauna exterior framing · bottom plate ↔ P005 · Sauna exterior framing · stud · No pair plan recorded.
+- P001 · Sauna exterior framing · bottom plate ↔ P006 · Sauna exterior framing · stud · No pair plan recorded.
+- P001 · Sauna exterior framing · bottom plate ↔ P007 · Sauna exterior framing · stud · No pair plan recorded.
+- P001 · Sauna exterior framing · bottom plate ↔ P008 · Sauna exterior framing · stud · No pair plan recorded.
+- P001 · Sauna exterior framing · bottom plate ↔ P009 · Sauna exterior framing · stud · No pair plan recorded.
+- P001 · Sauna exterior framing · bottom plate ↔ P010 · Sauna exterior framing · bottom plate · No pair plan recorded.
+- P001 · Sauna exterior framing · bottom plate ↔ P018 · Sauna exterior framing · bottom plate · No pair plan recorded.
+- P002 · Sauna exterior framing · top plate ↔ P003 · Sauna exterior framing · stud · No pair plan recorded.
+- P002 · Sauna exterior framing · top plate ↔ P004 · Sauna exterior framing · stud · No pair plan recorded.
+- P002 · Sauna exterior framing · top plate ↔ P005 · Sauna exterior framing · stud · No pair plan recorded.
+- Open scanned wood contacts · 90 found pairs to review. Focus on individual members for a closer search.
+
 ### Shopping and availability
 
 - 2 × 4 framing lumber · 1½ × 3½ in actual · 8 ft · Choose a Home Depot store for ZIP 84121 and record a current snapshot.

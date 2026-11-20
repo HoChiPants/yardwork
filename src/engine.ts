@@ -1,5 +1,6 @@
 import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
 import { buildPreparation, buildPreparationMarkdown } from "./buildPreparation";
+import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { offcutCutOrderMarkdown, offcutCutRows } from "./offcutCutGuide";
 import { beamSource, reviewShelfSag, shelfSagGuideLines, shelfSagScope, shelfSagSummary, stiffnessSource } from "./shelfSag";
 import { homeDepotShoppingList } from "./handoff";
@@ -1795,7 +1796,8 @@ export function guideMarkdown(p: Project) {
   const shelfSag = shelfSagGuideLines(p, panelReviews);
   const woodSupportReview = reviewWoodSupport(p);
   const woodSupport = woodSupportGuideLines(p, woodSupportReview);
-  const bearingJoints = bearingConnectionGuideLines(p, bearingConnections(p, woodSupportReview, connections), connections);
+  const bearingReview = bearingConnections(p, woodSupportReview, connections);
+  const bearingJoints = bearingConnectionGuideLines(p, bearingReview, connections);
   const roofBearing = reviewGreenhouseRafterBearing(p);
   const rafterBearing = rafterBearingGuideLines(p, roofBearing);
   const roofAttachments = greenhouseRoofAttachmentLines(p, greenhouseRoofAttachments(p, connections.intents, roofBearing));
@@ -1815,6 +1817,7 @@ export function guideMarkdown(p: Project) {
     supplies,
     sequences: stockCutSequences(p, materialRows),
     connections,
+    woodContacts: reviewModeledWoodContacts(p, connections, bearingReview),
     findings: validate(p, woodSupportReview),
     motions: motionReviews,
     lids: projectLidTravelChecks(p),

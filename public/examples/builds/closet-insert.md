@@ -35,6 +35,24 @@ Review the saved plan, actual stock and tools before cutting or assembly. Resolv
 - Closet: Set up tower supports and shelves · 4 parts without connection plans.
 - Closet: Dry-fit hanging rods and review supports · 2 parts without connection plans.
 
+### Modeled wood contacts
+
+16 touching pairs found. These are modeled touching wood faces. Review how each pair is supported or joined. Hardware fit, loads and capacity require their own review.
+
+- P001 · Closet casework · top or bottom ↔ P003 · Closet casework · vertical · No pair plan recorded.
+- P001 · Closet casework · top or bottom ↔ P004 · Closet casework · vertical · No pair plan recorded.
+- P001 · Closet casework · top or bottom ↔ P005 · Closet casework · vertical · No pair plan recorded.
+- P001 · Closet casework · top or bottom ↔ P006 · Closet casework · vertical · No pair plan recorded.
+- P002 · Closet casework · top or bottom ↔ P003 · Closet casework · vertical · No pair plan recorded.
+- P002 · Closet casework · top or bottom ↔ P004 · Closet casework · vertical · No pair plan recorded.
+- P002 · Closet casework · top or bottom ↔ P005 · Closet casework · vertical · No pair plan recorded.
+- P002 · Closet casework · top or bottom ↔ P006 · Closet casework · vertical · No pair plan recorded.
+- P004 · Closet casework · vertical ↔ P007 · Closet casework · tower shelf · No pair plan recorded.
+- P004 · Closet casework · vertical ↔ P008 · Closet casework · tower shelf · No pair plan recorded.
+- P004 · Closet casework · vertical ↔ P009 · Closet casework · tower shelf · No pair plan recorded.
+- P004 · Closet casework · vertical ↔ P010 · Closet casework · tower shelf · No pair plan recorded.
+- Open scanned wood contacts · 16 found pairs to review. Focus on individual members for a closer search.
+
 ### Shopping and availability
 
 - Plytanium BC pine plywood · 23/32 category · 201428 · 47.938 × 95.938 in · .703 in actual · dry interior casework only · Choose a Home Depot store for ZIP 84121 and record a current snapshot.

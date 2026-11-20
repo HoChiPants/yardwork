@@ -1,4 +1,5 @@
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
+import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { browserWorkshop, workshopAsset, workshopRequest } from "./workshopTransport";
 import { ZodError } from "zod";
 import { FloorBaseFields } from "./FloorBaseFields";
@@ -1142,6 +1143,7 @@ export function App() {
     openConnectionReview({
       title: memberIds.map((id) => partLabel(live, id)).join(" and "),
       memberIds,
+      focusPair: action.secondId ? [action.firstId, action.secondId] : undefined,
     });
     if (action.kind === "compare") planConnectionPair(action.firstId, action.secondId, true);
     if (plan) {
@@ -1489,17 +1491,23 @@ export function App() {
   );
   const guideReady = guideIsCurrent(project);
   const connectionReview = useMemo(() => connectionCoverage(project), [project]);
+  const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
+  const needsWoodContacts = panel === "prep" || modal === "export" || printingGuide ||
+    (panel === "connections" && !!liveConnectionContext?.scope.modeledContactList);
+  const modeledContacts = useMemo(() => needsWoodContacts
+    ? reviewModeledWoodContacts(project, connectionReview, bearingReview) : undefined,
+  [project, connectionReview, bearingReview, needsWoodContacts]);
   const preparation = useMemo(() => buildPreparation(project, {
     stock: rows,
     supplies: supplyPurchases,
     sequences: cutSequences,
     connections: connectionReview,
+    woodContacts: modeledContacts,
     findings,
     motions: motionReviews,
     lids: lidTravelChecks,
     handoff: project.retailer === "lowes" ? undefined : homeDepotShoppingList(project, rows, supplyPurchases),
-  }).filter(({ id }) => guideReady || id !== "order"), [project, rows, supplyPurchases, cutSequences, connectionReview, findings, motionReviews, lidTravelChecks, guideReady]);
-  const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
+  }).filter(({ id }) => guideReady || id !== "order"), [project, rows, supplyPurchases, cutSequences, connectionReview, modeledContacts, findings, motionReviews, lidTravelChecks, guideReady]);
   const activeRemovalContact = activeRemoval
     ? bearingReview.pairs.find(({ top, base }) => top.id === activeRemoval.topId && base.id === activeRemoval.baseId)
     : undefined;
@@ -3085,7 +3093,12 @@ export function App() {
                 constructionEntryId={liveConnectionContext.constructionEntryId}
                 onConstructionEntryChange={(id) => setConnectionContext((value) => value?.projectId === project.id ? {...value,constructionEntryId:id} : value)}
                 backLabel={liveConnectionContext.backPanel === "prep" ? "Back to build preparation" : liveConnectionContext.backPanel === "step" ? "Back to guide" : liveConnectionContext.backPanel === "part" ? "Back to part" : liveConnectionContext.backPanel === "sections" ? "Back to sections" : "Back to checks"}
-                onInspectPiece={inspectConnectionPiece} onPlanPair={(a,b) => safe(() => planConnectionPair(a,b))} onPlanConnectorPair={(a,b) => safe(() => planConnectorPair(a,b))} onReviewIntent={reviewConnectionIntent}
+                onInspectPiece={inspectConnectionPiece} onPlanPair={(a,b,compareSides) => safe(() => planConnectionPair(a,b,compareSides))} onPlanConnectorPair={(a,b) => safe(() => planConnectorPair(a,b))} onReviewIntent={reviewConnectionIntent}
+                modeledContacts={modeledContacts}
+                onFocusModeledContact={({ title, memberIds }) => openConnectionReview(
+                  { title, memberIds, focusPair: memberIds },
+                  liveConnectionContext.backPanel === "prep" ? "prep" : undefined,
+                )}
                 seatSpanActions={new Map(findings.flatMap((finding) => finding.area?.kind === "seat-span" && finding.pieceId
                   ? [[finding.pieceId, () => showFindingArea(finding)] as const] : []))}
                 onMeasureFoundation={() => openSiteClearances("connections")}

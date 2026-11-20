@@ -39,6 +39,24 @@ The current layouts have no listed stock conflicts.
 - Greenhouse: Dry-fit the pitched roof and gables · 21 parts without connection plans.
 - Greenhouse: Dry-fit the actual glazing panels · 31 parts without connection plans.
 
+### Modeled wood contacts
+
+123 touching pairs found. These are modeled touching wood faces. Review how each pair is supported or joined. Hardware fit, loads and capacity require their own review.
+
+- P001 · Greenhouse base · perimeter rail ↔ P003 · Greenhouse base · perimeter rail · No pair plan recorded.
+- P001 · Greenhouse base · perimeter rail ↔ P004 · Greenhouse base · perimeter rail · No pair plan recorded.
+- P001 · Greenhouse base · perimeter rail ↔ P005 · Greenhouse walls · bottom plate · No pair plan recorded.
+- P002 · Greenhouse base · perimeter rail ↔ P003 · Greenhouse base · perimeter rail · No pair plan recorded.
+- P002 · Greenhouse base · perimeter rail ↔ P004 · Greenhouse base · perimeter rail · No pair plan recorded.
+- P002 · Greenhouse base · perimeter rail ↔ P032 · Greenhouse door opening · bottom plate beside opening · No pair plan recorded.
+- P002 · Greenhouse base · perimeter rail ↔ P033 · Greenhouse door opening · door jamb · No pair plan recorded.
+- P002 · Greenhouse base · perimeter rail ↔ P034 · Greenhouse door opening · bottom plate beside opening · No pair plan recorded.
+- P002 · Greenhouse base · perimeter rail ↔ P035 · Greenhouse door opening · door jamb · No pair plan recorded.
+- P003 · Greenhouse base · perimeter rail ↔ P005 · Greenhouse walls · bottom plate · No pair plan recorded.
+- P003 · Greenhouse base · perimeter rail ↔ P013 · Greenhouse walls · bottom plate · No pair plan recorded.
+- P003 · Greenhouse base · perimeter rail ↔ P032 · Greenhouse door opening · bottom plate beside opening · No pair plan recorded.
+- Open scanned wood contacts · 123 found pairs to review. Focus on individual members for a closer search.
+
 ### Shopping and availability
 
 - SUNLITE 8 mm H-profile base/cap connector · 96 in · Glazing accessory estimate · 13 connector assemblies to select · Review glazing measurements, allowances and accessory counts in List.

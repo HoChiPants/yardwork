@@ -20,6 +20,8 @@ export type ConnectionReviewScope = {
   roofEntryId?: string;
   baseEntryId?: string;
   bearingPartId?: string;
+  focusPair?: readonly [string, string];
+  modeledContactList?: boolean;
 };
 export type ConnectionReviewActions = {
   onInspectPiece?: (id: string) => void;

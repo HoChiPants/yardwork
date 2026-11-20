@@ -6,6 +6,7 @@ import type { ConnectionReviewScope } from "./GuideConnections";
 import type { homeDepotShoppingList } from "./handoff";
 import type { ProjectLidTravelChecks } from "./lidTravelFindings";
 import { material, type MaterialId, type Project } from "./model";
+import { modeledWoodContactDetail, modeledWoodContactScope, type ModeledWoodContactReview } from "./modeledWoodContacts";
 import { motionTestFindings, type MotionTestVariant, type ProjectMotionReviews } from "./mechanismMotion";
 import { offcutCutRows } from "./offcutCutGuide";
 import { ensurePartLabels } from "./partLabels";
@@ -35,9 +36,11 @@ export type BuildPreparationItem = {
 };
 
 export type BuildPreparationGroup = {
-  id: "order" | "cuts" | "connections" | "motion" | "shopping" | "tools" | "checks";
+  id: "order" | "cuts" | "connections" | "wood-contacts" | "motion" | "shopping" | "tools" | "checks";
   title: string;
   empty: string;
+  intro?: string;
+  reviewCount?: number;
   items: BuildPreparationItem[];
 };
 
@@ -49,6 +52,7 @@ type PreparationInputs = {
   findings: readonly Finding[];
   motions: ProjectMotionReviews;
   lids: ProjectLidTravelChecks;
+  woodContacts?: ModeledWoodContactReview;
   handoff?: ReturnType<typeof homeDepotShoppingList>;
 };
 
@@ -147,6 +151,46 @@ export function connectionPreparationItems(coverage: Pick<ConnectionCoverage, "s
     });
   }
   return pending;
+}
+
+function woodContactPreparation(project: Project, input: PreparationInputs): BuildPreparationGroup[] {
+  const review = input.woodContacts;
+  if (!review || (!review.pairs.length && !review.limited)) return [];
+  const shown = review.needsReview.slice(0, 12);
+  const items: BuildPreparationItem[] = shown.map((row) => ({
+    id: row.id,
+    title: row.title,
+    detail: modeledWoodContactDetail(row),
+    action: {
+      kind: "connections",
+      scope: { title: row.title, memberIds: row.memberIds, focusPair: row.memberIds },
+    },
+  }));
+  if (review.needsReview.length > shown.length || review.limited) {
+    items.push({
+      id: "all-modeled-wood-contacts",
+      title: "Open scanned wood contacts",
+      detail: `${count(review.needsReview.length, "found pair")} to review. ${review.limited ? "This scan reached its search limit. " : ""}Focus on individual members for a closer search.`,
+      action: {
+        kind: "connections",
+        scope: {
+          title: "Modeled wood contacts",
+          memberIds: input.connections.parts.map(({ pieceId }) => pieceId),
+          ownerId: project.id,
+          stageKey: "all-connections",
+          modeledContactList: true,
+        },
+      },
+    });
+  }
+  return [{
+    id: "wood-contacts",
+    title: "Modeled wood contacts",
+    intro: `${count(review.pairs.length, "touching pair")} found. ${modeledWoodContactScope}`,
+    reviewCount: review.needsReview.length,
+    empty: "The scanned contacts have reviewed locations or a removable bearing decision.",
+    items,
+  }];
 }
 
 export function buildPreparation(
@@ -353,6 +397,7 @@ export function buildPreparation(
       empty: "The current assembly rows have no listed plan gaps.",
       items: connectionPreparationItems(input.connections),
     },
+    ...woodContactPreparation(project, input),
     ...(hasMotion ? [motionGroup] : []),
     {
       id: "shopping",
@@ -388,9 +433,10 @@ export function buildPreparationMarkdown(
     "",
     buildPreparationScope,
     "",
-    ...groups.flatMap(({ title, empty, items }) => [
+    ...groups.flatMap(({ title, empty, intro, items }) => [
       `### ${title}`,
       "",
+      ...(intro ? [intro, ""] : []),
       ...(items.length
         ? items.map((item) => `- ${md(item.title)} · ${md(item.detail)}`)
         : [empty]),

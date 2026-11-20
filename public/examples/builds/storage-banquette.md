@@ -56,6 +56,24 @@ The current layouts have no listed stock conflicts.
 - Banquette section 3: Fit the storage shell · 4 parts without connection plans.
 - Banquette section 3: Dry-fit the seat lid · 1 part with setup started.
 
+### Modeled wood contacts
+
+154 touching pairs found. These are modeled touching wood faces. Review how each pair is supported or joined. Hardware fit, loads and capacity require their own review.
+
+- P002 · Banquette section 1 · storage rear ↔ P014 · Banquette section 1 · seat lid · Review the saved joint details for H001.
+- P016 · Banquette section 2 · storage rear ↔ P028 · Banquette section 2 · seat lid · Review the saved joint details for H002.
+- P030 · Banquette section 3 · storage rear ↔ P042 · Banquette section 3 · seat lid · Review the saved joint details for H003.
+- P001 · Banquette section 1 · storage bottom ↔ P002 · Banquette section 1 · storage rear · No pair plan recorded.
+- P001 · Banquette section 1 · storage bottom ↔ P003 · Banquette section 1 · storage front · No pair plan recorded.
+- P001 · Banquette section 1 · storage bottom ↔ P004 · Banquette section 1 · storage left · No pair plan recorded.
+- P001 · Banquette section 1 · storage bottom ↔ P005 · Banquette section 1 · storage right · No pair plan recorded.
+- P001 · Banquette section 1 · storage bottom ↔ P006 · Banquette section 1 · leg · No pair plan recorded.
+- P001 · Banquette section 1 · storage bottom ↔ P007 · Banquette section 1 · leg · No pair plan recorded.
+- P001 · Banquette section 1 · storage bottom ↔ P008 · Banquette section 1 · leg · No pair plan recorded.
+- P001 · Banquette section 1 · storage bottom ↔ P009 · Banquette section 1 · leg · No pair plan recorded.
+- P001 · Banquette section 1 · storage bottom ↔ P015 · Banquette section 2 · storage bottom · No pair plan recorded.
+- Open scanned wood contacts · 154 found pairs to review. Focus on individual members for a closer search.
+
 ### Motion and clearance
 
 The current motion tests have no listed clearance findings.

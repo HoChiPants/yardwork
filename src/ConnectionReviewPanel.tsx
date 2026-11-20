@@ -10,6 +10,7 @@ import { BearingConnectionsPanel } from "./BearingConnectionsPanel";
 import { FloorBaseConnectionsPanel } from "./FloorBaseConnectionsPanel";
 import type { FloorHangerPlan } from "./floorHangerSchema";
 import type { BearingConnectionReview } from "./bearingConnections";
+import { modeledWoodContactDetail, modeledWoodContactScope, type ModeledWoodContact, type ModeledWoodContactReview } from "./modeledWoodContacts";
 import {
   connectionCoverage,
   type ConnectionIntent,
@@ -37,7 +38,9 @@ export type ConnectionReviewPanelProps = {
   backLabel?: string;
   onInspectPiece: (id: string) => void;
   seatSpanActions?: ReadonlyMap<string, () => void>;
-  onPlanPair: (aId: string, bId: string) => void;
+  onPlanPair: (aId: string, bId: string, compareSides?: boolean) => void;
+  modeledContacts?: ModeledWoodContactReview;
+  onFocusModeledContact?: (pair: ModeledWoodContact) => void;
   onPlanConnectorPair?: (baseId: string, postId: string) => void;
   onFitStockBetween?: (firstId: string, secondId: string) => void;
   fittedBlock?: { blockId: string; endpoints: [string, string] } | null;
@@ -75,6 +78,8 @@ export function ConnectionReviewPanel({
   onInspectPiece,
   seatSpanActions,
   onPlanPair,
+  modeledContacts,
+  onFocusModeledContact,
   onPlanConnectorPair,
   onFitStockBetween,
   fittedBlock,
@@ -88,7 +93,8 @@ export function ConnectionReviewPanel({
     [firstId, setFirstId] = useState(""),
     [secondId, setSecondId] = useState(""),
     [partLimit, setPartLimit] = useState(12),
-    [pairLimit, setPairLimit] = useState(6);
+    [pairLimit, setPairLimit] = useState(6),
+    [contactLimit, setContactLimit] = useState(12);
   const context = useMemo(() => {
     try {
       return { coverage: connectionCoverage(project), error: false };
@@ -116,6 +122,8 @@ export function ConnectionReviewPanel({
       scope.roofEntryId,
       scope.baseEntryId,
       scope.bearingPartId,
+      scope.focusPair,
+      scope.modeledContactList,
       memberIds,
       scope.intentIds,
     ]),
@@ -167,6 +175,7 @@ export function ConnectionReviewPanel({
     setSecondId("");
     setPartLimit(12);
     setPairLimit(6);
+    setContactLimit(12);
   }, [scopeKey]);
   useEffect(() => setPairLimit(6), [anchorId]);
   const neighbors = useMemo(() => {
@@ -194,6 +203,15 @@ export function ConnectionReviewPanel({
     if (a === b || !isWood(project, a) || !isWood(project, b)) return;
     onPlanPair(a, b);
   };
+  const focusedPair = scope.focusPair;
+  const focusedContact = useMemo(() => {
+    if (!focusedPair) return null;
+    const [a, b] = focusedPair.map((id) =>
+      project.pieces.find((piece) => piece.id === id && !piece.offcut));
+    return a && b ? reviewConnectionContact(a, b) : null;
+  }, [project, focusedPair]);
+  const focusedIntents = focusedPair ? scopedIntents.filter(({ pieceIds }) =>
+    pieceIds.length === 2 && focusedPair.every((id) => pieceIds.includes(id))) : [];
   const frameMember = (id: string) => project.pieces.some((piece) => piece.id === id && !piece.offcut && material(piece.material).wood && material(piece.material).stockKind === "linear");
   const optionText = (id: string) => {
     const piece = project.pieces.find((part) => part.id === id)!;
@@ -241,6 +259,56 @@ export function ConnectionReviewPanel({
           quantity records without locations; {excludedCount} have
           changed/conflicting intent.
         </p>
+      )}
+      {focusedPair && (
+        <section className="field-section" aria-label="Selected wood contact">
+          <h3>Selected wood contact</h3>
+          {focusedContact ? (
+            <>
+              <p>
+                {contactText[focusedContact.state]}
+                {focusedContact.gap !== null && <> · {formatPreciseInches(focusedContact.gap)} gap</>}.
+              </p>
+              <div className="button-row">
+                {focusedPair.map((id) => (
+                  <button key={id} type="button" className="text-button" onClick={() => onInspectPiece(id)}>
+                    Inspect {partLabel(project, id)}
+                  </button>
+                ))}
+              </div>
+              {focusedIntents.length ? (
+                <ConnectionIntentSchedule project={project} intents={focusedIntents} onReviewIntent={onReviewIntent} />
+              ) : focusedContact.state === "face-contact" && (
+                <button type="button" className="button secondary" onClick={() =>
+                  onPlanPair(focusedPair[0], focusedPair[1], true)}>
+                  Compare screw entry sides
+                </button>
+              )}
+            </>
+          ) : <p role="status">A member is unavailable. Select the current parts to continue.</p>}
+        </section>
+      )}
+      {scope.modeledContactList && modeledContacts && onFocusModeledContact && (
+        <section className="field-section" aria-label="Scanned wood contacts">
+          <p className="small-note">{modeledWoodContactScope}</p>
+          {modeledContacts.limited && (
+            <p role="status" className="small-note">This scan reached its search limit. Use nearby faces for an individual part to look beyond these results.</p>
+          )}
+          <ul className="preparation-rows">
+            {modeledContacts.pairs.slice(0, contactLimit).map((row) => (
+              <li key={row.id}>
+                <button type="button" onClick={() => onFocusModeledContact(row)}>
+                  <span><strong>{row.title}</strong><small>{modeledWoodContactDetail(row)}</small></span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {modeledContacts.pairs.length > contactLimit && (
+            <button type="button" className="text-button" onClick={() => setContactLimit((n) => n + 12)}>
+              Show more wood contacts
+            </button>
+          )}
+        </section>
       )}
       {fittedBlock && [fittedBlock.blockId, ...fittedBlock.endpoints].every((id) => isWood(project, id)) && (
         <div className="field-section" data-testid="fitted-block-end-connections">

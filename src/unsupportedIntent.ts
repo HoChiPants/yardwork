@@ -53,6 +53,8 @@ const directNegation =
   /\b(?:no|not|without|exclude|excluding|never|do not(?:\s+(?:want|add|move|change|design|plan|install|route|run))?|don't(?:\s+(?:want|add|move|change|design|plan|install|route|run))?|without\s+(?:moving|changing|designing|installing))\s+(?:(?:a|an|any|the|new|existing)\s+)*$/;
 const requestAction =
   /\b(?:design|plan|create|build|construct|draw|lay\s+out|layout|specify|install|add|route|run|move|reroute|connect|replace|rewire|size|calculate|locate|position|place|relocate|excavate|dig|need|want|change|revise)\b/;
+const omittedSelection =
+  /\b(?:do not|don't|never)\s+(?:invent|assume|choose|select)\b([^.!?;]{0,120})$/;
 const directedAction =
   /\b(?:design|plan|create|build|construct|draw|lay\s+out|specify|install|add|route|run|move|reroute|connect|replace|rewire|size|calculate|locate|position|place|relocate|excavate|dig)\s+(?:(?:a|an|the|any|new|existing|bathroom|kitchen|water|electrical)\s+){0,4}$/;
 const locative =
@@ -98,8 +100,12 @@ export function assessUnsupportedIntent(
       const before = clause.slice(0, hit.index),
         after = clause.slice(hit.end),
         between = clause.slice(previousEnd, hit.index),
+        excludedProducts = before.match(omittedSelection)?.[1],
         negated: boolean =
           directNegation.test(before) ||
+          (excludedProducts !== undefined &&
+            !requestAction.test(excludedProducts) &&
+            !/\b(?:but|then|also|include)\b/.test(excludedProducts)) ||
           (previousNegated &&
             /^\s*(?:(?:,|or|and|nor|a|an|any|the|new|existing|current|panel|equipment|systems?|work)\s*)*$/.test(
               between,

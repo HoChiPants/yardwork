@@ -190,6 +190,21 @@ test("a later explicit system action is not hidden by an earlier nearby furnitur
   }
 });
 
+test("a request to omit unspecified sauna products leaves its framing in scope", () => {
+  const prompt = "Plan a sauna room with CLEAR INSIDE dimensions 5 feet wide, 6 feet deep and 7 feet high. Use the sauna whole-structure generator. Show framing around the reserved interior; do not invent selected lining, heater, wiring or attachment products.";
+  assert.equal(assessUnsupportedIntent(prompt), null);
+  const proposal = wireIntentToPlan(
+    { prompt },
+    { family: "sauna", operation: "create", roofRise: 0, doorWidth: 0 },
+  );
+  assert.equal(proposal.structures[0].kind, "sauna");
+  const { clearWidth, clearDepth, clearHeight } = proposal.structures[0].parameters;
+  assert.deepEqual([clearWidth, clearDepth, clearHeight], [60, 72, 84]);
+  assert.deepEqual(proposal.structures[0].selections, {});
+  assert.equal(assessUnsupportedIntent(`${prompt} Route new wiring to the heater.`)?.primary, true);
+  assert.equal(assessUnsupportedIntent("Plan a sauna. Do not invent heater products, but route new wiring.")?.primary, true);
+});
+
 test("negated system mentions and furniture compounds are not an unsupported keyword ban", () => {
   for (const prompt of [
     "No pool or plumbing work; build a bench",

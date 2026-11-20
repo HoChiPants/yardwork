@@ -229,7 +229,7 @@ test("exports retain quantities and ordered manual instructions", () => {
   assert.match(guideMarkdown(p), /Check square before fastening/);
   assert.match(shoppingCsv(p), /UNVERIFIED/);
   assert.match(shoppingCsv(p), /Stock units to buy/);
-  assert.match(guideMarkdown(p), /8′/);
+  assert.match(guideMarkdown(p), /P001 · Test board: 1.5 in × 96 in × 3.5 in/);
 });
 test("project storage persists atomically, rejects path traversal, and prevents lost updates", async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), "yardwork-test-"));

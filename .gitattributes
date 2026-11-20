@@ -1,0 +1,1 @@
+public/examples/**/*.csv -text whitespace=cr-at-eol

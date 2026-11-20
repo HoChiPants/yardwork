@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   packRectangles,
   type RectangleCut,
@@ -9,17 +10,20 @@ import {
   bom,
   cutPiece,
   guideMarkdown,
+  shoppingCsv,
   usableInventory,
   validate,
 } from "../src/engine";
-import { homeDepotHandoff } from "../src/handoff";
+import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import {
   blank,
   material,
   part,
+  projectSchema,
   type Inventory,
   type Project,
 } from "../src/model";
+import { migrateLegacyProject } from "../src/projectVersion";
 function meshProject(sizes: [number, number][]): Project {
   const p = blank("Predator mesh study");
   sizes.forEach(([w, l], i) =>
@@ -232,11 +236,38 @@ test("retailer handoff uses purchase units once, retains exact product reference
   assert.match(text, /User-recorded snapshot: 3 available/);
   assert.match(text, /PROJECT PHASES/);
   assert.match(text, /does not synchronize/);
+  const list = homeDepotShoppingList(p);
+  assert.equal(list.text, "2 rolls — My matched roll — Internet #123456789");
+  assert.equal(list.items[0].snapshot?.available, 3);
+  assert.deepEqual(list.reviews, []);
+  const conflict = homeDepotShoppingList({
+    ...p,
+    pieces: [
+      ...p.pieces,
+      part("Board", "stud", [1.5, 96, 3.5], [0, 48, 0], p.steps[0].id, "Frame"),
+    ],
+    inventory: [...p.inventory, { ...p.inventory[0], material: "stud" }],
+  });
+  assert.equal(conflict.text, "");
+  assert.equal(
+    conflict.reviews.filter(
+      (row) => row.reason === "Possible double count · 123456789",
+    ).length,
+    2,
+  );
+  p.inventory[0].url = "https://www.homedepot.com/p/example/123456780";
+  assert.equal(homeDepotShoppingList(p).text, "");
+  p.inventory[0].url = "https://www.homedepot.com/p/example/123456789";
   p.inventory[0].checkedAt = "2020-01-01T00:00:00.000Z";
   const stale = homeDepotHandoff(p);
   assert.ok(!stale.includes("123456789"));
   assert.ok(!stale.includes("3 available"));
   assert.match(stale, /availability are unverified/);
+  assert.equal(homeDepotShoppingList(p).text, "");
+  assert.equal(
+    homeDepotShoppingList(p).reviews[0].reason,
+    "Exact product match needed",
+  );
 });
 test("handoff counts cut boards and retained offcuts as stock and makes excluded dimensions explicit", () => {
   let p = blank("Framing");
@@ -269,6 +300,47 @@ test("handoff counts cut boards and retained offcuts as stock and makes excluded
   assert.match(text, /- 1 board — 2 × 4 framing lumber/);
   assert.ok(!text.includes("Too long\ncheck this"));
   assert.match(homeDepotHandoff(blank()), /No fitting stock units/);
+});
+
+test("framing references add real purchase identities to the five saved build examples without counting store inventory", () => {
+  const expected = {
+    greenhouse: ["338861827", "100083274"],
+    sauna: ["338861827"],
+    "storage-banquette": ["338861827"],
+    shelves: [],
+    "closet-insert": [],
+  };
+  for (const [name, numbers] of Object.entries(expected)) {
+    const raw = readFileSync(
+      new URL(
+        `../public/examples/builds/${name}.yardwork.json`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const project = projectSchema.parse(migrateLegacyProject(JSON.parse(raw)));
+    const result = homeDepotShoppingList(project);
+    const suggestions = result.items.filter((item) => item.suggested);
+    assert.deepEqual(
+      suggestions.map((item) => item.productId),
+      numbers,
+      name,
+    );
+    for (const item of suggestions) {
+      const id = item.productId === "338861827" ? "stud" : "two-six";
+      assert.equal(
+        item.quantity,
+        bom(project).find((row) => row.id === id)?.quantity,
+      );
+      assert.equal(item.snapshot, undefined);
+      assert.ok(shoppingCsv(project).includes(item.url));
+      assert.ok(
+        homeDepotHandoff(project).includes(
+          `Suggested regional listing: ${item.productId}`,
+        ),
+      );
+    }
+  }
 });
 
 test("the build guide exports roll coordinates that can be followed at the workbench", () => {

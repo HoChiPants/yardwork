@@ -1,0 +1,31 @@
+# Wood-fastener product evidence
+
+Primary product pages, pack tables and manufacturer drawing links were reread **2026-11-17 UTC**. Author-review timestamp: `2026-11-17T03:55:01.000Z`. These references support exact purchase identities and source disclosure. They do not supply joint positions, measured installation depth, pilot diameters, structural capacity or installation approval.
+
+## Two purchase identities
+
+| Trusted ID           | Manufacturer purchase label                                          | Home Depot                                                                | Lowe’s                                                                                                                                                                             |
+| -------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `grk-r4-103101`      | GRK R4 part103101; #9×2½in; **100 screws**, **T25**                  | [203525228](https://www.homedepot.com/p/203525228), model103101/SKU723205 | [50303209](https://www.lowes.com/pd/GRK-100-Count-9-x-2-5-in-Countersinking-Head-Coated-Self-Tapping-Star-Drive-Interior-Exterior-Wood-Screw/50303209), model`103101.0`/item580238 |
+| `grk-cabinet-113079` | GRK Low Profile Cabinet part113079; #8×2½in; **100 screws**, **T15** | [203525221](https://www.homedepot.com/p/203525221), model113079/SKU726538 | [50303173](https://www.lowes.com/pd/GRK-8-x-2-1-2-in-Yellow-Polymer-Round-Washer-Interior-Exterior-Wood-Screws-100-Count/50303173), model`113079.0`/item580211                     |
+
+The [R4 manufacturer pack table](https://www.grkfasteners.com/grk-products/structural-framing-screws/r4-multi-purpose-screw) and [cabinet pack table](https://www.grkfasteners.com/grk-products/finish/low-profile-cabinet-screw) establish those pack/drive distinctions. The white cabinet120660/80-count product is separate and is not a substitute offer. Preserve the reviewed retailer model suffixes; no global numeric-model normalization is used.
+
+The existing R4 supply identity, MPN, pack and retailer references remain intact. The cabinet product is a new **purchase-only** supply: one selected purchase unit is one100-screw box. Adding boxes creates no part, installed screw, hole or pairwise joint. No MaterialId or physical mesh is added. Public links establish no selected-store price/stock; exact manual snapshots retain their own store/ZIP/time/retailer identity checks.
+
+## Published dimensions remain unresolved
+
+- **R4:** the [live-linked US drawing](<https://www.grkfasteners.com/getmedia/32d47272-9f9b-4f68-b663-60c09bcbd7bc/GRK-R4-Customer-Drawing-(1)_2.pdf?ext=.pdf>), dated11/01/2023, gives L2.50in and thread1.57in for #9×2½. [ICC-ES ESR-3201, July2026](https://icc-es.org/wp-content/uploads/report-directory/ESR-3201.pdf), Table1A/page5, gives L2⅜in and thread1⅝in. The report’s notation and table footnote describe different length datums. Both sources agree on the separately named head/shank/thread diameters; that does not resolve actual tip position or delivered revision.
+- **Cabinet:** the [11/01/2023 drawing](https://www.grkfasteners.com/getmedia/fb0fbb28-29c0-477c-8349-2c2364caa94d/GRK-Cabinet-Customer-Drawing_1.pdf?ext=.pdf) measures nominal L2.50in **beneath the washer head** and lists head/shank diameters .423/.114in. The [11/25 sell sheet50137](https://www.grkfasteners.com/getmedia/d4fe6346-bb1a-4160-9fbc-09cbfa6a65ea/GRK-Sellsheet2025-Cabinet.pdf?ext=.pdf), page2, instead lists .393/.110in. The drawing’s malformed drive column is not used; the manufacturer pack table supplies T15. Retailer coating/exposure wording also needs delivered-product confirmation.
+
+These are manufacturer nominal values without a resolved tolerance/profile for installation. The trusted module retains source revisions, datums, conflicts and unknowns. It exposes `surfaceToTipDepth:null` and `tipLength:null`; `nominalLength:2.5` is a purchase label. A separately measured entrance-surface-to-tip value must retain user provenance. Source conflicts remain visible even when a candidate geometric path is reviewed.
+
+Current ESR installation/design conditions vary with substrate, grain/loading and drilling method. Cabinet reference configurations do not establish arbitrary plywood/MDF-edge withdrawal or a completed carcass. No numeric load, pilot, edge/end/spacing or connector-equivalence rules are introduced. Manufacturer drawing images and bulk licensed code/evaluation text are not copied into application assets; source links and bounded factual notes are retained.
+
+## API and verification
+
+`fastenerProducts.ts` exports immutable `woodFastenerProducts`, `getWoodFastenerProduct(id)` and their types. Exact trusted IDs resolve the records; unknown IDs/model numbers and the80-count product do not. The module is independent of project input. Projects cannot add source claims or approval flags through this lookup.
+
+Six focused product tests cover exact100-count packs/retailer IDs, stable R4 identity, unknown physical depth/body geometry, immutable evidence, retained source conflicts, purchase-only JSON persistence, exact cabinet snapshots, wrong-product/80-count rejection and stale/future/cross-store observations. Together with existing supply, registry and wood-product regressions, **30 focused tests passed**. Browser, strict build and whole-feature qualification remain separate parent integration work.
+
+Catalog delta: **+1 registry product, +2 retailer offer rows, +1 purchase-only supply**. This adds no exact editable stock or reusable tool. After the separate counted/mass purchase batch, current totals are **41 registry products,55 offer rows,14 supply choices,32 editable stocks with11 exact/21 generic choices, and10 tool/accessory references**. SD/Grip-Rite supplies do not expand the two-product wood-fastener-plan enum; see [common-fastener purchases](common-fastener-purchases.md). Offer rows include historical rows; none of these counts means live stock or physical build approval.

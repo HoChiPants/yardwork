@@ -1,0 +1,96 @@
+.fitted-stock-panel {
+  min-width: 0;
+}
+.fitted-stock-panel .fitted-face-choice h3,
+.fitted-stock-panel .field-section > h3 {
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+.fitted-stock-panel .fitted-coordinate-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.fitted-stock-panel .fitted-datum {
+  min-width: 0;
+  padding: 0;
+  margin: 12px 0 0;
+  border: 0;
+}
+.fitted-stock-panel .fitted-datum legend {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.fitted-stock-panel .fitted-roll-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fitted-stock-panel .fitted-roll-entry input {
+  flex: 1;
+  min-width: 0;
+}
+.fitted-stock-panel .fitted-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+.fitted-stock-panel .fitted-actions .button {
+  flex: 1;
+}
+.fitted-stock-panel .fitted-stock-results {
+  min-width: 0;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #d6d8d0);
+  scroll-margin-block: 12px;
+}
+.fitted-stock-panel .fitted-stock-results:focus-visible {
+  outline: 2px solid #187b8e;
+  outline-offset: 4px;
+}
+.fitted-stock-panel .fitted-stock-results > h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.fitted-stock-panel .fitted-stock-results .fitted-inspect {
+  flex-basis: 100%;
+}
+.fitted-stock-panel .fitted-stock-summary dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px 10px;
+  font-size: 12px;
+}
+.fitted-stock-panel .fitted-stock-summary dt {
+  color: var(--muted, #797970);
+}
+.fitted-stock-panel .fitted-stock-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.fitted-stock-panel .fitted-stock-summary ul {
+  padding-left: 17px;
+  font-size: 12px;
+}
+.fitted-stock-panel select,
+.fitted-stock-panel input {
+  max-width: 100%;
+  min-width: 0;
+}
+.fitted-stock-panel details > summary {
+  cursor: pointer;
+}
+.fitted-stock-ghost-label {
+  display: block;
+  padding: 3px 6px;
+  color: #063f4b;
+  background: #dffbfc;
+  border: 1px solid #168697;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+}

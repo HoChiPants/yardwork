@@ -1,0 +1,625 @@
+{
+  "schemaVersion": 81,
+  "id": "866c3ce2-51fd-428f-a907-376880c5dbf3",
+  "name": "Built-in closet bay study",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [
+    {
+      "id": "24e73497-bd2f-4391-9c31-b0f9f6ffade9",
+      "productId": "everbilt-eh-wsthdus-311v",
+      "quantity": 2,
+      "purpose": "Closet rod end sockets",
+      "note": "One open and one closed socket per pair. Dry-fit the delivered rod and review support, backing and attachment."
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "b78e0adb-d316-4218-9375-248c67bb4538",
+      "label": "P001"
+    },
+    {
+      "partId": "72a50595-66d4-4a3b-9da1-48901efed66f",
+      "label": "P002"
+    },
+    {
+      "partId": "a5bd3bfe-0ee1-461f-8556-436ccc744178",
+      "label": "P003"
+    },
+    {
+      "partId": "24c07a3b-6a7c-4332-826e-d8b6725bae80",
+      "label": "P004"
+    },
+    {
+      "partId": "3eaf56e8-bd1a-4aeb-8904-0430be7fb206",
+      "label": "P005"
+    },
+    {
+      "partId": "f6f134ae-65a0-4d09-a4ed-364e2f7a4dd2",
+      "label": "P006"
+    },
+    {
+      "partId": "4f606947-1f0d-4818-b9b6-be8f4a82a602",
+      "label": "P007"
+    },
+    {
+      "partId": "fc862957-2722-410a-a97b-e2c0a3f39ebb",
+      "label": "P008"
+    },
+    {
+      "partId": "a9e1ec1b-0e6b-47df-bd63-47b4dfb88474",
+      "label": "P009"
+    },
+    {
+      "partId": "96b8201f-4a52-4539-8f9d-0aee41345526",
+      "label": "P010"
+    },
+    {
+      "partId": "4e0b1e38-6b8b-42ad-bcf3-5dac94dd2c48",
+      "label": "P011"
+    },
+    {
+      "partId": "cbc08a70-0bef-40fe-a32a-2fb773e3f9b9",
+      "label": "P012"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-20T01:33:49.534Z",
+  "pieces": [
+    {
+      "id": "b78e0adb-d316-4218-9375-248c67bb4538",
+      "name": "Closet casework · top or bottom",
+      "material": "plytanium-703",
+      "size": [
+        80,
+        0.703,
+        24
+      ],
+      "position": [
+        0,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c38e11f3-b5a6-4c5a-8072-770ad3839414",
+      "assembly": "Closet casework",
+      "designRole": "bottom",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "72a50595-66d4-4a3b-9da1-48901efed66f",
+      "name": "Closet casework · top or bottom",
+      "material": "plytanium-703",
+      "size": [
+        80,
+        0.703,
+        24
+      ],
+      "position": [
+        0,
+        83.6485,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c38e11f3-b5a6-4c5a-8072-770ad3839414",
+      "assembly": "Closet casework",
+      "designRole": "top",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a5bd3bfe-0ee1-461f-8556-436ccc744178",
+      "name": "Closet casework · vertical",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        82.594,
+        24
+      ],
+      "position": [
+        -39.6485,
+        42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c38e11f3-b5a6-4c5a-8072-770ad3839414",
+      "assembly": "Closet casework",
+      "designRole": "side-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "24c07a3b-6a7c-4332-826e-d8b6725bae80",
+      "name": "Closet casework · vertical",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        82.594,
+        24
+      ],
+      "position": [
+        -12.8515,
+        42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c38e11f3-b5a6-4c5a-8072-770ad3839414",
+      "assembly": "Closet casework",
+      "designRole": "tower-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3eaf56e8-bd1a-4aeb-8904-0430be7fb206",
+      "name": "Closet casework · vertical",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        82.594,
+        24
+      ],
+      "position": [
+        12.8515,
+        42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c38e11f3-b5a6-4c5a-8072-770ad3839414",
+      "assembly": "Closet casework",
+      "designRole": "tower-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f6f134ae-65a0-4d09-a4ed-364e2f7a4dd2",
+      "name": "Closet casework · vertical",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        82.594,
+        24
+      ],
+      "position": [
+        39.6485,
+        42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c38e11f3-b5a6-4c5a-8072-770ad3839414",
+      "assembly": "Closet casework",
+      "designRole": "side-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4f606947-1f0d-4818-b9b6-be8f4a82a602",
+      "name": "Closet casework · tower shelf",
+      "material": "plytanium-703",
+      "size": [
+        25,
+        0.703,
+        23.5
+      ],
+      "position": [
+        0,
+        17.221799999999998,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c56fba36-adae-498c-8b81-8b168e690992",
+      "assembly": "Closet casework",
+      "designRole": "tower-shelf-1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "fc862957-2722-410a-a97b-e2c0a3f39ebb",
+      "name": "Closet casework · tower shelf",
+      "material": "plytanium-703",
+      "size": [
+        25,
+        0.703,
+        23.5
+      ],
+      "position": [
+        0,
+        33.7406,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c56fba36-adae-498c-8b81-8b168e690992",
+      "assembly": "Closet casework",
+      "designRole": "tower-shelf-2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a9e1ec1b-0e6b-47df-bd63-47b4dfb88474",
+      "name": "Closet casework · tower shelf",
+      "material": "plytanium-703",
+      "size": [
+        25,
+        0.703,
+        23.5
+      ],
+      "position": [
+        0,
+        50.2594,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c56fba36-adae-498c-8b81-8b168e690992",
+      "assembly": "Closet casework",
+      "designRole": "tower-shelf-3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "96b8201f-4a52-4539-8f9d-0aee41345526",
+      "name": "Closet casework · tower shelf",
+      "material": "plytanium-703",
+      "size": [
+        25,
+        0.703,
+        23.5
+      ],
+      "position": [
+        0,
+        66.7782,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c56fba36-adae-498c-8b81-8b168e690992",
+      "assembly": "Closet casework",
+      "designRole": "tower-shelf-4",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4e0b1e38-6b8b-42ad-bcf3-5dac94dd2c48",
+      "name": "Closet hanging rods · cut tube rod",
+      "material": "hd-everbilt-closet-rod-96",
+      "size": [
+        1.31,
+        26.094,
+        1.31
+      ],
+      "position": [
+        -26.25,
+        64,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "a72e51e2-068f-44a6-9c1f-e5ac4fdf6753",
+      "assembly": "Closet hanging rods",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "cbc08a70-0bef-40fe-a32a-2fb773e3f9b9",
+      "name": "Closet hanging rods · cut tube rod",
+      "material": "hd-everbilt-closet-rod-96",
+      "size": [
+        1.31,
+        26.094,
+        1.31
+      ],
+      "position": [
+        26.25,
+        64,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "a72e51e2-068f-44a6-9c1f-e5ac4fdf6753",
+      "assembly": "Closet hanging rods",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "02d37778-80d7-4f32-83c9-fcd21d803f47",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "866c3ce2-51fd-428f-a907-376880c5dbf3",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-570e9ec9",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "c38e11f3-b5a6-4c5a-8072-770ad3839414",
+      "title": "Closet: Dry-fit the closet carcass",
+      "notes": "Dry-fit and clamp the listed outside panels and tower dividers. Check the measured opening, clear bays, square and access around trim/baseboards. Keep clamp and tool access before closing the body. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7360a3b0-73d6-436f-9fbe-6350f60b6ec3",
+        "stageKey": "carcass",
+        "memberIds": [
+          "24c07a3b-6a7c-4332-826e-d8b6725bae80",
+          "3eaf56e8-bd1a-4aeb-8904-0430be7fb206",
+          "72a50595-66d4-4a3b-9da1-48901efed66f",
+          "a5bd3bfe-0ee1-461f-8556-436ccc744178",
+          "b78e0adb-d316-4218-9375-248c67bb4538",
+          "f6f134ae-65a0-4d09-a4ed-364e2f7a4dd2"
+        ],
+        "notes": "Dry-fit and clamp the listed outside panels and tower dividers. Check the measured opening, clear bays, square and access around trim/baseboards. Keep clamp and tool access before closing the body. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-726c4e99",
+        "title": "Closet: Dry-fit the closet carcass"
+      }
+    },
+    {
+      "id": "c56fba36-adae-498c-8b81-8b168e690992",
+      "title": "Closet: Set up tower supports and shelves",
+      "notes": "Review support and drilling plans for each shelf before placement. Only explicitly planned holes and supports are documented; other support details remain unresolved. Dry-fit the actual tower shelves at their recorded levels and verify clearance from the hanging bays.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7360a3b0-73d6-436f-9fbe-6350f60b6ec3",
+        "stageKey": "tower-shelves",
+        "memberIds": [
+          "4f606947-1f0d-4818-b9b6-be8f4a82a602",
+          "96b8201f-4a52-4539-8f9d-0aee41345526",
+          "a9e1ec1b-0e6b-47df-bd63-47b4dfb88474",
+          "fc862957-2722-410a-a97b-e2c0a3f39ebb"
+        ],
+        "notes": "Review support and drilling plans for each shelf before placement. Only explicitly planned holes and supports are documented; other support details remain unresolved. Dry-fit the actual tower shelves at their recorded levels and verify clearance from the hanging bays.",
+        "fingerprint": "phase-v1-1f58e5aa",
+        "title": "Closet: Set up tower supports and shelves"
+      }
+    },
+    {
+      "id": "a72e51e2-068f-44a6-9c1f-e5ac4fdf6753",
+      "title": "Closet: Dry-fit hanging rods and review supports",
+      "notes": "Check the actual listed rods against the clear bays. Resolve matched sockets, any required center support, engagement/end deductions and mounting locations before cutting or attachment; geometric rod lengths are provisional without those details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7360a3b0-73d6-436f-9fbe-6350f60b6ec3",
+        "stageKey": "rods",
+        "memberIds": [
+          "4e0b1e38-6b8b-42ad-bcf3-5dac94dd2c48",
+          "cbc08a70-0bef-40fe-a32a-2fb773e3f9b9"
+        ],
+        "notes": "Check the actual listed rods against the clear bays. Resolve matched sockets, any required center support, engagement/end deductions and mounting locations before cutting or attachment; geometric rod lengths are provisional without those details.",
+        "fingerprint": "phase-v1-5ddd88fd",
+        "title": "Closet: Dry-fit hanging rods and review supports"
+      }
+    },
+    {
+      "id": "8f023149-0353-4aac-a0d4-2e044a526469",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "866c3ce2-51fd-428f-a907-376880c5dbf3",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-603c1222",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "ACCEPTANCE BASELINE STUDY — Actual three-bay casework and two source-sized cut rod envelopes; socket engagement, supports, shelf holes, anchors and measured obstructions remain incomplete.\n\nCloset insert — PARTIAL DIMENSIONAL STUDY\nUnresolved: closet-supports: Shelf pins/holes, carcass joints, rod sockets/supports, anti-tip anchors and substrate-dependent fastening schedules remain unspecified.\nUnresolved: closet-obstacles: Baseboards, trim, door swings, wall/stud locations and access clearances need measured obstacle geometry.\nUnresolved: closet-loads: Shelf/rod spans, panel grade, loads and anchoring are not qualified by this casework geometry.\nUnresolved: material.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.\nUnresolved: material.closetRod.installation: Hanging-clothes rod envelope. One 96-inch stock unit; measure before cutting. Dry-fit the delivered rod and sockets, measure both setbacks and insertion clearance, and confirm intermediate support, backing, fasteners and hanging load for your installation.\nUnresolved: material.closetRodSupport.installation: Review Everbilt 311V end sockets for the delivered rod and confirm backing, fasteners and any intermediate supports before installation.\nUnresolved: closet-rod-end-allowances: The modeled clear openings are provisional lengths. Use the measured opening, socket setbacks and insertion clearance to calculate each cut. Confirm mounting, height, access and intermediate supports.",
+  "sections": [
+    {
+      "id": "00d26bc4-f063-48d7-845a-0a1c45ff09c4",
+      "name": "Closet casework",
+      "pieceIds": [
+        "b78e0adb-d316-4218-9375-248c67bb4538",
+        "72a50595-66d4-4a3b-9da1-48901efed66f",
+        "a5bd3bfe-0ee1-461f-8556-436ccc744178",
+        "24c07a3b-6a7c-4332-826e-d8b6725bae80",
+        "3eaf56e8-bd1a-4aeb-8904-0430be7fb206",
+        "f6f134ae-65a0-4d09-a4ed-364e2f7a4dd2",
+        "4f606947-1f0d-4818-b9b6-be8f4a82a602",
+        "fc862957-2722-410a-a97b-e2c0a3f39ebb",
+        "a9e1ec1b-0e6b-47df-bd63-47b4dfb88474",
+        "96b8201f-4a52-4539-8f9d-0aee41345526"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "86165780-5788-4b62-a962-7439408b4de6",
+      "name": "Closet hanging rods",
+      "pieceIds": [
+        "4e0b1e38-6b8b-42ad-bcf3-5dac94dd2c48",
+        "cbc08a70-0bef-40fe-a32a-2fb773e3f9b9"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [
+    {
+      "version": 1,
+      "id": "06d60d85-f68f-4e26-8034-0aa2d9b96c37",
+      "revision": 2,
+      "currentFingerprint": "binding-v1-ba4ccc3b6123a9a1",
+      "reviewBlock": "Closet insert — PARTIAL DIMENSIONAL STUDY\nUnresolved: closet-supports: Shelf pins/holes, carcass joints, rod sockets/supports, anti-tip anchors and substrate-dependent fastening schedules remain unspecified.\nUnresolved: closet-obstacles: Baseboards, trim, door swings, wall/stud locations and access clearances need measured obstacle geometry.\nUnresolved: closet-loads: Shelf/rod spans, panel grade, loads and anchoring are not qualified by this casework geometry.\nUnresolved: material.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.\nUnresolved: material.closetRod.installation: Hanging-clothes rod envelope. One 96-inch stock unit; measure before cutting. Dry-fit the delivered rod and sockets, measure both setbacks and insertion clearance, and confirm intermediate support, backing, fasteners and hanging load for your installation.\nUnresolved: material.closetRodSupport.installation: Review Everbilt 311V end sockets for the delivered rod and confirm backing, fasteners and any intermediate supports before installation.\nUnresolved: closet-rod-end-allowances: The modeled clear openings are provisional lengths. Use the measured opening, socket setbacks and insertion clearance to calculate each cut. Confirm mounting, height, access and intermediate supports.",
+      "generatedNotes": "Closet insert — PARTIAL DIMENSIONAL STUDY\nUnresolved: closet-supports: Shelf pins/holes, carcass joints, rod sockets/supports, anti-tip anchors and substrate-dependent fastening schedules remain unspecified.\nUnresolved: closet-obstacles: Baseboards, trim, door swings, wall/stud locations and access clearances need measured obstacle geometry.\nUnresolved: closet-loads: Shelf/rod spans, panel grade, loads and anchoring are not qualified by this casework geometry.\nUnresolved: material.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.\nUnresolved: material.closetRod.installation: Hanging-clothes rod envelope. One 96-inch stock unit; measure before cutting. Dry-fit the delivered rod and sockets, measure both setbacks and insertion clearance, and confirm intermediate support, backing, fasteners and hanging load for your installation.\nUnresolved: material.closetRodSupport.installation: Review Everbilt 311V end sockets for the delivered rod and confirm backing, fasteners and any intermediate supports before installation.\nUnresolved: closet-rod-end-allowances: The modeled clear openings are provisional lengths. Use the measured opening, socket setbacks and insertion clearance to calculate each cut. Confirm mounting, height, access and intermediate supports.",
+      "title": "Built-in closet bay study",
+      "summary": "Actual three-bay casework and two source-sized cut rod envelopes; socket engagement, supports, shelf holes, anchors and measured obstructions remain incomplete.",
+      "assumptions": [],
+      "questions": [],
+      "suggestions": [],
+      "entries": [
+        {
+          "id": "7360a3b0-73d6-436f-9fbe-6350f60b6ec3",
+          "spec": {
+            "type": "structure",
+            "structure": {
+              "entryId": "7360a3b0-73d6-436f-9fbe-6350f60b6ec3",
+              "kind": "closet-insert",
+              "parameters": {
+                "width": 80,
+                "depth": 24,
+                "height": 84,
+                "towerWidth": 25,
+                "shelfCount": 4,
+                "rodHeight": 64,
+                "origin": [
+                  0,
+                  0,
+                  0
+                ],
+                "yaw": 0
+              },
+              "selections": {
+                "caseworkPanels": {
+                  "materialId": "plytanium-703",
+                  "productRegistryRef": "plytanium-bc-201428"
+                },
+                "closetRod": {
+                  "materialId": "hd-everbilt-closet-rod-96",
+                  "productRegistryRef": "everbilt-eh-wsthdus-320v"
+                }
+              }
+            }
+          },
+          "generatedNotes": "Closet insert — PARTIAL DIMENSIONAL STUDY\nUnresolved: closet-supports: Shelf pins/holes, carcass joints, rod sockets/supports, anti-tip anchors and substrate-dependent fastening schedules remain unspecified.\nUnresolved: closet-obstacles: Baseboards, trim, door swings, wall/stud locations and access clearances need measured obstacle geometry.\nUnresolved: closet-loads: Shelf/rod spans, panel grade, loads and anchoring are not qualified by this casework geometry.\nUnresolved: material.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.\nUnresolved: material.closetRod.installation: Hanging-clothes rod envelope. One 96-inch stock unit; measure before cutting. Dry-fit the delivered rod and sockets, measure both setbacks and insertion clearance, and confirm intermediate support, backing, fasteners and hanging load for your installation.\nUnresolved: material.closetRodSupport.installation: Review Everbilt 311V end sockets for the delivered rod and confirm backing, fasteners and any intermediate supports before installation.\nUnresolved: closet-rod-end-allowances: The modeled clear openings are provisional lengths. Use the measured opening, socket setbacks and insertion clearance to calculate each cut. Confirm mounting, height, access and intermediate supports.",
+          "pose": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "casework-panels",
+              "sectionId": "00d26bc4-f063-48d7-845a-0a1c45ff09c4",
+              "stepId": "b1b9d8d5-8be5-43cb-8c80-7b3e3d6fe79e"
+            },
+            {
+              "role": "hanging-rods",
+              "sectionId": "86165780-5788-4b62-a962-7439408b4de6",
+              "stepId": "8eecede3-06b3-4023-9587-e72a85389ccf"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": "design-v3-157aeb12",
+  "history": []
+}

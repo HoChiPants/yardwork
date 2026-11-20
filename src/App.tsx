@@ -1,5 +1,18 @@
+import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
+import { ZodError } from "zod";
+import { FloorBaseFields } from "./FloorBaseFields";
+import { fittingBaseBoards } from "./homeDepotTreatedLumber";
+import { assemblyOrderPreparation, buildPreparation, type BuildPreparationAction } from "./buildPreparation";
+import { reviewAssemblyOrder } from "./assemblyOrder";
+import { homeDepotShoppingList } from "./handoff";
+import { PrintSunliteMounts, SunliteMountPanel } from "./SunliteMountPanel";
+import { reviewSunliteMounts } from "./sunliteMounts";
+import type { Finding } from "./engine";
+import { reviewGreenhouseVentBacking, ventBackingGuideLines, ventBackingScope, ventBackingSource, ventBackingSummary } from "./greenhouseVentBacking";
+import { concreteAnchor, concreteAnchorScope } from "./concreteAnchorReference";
 import {
   Component,
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -7,13 +20,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
 import {
   ArrowDownToLine,
   ArrowLeft,
   ArrowRight,
   ArrowUpFromLine,
   Box,
-  Check,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -22,6 +35,7 @@ import {
   Copy,
   Cuboid,
   Download,
+  DoorOpen,
   Expand,
   Eye,
   FolderOpen,
@@ -34,8 +48,6 @@ import {
   MousePointer2,
   Move3D,
   Package,
-  Pause,
-  Play,
   Plus,
   Redo2,
   RotateCcw,
@@ -58,9 +70,196 @@ import {
 } from "lucide-react";
 import * as THREE from "three";
 import { Scene } from "./Scene";
+import { useInspectorFocus } from "./useInspectorFocus";
+import IdeaPlanner from "./IdeaPlanner";
+import { AppliedDesignsPanel } from "./AppliedDesignsPanel";
+import { GreenhouseFoundationsPanel } from "./GreenhouseFoundationsPanel";
+import { greenhouseFoundationGuide, greenhouseFoundationReviews, greenhouseFoundationScope } from "./greenhouseFoundation";
+import { SiteClearancesPanel } from "./SiteClearancesPanel";
+import { reviewSiteClearance, siteClearanceText } from "./siteClearance";
+import { lidSiteAngle } from "./lidSiteClearance";
+import { lidSiteGuideRows } from "./lidSiteGuide";
+import { lidMomentReference, lidStayScope, lidWeightGuideRows, lidWeightScope } from "./lidWeight";
+import { everbiltLidSupport, springLidStay } from "./lidStayReference";
+import { lidStayFitGuideRows, lidStayFitScope } from "./lidStayFit";
+import { adoptLegacyRecipe, detachIdeaBinding } from "./ideaBindings";
+import { WorkZoneForm } from "./WorkZoneForm";
+import { CutStudio } from "./CutStudio";
+import { canEditThroughOpenings } from "./throughOpeningCuts";
+import { ToolsPanel } from "./ToolsPanel";
+import { GuideConnectionSchedule, type ConnectionReviewScope } from "./GuideConnections";
+import { FittedStockPanel } from "./FittedStockPanel";
+import { commitFittedStock, type FittedFaceRef, type FittedStockPreview } from "./fittedStock";
+import { pickRenderedFittedStockFace } from "./fittedStockPicking";
+import { assemblyPartForOffcut } from "./sceneVisibility";
+import { rekeyGuidePlacements } from "./guidePlacement";
+import { GuidePlacementEditor } from "./GuidePlacementEditor";
+import { copySavedRevision } from "./recoverSavedRevision";
+import { recordStockCutLayouts, saveTubeCutLoss } from "./recordStockCutLayout";
+import { GuidePartLabels, PrintAssemblyPartLabels } from "./GuidePartLabels";
+import { assemblyPartLabels, type AssemblyPartLabel } from "./assemblyPartLabels";
+import { ConnectionReviewPanel } from "./ConnectionReviewPanel";
+import { previewGreenhouseRailFit, type GreenhouseRailFit } from "./greenhouseBaseConnections";
+import { EaveBlockPanel } from "./EaveBlockPanel";
+import type { EaveFitPreview } from "./eaveStockFit";
+import { BanquetteConstructionAppendix } from "./BanquetteConstructionReview";
+import { connectionCoverage, type ConnectionIntent } from "./connectionCoverage";
+import { LidHingesPanel } from "./LidHingesPanel";
+import { MotionPanel } from "./MotionPanel";
+import { RemovalMotionPanel } from "./RemovalMotionPanel";
+import { clearBearingRemovalPath, saveBearingRemovalPath } from "./recordedRemoval";
+import { motionDistance, motionReviewLines, motionTestFindings, projectMotionReviews, runMotionTest, type MotionPreview, type MotionTestSelection } from "./mechanismMotion";
+import { everbiltLatch, greenhouseLatchGuideLines } from "./greenhouseLatch";
+import { greenhouseDoorStopGuideLines } from "./greenhouseDoorStops";
+import { LidMotionPanel } from "./LidMotionPanel";
+import { AttachmentsPanel } from "./AttachmentsPanel";
+import { RestraintsPanel } from "./RestraintsPanel";
+import { FastenersPanel } from "./FastenersPanel";
+import { ConnectorsPanel } from "./ConnectorsPanel";
+import { retainConnectorLabelHistory, type ConnectorReview } from "./connectors";
+import { connectorPurchaseSummary } from "./connectorPurchases";
+import { connectorGuideText } from "./connectorGuide";
+import { connectorScheduleCsv } from "./connectorCsv";
+import { PROJECT_FORMAT_VERSION } from "./projectVersion";
+import { PricingSummary } from "./PricingSummary";
+import { fastenerPurchaseSummary } from "./fastenerPurchases";
+import { fastenerGuideText } from "./fastenerGuide";
+import { fastenerScheduleCsv } from "./fastenerCsv";
+import { hingeScheduleCsv } from "./hingeCsv";
+import { connectionCoverageCsv } from "./connectionCsv";
+import { ConnectionSummary } from "./ConnectionSummary";
+import type { DriverAccessLocation } from "./fastenerAccess";
+import type { FastenerLayoutMarkerPreview } from "./FastenerMarkers";
+import { hingeGuideText } from "./hingeGuide";
+import { retainFastenerLabelHistory } from "./fastenings";
+import { retainHingeLabelHistory } from "./hingeHistory";
+import { pickFastenerSurface } from "./fastenerPicking";
+import { restraintGuideText } from "./restraintGuide";
+import {
+  restraintPurchaseSummary,
+  addMissingRestraintKits,
+} from "./restraintPurchases";
+import { attachmentGuideText } from "./attachmentGuide";
+import {
+  ensurePartLabels,
+  partLabel,
+  retainPartLabelHistory,
+} from "./partLabels";
+import { attachmentScheduleCsv } from "./attachmentCsv";
+import {
+  attachmentPurchaseSummaries,
+  addMissingAttachmentPinPacks,
+} from "./attachmentPurchases";
+import {
+  CURRENT_DRAFT_KEY as DRAFT_KEY,
+  PREVIOUS_DRAFT_KEY,
+  readInitialBrowserDrafts,
+  writeBrowserDraft,
+  browserDraftRecoveries,
+} from "./drafts";
+import { SuppliesPanel } from "./SuppliesPanel";
+import { PrintSunliteProfiles, SunliteProfilePanel } from "./SunliteProfilePanel";
+import { reviewSunliteProfiles } from "./sunliteProfiles";
+import { SunliteTakeoffPanel } from "./SunliteTakeoffPanel";
+import { PrintSunliteTape, SunliteTapePanel } from "./SunliteTapePanel";
+import { EdgeBandingPanel, PrintEdgeBanding } from "./EdgeBandingPanel";
+import { isBandingPanel, reviewEdgeBanding, type BandingEdge } from "./edgeBanding";
+import { reviewSunliteTape } from "./sunliteTapePlan";
+import { PrintSunliteThermal, SunliteThermalPanel } from "./SunliteThermalPanel";
+import { sunliteThermalReview } from "./sunliteThermal";
+import { ProjectCodePanel, ProjectCodeRows } from "./ProjectCodePanel";
+import { dryerExhaustGuideLines } from "./dryerExhaust";
+import { shingleRoofGuideLines } from "./shingleRoof";
+import { reviewProjectCode } from "./projectCode";
+import { ventLayoutGuideLines } from "./plumbingVentLayout";
+import { CaseworkTipUpPanel } from "./CaseworkTipUpPanel";
+import { caseworkTipUpGuideLines } from "./caseworkTipUp";
+import { SaunaBenchTravelPanel } from "./SaunaBenchTravelPanel";
+import { saunaBenchTravelGuideLines } from "./saunaBenchTravel";
+import { SaunaHeaterPanel } from "./SaunaHeaterPanel";
+import { SaunaVentilationPanel } from "./SaunaVentilationPanel";
+import { saunaVentilationGuideLines, saunaVentilationReview, saunaVentReference, saunaVentScope } from "./saunaVentilation";
+import { saunaBenchGuideLines } from "./saunaBenches";
+import { cedarbrookBenchInstructions } from "./saunaBenchReference";
+import { foilBlankSize, foilReturnText } from "./saunaFoil";
+import { saunaCeilingGuideLines } from "./saunaCeilingCoverage";
+import { saunaLiningGuideLines, saunaLiningScope, saunaLiningSources, saunaLiningTools } from "./saunaLiningBacking";
+import { SaunaLiningPurchasePanel } from "./SaunaLiningPurchasePanel";
+import { saunaWallCoverageScope, saunaWallGuideLines } from "./saunaWallCoverage";
+import { stockAxes } from "./stockAxes";
+import { purchaseUnitLabel } from "./purchaseUnits";
+import { addMissingSaunaHeaters, saunaHeaterGuideLines, saunaHeaterGuideSources, saunaHeaterPurchases, saunaHeaterReview, saunaHeaterScope } from "./saunaHeaters";
+import { harviaKit, steel6 } from "./saunaHeaterReference";
+import { RodFitsPanel } from "./RodFitsPanel";
+import { addMissingEverbiltRodBrackets, addMissingRodBrackets, addMissingRodFlanges, addMissingRodSockets, everbiltRodBracketPurchases, rodBracketPurchases, rodFitGuideLines, rodFlangePurchases, rodSocketPurchases } from "./rodFits";
+import { addEstimatedSunlitePurchases, sunliteTakeoff } from "./sunliteTakeoff";
+import { reviewSunliteRoofBacking, roofBackingGuideLines, roofBackingScope, roofBackingSummary, sunliteRoofDetail } from "./sunliteRoofBacking";
+import { isHorizontalPanel, panelBearingGuideLines, panelBearingScope, reviewPanelBearing } from "./panelBearing";
+import { beamSource, shelfSagGuideLines, shelfSagScope, stiffnessSource } from "./shelfSag";
+import { ShelfSagPanel } from "./ShelfSagPanel";
+import type { ShelfDividerPreview } from "./shelfDivider";
+import { WoodSupportPanel } from "./WoodSupportPanel";
+import { bearingConnectionGuideLines, bearingConnections, bearingConnectionScope } from "./bearingConnections";
+import { clearBearingDecision, saveBearingDecision } from "./bearingDecisions";
+import { reviewWoodSupport, woodSupportGuideLines, woodSupportScope } from "./woodSupport";
+import { rafterBearingGuideLines, rafterBearingScope, reviewGreenhouseRafterBearing } from "./greenhouseRafterBearing";
+import { greenhouseAttachmentScope, greenhouseRoofAttachmentLines, greenhouseRoofAttachments } from "./greenhouseRoofAttachments";
+import { greenhouseBaseConnections, greenhouseBaseGuideLines, greenhouseBaseScope } from "./greenhouseBaseConnections";
+import { floorBaseConnections, floorBaseConnectionGuideLines, floorBaseConnectionScope } from "./floorBaseConnections";
+import { floorHangerGuideLines, saveFloorHangerPlan } from "./floorHangerPlans";
+import { floorHangerReport, floorHangerScope } from "./floorHangerReference";
+import { supplyRows, formatSupplyContent } from "./supplies";
+import { shoppingOfferForMaterial } from "./retailerCatalog";
+import { CatalogReferences } from "./CatalogReferences";
+import BuildStudies from "./BuildStudies";
+import { SheetLayouts, sheetPlansMarkdown } from "./SheetLayouts";
+import { PrintStockCutSequences, StockCutSequenceList } from "./StockCutSequenceList";
+import { PrintOffcutCutOrder } from "./PrintOffcutCutOrder";
+import { offcutCutRows } from "./offcutCutGuide";
+import { stockCutSequences, type StockCutLayout } from "./stockCutSequence";
+import { PartStockPlan } from "./PartStockPlan";
+import { StockGroupComparison } from "./StockGroupComparison";
+import { previewGroupStockReplacement, previewPartStockReplacement } from "./partStockReplacement";
+import { CutStockLayout } from "./CutStockLayoutView";
+import { cutStockLayoutMarkdown } from "./cutStockLayout";
+import "./CutStockLayout.css";
+import { cutInstructions, cutInstructionsText } from "./cutInstructions";
+import { pieceThroughOpenings, throughOpeningProblem } from "./throughOpenings";
+import { toolGuideMarkdown, selectedToolsForProject } from "./toolGuide";
+import { toolChecklist } from "./tools";
+import { retailerName, retailerSearch, type Retailer } from "./retailers";
+import {
+  measureBetween,
+  formatMeasurement,
+  formatPreciseInches,
+} from "./measurement";
+import { generateBuildGuide, guideIsCurrent } from "./guide";
+import {
+  SAVED_PROJECT_NOTES_CONTEXT,
+  SAVED_PROJECT_NOTES_TITLE,
+} from "./projectNotes";
+import { snapPlacement, surfacePlacement } from "./editing";
+import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSlideStopLabel } from "./placement";
+import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
+import { MaterialLibrary } from "./MaterialLibrary";
+import { CutPool } from "./CutPool";
+import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
+import { addMeasuredOffcut } from "./measuredOffcuts";
+import { assignOffcutToPart } from "./offcutAssignment";
+import { OffcutReleaseReview, type OffcutReleasePreview } from "./OffcutReleaseReview";
+import { planOffcutRelease } from "./offcutReleasePlan";
+import { OffcutReuseReview } from "./OffcutReuseReview";
+import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
+import { ObjectMovement } from "./ObjectMovement";
 import { InventoryForm } from "./InventoryForm";
 import { HomeDepotHandoff } from "./HomeDepotHandoff";
+import { recordHomeDepotStoreSnapshots } from "./homeDepotStoreSnapshots";
+import { mergeStoreSnapshots, readStoreSnapshotFile, recordMaterialObservation, storeSnapshotFile } from "./storeSnapshotFiles";
+import { nextStoreCheckChange } from "./storeSnapshotTime";
+import { addHomeDepotPurchaseNeed } from "./handoffPurchases";
 import { SectionsPanel } from "./SectionsPanel";
+import type { LidPreview } from "./lidMotion";
+import { inspectLidTravel, lidTravelPose, projectLidTravelChecks, type LidTravelInspection } from "./lidTravelFindings";
 import {
   reconcileSections,
   previewSectionCommand,
@@ -74,33 +273,46 @@ import {
   bom,
   bounds,
   connect,
-  cutPiece,
   distance,
+  guideHomeDepotStock,
   guideMarkdown,
+  inspectCutStock,
+  pieceCutKerf,
   parseDxf,
   parseInventory,
   recordChanges,
+  projectPricingCoverage,
   shoppingCsv,
   validate,
 } from "./engine";
+import { setCutSourceOnHand } from "./cutStock";
 import {
   applyCommand,
   blank,
   catalog,
   commandSchema,
-  coop,
   format,
+  isBatt,
   material,
   projectSchema,
   step,
   uid,
-  type Command,
+  type SectionCommand,
   type MaterialId,
   type Piece,
   type Project,
   type V3,
 } from "./model";
 type Modal =
+  | "idea"
+  | "zone"
+  | "cut"
+  | "part-stock"
+  | "measured-offcut"
+  | "offcut-reuse"
+  | "offcut-release"
+  | "catalog"
+  | "studies"
   | "handoff"
   | "inventory"
   | "projects"
@@ -108,6 +320,7 @@ type Modal =
   | "import"
   | "export"
   | "assistant"
+  | "base"
   | "new"
   | "step"
   | "help"
@@ -118,24 +331,61 @@ type Summary = {
   updatedAt: string;
   pieces: number;
   revision: number;
+  loadError?: string;
+  originalAvailable?: boolean;
+  earlierRevisions?: number[];
 };
+
+function EarlierProjectSaves({ project, onOpen }: {
+  project: Summary;
+  onOpen: (revision: number) => void;
+}) {
+  if (!project.earlierRevisions?.length) return null;
+  return (
+    <details className="project-earlier-saves" data-earlier-saves-for={project.id}>
+      <summary>Earlier saves · {project.earlierRevisions.length}</summary>
+      <ul>
+        {project.earlierRevisions.map((revision) => (
+          <li key={revision}>
+            <button className="text-button" type="button"
+              aria-label={`Open revision ${revision} of ${project.name} as a copy`}
+              onClick={() => onOpen(revision)}>
+              Open revision {revision} as a copy
+            </button>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
 const money = (n: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 2,
   }).format(n);
-const DRAFT_KEY = "yardwork-draft-v1";
 function initial() {
+  let drafts: ReturnType<typeof readInitialBrowserDrafts> = {
+    resume: null,
+    previous: null,
+  };
   try {
-    const data = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
-    if (data)
-      return {
-        project: projectSchema.parse(data.project),
-        revision: Number(data.revision) || 0,
-      };
-  } catch {}
-  return { project: coop(), revision: 0 };
+    drafts = readInitialBrowserDrafts(localStorage);
+  } catch {
+    /* Storage may be disabled by the browser. */
+  }
+  return {
+    project: blank(),
+    revision: 0,
+    ...drafts,
+  };
+}
+function recoverableDrafts() {
+  try {
+    return browserDraftRecoveries(localStorage);
+  } catch {
+    return [];
+  }
 }
 async function api(url: string, options?: RequestInit) {
   const response = await fetch(url, options);
@@ -158,6 +408,7 @@ function Num({
   min = -12000,
   max = 12000,
   unit = "in",
+  disabled = false,
 }: {
   label: string;
   value: number;
@@ -165,14 +416,20 @@ function Num({
   min?: number;
   max?: number;
   unit?: string;
+  disabled?: boolean;
 }) {
-  const [draft, setDraft] = useState(String(Math.round(value * 1000) / 1000));
-  useEffect(() => setDraft(String(Math.round(value * 1000) / 1000)), [value]);
+  const numberText=(n:number)=>String(Number(n.toFixed(8)));
+  const [draft, setDraft] = useState(numberText(value));
+  const edited = useRef(false);
+  useEffect(() => {setDraft(numberText(value));edited.current=false;}, [value]);
   const commit = () => {
+    if(!edited.current)return;
+    edited.current=false;
     const n = Number(draft);
     if (draft.trim() && Number.isFinite(n) && n >= min && n <= max) {
       if (n !== value) onChange(n);
-    } else setDraft(String(value));
+    }
+    setDraft(numberText(value));
   };
   return (
     <label className="number-field">
@@ -181,11 +438,12 @@ function Num({
         <input
           aria-label={label}
           type="number"
+          disabled={disabled}
           step="0.125"
           min={min}
           max={max}
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {edited.current=true;setDraft(e.target.value);}}
           onBlur={commit}
           onKeyDown={(e) => {
             if (e.key === "Enter") e.currentTarget.blur();
@@ -249,51 +507,272 @@ class SceneBoundary extends Component<
     );
   }
 }
+type WorkshopPanel = "prep" | "part" | "checks" | "materials" | "step" | "sections" | "tools" | "attachments" | "restraints" | "fasteners" | "connections" | "hinges" | "connectors" | "fit-stock" | "motion" | "lid-travel" | "site-clearances";
 export function App() {
   const [boot] = useState(initial);
+  const draftTouched = useRef(false);
+  const archivedDraft = useRef(false);
+  const [resumeDraft, setResumeDraft] = useState(boot.resume);
+  const [previousDraft, setPreviousDraft] = useState(boot.previous);
+  const [draftRecoveries, setDraftRecoveries] = useState(recoverableDrafts);
   const [project, setProject] = useState<Project>(boot.project);
+  const inspectorFocus = useInspectorFocus(project.id);
+  const [connectorDraftDirty, setConnectorDraftDirty] = useState(false);
+  const connectorDraftDirtyRef = useRef(false);
+  const onConnectorDirtyChange = useCallback((dirty:boolean) => { connectorDraftDirtyRef.current = dirty; setConnectorDraftDirty(dirty); }, []);
+  const [fittedDraftDirty, setFittedDraftDirty] = useState(false);
+  const fittedDraftDirtyRef = useRef(false);
+  const onFittedDirtyChange = useCallback((dirty:boolean) => { fittedDraftDirtyRef.current = dirty; setFittedDraftDirty(dirty); }, []);
   const current = useRef(project);
   current.current = project;
+  const earlierSaveRequest = useRef<AbortController | null>(null);
   const revision = useRef(boot.revision),
     undoStack = useRef<Project[]>([]),
     redoStack = useRef<Project[]>([]);
   const [, force] = useState(0);
+  const objectClipboard = useRef<ObjectClipboard | null>(null);
+  const [hasObjectClipboard, setHasObjectClipboard] = useState(false);
+  const [moveIncrement, setMoveIncrement] = useState(1);
+  const [shownSaunaHeaterId, setShownSaunaHeaterId] = useState<string | null>(null);
+  const [shownSaunaVentilationId, setShownSaunaVentilationId] = useState<string | null>(null);
+  const [shownProfileRunId, setShownProfileRunId] = useState<string | null>(null);
+  const [reviewStockId, setReviewStockId] = useState<MaterialId | null>(null);
+  const [reviewFinishPanel, setReviewFinishPanel] = useState<"sunlite-tape-plan" | "edge-banding-plan" | null>(null);
+  const [bandingMark, setBandingMark] = useState<{ project: Project; edge: BandingEdge } | null>(null);
+  const [offcutReusePlan, setOffcutReusePlan] = useState<OffcutReusePlan | null>(null);
+  const [offcutReleasePreview, setOffcutReleasePreview] = useState<OffcutReleasePreview | null>(null);
+  const [returnToPreparation, setReturnToPreparation] = useState(false);
+  const [sunliteMountPanelId, setSunliteMountPanelId] = useState("");
+  const [shownLatchId, setShownLatchId] = useState<string | null>(null);
+  const [shownRodSupportId, setShownRodSupportId] = useState<string | null>(null);
+  const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
+  const [shownSiteClearanceId, setShownSiteClearanceId] = useState<string | null>(null);
+  const [ventDatumProjectId, setVentDatumProjectId] = useState<string | null>(null);
+  const [dryerDuctProjectId, setDryerDuctProjectId] = useState<string | null>(null);
+  const [siteReturnPanel, setSiteReturnPanel] = useState<"checks" | "sections" | "motion" | "connections">("checks");
+  const [shownAreaFinding, setShownAreaFinding] = useState<{ project: Project; id: string } | null>(null);
+  const [eaveBlockDraft, setEaveBlockDraft] = useState<{ project: Project; fit: EaveFitPreview } | null>(null);
+  const [shelfDividerDraft, setShelfDividerDraft] = useState<{ project: Project; fit: ShelfDividerPreview } | null>(null);
+  const [baseRailDraft, setBaseRailDraft] = useState<{
+    project: Project; entryId: string; sideId: string; fit: GreenhouseRailFit;
+  } | null>(null);
+  const [guidePartFocus, setGuidePartFocus] = useState<{
+    project: Project; row: AssemblyPartLabel; isolated: boolean;
+  } | null>(null);
+  const [stockPlanPartId, setStockPlanPartId] = useState<string | null>(null);
+  const [labelPrint, setLabelPrint] = useState<{ title: string; labels: AssemblyPartLabel[] } | null>(null);
+  const [printingGuide, setPrintingGuide] = useState(false);
+  const hasOpeningLid = project.sections.some(({ recipe }) => recipe?.openingLid);
+  const hasMotionPlans = !!project.motionPlans?.length;
+  useEffect(() => {
+    if ((!hasOpeningLid && !hasMotionPlans) || labelPrint) return;
+    const prepareGuide = () => flushSync(() => setPrintingGuide(true));
+    const endPrint = () => setPrintingGuide(false);
+    window.addEventListener("beforeprint", prepareGuide);
+    window.addEventListener("afterprint", endPrint);
+    return () => {
+      window.removeEventListener("beforeprint", prepareGuide);
+      window.removeEventListener("afterprint", endPrint);
+    };
+  }, [hasOpeningLid, hasMotionPlans, labelPrint]);
+  useEffect(() => {
+    if (!labelPrint) return;
+    const reset = () => setLabelPrint(null);
+    const frame = requestAnimationFrame(() => window.print());
+    window.addEventListener("afterprint", reset);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("afterprint", reset);
+    };
+  }, [labelPrint]);
+  const objectActions = useRef<{copy?:()=>void;paste?:()=>void;duplicate?:()=>void;nudge?:(direction:number)=>void}>({});
   const [selected, setSelected] = useState<string | null>(null),
-    [mode, setMode] = useState<"select" | "move" | "rotate" | "screw">(
-      "select",
-    );
+    [mode, setMode] = useState<
+      "select" | "move" | "lift" | "rotate" | "screw" | "measure" | "fastener" | "fit-face"
+    >("select");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     null,
   );
+  const [lidMotionPreview, setLidMotionPreview] = useState<{
+    project: Project;
+    value: LidPreview;
+  } | null>(null);
+  const [lidTravelInspection, setLidTravelInspection] = useState<(LidTravelInspection & { project: Project }) | null>(null);
+  const [sectionMotionPreview, setSectionMotionPreview] = useState<{ project: Project; value: MotionPreview; target: "bench" | "casework" } | null>(null);
+  const [motionPreview, setMotionPreview] = useState<{ project: Project; value: MotionPreview } | null>(null);
+  const [motionTestSelection, setMotionTestSelection] = useState<(MotionTestSelection & { project: Project }) | null>(null);
+  const [clearanceRetest, setClearanceRetest] = useState<{
+    projectId: string;
+    target: { kind: "motion" } & NonNullable<MotionPreview["focusTest"]> | { kind: "lid"; sectionId: string };
+  } | null>(null);
+  useEffect(() => setClearanceRetest(null), [project.id]);
+  const [removalTarget, setRemovalTarget] = useState<{ projectId: string; topId: string; baseId: string } | null>(null);
   const [selectionScope, setSelectionScope] = useState<"part" | "section">(
     "part",
   );
+  const [measurement, setMeasurement] = useState<{
+    a: V3 | null;
+    b: V3 | null;
+  }>({ a: null, b: null });
+  const measured =
+    measurement.a && measurement.b
+      ? measureBetween(measurement.a, measurement.b)
+      : null;
   const [assistantTarget, setAssistantTarget] = useState("");
   const [snap, setSnap] = useState(true),
     [explode, setExplode] = useState(false),
     [xray, setXray] = useState(false),
+    [showOffcuts, setShowOffcuts] = useState(false),
     [view, setView] = useState({ preset: "iso", nonce: 0 });
-  const [panel, setPanel] = useState<
-      "part" | "checks" | "materials" | "step" | "sections"
-    >("checks"),
-    [library, setLibrary] = useState<"parts" | "assemblies">("parts"),
+  const [panel, setPanelState] = useState<WorkshopPanel>("checks"),
+    [library, setLibrary] = useState<"parts" | "assemblies" | "cuts">("parts"),
     [filter, setFilter] = useState("All"),
     [search, setSearch] = useState("");
+  const shownVentDatums = panel === "checks" && project.id === ventDatumProjectId &&
+    project.projectCode?.trades.includes("plumbing") && project.projectCode.wallVent.inScope === "yes"
+    ? project.projectCode.wallVent.layout : undefined;
+  const shownDryerDuct = panel === "checks" && project.id === dryerDuctProjectId &&
+    project.projectCode?.trades.includes("hvac") && project.projectCode.dryerExhaust?.appliance === "ducted"
+    ? project.projectCode.dryerExhaust.layout : undefined;
   const [stepId, setStepId] = useState(project.steps[0].id),
     [stage, setStage] = useState<number | null>(null),
     [playing, setPlaying] = useState(false);
-  const [modal, setModal] = useState<Modal>(null),
+  const activeLidPreview = lidMotionPreview?.project === project &&
+    (panel === "sections" || panel === "hinges" || panel === "lid-travel") && selectedSectionId === lidMotionPreview.value.sectionId
+    ? lidMotionPreview.value : null;
+  const inspectedLidSection = panel === "lid-travel"
+    ? project.sections.find(({ id }) => id === selectedSectionId)
+    : undefined;
+  const activeSectionMotion = sectionMotionPreview?.project === project && panel === "sections" ? sectionMotionPreview : null;
+  const activeMotionPreview = motionPreview?.project === project && panel === "motion" ? motionPreview.value : activeSectionMotion?.value ?? null;
+  const activeBaseRailDraft = baseRailDraft?.project === project && panel === "connections" ? baseRailDraft : null;
+  const baseRailPreview = activeBaseRailDraft?.fit.kind === "move" ? activeBaseRailDraft.fit.piece : null;
+  useEffect(() => {
+    setBaseRailDraft(null);
+  }, [project]);
+  const activeRemoval = panel === "motion" && removalTarget?.projectId === project.id ? removalTarget : null;
+  const travelPreviewActive = !!(activeMotionPreview || activeLidPreview);
+  useEffect(() => {
+    setLidMotionPreview((preview) =>
+      panel === "lid-travel" && preview?.project === project && preview.value.sectionId === selectedSectionId
+        ? preview
+        : null,
+    );
+  }, [project, panel, selectedSectionId]);
+  useEffect(() => {
+    setSectionMotionPreview(null);
+  }, [project]);
+  const [selectedAttachmentPlanId, setSelectedAttachmentPlanId] = useState<
+    string | null
+  >(null);
+  const [selectedFastenerPlanId, setSelectedFastenerPlanId] = useState<string | null>(null);
+  const [focusedFastenerLocation, setFocusedFastenerLocation] = useState<{projectId:string;planId:string;locationId:string|null}|null>(null);
+  const onFocusFastenerLocation = useCallback((locationId:string|null, planId:string) => {
+    setFocusedFastenerLocation({projectId:current.current.id,planId,locationId});
+  }, []);
+  const [selectedConnectorPlanId, setSelectedConnectorPlanId] = useState<string | null>(null);
+  const [focusedConnectorEntryId, setFocusedConnectorEntryId] = useState<string | null>(null);
+  const [connectorPreview, setConnectorPreview] = useState<{project:Project;review:ConnectorReview}|null>(null);
+  const onConnectorPreview = useCallback((review:ConnectorReview|null) => setConnectorPreview(review ? {project:current.current,review} : null), []);
+  // The editor owns its preview, including null for invalid inputs. A parent
+  // clearing effect would erase the child's initial review when opening a saved plan.
+  const activeConnectorPreview = connectorPreview?.project === project && panel === "connectors" &&
+    (!selectedConnectorPlanId || connectorPreview.review.plan.id === selectedConnectorPlanId) &&
+    !explode && stage === null && mode !== "fastener" ? connectorPreview.review : null;
+  const [fittedPreview, setFittedPreview] = useState<{project:Project;value:FittedStockPreview}|null>(null);
+  const onFittedPreview = useCallback((value:FittedStockPreview|null) => setFittedPreview(value ? {project:current.current,value} : null), []);
+  const activeFittedPreview = fittedPreview?.project === project && panel === "fit-stock" && !explode && stage === null && mode !== "fit-face" ? fittedPreview.value : null;
+  const [fittedFaces, setFittedFaces] = useState<{project:Project;first:FittedFaceRef|null;second:FittedFaceRef|null}|null>(null);
+  const onFittedFacesChange = useCallback((faces:{first:FittedFaceRef|null;second:FittedFaceRef|null}) => setFittedFaces({project:current.current,...faces}), []);
+  const activeFittedFaces = fittedFaces?.project === project && panel === "fit-stock" ? fittedFaces : undefined;
+  const [initialFittedPair, setInitialFittedPair] = useState<{projectId:string;firstId:string;secondId:string;nonce:number}|null>(null);
+  const [fittedFacePick, setFittedFacePick] = useState<{project:Project;which:"first"|"second";pieceId:string}|null>(null);
+  const [pickedFittedFace, setPickedFittedFace] = useState<{which:"first"|"second";pieceId:string;ref:FittedFaceRef;nonce:number}|null>(null);
+  const fittedPickNonce = useRef(0);
+  const [fittedConnectionEnds, setFittedConnectionEnds] = useState<{projectId:string;blockId:string;endpoints:[string,string]}|null>(null);
+  const cancelFittedPick = useCallback(() => { setFittedFacePick(null); setPickedFittedFace(null); setMode((previous) => previous === "fit-face" ? "select" : previous); }, []);
+  const [driverPreview, setDriverPreview] = useState<{ project: Project; value: DriverAccessLocation } | null>(null);
+  const activeDriverPreview = driverPreview?.project === project && panel === "fasteners" && !explode && stage === null && mode !== "fastener"
+    ? driverPreview.value : null;
+  const [fastenerLayoutPreview, setFastenerLayoutPreview] = useState<{project:Project;value:FastenerLayoutMarkerPreview}|null>(null);
+  const onFastenerLayoutPreview = useCallback((value:FastenerLayoutMarkerPreview|null) => {
+    if (value) setDriverPreview(null);
+    setFastenerLayoutPreview(value ? {project:current.current,value} : null);
+  }, []);
+  const activeFastenerLayoutPreview = fastenerLayoutPreview?.project === project && panel === "fasteners" && !explode && stage === null && mode !== "fastener"
+    ? fastenerLayoutPreview.value : null;
+  const centeredEntryPreview = activeFastenerLayoutPreview?.kind === "centered-entry";
+  const contactRowPreview = activeFastenerLayoutPreview?.kind === "contact-row";
+  useEffect(() => {
+    setFastenerLayoutPreview(null);
+    setDriverPreview(null);
+  }, [project,panel,selectedFastenerPlanId]);
+  const [entrancePick, setEntrancePick] = useState<{projectId:string;panel:"fasteners"|"connectors";planId:string;locationId:string;headPieceId:string} | null>(null);
+  const [pickedEntrance, setPickedEntrance] = useState<{projectId:string;panel:"fasteners"|"connectors";planId:string;locationId:string;entranceLocal:V3;driveLocal:V3;nonce:number} | null>(null);
+  const entrancePickNonce = useRef(0);
+  const [connectionContext, setConnectionContext] = useState<{projectId:string;scope:ConnectionReviewScope;backPanel:"part"|"checks"|"step"|"sections"|"prep";constructionEntryId?:string}|null>(null);
+  const [returnToConnections, setReturnToConnections] = useState(false);
+  const [initialFastenerPair, setInitialFastenerPair] = useState<{projectId:string;headId:string;receiverId:string;nonce:number}|null>(null);
+  const [initialConnectorPair, setInitialConnectorPair] = useState<{projectId:string;baseId:string;postId:string;nonce:number}|null>(null);
+  const connectionNavigationNonce = useRef(0);
+  const [hingeRequest, setHingeRequest] = useState<{planId:string;nonce:number}|null>(null);
+  const [displayedHingePlanId, setDisplayedHingePlanId] = useState<string|null>(null);
+  const [reviewedRestraintPlanId, setReviewedRestraintPlanId] = useState<string|null>(null);
+  const liveConnectionContext = connectionContext?.projectId === project.id ? connectionContext : null;
+  const displayedHingePlan = project.lidHingePlans.find((plan) => plan.id === displayedHingePlanId);
+  const displayedHingeSection = project.sections.find((section) => section.id === displayedHingePlan?.sectionId && section.recipe?.openingLid);
+  useEffect(() => {
+    if (panel === "hinges") setSelectedSectionId(displayedHingeSection?.id ?? null);
+  }, [panel, project.id, displayedHingeSection?.id]);
+  useEffect(() => {
+    setConnectionContext(null); setReturnToConnections(false); setInitialFastenerPair(null); setHingeRequest(null); setDisplayedHingePlanId(null);
+    setShowOffcuts(false);
+  }, [project.id]);
+  const [modal, setModalState] = useState<Modal>(null),
     [toast, setToast] = useState<{ text: string; error?: boolean } | null>(
       null,
     ),
     [busy, setBusy] = useState(false),
     [saved, setSaved] = useState(false),
     [projects, setProjects] = useState<Summary[]>([]);
+  const [ideaTarget, setIdeaTarget] = useState<{
+    bindingId: string;
+    entryIds?: string[];
+  } | null>(null);
   const [inventoryTick, setInventoryTick] = useState(0);
+  const [inventoryTarget, setInventoryTarget] = useState<MaterialId>();
   useEffect(() => {
-    const timer = setInterval(() => setInventoryTick((n) => n + 1), 60000);
-    return () => clearInterval(timer);
-  }, []);
+    if (!project.store) return;
+    const checks = [...project.inventory, ...project.supplyInventory].filter((entry) =>
+      (entry.retailer ?? "home-depot") === project.retailer &&
+      entry.store === project.store &&
+      entry.zip === project.zip
+    );
+    if (!checks.length) return;
+    let timer: number | undefined;
+    const schedule = () => {
+      window.clearTimeout(timer);
+      const now = Date.now();
+      const next = nextStoreCheckChange(checks, now);
+      if (next !== null)
+        timer = window.setTimeout(refresh, Math.min(next - now, 60000));
+    };
+    const refresh = () => {
+      setInventoryTick((n) => n + 1);
+      schedule();
+    };
+    const onVisibility = () => {
+      if (!document.hidden) refresh();
+    };
+    schedule();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [project.store, project.zip, project.retailer, project.inventory, project.supplyInventory]);
   const [health, setHealth] = useState<{ ai: string; catalog: boolean } | null>(
       null,
     ),
@@ -301,7 +780,7 @@ export function App() {
       "Build a wall 8 ft wide and 6 ft tall, 16 inches on center",
     ),
     [proposal, setProposal] = useState<{
-      command: Command;
+      command: SectionCommand;
       provider: string;
       message: string;
       targetSectionId?: string;
@@ -310,7 +789,7 @@ export function App() {
     [dxfScale, setDxfScale] = useState(1),
     [newStep, setNewStep] = useState(""),
     [newStepNotes, setNewStepNotes] = useState(""),
-    [cutLength, setCutLength] = useState(24),
+    [hardware, setHardware] = useState<MaterialId>("screw"),
     [connectionTarget, setConnectionTarget] = useState(""),
     [screws, setScrews] = useState(2),
     [screwLength, setScrewLength] = useState(3);
@@ -320,17 +799,377 @@ export function App() {
   const onCamera = useCallback((c: THREE.Camera) => {
     camera.current = c;
   }, []);
+  const inspectWorkspace = useCallback(() => {
+    inspectorFocus.suspend();
+    requestAnimationFrame(() => viewport.current?.scrollIntoView({behavior:"smooth",block:"center"}));
+  }, [inspectorFocus.suspend]);
+  function showLidMotion(value: LidPreview | null) {
+    setLidMotionPreview(value ? { project, value } : null);
+    if (value?.focusPair) inspectWorkspace();
+  }
+  function startSectionMotionPreview() {
+    setLidMotionPreview(null);
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+    inspectWorkspace();
+  }
   const notify = (text: string, error = false) => setToast({ text, error });
+  function canLeaveWorkingDraft() {
+    if (connectorDraftDirtyRef.current) {
+      notify("Save or discard the connector draft before leaving or saving the project.", true);
+      return false;
+    }
+    if (fittedDraftDirtyRef.current) {
+      notify("Add or cancel the fitted-stock draft before leaving or saving the project.", true);
+      return false;
+    }
+    return true;
+  }
+  function setModal(next: Modal) {
+    if (next !== null && !["export", "help", "projects", "import"].includes(next) && !canLeaveWorkingDraft()) return;
+    if (next !== "projects") earlierSaveRequest.current?.abort();
+    if (next !== "offcut-reuse") setOffcutReusePlan(null);
+    if (next !== "offcut-release") setOffcutReleasePreview(null);
+    if (next !== "inventory") setInventoryTarget(undefined);
+    if (next !== null) inspectorFocus.suspend();
+    setModalState(next);
+  }
+  function setPanel(next:WorkshopPanel) {
+    if ((panel === "connectors" || panel === "fit-stock") && next !== panel && !canLeaveWorkingDraft()) return;
+    if (next !== "motion") {
+      setMotionPreview(null);
+      setMotionTestSelection(null);
+      setShownLatchId(null);
+      setRemovalTarget(null);
+    }
+    if (next !== "sections") setSectionMotionPreview(null);
+    if (next !== "lid-travel") setLidTravelInspection(null);
+    if (next !== "checks") setShownAreaFinding(null);
+    if (next !== "connections") setBaseRailDraft(null);
+    if (next !== "step" && guidePartFocus) exitGuidePartView();
+    setPanelState(next);
+  }
+  function exitGuidePartView() {
+    setGuidePartFocus(null);
+    setStage(null);
+  }
+  function showFindingArea(finding: Finding) {
+    if (!finding.area) return;
+    setPanel("checks");
+    setEaveBlockDraft(null);
+    setShownAreaFinding({ project, id: finding.id });
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+    const perspective = finding.area.kind === "rafter-eave" || finding.area.kind === "rafter-ridge" || finding.area.kind === "glazing-hole-layout" || finding.area.kind === "roof-plane";
+    setView((previous) => ({ preset: perspective ? "iso" : "top", nonce: previous.nonce + 1 }));
+    inspectWorkspace();
+  }
+  function editClearanceObstruction(
+    id: string,
+    target: NonNullable<typeof clearanceRetest>["target"],
+  ) {
+    if (!project.pieces.some((piece) => piece.id === id && !piece.offcut)) {
+      notify("This obstruction is no longer an editable part.", true);
+      return;
+    }
+    setClearanceRetest({ projectId: project.id, target });
+    setPanel("part");
+    setLidMotionPreview(null);
+    setSelected(id);
+    setSelectedSectionId(null);
+    setSelectionScope("part");
+    setMode("select");
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+    inspectorFocus.expand();
+    inspectorFocus.scrollRef.current?.scrollTo(0, 0);
+  }
+  function retestClearance() {
+    if (clearanceRetest?.projectId !== project.id) return;
+    const { target } = clearanceRetest;
+    if (target.kind === "motion") {
+      const plan = project.motionPlans?.find(({ id }) => id === target.planId);
+      if (!plan) {
+        notify("The original motion is no longer in the project.", true);
+        return;
+      }
+      const result = runMotionTest(project, plan, target.setup);
+      setPanel("motion");
+      setMotionTestSelection({ project, plan, setup: target.setup, scenarioId: target.scenarioId, result });
+      setMotionPreview(result.review ? { project, value: result.review.preview(0) } : null);
+      if (result.review) inspectWorkspace();
+    } else {
+      if (!project.sections.some((section) => section.id === target.sectionId && section.recipe?.openingLid)) {
+        notify("The original lid is no longer in the project.", true);
+        return;
+      }
+      const entry = inspectLidTravel(project, target.sectionId);
+      setPanel("lid-travel");
+      setSelected(null);
+      setSelectedSectionId(target.sectionId);
+      setSelectionScope("section");
+      setLidTravelInspection({ project, review: entry.review, error: entry.error });
+      const value = entry.review
+        ? lidTravelPose(entry.review.preview(0), entry.stays.map(({ status }) => status))
+        : null;
+      setLidMotionPreview(value ? { project, value } : null);
+      if (value) inspectWorkspace();
+    }
+    setClearanceRetest(null);
+  }
+  function openBuildPreparationItem(action: BuildPreparationAction) {
+    if (action.kind === "offcut-cut") {
+      openOffcutReleaseReview(action.id);
+      return;
+    }
+    setReturnToPreparation(action.kind !== "connections" && action.kind !== "handoff" && action.kind !== "guide-step");
+    switch (action.kind) {
+      case "guide-step":
+        if (guidePartFocus) exitGuidePartView();
+        setStepId(action.id);
+        setPanel("step");
+        inspectorFocus.scrollRef.current?.scrollTo(0, 0);
+        break;
+      case "part":
+        inspectConnectionPiece(action.id);
+        setPanel("part");
+        break;
+      case "connections":
+        openConnectionReview(action.scope, "prep");
+        break;
+      case "stock":
+        setReviewStockId(action.id);
+        setPanel("materials");
+        break;
+      case "glazing-tape":
+      case "edge-banding":
+        setReviewFinishPanel(action.kind === "glazing-tape" ? "sunlite-tape-plan" : "edge-banding-plan");
+        setPanel("materials");
+        break;
+      case "motion": {
+        const entry = motionReviews.find(({ plan }) => plan.id === action.planId);
+        const scenario = entry?.scenarios.find(({ id }) => id === action.scenarioId);
+        const result = action.scenarioId ? scenario?.result : entry?.[action.variant];
+        const finding = result && motionTestFindings(project, result, !!scenario).find(({ id }) => id === action.findingId);
+        if (!entry || !result || !finding) {
+          notify("This clearance finding has changed. Review the current checklist.", true);
+          break;
+        }
+        setRemovalTarget(null);
+        const setup = scenario?.setup ?? (action.variant === "saved" ? entry.plan.testSetup : undefined);
+        setMotionTestSelection({ project, plan: entry.plan, setup, scenarioId: scenario?.id, result });
+        setPanel("motion");
+        setStage(null);
+        setPlaying(false);
+        setExplode(false);
+        inspectorFocus.scrollRef.current?.scrollTo(0, 0);
+        const value = result.review?.preview(finding.travel ?? 0, undefined, finding.siteFaceId, finding.phase);
+        setMotionPreview(value ? { project, value } : null);
+        if (value) inspectWorkspace();
+        break;
+      }
+      case "lid": {
+        const entry = lidTravelChecks.find(({ section }) => section.id === action.sectionId);
+        const finding = entry?.findings.find(({ id }) => id === action.findingId);
+        if (!entry || !finding) {
+          notify("This lid finding has changed. Review the current checklist.", true);
+          break;
+        }
+        setLidTravelInspection({ project, review: entry.review, error: entry.error, finding });
+        setSelectedSectionId(entry.section.id);
+        setSelected(null);
+        setSelectionScope("section");
+        setMode("select");
+        setPanel("lid-travel");
+        setStage(null);
+        setPlaying(false);
+        setExplode(false);
+        inspectorFocus.scrollRef.current?.scrollTo(0, 0);
+        const value = entry.review && finding.angle !== undefined
+          ? lidTravelPose(entry.review.preview(finding.angle), entry.stays.map(({ status }) => status), finding.faceId, finding.stayStop)
+          : null;
+        setLidMotionPreview(value ? { project, value } : null);
+        if (value) inspectWorkspace();
+        break;
+      }
+      case "list":
+        setPanel("materials");
+        break;
+      case "handoff":
+        setModal("handoff");
+        break;
+      case "tools":
+      case "checks":
+        setPanel(action.kind);
+        break;
+    }
+  }
+  useEffect(() => {
+    if (panel !== "materials" || !reviewStockId) return;
+    const row = inspectorFocus.scrollRef.current?.querySelector<HTMLElement>(
+      `[data-stock-material="${reviewStockId}"]`,
+    );
+    row?.focus({ preventScroll: true });
+    row?.scrollIntoView({ block: "nearest" });
+    setReviewStockId(null);
+  }, [panel, reviewStockId, inspectorFocus.scrollRef]);
+  useEffect(() => {
+    if (panel !== "materials" || !reviewFinishPanel) return;
+    const plan = inspectorFocus.scrollRef.current?.querySelector<HTMLDetailsElement>(`#${reviewFinishPanel}`);
+    if (plan) {
+      plan.open = true;
+      plan.querySelector("summary")?.focus({ preventScroll: true });
+      plan.scrollIntoView({ block: "nearest" });
+    }
+    setReviewFinishPanel(null);
+  }, [panel, reviewFinishPanel, inspectorFocus.scrollRef]);
+  function openSiteClearances(from: typeof siteReturnPanel) {
+    setSiteReturnPanel(from);
+    setPanel("site-clearances");
+    inspectorFocus.scrollRef.current?.scrollTo(0, 0);
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+  }
+  useEffect(() => {
+    if (fittedFacePick && (fittedFacePick.project !== project || panel !== "fit-stock" || mode !== "fit-face" || stage !== null || explode))
+      setFittedFacePick(null);
+    if (mode === "fit-face" && (!fittedFacePick || panel !== "fit-stock")) setMode("select");
+    if (panel !== "fit-stock") setPickedFittedFace(null);
+  }, [fittedFacePick, panel, mode, project, stage, explode]);
+  useEffect(() => {
+    if (entrancePick && (entrancePick.projectId !== project.id || panel !== entrancePick.panel || mode !== "fastener" || stage !== null || explode || !project.pieces.some((p) => p.id === entrancePick.headPieceId && !p.offcut)))
+      setEntrancePick(null);
+    if (pickedEntrance && (pickedEntrance.projectId !== project.id || panel !== pickedEntrance.panel)) setPickedEntrance(null);
+    if (mode === "fastener" && (!entrancePick || panel !== entrancePick.panel || stage !== null || explode))
+      setMode("select");
+  }, [entrancePick, pickedEntrance, panel, mode, project.id, project.pieces, stage, explode]);
+  function openIdea(
+    target: { bindingId: string; entryIds?: string[] } | null = null,
+  ) {
+    setIdeaTarget(target);
+    setModal("idea");
+  }
+  function openAttachments(planId: string | null = null) {
+    setReturnToConnections(false);
+    setSelectedAttachmentPlanId(planId);
+    setPanel("attachments");
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+    setMode("select");
+    setSelectionScope("part");
+    setSelectedSectionId(null);
+  }
+  function openRestraints() {
+    setReturnToConnections(false);
+    setReviewedRestraintPlanId(null);
+    setPanel("restraints");
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+    setMode("select");
+    setSelectionScope("part");
+    setSelectedSectionId(null);
+  }
+  function openFasteners(planId: string | null = null) {
+    setReturnToConnections(false);
+    setInitialFastenerPair(null);
+    setSelectedFastenerPlanId(planId);
+    setPanel("fasteners");
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+    setMode("select");
+    setSelectionScope("part");
+    setSelectedSectionId(null);
+  }
+  function openConnectors(planId: string | null = null) {
+    setInitialConnectorPair(null); setSelectedConnectorPlanId(planId); setReturnToConnections(false);
+    setPanel("connectors"); setStage(null); setPlaying(false); setExplode(false); setMode("select");
+    setSelectionScope("part"); setSelectedSectionId(null);
+  }
+  function planConnectorPair(baseId: string, postId: string) {
+    if (baseId === postId || ![baseId,postId].every((id) => project.pieces.some((piece) => piece.id === id && !piece.offcut && material(piece.material).wood && material(piece.material).stockKind === "linear")))
+      throw Error("Choose two actual active wood frame members.");
+    openConnectors(); setSelected(baseId); setInitialConnectorPair({projectId:project.id,baseId,postId,nonce:++connectionNavigationNonce.current}); setReturnToConnections(true);
+  }
+  function openFittedStock(firstId = "", secondId = "") {
+    if (!canLeaveWorkingDraft()) return;
+    cancelFittedPick(); setFittedPreview(null); setFittedFaces(null);
+    setInitialFittedPair({projectId:project.id,firstId,secondId,nonce:++connectionNavigationNonce.current});
+    setPanel("fit-stock"); setStage(null); setPlaying(false); setExplode(false); setMode("select");
+    setSelectionScope("part"); setSelectedSectionId(null);
+    setReturnToConnections(!!liveConnectionContext);
+  }
+  function openConnectionReview(scope: ConnectionReviewScope, returnTo?: "prep") {
+    const backPanel = returnTo ?? (panel === "part" || panel === "step" || panel === "sections" ? panel : "checks");
+    setConnectionContext({projectId:project.id,scope:{...scope,memberIds:[...scope.memberIds]},backPanel});
+    setBaseRailDraft(null);
+    setReturnToConnections(true); setPanel("connections"); setStage(null); setPlaying(false); setExplode(false); setMode("select"); setSelectionScope("part"); setSelectedSectionId(null);
+  }
+  function inspectConnectionPiece(id: string) {
+    if (!project.pieces.some((piece) => piece.id === id && !piece.offcut)) return;
+    setSelected(id); setSelectedSectionId(null); setSelectionScope("part"); setMode("select"); setStage(null);
+    inspectWorkspace();
+  }
+  function planConnectionPair(headId: string, receiverId: string) {
+    if (headId === receiverId || ![headId,receiverId].every((id) => project.pieces.some((piece) => piece.id === id && !piece.offcut && material(piece.material).wood)))
+      throw Error("Choose two actual active wood members.");
+    openFasteners(); setSelected(headId); setInitialFastenerPair({projectId:project.id,headId,receiverId,nonce:++connectionNavigationNonce.current}); setReturnToConnections(true);
+  }
+  function reviewConnectionIntent(intent: ConnectionIntent, scope?: ConnectionReviewScope) {
+    if (scope) openConnectionReview(scope);
+    if (intent.kind === "wood-fastener") openFasteners(intent.planId);
+    else if (intent.kind === "angle-connector") openConnectors(intent.planId);
+    else if (intent.kind === "shelf-pin") openAttachments(intent.planId);
+    else if (intent.kind === "restraint") { openRestraints(); setReviewedRestraintPlanId(intent.planId); }
+    else if (intent.kind === "lid-hinge") {
+      setHingeRequest({planId:intent.planId,nonce:++connectionNavigationNonce.current}); setDisplayedHingePlanId(intent.planId); setPanel("hinges"); setStage(null); setPlaying(false); setExplode(false); setMode("select"); setSelectionScope("part");
+    } else { inspectConnectionPiece(intent.activePieceIds[0] ?? intent.pieceIds[0]); setPanel("part"); }
+    setReturnToConnections(true);
+  }
+  function backToConnectionReview() {
+    setPanel(liveConnectionContext ? "connections" : "part"); setStage(null); setMode("select"); setPlaying(false);
+  }
+  function openRemovalTest(topId: string, baseId: string) {
+    setRemovalTarget({ projectId: project.id, topId, baseId });
+    setMotionPreview(null); setPanel("motion"); setStage(null); setPlaying(false); setExplode(false);
+    setMode("select"); setSelectionScope("part"); setSelectedSectionId(null); setSelected(topId);
+  }
+  function backFromConnectionReview() {
+    const destination = liveConnectionContext?.backPanel ?? "checks";
+    const floorBase = destination === "sections" && project.sections.find((section) =>
+      section.id === liveConnectionContext?.scope.ownerId && section.generator?.type === "foundation");
+    if (floorBase) setSelectedSectionId(floorBase.id);
+    if (liveConnectionContext?.scope.stepId && project.steps.some((step) => step.id === liveConnectionContext.scope.stepId)) setStepId(liveConnectionContext.scope.stepId);
+    setReturnToConnections(false); setPanel(destination);
+  }
+  function scopeForGuideIntent(intent?: ConnectionIntent): ConnectionReviewScope {
+    const step = project.steps.find((step) => step.id === stepId) ?? project.steps[0];
+    if (step.generated?.kind === "assembly-stage") return {title:step.title,memberIds:step.generated.memberIds,ownerId:step.generated.planId,stageKey:step.generated.stageKey,stepId:step.id};
+    return {title:step.title,memberIds:intent?.pieceIds ?? project.pieces.filter((piece) => piece.stepId === step.id && !piece.offcut).map((piece) => piece.id),stepId:step.id};
+  }
   const change = useCallback((update: Project | ((p: Project) => Project)) => {
+    if (fittedDraftDirtyRef.current)
+      throw Error("Add or cancel the fitted-stock draft before changing project parts.");
+    draftTouched.current = true;
     const proposal =
       typeof update === "function" ? update(current.current) : update;
-    const next = recordChanges(current.current, reconcileSections(proposal));
-    projectSchema.parse(next);
+    const next = projectSchema.parse(
+      ensurePartLabels(
+        recordChanges(current.current, reconcileSections(proposal)),
+      ),
+    );
     undoStack.current.push(current.current);
     if (undoStack.current.length > 60) undoStack.current.shift();
     redoStack.current = [];
     setProject(next);
     setSaved(false);
+    return next;
   }, []);
   const safe = (fn: () => void) => {
     try {
@@ -349,13 +1188,22 @@ export function App() {
         ),
       );
   }, []);
+  function archivePreviousDraft() {
+    if (!archivedDraft.current && boot.resume) {
+      writeBrowserDraft(localStorage, PREVIOUS_DRAFT_KEY, boot.resume);
+      archivedDraft.current = true;
+      setPreviousDraft(boot.resume);
+    }
+  }
   useEffect(() => {
+    if (!draftTouched.current) return;
     const timer = setTimeout(() => {
       try {
-        localStorage.setItem(
-          DRAFT_KEY,
-          JSON.stringify({ project, revision: revision.current }),
-        );
+        archivePreviousDraft();
+        writeBrowserDraft(localStorage, DRAFT_KEY, {
+          project,
+          revision: revision.current,
+        });
       } catch {
         notify(
           "Browser storage is full. Export your project to keep a copy.",
@@ -365,6 +1213,9 @@ export function App() {
     }, 350);
     return () => clearTimeout(timer);
   }, [project]);
+  useEffect(() => {
+    if (modal === "projects") setDraftRecoveries(recoverableDrafts());
+  }, [modal]);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), 6000);
@@ -388,31 +1239,47 @@ export function App() {
     return () => clearInterval(timer);
   }, [playing, project.steps]);
   const undo = () => {
+    if (!canLeaveWorkingDraft()) return;
     const previous = undoStack.current.pop();
     if (previous) {
       redoStack.current.push(current.current);
-      setProject(previous);
+      draftTouched.current = true;
+      setProject(retainConnectorLabelHistory(retainHingeLabelHistory(retainFastenerLabelHistory(retainPartLabelHistory(previous, current.current), current.current), current.current), current.current));
       setSaved(false);
       force((n) => n + 1);
       setSelected(null);
       setSelectedSectionId(null);
       setStage(null);
+      setEntrancePick(null);
+      setPickedEntrance(null);
+      if (mode === "fastener") setMode("select");
     }
   };
   const redo = () => {
+    if (!canLeaveWorkingDraft()) return;
     const next = redoStack.current.pop();
     if (next) {
       undoStack.current.push(current.current);
-      setProject(next);
+      draftTouched.current = true;
+      setProject(retainConnectorLabelHistory(retainHingeLabelHistory(retainFastenerLabelHistory(retainPartLabelHistory(next, current.current), current.current), current.current), current.current));
       setSaved(false);
       force((n) => n + 1);
       setSelected(null);
       setSelectedSectionId(null);
       setStage(null);
+      setEntrancePick(null);
+      setPickedEntrance(null);
+      if (mode === "fastener") setMode("select");
     }
   };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
+      // The mounted inspector owns its keyboard while focused. Its Escape handler
+      // closes only the overlay, preserving measurement/tool state underneath.
+      if (inspectorFocus.active.current) {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") e.preventDefault();
+        return;
+      }
       if (e.key === "Escape") {
         setModal(null);
         setMode("select");
@@ -428,6 +1295,12 @@ export function App() {
         )
       )
         return;
+      if ((e.metaKey || e.ctrlKey) && ["c","v","d"].includes(e.key.toLowerCase())) {
+        const action=e.key.toLowerCase()==="c"?objectActions.current.copy:e.key.toLowerCase()==="v"?objectActions.current.paste:objectActions.current.duplicate;
+        if(action&&!window.getSelection()?.toString()){e.preventDefault();action();}return;
+      }
+      if(e.altKey&&["ArrowUp","ArrowDown"].includes(e.key)){e.preventDefault();objectActions.current.nudge?.(e.key==="ArrowUp"?1:-1);return;}
+      if(e.key.toLowerCase()==="l")setMode("lift");
       if ((e.metaKey || e.ctrlKey) && e.key === "z") {
         e.preventDefault();
         if (e.shiftKey) redo();
@@ -440,15 +1313,316 @@ export function App() {
       }
       if (e.key.toLowerCase() === "m") setMode("move");
       if (e.key.toLowerCase() === "r") setMode("rotate");
+      if (e.key.toLowerCase() === "d") {
+        setMode("measure");
+        setStage(null);
+        setExplode(false);
+      }
+      if (e.key.toLowerCase() === "c")
+        document.querySelector<HTMLButtonElement>("[data-cut-part]")?.click();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, []);
+  const woodSupport = useMemo(() => reviewWoodSupport(project), [project]);
   const piece = project.pieces.find((p) => p.id === selected),
+    selectedOffcut = piece?.offcut ? piece : null,
+    offcutCount = project.pieces.filter((part) => part.offcut).length,
     currentStep =
       project.steps.find((s) => s.id === stepId) ?? project.steps[0],
-    findings = useMemo(() => validate(project), [project, inventoryTick]),
-    rows = useMemo(() => bom(project), [project, inventoryTick]);
+    findings = useMemo(() => validate(project, woodSupport), [project, inventoryTick, woodSupport]),
+    rows = useMemo(() => bom(project), [project, inventoryTick]),
+    supplyPurchases = useMemo(
+      () => supplyRows(project),
+      [project, inventoryTick],
+    );
+  const cutSequences = useMemo(() => stockCutSequences(project, rows), [project, rows]);
+  const snapshotExport = useMemo(
+    () => modal === "export" ? storeSnapshotFile(project) : null,
+    [modal, project, inventoryTick],
+  );
+  const pricing = useMemo(
+    () => projectPricingCoverage(project, rows, supplyPurchases),
+    [project, rows, supplyPurchases],
+  );
+  const glazingEstimate = useMemo(() => sunliteTakeoff(project), [project]);
+  const glazingTape = useMemo(() => reviewSunliteTape(project, glazingEstimate), [project, glazingEstimate]);
+  const bandingGuide = useMemo(() => reviewEdgeBanding(project), [project]);
+  const shownBandingEdge = panel === "materials" && bandingMark?.project === project ? bandingMark.edge : null;
+  const glazingThermal = useMemo(() => sunliteThermalReview(project), [project]);
+  const glazingMounts = useMemo(() => reviewSunliteMounts(project), [project]);
+  const roofBacking = useMemo(() => reviewSunliteRoofBacking(project), [project]);
+  const printRoofBacking = roofBacking.flatMap(roofBackingGuideLines);
+  const ventBacking = useMemo(() => reviewGreenhouseVentBacking(project), [project]);
+  const printVentBacking = ventBacking.flatMap((review) => ventBackingGuideLines(project, review));
+  const panelReviews = useMemo(() => reviewPanelBearing(project), [project]);
+  const printPanelBearing = useMemo(() => panelBearingGuideLines(project, panelReviews), [project, panelReviews]);
+  const printShelfSag = useMemo(() => shelfSagGuideLines(project, panelReviews), [project, panelReviews]);
+  const sagPanel = useMemo(() => {
+    if (panel !== "part" || !piece) return null;
+    const known = panelReviews.find((row) => row.piece.id === piece.id);
+    const row = known ?? (isHorizontalPanel(piece) ? reviewPanelBearing(project, undefined, piece.id).find((item) => item.piece.id === piece.id) : undefined);
+    return row?.role === "shelf" || project.shelfSagPlans?.some(({ pieceId }) => pieceId === piece.id)
+      ? { row, pieceId: piece.id } : null;
+  }, [panel, piece, panelReviews, project]);
+  const printWoodSupport = useMemo(() => woodSupportGuideLines(project, woodSupport), [project, woodSupport]);
+  const roofBearing = useMemo(() => reviewGreenhouseRafterBearing(project), [project]);
+  const printRafterBearing = rafterBearingGuideLines(project, roofBearing);
+  const glazingProfiles = useMemo(() => reviewSunliteProfiles(project, glazingEstimate), [project, glazingEstimate]);
+  const shownProfileRun = panel === "materials" ? glazingEstimate?.profileRuns.find((run) => run.id === shownProfileRunId) : undefined;
+  function showGlazingRun(id: string | null) {
+    setShownProfileRunId(id);
+    if (!id) return;
+    setBandingMark(null);
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+    inspectWorkspace();
+  }
+  const rodBrackets = useMemo(() => rodBracketPurchases(project), [project]);
+  const everbiltRodBrackets = useMemo(() => everbiltRodBracketPurchases(project), [project]);
+  const rodFlanges = useMemo(() => rodFlangePurchases(project), [project]);
+  const rodSockets = useMemo(() => rodSocketPurchases(project), [project]);
+  const saunaSourcing = project.retailer === "home-depot" ? harviaKit : steel6;
+  const saunaHeaterStock = useMemo(() => saunaHeaterPurchases(project, saunaSourcing.productId), [project, saunaSourcing]);
+  const printSaunaHeater = useMemo(() => saunaHeaterGuideLines(project), [project]);
+  const printSaunaVentilation = useMemo(() => saunaVentilationGuideLines(project), [project]);
+  const printSaunaBench = useMemo(() => saunaBenchGuideLines(project), [project]);
+  const printCaseworkTipUp = useMemo(() => caseworkTipUpGuideLines(project), [project]);
+  const printSaunaBenchTravel = useMemo(() => saunaBenchTravelGuideLines(project), [project]);
+  const printSaunaWalls = useMemo(() => saunaWallGuideLines(project), [project]);
+  const printSaunaCeiling = useMemo(() => saunaCeilingGuideLines(project), [project]);
+  const liningBackingLines = useMemo(() => saunaLiningGuideLines(project), [project]);
+  const liningBackingContent = liningBackingLines.length > 0 && (
+    <>
+      <ul>{liningBackingLines.map((line) => <li key={line}>{line}</li>)}</ul>
+      <p>{saunaLiningScope}</p>
+      <p>{saunaLiningTools}</p>
+      <ul>{saunaLiningSources.map(([name, url]) => <li key={url}><a href={url} target="_blank" rel="noreferrer">{name}</a></li>)}</ul>
+    </>
+  );
+  const eaveBlock = panel === "checks" && eaveBlockDraft?.project === project ? eaveBlockDraft.fit : null;
+  const eaveBlockArea = useMemo(() => eaveBlock?.outlines.length ? {
+    kind: "eave-block-preview" as const,
+    outlines: eaveBlock.outlines,
+    label: "fits" in eaveBlock
+      ? `Eave block preview · ${eaveBlock.fits.length} fitted`
+      : `Eave block preview · ${partLabel(project, eaveBlock.rafterId)}`,
+    labelPoint: eaveBlock.point,
+  } : undefined, [eaveBlock, project]);
+  const shelfDivider = panel === "part" && shelfDividerDraft?.project === project && shelfDividerDraft.fit.shelfId === selected
+    ? shelfDividerDraft.fit : null;
+  const shelfDividerArea = useMemo(() => shelfDivider ? {
+    kind: "shelf-divider-preview" as const,
+    outlines: shelfDivider.outlines,
+    label: "Center divider preview",
+    labelPoint: shelfDivider.divider.position,
+  } : undefined, [shelfDivider]);
+  const shownCheckArea = shelfDividerArea ?? eaveBlockArea ?? (panel === "checks" && shownAreaFinding?.project === project
+    ? findings.find((finding) => finding.id === shownAreaFinding.id)?.area
+    : undefined);
+  const activeGuidePart = panel === "step" && guidePartFocus?.project === project &&
+    stage !== null && project.steps[stage]?.id === guidePartFocus.row.stepId && currentStep.id === guidePartFocus.row.stepId
+    ? guidePartFocus : null;
+  const workspaceReviewActive = travelPreviewActive || !!shownCheckArea || !!activeGuidePart;
+  useEffect(() => {
+    if (guidePartFocus?.project && guidePartFocus.project !== project) {
+      setGuidePartFocus(null);
+      setStage(null);
+    }
+  }, [project, guidePartFocus]);
+  const shownSaunaHeater = useMemo(() =>
+    panel === "sections" && shownSaunaHeaterId ? saunaHeaterReview(project, shownSaunaHeaterId) : null,
+  [panel, project, shownSaunaHeaterId]);
+  const shownSaunaVentilation = useMemo(() => {
+    const plan = project.saunaVentilationPlans?.find((row) => row.roomId === shownSaunaVentilationId);
+    return panel === "sections" && plan ? saunaVentilationReview(project, plan) : null;
+  }, [panel, project, shownSaunaVentilationId]);
+  const reviewScenarios = panel === "prep" || modal === "export" || printingGuide;
+  const motionReviews = useMemo(
+    () => projectMotionReviews(project, reviewScenarios),
+    [project, reviewScenarios],
+  );
+  const reviewLids = hasOpeningLid &&
+    (panel === "prep" || panel === "lid-travel" || modal === "export" || printingGuide);
+  const lidTravelChecks = useMemo(
+    () => reviewLids ? projectLidTravelChecks(project) : [],
+    [project, reviewLids],
+  );
+  const printMotions = useMemo(() => motionReviewLines(project, motionReviews), [project, motionReviews]);
+  const printGreenhouseLatch = useMemo(() => greenhouseLatchGuideLines(project), [project]);
+  const printDoorStops = useMemo(() => greenhouseDoorStopGuideLines(project), [project]);
+  const printRodFits = useMemo(() => rodFitGuideLines(project), [project]);
+  const toolsReview = useMemo(
+    () => toolChecklist(project, selectedToolsForProject(project).tools),
+    [project],
+  );
+  const guideReady = guideIsCurrent(project);
+  const connectionReview = useMemo(() => connectionCoverage(project), [project]);
+  const preparation = useMemo(() => buildPreparation(project, {
+    stock: rows,
+    supplies: supplyPurchases,
+    sequences: cutSequences,
+    connections: connectionReview,
+    findings,
+    motions: motionReviews,
+    lids: lidTravelChecks,
+    handoff: project.retailer === "lowes" ? undefined : homeDepotShoppingList(project, rows, supplyPurchases),
+  }).filter(({ id }) => guideReady || id !== "order"), [project, rows, supplyPurchases, cutSequences, connectionReview, findings, motionReviews, lidTravelChecks, guideReady]);
+  const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
+  const activeRemovalContact = activeRemoval
+    ? bearingReview.pairs.find(({ top, base }) => top.id === activeRemoval.topId && base.id === activeRemoval.baseId)
+    : undefined;
+  const printBearingConnections = useMemo(() => bearingConnectionGuideLines(project, bearingReview, connectionReview), [project, bearingReview, connectionReview]);
+  const canReviewConnections = !!(connectionReview.parts.length || connectionReview.intents.length || bearingReview.withoutContact.length);
+  const printRoofAttachments = useMemo(() => greenhouseRoofAttachmentLines(
+    project, greenhouseRoofAttachments(project, connectionReview.intents, roofBearing),
+  ), [project, connectionReview, roofBearing]);
+  const shownFoundation = useMemo(() => shownFoundationId
+    ? greenhouseFoundationReviews(project).find(({ site }) => site.entryId === shownFoundationId)
+    : undefined, [project, shownFoundationId]);
+  const printFoundations = useMemo(() => greenhouseFoundationGuide(project), [project]);
+  const printBaseCorners = useMemo(() => greenhouseBaseGuideLines(
+    project, greenhouseBaseConnections(project, connectionReview.intents),
+  ), [project, connectionReview]);
+  const printFloorBaseJoints = useMemo(() => floorBaseConnectionGuideLines(
+    project, floorBaseConnections(project, connectionReview.intents),
+  ), [project, connectionReview]);
+  const printFloorHangers = useMemo(() => floorHangerGuideLines(project, connectionReview.intents), [project, connectionReview]);
+  const guideExport = useMemo(() => {
+    try {
+      return {
+        project: guideReady ? project : generateBuildGuide(project),
+        error: null,
+      };
+    } catch (error) {
+      return {
+        project,
+        error:
+          error instanceof Error
+            ? error.message
+            : "The guide could not be generated.",
+      };
+    }
+  }, [project, guideReady]);
+  const exportGuide = guideExport.project;
+  const printPreparation = useMemo(() => exportGuide === project ? preparation : [
+    ...assemblyOrderPreparation(reviewAssemblyOrder(exportGuide)),
+    ...preparation.filter(({ id }) => id !== "order"),
+  ], [exportGuide, preparation, project]);
+  const printStockReferences = useMemo(() => new Map(guideHomeDepotStock(exportGuide, rows).map(({ id, offer }) => [id, offer])), [exportGuide, rows]);
+  function printPartLabels(source: Project, stepId?: string) {
+    const labels = assemblyPartLabels(source).filter((row) => !stepId || row.stepId === stepId);
+    if (!labels.length) return;
+    setModal(null);
+    setLabelPrint({ title: source.name, labels });
+  }
+  function locateGuidePart(row: AssemblyPartLabel) {
+    const index = project.steps.findIndex((step) => step.id === row.stepId);
+    if (index < 0) return;
+    setGuidePartFocus({ project, row, isolated: true });
+    setStepId(row.stepId);
+    setStage(index);
+    setPlaying(false); setExplode(false); setMode("select");
+    setSelectionScope("part"); setSelected(null); setSelectedSectionId(null);
+    inspectWorkspace();
+  }
+  function openPartStockPlan(id: string) {
+    setStockPlanPartId(id);
+    setModal("part-stock");
+  }
+  function openOffcutReleaseReview(id: string) {
+    try {
+      setOffcutReleasePreview({ plan: planOffcutRelease(current.current, id) });
+    } catch (error) {
+      setOffcutReleasePreview({
+        error: error instanceof Error ? error.message : "This offcut assignment could not be reviewed.",
+      });
+    }
+    setModal("offcut-release");
+  }
+  function saveStockCutLoss(layout: StockCutLayout) {
+    safe(() => {
+      change(saveTubeCutLoss(current.current, layout));
+      notify(layout.tubeKerf === undefined
+        ? "Stock cut order uses the modeled loss."
+        : "Cutting loss saved for the build guide.");
+    });
+  }
+  function recordStockUnits(layouts: StockCutLayout[], onHand: boolean) {
+    safe(() => {
+      const recorded = recordStockCutLayouts(current.current, layouts, onHand);
+      change(recorded.project);
+      const units = layouts.length === 1 ? "Stock unit recorded." : `${layouts.length} stock units recorded.`;
+      notify(recorded.offcuts
+        ? `${units} ${recorded.offcuts} ${recorded.offcuts === 1 ? "offcut added" : "offcuts added"} to the Cut pool.`
+        : units);
+    });
+  }
+  function recordStockUnit(layout: StockCutLayout, onHand: boolean) {
+    recordStockUnits([layout], onHand);
+  }
+  function markStockOnHand(sourceId: string, onHand: boolean) {
+    safe(() => change((p) => setCutSourceOnHand(p, sourceId, onHand)));
+  }
+  const printCutSequences = useMemo(
+    () => exportGuide === project ? cutSequences : stockCutSequences(exportGuide, bom(exportGuide)),
+    [cutSequences, exportGuide, project],
+  );
+  const lidSiteSchedule = useMemo(() => lidSiteGuideRows(exportGuide), [exportGuide]);
+  const lidWeightSchedule = useMemo(() => lidWeightGuideRows(exportGuide), [exportGuide]);
+  const lidStayFitSchedule = useMemo(() => lidStayFitGuideRows(exportGuide), [exportGuide]);
+  const exportConnectionReview = useMemo(() => connectionCoverage(exportGuide), [exportGuide]);
+  const printCutSources = useMemo(
+    () => inspectCutStock(exportGuide),
+    [exportGuide],
+  );
+  const printOffcutCuts = useMemo(
+    () => offcutCutRows(exportGuide, printCutSources),
+    [exportGuide, printCutSources],
+  );
+  const currentCutSources = useMemo(() => inspectCutStock(project), [project]);
+  const focusedGuidePiece = activeGuidePart && project.pieces.find(({ id }) => id === activeGuidePart.row.pieceId);
+  const stockPlanPiece = modal === "part-stock" && project.pieces.find(({ id }) => id === stockPlanPartId);
+  const sourceIdsByMaterial = useMemo(() => {
+    const grouped = new Map<string, string[]>();
+    for (const [sourceId, pieces] of currentCutSources.groups) {
+      const id = pieces[0]?.material;
+      if (id) grouped.set(id, [...(grouped.get(id) ?? []), sourceId]);
+    }
+    return grouped;
+  }, [currentCutSources]);
+  const recordedSourceMarkdown = useMemo(() => {
+    const sources = [...printCutSources.groups.keys()];
+    return sources.length
+      ? "\n\n## Recorded cut-source layouts\n\nSaved blank regions and offcuts share their original physical source. These coordinates do not reconstruct a chronological cutting sequence.\n\n" +
+        sources.map((sourceId) => cutStockLayoutMarkdown(exportGuide, sourceId, printCutSources)).join("\n\n")
+      : "";
+  }, [exportGuide, printCutSources]);
+  const printCuts = (x: Piece) =>
+    material(x.material).cuttable || pieceThroughOpenings(x).length
+      ? cutInstructionsText(
+          cutInstructions(x, {
+            kerf: pieceCutKerf(x),
+            lineageStatus:
+              x.cutStock && printCutSources.valid.has(x.cutStock.id)
+                ? "validated"
+                : "unverified",
+          }),
+        )
+      : "";
+  function generateGuide() {
+    safe(() => {
+      const next = generateBuildGuide(project);
+      change(next);
+      setStepId(next.steps[0].id);
+      setStage(null);
+      setPanel("step");
+      notify(
+        "Build guide generated from your layout. Review the inferred assembly order.",
+      );
+    });
+  }
   const preview = useMemo(() => {
     if (!proposal) return null;
     try {
@@ -463,61 +1637,61 @@ export function App() {
     } catch (e) {
       return {
         impact: null,
-        error: e instanceof Error ? e.message : "Invalid proposal",
+        error: e instanceof ZodError ? e.issues[0]?.message ?? "Invalid proposal"
+          : e instanceof Error ? e.message : "Invalid proposal",
       };
     }
   }, [proposal, project]);
+  const plannedPinPurchases = useMemo(
+    () => attachmentPurchaseSummaries(project),
+    [project],
+  );
+  const plannedFastenerPurchases = useMemo(() => fastenerPurchaseSummary(project), [project]);
+  const plannedConnectorPurchases = useMemo(() => connectorPurchaseSummary(project), [project]);
+  const plannedRestraintPurchases = useMemo(
+    () => restraintPurchaseSummary(project),
+    [project],
+  );
   const warnings = findings.filter((f) => f.severity !== "info"),
-    total = rows.reduce((n, r) => n + r.total, 0),
     completed = project.steps.filter((s) => s.complete).length;
   const activeStepId = currentStep.id;
+  const activeStepOrder = preparation.find(({ id }) => id === "order")?.items.find(({ id }) => id === activeStepId);
   const baseName =
     project.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") ||
     "yardwork-project";
-  const updatePart = (patch: Partial<Piece>) => {
-    if (piece)
-      change((p) => ({
-        ...p,
-        pieces: p.pieces.map((x) =>
-          x.id === piece.id ? { ...x, ...patch } : x,
-        ),
-      }));
-  };
-  function move(id: string, position: V3, rotation: V3) {
+  const updatePart = (patch: Partial<Piece>) => safe(() => {
+    if(!piece)return;
+    const candidate={...piece,...patch};
+    if (patch.size) {
+      const problem = throughOpeningProblem(candidate.size, pieceThroughOpenings(candidate));
+      if (problem) throw Error(problem);
+    }
+    if(!candidate.offcut&&(patch.position||patch.rotation||patch.size)) {
+      const axes=patch.position?[0,1,2].filter((i)=>Math.abs(patch.position![i]-piece.position[i])>1e-7):[];
+      const clear=placeWood(current.current,candidate,candidate.position,candidate.rotation,axes.length===1?axes[0] as 0|1|2:undefined);
+      if(clear.blocked)throw Error("This position overlaps wood. Choose an open position.");
+      candidate.position=clear.position;
+      if(clear.adjusted)notify("Adjusted to a clear face; solid wood cannot overlap.");
+    }
+    change((p)=>({...p,pieces:p.pieces.map((x)=>x.id===piece.id?candidate:x)}));
+  });
+  function move(id: string, position: V3, rotation: V3, previewed = false) {
     safe(() => {
-      const p = current.current.pieces.find((p) => p.id === id)!;
-      const candidate = { ...p, position, rotation };
-      if (snap && rotation.every((r) => Math.abs(r % (Math.PI / 2)) < 0.001)) {
-        const b = bounds(candidate);
-        for (let axis = 0; axis < 3; axis++) {
-          let closest = 0.8,
-            offset = 0;
-          for (const other of current.current.pieces) {
-            if (other.id === id || other.offcut) continue;
-            const o = bounds(other);
-            if (
-              ![0, 1, 2]
-                .filter((i) => i !== axis)
-                .every(
-                  (i) =>
-                    Math.min(b.max[i], o.max[i]) -
-                      Math.max(b.min[i], o.min[i]) >
-                    -0.75,
-                )
-            )
-              continue;
-            for (const delta of [
-              o.max[axis] - b.min[axis],
-              o.min[axis] - b.max[axis],
-            ])
-              if (Math.abs(delta) < closest) {
-                closest = Math.abs(delta);
-                offset = delta;
-              }
-          }
-          position[axis] += offset;
-        }
-      }
+      const p = current.current.pieces.find((p) => p.id === id);
+      if (!p) return;
+      const requestedAxes=[0,1,2].filter((i)=>Math.abs(position[i]-p.position[i])>1e-7);
+      if (snap && !previewed && requestedAxes.length !== 1)
+        position = snapPlacement(
+          current.current,
+          p,
+          position,
+          rotation,
+        ).position;
+      const clear=placeWood(current.current,p,position,rotation,requestedAxes.length===1?requestedAxes[0] as 0|1|2:undefined);
+      if(clear.blocked)throw Error("This move is blocked by solid wood.");
+      position=clear.position;
+      if (position.every((value, axis) => Math.abs(value - p.position[axis]) < 1e-7) &&
+          rotation.every((value, axis) => Math.abs(value - p.rotation[axis]) < 1e-7)) return;
       change((pr) => ({
         ...pr,
         pieces: pr.pieces.map((x) =>
@@ -526,6 +1700,15 @@ export function App() {
       }));
     });
   }
+  function rotatePart(delta: V3) {
+    if (!piece) return;
+    const rotation = composeRotation(delta, piece.rotation),
+      position = [...piece.position] as V3;
+    const wasGrounded = Math.abs(bounds(piece).min[1]) < 0.8;
+    if (wasGrounded)
+      position[1] -= bounds({ ...piece, position, rotation }).min[1];
+    move(piece.id, position, rotation);
+  }
   function selectSection(id: string | null) {
     setSelectedSectionId(id);
     setSelected(null);
@@ -533,9 +1716,28 @@ export function App() {
     setSelectionScope("section");
     setStage(null);
   }
+  function configureBase(targetId?: string) {
+    const existing = project.sections.find((s) => s.id === targetId)?.generator;
+    const command: SectionCommand = existing?.type === "foundation"
+      ? existing
+      : { type: "foundation", width: 72, depth: 48, height: 48, spacing: 16 };
+    setProposal({
+      command: !existing && project.retailer === "home-depot"
+        ? { ...command, baseStock: fittingBaseBoards(command) }
+        : command,
+      targetSectionId: targetId,
+      provider: "Local base template",
+      message: "Review the site, supports and connections for this layout.",
+    });
+    setModal("base");
+  }
   function reviseSection(id: string) {
     const section = current.current.sections.find((s) => s.id === id);
     if (!section?.generator) return;
+    if (section.generator.type === "foundation") {
+      configureBase(id);
+      return;
+    }
     setAssistantTarget(id);
     setPrompt(
       section.generator.type === "wall"
@@ -573,28 +1775,78 @@ export function App() {
             activeStepId,
             screws,
             screwLength,
+            hardware === "nail" || material(hardware).fastenerType === "nail"
+              ? "nail"
+              : hardware === "bracket"
+                ? "bracket"
+                : "screw",
+            hardware,
           ),
         );
-        notify(`Connected with ${screws} screws`);
+        notify(`Connection recorded: ${screws} × ${material(hardware).name}`);
       });
       return;
     }
     setSelected(id);
     setPanel("part");
   }
-  function add(id: MaterialId, position: V3 = [60, 0, 0]) {
+  function add(id: MaterialId, position: V3 = [0, 0, 0]) {
     safe(() => {
       const next = addMaterial(project, id, position, activeStepId);
+      const added = next.pieces.at(-1)!;
+      // Repeated + additions form an adjacent row rather than occupying the same volume.
+      if (arguments.length < 2 && project.pieces.some((p) => !p.offcut)) {
+        const right = Math.max(
+          ...project.pieces
+            .filter((p) => !p.offcut)
+            .map((p) => bounds(p).max[0]),
+        );
+        added.position[0] = right + added.size[0] / 2;
+      }
+      if (snap)
+        added.position = snapPlacement(
+          next,
+          added,
+          added.position,
+          added.rotation,
+        ).position;
+      const clear=placeWood(next,added,added.position,added.rotation);
+      if(clear.blocked)throw Error("No clear position was found for this stock.");
+      added.position=clear.position;
       change(next);
       setSelectionScope("part");
       setSelectedSectionId(null);
       setSelected(next.pieces.at(-1)!.id);
       setPanel("part");
+      setMode("select");
       setStage(null);
-      notify(`${material(id).name} added. Drag the arrows to position it.`);
+      notify(
+        `${material(id).name} added. Drag to move, or Shift-drag to rotate.`,
+      );
     });
   }
   function replace(p: Project, rev = 0) {
+    if (!canLeaveWorkingDraft()) return false;
+    p = ensurePartLabels(projectSchema.parse(p));
+    if (p.id !== current.current.id && draftTouched.current) {
+      // Keep the draft being left, including edits waiting for the autosave timer.
+      const previous = { project: current.current, revision: revision.current };
+      try {
+        writeBrowserDraft(localStorage, PREVIOUS_DRAFT_KEY, previous);
+        archivedDraft.current = true;
+        setPreviousDraft(previous);
+      } catch {
+        notify(
+          "Browser storage is full. Save or export this draft before opening another project.",
+          true,
+        );
+        return false;
+      }
+    }
+    setMeasurement({ a: null, b: null });
+    setSelectedAttachmentPlanId(null);
+    setMode("select");
+    draftTouched.current = true;
     revision.current = rev;
     undoStack.current = [];
     redoStack.current = [];
@@ -608,8 +1860,10 @@ export function App() {
     setSaved(rev > 0);
     setModal(null);
     setView((v) => ({ preset: "iso", nonce: v.nonce + 1 }));
+    return true;
   }
   async function save() {
+    if (!canLeaveWorkingDraft()) return;
     setBusy(true);
     const snapshot = current.current;
     try {
@@ -621,16 +1875,23 @@ export function App() {
           baseRevision: revision.current,
         }),
       });
+      if (current.current.id !== snapshot.id) {
+        notify(`Saved ${snapshot.name} to the project library.`);
+        return;
+      }
       revision.current = record.revision;
       setSaved(current.current === snapshot);
+      const savedDraft =
+        current.current === snapshot
+          ? projectSchema.parse(record.project)
+          : current.current;
+      if (current.current === snapshot) setProject(savedDraft);
       try {
-        localStorage.setItem(
-          DRAFT_KEY,
-          JSON.stringify({
-            project: current.current,
-            revision: revision.current,
-          }),
-        );
+        archivePreviousDraft();
+        writeBrowserDraft(localStorage, DRAFT_KEY, {
+          project: savedDraft,
+          revision: revision.current,
+        });
       } catch {}
       notify("Saved to your self-hosted project library");
     } catch (e) {
@@ -645,6 +1906,25 @@ export function App() {
       setProjects(await api("/api/projects"));
     } catch (e) {
       notify((e as Error).message, true);
+    }
+  }
+  async function openEarlierSave(id: string, number: number) {
+    earlierSaveRequest.current?.abort();
+    const controller = new AbortController();
+    earlierSaveRequest.current = controller;
+    const previousId = current.current.id;
+    try {
+      const data = await api(`/api/projects/${id}/revisions/${number}`, { signal: controller.signal });
+      if (controller.signal.aborted || current.current.id !== previousId) return;
+      if (data.revision !== number || data.project?.id !== id)
+        throw Error("The earlier save did not match this project and revision.");
+      const copy = copySavedRevision(projectSchema.parse(data.project), number);
+      if (replace(copy)) notify("Earlier save opened as a new project copy.");
+    } catch (error) {
+      if (!controller.signal.aborted)
+        notify(error instanceof Error ? error.message : "The earlier save could not be opened.", true);
+    } finally {
+      if (earlierSaveRequest.current === controller) earlierSaveRequest.current = null;
     }
   }
   async function generate() {
@@ -669,7 +1949,11 @@ export function App() {
       const target = project.sections.find((s) => s.id === assistantTarget);
       if (target?.generator && target.generator.type !== command.type)
         throw Error("A targeted proposal must preserve the section type.");
-      setProposal({ ...p, command });
+      const baseStock = command.type === "foundation"
+        ? target?.generator?.baseStock ??
+          (!target && project.retailer === "home-depot" ? fittingBaseBoards(command) : undefined)
+        : undefined;
+      setProposal({ ...p, command: baseStock ? { ...command, baseStock } : command });
     } catch (e) {
       notify((e as Error).message, true);
     } finally {
@@ -677,6 +1961,7 @@ export function App() {
     }
   }
   async function importFile(f: File) {
+    const targetId = current.current.id;
     try {
       if (f.size > 4 * 1024 * 1024)
         throw Error("Use a file smaller than 4 MB.");
@@ -684,18 +1969,19 @@ export function App() {
       if (importKind === "project") {
         const p = projectSchema.parse(JSON.parse(text));
         const clone = {
-          ...p,
-          id: uid(),
+          ...rekeyGuidePlacements(p, uid()),
           name: `${p.name.slice(0, 108)} · imported`,
         };
         replace(clone);
         notify("Plan imported as a new project");
       } else if (importKind === "inventory") {
-        const entries = parseInventory(text);
-        change((p) => ({ ...p, inventory: entries }));
+        const target = current.current;
+        if (target.id !== targetId) throw Error("The project changed while reading the snapshot file. Import it again.");
+        const imported = mergeStoreSnapshots(target, readStoreSnapshotFile(text));
+        if (imported.changed) change(imported.project);
         setModal(null);
         notify(
-          "Inventory snapshot imported. Store, ZIP, and timestamps will be checked.",
+          `${imported.changed} store ${imported.changed === 1 ? "snapshot" : "snapshots"} imported.${imported.skipped ? ` Skipped ${imported.skipped} duplicate or older rows.` : ""}`,
         );
       } else {
         const lines = parseDxf(text, dxfScale);
@@ -715,15 +2001,20 @@ export function App() {
     setBusy(true);
     try {
       if (!project.store)
-        throw Error("Enter an exact Home Depot store number first.");
+        throw Error(
+          "Enter an exact store number for the selected retailer first.",
+        );
       const entries = parseInventory(
         JSON.stringify(
           await api(
-            `/api/catalog?zip=${project.zip}&store=${encodeURIComponent(project.store)}`,
+            `/api/catalog?zip=${project.zip}&store=${encodeURIComponent(project.store)}&retailer=${project.retailer ?? "home-depot"}`,
           ),
         ),
       );
-      change((p) => ({ ...p, inventory: entries }));
+      const target = current.current;
+      if (target.id !== project.id) throw Error("The project changed during the store refresh.");
+      const imported = mergeStoreSnapshots(target, { materials: entries });
+      if (imported.changed) change(imported.project);
       notify("Provider inventory refreshed");
     } catch (e) {
       notify((e as Error).message, true);
@@ -749,41 +2040,64 @@ export function App() {
     );
     const ray = new THREE.Raycaster();
     ray.setFromCamera(pointer, camera.current);
-    const point = new THREE.Vector3();
-    if (
-      ray.ray.intersectPlane(
-        new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
-        point,
-      )
-    ) {
-      const round = (v: number) => (snap ? Math.round(v * 12) : v * 12);
-      add(id, [round(point.x), 0, round(point.z)]);
+    const point = surfacePlacement(
+      project,
+      ray.ray.origin.toArray().map((v) => v * 12) as V3,
+      ray.ray.direction.toArray() as V3,
+    );
+    if (point) {
+      const round = (v: number) => (snap ? Math.round(v) : v);
+      add(id, [round(point[0]), point[1], round(point[2])]);
     }
   }
-  const clonePiece = () => {
+  function copySelection() {
+    objectClipboard.current=copyObjects(current.current,selected,selectedSectionId);
+    if(objectClipboard.current){setHasObjectClipboard(true);notify(`Copied ${objectClipboard.current.pieces.length} part(s). Paste creates independent parts; source allocations and connection plans stay with the originals.`);}
+  }
+  function pasteSelection(snapshot=objectClipboard.current) {
+    if(!snapshot||!canLeaveWorkingDraft())return;
+    safe(()=>{const result=pasteObjects(current.current,snapshot,activeStepId);change(result.project);setSelected(result.sectionId?null:result.pieceId);setSelectedSectionId(result.sectionId);setSelectionScope(result.sectionId?"section":"part");setPanel(result.sectionId?"sections":"part");setMode("move");setStage(null);});
+  }
+  const clonePiece=()=>pasteSelection(copyObjects(current.current,selected,selectedSectionId));
+  function moveWholeSection(id: string, origin: V3, rotation: V3) {
+    const project = current.current;
+    const section = project.sections.find((row) => row.id === id);
+    if (!section) return;
+    const candidate = transformSection(project, id, origin, rotation);
+    const ids = new Set(section.pieceIds);
+    const clear = separateWood(candidate, candidate.pieces.filter((part) => ids.has(part.id)));
+    if (clear.blocked) throw Error("This section cannot overlap the existing wood.");
+    const position = origin.map((value, i) => value + clear.offset[i]) as V3;
+    if (position.every((value, i) => Math.abs(value - section.origin[i]) < 1e-7) &&
+      rotation.every((value, i) => Math.abs(value - section.rotation[i]) < 1e-7)) return;
+    change(clear.adjusted ? transformSection(project, id, position, rotation) : candidate);
+  }
+  function nudgeSelection(direction:number) {
+    if(!canLeaveWorkingDraft())return;
     if (piece) {
-      const copy = {
-        ...structuredClone(piece),
-        id: uid(),
-        name: `${piece.name.slice(0, 110)} · copy`,
-        position: [
-          piece.position[0] + 6,
-          piece.position[1],
-          piece.position[2],
-        ] as V3,
-      };
-      change((p) => ({
-        ...p,
-        pieces: [...p.pieces, copy],
-        sections: p.sections.map((s) =>
-          s.pieceIds.includes(piece.id)
-            ? { ...s, pieceIds: [...s.pieceIds, copy.id] }
-            : s,
-        ),
-      }));
-      setSelected(copy.id);
+      const position = [...piece.position] as V3;
+      position[1] += direction * moveIncrement;
+      const placed = createWoodSlide(current.current, piece)?.(position);
+      if (placed) {
+        move(piece.id, placed.position, piece.rotation, true);
+        if (placed.stop) notify(woodSlideStopLabel(current.current, placed.stop));
+      } else updatePart({ position });
     }
-  };
+    else if (selectedSectionId) safe(() => {
+      const active = current.current;
+      const section = active.sections.find((row) => row.id === selectedSectionId);
+      if (!section) return;
+      const target: V3 = [section.origin[0], section.origin[1] + direction * moveIncrement, section.origin[2]];
+      const ids = new Set(section.pieceIds);
+      const placed = createWoodGroupSlide(active, active.pieces.filter((part) => ids.has(part.id)), section.origin)?.(target);
+      moveWholeSection(section.id, placed?.position ?? target, section.rotation);
+      if (placed?.stop) notify(woodSlideStopLabel(active, placed.stop));
+    });
+  }
+  function inspectStock(id:string){setSelectionScope("part");setSelectedSectionId(null);setSelected(id);setPanel("part");inspectWorkspace();}
+  function reuseOffcut(id:string){safe(()=>{const old=current.current.pieces.find((p)=>p.id===id&&p.offcut);if(!old)return;const candidate={...old,offcut:false,name:old.name.replace(/^Offcut · /,"Reused · ")};const clear=placeWood(current.current,candidate,candidate.position);if(clear.blocked)throw Error("Choose a clear position for this offcut.");candidate.position=clear.position;change((p)=>({...p,pieces:p.pieces.map((row)=>row.id===id?candidate:row)}));inspectStock(id);notify("Offcut reused. Its original stock source is preserved.");});}
+  objectActions.current={copy:copySelection,paste:()=>pasteSelection(),duplicate:clonePiece,nudge:nudgeSelection};
+  const movementTools=<ObjectMovement onMove={()=>setMode("move")} onLift={()=>setMode("lift")} onNudge={nudgeSelection} onCopy={copySelection} onPaste={()=>pasteSelection()} onDuplicate={clonePiece} hasClipboard={hasObjectClipboard} increment={moveIncrement} onIncrement={setMoveIncrement} bottom={piece?bounds(piece).min[1]:undefined} lifting={mode==="lift"}/>;
   const deletePiece = () => {
     if (piece) {
       change((p) => ({
@@ -795,7 +2109,7 @@ export function App() {
     }
   };
   return (
-    <div className="app-shell">
+    <div className={`app-shell${labelPrint ? " printing-part-labels" : ""}`}>
       <header className="topbar">
         <button
           className="brand"
@@ -813,9 +2127,17 @@ export function App() {
           <span>{project.name}</span>
         </div>
         <div className="top-actions">
-          <span className={`save-state ${saved ? "saved" : ""}`}>
+          <button
+            className="button secondary open-projects"
+            onClick={openProjects}
+          >
+            <FolderOpen size={15} />
+            Open project
+          </button>
+          {hasObjectClipboard&&<button className="button secondary" onClick={()=>pasteSelection()}>Paste object</button>}
+          <span className={`save-state ${saved && !connectorDraftDirty && !fittedDraftDirty ? "saved" : ""}`}>
             <span />
-            {saved ? "Saved to library" : "Browser draft"}
+            {connectorDraftDirty ? "Connector draft" : fittedDraftDirty ? "Fitted-stock draft" : saved ? "Saved to library" : "Browser draft"}
           </span>
           <button
             className="icon-button"
@@ -871,8 +2193,15 @@ export function App() {
             <Layers3 size={14} />
             Assemblies
           </button>
+          <button className={library === "cuts" ? "active" : ""} onClick={() => setLibrary("cuts")}><Scissors size={14}/>Cut pool ({offcutCount})</button>
         </div>
-        {library === "parts" ? (
+        {library === "cuts" ? <CutPool project={project} onInspect={inspectStock} onReuse={reuseOffcut}
+          onAdd={() => setModal("measured-offcut")}
+          onReviewReuse={() => safe(() => {
+            const plan = planOffcutReuse(current.current);
+            setOffcutReusePlan(plan);
+            setModal("offcut-reuse");
+          })} /> : library === "parts" ? (
           <>
             <label className="search-field">
               <Search size={16} />
@@ -885,81 +2214,32 @@ export function App() {
               <kbd>⌕</kbd>
             </label>
             <div className="categories">
-              {["All", "Lumber", "Panels", "Roof & wire", "Fasteners"].map(
-                (c) => (
-                  <button
-                    key={c}
-                    className={filter === c ? "active" : ""}
-                    onClick={() => setFilter(c)}
-                  >
-                    {c}
-                  </button>
-                ),
-              )}
+              {[
+                "All",
+                "Lumber",
+                "Panels",
+                "Roof & wire",
+                "Fasteners",
+                "Brackets",
+                "Rods",
+              ].map((c) => (
+                <button
+                  key={c}
+                  className={filter === c ? "active" : ""}
+                  onClick={() => setFilter(c)}
+                >
+                  {c}
+                </button>
+              ))}
             </div>
-            <div className="section-label">
-              {filter === "All" ? "STARTER MATERIALS" : filter.toUpperCase()}
-              <span>
-                {
-                  catalog.filter(
-                    (m) =>
-                      (filter === "All" || m.category === filter) &&
-                      m.name.toLowerCase().includes(search.toLowerCase()),
-                  ).length
-                }
-              </span>
-            </div>
-            <div className="material-list">
-              {catalog
-                .filter(
-                  (m) =>
-                    (filter === "All" || m.category === filter) &&
-                    m.name.toLowerCase().includes(search.toLowerCase()),
-                )
-                .map((m) => (
-                  <div
-                    key={m.id}
-                    className="material-card"
-                    draggable
-                    onDragStart={(e) =>
-                      e.dataTransfer.setData(
-                        "application/yardwork-material",
-                        m.id,
-                      )
-                    }
-                  >
-                    <div
-                      className={`material-art ${m.id}`}
-                      style={
-                        { "--material-color": m.color } as React.CSSProperties
-                      }
-                    >
-                      <div />
-                      <div />
-                      <div />
-                    </div>
-                    <div className="material-info">
-                      <strong>{m.name}</strong>
-                      <small>{m.subtitle}</small>
-                      <span>
-                        {money(m.price)} <em>/ {m.unit} · example</em>
-                      </span>
-                    </div>
-                    <button
-                      aria-label={`Add ${m.name}`}
-                      onClick={() => add(m.id)}
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                ))}
-            </div>
+            <MaterialLibrary category={filter} search={search} onAdd={add} />
             <div className="drag-hint">
               <MousePointer2 size={15} />
               <span>
                 Drag a material onto the ground.
                 <br />
-                Or tap + to add it beside your build.
+                Add as many design parts as you need; stock is checked
+                separately.
               </span>
             </div>
           </>
@@ -968,6 +2248,7 @@ export function App() {
             <button
               className="assembly-card"
               onClick={() => {
+                setAssistantTarget("");
                 setPrompt(
                   "Build a wall 8 ft wide and 6 ft tall, 16 inches on center",
                 );
@@ -988,12 +2269,7 @@ export function App() {
             </button>
             <button
               className="assembly-card"
-              onClick={() => {
-                setAssistantTarget("");
-                setPrompt("Build a base 6 by 4 ft");
-                setProposal(null);
-                setModal("assistant");
-              }}
+              onClick={() => configureBase()}
             >
               <div className="assembly-art floor-art">▤</div>
               <strong>Floor & foundation</strong>
@@ -1006,6 +2282,13 @@ export function App() {
                 Configure base <ArrowRight size={14} />
               </span>
             </button>
+            <button
+              className="button secondary full"
+              onClick={() => setModal("studies")}
+            >
+              <Layers3 size={16} />
+              Explore whole builds
+            </button>
             <button className="text-button" onClick={() => setModal("new")}>
               <Plus size={15} />
               Start a new project
@@ -1013,9 +2296,11 @@ export function App() {
           </div>
         )}
         <div className="store-card">
-          <div className="store-logo">HD</div>
+          <div className="store-logo">
+            {project.retailer === "lowes" ? "L" : "HD"}
+          </div>
           <div>
-            <strong>Home Depot sourcing</strong>
+            <strong>{retailerName(project.retailer)} sourcing</strong>
             <span>
               ZIP {project.zip} ·{" "}
               {project.store ? `Store ${project.store}` : "choose a store"}
@@ -1049,67 +2334,275 @@ export function App() {
                 <ChevronDown size={18} />
               </button>
             </h1>
-            <p>
-              {project.kind === "coop"
-                ? "A little planning. A better backyard."
-                : "Big ideas start with the first piece."}
-            </p>
+            <p>Big ideas start with the first piece.</p>
           </div>
-          <button
-            className="button ai-button"
-            onClick={() => {
-              setProposal(null);
-              setAssistantTarget(
-                selectedSectionId &&
-                  project.sections.find((s) => s.id === selectedSectionId)
-                    ?.generator
-                  ? selectedSectionId
-                  : "",
-              );
-              setModal("assistant");
-            }}
-          >
-            <Sparkles size={16} />
-            Build with a prompt
-          </button>
+          <div className="design-actions">
+            <button
+              className="button secondary zone-button"
+              onClick={() => setModal("zone")}
+            >
+              <Ruler size={14} />
+              {project.workZone
+                ? `${format(project.workZone.width)} W × ${format(project.workZone.depth)} D × ${format(project.workZone.height)} H`
+                : "Set work zone"}
+            </button>
+            <button className="button ai-button" onClick={() => openIdea()}>
+              <Sparkles size={16} />
+              Plan an idea
+            </button>
+          </div>
         </div>
+          {activeFastenerLayoutPreview && (
+            <div className="lid-preview-banner" data-testid="layout-preview-banner">
+              <span>
+                {centeredEntryPreview
+                  ? "Centered entry preview · direction only"
+                  : contactRowPreview
+                  ? `Screw row preview · ${activeFastenerLayoutPreview.candidateIds.length} marks`
+                  : `Layout preview · ${activeFastenerLayoutPreview.candidateIds.length} new positions · ${activeFastenerLayoutPreview.selectedCandidateIds.length} selected`}
+              </span>
+              <button type="button" onClick={() => {
+                inspectorFocus.expand();
+                const section = centeredEntryPreview ? ".fastener-centered-preview" : contactRowPreview ? ".fastener-strip-preview" : ".fastener-layout-panel";
+                requestAnimationFrame(() => document.querySelector(section)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+              }}>
+                {centeredEntryPreview ? "Return to entry preview" : contactRowPreview ? "Return to screw row" : "Return to layout"}
+              </button>
+            </div>
+          )}
+          {activeConnectorPreview && <div className="lid-preview-banner" data-testid="connector-preview-banner">
+            <span>{activeConnectorPreview.plan.label} draft · entered wood paths · connector fit pending</span>
+            <button type="button" onClick={() => { inspectorFocus.expand(); requestAnimationFrame(() => document.querySelector(".connectors-panel")?.scrollIntoView({behavior:"smooth",block:"start"})); }}>Return to connector plan</button>
+          </div>}
+          {panel === "fit-stock" && <div className="lid-preview-banner" data-testid="fitted-stock-preview-banner">
+            <span>{fittedFacePick ? `Pick ${fittedFacePick.which} face on ${partLabel(project, fittedFacePick.pieceId)}` : activeFittedPreview ? `Fitted-stock preview · ${formatPreciseInches(activeFittedPreview.cutLength)} cut · not added` : "Fit stock between actual faces"}</span>
+            <button type="button" onClick={() => {
+              inspectorFocus.expand();
+              requestAnimationFrame(() => {
+                const target = document.querySelector<HTMLElement>(".fitted-stock-results") ?? document.querySelector<HTMLElement>(".fitted-stock-panel");
+                target?.focus({preventScroll:true});
+                target?.scrollIntoView({behavior:"smooth",block:"start"});
+              });
+            }}>Return to fitted stock</button>
+          </div>}
+          {(showOffcuts || selectedOffcut) && !workspaceReviewActive && !["fit-stock","fasteners","connectors","hinges","attachments","restraints"].includes(panel) && <div className="lid-preview-banner" data-testid="offcut-view-status">
+            <span>{showOffcuts ? `${offcutCount} offcut stock records visible` : `Inspecting ${partLabel(project, selectedOffcut!.id)} · offcut stock`}</span>
+            <button type="button" onClick={() => {
+              setShowOffcuts(false);
+              if (selectedOffcut) select(assemblyPartForOffcut(project, selectedOffcut.id) ?? "");
+              setView((previous) => ({...previous,nonce:previous.nonce + 1}));
+            }}>Back to assembly</button>
+          </div>}
+          {activeLidPreview && (
+            <div className={`lid-preview-banner${activeLidPreview.focusPair ? " motion-pair-banner" : ""}`} role="status">
+              <span data-testid="lid-preview-label" data-lid-id={activeLidPreview.piece.id} data-angle={activeLidPreview.angle} data-position={JSON.stringify(activeLidPreview.piece.position)} data-rotation={JSON.stringify(activeLidPreview.piece.rotation)} data-stay-arms={activeLidPreview.stayLinks?.reduce((n, link) => n + (link.arms?.length ?? 0), 0)}>
+                Lid travel preview · {lidSiteAngle(activeLidPreview.angle)}
+                {activeLidPreview.siteFaceHits?.length ? activeLidPreview.atLimit ? " · Reached measured clearance limit" : " · lid clearance shortfall" : ""}
+                {activeLidPreview.interferenceIds?.length
+                  ? activeLidPreview.envelopeOnly
+                    ? " · Possible contact · Part envelope in red"
+                    : activeLidPreview.atLimit ? " · Contact ahead · Parts in red" : ` · ${activeLidPreview.interferenceIds.length} overlapping part(s) in red`
+                  : ""}
+                {activeLidPreview.stayArmHitIds?.length
+                  ? activeLidPreview.stayArmContactAhead ? " · Stay arm contact ahead" : " · Stay arm overlap in red"
+                  : ""}
+                {activeLidPreview.outsideZoneFaces?.length ? ` · ${activeLidPreview.atLimit ? "Reached" : "outside"} ${activeLidPreview.outsideZoneFaces.join(", ")}${activeLidPreview.atLimit ? " work-zone limit" : ""}` : ""}
+                {activeLidPreview.focusPair && ` · Focused on ${activeLidPreview.focusPair.map((id) => partLabel(project, id)).join(" and ")}`}
+              </span>
+              {activeLidPreview.focusPair && (
+                <button type="button" onClick={() => setLidMotionPreview({ project, value: { ...activeLidPreview, focusPair: undefined } })}>
+                  Show full project
+                </button>
+              )}
+              {activeLidPreview.focusPair && (
+                <button type="button" onClick={() => editClearanceObstruction(activeLidPreview.focusPair![1], {
+                  kind: "lid", sectionId: activeLidPreview.sectionId,
+                })}>
+                  Edit obstruction
+                </button>
+              )}
+              {(panel === "lid-travel" || panel === "hinges" || panel === "sections") && (
+                <button type="button" onClick={() => inspectorFocus.expand()}>Return to lid controls</button>
+              )}
+              <button className="button" onClick={() => setLidMotionPreview(null)}>Exit preview</button>
+            </div>
+          )}
+          {activeDriverPreview && (
+            <div className="lid-preview-banner">
+              <span>{activeDriverPreview.label} · {activeDriverPreview.detail}</span>
+              <button type="button" className="button" onClick={() => setDriverPreview(null)}>Hide driver approach</button>
+            </div>
+          )}
+          {shownDryerDuct && (
+            <div className="lid-preview-banner">
+              <span>Dryer duct layout · straight-run envelopes</span>
+              <button type="button" onClick={() => inspectorFocus.expand()}>Return to duct layout</button>
+              <button type="button" onClick={() => setDryerDuctProjectId(null)}>Hide dryer duct layout</button>
+            </div>
+          )}
+          {activeMotionPreview && (
+            <div className={`lid-preview-banner${activeMotionPreview.focusPair ? " motion-pair-banner" : ""}`}>
+              <span data-testid="motion-preview-label" data-pose={activeMotionPreview.travel}>
+                {activeMotionPreview.label} · {activeMotionPreview.positionText ?? motionDistance(activeMotionPreview.travel, activeMotionPreview.kind)}
+                {activeMotionPreview.interferenceIds.length > 0 && (activeMotionPreview.envelopeOnly
+                  ? " · Possible contact · Part envelope in red"
+                  : activeMotionPreview.atLimit ? " · Contact ahead · Parts in red" : " · Interfering parts in red")}
+                {activeMotionPreview.obstacleNames.length > 0 && ` · ${activeMotionPreview.obstacleNames[0]}${activeMotionPreview.obstacleNames.length > 1 ? ` +${activeMotionPreview.obstacleNames.length - 1}` : ""}`}
+                {activeMotionPreview.outsideZoneFaces.length > 0 && ` · ${activeMotionPreview.atLimit ? "Reached" : "Outside"} ${activeMotionPreview.outsideZoneFaces.join(", ")} work-zone limit`}
+                {activeMotionPreview.siteFaceNames.length > 0 && ` · ${activeMotionPreview.atLimit ? "Reached measured clearance limit" : "Measured clearance shortfall"} · ${activeMotionPreview.siteFaceNames.join(", ")}`}
+                {activeMotionPreview.uncertainLimit && " · Stopped where clearance needs review"}
+                {activeMotionPreview.focusPair && ` · Focused on ${activeMotionPreview.focusPair.map((id) => partLabel(project, id)).join(" and ")}`}
+              </span>
+              {activeMotionPreview.focusPair && (
+                <button type="button" onClick={() => setMotionPreview({ project, value: { ...activeMotionPreview, focusPair: undefined } })}>
+                  Show full project
+                </button>
+              )}
+              {activeMotionPreview.focusPair && activeMotionPreview.focusTest && (
+                <button type="button" onClick={() => editClearanceObstruction(activeMotionPreview.focusPair![1], {
+                  kind: "motion", ...activeMotionPreview.focusTest!,
+                })}>
+                  Edit obstruction
+                </button>
+              )}
+              {panel === "motion" && !activeRemoval && (
+                <button type="button" onClick={() => inspectorFocus.expand()}>Return to motion controls</button>
+              )}
+              {activeRemoval && <button type="button" onClick={() => inspectorFocus.expand()}>Return to removal controls</button>}
+              {activeSectionMotion && <button type="button" onClick={() => {
+                inspectorFocus.expand();
+                const id = activeSectionMotion.target === "bench" ? "sauna-bench-carry-in" : "casework-tip-up";
+                requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+              }}>{activeSectionMotion.target === "bench" ? "Return to bench carry-in" : "Return to casework tip-up"}</button>}
+              <button type="button" className="button" onClick={() => {
+                setMotionPreview(null);
+                setSectionMotionPreview(null);
+              }}>Exit preview</button>
+            </div>
+          )}
+          {activeGuidePart && (
+            <section className="lid-preview-banner guide-part-view" aria-label="Guide part view">
+              <span role="status">{activeGuidePart.row.label} · {activeGuidePart.row.name} · Step {activeGuidePart.row.step.number}</span>
+              <div className="guide-part-view-actions">
+                <button type="button" className="button" onClick={() => setGuidePartFocus((value) =>
+                  value && { ...value, isolated: !value.isolated })}>
+                  {activeGuidePart.isolated ? "Show step context" : "Isolate part"}
+                </button>
+                {focusedGuidePiece && material(focusedGuidePiece.material).cuttable && (
+                  <button type="button" className="button" onClick={() => openPartStockPlan(focusedGuidePiece.id)}>
+                    View stock cut plan
+                  </button>
+                )}
+                <button type="button" className="button" onClick={exitGuidePartView}>Exit part view</button>
+              </div>
+            </section>
+          )}
+          {shownCheckArea && (
+            <div className="lid-preview-banner" role="status">
+              <span>{shownCheckArea.label}</span>
+              {eaveBlock ? <button className="button" onClick={() => {
+                inspectorFocus.expand();
+                requestAnimationFrame(() => document.querySelector(".eave-fit")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+              }}>Return to eave block</button> : (
+                <button className="button" onClick={() => {
+                  setShelfDividerDraft(null);
+                  setShownAreaFinding(null);
+                }}>Hide highlighted area</button>
+              )}
+            </div>
+          )}
         <div
-          className="canvas-wrap"
+          className={`canvas-wrap${workspaceReviewActive ? " motion-preview" : ""}${activeFastenerLayoutPreview || activeConnectorPreview || panel === "fit-stock" ? " layout-preview" : ""}`}
           ref={viewport}
           onDragOver={(e) => e.preventDefault()}
-          onDrop={drop}
+          onDrop={(event) => {
+            if (workspaceReviewActive) event.preventDefault();
+            else drop(event);
+          }}
         >
           <SceneBoundary>
             <Scene
               project={project}
-              selected={selected}
-              selectedSectionId={selectedSectionId}
-              onSectionMove={(id, origin, delta) =>
-                safe(() => {
-                  const section = current.current.sections.find(
-                    (s) => s.id === id,
-                  );
-                  if (section)
-                    change(
-                      transformSection(
-                        current.current,
-                        id,
-                        snap
-                          ? snapSectionOrigin(
-                              current.current,
-                              id,
-                              origin,
-                              composeRotation(delta, section.rotation),
-                            )
-                          : origin,
-                        composeRotation(delta, section.rotation),
-                      ),
-                    );
-                })
-              }
+              showOffcuts={!shownCheckArea && showOffcuts}
+              readOnly={!!shownCheckArea || !!activeGuidePart || !!activeFastenerLayoutPreview || !!activeConnectorPreview || !!baseRailPreview || (panel === "fit-stock" && mode !== "fit-face")}
+              guidePartFocus={activeGuidePart ? {
+                pieceId: activeGuidePart.row.pieceId, label: activeGuidePart.row.label, isolated: activeGuidePart.isolated,
+              } : undefined}
+              fittedStockPreview={activeFittedPreview}
+              fittedStockFaces={activeFittedFaces}
+              baseRailPreview={baseRailPreview}
+              onPickFittedFace={(id, point, outward) => safe(() => {
+                if (!fittedFacePick || fittedFacePick.project !== project || panel !== "fit-stock") return;
+                if (id !== fittedFacePick.pieceId) throw Error(`Click a retained face of ${partLabel(project, fittedFacePick.pieceId)}.`);
+                const ref = pickRenderedFittedStockFace(project, id, point, outward);
+                setPickedFittedFace({which:fittedFacePick.which,pieceId:id,ref,nonce:++fittedPickNonce.current});
+                setFittedFacePick(null); setMode("select");
+              })}
+              lidPreview={activeLidPreview}
+              motionPreview={activeMotionPreview}
+              fitToView
+              animateView
+              shownProfileRun={shownProfileRun}
+              shownBandingEdge={shownBandingEdge}
+              shownSaunaHeater={shownSaunaHeater}
+              shownSaunaVentilation={shownSaunaVentilation}
+              shownLatchId={panel === "motion" && !activeMotionPreview ? shownLatchId : null}
+              shownRodSupportId={panel === "sections" ? shownRodSupportId : null}
+              shownSiteClearanceId={panel === "site-clearances" ? shownSiteClearanceId : null}
+              shownFoundation={panel === "site-clearances" ? shownFoundation : undefined}
+              shownPlumbingVentLayout={shownVentDatums}
+              shownDryerDuctLayout={shownDryerDuct}
+              shownCheckArea={shownCheckArea}
+              showAttachments={panel === "attachments"}
+              showRestraints={panel === "restraints"}
+              driverAccessPreview={activeDriverPreview}
+              showFasteners={panel === "fasteners" && !explode && stage === null}
+              fastenerLayoutPreview={activeFastenerLayoutPreview}
+              focusedFastenerLocationId={focusedFastenerLocation?.projectId === project.id && focusedFastenerLocation.planId === selectedFastenerPlanId ? focusedFastenerLocation.locationId : null}
+              selectedFastenerPlanId={project.fastenerPlans.some((plan) => plan.id === selectedFastenerPlanId) ? selectedFastenerPlanId : null}
+              showHinges={(panel === "sections" || panel === "hinges") && !activeLidPreview}
+              showConnectors={panel === "connectors" && !explode && stage === null}
+              selectedConnectorPlanId={selectedConnectorPlanId}
+              connectorPreview={activeConnectorPreview}
+              focusedConnectorEntryId={focusedConnectorEntryId}
+              onPickFastenerEntrance={(id, point, inward) => safe(() => {
+                if (!entrancePick || entrancePick.projectId !== project.id) return;
+                if (id !== entrancePick.headPieceId) throw Error("Click the selected member's retained face.");
+                const target = project.pieces.find((p) => p.id === id)!;
+                const picked = pickFastenerSurface(target, point, inward);
+                setPickedEntrance({ ...picked, projectId: project.id, panel:entrancePick.panel, planId: entrancePick.planId, locationId: entrancePick.locationId, nonce: ++entrancePickNonce.current });
+                setEntrancePick(null);
+                setMode("select");
+                notify("Entrance picked. Review the draft location and save the plan.");
+              })}
+              selectedAttachmentPlanId={selectedAttachmentPlanId}
+              onSelectAttachmentPlan={setSelectedAttachmentPlanId}
+              onSelectAttachmentPart={(id) => {
+                setSelected(id);
+                setSelectedSectionId(null);
+                setSelectionScope("part");
+              }}
+              selected={activeGuidePart?.row.pieceId ?? (shownCheckArea ? null : selected)}
+              selectedSectionId={shownCheckArea ? null : selectedSectionId}
+              onSectionMove={(id, origin, delta, previewed) => safe(() => {
+                const active = current.current;
+                const section = active.sections.find((row) => row.id === id);
+                if (!section) return;
+                const rotation = delta.every((value) => value === 0) ? section.rotation : composeRotation(delta, section.rotation);
+                moveWholeSection(id, snap && !previewed ? snapSectionOrigin(active, id, origin, rotation) : origin, rotation);
+              })}
               onSelect={select}
-              onMove={move}
+              onMove={(id, position, rotation) => move(id, position, rotation, true)}
+              interferenceIds={activeDriverPreview?.blockerIds ?? findings.find((finding)=>finding.id==="collision")?.pieceIds}
               mode={mode}
+              measurement={measurement}
+              onMeasurePoint={(point) =>
+                setMeasurement((previous) =>
+                  !previous.a || previous.b
+                    ? { a: point, b: null }
+                    : { ...previous, b: point },
+                )
+              }
               snap={snap}
               explode={explode}
               xray={xray}
@@ -1132,6 +2625,7 @@ export function App() {
                 { id: "move", icon: Move3D, label: "Move (M)" },
                 { id: "rotate", icon: RotateCw, label: "Rotate (R)" },
                 { id: "screw", icon: Wrench, label: "Connect with screws" },
+                { id: "measure", icon: Ruler, label: "Measure (D)" },
               ] as const
             ).map((t) => (
               <button
@@ -1141,10 +2635,24 @@ export function App() {
                 className={mode === t.id ? "active" : ""}
                 onClick={() => {
                   setMode(t.id);
+                  if (t.id === "measure") {
+                    setStage(null);
+                    setExplode(false);
+                  }
                   if (t.id === "select" || t.id === "screw") {
                     setSelectionScope("part");
                     setSelectedSectionId(null);
                   }
+                  if (t.id === "screw")
+                    setTimeout(
+                      () =>
+                        document
+                          .querySelector<HTMLDetailsElement>(
+                            ".connection-settings",
+                          )
+                          ?.setAttribute("open", ""),
+                      30,
+                    );
                   if (t.id === "screw")
                     notify(
                       "Select a first part, then click a touching second part to connect them.",
@@ -1166,6 +2674,11 @@ export function App() {
               }}
             >
               <Cuboid size={18} />
+            </button>
+            <button type="button" aria-label="Test movement" title="Test door, lid or drawer movement"
+              className={panel === "motion" ? "active" : ""}
+              onClick={() => { if (activeRemoval) setMotionPreview(null); setRemovalTarget(null); setPanel("motion"); setStage(null); setPlaying(false); setExplode(false); }}>
+              <DoorOpen size={18} />
             </button>
             <i />
             <button
@@ -1195,6 +2708,12 @@ export function App() {
             </button>
           </div>
           <div className="view-tools">
+            {offcutCount > 0 && <button type="button"
+              className={showOffcuts ? "active" : ""} aria-pressed={showOffcuts}
+              aria-label={showOffcuts ? "Hide offcut stock" : "Show offcut stock"}
+              title="Show virtual offcut stock without changing the build or material list"
+              disabled={workspaceReviewActive || ["fit-stock","fasteners","connectors","hinges","attachments","restraints"].includes(panel)}
+              onClick={() => setShowOffcuts((shown) => !shown)}><Package size={16} /></button>}
             <button
               className={xray ? "active" : ""}
               onClick={() => setXray(!xray)}
@@ -1208,6 +2727,7 @@ export function App() {
               onClick={() => setExplode(!explode)}
               title="Explode by build step"
               aria-label="Explode assembly"
+              disabled={workspaceReviewActive}
             >
               <Layers3 size={16} />
             </button>
@@ -1240,8 +2760,13 @@ export function App() {
               ))}
             </div>
             <span className="orbit-hint">
-              Drag to orbit <b>·</b> Scroll to zoom
+              {fittedFacePick ? `Click a retained face of ${partLabel(project, fittedFacePick.pieceId)}. Escape cancels.` : workspaceReviewActive || activeFastenerLayoutPreview || activeConnectorPreview || panel === "fit-stock" ? "Drag to orbit · Scroll to zoom" : entrancePick ? `Click a retained face of ${partLabel(project, entrancePick.headPieceId)}. Escape cancels.` : mode === "lift" ? "Drag a part up/down to lift · Alt + ↑/↓ to nudge" : "Drag to move · Alt-drag to lift · Shift-drag to rotate · Right-drag to orbit"}
             </span>
+            {entrancePick && (
+              <button className="button secondary" style={{padding:"5px 8px",fontSize:11}} aria-label="Cancel entrance pick" onClick={() => { setEntrancePick(null); setMode("select"); }}>
+                Pick {partLabel(project, entrancePick.headPieceId)} · Cancel
+              </button>
+            )}
             <button
               className="icon-button"
               aria-label="Workspace help"
@@ -1250,7 +2775,123 @@ export function App() {
               <CircleHelp size={17} />
             </button>
           </div>
-          {mode === "screw" && (
+          {!project.pieces.length && !project.workZone && !shownVentDatums && !shownDryerDuct && (
+            <div className="empty-workspace">
+              <Box size={30} />
+              <h2>A space for your next idea.</h2>
+              <p>
+                Set your available space, drag in materials, or describe what
+                you want to build.
+              </p>
+              <div className="inline">
+                <button
+                  className="button secondary"
+                  onClick={() => setModal("zone")}
+                >
+                  Set work zone
+                </button>
+                <button className="button primary" onClick={() => openIdea()}>
+                  Plan an idea
+                </button>
+              </div>
+            </div>
+          )}
+          {!workspaceReviewActive && piece && mode !== "measure" && mode !== "fastener" && (
+            <div className="part-quick-tools">
+              <strong>{piece.name}</strong>
+              <button onClick={()=>setMode("move")}><Move3D size={15}/>Move XYZ</button>
+              <button aria-pressed={mode==="lift"} onClick={()=>setMode("lift")}>↕ Lift</button>
+              <button onClick={copySelection}><Copy size={15}/>Copy</button>
+              <button
+                title="Turn around Y by 90 degrees"
+                onClick={() => rotatePart([0, Math.PI / 2, 0])}
+              >
+                <RotateCw size={15} />
+                Turn 90°
+              </button>
+              <button
+                title="Lay down or tip up around Z"
+                onClick={() => rotatePart([0, 0, Math.PI / 2])}
+              >
+                <RotateCcw size={15} />
+                Tip 90°
+              </button>
+              {(material(piece.material).cuttable || canEditThroughOpenings(piece)) && (
+                <button data-cut-part onClick={() => setModal("cut")}>
+                  <Scissors size={15} />
+                  Cut part
+                </button>
+              )}
+            </div>
+          )}
+          {!workspaceReviewActive && mode === "measure" && (
+            <div className="measurement-panel" aria-label="Measurement">
+              <strong>
+                <Ruler size={14} /> Measure distances
+              </strong>
+              <p>
+                {!measurement.a
+                  ? "Click the first surface or floor point."
+                  : !measurement.b
+                    ? "Click the second point."
+                    : "Click again to start a new measurement."}
+              </p>
+              {measured && (
+                <>
+                  <output aria-label="Measured distance">
+                    {formatMeasurement(measured.distance)}{" "}
+                    <small>({measured.distance.toFixed(3)} in)</small>
+                  </output>
+                  <p className="measurement-deltas">
+                    X {formatMeasurement(measured.delta[0])} · Y{" "}
+                    {formatMeasurement(measured.delta[1])} · Z{" "}
+                    {formatMeasurement(measured.delta[2])}
+                  </p>
+                </>
+              )}
+              {(["a", "b"] as const).map(
+                (end) =>
+                  measurement[end] && (
+                    <details key={end}>
+                      <summary>
+                        Point {end.toUpperCase()} · exact coordinates
+                      </summary>
+                      <div className="number-row">
+                        {["X", "Y", "Z"].map((axis, i) => (
+                          <Num
+                            key={axis}
+                            label={`Point ${end.toUpperCase()} ${axis}`}
+                            value={measurement[end]![i]}
+                            onChange={(value) =>
+                              setMeasurement((previous) => {
+                                const point = [...previous[end]!] as V3;
+                                point[i] = value;
+                                return { ...previous, [end]: point };
+                              })
+                            }
+                          />
+                        ))}
+                      </div>
+                    </details>
+                  ),
+              )}
+              <div className="inline">
+                <button
+                  className="text-button"
+                  onClick={() => setMeasurement({ a: null, b: null })}
+                >
+                  Clear measurement
+                </button>
+                <button
+                  className="text-button"
+                  onClick={() => setMode("select")}
+                >
+                  Done measuring
+                </button>
+              </div>
+            </div>
+          )}
+          {!workspaceReviewActive && mode === "screw" && (
             <div className="mode-banner">
               <Wrench size={15} />
               {selected
@@ -1258,7 +2899,7 @@ export function App() {
                 : "Choose the first part to connect"}
             </div>
           )}
-          {stage !== null && (
+          {!workspaceReviewActive && stage !== null && (
             <div className="preview-badge">
               Step {stage + 1} of {project.steps.length}
               <button
@@ -1275,97 +2916,106 @@ export function App() {
         <section className="build-timeline">
           <div className="timeline-heading">
             <div>
-              <span className="eyebrow">PIECE BY PIECE</span>
+              <span className="eyebrow">DESIGN FIRST · GUIDE WHEN READY</span>
               <h3>
-                Your build, in steps <span>{project.steps.length}</span>
+                {guideReady
+                  ? "Your generated build guide"
+                  : "Build it your way."}
               </h3>
+              <p className="muted">
+                {guideReady
+                  ? "Stages follow the saved assembly. Review order and connections."
+                  : project.guideFingerprint
+                    ? "Your layout changed. Regenerate the guide to include your latest design."
+                    : "Place, rotate, cut and connect parts. Your steps are generated from the finished layout."}
+              </p>
             </div>
-            <div>
-              <button
-                className={`text-button ${playing ? "accent" : ""}`}
-                onClick={() => {
-                  if (playing) {
-                    setPlaying(false);
-                  } else {
-                    setStage(-1);
-                    setPlaying(true);
-                  }
-                }}
-              >
-                {playing ? <Pause size={14} /> : <Play size={14} />}Preview
-                build
-              </button>
-              <button
-                className="button small secondary"
-                onClick={() => {
-                  setNewStep("");
-                  setNewStepNotes("");
-                  setModal("step");
-                }}
-              >
-                <Plus size={14} />
-                Add step
-              </button>
-            </div>
-          </div>
-          <div className="step-track">
-            {project.steps.map((s, i) => (
-              <button
-                key={s.id}
-                className={`step-chip ${s.id === activeStepId ? "active" : ""} ${s.complete ? "complete" : ""}`}
-                onClick={() => {
-                  setStepId(s.id);
-                  setPanel("step");
-                }}
-              >
-                <span className="step-number">
-                  {s.complete ? (
-                    <Check size={14} />
-                  ) : (
-                    String(i + 1).padStart(2, "0")
-                  )}
-                </span>
-                <div>
-                  <strong>{s.title}</strong>
-                  <small>
-                    {
-                      project.pieces.filter(
-                        (p) => p.stepId === s.id && !p.offcut,
-                      ).length
-                    }{" "}
-                    parts
-                  </small>
-                </div>
-                <ChevronRight size={14} />
-              </button>
-            ))}
-          </div>
-          <div className="timeline-foot">
-            <span>
-              <span className="green-dot" />
-              {completed} of {project.steps.length} steps completed
-            </span>
-            <button onClick={() => setModal("export")}>
-              Take your build guide with you <ArrowUpFromLine size={12} />
+            <button
+              className="button primary small"
+              disabled={!project.pieces.some((p) => !p.offcut)}
+              onClick={generateGuide}
+            >
+              <Layers3 size={15} />
+              {guideReady ? "Regenerate guide" : "Generate build guide"}
             </button>
           </div>
+          {guideReady && (
+            <>
+              <div className="step-track">
+                {project.steps.map((s, i) => (
+                  <button
+                    key={s.id}
+                    className={`step-chip ${s.id === activeStepId ? "active" : ""}`}
+                    onClick={() => {
+                      if (guidePartFocus) exitGuidePartView();
+                      setStepId(s.id);
+                      setPanel("step");
+                    }}
+                  >
+                    <span className="step-number">{i + 1}</span>
+                    <div>
+                      <strong>{s.title}</strong>
+                      <small>
+                        {
+                          project.pieces.filter(
+                            (p) => p.stepId === s.id && !p.offcut,
+                          ).length
+                        }{" "}
+                        parts
+                      </small>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="timeline-foot">
+                <span>{completed} steps reviewed</span>
+                <button
+                  onClick={() => {
+                    setGuidePartFocus(null);
+                    setStage(-1);
+                    setPlaying(true);
+                  }}
+                >
+                  Preview build
+                </button>
+                <button onClick={() => setModal("export")}>Export guide</button>
+              </div>
+            </>
+          )}
         </section>
       </main>
-      <aside className="inspector">
+      <aside
+        id="workshop-inspector"
+        ref={inspectorFocus.inspectorRef}
+        className={`inspector${inspectorFocus.focused ? " inspector-focused" : ""}`}
+        role={inspectorFocus.focused ? "dialog" : undefined}
+        aria-modal={inspectorFocus.focused ? true : undefined}
+        aria-label="Inspector"
+        tabIndex={-1}
+        data-inspector-focused={String(inspectorFocus.focused)}
+        data-inspector-returnable={String(inspectorFocus.returnable)}
+      >
+        <div className="inspector-focus-heading">
+          <strong>Inspector</strong>
+          <button type="button" className="button secondary" data-inspector-close onClick={inspectorFocus.close}><ArrowLeft size={15} />Back to workspace</button>
+        </div>
         <div className="inspector-tabs">
           {(
             [
               { id: "part", icon: Settings2, label: "Part" },
               { id: "checks", icon: ShieldCheck, label: "Checks" },
               { id: "materials", icon: ClipboardList, label: "List" },
-              { id: "step", icon: Layers3, label: "Step" },
+              { id: "step", icon: Layers3, label: "Guide" },
               { id: "sections", icon: Cuboid, label: "Sections" },
+              { id: "tools", icon: Wrench, label: "Tools" },
             ] as const
           ).map((t) => (
             <button
               key={t.id}
               className={panel === t.id ? "active" : ""}
               onClick={() => {
+                setReturnToConnections(false);
+                setReturnToPreparation(false);
                 setPanel(t.id);
                 if (t.id === "part") {
                   setSelectionScope("part");
@@ -1381,22 +3031,369 @@ export function App() {
             </button>
           ))}
         </div>
-        <div className="inspector-scroll">
-          {panel === "sections" && (
-            <SectionsPanel
+        <div className="inspector-scroll" ref={inspectorFocus.scrollRef}>
+          {returnToConnections && liveConnectionContext && !activeRemoval && !["connections","fasteners","attachments","restraints","hinges","connectors","fit-stock","site-clearances"].includes(panel) && (
+            <button type="button" className="text-button" onClick={backToConnectionReview}>← Back to connections</button>
+          )}
+          {panel === "connections" && liveConnectionContext && (
+            <>
+              <ConnectionReviewPanel project={project} scope={liveConnectionContext.scope} bearingReview={bearingReview} onBack={backFromConnectionReview}
+                onSaveHangers={(id, plan) => safe(() => change((p) => saveFloorHangerPlan(p, id, plan)))}
+                onSaveBearingDecision={(topId, baseId, note) => safe(() => change((p) => saveBearingDecision(p, topId, baseId, note)))}
+                onClearBearingDecision={(topId, baseId) => safe(() => change((p) => clearBearingDecision(p, topId, baseId)))}
+                onTestRemoval={openRemovalTest}
+                constructionEntryId={liveConnectionContext.constructionEntryId}
+                onConstructionEntryChange={(id) => setConnectionContext((value) => value?.projectId === project.id ? {...value,constructionEntryId:id} : value)}
+                backLabel={liveConnectionContext.backPanel === "prep" ? "Back to build preparation" : liveConnectionContext.backPanel === "step" ? "Back to guide" : liveConnectionContext.backPanel === "part" ? "Back to part" : liveConnectionContext.backPanel === "sections" ? "Back to sections" : "Back to checks"}
+                onInspectPiece={inspectConnectionPiece} onPlanPair={(a,b) => safe(() => planConnectionPair(a,b))} onPlanConnectorPair={(a,b) => safe(() => planConnectorPair(a,b))} onReviewIntent={reviewConnectionIntent}
+                seatSpanActions={new Map(findings.flatMap((finding) => finding.area?.kind === "seat-span" && finding.pieceId
+                  ? [[finding.pieceId, () => showFindingArea(finding)] as const] : []))}
+                onMeasureFoundation={() => openSiteClearances("connections")}
+                baseRailAdjustment={{
+                  draft: activeBaseRailDraft,
+                  preview: (entryId, sideId) => {
+                    const fit = previewGreenhouseRailFit(project, entryId, sideId);
+                    setMode("select"); setStage(null); setPlaying(false); setExplode(false);
+                    setSelected(sideId); setSelectedSectionId(null);
+                    setBaseRailDraft({ project, entryId, sideId, fit });
+                  },
+                  cancel: () => setBaseRailDraft(null),
+                  apply: () => safe(() => {
+                    if (!baseRailPreview || activeBaseRailDraft?.project !== current.current)
+                      throw Error("The project changed. Preview the rail adjustment again.");
+                    change((p) => ({ ...p, pieces: p.pieces.map((item) =>
+                      item.id === baseRailPreview.id ? baseRailPreview : item) }));
+                    setBaseRailDraft(null);
+                    notify("Rail adjusted. Both corners meet and align.");
+                  }),
+                }}
+                onFitStockBetween={openFittedStock}
+                fittedBlock={fittedConnectionEnds?.projectId === project.id ? fittedConnectionEnds : null} />
+              {!guideReady && <div className="field-section"><p className="small-note">Keep editing connection details here. Regenerate the build guide when you finish these decisions.</p><button type="button" className="button secondary full" onClick={generateGuide}>Regenerate build guide</button></div>}
+            </>
+          )}
+          {panel === "hinges" && (
+            <>
+              <button type="button" className="text-button" onClick={returnToConnections && liveConnectionContext ? backToConnectionReview : () => setPanel("sections")}>← {returnToConnections && liveConnectionContext ? "Back to connections" : "Back to sections"}</button>
+              {displayedHingeSection && <LidMotionPanel project={project} section={displayedHingeSection} onPreview={showLidMotion} onChange={(next) => safe(() => change(next))} previewActive={activeLidPreview?.sectionId === displayedHingeSection.id} />}
+              <LidHingesPanel project={project} sectionId={null} initialPlanId={hingeRequest?.planId} onSelectPlan={setDisplayedHingePlanId}
+                onChange={(next) => safe(() => change(next))} onPreview={(value) => setLidMotionPreview(value ? {project,value} : null)} />
+            </>
+          )}
+          {panel === "fasteners" && (
+            <FastenersPanel
               project={project}
-              selectedId={selectedSectionId}
-              onSelect={selectSection}
-              onChange={(p) => safe(() => change(p))}
-              onGenerate={reviseSection}
-              onMoveTool={() => setMode("move")}
-              onPartTool={() => {
-                setSelectionScope("part");
-                setSelectedSectionId(null);
-                setMode("select");
-                setPanel("part");
+              selectedPieceId={piece?.id ?? null}
+              selectedPlanId={selectedFastenerPlanId}
+              onSelectPlan={setSelectedFastenerPlanId}
+              focusedLocationId={focusedFastenerLocation?.projectId === project.id && focusedFastenerLocation.planId === selectedFastenerPlanId ? focusedFastenerLocation.locationId : null}
+              onFocusLocation={onFocusFastenerLocation}
+              onLayoutPreview={onFastenerLayoutPreview}
+              onDriverPreview={(value) => {
+                setDriverPreview(value ? { project, value } : null);
+                if (value) {
+                  setFastenerLayoutPreview(null);
+                  setStage(null);
+                  setPlaying(false);
+                  setExplode(false);
+                  setMode("select");
+                  inspectWorkspace();
+                }
               }}
+              onInspectLayout={inspectWorkspace}
+              initialPair={initialFastenerPair?.projectId === project.id ? initialFastenerPair : undefined}
+              backLabel={returnToConnections && liveConnectionContext ? "Back to connections" : "Back to part"}
+              onBack={returnToConnections && liveConnectionContext ? backToConnectionReview : () => setPanel("part")}
+              onOpenTools={() => setPanel("tools")}
+              onChange={(next) => safe(() => change(next))}
+              pickingLocationId={entrancePick?.locationId ?? null}
+              pickedEntrance={pickedEntrance?.projectId === project.id && pickedEntrance.panel === "fasteners" ? pickedEntrance : null}
+              onRequestEntrancePick={(request) => {
+                setDriverPreview(null);
+                setPickedEntrance(null);
+                setEntrancePick({...request, projectId: project.id, panel:"fasteners"});
+                setMode("fastener");
+                setStage(null);
+                setPlaying(false);
+                setExplode(false);
+                inspectWorkspace();
+              }}
+              onCancelEntrancePick={() => { setEntrancePick(null); setPickedEntrance(null); setMode("select"); }}
             />
+          )}
+          {panel === "connectors" && <ConnectorsPanel
+            project={project} selectedPieceId={piece?.id ?? null} selectedPlanId={selectedConnectorPlanId} onSelectPlan={setSelectedConnectorPlanId}
+            initialPair={initialConnectorPair?.projectId === project.id ? initialConnectorPair : undefined}
+            onPreview={onConnectorPreview}
+            onFocusEntry={setFocusedConnectorEntryId}
+            onDirtyChange={onConnectorDirtyChange}
+            onChange={(next) => safe(() => change(next))}
+            backLabel={returnToConnections && liveConnectionContext ? "Back to connections" : "Back to part"}
+            onBack={returnToConnections && liveConnectionContext ? backToConnectionReview : () => setPanel("part")}
+            onInspectPiece={(id) => { setEntrancePick(null); setPickedEntrance(null); inspectConnectionPiece(id); }}
+            onOpenSupplies={() => setPanel("materials")} onOpenTools={() => setPanel("tools")}
+            pickingEntryId={entrancePick?.panel === "connectors" ? entrancePick.locationId : null}
+            pickedEntrance={pickedEntrance?.projectId === project.id && pickedEntrance.panel === "connectors" ? {
+              planId:pickedEntrance.planId,entryId:pickedEntrance.locationId,entranceLocal:pickedEntrance.entranceLocal,driveLocal:pickedEntrance.driveLocal,nonce:pickedEntrance.nonce,
+            } : null}
+            onRequestEntrancePick={(request) => {
+              setPickedEntrance(null); setEntrancePick({projectId:project.id,panel:"connectors",planId:request.planId,locationId:request.entryId,headPieceId:request.memberId});
+              setMode("fastener"); setStage(null); setPlaying(false); setExplode(false); inspectWorkspace();
+            }}
+            onCancelEntrancePick={() => { setEntrancePick(null); setPickedEntrance(null); setMode("select"); }}
+          />}
+          {panel === "fit-stock" && <FittedStockPanel
+            project={project}
+            initialPair={initialFittedPair?.projectId === project.id ? initialFittedPair : undefined}
+            onBack={liveConnectionContext ? backToConnectionReview : () => setPanel("part")}
+            onPreview={onFittedPreview} onFacesChange={onFittedFacesChange} onDirtyChange={onFittedDirtyChange}
+            pickingFace={fittedFacePick?.which ?? null} pickedFace={pickedFittedFace}
+            onCancelPick={cancelFittedPick}
+            onInspectPreview={inspectWorkspace}
+            onRequestFacePick={({which,pieceId}) => {
+              setPickedFittedFace(null); setFittedFacePick({project,which,pieceId});
+              setMode("fit-face"); setStage(null); setPlaying(false); setExplode(false);
+              inspectWorkspace();
+            }}
+            onApply={(preview) => {
+              const next = commitFittedStock(project, preview.spec, preview);
+              onFittedDirtyChange(false); cancelFittedPick(); setFittedPreview(null); setFittedFaces(null);
+              change(next); setSelected(preview.blockId); setSelectedSectionId(null); setSelectionScope("part");
+              setFittedConnectionEnds({projectId:next.id,blockId:preview.blockId,endpoints:[preview.spec.first.pieceId,preview.spec.second.pieceId]});
+              setConnectionContext({projectId:next.id,scope:{title:`Connect ${partLabel(next, preview.blockId)}`,memberIds:[preview.spec.first.pieceId,preview.blockId,preview.spec.second.pieceId]},backPanel:"part"});
+              setReturnToConnections(true); setPanel("connections"); setMode("select");
+              notify(`${partLabel(next, preview.blockId)} added with its stock cut. Plan the connections at both ends.`);
+            }}
+          />}
+          {panel === "restraints" && (
+            <RestraintsPanel
+              project={project}
+              onChange={(next) => safe(() => change(next))}
+              onBack={returnToConnections && liveConnectionContext ? backToConnectionReview : () => setPanel("sections")}
+              backLabel={returnToConnections && liveConnectionContext ? "Back to connections" : "Back to sections"}
+              initialPlanId={reviewedRestraintPlanId}
+            />
+          )}
+          {panel === "attachments" && (
+            <>
+              <button
+                className="text-button"
+                onClick={returnToConnections && liveConnectionContext ? backToConnectionReview : () => setPanel("sections")}
+              >
+                ← {returnToConnections && liveConnectionContext ? "Back to connections" : "Back to sections"}
+              </button>
+              <AttachmentsPanel
+                project={project}
+                selectedPlanId={selectedAttachmentPlanId}
+                onSelectPlan={setSelectedAttachmentPlanId}
+                onChange={(next) => safe(() => change(next))}
+                onSelectPart={(id) => {
+                  setSelected(id);
+                  setSelectedSectionId(null);
+                  setSelectionScope("part");
+                  setStage(null);
+                }}
+                onOpenTools={() => setPanel("tools")}
+              />
+            </>
+          )}
+          {panel === "tools" && (
+            <ToolsPanel
+              project={project}
+              onChange={(next) => safe(() => change(next))}
+            />
+          )}
+          {activeRemoval && (
+            <RemovalMotionPanel key={`${activeRemoval.topId}/${activeRemoval.baseId}`} project={project}
+              contact={activeRemovalContact}
+              preview={activeMotionPreview}
+              onPreview={(value) => {
+                setMotionPreview(value ? { project, value } : null);
+                if (value && !activeMotionPreview) inspectWorkspace();
+              }}
+              onBack={backToConnectionReview}
+              onSavePath={(legs) => change((p) => saveBearingRemovalPath(p, activeRemoval.topId, activeRemoval.baseId, legs))}
+              onClearPath={() => change((p) => clearBearingRemovalPath(p, activeRemoval.topId, activeRemoval.baseId))}
+            />
+          )}
+          {panel === "motion" && !activeRemoval && (
+            <>
+              {returnToPreparation && (
+                <button type="button" className="text-button" onClick={() => {
+                  setReturnToPreparation(false);
+                  setPanel("prep");
+                }}>← Back to build preparation</button>
+              )}
+              <button type="button" className="text-button" onClick={() => openSiteClearances("motion")}>Measured site clearances</button>
+              <MotionPanel key={project.id} project={project}
+              initialTest={motionTestSelection?.project === project ? motionTestSelection : undefined}
+              ventBacking={ventBacking}
+              shownLatchId={shownLatchId}
+              onShowLatch={(id) => {
+                setShownLatchId(id);
+                if (id) {
+                  setStage(null);
+                  setPlaying(false);
+                  setExplode(false);
+                  inspectWorkspace();
+                }
+              }}
+              onShowSashGaps={(entryId) => {
+                const row = findings.find(({ id }) => id === `sunlite-vent-backing-${entryId}`);
+                if (row) showFindingArea(row);
+              }}
+              selectedIds={selectedSectionId ? project.sections.find((row) => row.id === selectedSectionId)?.pieceIds ?? [] : selected ? [selected] : []}
+              preview={activeMotionPreview}
+              onPreview={(value, source = project) => {
+                if (value) setShownLatchId(null);
+                setMotionPreview(value ? { project: source, value } : null);
+                if (value && (!activeMotionPreview || value.focusPair)) inspectWorkspace();
+              }}
+              onChange={change}
+              />
+            </>
+          )}
+          {panel === "lid-travel" && (
+            <>
+              <button type="button" className="text-button" onClick={() => {
+                setReturnToPreparation(false);
+                setPanel(returnToPreparation ? "prep" : "sections");
+              }}>← {returnToPreparation ? "Back to build preparation" : "Back to sections"}</button>
+              {inspectedLidSection ? (
+                <>
+                  <h2>{inspectedLidSection.name}</h2>
+                  <LidMotionPanel project={project} section={inspectedLidSection}
+                    initialInspection={lidTravelInspection?.project === project ? lidTravelInspection : undefined}
+                    onPreview={showLidMotion}
+                    onChange={change}
+                    previewActive={activeLidPreview?.sectionId === inspectedLidSection.id} />
+                </>
+              ) : <p className="small-note">This lid’s section has been removed.</p>}
+            </>
+          )}
+          {panel === "site-clearances" && (
+            <>
+              <button type="button" className="text-button" onClick={() => setPanel(siteReturnPanel)}>
+                ← {siteReturnPanel === "motion" ? "Back to movement" : siteReturnPanel === "sections" ? "Back to sections" : siteReturnPanel === "connections" ? "Back to connections" : "Back to checks"}
+              </button>
+              <GreenhouseFoundationsPanel key={`foundation-${project.id}`} project={project} onChange={change}
+                shownId={shownFoundationId}
+                onShow={(id) => {
+                  setShownFoundationId(id);
+                  if (id) { setShownSiteClearanceId(null); inspectWorkspace(); }
+                }}
+              />
+              <SiteClearancesPanel key={project.id} project={project} onChange={change}
+                shownId={shownSiteClearanceId}
+                onShow={(id) => { setShownSiteClearanceId(id); if (id) { setShownFoundationId(null); inspectWorkspace(); } }}
+              />
+            </>
+          )}
+          {panel === "sections" && (
+            <>
+              <button className="button secondary full attachment-entry" onClick={() => setPanel("motion")}>Test door or drawer movement</button>
+              <button className="button secondary full attachment-entry" onClick={() => openConnectors()}>Plan A21Z connector</button>
+              <button className="button secondary full attachment-entry" onClick={() => openFasteners()}>
+                Plan wood-fastener locations
+              </button>
+              <button
+                className="button secondary full attachment-entry"
+                onClick={() => openAttachments()}
+              >
+                Plan shelf supports
+              </button>
+              <button className="text-button" onClick={openRestraints}>
+                Plan furniture anti-tip restraints
+              </button>
+              <AppliedDesignsPanel
+                project={project}
+                onRevise={(bindingId, entryIds) =>
+                  openIdea({ bindingId, entryIds })
+                }
+                onDetach={(bindingId) =>
+                  safe(() => {
+                    change(detachIdeaBinding(project, bindingId));
+                    notify(
+                      "Saved design controls removed. Its parts, cuts and connections are retained; Undo is available.",
+                    );
+                  })
+                }
+                onAdopt={(sectionId) =>
+                  safe(() => {
+                    change(adoptLegacyRecipe(project, sectionId));
+                    notify(
+                      "This furniture section now supports saved design revisions.",
+                    );
+                  })
+                }
+              />
+              <button type="button" className="button secondary full" onClick={() => openSiteClearances("sections")}>Measured site clearances</button>
+              <CaseworkTipUpPanel key={`casework-tip-up-${project.id}`} project={project}
+                onChange={change} previewActive={activeSectionMotion?.target === "casework"}
+                onStartPreview={startSectionMotionPreview}
+                onPreview={(value) => setSectionMotionPreview((current) => value
+                  ? { project, value, target: "casework" }
+                  : current?.target === "casework" ? null : current)}
+              />
+              <SaunaBenchTravelPanel key={`bench-carry-${project.id}`} project={project}
+                onChange={change} previewActive={activeSectionMotion?.target === "bench"}
+                onStartPreview={startSectionMotionPreview}
+                onPreview={(value) => setSectionMotionPreview((current) => value
+                  ? { project, value, target: "bench" }
+                  : current?.target === "bench" ? null : current)}
+              />
+              <SaunaHeaterPanel key={project.id} project={project} onChange={change} shownId={shownSaunaHeaterId}
+                onShow={(id) => {
+                  setShownSaunaHeaterId(id);
+                  if (id) setShownSaunaVentilationId(null);
+                  if (id) { setStage(null); setPlaying(false); setExplode(false); inspectWorkspace(); }
+                }}
+              />
+              <SaunaVentilationPanel key={`sauna-vents-${project.id}`} project={project} onChange={change} shownId={shownSaunaVentilationId}
+                onShow={(id) => {
+                  setShownSaunaVentilationId(id);
+                  if (id) {
+                    setShownSaunaHeaterId(null);
+                    setStage(null);
+                    setPlaying(false);
+                    setExplode(false);
+                    inspectWorkspace();
+                  }
+                }}
+              />
+              <RodFitsPanel key={project.id} project={project} onChange={change} shownId={shownRodSupportId}
+                onShow={(id) => {
+                  setShownRodSupportId(id);
+                  if (id) { setStage(null); setPlaying(false); setExplode(false); inspectWorkspace(); }
+                }}
+              />
+              {selectedSectionId && movementTools}
+              <SectionsPanel
+                project={project}
+                selectedId={selectedSectionId}
+                onSelect={selectSection}
+                onChange={(next) => safe(() => {
+                  const edited=next.sections.find((row)=>!project.sections.some((old)=>old.id===row.id))??next.sections.find((row)=>row.id===selectedSectionId);
+                  if(!edited){change(next);return;}
+                  const clear=separateWood(next,next.pieces.filter((part)=>edited.pieceIds.includes(part.id)));
+                  if(clear.blocked)throw Error("This section would overlap existing wood.");
+                  change(clear.adjusted?transformSection(next,edited.id,edited.origin.map((n,i)=>n+clear.offset[i]) as V3,edited.rotation):next);
+                })}
+                onLidPreview={showLidMotion}
+                lidPreviewSectionId={activeLidPreview?.sectionId ?? null}
+                onGenerate={reviseSection}
+                onReviewFloorBase={(section) => openConnectionReview({
+                  title: `${section.name} connections`, ownerId: section.id, memberIds: section.pieceIds,
+                })}
+                onMoveTool={() => setMode("move")}
+                onPartTool={() => {
+                  setSelectionScope("part");
+                  setSelectedSectionId(null);
+                  setMode("select");
+                  setPanel("part");
+                }}
+              />
+            </>
           )}
           {panel === "checks" && (
             <>
@@ -1408,17 +3405,98 @@ export function App() {
                 <h2>Make every piece count.</h2>
                 <p>Catch planning issues before you get the tools out.</p>
               </div>
+              <ProjectCodePanel
+                key={project.id}
+                project={project}
+                measurement={measurement}
+                measuredDistance={measured?.distance ?? null}
+                onChange={change}
+                shownDryerDuct={!!shownDryerDuct}
+                onShowDryerDuct={(show) => {
+                  setDryerDuctProjectId(show ? project.id : null);
+                  if (show) {
+                    setVentDatumProjectId(null);
+                    setStage(null);
+                    setPlaying(false);
+                    setExplode(false);
+                    setView((previous) => ({ preset: "iso", nonce: previous.nonce + 1 }));
+                    inspectWorkspace();
+                  }
+                }}
+                shownVentDatums={!!shownVentDatums}
+                onShowVentDatums={(show) => {
+                  setVentDatumProjectId(show ? project.id : null);
+                  if (show) {
+                    setDryerDuctProjectId(null);
+                    setStage(null);
+                    setExplode(false);
+                    setView((previous) => ({ preset: "iso", nonce: previous.nonce + 1 }));
+                  }
+                }}
+              />
+              <button type="button" className="button secondary full" onClick={() => openSiteClearances("checks")}>Measured site clearances</button>
               <div className="check-summary">
                 <span className="warning-dot" />
                 {warnings.length} things to review<span>Concept plan</span>
               </div>
+              <button type="button" className="button secondary full" disabled={!canReviewConnections} onClick={() => openConnectionReview({title:"Connections in this project",memberIds:connectionReview.parts.map((part) => part.pieceId),ownerId:project.id,stageKey:"all-connections"})}>Review connection decisions</button>
+              {liningBackingContent && <details className="field-section">
+                <summary>Sauna lining backing</summary>
+                {liningBackingContent}
+              </details>}
+              <button type="button" className="button secondary full" onClick={() => openConnectors()}>Plan A21Z connector</button>
+              <button type="button" className="button secondary full" onClick={() => openFittedStock()}>Fit stock between faces</button>
+              <EaveBlockPanel
+                project={project}
+                preview={eaveBlock}
+                onPreview={(fit) => {
+                  setEaveBlockDraft(fit ? { project, fit } : null);
+                  if (!fit?.outlines.length) return;
+                  setShownAreaFinding(null);
+                  setStage(null);
+                  setPlaying(false);
+                  setExplode(false);
+                  setView((previous) => ({ preset: "iso", nonce: previous.nonce + 1 }));
+                  inspectWorkspace();
+                }}
+                onAdd={(fit) => safe(() => {
+                  if (eaveBlockDraft?.project !== current.current || eaveBlockDraft.fit !== fit)
+                    throw Error("The project or joint changed. Preview the fit again.");
+                  change(fit.project);
+                  setEaveBlockDraft(null);
+                  const added = "fits" in fit ? fit.fits.length : 1;
+                  const pending = "fits" in fit ? fit.skipped.length : 0;
+                  const label = added === 1 ? "Eave block added" : `${added} eave blocks added`;
+                  notify(pending
+                    ? `${label}. ${pending === 1 ? "One joint still needs" : `${pending} joints still need`} a fit review.`
+                    : `${label}. Review both sides under greenhouse roof attachments.`);
+                })}
+              />
               <div className="findings">
                 {findings.map((f) => (
                   <button
                     key={f.id}
                     className={`finding ${f.severity}`}
+                    aria-pressed={f.area ? shownCheckArea === f.area : undefined}
                     onClick={() => {
-                      if (f.pieceId) {
+                      if (f.area) {
+                        if (shownCheckArea === f.area) setShownAreaFinding(null);
+                        else showFindingArea(f);
+                      } else if (f.connectionScope) {
+                        openConnectionReview(f.connectionScope);
+                      } else if (f.hingePlanId) {
+                        const plan = project.lidHingePlans.find((plan) => plan.id === f.hingePlanId);
+                        if (plan) { setSelectedSectionId(plan.sectionId); setSelectionScope("section"); setPanel("sections"); }
+                      } else if (f.fastenerPlanId) {
+                        openFasteners(f.fastenerPlanId);
+                        if (f.pieceId) setSelected(f.pieceId);
+                      } else if (f.restraintPlanId) {
+                        openRestraints();
+                        if (f.pieceId) setSelected(f.pieceId);
+                      } else if (f.attachmentPlanId) {
+                        openAttachments(f.attachmentPlanId);
+                        if (f.pieceId) setSelected(f.pieceId);
+                      } else if (f.pieceId) {
                         setSelectionScope("part");
                         setSelectedSectionId(null);
                         setSelected(f.pieceId);
@@ -1434,12 +3512,30 @@ export function App() {
                     <div>
                       <strong>{f.title}</strong>
                       <p>{f.detail}</p>
+                      {f.area && <small>{f.area.kind === "panel-bearing"
+                        ? shownCheckArea === f.area ? "Hide bearing" : "Show bearing in 3D"
+                        : f.area.kind === "roof-plane"
+                          ? shownCheckArea === f.area ? "Hide roof area" : "Show roof area in 3D"
+                        : f.area.kind === "seat-span" || f.area.kind === "shelf-span"
+                          ? shownCheckArea === f.area ? "Hide spans" : "Show spans in 3D"
+                          : f.area.kind === "rafter-eave" || f.area.kind === "rafter-ridge"
+                            ? shownCheckArea === f.area ? "Hide joints" : "Show joints in 3D"
+                            : shownCheckArea === f.area ? "Hide gap" : "Show gap in 3D"}</small>}
                     </div>
-                    {f.pieceId && <ChevronRight size={13} />}
+                    {(f.pieceId || f.area) && <ChevronRight size={13} />}
                   </button>
                 ))}
               </div>
             </>
+          )}
+          {panel === "part" && clearanceRetest?.projectId === project.id && (
+            <div className="field-section">
+              <p className="small-note">Retest from the closed position with your current layout.</p>
+              <div className="inline">
+                <button type="button" className="button secondary" onClick={retestClearance}>Retest clearance</button>
+                <button type="button" className="text-button" onClick={() => setClearanceRetest(null)}>Dismiss</button>
+              </div>
+            </div>
           )}
           {panel === "part" &&
             (!piece ? (
@@ -1455,11 +3551,11 @@ export function App() {
                   onClick={() => {
                     setLibrary("assemblies");
                     setAssistantTarget("");
-                    setModal("assistant");
+                    openIdea();
                   }}
                 >
                   <Plus size={15} />
-                  Generate a wall
+                  Plan an idea
                 </button>
               </div>
             ) : (
@@ -1481,6 +3577,8 @@ export function App() {
                     }}
                   />
                 </label>
+                {movementTools}
+                {findings.find((finding)=>finding.id==="collision")?.pieceIds?.includes(piece.id)&&<div className="placement-warning" role="status">This wood overlaps another part. <button className="button secondary" onClick={()=>move(piece.id,piece.position,piece.rotation)}>Separate overlapping wood</button></div>}
                 <div className="field-section">
                   <h4>
                     <Ruler size={14} />
@@ -1494,6 +3592,15 @@ export function App() {
                         value={piece.size[i]}
                         min={0.001}
                         max={240}
+                        disabled={
+                          ["fastener", "connector", "equipment"].includes(
+                            material(piece.material).stockKind,
+                          ) ||
+                          (isBatt(piece.material) && i === stockAxes(piece).thickness) ||
+                          (material(piece.material).orderRollWidth !== undefined && i === 2) ||
+                          (material(piece.material).shape === "tube-envelope" &&
+                            i !== 1)
+                        }
                         onChange={(n) =>
                           safe(() => {
                             const size = [...piece.size] as V3;
@@ -1505,8 +3612,75 @@ export function App() {
                     ))}
                   </div>
                   <small className="muted">
-                    Actual size. Longest axis is used for cuts.
+                    {material(piece.material).shape === "tube-envelope"
+                      ? "Outside diameter is fixed by this product; tube wall thickness and support capacity remain unverified. Use Cut part to shorten it."
+                      : isBatt(piece.material)
+                        ? "Keep the stock thickness. Use Cut part to trim the length or width and keep the offcut."
+                      : material(piece.material).shape === "door-leaf-envelope"
+                        ? "The prehung leaf has fixed dimensions. Position it in its rough opening and use Test movement to check the swing."
+                      : material(piece.material).shape === "pedestal-bench-envelope"
+                        ? "Move or rotate the assembled kit. Measurements and clearance checks use its documented outer dimensions."
+                      : material(piece.material).orderRollWidth
+                        ? "Edit the visible face. The foil thickness is a drawing convention, and cut sizes include the folds below."
+                      : ["fastener", "connector"].includes(
+                            material(piece.material).stockKind,
+                          )
+                        ? "Product dimensions are fixed. Select a different hardware size from the library."
+                        : piece.cutPlanes.length
+                          ? "Stock blank dimensions. The rendered cut profile and measuring tool show the retained geometry."
+                          : "Actual dimensions in inches; nominal lumber names are shown in the library."}
                   </small>
+                  {material(piece.material).orderRollWidth && (
+                    <>
+                      <p className="small-note">Flat cut blank · {foilBlankSize(piece).slice(0, 2).map(formatPreciseInches).join(" × ")}</p>
+                      <div className="number-row">
+                        {([["xStart", "Fold at X start"], ["xEnd", "Fold at X end"],
+                          ["yStart", "Fold at Y start"], ["yEnd", "Fold at Y end"]] as const).map(([key, label]) => (
+                          <Num key={key} label={label} min={0} max={12}
+                            value={piece.foilReturns?.[key] ?? 0}
+                            onChange={(value) => safe(() => updatePart({
+                              foilReturns: {
+                                xStart: 0, xEnd: 0, yStart: 0, yEnd: 0,
+                                ...piece.foilReturns,
+                                [key]: value,
+                              },
+                            }))} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {material(piece.material).cuttable &&
+                    !isBatt(piece.material) &&
+                    material(piece.material).shape !== "tube-envelope" && (
+                      <label className="field">
+                        Stock length / grain or flute axis
+                        <select
+                          aria-label="Stock length axis"
+                          value={piece.cutStock?.sourceAxes?.[2] ?? piece.stockLengthAxis ?? ""}
+                          disabled={!!piece.cutStock?.sourceAxes}
+                          onChange={(e) =>
+                            safe(() =>
+                              updatePart({
+                                stockLengthAxis:
+                                  e.target.value === ""
+                                    ? null
+                                    : (Number(e.target.value) as 0 | 1 | 2),
+                              }),
+                            )
+                          }
+                        >
+                          <option value="">Infer from blank dimensions</option>
+                          <option value="0">Local X</option>
+                          <option value="1">Local Y</option>
+                          <option value="2">Local Z</option>
+                        </select>
+                        <small>
+                          Keep stock length aligned with grain or flutes, even
+                          when a cut blank is wider than it is long. Rotation
+                          moves these local axes with the part.
+                        </small>
+                      </label>
+                    )}
                 </div>
                 <div className="field-section">
                   <h4>
@@ -1545,147 +3719,201 @@ export function App() {
                     ))}
                   </div>
                 </div>
-                <label className="field">
-                  Build step
-                  <select
-                    value={piece.stepId}
-                    onChange={(e) => updatePart({ stepId: e.target.value })}
-                  >
-                    {project.steps.map((s, i) => (
-                      <option key={s.id} value={s.id}>
-                        {i + 1}. {s.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="field-section cut-section">
-                  <h4>
-                    <Scissors size={15} />
-                    Make a cut
-                  </h4>
-                  <p>
-                    Cut along the longest axis. A ⅛ in saw kerf is removed; the
-                    offcut stays in your plan.
-                  </p>
-                  <div className="inline">
-                    <Num
-                      label="Cut length"
-                      value={cutLength}
-                      min={0.125}
-                      max={240}
-                      onChange={setCutLength}
-                    />
+                {!piece.offcut && <GuidePlacementEditor project={project} pieceId={piece.id} onChange={(next) => safe(() => change(next))}
+                  onOpenStage={guideReady ? (id) => { setStepId(id); setPanel("step"); } : undefined}
+                  onRegenerateGuide={!guideReady ? () => safe(() => {
+                    const next = generateBuildGuide(project);
+                    change(next); setStepId(next.pieces.find((part) => part.id === piece.id)!.stepId); setPanel("step");
+                  }) : undefined} />}
+                {guideReady && !piece.offcut && (
+                  <details className="field-section">
+                    <summary>Initial step assignment</summary>
+                    <label className="field">
+                      Initial display step
+                      <select
+                        value={piece.stepId}
+                        onChange={(e) => updatePart({ stepId: e.target.value })}
+                      >
+                        {project.steps.map((s, i) => (
+                          <option key={s.id} value={s.id}>
+                            {i + 1}. {s.title}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <p className="small-note">Build stage above controls regenerated guides. This selector changes the current editing timeline.</p>
+                  </details>
+                )}
+                {(material(piece.material).cuttable || canEditThroughOpenings(piece)) && (
+                  <div className="field-section cut-section">
+                    <h4>
+                      <Scissors size={15} />
+                      Shape this stock
+                    </h4>
+                    <p>
+                      {canEditThroughOpenings(piece) && !material(piece.material).cuttable
+                        ? "Preview through-cuts in the retained face."
+                        : canEditThroughOpenings(piece)
+                          ? "Preview trims, through-cuts, and reusable offcuts."
+                          : "Preview the retained dimensions and reusable offcuts."}
+                    </p>
                     <button
-                      className="button secondary"
+                      className="button primary full"
+                      onClick={() => setModal("cut")}
+                    >
+                      Cut / resize stock
+                    </button>
+                    {material(piece.material).cuttable && (
+                      <button type="button" className="button secondary full" onClick={() => openPartStockPlan(piece.id)}>
+                        View stock cut plan
+                      </button>
+                    )}
+                  </div>
+                )}
+                {piece.offcut && <button className="button secondary full" onClick={()=>reuseOffcut(piece.id)}>Use offcut in build</button>}
+                <WoodSupportPanel project={project} review={woodSupport} pieceId={piece.id} onInspect={inspectStock}
+                  onReviewBearing={bearingReview.pairs.some(({ top, base }) => piece.id === top.id || piece.id === base.id)
+                    || bearingReview.withoutContact.some(({ topId, baseId }) => piece.id === topId || piece.id === baseId)
+                    ? () => openConnectionReview({ title: `Bearing joints for ${partLabel(project, piece.id)}`, memberIds: [piece.id], bearingPartId: piece.id })
+                    : undefined} />
+                {sagPanel && <ShelfSagPanel key={sagPanel.pieceId} project={project} {...sagPanel} onChange={change}
+                  divider={shelfDivider}
+                  onPreviewDivider={(fit) => {
+                    setShelfDividerDraft(fit ? { project, fit } : null);
+                    if (!fit) return;
+                    setStage(null);
+                    setPlaying(false);
+                    setExplode(false);
+                    setView((previous) => ({ preset: "iso", nonce: previous.nonce + 1 }));
+                  }}
+                  onCommitDivider={(fit) => safe(() => {
+                    if (shelfDividerDraft?.project !== current.current || shelfDividerDraft.fit !== fit)
+                      throw Error("The shelf or its supports changed. Preview the center divider again.");
+                    change(fit.project);
+                    setShelfDividerDraft(null);
+                    notify("Center divider added to the build.");
+                  })}
+                />}
+                <details className="connection-settings">
+                  <summary>Connect parts</summary>
+                  <div className="field-section">
+                    {connectionReview.parts.some((part) => part.pieceId === piece.id) && <button type="button" className="button secondary full" onClick={() => openConnectionReview({title:`${partLabel(project,piece.id)} · ${piece.name}`,memberIds:[piece.id]})}>Review nearby connections</button>}
+                    <button className="button secondary full" onClick={() => openFasteners()}>
+                      Plan wood-fastener locations
+                    </button>
+                    <button className="button secondary full" onClick={() => openConnectors()}>Plan A21Z connector</button>
+                    <p>Set actual entrance points and drive directions for wood screws, with measured seating and pilot data.</p>
+                    <h4>
+                      <Link2 size={14} />
+                      Specify a connection
+                    </h4>
+                    <p>
+                      Connections require two parts within ½ inch. Set quantity
+                      and hardware type.
+                    </p>
+                    <label className="field">
+                      Connection hardware
+                      <select
+                        aria-label="Connection hardware"
+                        value={hardware}
+                        onChange={(e) => {
+                          const id = e.target.value as MaterialId;
+                          setHardware(id);
+                          setScrewLength(material(id).fastenerLength ?? 3);
+                        }}
+                      >
+                        {catalog
+                          .filter((m) =>
+                            ["fastener", "connector"].includes(m.stockKind),
+                          )
+                          .map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name} · {m.subtitle}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <select
+                      aria-label="Connect to part"
+                      value={connectionTarget}
+                      onChange={(e) => setConnectionTarget(e.target.value)}
+                    >
+                      <option value="">Choose a second part…</option>
+                      {project.pieces
+                        .filter((x) => x.id !== piece.id && !x.offcut)
+                        .map((x) => (
+                          <option key={x.id} value={x.id}>
+                            {x.name}{" "}
+                            {distance(piece, x) <= 0.5 ? "· touching" : ""}
+                          </option>
+                        ))}
+                    </select>
+                    <div className="number-row">
+                      <Num
+                        label="Hardware count"
+                        value={screws}
+                        min={1}
+                        max={100}
+                        unit="pcs"
+                        onChange={(n) => setScrews(Math.round(n))}
+                      />
+                      <div className="field">
+                        <span>Stock size</span>
+                        <strong>{material(hardware).subtitle}</strong>
+                      </div>
+                    </div>
+                    <button
+                      className="button secondary full"
+                      disabled={!connectionTarget}
                       onClick={() =>
                         safe(() => {
-                          change(cutPiece(project, piece.id, cutLength));
-                          notify("Cut made. The remaining offcut is retained.");
+                          change(
+                            connect(
+                              project,
+                              piece.id,
+                              connectionTarget,
+                              activeStepId,
+                              screws,
+                              screwLength,
+                              hardware === "nail" ||
+                                material(hardware).fastenerType === "nail"
+                                ? "nail"
+                                : material(hardware).stockKind === "connector"
+                                  ? "bracket"
+                                  : "screw",
+                              hardware,
+                            ),
+                          );
+                          notify("Connection added to the build guide");
                         })
                       }
                     >
-                      <Scissors size={14} />
-                      Cut
+                      <Wrench size={14} />
+                      Add connection
                     </button>
-                  </div>
-                </div>
-                {piece.offcut && (
-                  <button
-                    className="button secondary full"
-                    onClick={() =>
-                      updatePart({
-                        offcut: false,
-                        name: piece.name.replace(/^Offcut · /, "Reused · "),
-                      })
-                    }
-                  >
-                    Use offcut in build
-                  </button>
-                )}
-                <div className="field-section">
-                  <h4>
-                    <Link2 size={14} />
-                    Specify a connection
-                  </h4>
-                  <p>
-                    Connections require two parts within ½ inch. Set quantity
-                    and screw length.
-                  </p>
-                  <select
-                    aria-label="Connect to part"
-                    value={connectionTarget}
-                    onChange={(e) => setConnectionTarget(e.target.value)}
-                  >
-                    <option value="">Choose a second part…</option>
-                    {project.pieces
-                      .filter((x) => x.id !== piece.id && !x.offcut)
-                      .map((x) => (
-                        <option key={x.id} value={x.id}>
-                          {x.name}{" "}
-                          {distance(piece, x) <= 0.5 ? "· touching" : ""}
-                        </option>
+                    {project.joints
+                      .filter((j) => j.a === piece.id || j.b === piece.id)
+                      .map((j) => (
+                        <div className="joint-row" key={j.id}>
+                          <span>
+                            {j.quantity} × {j.kind}
+                            {j.kind === "bracket" ? "s" : ` · ${j.length} in`}
+                          </span>
+                          <button
+                            aria-label="Remove connection"
+                            onClick={() =>
+                              change((p) => ({
+                                ...p,
+                                joints: p.joints.filter((x) => x.id !== j.id),
+                              }))
+                            }
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
                       ))}
-                  </select>
-                  <div className="number-row">
-                    <Num
-                      label="Screw count"
-                      value={screws}
-                      min={1}
-                      max={100}
-                      unit="pcs"
-                      onChange={(n) => setScrews(Math.round(n))}
-                    />
-                    <Num
-                      label="Screw length"
-                      value={screwLength}
-                      min={0.25}
-                      max={12}
-                      onChange={setScrewLength}
-                    />
                   </div>
-                  <button
-                    className="button secondary full"
-                    disabled={!connectionTarget}
-                    onClick={() =>
-                      safe(() => {
-                        change(
-                          connect(
-                            project,
-                            piece.id,
-                            connectionTarget,
-                            activeStepId,
-                            screws,
-                            screwLength,
-                          ),
-                        );
-                        notify("Connection added to the build guide");
-                      })
-                    }
-                  >
-                    <Wrench size={14} />
-                    Add screw connection
-                  </button>
-                  {project.joints
-                    .filter((j) => j.a === piece.id || j.b === piece.id)
-                    .map((j) => (
-                      <div className="joint-row" key={j.id}>
-                        <span>
-                          {j.quantity} × {j.length} in screws
-                        </span>
-                        <button
-                          aria-label="Remove connection"
-                          onClick={() =>
-                            change((p) => ({
-                              ...p,
-                              joints: p.joints.filter((x) => x.id !== j.id),
-                            }))
-                          }
-                        >
-                          <X size={13} />
-                        </button>
-                      </div>
-                    ))}
-                </div>
+                </details>
                 <div className="inline part-actions">
                   <button
                     className="button secondary"
@@ -1708,63 +3936,349 @@ export function App() {
                 <h2>Your material list.</h2>
                 <button
                   className="button secondary full"
-                  onClick={() => setModal("inventory")}
+                  onClick={() => {
+                    setInventoryTarget(undefined);
+                    setModal("inventory");
+                  }}
                 >
                   <Plus size={14} />
                   Record store snapshot
                 </button>
                 <p>
-                  Board cuts are packed with a ⅛ in kerf. Panels use one stock
-                  sheet per piece, conservatively.
+                  Cuts retain their physical source stock. Untracked boards use
+                  length packing. Sheet blanks share proposed layouts with ⅛ in
+                  kerf; existing cut sources are reserved separately.
                 </p>
               </div>
-              <div className="estimate">
-                <span>Planning estimate</span>
-                <strong>{money(total)}</strong>
-                <small>
-                  Example prices unless a matching fresh snapshot exists.
-                  Excludes tax, delivery, waste allowance, and oversized parts.
-                </small>
-              </div>
+              <button
+                className="button secondary full"
+                onClick={() => setModal("catalog")}
+              >
+                Review product references
+              </button>
+              <PricingSummary coverage={pricing} />
+              {project.fastenerPlans.length > 0 && (
+                <details className="field-section">
+                  <summary>Planned wood-fastener purchases</summary>
+                  {plannedFastenerPurchases.products.filter((row) => row.plannedScrews || row.selectedPacks || row.excludedLocations).map((row) => (
+                    <p key={row.productId}>{row.productName}: {row.plannedScrews} provisional screws · {row.requiredPacks} required packs · {row.selectedPacks} selected · {row.shortfallPacks} missing. {row.excludedLocations} locations excluded.</p>
+                  ))}
+                  <p>Supply rows alone purchase complete packs. Review pending geometry, exact fasteners and any legacy connection quantities.</p>
+                  <button className="button secondary full" onClick={() => openFasteners()}>Review wood-fastener locations</button>
+                </details>
+              )}
+              {project.connectorPlans.length > 0 && <details className="field-section">
+                <summary>Planned A21Z connector purchases</summary>
+                {plannedConnectorPurchases.products.filter((row) => row.requiredUnits || row.selectedPacks || row.excludedUnits).map((row) => <p key={row.productId}>{row.productName}: {row.requiredUnits} provisional units · {row.requiredPacks} required packs · {row.selectedPacks} selected · {row.shortfallPacks} missing. {row.excludedUnits} units excluded.</p>)}
+                <p>One complete screw or nail reference per angle. Manual supply rows alone purchase packs; entered wood paths do not establish connector fit.</p>
+                <button className="button secondary full" onClick={() => openConnectors()}>Review A21Z connector plans</button>
+              </details>}
+              {plannedPinPurchases.length > 0 && (
+                <div className="notice attachment-purchase-notice">
+                  <div>
+                    <strong>Planned shelf-pin purchases</strong>
+                    {plannedPinPurchases.map((pins) => (
+                      <div key={pins.productId}>
+                        <p>{pins.productName}</p>
+                        <p>
+                          {pins.plannedPins} planned pins · Required packs:{" "}
+                          {pins.requiredPacks} · Selected packs:{" "}
+                          {pins.selectedPacks} · Missing packs: {pins.shortfallPacks}.
+                        </p>
+                        {!pins.retailerSupported && (
+                          <p className="small-note">
+                            The exact pin pack has no reviewed offer at this
+                            retailer. Review its source before choosing a purchase.
+                          </p>
+                        )}
+                        {pins.canAddMissing && (
+                          <button
+                            className="button secondary full"
+                            aria-label={`Add missing pin packs for ${pins.productName}`}
+                            onClick={() =>
+                              safe(() =>
+                                change(addMissingAttachmentPinPacks(project, pins.productId)),
+                              )
+                            }
+                          >
+                            Add missing pin packs
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      className="text-button"
+                      onClick={() => openAttachments()}
+                    >
+                      Review shelf support purchases
+                    </button>
+                  </div>
+                </div>
+              )}
+              {project.restraintPlans.length > 0 && (
+                <div className="notice attachment-purchase-notice">
+                  <div>
+                    <strong>Planned restraint-kit purchases</strong>
+                    <p>
+                      {plannedRestraintPurchases.plannedKits} provisional
+                      locations · Selected kits:{" "}
+                      {plannedRestraintPurchases.selectedKits} · Missing kits:{" "}
+                      {plannedRestraintPurchases.shortfallKits}.
+                    </p>
+                    <p className="small-note">
+                      Each complete kit is counted once. The location count is a
+                      design choice; fitting, joinery and installation remain
+                      under review.
+                    </p>
+                    <button className="text-button" onClick={openRestraints}>
+                      Review restraint purchases
+                    </button>
+                    {plannedRestraintPurchases.canAddMissing && (
+                      <button
+                        className="button secondary full"
+                        onClick={() =>
+                          safe(() => change(addMissingRestraintKits(project)))
+                        }
+                      >
+                        Add missing restraint kits
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+              {glazingProfiles && (
+                <SunliteProfilePanel key={`glazing-profiles-${project.id}`} project={project} review={glazingProfiles}
+                  onChange={change} shownId={shownProfileRun?.id ?? null}
+                  onShow={(run) => showGlazingRun(run?.id ?? null)}
+                />
+              )}
+              {glazingTape && (
+                <SunliteTapePanel key={project.id} project={project} review={glazingTape}
+                  onChange={change} onShow={showGlazingRun} shownId={shownProfileRun?.id ?? null} />
+              )}
+              {(bandingGuide.length > 0 || project.pieces.some(isBandingPanel)) && (
+                <EdgeBandingPanel key={project.id} project={project} shown={shownBandingEdge} onChange={change}
+                  onShow={(edge) => {
+                    setBandingMark(edge ? { project, edge } : null);
+                    if (edge) {
+                      setShownProfileRunId(null);
+                      setStage(null);
+                      setPlaying(false);
+                      setExplode(false);
+                      inspectWorkspace();
+                    }
+                  }} />
+              )}
+              {glazingEstimate && (
+                <SunliteTakeoffPanel
+                  estimate={glazingEstimate}
+                  backingNotes={[
+                    ...roofBacking.map((review) => `${review.title} · ${roofBackingSummary(review)} See Checks for the gap locations.`),
+                    ...ventBacking.map((review) => `${review.title} · ${ventBackingSummary(review)}`),
+                  ]}
+                  onAdd={() => safe(() => change(addEstimatedSunlitePurchases(project)))}
+                />
+              )}
+              {glazingEstimate && (
+                <SunliteThermalPanel key={`glazing-thermal-${project.id}`} project={project} review={glazingThermal} onChange={change} />
+              )}
+              {(glazingEstimate || glazingMounts.length > 0) && (
+                <SunliteMountPanel key={`glazing-mounts-${project.id}`} project={project} reviews={glazingMounts} panelId={sunliteMountPanelId} onSelectPanel={setSunliteMountPanelId} onChange={change}
+                  onShow={(id) => {
+                    const finding = findings.find((row) => row.id === `sunlite-mount-${id}`);
+                    if (finding) showFindingArea(finding);
+                  }}
+                />
+              )}
+              {!!project.saunaHeaterPlans?.length && (
+                <details className="field-section">
+                  <summary>Sauna heater sourcing</summary>
+                  {project.saunaHeaterPlans.some((plan) => plan.productId === saunaSourcing.productId) ? (
+                    <>
+                      <p className="small-note">
+                        {saunaSourcing === harviaKit ? "Package candidates" : "Modeled layouts within reviewed ranges"} {saunaHeaterStock.needed} · Selected {saunaHeaterStock.selected}.
+                      </p>
+                      <p className="small-note">
+                        <a href={saunaSourcing.listing} target="_blank" rel="noreferrer">
+                          {saunaSourcing === harviaKit ? "Home Depot · KITJH60-HD" : "Bathing Brands on Lowe’s marketplace"}
+                        </a>
+                      </p>
+                      {saunaSourcing === harviaKit && <p className="small-note">{harviaKit.installationReview}</p>}
+                    </>
+                  ) : (
+                    <p className="small-note">The saved heater has no verified package reference at the selected retailer.</p>
+                  )}
+                  {saunaHeaterStock.missing > 0 && (
+                    <button type="button" className="button secondary full"
+                      onClick={() => safe(() => change(addMissingSaunaHeaters(project, saunaSourcing.productId)))}>
+                      Add sauna heater package reference
+                    </button>
+                  )}
+                </details>
+              )}
+              {liningBackingLines.length > 0 && project.retailer === "home-depot" && (
+                <SaunaLiningPurchasePanel key={project.id} project={project} onChange={change} />
+              )}
+              {(rodSockets.needed > 0 || rodSockets.selected > 0) && (
+                <details className="field-section">
+                  <summary>Everbilt rod sockets · {rodSockets.missing ? `${rodSockets.missing} to add` : `${rodSockets.selected} selected`}</summary>
+                  <p className="small-note">
+                    Everbilt 311V · {rodSockets.needed} pairs planned · {rodSockets.selected} selected.
+                    Each pair has one open and one closed socket. Dry-fit the delivered pieces.
+                  </p>
+                  {rodSockets.missing > 0 && project.retailer === "home-depot" && (
+                    <button className="button secondary full"
+                      onClick={() => safe(() => change(addMissingRodSockets(project)))}>
+                      Add missing Everbilt socket pairs
+                    </button>
+                  )}
+                </details>
+              )}
+              {project.rodFitPlans?.some((plan) => !plan.rodMaterial) && (
+                <details className="field-section">
+                  <summary>Closet rod flange pairs · {rodFlanges.needed} measured</summary>
+                  <p className="small-note">
+                    Project Source 23723PHSLG · {rodFlanges.needed} pairs planned · {rodFlanges.selected} selected.
+                    Each pair contains one open and one closed flange.
+                  </p>
+                  {rodFlanges.missing > 0 && project.retailer === "lowes" && (
+                    <button className="button secondary full"
+                      onClick={() => safe(() => change(addMissingRodFlanges(project)))}>
+                      Add missing closet flange pairs
+                    </button>
+                  )}
+                  {rodFlanges.missing > 0 && project.retailer !== "lowes" && (
+                    <p className="small-note">The reviewed 23723PHSLG pair is listed at Lowe’s.</p>
+                  )}
+                </details>
+              )}
+              {(rodBrackets.needed > 0 || rodBrackets.selected > 0) && (
+                <details className="field-section">
+                  <summary>Intermediate rod brackets · {rodBrackets.needed} planned</summary>
+                  <p className="small-note">
+                    Project Source 27587PHLLG · Planned positions {rodBrackets.needed} · Selected {rodBrackets.selected}.
+                    The bracket includes the rod clip. Fasteners are separate.
+                  </p>
+                  {rodBrackets.missing > 0 && project.retailer === "lowes" && (
+                    <button className="button secondary full"
+                      onClick={() => safe(() => change(addMissingRodBrackets(project)))}>
+                      Add missing rod brackets
+                    </button>
+                  )}
+                  {rodBrackets.missing > 0 && project.retailer !== "lowes" && (
+                    <p className="small-note">The reviewed 27587PHLLG bracket is listed at Lowe’s.</p>
+                  )}
+                </details>
+              )}
+              {(everbiltRodBrackets.needed > 0 || everbiltRodBrackets.selected > 0) && (
+                <details className="attachment-purchases">
+                  <summary>Everbilt 14317 closet rod brackets</summary>
+                  <p>Measured positions {everbiltRodBrackets.needed} · Selected {everbiltRodBrackets.selected}.</p>
+                  {everbiltRodBrackets.missing > 0 && project.retailer === "home-depot" && (
+                    <button className="button secondary full" onClick={() => safe(() => change(addMissingEverbiltRodBrackets(project)))}>
+                      Add missing Everbilt rod brackets
+                    </button>
+                  )}
+                </details>
+              )}
+              <SuppliesPanel
+                project={project}
+                onChange={(next) => safe(() => change(next))}
+              />
+              {supplyPurchases.some((row) => row.isTool) && (
+                <SuppliesPanel project={project} kind="tools" onChange={(next) => safe(() => change(next))} />
+              )}
               {rows.map((r) => (
-                <div className="bom-row" key={r.id}>
+                <div className="bom-row" key={r.id} data-stock-material={r.id} tabIndex={-1}>
                   <div>
                     <strong>{material(r.id).name}</strong>
                     <span>
-                      {r.quantity} {material(r.id).unit}
-                      {r.quantity !== 1 ? "s" : ""} · {r.pieces} parts
+                      {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)}{r.onHandStockUnits > 0 && " to buy"}{" "}
+                      · {r.pieces} {r.pieces === 1 ? "part" : "parts"}
                     </span>
                   </div>
-                  <b>{money(r.total)}</b>
-                  <small>
+                  <b>{r.unpriced && r.quantity > 0 ? "Unpriced" : money(r.total)}</b>
+                  {r.onHandStockUnits > 0 && (
+                    <small>{r.onHandStockUnits} stock {r.onHandStockUnits === 1 ? "source" : "sources"} on hand</small>
+                  )}
+                  {r.packCount > 1 && (
+                    <small>
+                      {r.physicalStockUnits} individual items needed ·{" "}
+                      {r.purchasedStockUnits} supplied in {r.quantity} purchase{" "}
+                      {r.quantity === 1 ? "unit" : "units"} ·{" "}
+                      {r.surplusStockUnits} spare
+                    </small>
+                  )}
+                  {(r.quantity > 0 || !r.onHandStockUnits) && <small>
                     {r.verified
                       ? `Snapshot · ${r.inventory!.available} available`
-                      : "Availability unverified"}
-                  </small>
+                      : r.supplier ? "Direct supplier · price and availability to confirm" : "Availability unverified"}
+                  </small>}
                   {r.oversize > 0 && (
                     <em>{r.oversize} oversized · excluded from estimate</em>
                   )}
-                  <a
+                  {(r.quantity > 0 || !r.onHandStockUnits) && <a
                     href={
                       r.inventory?.url ??
-                      `https://www.homedepot.com/s/${encodeURIComponent(material(r.id).search)}`
+                      shoppingOfferForMaterial(
+                        material(r.id),
+                        project.retailer ?? "home-depot",
+                      )?.offer.url ??
+                      r.supplier?.url ??
+                      retailerSearch(
+                        project.retailer ?? "home-depot",
+                        material(r.id).search,
+                      )
                     }
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Find at Home Depot <ExternalLink size={11} />
-                  </a>
+                    {r.supplier ? `View at ${r.supplier.seller}` : `Find at ${retailerName(project.retailer)}`}{" "}
+                    <ExternalLink size={11} />
+                  </a>}
+                  {project.retailer === "home-depot" && r.pieces >= 2 && (
+                    <StockGroupComparison
+                      key={project.id}
+                      project={project}
+                      source={r.id}
+                      inventoryTick={inventoryTick}
+                      onRecordSnapshot={(stock) => {
+                        setInventoryTarget(stock);
+                        setModal("inventory");
+                      }}
+                      onReplace={(source, replacement) => safe(() => {
+                        change((p) => {
+                          if (p !== project) throw Error("The project changed. Review the updated stock comparison.");
+                          return previewGroupStockReplacement(p, source, replacement).project;
+                        });
+                        notify("Stock updated for the compared parts.");
+                      })}
+                    />
+                  )}
+                  <SheetLayouts row={r} project={project} />
+                  {(sourceIdsByMaterial.get(r.id) ?? []).map((sourceId, index) => (
+                    <details className="recorded-source-layout" key={sourceId}>
+                      <summary>Recorded cut source {index + 1} · parts and offcuts</summary>
+                      <CutStockLayout project={project} sourceId={sourceId} inspection={currentCutSources}
+                        onStockOnHand={(onHand) => markStockOnHand(sourceId, onHand)}
+                        onSelectPart={(id) => {
+                          setSelected(id); setSelectedSectionId(null); setSelectionScope("part");
+                          setPanel("part"); setStage(null); setPlaying(false); setMode("select");
+                        }} />
+                    </details>
+                  ))}
                   {r.rolls.length > 0 && (
                     <details className="roll-layout">
-                      <summary>Roll layout · {r.rolls.length} rolls</summary>
+                      <summary>{material(r.id).orderRollWidth ? "Foil roll cut layout" : `Roll layout · ${r.rolls.length} rolls`}</summary>
                       <p>
-                        24 in × 25 ft stock. Feasible shelf layout; snip cuts
-                        use zero kerf. Not a global waste optimum.
+                        {material(r.id).orderRollWidth
+                          ? `${material(r.id).orderRollWidth} in wide · ${r.quantity} linear ft for the quote. Confirm supplied lengths and flat cuts, including folds.`
+                          : "24 in × 25 ft stock. Feasible shelf layout; snip cuts use zero kerf. Not a global waste optimum."}
                       </p>
                       {r.rolls.map((roll, i) => (
                         <div className="roll-plan" key={i}>
                           <strong>
-                            Roll {i + 1} ·{" "}
+                            {material(r.id).orderRollWidth ? "Requested length" : `Roll ${i + 1}`} ·{" "}
                             {format(roll.length - roll.usedLength)} uncut tail
                           </strong>
                           <div
@@ -1772,10 +4286,10 @@ export function App() {
                             role="img"
                             aria-label={`Roll ${i + 1} cutting layout`}
                           >
-                            {roll.placements.map((cut, j) => (
+                            {roll.placements.map((cut) => (
                               <span
                                 key={cut.id}
-                                title={`${cut.name}: ${format(cut.width)} × ${format(cut.length)}`}
+                                title={`${partLabel(project, cut.id)} · ${cut.name}: ${formatPreciseInches(cut.width)} × ${formatPreciseInches(cut.length)}`}
                                 style={{
                                   left: `${(cut.y / roll.length) * 100}%`,
                                   top: `${(cut.x / roll.width) * 100}%`,
@@ -1783,29 +4297,38 @@ export function App() {
                                   height: `${(cut.width / roll.width) * 100}%`,
                                 }}
                               >
-                                {j + 1}
+                                {partLabel(project, cut.id)}
                               </span>
                             ))}
                           </div>
                           <ol>
-                            {roll.placements.map((cut) => (
-                              <li key={cut.id}>
-                                {cut.name} · {format(cut.width)} ×{" "}
-                                {format(cut.length)}
-                              </li>
-                            ))}
+                            {roll.placements.map((cut) => {
+                              const folds = material(r.id).orderRollWidth
+                                ? foilReturnText(project.pieces.find((piece) => piece.id === cut.id)?.foilReturns) : "";
+                              return <li key={cut.id}>
+                                {partLabel(project, cut.id)} · {cut.name} ·{" "}
+                                {formatPreciseInches(cut.width)} ×{" "}
+                                {formatPreciseInches(cut.length)}
+                                {folds && ` · Folds ${folds}`}
+                              </li>;
+                            })}
                           </ol>
                         </div>
                       ))}
                     </details>
                   )}
-                  {r.bins.length > 0 && (
+                  {r.bins.some((bin) => !bin.sourceId) && (
                     <details>
-                      <summary>Cut layout · {r.bins.length} boards</summary>
-                      {r.bins.map((b, i) => (
+                      <summary>
+                        {material(r.id).shape === "tube-envelope"
+                          ? `Tube stock estimate · ${r.bins.filter((bin) => !bin.sourceId).length}`
+                          : `Cut layout · ${r.bins.filter((bin) => !bin.sourceId).length} boards`}
+                      </summary>
+                      {r.bins.filter((bin) => !bin.sourceId).map((b, i) => (
                         <div className="cut-board" key={i}>
                           <small>
-                            Board {i + 1} · {format(b.remaining)} remaining
+                            {material(r.id).shape === "tube-envelope" ? "Tube" : "Board"}{" "}
+                            {i + 1} · {format(b.remaining)} remaining
                           </small>
                           <div>
                             {b.cuts.map((c) => (
@@ -1825,6 +4348,9 @@ export function App() {
                       ))}
                     </details>
                   )}
+                  <StockCutSequenceList project={project} row={r} sequences={cutSequences.get(r.id) ?? []}
+                    onRecordMany={recordStockUnits}
+                    onSaveLoss={saveStockCutLoss} onRecord={recordStockUnit} />
                 </div>
               ))}
               <button
@@ -1845,7 +4371,7 @@ export function App() {
                 onClick={() => setModal("handoff")}
               >
                 <ExternalLink size={14} />
-                Prepare Home Depot list
+                Prepare {retailerName(project.retailer)} list
               </button>
               <p className="small-note">
                 This CSV is a shopping handoff. Direct import into Home Depot
@@ -1853,8 +4379,63 @@ export function App() {
               </p>
             </>
           )}
-          {panel === "step" && (
+          {returnToPreparation && ["part", "materials", "tools", "checks"].includes(panel) && (
+            <button type="button" className="text-button" onClick={() => {
+              setReturnToPreparation(false);
+              setPanel("prep");
+            }}>← Back to build preparation</button>
+          )}
+          {panel === "step" && (preparation.length > 0 || hasOpeningLid) && (
+            <button type="button" className="button secondary full" onClick={() => setPanel("prep")}>
+              Review build preparation
+            </button>
+          )}
+          {panel === "prep" && (
+            <BuildPreparationPanel groups={preparation} onOpen={openBuildPreparationItem} onBack={() => setPanel("step")} />
+          )}
+          {panel === "step" && !guideReady && (
             <>
+              <div className="panel-intro">
+                <Layers3 size={28} />
+                <h2>Your guide comes last.</h2>
+                <p>
+                  Build your layout first. Generate the sequence when you are
+                  ready; no manual steps are required.
+                </p>
+                <button
+                  className="button primary full"
+                  disabled={!project.pieces.length}
+                  onClick={generateGuide}
+                >
+                  Generate build guide
+                </button>
+              </div>
+              <button type="button" className="button secondary full" disabled={!canReviewConnections} onClick={() => openConnectionReview({title:"Connections in this project",memberIds:connectionReview.parts.map((part) => part.pieceId),ownerId:project.id,stageKey:"all-connections"})}>Review connection decisions</button>
+              <div className="field-section">
+                <h4>Parts in your design</h4>
+                {project.pieces.map((x) => (
+                  <button
+                    key={x.id}
+                    className="step-part"
+                    data-part-id={x.id}
+                    aria-label={`${partLabel(project, x.id)} · ${x.name}`}
+                    onClick={() => select(x.id)}
+                  >
+                    <Box size={14} />
+                    <span>
+                      {partLabel(project, x.id)} · {x.name}
+                    </span>
+                    <ChevronRight size={13} />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {panel === "step" && guideReady && (
+            <>
+              <GuidePartLabels project={project} stepId={activeStepId}
+                focusedId={activeGuidePart?.row.pieceId} onLocate={locateGuidePart}
+                onPrint={(id) => printPartLabels(project, id)} />
               <div className="part-title">
                 <span className="eyebrow">
                   STEP{" "}
@@ -1863,6 +4444,20 @@ export function App() {
                 </span>
                 <h2>{currentStep.title}</h2>
               </div>
+              {activeStepOrder && <p className="placement-warning" role="status">{activeStepOrder.detail}</p>}
+              {liningBackingContent && currentStep.generated?.kind === "assembly-stage" &&
+                currentStep.generated.stageKey === "cedar-lining" && (
+                  <details className="field-section">
+                    <summary>Sauna lining backing</summary>
+                    {liningBackingContent}
+                  </details>
+                )}
+              {currentStep.generated?.kind === "wood-fastener-preparation" && (
+                <button className="button secondary full" onClick={() => openFasteners(currentStep.generated?.planId ?? null)}>
+                  Edit wood-fastener locations
+                </button>
+              )}
+              {currentStep.generated?.kind === "connector-preparation" && <button className="button secondary full" onClick={() => openConnectors(currentStep.generated?.planId ?? null)}>Edit A21Z connector plan</button>}
               <label className="field">
                 Step title
                 <input
@@ -1898,6 +4493,14 @@ export function App() {
                   }
                 />
               </label>
+              <GuideConnectionSchedule
+                project={project}
+                stepId={activeStepId}
+                coverage={connectionReview}
+                onOpenConnections={openConnectionReview}
+                onInspectPiece={inspectConnectionPiece}
+                onReviewIntent={(intent) => reviewConnectionIntent(intent,scopeForGuideIntent(intent))}
+              />
               <button
                 className={`button full ${currentStep.complete ? "green" : "primary"}`}
                 onClick={() =>
@@ -1955,6 +4558,7 @@ export function App() {
               <button
                 className="text-button"
                 onClick={() => {
+                  setGuidePartFocus(null);
                   setPlaying(false);
                   setStage(
                     project.steps.findIndex((s) => s.id === activeStepId),
@@ -1971,6 +4575,8 @@ export function App() {
                   .map((x) => (
                     <button
                       className="step-part"
+                      data-part-id={x.id}
+                      aria-label={`${partLabel(project, x.id)} · ${x.name}`}
                       key={x.id}
                       onClick={() => {
                         setSelectionScope("part");
@@ -1980,7 +4586,9 @@ export function App() {
                       }}
                     >
                       <Box size={14} />
-                      <span>{x.name}</span>
+                      <span>
+                        {partLabel(project, x.id)} · {x.name}
+                      </span>
                       <ChevronRight size={13} />
                     </button>
                   ))}
@@ -1992,7 +4600,7 @@ export function App() {
                     .filter((h) => h.stepId === activeStepId)
                     .slice(-30)
                     .map((h) => (
-                      <p key={h.id}>{h.message}</p>
+                      <p key={h.id}>{h.offcutCut?.releasedAt && <strong>Released · </strong>}{h.message}</p>
                     ))}
                 </div>
               )}
@@ -2045,11 +4653,19 @@ export function App() {
           </span>
         </div>
       </aside>
+      <button
+        type="button"
+        className="button primary inspector-focus-toggle"
+        hidden={inspectorFocus.focused}
+        aria-controls="workshop-inspector"
+        aria-expanded={inspectorFocus.focused}
+        onClick={inspectorFocus.expand}
+      ><Expand size={16} />{inspectorFocus.returnable ? "Return to inspector" : "Expand inspector"}</button>
       <footer className="statusbar">
         <span>
           <span className="green-dot" />
           {project.pieces.filter((p) => !p.offcut).length} parts <b>·</b>{" "}
-          {project.joints.length} connections <b>·</b>{" "}
+          <ConnectionSummary coverage={connectionReview} onReview={() => openConnectionReview({title:"Connections in this project",memberIds:connectionReview.parts.map((part) => part.pieceId),ownerId:project.id,stageKey:"all-connections"})} /> <b>·</b>{" "}
           {project.pieces.filter((p) => p.offcut).length} offcuts
         </span>
         <span>Concept workspace · engineering review required</span>
@@ -2057,7 +4673,7 @@ export function App() {
           Made for the making <ArrowRight size={12} />
         </button>
       </footer>
-      {toast && (
+      {toast && (modal !== "cut" || toast.error) && (
         <div className={`toast ${toast.error ? "error" : ""}`} role="status">
           {toast.error ? (
             <AlertTriangle size={17} />
@@ -2081,7 +4697,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "handoff" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -2093,18 +4709,131 @@ export function App() {
             >
               <X size={20} />
             </button>
-            {modal === "assistant" && (
+            {modal === "idea" && (
+              <IdeaPlanner
+                project={project}
+                initialTarget={ideaTarget}
+                onApply={(next) => {
+                  safe(() => {
+                    change(next);
+                    setStage(null);
+                    setSelected(null);
+                    setSelectedSectionId(null);
+                    setView((v) => ({ preset: "iso", nonce: v.nonce + 1 }));
+                    setModal(null);
+                    notify(
+                      "Design saved as editable parts. Review assumptions and checks before building.",
+                    );
+                  });
+                }}
+                onClose={() => setModal(null)}
+              />
+            )}
+            {modal === "catalog" && <CatalogReferences />}
+            {modal === "studies" && (
+              <BuildStudies
+                project={project}
+                onOpen={(next) => {
+                  if (replace(next))
+                    notify(
+                      "Study opened as an editable project. The draft you left is available under Open project.",
+                    );
+                }}
+                onClose={() => setModal(null)}
+              />
+            )}
+            {modal === "cut" && piece && (
+              <CutStudio
+                project={project}
+                pieceId={piece.id}
+                onApply={(next, kind) =>
+                  safe(() => {
+                    change(next);
+                    setModal(null);
+                    notify(
+                      kind === "round"
+                        ? "Round opening updated."
+                        : kind === "rectangle"
+                          ? "Rectangular cut updated."
+                          : "Cuts applied. The retained part stays selected; offcuts are available for reuse.",
+                    );
+                  })
+                }
+                onClose={() => setModal(null)}
+              />
+            )}
+            {modal === "part-stock" && stockPlanPiece && (
+              <PartStockPlan
+                project={project}
+                piece={stockPlanPiece}
+                row={rows.find(({ id }) => id === stockPlanPiece.material)}
+                sequences={cutSequences.get(stockPlanPiece.material)}
+                inspection={currentCutSources}
+                onSaveLoss={saveStockCutLoss}
+                onRecord={recordStockUnit}
+                onStockOnHand={markStockOnHand}
+                onReviewOffcut={openOffcutReleaseReview}
+                onReplaceStock={(pieceId, stockId) => safe(() => {
+                  change((p) => previewPartStockReplacement(p, pieceId, stockId).project);
+                  notify("Part stock updated. The finished blank stays in place.");
+                })}
+                onAssignOffcut={(pieceId, offcutId) => safe(() => {
+                  change((p) => assignOffcutToPart(p, pieceId, offcutId));
+                  notify("Offcut assigned. Check the updated cut source and shopping list.");
+                })}
+              />
+            )}
+            {modal === "measured-offcut" && (
+              <MeasuredOffcutForm onAdd={(id, dimensions, name) => {
+                change((p) => addMeasuredOffcut(p, activeStepId, id, dimensions, name));
+                setModal(null);
+                notify("Measured stock added to the Cut pool.");
+              }} />
+            )}
+            {modal === "offcut-reuse" && offcutReusePlan && (
+              <OffcutReuseReview plan={offcutReusePlan} onApply={() => safe(() => {
+                if (current.current !== offcutReusePlan.source)
+                  throw Error("The project changed. Reopen the Cut pool review for updated assignments.");
+                change(offcutReusePlan.project);
+                setModal(null);
+                notify("Offcut plan applied. The Cut pool and shopping list are updated.");
+              })} />
+            )}
+            {modal === "offcut-release" && offcutReleasePreview && (
+              <OffcutReleaseReview preview={offcutReleasePreview} onApply={(plan) => safe(() => {
+                if (current.current !== plan.source)
+                  throw Error("The project changed. Reopen the offcut assignment to review the current stock.");
+                change(plan.project);
+                setModal(null);
+                notify("Uncut stock returned to the Cut pool. The affected parts can be planned again.");
+              })} />
+            )}
+            {modal === "zone" && (
+              <WorkZoneForm
+                project={project}
+                onApply={(workZone) => {
+                  change((p) => ({ ...p, workZone }));
+                  setView((v) => ({ preset: "iso", nonce: v.nonce + 1 }));
+                }}
+                onClose={() => setModal(null)}
+              />
+            )}
+            {(modal === "assistant" || modal === "base") && (
               <>
-                <div className="modal-icon">
-                  <Sparkles size={25} />
-                </div>
-                <span className="eyebrow">
+                {modal === "base" && (
+                  <h2 id="modal-title">{proposal?.targetSectionId ? "Revise floor base" : "Configure a floor base"}</h2>
+                )}
+                {modal === "assistant" && <>
+                  <div className="modal-icon">
+                    <Sparkles size={25} />
+                  </div>
+                  <span className="eyebrow">
                   FROM AN IDEA TO INDIVIDUAL PIECES
                 </span>
                 <h2 id="modal-title">What are we building?</h2>
                 <p>
-                  Describe a framed wall or base with dimensions. Or start with
-                  the backyard coop concept.
+                  Revise a wall or base using dimensions. For furniture and
+                  broader ideas, use Plan an idea.
                 </p>
                 <div className="provider-pill">
                   <span className="green-dot" />
@@ -2122,7 +4851,7 @@ export function App() {
                       setProposal(null);
                     }}
                   >
-                    <option value="">Add a new assembly / start a coop</option>
+                    <option value="">Add a new wall or base</option>
                     {project.sections
                       .filter((s) => s.generator)
                       .map((s) => (
@@ -2159,11 +4888,7 @@ export function App() {
                   }}
                 />
                 <div className="prompt-examples">
-                  {[
-                    "Wall 8 ft wide, 6 ft tall",
-                    "Base 6 by 4 ft",
-                    "A chicken coop",
-                  ].map((s) => (
+                  {["Wall 8 ft wide, 6 ft tall", "Base 6 by 4 ft"].map((s) => (
                     <button
                       key={s}
                       onClick={() => {
@@ -2187,9 +4912,13 @@ export function App() {
                   )}
                   Preview proposal
                 </button>
+                </>}
                 {proposal && (
                   <div className="proposal">
-                    <div>
+                    {modal === "base" && proposal.targetSectionId && (
+                      <p>Rebuilding replaces the parts in this base at its current placement. Undo is available.</p>
+                    )}
+                    {modal === "assistant" && <div>
                       <CheckCircle2 size={19} />
                       <strong>
                         {proposal.command.type === "coop"
@@ -2198,12 +4927,18 @@ export function App() {
                             ? "Framed wall assembly"
                             : "Floor base assembly"}
                       </strong>
-                    </div>
-                    <p>
+                    </div>}
+                    {proposal.command.type === "foundation" ? (
+                      <FloorBaseFields
+                        command={proposal.command}
+                        canSuggestStock={project.retailer === "home-depot"}
+                        onChange={(command) => setProposal({ ...proposal, command })}
+                      />
+                    ) : <p>
                       {proposal.command.type === "coop"
                         ? "Fixed 6 × 4 ft footprint · elevated coop concept. This replaces the current canvas; undo is available."
-                        : `${format(proposal.command.width)} wide × ${format(proposal.command.type === "wall" ? proposal.command.height : proposal.command.depth)} ${proposal.command.type === "wall" ? "tall" : "deep"} · ${proposal.command.spacing} in spacing. ${proposal.targetSectionId ? "Replaces the selected section at its current placement." : "Added beside existing parts."}`}
-                    </p>
+                        : `${format(proposal.command.width)} wide × ${format(proposal.command.height)} tall · ${proposal.command.spacing} in spacing. ${proposal.targetSectionId ? "Replaces the selected section at its current placement." : "Added beside existing parts."}`}
+                    </p>}
                     {preview?.impact && (
                       <div className="proposal-impact">
                         <p>
@@ -2214,10 +4949,23 @@ export function App() {
                             ? `Remove ${preview.impact.removedConnections} screw connection(s).`
                             : ""}
                         </p>
+                        {preview.impact.basePurchase.length > 0 && (
+                          <ul className="floor-base-stock-estimate" aria-label="Floor base stock estimate">
+                            {preview.impact.basePurchase.map(({ id, quantity, oversize }) => {
+                              const stock = material(id);
+                              const link = shoppingOfferForMaterial(stock, project.retailer)?.offer;
+                              return <li key={id}>
+                                {quantity} {quantity === 1 ? "board" : "boards"} · {stock.name}
+                                {oversize > 0 && ` · ${oversize} cuts exceed this stock`}
+                                {link && <> · <a href={link.url} target="_blank" rel="noreferrer">Product #{link.productId}</a></>}
+                              </li>;
+                            })}
+                          </ul>
+                        )}
                         <p>
                           {preview.impact.incompleteEstimate
-                            ? "Estimate incomplete: some parts exceed the starter stock."
-                            : `Planning estimate: ${money(preview.impact.costBefore)} → ${money(preview.impact.costAfter)} (sample/snapshot prices)`}
+                            ? "Stock subtotal incomplete: some materials are unpriced or parts exceed the modeled stock."
+                            : `Priced stock subtotal: ${money(preview.impact.costBefore)} → ${money(preview.impact.costAfter)} (example/snapshot prices; supplies and other costs excluded)`}
                         </p>
                         {preview.impact.findings.slice(0, 3).map((f) => (
                           <p key={f.id}>
@@ -2228,10 +4976,11 @@ export function App() {
                       </div>
                     )}
                     {preview?.error && (
-                      <p className="form-error">{preview.error}</p>
+                      <p className="form-error" role="alert">{preview.error}</p>
                     )}
                     <small>
-                      {proposal.provider} · {proposal.message}
+                      {modal === "assistant" && `${proposal.provider} · `}
+                      {proposal.message}
                     </small>
                     <button
                       className="button primary full"
@@ -2283,16 +5032,39 @@ export function App() {
                     </button>
                   </div>
                 )}
-                <p className="small-note">
+                {modal === "assistant" && <p className="small-note">
                   Ollama can be configured on your server for natural-language
                   interpretation. All proposals pass through the same dimension
                   checks; they do not certify structure.
-                </p>
+                </p>}
               </>
             )}
             {modal === "settings" && (
               <>
                 <h2 id="modal-title">Make it your project.</h2>
+                <label className="field">
+                  Retailer
+                  <select
+                    aria-label="Project retailer"
+                    value={project.retailer ?? "home-depot"}
+                    onChange={(e) =>
+                      change((p) => ({
+                        ...p,
+                        retailer: e.target.value as Retailer,
+                        store: "",
+                      }))
+                    }
+                  >
+                    <option value="home-depot">Home Depot</option>
+                    <option value="lowes">Lowe's</option>
+                  </select>
+                </label>
+                <button
+                  className="button secondary full"
+                  onClick={() => setModal("zone")}
+                >
+                  Configure work zone
+                </button>
                 <label className="field">
                   Project name
                   <input
@@ -2318,6 +5090,7 @@ export function App() {
                   <label className="field">
                     Exact store number
                     <input
+                      aria-label="Exact store number"
                       value={project.store}
                       placeholder="e.g. 4409"
                       onChange={(e) =>
@@ -2348,7 +5121,7 @@ export function App() {
                   <p>
                     {health?.catalog
                       ? "A catalog provider is configured. Refresh checks its data for your exact store."
-                      : "Live Home Depot inventory is not connected. Use verified inventory snapshots, or configure an authorized provider in the server environment."}
+                      : "Live retailer inventory is not connected. Use verified inventory snapshots, or configure an authorized provider in the server environment."}
                   </p>
                 </div>
                 <div className="inline">
@@ -2382,31 +5155,18 @@ export function App() {
             {modal === "inventory" && (
               <InventoryForm
                 project={project}
-                onSave={(entry) =>
-                  safe(() => {
-                    change((p) => ({
-                      ...p,
-                      zip: entry.zip,
-                      store: entry.store,
-                      inventory: [
-                        ...p.inventory.filter(
-                          (i) =>
-                            !(
-                              i.material === entry.material &&
-                              i.store === entry.store &&
-                              i.zip === entry.zip
-                            ),
-                        ),
-                        entry,
-                      ],
-                    }));
-                    setModal(null);
-                    setPanel("materials");
-                    notify(
-                      "Snapshot recorded. It is valid for this store and ZIP for 24 hours.",
-                    );
-                  })
-                }
+                target={inventoryTarget}
+                onSave={(entry) => {
+                  change((p) => ({
+                    ...recordMaterialObservation(p, entry),
+                    zip: entry.zip,
+                    retailer: entry.retailer ?? "home-depot",
+                    store: entry.store,
+                  }));
+                  setModal(null);
+                  if (!inventoryTarget) setPanel("materials");
+                  notify("Snapshot recorded. It is valid for this store and ZIP for 24 hours.");
+                }}
               />
             )}
             {modal === "projects" && (
@@ -2416,43 +5176,144 @@ export function App() {
                   Projects saved on this server. Browser drafts stay on this
                   device until you save or export them.
                 </p>
-                <button
-                  className="button primary"
-                  onClick={() => setModal("new")}
-                >
-                  <Plus size={15} />
-                  New project
-                </button>
+                <div className="inline">
+                  <button
+                    className="button primary"
+                    onClick={() => setModal("new")}
+                  >
+                    <Plus size={15} />
+                    New project
+                  </button>
+                  <button
+                    className="button secondary"
+                    onClick={() => {
+                      setImportKind("project");
+                      setModal("import");
+                    }}
+                  >
+                    <ArrowDownToLine size={15} /> Import a plan
+                  </button>
+                  <a className="button secondary" href="/api/workshop-backup" download>
+                    <Download size={15} /> Download workshop backup
+                  </a>
+                </div>
+                {resumeDraft && (
+                  <button
+                    className="template-choice"
+                    onClick={() => {
+                      replace(resumeDraft.project, resumeDraft.revision);
+                      setResumeDraft(null);
+                    }}
+                  >
+                    <FolderOpen size={22} />
+                    <div>
+                      <strong>Resume previous browser draft</strong>
+                      <small>
+                        {resumeDraft.project.name} ·{" "}
+                        {resumeDraft.project.pieces.length} parts
+                      </small>
+                    </div>
+                  </button>
+                )}
+                {previousDraft &&
+                  previousDraft.project.id !== resumeDraft?.project.id && (
+                    <button
+                      className="template-choice"
+                      onClick={() => {
+                        setPreviousDraft(null);
+                        replace(previousDraft.project, previousDraft.revision);
+                      }}
+                    >
+                      <FolderOpen size={22} />
+                      <div>
+                        <strong>Open earlier browser draft</strong>
+                        <small>
+                          {previousDraft.project.name} ·{" "}
+                          {previousDraft.project.pieces.length} parts
+                        </small>
+                      </div>
+                    </button>
+                  )}
+                {draftRecoveries.length > 0 && (
+                  <details className="draft-recovery">
+                    <summary>
+                      Preserved browser drafts · {draftRecoveries.length}
+                    </summary>
+                    {draftRecoveries.map((draft) => (
+                      <div className="section-description" key={draft.key}>
+                        <p>{draft.problem}</p>
+                        <button
+                          className="text-button"
+                          onClick={() =>
+                            download(
+                              "yardwork-original-browser-draft.json",
+                              draft.raw,
+                              "application/json",
+                            )
+                          }
+                        >
+                          Download original browser draft
+                        </button>
+                      </div>
+                    ))}
+                  </details>
+                )}
                 <div className="project-list">
                   {projects.length ? (
-                    projects.map((p) => (
-                      <button
-                        key={p.id}
-                        onClick={async () => {
-                          try {
-                            const data = await api(`/api/projects/${p.id}`);
-                            replace(
-                              projectSchema.parse(data.project),
-                              data.revision,
-                            );
-                          } catch (e) {
-                            notify((e as Error).message, true);
-                          }
-                        }}
-                      >
-                        <span className="project-thumb">
-                          <Cuboid size={25} />
-                        </span>
-                        <div>
+                    projects.map((p) =>
+                      p.loadError ? (
+                        <div
+                          className="project-recovery"
+                          role="group"
+                          aria-label={`Recover ${p.name}`}
+                          key={p.id}
+                        >
                           <strong>{p.name}</strong>
-                          <small>
-                            {p.pieces} parts ·{" "}
-                            {new Date(p.updatedAt).toLocaleDateString()}
-                          </small>
+                          <p>{p.loadError}</p>
+                          {p.originalAvailable !== false && (
+                            <a className="text-button" href={`/api/projects/${p.id}/original`} download>
+                              Download original saved file
+                            </a>
+                          )}
+                          <EarlierProjectSaves
+                            project={p}
+                            onOpen={(number) => void openEarlierSave(p.id, number)}
+                          />
                         </div>
-                        <ChevronRight size={17} />
-                      </button>
-                    ))
+                      ) : (
+                        <Fragment key={p.id}>
+                          <button
+                            onClick={async () => {
+                              try {
+                                const data = await api(`/api/projects/${p.id}`);
+                                replace(
+                                  projectSchema.parse(data.project),
+                                  data.revision,
+                                );
+                              } catch (e) {
+                                notify((e as Error).message, true);
+                              }
+                            }}
+                          >
+                            <span className="project-thumb">
+                              <Cuboid size={25} />
+                            </span>
+                            <div>
+                              <strong>{p.name}</strong>
+                              <small>
+                                {p.pieces} parts ·{" "}
+                                {new Date(p.updatedAt).toLocaleDateString()}
+                              </small>
+                            </div>
+                            <ChevronRight size={17} />
+                          </button>
+                          <EarlierProjectSaves
+                            project={p}
+                            onOpen={(number) => void openEarlierSave(p.id, number)}
+                          />
+                        </Fragment>
+                      ),
+                    )
                   ) : (
                     <div className="empty">
                       <FolderOpen size={30} />
@@ -2482,49 +5343,12 @@ export function App() {
                 </p>
                 <button
                   className="template-choice"
-                  onClick={() => {
-                    replace(coop());
-                    notify("Coop concept loaded");
-                  }}
-                >
-                  <span>⌂</span>
-                  <div>
-                    <strong>The backyard coop</strong>
-                    <small>6 × 4 ft concept · five editable build steps</small>
-                  </div>
-                  <ArrowRight size={17} />
-                </button>
-                <button
-                  className="template-choice"
-                  onClick={() => replace(blank("My next good build"))}
+                  onClick={() => replace(blank())}
                 >
                   <Square size={27} />
                   <div>
                     <strong>A blank canvas</strong>
                     <small>Your materials. Your dimensions. Your idea.</small>
-                  </div>
-                  <ArrowRight size={17} />
-                </button>
-                <button
-                  className="template-choice"
-                  onClick={() => {
-                    const p = blank("Framed wall study");
-                    p.kind = "wall";
-                    replace(
-                      applyCommand(p, {
-                        type: "wall",
-                        width: 96,
-                        height: 72,
-                        depth: 48,
-                        spacing: 16,
-                      }),
-                    );
-                  }}
-                >
-                  <Layers3 size={27} />
-                  <div>
-                    <strong>A framed wall</strong>
-                    <small>8 ft wide × 6 ft tall · 16 in on center</small>
                   </div>
                   <ArrowRight size={17} />
                 </button>
@@ -2628,10 +5452,10 @@ export function App() {
                     <div className="notice">
                       <Info size={16} />
                       <p>
-                        Snapshots need a material ID, Home Depot Internet
-                        number/URL, price, available quantity, store, ZIP, and
-                        checkedAt timestamp. Imported values are user-supplied
-                        and are not independently verified.
+                        Import a Yardwork snapshot file with materials, hardware
+                        and tools, or a material snapshot array. The file keeps
+                        its original check times. Newer observations update
+                        matching products and locations.
                       </p>
                     </div>
                     <a
@@ -2644,9 +5468,10 @@ export function App() {
                   </>
                 ) : (
                   <p className="small-note">
-                    A valid version 1 project imports as a new copy, including
-                    parts, connections, build steps, store settings, and plan
-                    references.
+                    Formats 1–{PROJECT_FORMAT_VERSION} import as new copies,
+                    including parts, connections, build steps, store settings
+                    and plan references. New exports use format {PROJECT_FORMAT_VERSION};
+                    older apps reject unsupported versions to preserve saved data.
                   </p>
                 )}
                 <input
@@ -2670,14 +5495,37 @@ export function App() {
             {modal === "handoff" && (
               <HomeDepotHandoff
                 project={project}
+                inventoryTick={inventoryTick}
+                onRecordSnapshots={(batch) => change((p) => recordHomeDepotStoreSnapshots(p, batch))}
+                onAddPurchase={(id) => safe(() => {
+                  const next = addHomeDepotPurchaseNeed(current.current, id);
+                  if (next === current.current) return;
+                  change(next);
+                  notify("Added the missing quantity to the Home Depot list.");
+                })}
+                onReview={(area) => {
+                  setModal(null);
+                  setPanel(area === "tools" ? "tools" : area === "assembly" ? "prep" : "materials");
+                  inspectorFocus.expand();
+                }}
                 onDownload={(text) =>
-                  download(`${baseName}-home-depot.txt`, text, "text/plain")
+                  download(
+                    `${baseName}-${project.retailer ?? "home-depot"}.txt`,
+                    text,
+                    "text/plain",
+                  )
                 }
               />
             )}
             {modal === "export" && (
               <>
                 <h2 id="modal-title">From screen to workbench.</h2>
+                {guideExport.error && (
+                  <p className="form-error" role="alert">
+                    {guideExport.error} JSON and shopping exports remain
+                    available.
+                  </p>
+                )}
                 <p>
                   Keep an editable plan, take a shopping list, or print your
                   build steps.
@@ -2686,7 +5534,7 @@ export function App() {
                   {
                     title: "Editable project",
                     description:
-                      "JSON · parts, cuts, joints, steps, and inventory",
+                      `${connectorDraftDirty ? "Save the connector draft to include its edits; this export contains the current project. " : ""}Format ${PROJECT_FORMAT_VERSION} JSON · labeled parts, cuts, assembly stages, measured hinges, fastener history, A21Z connector references and wood entries, supports, restraints, steps and inventory. Opens in Yardwork with format ${PROJECT_FORMAT_VERSION} support.`,
                     icon: Box,
                     action: () =>
                       download(
@@ -2707,8 +5555,14 @@ export function App() {
                         "text/csv",
                       ),
                   },
+                  ...(snapshotExport ? [{
+                    title: "Store snapshots",
+                    description: `JSON · ${snapshotExport.count} observations at the selected Home Depot store${snapshotExport.excluded ? ` · ${snapshotExport.excluded} unusable observations excluded` : ""}`,
+                    icon: Download,
+                    action: () => download(`${baseName}-store-snapshots.json`, snapshotExport.text, "application/json"),
+                  }] : []),
                   {
-                    title: "Prepare Home Depot list",
+                    title: `Prepare ${retailerName(project.retailer)} list`,
                     description:
                       "Copy/paste handoff · stock quantities and product matches",
                     icon: ExternalLink,
@@ -2722,7 +5576,10 @@ export function App() {
                     action: () =>
                       download(
                         `${baseName}-guide.md`,
-                        guideMarkdown(project),
+                        guideMarkdown(exportGuide) +
+                          toolGuideMarkdown(exportGuide) +
+                          sheetPlansMarkdown(bom(exportGuide), exportGuide) +
+                          recordedSourceMarkdown,
                         "text/markdown",
                       ),
                   },
@@ -2735,9 +5592,61 @@ export function App() {
                       setTimeout(() => window.print(), 100);
                     },
                   },
+                  ...(exportGuide.pieces.some((piece) => !piece.offcut) && !guideExport.error ? [{
+                    title: "Print part labels",
+                    description: "Cut-out tags with part IDs, dimensions, and build steps",
+                    icon: Download,
+                    action: () => printPartLabels(exportGuide),
+                  }] : []),
+                  ...(project.attachmentPlans.length
+                    ? [
+                        {
+                          title: "Shelf support schedule CSV",
+                          description:
+                            "Planned target coordinates and user measurements · unresolved drill coordinates stay pending",
+                          icon: Ruler,
+                          action: () =>
+                            download(
+                              `${baseName}-shelf-supports.csv`,
+                              attachmentScheduleCsv(project),
+                              "text/csv",
+                            ),
+                        },
+                      ]
+                    : []),
+                  ...(connectionReview.parts.length || connectionReview.intents.length ? [{
+                    title: "Connection review CSV",
+                    description: "Actual members, assembly stages and saved connection states · separate from shopping quantities and drill schedules",
+                    icon: ClipboardList,
+                    action: () => download(`${baseName}-connection-review.csv`, connectionCoverageCsv(project, connectionReview), "text/csv"),
+                  }] : []),
+                  ...(project.fastenerPlans.length ? [{
+                    title: "Wood-fastener schedule CSV",
+                    description: "Explicit local entrances and candidate drive paths · pending or excluded values remain blank",
+                    icon: Ruler,
+                    action: () => download(`${baseName}-wood-fasteners.csv`, fastenerScheduleCsv(project), "text/csv"),
+                  }] : []),
+                  ...(project.connectorPlans.length ? [{
+                    title: "Connector wood-entry CSV",
+                    description: "Assigned wood entries and alternative schedule references · no inferred manufactured hole pattern",
+                    icon: Ruler,
+                    action: () => download(`${baseName}-connectors.csv`, connectorScheduleCsv(project), "text/csv"),
+                  }] : []),
+                  ...(project.lidHingePlans.length || project.hingeStockSources.length ? [{
+                    title: "Measured hinge schedule CSV",
+                    description: "Physical source cuts, retained intervals and entered mounting datums · stale or conflicting drill coordinates remain blank",
+                    icon: Ruler,
+                    action: () => download(`${baseName}-hinges.csv`, hingeScheduleCsv(project), "text/csv"),
+                  }] : []),
                 ].map((item) => (
                   <button
                     className="export-choice"
+                    disabled={
+                      !!guideExport.error &&
+                      ["Build guide", "Print / save guide as PDF"].includes(
+                        item.title,
+                      )
+                    }
                     key={item.title}
                     onClick={item.action}
                   >
@@ -2790,8 +5699,8 @@ export function App() {
                     <Layers3 size={20} />
                     <strong>Every step counts</strong>
                     <p>
-                      Add instructions, assign parts, reorder steps, and preview
-                      the build. Export the guide when ready.
+                      Generate steps from your finished layout, then review the
+                      sequence and export a guide.
                     </p>
                   </div>
                   <div>
@@ -2822,57 +5731,466 @@ export function App() {
           </section>
         </div>
       )}
+      {labelPrint && <PrintAssemblyPartLabels title={labelPrint.title} labels={labelPrint.labels} />}
       <article className="print-guide">
         <h1>{project.name}</h1>
         <p>
           Concept build guide · {project.zip} ·{" "}
           {new Date().toLocaleDateString()}
         </p>
-        <p>{project.notes}</p>
+        {project.notes.trim() && (
+          <section className="saved-project-notes">
+            <h2>{SAVED_PROJECT_NOTES_TITLE}</h2>
+            <p className="saved-notes-context">{SAVED_PROJECT_NOTES_CONTEXT}</p>
+            <p className="saved-notes-text">{project.notes}</p>
+          </section>
+        )}
         <strong>
           Planning only. Verify site, code, engineering, and connections before
           construction.
         </strong>
-        {project.steps.map((s, i) => (
+        <PrintBuildPreparation groups={printPreparation} />
+        <PrintOffcutCutOrder rows={printOffcutCuts} />
+        {exportGuide.ideaBindings.map((binding) => (
+          <section key={binding.id}>
+            <h2>Saved design review · {binding.title}</h2>
+            <p>
+              Revision {binding.revision}. Actual part dimensions and cuts
+              follow in the build sequence.
+            </p>
+            <ul>
+              {binding.assumptions.map((text, i) => (
+                <li key={`a${i}`}>Assumption: {text}</li>
+              ))}
+              {binding.questions.map((text, i) => (
+                <li key={`q${i}`}>Open decision: {text}</li>
+              ))}
+              {binding.suggestions.map((text, i) => (
+                <li key={`s${i}`}>Review: {text}</li>
+              ))}
+            </ul>
+          </section>
+        ))}
+        {exportGuide.steps.map((s, i) => (
           <section key={s.id}>
             <h2>
               {i + 1}. {s.title}
             </h2>
             <p>{s.notes}</p>
             <ul>
-              {project.pieces
+              {exportGuide.pieces
                 .filter((x) => x.stepId === s.id && !x.offcut)
                 .map((x) => (
                   <li key={x.id}>
-                    {x.name} · {x.size.map(format).join(" × ")} ·{" "}
+                    {partLabel(exportGuide, x.id)} · {x.name} ·{" "}
+                    {x.size.map(formatPreciseInches).join(" × ")} ·{" "}
                     {material(x.material).name}
+                    {(x.cutPlanes.length > 0 || x.cutStock || pieceThroughOpenings(x).length > 0) && (
+                      <pre className="print-cut-details">{printCuts(x)}</pre>
+                    )}
                   </li>
                 ))}
             </ul>
-            <p>
-              {project.joints
-                .filter((j) => j.stepId === s.id)
-                .reduce((n, j) => n + j.quantity, 0)}{" "}
-              screws specified
-            </p>
-            {project.history
+            <GuideConnectionSchedule
+              project={exportGuide}
+              stepId={s.id}
+              printable
+              coverage={exportConnectionReview}
+            />
+            {exportGuide.history
               .filter((h) => h.stepId === s.id)
               .map((h) => (
-                <p key={h.id}>Operation: {h.message}</p>
+                <p key={h.id}>{h.offcutCut?.releasedAt ? "Released plan" : "Operation"}: {h.message}</p>
               ))}
           </section>
         ))}
-        <h2>Shopping list · estimate {money(total)}</h2>
+        {exportGuide.pieces.some((piece) => piece.offcut) && (
+          <section>
+            <h2>Recorded offcuts</h2>
+            {exportGuide.pieces
+              .filter((piece) => piece.offcut)
+              .map((piece) => (
+                <div key={piece.id}>
+                  <strong>
+                    {partLabel(exportGuide, piece.id)} · {piece.name}
+                  </strong>
+                  <pre className="print-cut-details">{printCuts(piece)}</pre>
+                </div>
+              ))}
+          </section>
+        )}
+        {exportGuide.attachmentPlans.length > 0 && (
+          <section>
+            <h2>Planned shelf attachments</h2>
+            <pre className="print-cut-details attachment-print">
+              {attachmentGuideText(exportGuide, false)}
+            </pre>
+          </section>
+        )}
+        {exportGuide.restraintPlans.length > 0 && (
+          <section>
+            <h2>Furniture anti-tip review</h2>
+            <pre className="print-cut-details attachment-print">
+              {restraintGuideText(exportGuide, false)}
+            </pre>
+          </section>
+        )}
+        {exportGuide.fastenerPlans.length > 0 && (
+          <section>
+            <h2>Wood-fastener locations</h2>
+            <pre className="print-cut-details attachment-print">{fastenerGuideText(exportGuide, false)}</pre>
+          </section>
+        )}
+        {(exportGuide.lidHingePlans.length > 0 || exportGuide.hingeStockSources.length > 0) && (
+          <section><h2>Measured lid hinge plans</h2><pre className="print-cut-details attachment-print">{hingeGuideText(exportGuide, false)}</pre></section>
+        )}
+        {!!printFoundations.length && (
+          <section className="greenhouse-foundation-print">
+            <h2>Greenhouse foundation footprint</h2>
+            <p>{greenhouseFoundationScope}</p>
+            {printFoundations.map(({ entryId, title, summary, rails, anchors }) => (
+              <div key={entryId}>
+                <p><strong>{title}</strong> · {summary}</p>
+                <ul>{rails.map((rail) => <li key={rail}>{rail}</li>)}</ul>
+                {anchors && (
+                  <>
+                    <h3>Concrete anchor layout</h3>
+                    <p>{concreteAnchor.label} · {anchors.detail}</p>
+                    <ul>{anchors.marks.map((mark) => <li key={mark}>{mark}</li>)}</ul>
+                    <p>{concreteAnchorScope} <a href={concreteAnchor.instructions}>Manufacturer instructions</a> · <a href={concreteAnchor.evaluation}>Evaluation table</a></p>
+                  </>
+                )}
+              </div>
+            ))}
+          </section>
+        )}
+        {!!exportGuide.siteClearances?.length && (
+          <section>
+            <h2>Measured site clearances</h2>
+            {exportGuide.siteClearances.map((plane) => (
+              <p key={plane.id}><strong>{plane.label}</strong> · {siteClearanceText(exportGuide, reviewSiteClearance(exportGuide, plane))}</p>
+            ))}
+          </section>
+        )}
+        {!!lidSiteSchedule.length && (
+          <section>
+            <h2>Lid swing at measured site faces</h2>
+            {lidSiteSchedule.map((row) => <p key={row.id}><strong>{row.label}</strong> · {row.text}</p>)}
+          </section>
+        )}
+        {!!lidWeightSchedule.length && (
+          <section>
+            <h2>Lid weight and gravity torque</h2>
+            {lidWeightSchedule.map((row) => <p key={row.id}><strong>{row.label}</strong> · {row.text}</p>)}
+            <p>{lidWeightScope} <a href={lidMomentReference}>Manufacturer lid moment reference</a></p>
+            <h2>Lid stay torque comparison</h2>
+            {lidWeightSchedule.map((row) => <p key={row.id}><strong>{row.label}</strong> · {row.stayText}</p>)}
+            <p>{lidStayScope} <a href={springLidStay.manual}>Sugatsune installation manual</a></p>
+            <p>Everbilt {everbiltLidSupport.model} · {everbiltLidSupport.scope} <a href={everbiltLidSupport.listing}>Home Depot listing</a></p>
+          </section>
+        )}
+        {!!lidStayFitSchedule.length && (
+          <section>
+            <h2>Folding lid stay fit</h2>
+            {lidStayFitSchedule.map((row) => (
+              <div key={row.id}>
+                <p><strong>{row.label}</strong> · {row.result}</p>
+                <p>{row.settings}</p>
+                {row.sourceNote && <p>{row.sourceNote}</p>}
+                {row.source && <p><a href={row.source.listing}>Home Depot reference</a> · <a href={row.source.manual}>Installation drawing</a></p>}
+              </div>
+            ))}
+            <p>{lidStayFitScope}</p>
+          </section>
+        )}
+        {exportGuide.connectorPlans.length > 0 && <section><h2>A21Z connector plans</h2><pre className="print-cut-details attachment-print">{connectorGuideText(exportGuide, false)}</pre></section>}
+        <BanquetteConstructionAppendix project={exportGuide} />
+        <h2>Tools and setup checklist</h2>
+        <p>
+          Documented selections support capabilities, not safe operation,
+          ownership or current stock. Check the actual tool, blade/bit,
+          instructions and work setup.
+        </p>
         <ul>
-          {rows.map((r) => (
-            <li key={r.id}>
-              {r.quantity} {material(r.id).unit}
-              {r.quantity === 1 ? "" : "s"} × {material(r.id).name} ·{" "}
-              {money(r.total)} ·{" "}
-              {r.verified ? "snapshot available" : "stock unverified"}
+          {toolsReview.requirements.map((row) => (
+            <li key={row.capability}>
+              {row.name} · {row.necessity} ·{" "}
+              {row.status === "supported"
+                ? "documented selection reviewed"
+                : "tool selection unresolved"}
+              {row.condition ? ` · ${row.condition}` : ""}
             </li>
           ))}
         </ul>
+        <h2>Shopping list</h2>
+        <PricingSummary coverage={pricing} printable />
+        <ul>
+          {rows.map((r) => {
+            const offer = printStockReferences.get(r.id);
+            return (
+              <li key={r.id}>
+                {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)} × {material(r.id).name} ·{" "}
+                {r.unpriced && r.quantity > 0 ? "UNPRICED" : money(r.total)} ·{" "}
+                {r.quantity === 0 && r.onHandStockUnits > 0 ? "stock on hand" : r.verified
+                  ? `${r.inventory!.available} stock units reported · ${r.inventory!.available >= r.quantity ? "quantity covered by snapshot" : "snapshot quantity short"}`
+                  : r.supplier ? (
+                    <a href={r.supplier.url}>{r.supplier.seller} {r.supplier.productCode} · quote needed</a>
+                  ) : "stock unverified"}
+                {offer && <>{" · "}<a href={offer.url}>Internet #{offer.productId}</a></>}
+                {r.onHandStockUnits > 0 && ` · ${r.onHandStockUnits} ${r.onHandStockUnits === 1 ? "source" : "sources"} on hand`}
+                {r.packCount > 1
+                  ? ` · ${r.physicalStockUnits} individual items needed; ${r.packCount} per purchase unit; ${r.surplusStockUnits} spare`
+                  : ""}
+              </li>
+            );
+          })}
+        </ul>
+        {rows.map((row) => (
+          <SheetLayouts
+            key={row.id}
+            row={row}
+            project={exportGuide}
+            printable
+          />
+        ))}
+        <PrintStockCutSequences groups={printCutSequences} />
+        {printCutSources.groups.size > 0 && <section className="recorded-source-print">
+          <h2>Recorded cut-source layouts</h2>
+          <p>Saved blank regions and offcuts share their original physical source. Review these coordinates alongside each part's retained cut profile; no chronological cutting sequence is inferred.</p>
+          {[...printCutSources.groups.keys()].map((sourceId) => <CutStockLayout key={sourceId} project={exportGuide} sourceId={sourceId} inspection={printCutSources} printable />)}
+        </section>}
+        {glazingProfiles && <PrintSunliteProfiles review={glazingProfiles} />}
+        {glazingTape && <PrintSunliteTape review={glazingTape} />}
+        <PrintEdgeBanding groups={bandingGuide} />
+        {glazingEstimate && <SunliteTakeoffPanel estimate={glazingEstimate} />}
+        {glazingThermal && glazingEstimate && <PrintSunliteThermal review={glazingThermal} />}
+        {glazingMounts.length > 0 && <PrintSunliteMounts project={project} reviews={glazingMounts} />}
+        {printRoofBacking.length > 0 && (
+          <section>
+            <h2>SUNLITE roof seam backing</h2>
+            <p>{roofBackingScope}</p>
+            <ul>{printRoofBacking.map((line) => <li key={line}>{line}</li>)}</ul>
+            <p><a href={sunliteRoofDetail}>Palram roof connector detail</a></p>
+          </section>
+        )}
+        {printVentBacking.length > 0 && (
+          <section className="vent-backing-print">
+            <h2>Roof vent sash backing</h2>
+            <p>{ventBackingScope}</p>
+            <ul>{printVentBacking.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={ventBackingSource}>Palram SUNLITE installation resources</a></p>
+          </section>
+        )}
+        {printPanelBearing.length > 0 && (
+          <section>
+            <h2>Shelf and seat bearing</h2>
+            <p>{panelBearingScope}</p>
+            <ul>{printPanelBearing.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printShelfSag.length > 0 && (
+          <section>
+            <h2>Shelf sag estimates</h2>
+            <p>{shelfSagScope}</p>
+            <ul>{printShelfSag.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={stiffnessSource}>Panel stiffness reference</a> · <a href={beamSource}>Bending formula</a></p>
+          </section>
+        )}
+        {printWoodSupport.length > 0 && (
+          <section className="wood-support-print">
+            <h2>Wood contact to floor</h2>
+            <p>{woodSupportScope}</p>
+            <ul>{printWoodSupport.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printBearingConnections.length > 0 && (
+          <section className="bearing-connections-print">
+            <h2>Bearing joints</h2>
+            <p>{bearingConnectionScope}</p>
+            <ul>{printBearingConnections.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printRafterBearing.length > 0 && (
+          <section>
+            <h2>Greenhouse rafter joints</h2>
+            <p>{rafterBearingScope}</p>
+            <ul>{printRafterBearing.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printRoofAttachments.length > 0 && (
+          <section>
+            <h2>Greenhouse roof attachments</h2>
+            <p>{greenhouseAttachmentScope}</p>
+            <ul>{printRoofAttachments.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printBaseCorners.length > 0 && (
+          <section className="greenhouse-base-print">
+            <h2>Greenhouse base corners</h2>
+            <p>{greenhouseBaseScope}</p>
+            <ul>{printBaseCorners.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printFloorBaseJoints.length > 0 && (
+          <section>
+            <h2>Floor base joist ends</h2>
+            <p>{floorBaseConnectionScope}</p>
+            <ul>{printFloorBaseJoints.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printFloorHangers.length > 0 && (
+          <section>
+            <h2>Floor base hanger plan</h2>
+            <p>{floorHangerScope} <a href={floorHangerReport}>ESR-3096 Table 20</a></p>
+            <ul>{printFloorHangers.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {exportGuide.projectCode && (
+          <section>
+            <h2>Project code references</h2>
+            <p>Verify applicability with the local authority.</p>
+            {exportGuide.projectCode.trades.includes("plumbing") && exportGuide.projectCode.wallVent.inScope === "yes" && exportGuide.projectCode.wallVent.layout && (
+              <ul>{ventLayoutGuideLines(exportGuide.projectCode.wallVent.layout).map((line) => <li key={line}>{line}</li>)}</ul>
+            )}
+            {exportGuide.projectCode.trades.includes("hvac") && exportGuide.projectCode.dryerExhaust?.appliance === "ducted" && (
+              <ul>{dryerExhaustGuideLines(exportGuide.projectCode.dryerExhaust).map((line) => <li key={line}>{line}</li>)}</ul>
+            )}
+            {exportGuide.projectCode.trades.includes("roofing") && exportGuide.projectCode.shingleRoof && (
+              <ul>{shingleRoofGuideLines(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
+            )}
+            <ProjectCodeRows rows={reviewProjectCode(exportGuide.projectCode, exportGuide).rows} />
+          </section>
+        )}
+        {printSaunaHeater.length > 0 && (
+          <section>
+            <h2>Sauna heater layout review</h2>
+            <p>{saunaHeaterScope}</p>
+            <ul>{printSaunaHeater.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p>{saunaHeaterGuideSources(exportGuide).map(({ label, url }, index) => (
+              <span key={url}>{index > 0 && " · "}<a href={url}>{label}</a></span>
+            ))}</p>
+          </section>
+        )}
+        {printSaunaVentilation.length > 0 && (
+          <section>
+            <h2>Sauna ventilation layout</h2>
+            <p>{saunaVentScope} <a href={saunaVentReference.url}>U.S. STEEL manual, pp. 10–11</a></p>
+            <ul>{printSaunaVentilation.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printSaunaBench.length > 0 && (
+          <section>
+            <h2>Sauna seating layout</h2>
+            <ul>{printSaunaBench.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={cedarbrookBenchInstructions}>Cedarbrook pedestal bench assembly instructions</a></p>
+          </section>
+        )}
+        {printCaseworkTipUp.length > 0 && (
+          <section>
+            <h2>Casework tip-up and placement</h2>
+            <ul>{printCaseworkTipUp.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printSaunaBenchTravel.length > 0 && (
+          <section>
+            <h2>Sauna bench carry-in</h2>
+            <ul>{printSaunaBenchTravel.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printSaunaWalls.length > 0 && (
+          <section>
+            <h2>Sauna wall insulation coverage</h2>
+            <ul>{printSaunaWalls.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p>{saunaWallCoverageScope}</p>
+          </section>
+        )}
+        {printSaunaCeiling.length > 0 && (
+          <section>
+            <h2>Sauna ceiling coverage</h2>
+            <p>Check these modeled dimensions against the actual ceiling assembly, supports and services.</p>
+            <ul>{printSaunaCeiling.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {liningBackingContent && (
+          <section>
+            <h2>Sauna lining backing</h2>
+            {liningBackingContent}
+          </section>
+        )}
+        {printMotions.length > 0 && (
+          <section>
+            <h2>Motion and clearance</h2>
+            <ul>{printMotions.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printGreenhouseLatch.length > 0 && (
+          <section>
+            <h2>Greenhouse door latch layout</h2>
+            <ul>{printGreenhouseLatch.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={everbiltLatch.instructions}>Everbilt 24417 installation instructions</a></p>
+          </section>
+        )}
+        {printDoorStops.length > 0 && (
+          <section>
+            <h2>Fitted greenhouse door stops</h2>
+            <ul>{printDoorStops.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printRodFits.length > 0 && (
+          <section>
+            <h2>Closet rod fits</h2>
+            <ul>{printRodFits.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {[false, true].map((isTool) => {
+          const purchases = supplyPurchases.filter((row) => row.isTool === isTool);
+          return purchases.length > 0 && (
+          <section key={isTool ? "tools" : "supplies"}>
+            <h2>{isTool ? "Tools to buy" : "Hardware and supplies to purchase"}</h2>
+            <p>
+              {isTool ? "User-chosen tool purchases have a separate cost and capability review." : "User-chosen purchase packs. Verify installation and attachment separately."}
+            </p>
+            {purchases.map((r) => (
+              <div key={r.productId}>
+                <h3>
+                  {r.quantity} × {r.purchaseUnit} · {r.name}
+                </h3>
+                <p>
+                  {isTool ? "Package highlights: " : "Each pack: "}
+                  {r.contents
+                    .map(formatSupplyContent)
+                    .join("; ") || "contents unresolved"}
+                  .
+                </p>
+                <p>
+                  {r.total === null ? "UNPRICED" : money(r.total)} ·{" "}
+                  {r.inventory
+                    ? `User-recorded ${r.inventory.available} purchase packs at store ${r.inventory.store}, ZIP ${r.inventory.zip}; checked ${r.inventory.checkedAt}`
+                    : "Stock unverified"}
+                </p>
+                {r.offer && (
+                  <p>
+                    {retailerName(project.retailer)} {r.offer.productId} ·
+                    seller {r.offer.seller} · {r.offer.url}
+                  </p>
+                )}
+                <ul>
+                  {r.selections.map((s) => (
+                    <li key={s.id}>
+                      {s.quantity} packs · {s.purpose} · {s.note}
+                    </li>
+                  ))}
+                </ul>
+                <ul>
+                  {[...r.requirements, ...r.issues].map((text, i) => (
+                    <li key={i}>{text}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+          );
+        })}
         {rows.some((r) => r.rolls.length > 0) && (
           <section>
             <h2>Roll cutting layouts</h2>
@@ -2900,7 +6218,9 @@ export function App() {
                     <tbody>
                       {roll.placements.map((c) => (
                         <tr key={c.id}>
-                          <td>{c.name}</td>
+                          <td>
+                            {partLabel(exportGuide, c.id)} · {c.name}
+                          </td>
                           <td>
                             {c.width} × {c.length} in
                           </td>

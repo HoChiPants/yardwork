@@ -11,6 +11,11 @@ services:
       # OLLAMA_URL: http://host.docker.internal:11434
       # OLLAMA_MODEL: llama3.2
       # CATALOG_URL: https://your-authorized-provider.example/inventory
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4173/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
     restart: unless-stopped
 volumes:
   projects:

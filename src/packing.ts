@@ -18,11 +18,99 @@ export type StockPlan = {
 };
 type Shelf = { x: number; y: number; widthUsed: number; length: number };
 const EPS = 1e-8;
+
+export function stockSplitState(available: number, keep: number, kerf: number) {
+  const remaining = available - keep;
+  if (Math.abs(remaining) <= EPS) return "whole";
+  if (remaining < 0) return "too-long";
+  return remaining < kerf - EPS ? "thin-trim" : "cut";
+}
+
+type BoardBin = {
+  remaining: number;
+  cuts: { id: string; length: number; name: string }[];
+};
+
+/** Reassign cuts among the current unrecorded boards if both boards can still be cut. */
+export function balanceBoardCutEnds(
+  bins: BoardBin[],
+  length: number,
+  kerf: number,
+) {
+  const used = bins.map(({ cuts }) =>
+    cuts.reduce((sum, cut) => sum + cut.length + kerf, 0),
+  );
+  const fits = (total: number) => {
+    const end = stockSplitState(length + kerf, total, kerf);
+    return end === "whole" || end === "cut";
+  };
+
+  for (const [sourceIndex, source] of bins.entries()) {
+    if (fits(used[sourceIndex])) continue;
+    let move:
+      | { cut: number; target: number; swap: number | null; shift: number }
+      | undefined;
+    for (let cutIndex = source.cuts.length - 1; cutIndex >= 0; cutIndex--) {
+      const amount = source.cuts[cutIndex].length + kerf;
+      if (source.cuts.length > 1 && fits(used[sourceIndex] - amount)) {
+        const target = used.findIndex(
+          (total, index) => index !== sourceIndex && fits(total + amount),
+        );
+        if (target !== -1) {
+          move = { cut: cutIndex, target, swap: null, shift: amount };
+          break;
+        }
+      }
+    }
+    if (!move) {
+      for (const [target, board] of bins.entries()) {
+        if (target === sourceIndex) continue;
+        for (const [cut, outgoing] of source.cuts.entries()) {
+          const swap = board.cuts.findIndex((incoming) => {
+            const shift = outgoing.length - incoming.length;
+            return (
+              fits(used[sourceIndex] - shift) && fits(used[target] + shift)
+            );
+          });
+          if (swap !== -1) {
+            move = {
+              cut,
+              target,
+              swap,
+              shift: outgoing.length - board.cuts[swap].length,
+            };
+            break;
+          }
+        }
+        if (move) break;
+      }
+    }
+    if (!move) continue;
+    const destination = bins[move.target];
+    const outgoing = source.cuts[move.cut];
+    if (move.swap === null) {
+      source.cuts.splice(move.cut, 1);
+      destination.cuts.push(outgoing);
+    } else {
+      source.cuts[move.cut] = destination.cuts[move.swap];
+      destination.cuts[move.swap] = outgoing;
+    }
+    used[sourceIndex] -= move.shift;
+    used[move.target] += move.shift;
+    source.remaining = Math.max(0, length - used[sourceIndex]);
+    destination.remaining = Math.max(0, length - used[move.target]);
+  }
+}
+
 export function packRectangles(
   cuts: RectangleCut[],
   width: number,
   length: number,
+  options: { kerf?: number; allowRotation?: boolean } = {},
 ): { plans: StockPlan[]; rejected: RectangleCut[] } {
+  const kerf = options.kerf ?? 0;
+  if (!Number.isFinite(kerf) || kerf < 0)
+    throw Error("Kerf must be a finite nonnegative number.");
   if (
     !Number.isFinite(width) ||
     !Number.isFinite(length) ||
@@ -40,7 +128,9 @@ export function packRectangles(
   for (const cut of ordered) {
     const variants = [
       { width: cut.width, length: cut.length, rotated: false },
-      { width: cut.length, length: cut.width, rotated: true },
+      ...(options.allowRotation === false
+        ? []
+        : [{ width: cut.length, length: cut.width, rotated: true }]),
     ]
       .filter(
         (v) =>
@@ -71,25 +161,25 @@ export function packRectangles(
             x: shelf.widthUsed,
             y: shelf.y,
           });
-          shelf.widthUsed += variant.width;
+          shelf.widthUsed += variant.width + kerf;
           placed = true;
           break;
         }
       }
       if (placed) break;
       const variant = variants.find(
-        (v) => roll.plan.usedLength + v.length <= length + EPS,
+        (v) => roll.plan.usedLength + kerf + v.length <= length + EPS,
       );
       if (variant) {
-        const y = roll.plan.usedLength;
+        const y = roll.plan.usedLength + kerf;
         roll.shelves.push({
           x: 0,
           y,
-          widthUsed: variant.width,
+          widthUsed: variant.width + kerf,
           length: variant.length,
         });
         roll.plan.placements.push({ ...cut, ...variant, x: 0, y });
-        roll.plan.usedLength += variant.length;
+        roll.plan.usedLength = y + variant.length;
         placed = true;
         break;
       }
@@ -103,7 +193,7 @@ export function packRectangles(
           placements: [{ ...cut, ...v, x: 0, y: 0 }],
           usedLength: v.length,
         },
-        shelves: [{ x: 0, y: 0, widthUsed: v.width, length: v.length }],
+        shelves: [{ x: 0, y: 0, widthUsed: v.width + kerf, length: v.length }],
       });
     }
   }

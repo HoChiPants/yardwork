@@ -8,12 +8,53 @@ import {
 import {
   Edges,
   Grid,
+  Html,
   Line,
   OrbitControls,
   TransformControls,
 } from "@react-three/drei";
 import * as THREE from "three";
-import { bounds } from "./engine";
+import { bounds, type Finding } from "./engine";
+import { fitPerspectiveBounds, workshopViewOffset, WORKSHOP_MAX_POLAR_ANGLE, type PerspectiveBounds } from "./cameraFit";
+import { motionViewport, unionBounds } from "./motionCamera";
+import { DryerDuctMarkers } from "./DryerDuctMarkers";
+import { reviewDryerDuctLayout } from "./dryerDuctLayout";
+import type { DryerDuctLayout } from "./dryerExhaustSchema";
+import { clipBox, triangulateSolid } from "./cutProfiles";
+import { pieceThroughOpenings, throughOpeningTriangles } from "./throughOpenings";
+import { alignNearbyFaces, surfacePlacement } from "./editing";
+import { createWoodGroupSlide, createWoodSlide, placeWood, woodSlideStopLabel } from "./placement";
+import { snapSectionOrigin } from "./sections";
+import { liftDistanceInches } from "./editorMotion";
+import { composeRotation } from "./spatial";
+import type { SaunaHeaterReview } from "./saunaHeaters";
+import { SaunaVentilationMarkers } from "./SaunaVentilationMarkers";
+import type { SaunaVentilationReview } from "./saunaVentilation";
+import { cedarbrookLining } from "./saunaLiningReference";
+import type { SunliteProfileRun } from "./sunliteTakeoff";
+import { GreenhouseLatchMarkers } from "./GreenhouseLatchMarkers";
+import { RodSupportMarkers } from "./RodSupportMarkers";
+import { GreenhouseFoundationMarker } from "./GreenhouseFoundationMarker";
+import type { reviewGreenhouseFoundation } from "./greenhouseFoundation";
+import { SiteClearanceMarkers } from "./SiteClearanceMarkers";
+import { PlumbingVentMarkers } from "./PlumbingVentMarkers";
+import { ventLayoutBounds } from "./plumbingVentLayout";
+import type { PlumbingVentLayout } from "./plumbingVentSchema";
+import { CheckAreaMarkers } from "./CheckAreaMarkers";
+import { AttachmentMarkers } from "./AttachmentMarkers";
+import { RestraintMarkers } from "./RestraintMarkers";
+import { DriverAccessMarker } from "./DriverAccessMarker";
+import type { DriverAccessLocation } from "./fastenerAccess";
+import { FastenerMarkers, type FastenerLayoutMarkerPreview } from "./FastenerMarkers";
+import { HingeMarkers } from "./HingeMarkers";
+import { ConnectorMarkers } from "./ConnectorMarkers";
+import type { ConnectorReview } from "./connectors";
+import { FittedStockGeometry, StockGhost } from "./FittedStockGeometry";
+import type { FittedFaceRef, FittedStockPreview } from "./fittedStock";
+import { visibleStagePieces, visibleStockPieces } from "./sceneVisibility";
+import type { MotionPreview } from "./mechanismMotion";
+import { lidAxisSegment, reviewLidTravel, type LidPreview } from "./lidMotion";
+import { formatMeasurement, measureBetween } from "./measurement";
 import {
   material,
   type Piece,
@@ -24,16 +65,62 @@ import {
 export type SceneProps = {
   project: Project;
   selected: string | null;
+  /** Virtual loose stock is optional display data, always retained in Project. */
+  showOffcuts?: boolean;
+  shownSiteClearanceId?: string | null;
+  shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
+  shownPlumbingVentLayout?: PlumbingVentLayout;
+  shownDryerDuctLayout?: DryerDuctLayout;
+  shownCheckArea?: Finding["area"];
+  shownLatchId?: string | null;
+  shownRodSupportId?: string | null;
+  shownProfileRun?: SunliteProfileRun;
+  shownBandingEdge?: { points: [V3, V3]; label: string } | null;
+  shownSaunaHeater?: SaunaHeaterReview | null;
+  shownSaunaVentilation?: SaunaVentilationReview | null;
+  /** Transient read-only pose; never changes the saved project. */
+  lidPreview?: LidPreview | null;
+  motionPreview?: MotionPreview | null;
+  motionBounds?: PerspectiveBounds | null;
+  focusedMotion?: boolean;
+  readOnly?: boolean;
   onSelect: (id: string) => void;
   onMove: (id: string, position: V3, rotation: V3) => void;
   selectedSectionId: string | null;
-  onSectionMove: (id: string, origin: V3, deltaRotation: V3) => void;
-  mode: "select" | "move" | "rotate" | "screw";
+  onSectionMove: (id: string, origin: V3, deltaRotation: V3, previewed?: boolean) => void;
+  mode: "select" | "move" | "lift" | "rotate" | "screw" | "measure" | "fastener" | "fit-face";
+  interferenceIds?: readonly string[];
+  onPickFastenerEntrance?: (pieceId: string, localPoint: V3, localInward: V3) => void;
+  onPickFittedFace?: (pieceId: string, localPoint: V3, localOutward: V3) => void;
+  fittedStockPreview?: FittedStockPreview | null;
+  fittedStockFaces?: { first: FittedFaceRef | null; second: FittedFaceRef | null };
+  baseRailPreview?: Piece | null;
+  guidePartFocus?: { pieceId: string; label: string; isolated: boolean };
+  measurement?: { a: V3 | null; b: V3 | null };
+  onMeasurePoint?: (point: V3) => void;
   snap: boolean;
   explode: boolean;
   xray: boolean;
   stage: number | null;
   view: { preset: string; nonce: number };
+  /** Opt in for a complete padded framing in compact read-only previews. */
+  fitToView?: boolean;
+  animateView?: boolean;
+  showAttachments?: boolean;
+  showRestraints?: boolean;
+  showFasteners?: boolean;
+  driverAccessPreview?: DriverAccessLocation | null;
+  fastenerLayoutPreview?: FastenerLayoutMarkerPreview | null;
+  showHinges?: boolean;
+  showConnectors?: boolean;
+  selectedConnectorPlanId?: string | null;
+  connectorPreview?: ConnectorReview | null;
+  focusedConnectorEntryId?: string | null;
+  selectedFastenerPlanId?: string | null;
+  focusedFastenerLocationId?: string | null;
+  selectedAttachmentPlanId?: string | null;
+  onSelectAttachmentPlan?: (id: string | null) => void;
+  onSelectAttachmentPart?: (id: string) => void;
   onCamera: (camera: THREE.Camera) => void;
 };
 function woodTexture() {
@@ -90,6 +177,41 @@ function wireTexture(size: V3) {
   texture.repeat.set(size[axes[0]] / 4, size[axes[1]] / 4);
   return texture;
 }
+function PedestalBenchMesh({ size, color, texture }: {
+  size: V3;
+  color: string;
+  texture: THREE.Texture;
+}) {
+  const [width, height, depth] = size;
+  const slat = depth / 8;
+  const top = height * 0.16;
+  const leg = height * 0.12;
+  // The drawing suggests the prebuilt top and pedestal. Sizing, measurement
+  // and collision use the verified rectangular envelope.
+  const boxes: { size: V3; at: V3; key: string }[] = [
+    ...Array.from({ length: 8 }, (_, i) => ({
+      size: [width, top, slat * 0.89] as V3,
+      at: [0, (height - top) / 2, (i - 3.5) * slat] as V3,
+      key: `slat-${i}`,
+    })),
+    ...[-1, 1].flatMap((side) => [
+      { size: [width, top, slat * 0.34] as V3, at: [0, height / 2 - top * 1.4, side * (depth - slat * 0.34) / 2] as V3, key: `rail-${side}` },
+      { size: [leg, height - top, leg * 1.1] as V3, at: [side * width * 0.36, -top / 2, 0] as V3, key: `leg-${side}` },
+      { size: [leg * 1.2, leg * 0.6, depth] as V3, at: [side * width * 0.36, -height / 2 + leg * 0.3, 0] as V3, key: `foot-${side}` },
+    ]),
+    { size: [width * 0.72, leg * 0.65, leg * 0.7], at: [0, -height * 0.23, 0], key: "brace" },
+  ];
+  return (
+    <group>
+      {boxes.map((box) => (
+        <mesh key={box.key} position={box.at} castShadow receiveShadow>
+          <boxGeometry args={box.size} />
+          <meshStandardMaterial color={color} map={texture} roughness={0.9} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 function PartMesh({
   piece,
   selected,
@@ -98,6 +220,15 @@ function PartMesh({
   explode,
   stepIndex,
   texture,
+  onPointerDown,
+  measuring = false,
+  onMeasurePoint,
+  fastenerPicking = false,
+  onPickFastenerEntrance,
+  fittedFacePicking = false,
+  onPickFittedFace,
+  readOnly = false,
+  interference = false,
 }: {
   piece: Piece;
   selected: boolean;
@@ -106,6 +237,15 @@ function PartMesh({
   explode: boolean;
   stepIndex: number;
   texture: THREE.Texture;
+  onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
+  measuring?: boolean;
+  onMeasurePoint?: (point: V3) => void;
+  fastenerPicking?: boolean;
+  onPickFastenerEntrance?: SceneProps["onPickFastenerEntrance"];
+  fittedFacePicking?: boolean;
+  onPickFittedFace?: SceneProps["onPickFittedFace"];
+  readOnly?: boolean;
+  interference?: boolean;
 }) {
   const mesh = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
@@ -115,8 +255,54 @@ function PartMesh({
     [piece.material, ...piece.size],
   );
   useEffect(() => () => wire?.dispose(), [wire]);
+  const profile = useMemo(() => {
+    const openings = pieceThroughOpenings(piece);
+    if (!piece.cutPlanes?.length && !openings.length) return null;
+    const through = openings.length
+      ? throughOpeningTriangles(piece.size, openings)
+      : null;
+    const triangles = through ?? triangulateSolid(clipBox(piece.size, piece.cutPlanes));
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(
+        triangles.positions.map((v) => v / 12),
+        3,
+      ),
+    );
+    geometry.setAttribute(
+      "normal",
+      new THREE.Float32BufferAttribute(triangles.normals, 3),
+    );
+    const uv: number[] = [];
+    for (let i = 0; i < triangles.positions.length; i += 3) {
+      const normalMagnitude = triangles.normals.slice(i, i + 3).map(Math.abs);
+      const dominant = normalMagnitude.indexOf(Math.max(...normalMagnitude));
+      const u = (dominant + 1) % 3,
+        v = (dominant + 2) % 3;
+      uv.push(
+        triangles.positions[i + u] / piece.size[u] + 0.5,
+        triangles.positions[i + v] / piece.size[v] + 0.5,
+      );
+    }
+    geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+    const outline = through ? new THREE.BufferGeometry().setAttribute(
+      "position", new THREE.Float32BufferAttribute(through.outline.map((v) => v / 12), 3),
+    ) : null;
+    return { geometry, outline };
+  }, [piece.cutPlanes, piece.roundOpenings, piece.rectangularOpenings, ...piece.size]);
+  useEffect(() => () => {
+    profile?.geometry.dispose();
+    profile?.outline?.dispose();
+  }, [profile]);
   const m = material(piece.material);
-  const wood = ["stud", "treated", "post", "plywood"].includes(piece.material);
+  const wood = m.wood;
+  const seeThrough = xray && (
+    ["siding", "roof", cedarbrookLining.materialId].includes(piece.material) ||
+    m.shape === "door-leaf-envelope" || m.orderRollWidth !== undefined
+  );
   useEffect(() => {
     mesh.current?.scale.setScalar(0.9);
   }, [...piece.size]);
@@ -141,50 +327,184 @@ function PartMesh({
         invalidate();
     }
   });
+  const color = interference ? "#d64e39" : selected ? "#f2a16b" : piece.offcut ? "#b5ada0" : m.color;
+  const size = piece.size.map((v) => v / 12) as V3;
+  const metal = (
+    <meshStandardMaterial color={color} metalness={0.65} roughness={0.45} />
+  );
+  const radius =
+    (m.headDiameter ? m.headDiameter / 12 : Math.min(size[0], size[2])) / 2;
+  const shankRadius = m.shankDiameter ? m.shankDiameter / 24 : radius * 0.42;
+  const headHeight = Math.min(size[1] * 0.05, 0.008);
+  const leg = Math.min(size[0], size[1], size[2]) * 0.07;
   return (
     <group ref={mesh} scale={[0.92, 0.92, 0.92]}>
-      <mesh
-        castShadow
-        receiveShadow
+      <group
+        onPointerDown={readOnly || measuring || fastenerPicking || fittedFacePicking ? undefined : onPointerDown}
         onClick={(e: ThreeEvent<MouseEvent>) => {
+          if (readOnly) return;
           e.stopPropagation();
+          if (fittedFacePicking) {
+            if (e.button === 0 && e.delta <= 4 && e.face) {
+              const local = e.object.worldToLocal(e.point.clone()).multiplyScalar(12);
+              onPickFittedFace?.(piece.id, local.toArray() as V3, e.face.normal.clone().normalize().toArray() as V3);
+            }
+            return;
+          }
+          if (fastenerPicking) {
+            if (e.button === 0 && e.delta <= 4 && e.face) {
+              const local = e.object.worldToLocal(e.point.clone()).multiplyScalar(12);
+              onPickFastenerEntrance?.(piece.id, local.toArray() as V3, e.face.normal.clone().negate().normalize().toArray() as V3);
+            }
+            return;
+          }
+          if (measuring) {
+            if (e.button === 0 && e.delta <= 4)
+              onMeasurePoint?.(e.point.toArray().map((v) => v * 12) as V3);
+            return;
+          }
           onSelect(piece.id);
         }}
         onPointerOver={(e) => {
+          if (readOnly) return;
           e.stopPropagation();
-          document.body.style.cursor = "pointer";
+          document.body.style.cursor = measuring || fastenerPicking || fittedFacePicking ? "crosshair" : "grab";
         }}
         onPointerOut={() => (document.body.style.cursor = "auto")}
       >
-        <boxGeometry args={piece.size.map((v) => v / 12) as V3} />
-        <meshStandardMaterial
-          color={selected ? "#f2a16b" : piece.offcut ? "#b5ada0" : m.color}
-          map={wire ?? (wood ? texture : null)}
-          alphaTest={wire ? 0.15 : 0}
-          roughness={piece.material === "roof" ? 0.6 : 0.9}
-          metalness={piece.material === "roof" ? 0.4 : 0}
-          transparent={xray || piece.offcut || piece.material === "mesh"}
-          opacity={
-            piece.offcut
-              ? 0.45
-              : xray && ["siding", "roof"].includes(piece.material)
-                ? 0.16
-                : piece.material === "mesh"
-                  ? 0.85
-                  : 1
-          }
-          wireframe={false}
-        />
-        <Edges
-          threshold={25}
-          color={selected ? "#f28146" : "#3c392b"}
-          opacity={selected ? 0.9 : 0.14}
-          transparent
-        />
-      </mesh>
+        {m.shape === "pedestal-bench-envelope" && !measuring && !fastenerPicking && !fittedFacePicking ? (
+          <PedestalBenchMesh size={size} color={color} texture={texture} />
+        ) : m.shape === "tube-envelope" ? (
+          <mesh castShadow receiveShadow>
+            <cylinderGeometry
+              args={[size[0] / 2, size[2] / 2, size[1], 24, 1, true]}
+            />
+            <meshStandardMaterial
+              color={color}
+              side={THREE.DoubleSide}
+              metalness={0.6}
+              roughness={0.35}
+              transparent={xray || piece.offcut}
+              opacity={piece.offcut ? 0.45 : 1}
+            />
+            <Edges color={selected ? "#f28146" : "#646b67"} />
+          </mesh>
+        ) : m.stockKind === "fastener" ? (
+          <group>
+            <mesh castShadow receiveShadow>
+              <cylinderGeometry
+                args={[
+                  shankRadius,
+                  shankRadius * 0.4,
+                  size[1] - headHeight,
+                  10,
+                ]}
+              />
+              {metal}
+            </mesh>
+            <mesh position={[0, (size[1] - headHeight) / 2, 0]} castShadow>
+              <cylinderGeometry args={[radius, radius, headHeight, 14]} />
+              {metal}
+            </mesh>
+            {piece.material !== "nail" &&
+              m.fastenerType !== "nail" &&
+              Array.from({ length: 6 }, (_, i) => (
+                <mesh
+                  key={i}
+                  position={[0, -size[1] * 0.3 + (i * size[1]) / 10, 0]}
+                  rotation={[Math.PI / 2, 0, 0]}
+                >
+                  <torusGeometry args={[radius * 0.45, radius * 0.12, 4, 10]} />
+                  {metal}
+                </mesh>
+              ))}
+          </group>
+        ) : m.stockKind === "connector" ? (
+          <group>
+            <mesh
+              position={[0, -size[1] / 2 + leg / 2, 0]}
+              castShadow
+              receiveShadow
+            >
+              <boxGeometry args={[size[0], leg, size[2]]} />
+              {metal}
+              <Edges
+                color={selected ? "#f28146" : "#3c392b"}
+                transparent
+                opacity={0.3}
+              />
+            </mesh>
+            <mesh
+              position={[-size[0] / 2 + leg / 2, 0, 0]}
+              castShadow
+              receiveShadow
+            >
+              <boxGeometry args={[leg, size[1], size[2]]} />
+              {metal}
+              <Edges
+                color={selected ? "#f28146" : "#3c392b"}
+                transparent
+                opacity={0.3}
+              />
+            </mesh>
+          </group>
+        ) : (
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={profile?.geometry}
+          >
+            {!profile && <boxGeometry args={size} />}
+            <meshStandardMaterial
+              color={color}
+              map={wire ?? (wood || m.stockKind === "equipment" ? texture : null)}
+              alphaTest={wire ? 0.15 : 0}
+              roughness={piece.material === "roof" ? 0.6 : 0.9}
+              metalness={piece.material === "roof" ? 0.4 : 0}
+              transparent={
+                xray ||
+                piece.offcut ||
+                piece.material === "mesh" ||
+                m.shape === "glazing-envelope"
+              }
+              opacity={
+                piece.offcut
+                  ? 0.45
+                  : seeThrough
+                    ? 0.16
+                    : m.shape === "glazing-envelope"
+                      ? 0.38
+                      : piece.material === "mesh"
+                        ? 0.85
+                        : 1
+              }
+            />
+            {profile?.outline ? (
+              <lineSegments geometry={profile.outline} raycast={() => null}>
+                <lineBasicMaterial color={selected ? "#f28146" : "#3c392b"} opacity={selected ? 0.9 : 0.35} transparent />
+              </lineSegments>
+            ) : (
+              <Edges
+                threshold={25}
+                color={selected ? "#f28146" : m.orderRollWidth ? "#4f6e7e" : "#3c392b"}
+                opacity={selected ? 0.9 : m.orderRollWidth ? 0.5 : 0.14}
+                transparent
+              />
+            )}
+          </mesh>
+        )}
+      </group>
     </group>
   );
 }
+
+function setContactMarker(marker: HTMLSpanElement | null, message: string) {
+  // Updating the marker without rerendering keeps TransformControls attached during the gesture.
+  if (!marker || marker.textContent === message) return;
+  marker.textContent = message;
+  marker.hidden = !message;
+}
+
 function PlacedPart({
   p,
   props,
@@ -195,9 +515,204 @@ function PlacedPart({
   texture: THREE.Texture;
 }) {
   const ref = useRef<THREE.Group>(null!);
+  const { gl, camera, controls, invalidate } = useThree();
+  const gestureCleanup = useRef<(() => void) | null>(null);
+  const gizmoSlide = useRef<ReturnType<typeof createWoodSlide>>(null);
+  const placementContact = useRef<HTMLSpanElement>(null);
+  function showPlacementContact(message: string) {
+    setContactMarker(placementContact.current, message);
+  }
+  useEffect(() => () => gestureCleanup.current?.(), []);
+  useEffect(() => {
+    gizmoSlide.current = null;
+    showPlacementContact("");
+  }, [props.mode]);
+  const beginDrag = (event: ThreeEvent<PointerEvent>) => {
+    if (
+      event.button !== 0 ||
+      props.readOnly ||
+      (props.mode !== "select" && props.mode !== "lift") ||
+      props.stage !== null ||
+      props.explode
+    )
+      return;
+    // Precision tools own their pointer stream; a mesh drag must never
+    // overwrite a gizmo transform when both overlap on screen.
+    event.stopPropagation();
+    props.onSelect(p.id);
+    gestureCleanup.current?.();
+    const startX = event.clientX,
+      startY = event.clientY;
+    const startPosition = [...p.position] as V3,
+      startRotation = [...p.rotation] as V3;
+    const lift = props.mode === "lift" || event.altKey;
+    const rotate = event.shiftKey && !lift;
+    const slide = rotate ? null : createWoodSlide(props.project, p);
+    const liftCameraDistance = camera.position.distanceTo(event.point);
+    const liftViewportHeight = gl.domElement.getBoundingClientRect().height;
+    const plane = new THREE.Plane(
+      new THREE.Vector3(0, 1, 0),
+      -p.position[1] / 12,
+    );
+    const ray = new THREE.Raycaster();
+    const pointAt = (x: number, y: number, height = p.position[1] / 12) => {
+      const rect = gl.domElement.getBoundingClientRect();
+      ray.setFromCamera(
+        new THREE.Vector2(
+          ((x - rect.left) / rect.width) * 2 - 1,
+          -((y - rect.top) / rect.height) * 2 + 1,
+        ),
+        camera,
+      );
+      plane.constant = -height;
+      return ray.ray.intersectPlane(plane, new THREE.Vector3());
+    };
+    const grabOffset = event.point
+      .toArray()
+      .map((v, i) => v * 12 - startPosition[i]) as V3;
+    const bottom = bounds({ ...p, position: [0, 0, 0] }).min[1];
+    const orbit = controls as unknown as
+      | { enabled: boolean; dispatchEvent?: (event: { type: string }) => void }
+      | undefined;
+    const previousEnabled = orbit?.enabled;
+    if (orbit) {
+      orbit.enabled = false;
+      orbit.dispatchEvent?.({ type: "start" });
+    }
+    let changed = false;
+    let position = [...startPosition] as V3,
+      rotation = [...startRotation] as V3;
+    const preview = () => {
+      if (!ref.current) return;
+      ref.current.position.set(...(position.map((v) => v / 12) as V3));
+      ref.current.rotation.set(...rotation);
+      invalidate();
+    };
+    const move = (e: PointerEvent) => {
+      if (e.pointerId !== event.pointerId) return;
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) < 4 && !changed)
+        return;
+      changed = true;
+      try {
+        if (lift) {
+          const delta = liftDistanceInches(
+            e.clientY - startY,
+            liftCameraDistance,
+            liftViewportHeight,
+            (camera as THREE.PerspectiveCamera).fov ?? 38,
+          );
+          position = [
+            startPosition[0],
+            startPosition[1] + (props.snap ? Math.round(delta) : delta),
+            startPosition[2],
+          ];
+        } else if (rotate) {
+          let angle = (e.clientX - startX) * 0.012;
+          if (props.snap)
+            angle = Math.round(angle / (Math.PI / 12)) * (Math.PI / 12);
+          rotation = composeRotation([0, angle, 0], startRotation);
+        } else {
+          // Pick the supporting face first, then preserve the actual grabbed point
+          // at the new height so a board does not jump when the gesture starts.
+          pointAt(e.clientX, e.clientY);
+          const surface = surfacePlacement(
+            props.project,
+            ray.ray.origin.toArray().map((v) => v * 12) as V3,
+            ray.ray.direction.toArray() as V3,
+            p.id,
+          );
+          if (!surface) return;
+          const centerY = Math.max(startPosition[1], surface[1] - bottom);
+          const point = pointAt(
+            e.clientX,
+            e.clientY,
+            (centerY + grabOffset[1]) / 12,
+          );
+          if (!point) return;
+          position = [
+            point.x * 12 - grabOffset[0],
+            centerY,
+            point.z * 12 - grabOffset[2],
+          ];
+          if (props.snap) {
+            position = [
+              Math.round(position[0]),
+              position[1],
+              Math.round(position[2]),
+            ];
+            position = alignNearbyFaces(props.project, p, position, rotation);
+          }
+        }
+        if (slide) {
+          // A surface drag can raise the piece before it moves across a supporting face.
+          const raised = slide([startPosition[0], position[1], startPosition[2]]);
+          const placed = lift
+            ? raised
+            : slide(
+                [position[0], raised.position[1], position[2]],
+                raised.position,
+              );
+          position = placed.position;
+          showPlacementContact(
+            woodSlideStopLabel(props.project, placed.stop ?? raised.stop),
+          );
+        } else {
+          const clear = placeWood(
+            props.project,
+            p,
+            position,
+            rotation,
+            lift ? 1 : undefined,
+          );
+          position = clear.blocked ? startPosition : clear.position;
+          if (clear.blocked) rotation = startRotation;
+          showPlacementContact(clear.blocked ? "Choose a clear position" : "");
+        }
+      } catch {
+        position = startPosition;
+        rotation = startRotation;
+        showPlacementContact("Review the overlapping parts");
+      }
+      preview();
+    };
+    const cleanup = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("keydown", keydown);
+      if (orbit && previousEnabled !== undefined)
+        orbit.enabled = previousEnabled;
+      document.body.style.cursor = "auto";
+      gestureCleanup.current = null;
+      showPlacementContact("");
+    };
+    const cancel = () => {
+      position = startPosition;
+      rotation = startRotation;
+      preview();
+      cleanup();
+    };
+    const finish = (e: PointerEvent) => {
+      if (e.pointerId !== event.pointerId) return;
+      cleanup();
+      if (changed) props.onMove(p.id, position, rotation);
+    };
+    const keydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        cancel();
+      }
+    };
+    gestureCleanup.current = cancel;
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", cancel);
+    window.addEventListener("keydown", keydown);
+    document.body.style.cursor = rotate ? "ew-resize" : "grabbing";
+  };
   const selected = props.selected === p.id;
   const transform =
-    selected && (props.mode === "move" || props.mode === "rotate");
+    selected && !props.readOnly && (props.mode === "move" || props.mode === "rotate");
   const mesh = (
     <group
       ref={ref}
@@ -209,10 +724,27 @@ function PlacedPart({
         selected={selected}
         onSelect={props.onSelect}
         xray={props.xray}
-        explode={props.explode && !selected}
+        explode={props.mode !== "measure" && props.mode !== "fastener" && props.mode !== "fit-face" && props.explode && !selected}
         stepIndex={props.project.steps.findIndex((s) => s.id === p.stepId)}
         texture={texture}
+        onPointerDown={beginDrag}
+        measuring={props.mode === "measure"}
+        onMeasurePoint={props.onMeasurePoint}
+        fastenerPicking={props.mode === "fastener"}
+        onPickFastenerEntrance={props.onPickFastenerEntrance}
+        fittedFacePicking={props.mode === "fit-face"}
+        onPickFittedFace={props.onPickFittedFace}
+        readOnly={props.readOnly}
+        interference={props.lidPreview?.interferenceIds?.includes(p.id) ||
+          props.lidPreview?.stayArmHitIds?.includes(p.id) ||
+          (props.lidPreview?.piece.id === p.id && !!(props.lidPreview.siteFaceHits?.length || props.lidPreview.interferenceIds?.length)) ||
+          props.interferenceIds?.includes(p.id)}
       />
+      {selected && !props.readOnly && (
+        <Html center position={[0, 0, 0]} style={{ pointerEvents: "none" }}>
+          <span ref={placementContact} className="placement-contact" role="status" hidden />
+        </Html>
+      )}
     </group>
   );
   if (transform)
@@ -224,14 +756,42 @@ function PlacedPart({
         size={0.8}
         translationSnap={props.snap ? 1 / 12 : null}
         rotationSnap={props.snap ? Math.PI / 12 : null}
+        onMouseDown={() => {
+          gizmoSlide.current = props.mode === "move" ? createWoodSlide(props.project, p) : null;
+        }}
+        onObjectChange={() => {
+          const obj=ref.current;if(!obj)return;
+          try {
+            const position=obj.position.toArray().map((n)=>n*12) as V3;
+            if (gizmoSlide.current) {
+              const placed = gizmoSlide.current(position);
+              obj.position.set(...(placed.position.map((n) => n / 12) as V3));
+              showPlacementContact(woodSlideStopLabel(props.project, placed.stop));
+              invalidate();
+              return;
+            }
+            const axes=[0,1,2].filter((i)=>Math.abs(position[i]-p.position[i])>1e-7);
+            const clear=placeWood(props.project,p,position,[obj.rotation.x,obj.rotation.y,obj.rotation.z],props.mode==="move"&&axes.length===1?axes[0] as 0|1|2:undefined);
+            obj.position.set(...((clear.blocked?p.position:clear.position).map((n)=>n/12) as V3));
+            if (clear.blocked) obj.rotation.set(...p.rotation);
+            showPlacementContact(clear.blocked ? "Choose a clear position" : "");
+            invalidate();
+          } catch {
+            obj.position.set(...(p.position.map((n)=>n/12) as V3));
+            obj.rotation.set(...p.rotation);
+            showPlacementContact("Review the overlapping parts");
+          }
+        }}
         onMouseUp={() => {
           const obj = ref.current;
+          gizmoSlide.current = null;
+          showPlacementContact("");
           if (obj)
             props.onMove(
               p.id,
               obj.position
                 .toArray()
-                .map((v) => Math.round(v * 12 * 1000) / 1000) as V3,
+                .map((v) => v * 12) as V3,
               [obj.rotation.x, obj.rotation.y, obj.rotation.z],
             );
         }}
@@ -253,6 +813,17 @@ function SectionGroup({
   texture: THREE.Texture;
 }) {
   const group = useRef<THREE.Group>(null!);
+  const contact = useRef<HTMLSpanElement>(null);
+  const slide = useRef<ReturnType<typeof createWoodGroupSlide>>(null);
+  const stopped = useRef(false);
+  const translating = props.mode === "move" || props.mode === "lift";
+  const invalidate = useThree((state) => state.invalidate);
+  const memberBounds = pieces.length ? unionBounds(pieces.map(bounds)) : null;
+  const labelPoint = section.origin.map((n, i) =>
+    memberBounds
+      ? ((memberBounds.min[i] + memberBounds.max[i]) / 2 - n) / 12
+      : 0,
+  ) as V3;
   const content = (
     <group
       ref={group}
@@ -273,32 +844,100 @@ function SectionGroup({
             onSelect={props.onSelect}
             xray={props.xray}
             explode={false}
+            interference={props.interferenceIds?.includes(p.id)}
             stepIndex={0}
             texture={texture}
+            measuring={props.mode === "measure"}
+            onMeasurePoint={props.onMeasurePoint}
           />
         </group>
       ))}
+      {translating && (
+        <Html center position={labelPoint} style={{ pointerEvents: "none" }}>
+          <span
+            ref={contact}
+            className="placement-contact"
+            role="status"
+            hidden
+          />
+        </Html>
+      )}
     </group>
   );
-  if (props.mode !== "move" && props.mode !== "rotate") return content;
+  if (props.mode !== "move" && props.mode !== "rotate" && props.mode !== "lift")
+    return content;
   return (
     <TransformControls
       object={group}
       enabled
-      mode={props.mode === "move" ? "translate" : "rotate"}
+      mode={props.mode === "rotate" ? "rotate" : "translate"}
+      showX={props.mode !== "lift"}
+      showZ={props.mode !== "lift"}
       size={0.8}
       translationSnap={props.snap ? 1 / 12 : null}
       rotationSnap={props.snap ? Math.PI / 12 : null}
+      onMouseDown={() => {
+        stopped.current = false;
+        if (!translating) return;
+        const ids = new Set(section.pieceIds);
+        const members = props.project.pieces.filter((piece) =>
+          ids.has(piece.id),
+        );
+        slide.current = createWoodGroupSlide(
+          props.project,
+          members,
+          section.origin,
+        );
+      }}
+      onObjectChange={() => {
+        const obj = group.current;
+        if (!obj || !translating || !slide.current) return;
+        const target = obj.position.toArray().map((n) => n * 12) as V3;
+        if (props.mode === "lift") {
+          target[0] = section.origin[0];
+          target[2] = section.origin[2];
+        }
+        const placed = slide.current(target);
+        stopped.current = placed.stop !== null;
+        obj.position.set(...(placed.position.map((n) => n / 12) as V3));
+        setContactMarker(
+          contact.current,
+          woodSlideStopLabel(props.project, placed.stop),
+        );
+        invalidate();
+      }}
       onMouseUp={() => {
         const obj = group.current;
-        if (obj)
-          props.onSectionMove(
-            section.id,
-            obj.position
-              .toArray()
-              .map((v) => Math.round(v * 12 * 1000) / 1000) as V3,
-            [obj.rotation.x, obj.rotation.y, obj.rotation.z],
-          );
+        const finishSlide = translating ? slide.current : null;
+        slide.current = null;
+        setContactMarker(contact.current, "");
+        if (!obj) return;
+        let origin = obj.position.toArray().map((n) => n * 12) as V3;
+        if (finishSlide && props.snap && !stopped.current) {
+          try {
+            const axes = [0, 1, 2].filter(
+              (i) => Math.abs(origin[i] - section.origin[i]) > 1e-7,
+            );
+            const snapped = snapSectionOrigin(
+              props.project,
+              section.id,
+              origin,
+              section.rotation,
+              0.8,
+              axes,
+            );
+            const placed = finishSlide(snapped);
+            if (!placed.stop) origin = placed.position;
+          } catch {
+            // The commit path validates the preview position if a snap cannot be resolved.
+          }
+        }
+        props.onSectionMove(
+          section.id,
+          origin,
+          [obj.rotation.x, obj.rotation.y, obj.rotation.z],
+          !!finishSlide,
+        );
       }}
     >
       {content}
@@ -354,80 +993,296 @@ function CameraRig({
   view,
   project,
   onCamera,
+  fitToView = false,
+  animateView = !fitToView,
+  motionBounds = null,
+  siteBounds = null,
+  framePieces,
+  stockFrameKey,
 }: {
   view: SceneProps["view"];
   project: Project;
   onCamera: SceneProps["onCamera"];
+  fitToView?: boolean;
+  animateView?: boolean;
+  motionBounds?: PerspectiveBounds | null;
+  siteBounds?: PerspectiveBounds | null;
+  framePieces: readonly Piece[];
+  stockFrameKey: string;
 }) {
-  const { camera, invalidate } = useThree();
+  const { camera, gl, invalidate, size } = useThree();
   const controls = useRef<any>(null);
   const destination = useRef(new THREE.Vector3(12, 9, 14));
   const target = useRef(new THREE.Vector3(0, 3, 0));
   const moving = useRef(false);
+  const framedBounds = useRef<PerspectiveBounds | null>(null);
   useEffect(() => {
     onCamera(camera);
   }, [camera, onCamera]);
   useEffect(() => {
-    const active = project.pieces.filter((x) => !x.offcut);
+    const active = framePieces;
     let min = [-36, 0, -24],
       max = [36, 84, 24];
+    const zone = project.workZone;
+    if (zone && !active.length) {
+      min = [-zone.width / 2, 0, -zone.depth / 2];
+      max = [zone.width / 2, zone.height, zone.depth / 2];
+    }
     if (active.length) {
       const bs = active.map(bounds);
       min = [0, 1, 2].map((i) => Math.min(...bs.map((b) => b.min[i])));
       max = [0, 1, 2].map((i) => Math.max(...bs.map((b) => b.max[i])));
     }
+    const overlayBounds = motionBounds ?? siteBounds;
+    if (overlayBounds) {
+      const combined = siteBounds && !active.length && !zone
+        ? overlayBounds
+        : unionBounds([{ min: min as V3, max: max as V3 }, overlayBounds]);
+      min = combined.min;
+      max = combined.max;
+    }
+    const worldBounds = {
+      min: min.map((n) => n / 12) as V3,
+      max: max.map((n) => n / 12) as V3,
+    };
+    framedBounds.current = motionBounds ? worldBounds : null;
     const center = new THREE.Vector3(
       ...(min.map((v, i) => (v + max[i]) / 24) as V3),
     );
     const radius = Math.max(6, ...max.map((v, i) => (v - min[i]) / 12));
     target.current = center;
-    const offset =
-      view.preset === "top"
-        ? new THREE.Vector3(0, radius * 1.8, 0.01)
-        : view.preset === "front"
-          ? new THREE.Vector3(0, 0, radius * 1.8)
-          : new THREE.Vector3(radius * 1.2, radius * 0.85, radius * 1.35);
+    const offset = new THREE.Vector3(...workshopViewOffset(view.preset, radius));
     destination.current = center.clone().add(offset);
-    moving.current = true;
+    if (fitToView && camera instanceof THREE.PerspectiveCamera) {
+      const fitted = fitPerspectiveBounds(
+        worldBounds,
+        {
+          verticalFovDegrees: camera.fov,
+          aspect: Math.max(1, size.width) / Math.max(1, size.height),
+          direction: offset.toArray() as V3,
+          padding: 1.1,
+          minDistance: 2,
+          nearClip: camera.near,
+          viewportInsets: overlayBounds ? motionViewport(size.width, size.height).insets : undefined,
+        },
+      );
+      destination.current.set(...fitted.position);
+      if (animateView) moving.current = true;
+      else {
+        camera.position.copy(destination.current);
+        controls.current?.target.copy(center);
+        controls.current?.update();
+        moving.current = false;
+      }
+    } else moving.current = true;
     invalidate();
-  }, [view.nonce, view.preset]);
+  }, [
+    view.nonce,
+    view.preset,
+    fitToView,
+    animateView,
+    fitToView ? size.width : 0,
+    fitToView ? size.height : 0,
+    project.workZone?.width,
+    project.workZone?.depth,
+    project.workZone?.height,
+    motionBounds,
+    siteBounds,
+    stockFrameKey,
+  ]);
   useFrame((_, dt) => {
     if (moving.current && controls.current) {
       camera.position.lerp(destination.current, Math.min(1, dt * 5));
       controls.current.target.lerp(target.current, Math.min(1, dt * 5));
       controls.current.update();
       invalidate();
-      if (camera.position.distanceTo(destination.current) < 0.03)
+      if (camera.position.distanceTo(destination.current) < 0.005 && controls.current.target.distanceTo(target.current) < 0.005) {
+        camera.position.copy(destination.current);
+        controls.current.target.copy(target.current);
+        controls.current.update();
         moving.current = false;
+      }
     }
+    camera.updateMatrixWorld();
+    gl.domElement.dataset.workshopCamera = JSON.stringify({
+      position: camera.position.toArray(),
+      projectionMatrix: camera.projectionMatrix.elements,
+      matrixWorldInverse: camera.matrixWorldInverse.elements,
+      viewport: { width: size.width, height: size.height },
+      settled: !moving.current,
+      units: "feet",
+    });
+    if (motionBounds && framedBounds.current) {
+      camera.updateMatrixWorld();
+      gl.domElement.dataset.motionCamera = JSON.stringify({
+        position: camera.position.toArray(),
+        quaternion: camera.quaternion.toArray(),
+        projectionMatrix: camera.projectionMatrix.toArray(),
+        matrixWorldInverse: camera.matrixWorldInverse.toArray(),
+        target: controls.current?.target.toArray() ?? target.current.toArray(),
+        settled: !moving.current,
+        framingBounds: framedBounds.current,
+        safeRect: motionViewport(size.width, size.height).safeRect,
+        viewport: { width: size.width, height: size.height },
+        units: "feet",
+      });
+    } else delete gl.domElement.dataset.motionCamera;
   });
   return (
     <OrbitControls
       ref={controls}
       makeDefault
+      // A demand-rendered scrub must not resume leftover orbit inertia.
+      enableDamping={!motionBounds}
+      mouseButtons={{
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.PAN,
+        RIGHT: THREE.MOUSE.ROTATE,
+      }}
       minDistance={2}
       maxDistance={400}
-      maxPolarAngle={Math.PI / 2 - 0.01}
+      maxPolarAngle={WORKSHOP_MAX_POLAR_ANGLE}
       target={[0, 3, 0]}
       onStart={() => (moving.current = false)}
     />
   );
 }
+function WorkZone({ project }: { project: Project }) {
+  const zone = project.workZone;
+  if (!zone) return null;
+  const w = zone.width / 24,
+    d = zone.depth / 24,
+    h = zone.height / 12;
+  const floor: V3[] = [
+    [-w, 0.015, -d],
+    [w, 0.015, -d],
+    [w, 0.015, d],
+    [-w, 0.015, d],
+    [-w, 0.015, -d],
+  ];
+  return (
+    <group>
+      <mesh
+        position={[0, 0.005, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        raycast={() => null}
+      >
+        <planeGeometry args={[w * 2, d * 2]} />
+        <meshBasicMaterial
+          color="#a8bc95"
+          transparent
+          opacity={0.15}
+          depthWrite={false}
+        />
+      </mesh>
+      <Line points={floor} color="#6a8754" lineWidth={2} raycast={() => null} />
+      <Line
+        points={floor.map(([x, , z]) => [x, h, z]) as V3[]}
+        color="#8ba279"
+        lineWidth={1}
+        dashed
+        dashSize={0.2}
+        gapSize={0.15}
+        raycast={() => null}
+      />
+      {floor.slice(0, 4).map(([x, , z], i) => (
+        <Line
+          key={i}
+          points={[
+            [x, 0, z],
+            [x, h, z],
+          ]}
+          color="#8ba279"
+          lineWidth={1}
+          dashed
+          dashSize={0.2}
+          gapSize={0.15}
+          raycast={() => null}
+        />
+      ))}
+    </group>
+  );
+}
+function Measurement({
+  measurement,
+}: {
+  measurement: SceneProps["measurement"];
+}) {
+  const a = measurement?.a,
+    b = measurement?.b;
+  if (!a) return null;
+  const first = a.map((v) => v / 12) as V3;
+  const second = b?.map((v) => v / 12) as V3;
+  const midpoint = second
+    ? (first.map((v, i) => (v + second[i]) / 2) as V3)
+    : first;
+  return (
+    <group>
+      {[first, ...(second ? [second] : [])].map((point, i) => (
+        <mesh key={i} position={point} renderOrder={1000} raycast={() => null}>
+          <sphereGeometry args={[0.045, 14, 10]} />
+          <meshBasicMaterial color="#287c9b" depthTest={false} />
+        </mesh>
+      ))}
+      {second && (
+        <Line
+          points={[first, second]}
+          color="#287c9b"
+          lineWidth={2}
+          depthTest={false}
+          renderOrder={1000}
+          raycast={() => null}
+        />
+      )}
+      <Html
+        center
+        position={[midpoint[0], midpoint[1] + 0.18, midpoint[2]]}
+        style={{
+          pointerEvents: "none",
+          whiteSpace: "nowrap",
+          color: "#145c76",
+          fontSize: 12,
+          fontWeight: 600,
+          background: "#f4fcffeF",
+          border: "1px solid #8eb8c8",
+          borderRadius: 5,
+          padding: "5px 8px",
+        }}
+      >
+        <span data-testid="measurement-label">
+          {b
+            ? formatMeasurement(measureBetween(a, b).distance)
+            : "Start point · choose end point"}
+        </span>
+      </Html>
+    </group>
+  );
+}
 function World(props: SceneProps) {
+  const renderer = useThree((state) => state.gl);
   const texture = useMemo(woodTexture, []);
   useEffect(() => () => texture.dispose(), [texture]);
-  const visible =
-    props.stage === null
-      ? props.project.pieces
-      : props.project.pieces.filter(
-          (p) =>
-            props.project.steps.findIndex((s) => s.id === p.stepId) <=
-            props.stage!,
-        );
+  const vent = props.shownPlumbingVentLayout;
+  const ductLayout = props.shownDryerDuctLayout;
+  const ductRuns = useMemo(() => ductLayout ? reviewDryerDuctLayout(props.project, ductLayout) : [], [props.project, ductLayout]);
+  const siteBounds = useMemo(() => vent ? ventLayoutBounds(vent) : ductRuns.length ? unionBounds(ductRuns.map(({ bounds }) => bounds)) : null, [vent, ductRuns]);
+  const assemblyOnly = !!vent || !!ductLayout || !!props.guidePartFocus || !!props.motionPreview || !!props.lidPreview || !!props.fittedStockFaces || !!props.showFasteners || !!props.showConnectors || !!props.showHinges || !!props.showAttachments || !!props.showRestraints || props.mode === "fit-face" || props.mode === "fastener";
+  const selectedOffcut = props.project.pieces.find((piece) => piece.id === props.selected && piece.offcut)?.id ?? null;
+  const visibility = { showOffcuts: props.showOffcuts, selectedId: selectedOffcut, assemblyOnly };
+  const stagePieces = visibleStagePieces(props.project, { ...visibility, stage: props.stage });
+  const guidePiece = stagePieces.find((piece) => piece.id === props.guidePartFocus?.pieceId);
+  const isolated = guidePiece && props.guidePartFocus?.isolated;
+  const visible = isolated ? [guidePiece] : stagePieces;
+  const framePieces = guidePiece ? visible : visibleStockPieces(props.project, visibility);
+  const stockFrameKey = guidePiece ? `guide:${guidePiece.id}:${props.guidePartFocus?.isolated}`
+    : assemblyOnly ? "assembly" : props.showOffcuts ? "all-offcuts" : selectedOffcut ?? "assembly";
+  const renderedIds = JSON.stringify(visible.map((piece) => piece.id));
+  useEffect(() => { renderer.domElement.dataset.renderedPartIds = renderedIds; }, [renderer, renderedIds]);
   const section = props.project.sections.find(
     (s) => s.id === props.selectedSectionId,
   );
   const grouped = new Set(section?.pieceIds ?? []);
+  const markedRun = props.shownBandingEdge ?? props.shownProfileRun;
   return (
     <>
       <color attach="background" args={["#eeeee5"]} />
@@ -466,6 +1321,190 @@ function World(props: SceneProps) {
         fadeStrength={1.5}
         infiniteGrid
       />
+      {props.mode === "measure" && (
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          onClick={(e: ThreeEvent<MouseEvent>) => {
+            e.stopPropagation();
+            if (e.button === 0 && e.delta <= 4)
+              props.onMeasurePoint?.([e.point.x * 12, 0, e.point.z * 12]);
+          }}
+          onPointerOver={() => {
+            document.body.style.cursor = "crosshair";
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = "auto";
+          }}
+        >
+          <planeGeometry args={[400, 400]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      )}
+      {!isolated && !props.focusedMotion && <WorkZone project={props.project} />}
+      {props.shownCheckArea && !props.explode && props.stage === null && (
+        <CheckAreaMarkers area={props.shownCheckArea} />
+      )}
+      {!props.focusedMotion && (props.lidPreview?.shownSiteFaceId ? (
+        <SiteClearanceMarkers project={props.project} id={props.lidPreview.shownSiteFaceId}
+          shortfall={props.lidPreview.siteFaceHits?.includes(props.lidPreview.shownSiteFaceId)} />
+      ) : props.motionPreview?.shownSiteFaceId ? (
+        <SiteClearanceMarkers project={props.project} id={props.motionPreview.shownSiteFaceId}
+          shortfall={props.motionPreview.siteFaceHits.includes(props.motionPreview.shownSiteFaceId)} />
+      ) : props.shownSiteClearanceId && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <SiteClearanceMarkers project={props.project} id={props.shownSiteClearanceId} />
+      ))}
+      {!isolated && props.shownFoundation && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <GreenhouseFoundationMarker review={props.shownFoundation} />
+      )}
+      {vent && !props.lidPreview && !props.motionPreview && <PlumbingVentMarkers layout={vent} />}
+      {!!ductRuns.length && !props.lidPreview && !props.motionPreview && <DryerDuctMarkers runs={ductRuns} />}
+      {props.motionPreview?.clearanceCeiling && (
+        <mesh position={props.motionPreview.clearanceCeiling.center.map((n) => n / 12) as V3} raycast={() => null}>
+          <boxGeometry args={props.motionPreview.clearanceCeiling.size.map((n) => n / 12) as V3} />
+          <meshBasicMaterial color="#4aa3c1" transparent opacity={0.12} depthWrite={false} />
+          <Edges color="#4a8ea3" depthWrite={false} />
+          <Html position={[0, 0.12, 0]} center style={{ pointerEvents: "none" }}>
+            <span className="site-clearance-marker" data-testid="casework-measured-ceiling">Measured ceiling</span>
+          </Html>
+        </mesh>
+      )}
+      {props.motionPreview?.obstaclePieces?.map((piece) => {
+        const hit = props.motionPreview?.interferenceIds.includes(piece.id);
+        return (
+          <mesh key={piece.id} position={piece.position.map((n) => n / 12) as V3}
+            rotation={piece.rotation} raycast={() => null}>
+            <boxGeometry args={piece.size.map((n) => n / 12) as V3} />
+            <meshStandardMaterial color={hit ? "#b92e2e" : "#474a4c"} roughness={0.48} metalness={0.4} />
+            <Edges color={hit ? "#ed5555" : "#424d51"} depthTest={false} depthWrite={false} renderOrder={6} />
+            <Html center position={[0, piece.size[1] / 24, 0]} style={{ pointerEvents: "none" }}>
+              <span className="site-clearance-marker" data-testid="motion-obstacle" data-contact={hit ? "ahead" : "clear"}>{piece.name}</span>
+            </Html>
+          </mesh>
+        );
+      })}
+      {props.shownSaunaHeater?.layout && !props.explode && props.stage === null && !props.motionPreview && !props.lidPreview && (
+        <>
+          <mesh position={props.shownSaunaHeater.layout.body.center.map((n) => n / 12) as V3}
+            rotation={props.shownSaunaHeater.layout.rotation} raycast={() => null}>
+            <boxGeometry args={props.shownSaunaHeater.layout.body.size.map((n) => n / 12) as V3} />
+            <meshStandardMaterial color="#474a4c" roughness={0.48} metalness={0.4} />
+            <Edges color="#424d51" lineWidth={2} depthTest={false} depthWrite={false} renderOrder={6} />
+            {!props.shownSaunaHeater.layout.clearance && (
+              <Html center position={[0, props.shownSaunaHeater.layout.body.size[1] / 24, 0]} style={{ pointerEvents: "none" }}>
+                <span className="site-clearance-marker" data-testid="sauna-heater-marker">Harvia listed body</span>
+              </Html>
+            )}
+          </mesh>
+          {props.shownSaunaHeater.layout.clearance && <mesh position={props.shownSaunaHeater.layout.clearance.center.map((n) => n / 12) as V3}
+            rotation={props.shownSaunaHeater.layout.rotation} raycast={() => null}>
+            <boxGeometry args={props.shownSaunaHeater.layout.clearance.size.map((n) => n / 12) as V3} />
+            <meshBasicMaterial transparent opacity={0.1} depthWrite={false}
+              color={props.shownSaunaHeater.ready ? "#2382a5" : "#ba4c2b"} />
+            <Edges color={props.shownSaunaHeater.ready ? "#2382a5" : "#ba4c2b"}
+              lineWidth={2} depthTest={false} depthWrite={false} renderOrder={7}
+              dashed dashSize={0.13} gapSize={0.08} />
+            <Html center position={[0, props.shownSaunaHeater.layout.clearance.size[1] / 24, 0]} style={{ pointerEvents: "none" }}>
+              <span className="site-clearance-marker" data-testid="sauna-heater-marker">STEEL 6 clearance</span>
+            </Html>
+          </mesh>}
+        </>
+      )}
+      {props.shownSaunaVentilation && !props.explode && props.stage === null && !props.motionPreview && !props.lidPreview && (
+        <SaunaVentilationMarkers review={props.shownSaunaVentilation} />
+      )}
+      {markedRun && !props.explode && props.stage === null && !props.motionPreview && !props.lidPreview && (
+        <group>
+          <Line points={markedRun.points.map((point) => point.map((v) => v / 12) as V3)}
+            color="#2382a5" lineWidth={4} depthTest={false} raycast={() => null} />
+          <Html center position={markedRun.points[0].map((v, i) =>
+            (v + markedRun.points[1][i]) / 24) as V3}
+            zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+            <span className="site-clearance-marker" data-testid={props.shownBandingEdge ? "edge-banding-marker" : "sunlite-profile-marker"}>{markedRun.label}</span>
+          </Html>
+        </group>
+      )}
+      {props.shownLatchId && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <GreenhouseLatchMarkers project={props.project} motionId={props.shownLatchId} />
+      )}
+      {props.shownRodSupportId && !props.explode && props.stage === null && !props.lidPreview && (
+        <RodSupportMarkers project={props.project} rodId={props.shownRodSupportId} />
+      )}
+      {props.fittedStockFaces && <FittedStockGeometry project={props.project} preview={props.fittedStockPreview ?? null} faces={props.fittedStockFaces} />}
+      {props.baseRailPreview && !props.explode && props.stage === null && (
+        <group>
+          <StockGhost piece={props.baseRailPreview} />
+          <Html center position={props.baseRailPreview.position.map((value) => value / 12) as V3}
+            zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+            <span className="fitted-stock-ghost-label" data-testid="base-rail-preview">Proposed rail position</span>
+          </Html>
+        </group>
+      )}
+      {guidePiece && props.guidePartFocus && (
+        <Html center position={guidePiece.position.map((value) => value / 12) as V3}
+          zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+          <span className="fitted-stock-ghost-label" data-testid="guide-part-marker" data-piece-id={guidePiece.id}>
+            {props.guidePartFocus.label}
+          </span>
+        </Html>
+      )}
+      {!props.focusedMotion && (props.lidPreview || props.motionPreview) && (
+        <Line
+          points={(props.motionPreview?.guideLine ?? lidAxisSegment(props.lidPreview!))
+            .map((point) => point.map((value) => value / 12) as V3)}
+          color="#287c9b"
+          lineWidth={3}
+          dashed
+          dashSize={0.12}
+          gapSize={0.08}
+          depthTest={!props.motionPreview}
+          depthWrite={!props.motionPreview}
+          renderOrder={props.motionPreview ? 10 : 0}
+          raycast={() => null}
+        />
+      )}
+      {!props.focusedMotion && props.lidPreview?.stayLinks?.map((link) => link.arms?.length ? (
+        <group key={link.id}>
+          {link.arms.map((arm, index) => (
+            <mesh key={index} position={arm.position.map((value) => value / 12) as V3}
+              rotation={arm.rotation} renderOrder={9} raycast={() => null}>
+              <boxGeometry args={arm.size.map((value) => value / 12) as V3} />
+              <meshBasicMaterial color={arm.hitIds.length ? "#b2482d" : "#316d64"}
+                transparent opacity={0.8} depthTest={false} depthWrite={false} />
+            </mesh>
+          ))}
+        </group>
+      ) : (
+        <Line
+          key={link.id}
+          points={link.points.map((point) => point.map((value) => value / 12) as V3)}
+          color={link.state === "reachable" ? "#316d64" : "#b2482d"}
+          dashed={link.state !== "reachable"}
+          dashSize={0.08}
+          gapSize={0.04}
+          depthTest={false}
+          depthWrite={false}
+          renderOrder={9}
+          lineWidth={3}
+          raycast={() => null}
+        />
+      ))}
+      {props.driverAccessPreview && <DriverAccessMarker row={props.driverAccessPreview} />}
+      {props.showFasteners && <FastenerMarkers project={props.project} selectedPlanId={props.selectedFastenerPlanId} focusedLocationId={props.focusedFastenerLocationId} layoutPreview={props.fastenerLayoutPreview} />}
+      {props.showConnectors && !props.explode && props.stage === null && <ConnectorMarkers project={props.project} selectedPlanId={props.selectedConnectorPlanId} review={props.connectorPreview} focusedEntryId={props.focusedConnectorEntryId} />}
+      {props.showHinges && !props.readOnly && !props.explode && props.stage === null && <HingeMarkers project={props.project} sectionId={props.selectedSectionId} />}
+      {props.showRestraints && <RestraintMarkers project={props.project} />}
+      {props.showAttachments && (
+        <AttachmentMarkers
+          project={props.project}
+          readOnly={props.readOnly}
+          selectedPlanId={props.selectedAttachmentPlanId}
+          onSelectPlan={props.onSelectAttachmentPlan}
+          onSelectPart={props.onSelectAttachmentPart ?? props.onSelect}
+        />
+      )}
+      {props.mode === "measure" && (
+        <Measurement measurement={props.measurement} />
+      )}
       {section && (
         <SectionGroup
           key={`${section.id}:${section.origin.join(",")}:${section.rotation.join(",")}`}
@@ -480,7 +1519,7 @@ function World(props: SceneProps) {
         .map((p) => (
           <PlacedPart key={p.id} p={p} props={props} texture={texture} />
         ))}
-      {props.project.planLines.map((l, i) => (
+      {!isolated && props.project.planLines.map((l, i) => (
         <Line
           key={i}
           points={[l.a.map((v) => v / 12) as V3, l.b.map((v) => v / 12) as V3]}
@@ -488,7 +1527,7 @@ function World(props: SceneProps) {
           lineWidth={2}
         />
       ))}
-      {props.project.joints.map((j) => {
+      {!props.readOnly && props.project.joints.map((j) => {
         const a = visible.find((p) => p.id === j.a),
           b = visible.find((p) => p.id === j.b);
         if (!a || !b) return null;
@@ -498,11 +1537,64 @@ function World(props: SceneProps) {
         view={props.view}
         project={props.project}
         onCamera={props.onCamera}
+        fitToView={props.fitToView}
+        animateView={props.animateView}
+        motionBounds={props.motionBounds}
+        siteBounds={siteBounds}
+        framePieces={framePieces}
+        stockFrameKey={stockFrameKey}
       />
     </>
   );
 }
 export function Scene(props: SceneProps) {
+  const preview = props.lidPreview;
+  const motion = props.motionPreview;
+  // Stable through scrubbing: frame the full swing once on entry, then let
+  // the user orbit freely. The shown pose never becomes saved project geometry.
+  const motionBounds = useMemo(() => preview
+    ? unionBounds([
+      ...props.project.pieces.filter((p) => !p.offcut).map(bounds),
+      preview.travelBounds ?? reviewLidTravel(props.project, preview.sectionId).bounds,
+    ])
+    : null, [props.project, preview?.sectionId, preview?.travelBounds]);
+  const posed = useMemo(() => {
+    if (!motion && !preview) return null;
+    const hidden = new Set(motion?.hiddenPieceIds);
+    const poses = new Map(motion?.pieces.map((piece) => [piece.id, piece]));
+    const pieces = props.project.pieces.filter((piece) => !hidden.has(piece.id))
+      .map((piece) => piece.id === preview?.piece.id ? preview.piece : poses.get(piece.id) ?? piece);
+    const focus = motion?.focusPair ?? preview?.focusPair;
+    const pair = focus ? pieces.filter((piece) => !piece.offcut && focus.includes(piece.id)) : [];
+    return pair.length === 2
+      ? { pieces: pair, pairBounds: unionBounds(pair.map(bounds)) }
+      : { pieces, pairBounds: null };
+  }, [props.project, motion, preview]);
+  const shown: SceneProps = preview || motion ? {
+    ...props,
+    project: {
+      ...props.project,
+      pieces: posed?.pieces ?? props.project.pieces,
+    },
+    readOnly: true,
+    motionBounds: posed?.pairBounds ?? motion?.bounds ?? motionBounds,
+    focusedMotion: !!posed?.pairBounds,
+    interferenceIds: motion?.interferenceIds ?? [],
+    selected: null,
+    selectedSectionId: null,
+    mode: "move",
+    onSelect: () => {},
+    onMove: () => {},
+    onSectionMove: () => {},
+    stage: null,
+    guidePartFocus: undefined,
+    explode: false,
+    showAttachments: false,
+    showRestraints: false,
+    showFasteners: false,
+    showConnectors: false,
+    showHinges: motion ? false : props.showHinges,
+  } : props;
   return (
     <Canvas
       frameloop="demand"
@@ -510,17 +1602,20 @@ export function Scene(props: SceneProps) {
       dpr={[1, 2]}
       camera={{ position: [12, 9, 14], fov: 38, near: 0.05, far: 500 }}
       gl={{ antialias: true, preserveDrawingBuffer: true }}
+      onContextMenu={(event) => event.preventDefault()}
       fallback={
         <div className="empty">
           This workshop needs a browser with WebGL enabled.
         </div>
       }
       onPointerMissed={() => {
-        if (props.mode !== "screw") props.onSelect("");
+        if (shown.readOnly) return;
+        if (props.mode !== "screw" && props.mode !== "measure" && props.mode !== "fastener" && props.mode !== "fit-face")
+          props.onSelect("");
       }}
     >
       <Suspense fallback={null}>
-        <World {...props} />
+        <World {...shown} />
       </Suspense>
     </Canvas>
   );

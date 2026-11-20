@@ -1,0 +1,431 @@
+{
+  "researchedOn": "2026-11-16",
+  "status": "research-only; no runtime changes",
+  "system": "Kreg5 mm adjustable-shelf pins with KMA3232 jig and KMA3215 bit",
+  "stockBoundary": {
+    "zipContext": "84121",
+    "storeId": null,
+    "availabilityObserved": false,
+    "pricesImported": false
+  },
+  "sources": [
+    {
+      "id": "pins-manufacturer",
+      "url": "https://www.kregtool.com/shop/cabinet-solutions/cabinet-drawer-shelf-jigs/shelf-pins-5mm/KMA-5MPIN.html",
+      "type": "manufacturer-product",
+      "supports": [
+        "KMA-5MPIN",
+        "20 pins",
+        "5 mm nominal mating size",
+        "zinc finish",
+        "explicit Kreg 5 mm jig/bit compatibility"
+      ],
+      "limitations": [
+        "No dimensioned pin-insertion or bearing-face drawing. Capacity statement does not define the complete shelf assembly."
+      ],
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "pins-lowes",
+      "url": "https://www.lowes.com/pd/Kreg-0-75-in-L-x-0-332-in-W-x-0-19-in-D-Shelf-pins-20-Pack/5006037921",
+      "type": "retailer-reference",
+      "supports": [
+        "item4897499",
+        "modelKMA-5MPIN",
+        "20 per pack",
+        "overall fields .75×.332×.19 in"
+      ],
+      "limitations": [
+        "Overall dimension axes are not a dimensioned shank/bearing profile. .19 in is not exact5 mm."
+      ],
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "pins-photo",
+      "url": "https://www.kregtool.com/dw/image/v2/BDZM_PRD/on/demandware.static/-/Sites-master-kreg/default/dwa20ae695/images/hi-res/KMA-5MPIN-01.jpg?sh=140&sw=140",
+      "type": "manufacturer-image",
+      "supports": [
+        "Observed round pin with flattened paddle/spoon bearing portion"
+      ],
+      "limitations": [
+        "Shape observation only; no measurements inferred from pixels."
+      ],
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "jig-manufacturer",
+      "url": "https://www.kregtool.com/shop/cabinet-solutions/cabinet-drawer-shelf-jigs/shelf-pin-jig-5-mm/KMA3232.html",
+      "type": "manufacturer-product",
+      "supports": [
+        "KMA3232",
+        "six drill guides",
+        "5 mm bit",
+        "32 mm system",
+        "one jig kit with collar, indexing pin, fence, extension, hex wrench and4 shelf pins"
+      ],
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "jig-manual",
+      "url": "https://www.kregtool.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dw31eb0d3c/manuals/KMA3232_Global.pdf",
+      "type": "manufacturer-manual",
+      "documentId": "105707 V1",
+      "printedDate": "1/2021",
+      "appliesTo": [
+        "KMA3225",
+        "KMA3232",
+        "KMA3232-INT"
+      ],
+      "pdfPages": 72,
+      "englishPdfPages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "sha256": "b1c727b4dc278b2b0a00bb695b0f1a9970a35ceabd90f738b2bef8533e4a6cf4",
+      "bytes": 19877000,
+      "supports": [
+        "p3 kit components",
+        "p4 collar setup in molded gauge",
+        "p5–7 cabinet datum/clamping",
+        "p8 drill/index sequence",
+        "p9 37 mm jig-side offset and32 mm pitch",
+        "p11 KMA3215 accessory"
+      ],
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "jig-hd",
+      "url": "https://www.homedepot.com/p/Kreg-Shelf-Pin-Jig-5mm-with-6-hardened-steel-drill-guides-KMA3232/319450681",
+      "type": "retailer-reference",
+      "supports": [
+        "modelKMA3232",
+        "SKU1007456246",
+        "one jig kit"
+      ],
+      "limitations": [
+        "Generic piece count7 is not seven jigs and differs from manufacturer component enumeration."
+      ],
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "jig-lowes",
+      "url": "https://www.lowes.com/pd/Kreg-Shelf-Pin-Jig-5mm-Create-Perfectly-Spaced-Holes-at-1-1-4-Inch-32mm-Increments/5006041513",
+      "type": "retailer-reference",
+      "supports": [
+        "modelKMA3232",
+        "item4897498",
+        "one jig kit"
+      ],
+      "limitations": [
+        "Generic piece count9 is not nine jigs."
+      ],
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "bit-manufacturer",
+      "url": "https://www.kregtool.com/shop/cabinet-solutions/cabinet-drawer-shelf-jigs/shelf-pin-jig-drill-bit-5mm/KMA3215.html",
+      "type": "manufacturer-product",
+      "supports": [
+        "KMA3215",
+        "5 mm high-speed-steel brad point",
+        "1/4 in hex shank",
+        "one replacement bit",
+        "published capacity5 mm holes7 mm deep"
+      ],
+      "limitations": [
+        "Current included-items list contains only one bit; do not assume spare collar/wrench. A published capacity is not a measured deepest-point cut envelope."
+      ],
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "bit-lowes",
+      "url": "https://www.lowes.com/pd/Kreg-Shelf-Pin-Jig-Drill-Bit/50022250",
+      "type": "retailer-reference",
+      "supports": [
+        "modelKMA3215",
+        "item518048",
+        "package1",
+        "wood drilling"
+      ],
+      "limitations": [
+        "3/16 in generic diameter conflicts with manufacturer5 mm; retain5 mm system identity."
+      ],
+      "reviewedOn": "2026-11-16"
+    }
+  ],
+  "products": [
+    {
+      "id": "kreg-kma-5mpin",
+      "manufacturer": "Kreg",
+      "manufacturerPartNumber": "KMA-5MPIN",
+      "kind": "shelf-pin-support",
+      "purchaseUnit": "20-pin pack",
+      "packCount": 20,
+      "geometry": {
+        "nominalShankDiameterMm": 5,
+        "shankDiameterToleranceMm": null,
+        "insertionLengthMm": null,
+        "bearingFaceDimensionsMm": null,
+        "bodyEnvelopeMm": null,
+        "observedSupportShape": "Cylindrical pin with flattened paddle/spoon bearing portion; visual observation only",
+        "retailerOverallFieldsIn": {
+          "length": 0.75,
+          "width": 0.332,
+          "depth": 0.19
+        }
+      },
+      "sourceRefs": [
+        "pins-manufacturer",
+        "pins-lowes",
+        "pins-photo"
+      ],
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "5006037921",
+          "retailerModel": "KMA-5MPIN",
+          "retailerItemNumber": "4897499",
+          "url": "https://www.lowes.com/pd/Kreg-0-75-in-L-x-0-332-in-W-x-0-19-in-D-Shelf-pins-20-Pack/5006037921",
+          "seller": "Lowe's",
+          "listingStatus": "reference"
+        }
+      ],
+      "requirements": [
+        "Verify actual insertion length, shoulder/reference plane and bearing-face geometry before exact installed placement.",
+        "5 mm nominal size is not a tolerance specification; do not substitute3/16 or1/4 in holes.",
+        "No exact Home Depot pin counterpart verified. No whole-shelf load approval."
+      ]
+    },
+    {
+      "id": "kreg-kma3232",
+      "manufacturer": "Kreg",
+      "manufacturerPartNumber": "KMA3232",
+      "kind": "drilling-jig",
+      "purchaseUnit": "One complete jig kit",
+      "packCount": 1,
+      "bodyEnvelopeMm": null,
+      "kitContents": [
+        {
+          "item": "jig",
+          "quantity": 1
+        },
+        {
+          "item": "removable fence",
+          "quantity": 1
+        },
+        {
+          "item": "5 mm drill bit",
+          "quantity": 1
+        },
+        {
+          "item": "stop collar with set screw",
+          "quantity": 1
+        },
+        {
+          "item": "double-ended indexing pin",
+          "quantity": 1
+        },
+        {
+          "item": "extension connector",
+          "quantity": 1
+        },
+        {
+          "item": "hex wrench",
+          "quantity": 1
+        },
+        {
+          "item": "5 mm shelf pins",
+          "quantity": 4
+        },
+        {
+          "item": "manual",
+          "quantity": 1
+        }
+      ],
+      "sourceRefs": [
+        "jig-manufacturer",
+        "jig-manual",
+        "jig-hd",
+        "jig-lowes"
+      ],
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "319450681",
+          "retailerModel": "KMA3232",
+          "retailerItemNumber": "1007456246",
+          "url": "https://www.homedepot.com/p/Kreg-Shelf-Pin-Jig-5mm-with-6-hardened-steel-drill-guides-KMA3232/319450681",
+          "seller": "The Home Depot",
+          "listingStatus": "reference"
+        },
+        {
+          "retailer": "lowes",
+          "productId": "5006041513",
+          "retailerModel": "KMA3232",
+          "retailerItemNumber": "4897498",
+          "url": "https://www.lowes.com/pd/Kreg-Shelf-Pin-Jig-5mm-Create-Perfectly-Spaced-Holes-at-1-1-4-Inch-32mm-Increments/5006041513",
+          "seller": "Lowe's",
+          "listingStatus": "reference"
+        }
+      ],
+      "requirements": [
+        "Use the matching stepped5 mm Kreg bit and securely set stop collar with the molded jig gauge.",
+        "Clamp the jig/workpiece as directed; indexing extension holes are registration holes, not drill guides.",
+        "Six guides per setup; preserve one reference end and matching row origin on both sides.",
+        "Do not import older KMA3200/KMA3220 setback values into this second-generation model."
+      ]
+    },
+    {
+      "id": "kreg-kma3215",
+      "manufacturer": "Kreg",
+      "manufacturerPartNumber": "KMA3215",
+      "kind": "replacement-drill-bit",
+      "purchaseUnit": "One bit",
+      "packCount": 1,
+      "geometry": {
+        "cuttingDiameterMm": 5,
+        "cuttingDiameterToleranceMm": null,
+        "shankHexAcrossFlatsIn": 0.25,
+        "publishedHoleDepthCapacityMm": 7,
+        "deepestPointExtensionMm": null,
+        "bodyEnvelopeMm": null
+      },
+      "sourceRefs": [
+        "bit-manufacturer",
+        "bit-lowes",
+        "jig-manual"
+      ],
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "50022250",
+          "retailerModel": "KMA3215",
+          "retailerItemNumber": "518048",
+          "url": "https://www.lowes.com/pd/Kreg-Shelf-Pin-Jig-Drill-Bit/50022250",
+          "seller": "Lowe's",
+          "listingStatus": "reference"
+        }
+      ],
+      "requirements": [
+        "Current manufacturer contents identify one bit only; retain existing correct collar/wrench or verify separately.",
+        "Do not replace the manufacturer5 mm diameter with retailer3/16 in or convert1/4 in hex into exact6 mm.",
+        "A purchased complete jig already includes its bit/collar; do not add a replacement by default."
+      ]
+    }
+  ],
+  "holeScheduleProposal": {
+    "status": "Supported nominal drilling pattern; exact pin placement/deepest-point profile unresolved",
+    "diameterMm": 5,
+    "pitchMm": 32,
+    "pitchMeaning": "Nominal32 mm system; do not convert paired marketing1.25 in to31.75 mm",
+    "setbackMm": 37,
+    "setbackMeaning": "Manualp9 gives37 mm from jig sides; confirm actual fence/reference face on intended face-framed or frameless panel",
+    "startDatumMm": null,
+    "holeCount": null,
+    "endMarginMm": null,
+    "rowsPerSide": null,
+    "holeDepth": {
+      "publishedNominalCapacityMm": 7,
+      "sourceRef": "bit-manufacturer",
+      "collarSetup": "Manufacturer manualp4 molded storage-slot/gauge procedure",
+      "calibratedActualDepthMm": null,
+      "deepestTipDepthMm": null
+    },
+    "coordinateRule": "User-reviewed row origin + n×32 mm on each vertical row; the same origin and reference end must be used on opposite cabinet sides",
+    "requiredInputs": [
+      "Actual panel thickness and face orientation",
+      "Actual shelf width/depth and cabinet clear opening",
+      "Selected front/rear row positions and matching heights",
+      "First-hole datum, count and end exclusions",
+      "Measured pin insertion length and bearing offset",
+      "Maximum actual hole depth including brad-point tip and collar/setup tolerance"
+    ],
+    "checks": [
+      "No hole crosses the back face or conflicts with opposite-face holes, joinery, hardware or existing cuts.",
+      "No assumed minimum web or edge capacity is invented.",
+      "Do not use shelf-pin bores as arbitrary connector/hinge screw bores."
+    ]
+  },
+  "processRequirements": [
+    {
+      "process": "measure-and-mark",
+      "toolFunctions": [
+        "measure",
+        "square"
+      ],
+      "evidence": "User confirms reference panel, row origin and support heights; no default first-hole distance from manufacturer."
+    },
+    {
+      "process": "jig-setup",
+      "toolFunctions": [
+        "clamp",
+        "fixture-shelf-pin-jig"
+      ],
+      "evidence": "Exact KMA3232 with correct bit/collar and manufacturer setup procedure."
+    },
+    {
+      "process": "drill-blind-holes",
+      "toolFunctions": [
+        "wood-drill",
+        "depth-stop"
+      ],
+      "evidence": "5 mm brad-point bit; drill to collar contact; check actual depth on scrap of same stock before generated feature approval."
+    },
+    {
+      "process": "index-and-repeat",
+      "toolFunctions": [
+        "index-shelf-pin-row"
+      ],
+      "evidence": "Register in the last hole, reclamp, use drill bushings; connector extension is not a drilling guide."
+    },
+    {
+      "process": "install-and-check",
+      "toolFunctions": [
+        "manual-pin-insertion",
+        "shelf-fit-review"
+      ],
+      "evidence": "Correct pins fit at matching heights; actual bearing area, clearances and shelf retention remain reviewed inputs."
+    },
+    {
+      "process": "ppe",
+      "toolFunctions": [
+        "ppe-eye",
+        "wood-dust-review"
+      ],
+      "evidence": "Follow the exact drill/jig/clamp manuals and actual operation requirements; no safe-condition claim from selection."
+    }
+  ],
+  "countingRules": [
+    "Count installed supports as individual pins, then round newly required loose pins into20-count packs exactly once.",
+    "Only a newly purchased complete jig kit with explicitly allocated included contents can contribute its four pins, after verifying supplied-pin identity/geometry against the selected installed profile. The kit lists generic5 mm pins without a separate KMA-5MPIN part number; an existing-tool checkbox is not stock evidence.",
+    "Do not count kit-included bit/collar/pins again as standalone purchases.",
+    "Pin count/support positions are design inputs; a20-pack does not automatically authorize five shelves or any load."
+  ],
+  "applicationLimits": [
+    "Manufacturer advertises25 lb per pin, but substrate, engagement, shelf span/deflection, pin sharing, retention and test conditions are not established here. Never multiply it into a whole-shelf rating.",
+    "Only the manufacturer named5 mm jig/bit/pin compatibility is reviewed; installed support geometry remains incomplete.",
+    "No sauna, wet-area, structural/bracing or overhead safety qualification."
+  ],
+  "specificMissingInputs": [
+    "A dimensioned KMA-5MPIN drawing defining shank insertion length, shoulder and bearing-face projection/thickness.",
+    "A physical tolerance/fit specification for nominal5 mm pin and bored hole.",
+    "Deepest drill-tip envelope after the exact collar/gauge setup;7 mm advertised capacity alone does not prove breakthrough clearance.",
+    "A project-specific row origin, number of positions, shelf/end clearances and supported-load assessment."
+  ],
+  "futureImplementationBatch": [
+    "Add trusted source-owned pin-system identity/compatibility evidence with nullable physical dimensions; preserve unknowns.",
+    "Represent drilled holes as subtractive blind-hole features with explicit axis, diameter, center and reviewed actual depth, persisted through transforms and JSON.",
+    "Generate conditional drill/index/tool instructions and count20-pin packs separately from reusable jig/tool selections.",
+    "Allow exact hole patterns only after required depth/thickness inputs are present; never fabricate a cylindrical full-length pin body."
+  ]
+}

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { retailerFromUrl, retailerName, type Retailer } from "./retailers";
 import { CheckCircle2, Info } from "lucide-react";
+import { shoppingOfferForMaterial } from "./retailerCatalog";
 import {
   catalog,
   inventorySchema,
@@ -10,15 +12,22 @@ import {
 } from "./model";
 export function InventoryForm({
   project,
+  target,
   onSave,
 }: {
   project: Project;
+  target?: MaterialId;
   onSave: (entry: Inventory) => void;
 }) {
-  const [materialId, setMaterialId] = useState<MaterialId>("stud");
-  const [name, setName] = useState(material("stud").name),
-    [url, setUrl] = useState(""),
-    [internetNumber, setInternetNumber] = useState("");
+  const initial = material(target ?? "stud");
+  const offer = target ? shoppingOfferForMaterial(initial, "home-depot")?.offer : undefined;
+  const [retailer, setRetailer] = useState<Retailer>(
+    project.retailer ?? "home-depot",
+  );
+  const [materialId, setMaterialId] = useState<MaterialId>(initial.id);
+  const [name, setName] = useState(initial.name),
+    [url, setUrl] = useState(offer?.url ?? ""),
+    [internetNumber, setInternetNumber] = useState(offer?.productId ?? "");
   const [price, setPrice] = useState(""),
     [available, setAvailable] = useState(""),
     [store, setStore] = useState(project.store),
@@ -30,6 +39,8 @@ export function InventoryForm({
   );
   const [matched, setMatched] = useState(false),
     [error, setError] = useState("");
+  const stock = material(materialId);
+  const reference = shoppingOfferForMaterial(stock, retailer);
   return (
     <form
       onSubmit={(e) => {
@@ -37,6 +48,7 @@ export function InventoryForm({
         setError("");
         try {
           const entry = inventorySchema.parse({
+            retailer,
             material: materialId,
             name,
             url,
@@ -51,8 +63,6 @@ export function InventoryForm({
             throw Error(
               "Confirm that the product matches the modeled stock dimensions.",
             );
-          if (Date.parse(entry.checkedAt) > Date.now() + 60000)
-            throw Error("The check time cannot be in the future.");
           onSave(entry);
         } catch (e) {
           setError(
@@ -64,17 +74,38 @@ export function InventoryForm({
       <h2 id="modal-title">Record a store snapshot.</h2>
       <p className="small-note">
         Copy values you checked at the retailer. This records your observations;
-        it does not verify stock with Home Depot.
+        it does not contact either retailer to verify stock.
       </p>
+      <label className="field">
+        Retailer
+        <select
+          aria-label="Snapshot retailer"
+          value={retailer}
+          disabled={!!target}
+          onChange={(e) => {
+            setRetailer(e.target.value as Retailer);
+            setStore("");
+            setMatched(false);
+            setUrl("");
+            setInternetNumber("");
+          }}
+        >
+          <option value="home-depot">Home Depot</option>
+          <option value="lowes">Lowe's</option>
+        </select>
+      </label>
       <label className="field">
         Modeled material
         <select
           value={materialId}
+          disabled={!!target}
           onChange={(e) => {
             const id = e.target.value as MaterialId;
             setMaterialId(id);
             setName(material(id).name);
             setMatched(false);
+            setUrl("");
+            setInternetNumber("");
           }}
         >
           {catalog.map((m) => (
@@ -84,6 +115,49 @@ export function InventoryForm({
           ))}
         </select>
       </label>
+      {(reference || stock.productReference) && (
+        <div className="notice">
+          <div>
+            {reference ? (
+              <>
+                <strong>
+                  {reference.suggested
+                    ? "Suggested regional listing"
+                    : "Exact product reference"}
+                  {" · "}
+                  {reference.offer.productId}
+                </strong>
+                <p>
+                  {stock.subtitle}. Record observations for one {stock.unit}{" "}
+                  purchase unit.{" "}
+                  {reference.suggested &&
+                    "Confirm grade, species and treatment."}
+                </p>
+                {!target && <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => {
+                    setUrl(reference.offer.url);
+                    setInternetNumber(reference.offer.productId);
+                    setName(stock.name);
+                    setMatched(false);
+                  }}
+                >
+                  {reference.suggested
+                    ? "Use suggested listing"
+                    : "Use reviewed product reference"}
+                </button>}
+              </>
+            ) : (
+              <p>
+                No current reviewed offer for this exact modeled product at{" "}
+                {retailerName(retailer)}. Select its reviewed retailer or
+                another material.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
       <label className="field">
         Product name
         <input
@@ -94,26 +168,38 @@ export function InventoryForm({
         />
       </label>
       <label className="field">
-        Home Depot product URL
+        {retailerName(retailer)} product URL
         <input
           required
           type="url"
-          placeholder="https://www.homedepot.com/p/…/123456789"
+          placeholder={
+            retailer === "lowes"
+              ? "https://www.lowes.com/pd/…/1114951"
+              : "https://www.homedepot.com/p/…/123456789"
+          }
           value={url}
+          readOnly={!!target}
           onChange={(e) => {
             setUrl(e.target.value);
-            const id = e.target.value.match(/\/(\d{6,12})(?:[/?#]|$)/)?.[1];
+            const detected = retailerFromUrl(e.target.value);
+            if (detected && detected !== retailer) {
+              setRetailer(detected);
+              setStore("");
+              setMatched(false);
+            }
+            const id = e.target.value.match(/\/(\d{3,16})(?:[/?#]|$)/)?.[1];
             if (id) setInternetNumber(id);
           }}
         />
       </label>
       <label className="field">
-        Internet number
+        {retailer === "lowes" ? "Retailer product number" : "Internet number"}
         <input
           required
           inputMode="numeric"
-          pattern="[0-9]{6,12}"
+          pattern="[0-9]{3,16}"
           value={internetNumber}
+          readOnly={!!target}
           onChange={(e) => setInternetNumber(e.target.value)}
         />
       </label>

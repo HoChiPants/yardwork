@@ -1,0 +1,91 @@
+{
+  "proposalVersion": 1,
+  "reviewDate": "2026-11-16",
+  "purpose": "Research proposals only; not executable registry data or store snapshots",
+  "products": [
+    {
+      "id": "cedarbrook-6-1x4-tng",
+      "supplier": "Cedarbrook Sauna + Steam",
+      "supplierSku": "6-1X4-TNG",
+      "channel": "specialist-manufacturer-retail",
+      "retailerOffers": [],
+      "sourceRefs": ["https://cedarbrooksauna.com/6ft-1x4-tg-cedar-paneling-bundle/"],
+      "application": {"role": "saunaInterior", "evidence": "Manufacturer explicitly lists sauna walls/ceilings and recommends raw untreated cedar"},
+      "profile": {"stockKind": "linear", "wood": true, "lengthIn": 72, "fullWidthIn": 3.375, "thicknessIn": 0.6875, "coverWidthIn": 3, "profileFamily": "tongue-and-groove", "treatment": "raw untreated for sauna use per supplier"},
+      "purchase": {"unit": "bundle", "pieceCount": 6, "coverageSqFt": 9},
+      "requirements": ["Add a specialist supplier channel; no Home Depot/Lowe's exact offer verified", "Use full stock width for cuts and cover width for installed pitch", "Require a dimensioned T&G cross-section for interlocking collision geometry", "Round board needs into six-board bundles; do not use shipping dimensions as board dimensions", "Retain selected heater/attachment/assembly requirements"]
+    },
+    {
+      "id": "thermory-vll0012-aspen-bench",
+      "supplier": "Thermory",
+      "manufacturerPartNumber": "VLL0012",
+      "channel": "manufacturer-distributor",
+      "retailerOffers": [],
+      "sourceRefs": ["https://thermory.com/product/thermory-sauna-bench-board-shp-aspen/"],
+      "application": {"role": "saunaBenchSurface", "evidence": "Manufacturer-listed sauna bench board"},
+      "profile": {"stockKind": "linear", "wood": true, "thicknessMm": 28, "widthMm": 90, "lengthMm": null, "profileFamily": "SHP", "thermalModification": "not modified"},
+      "purchase": {"unit": "bundle", "pieceCount": 4, "selectedLengthRequired": true},
+      "requirements": ["Obtain an exact dealer length/sell unit before stock binding", "No same-product HD/Lowe's offer verified", "Not-modified classification is not a universal finish/chemical declaration", "Design supporting frame, span and attachments separately"]
+    },
+    {
+      "id": "cedarbrook-foil-vapor",
+      "supplier": "Cedarbrook Sauna + Steam",
+      "supplierSku": "FOIL-VAPOR",
+      "channel": "specialist-manufacturer-retail",
+      "retailerOffers": [],
+      "sourceRefs": ["https://cedarbrooksauna.com/sauna-foil-vapor-barrier/"],
+      "application": {"role": "saunaVaporBarrier", "evidence": "Supplier uses this foil in its sauna assemblies"},
+      "profile": {"stockKind": "roll", "widthIn": 54, "lengthIn": null, "thicknessIn": null},
+      "purchase": {"unit": "custom-length roll", "pieceCount": 1, "lengthFromOrder": true},
+      "requirements": ["Record actual supplied length from selected room/order", "Use the supplier's coverage/overlap method; fixed 100-foot rolls are not established", "This supplier describes stapled overlaps without requiring seam tape", "Do not substitute bubble foil or plastic by name or appearance", "Do not render a fabricated solid thickness"]
+    },
+    {
+      "id": "cedarbrook-clad-24x76-nw",
+      "supplier": "Cedarbrook Sauna + Steam",
+      "supplierSku": "CLAD-24X76-NW",
+      "channel": "specialist-manufacturer-retail",
+      "retailerOffers": [],
+      "sourceRefs": ["https://cedarbrooksauna.com/cedar-clad-sauna-door-24x76-ro-no-window/"],
+      "application": {"role": "saunaDoor", "evidence": "Manufacturer prehung sauna door; outward swing required"},
+      "profile": {"stockKind": "preassembled-door", "leafWidthIn": 22, "leafHeightIn": 74.5, "leafThicknessIn": 2.625, "roughOpeningWidthIn": 24, "roughOpeningHeightIn": 76, "jambWidthIn": null, "completeFrameEnvelope": null},
+      "purchase": {"unit": "prehung assembly", "pieceCount": 1, "included": [{"component": "self-closing hinge", "quantity": 1}, {"component": "standard hinge", "quantity": 2}, {"component": "handle", "quantity": 1}]},
+      "requirements": ["Configure jamb to the chosen wall stack; preserve no-threshold and outward-swing requirements", "Leaf, opening and frame envelope are different dimensions", "Do not substitute shipping dimensions or double-count included hardware", "Do not permit stock-board cut operations on the assembly"]
+    },
+    {
+      "id": "jm-u1330-unfaced-r13",
+      "supplier": "Johns Manville",
+      "manufacturerPartNumber": "U1330",
+      "channel": "lowes",
+      "retailerOffers": [{"retailer": "lowes", "productId": "3013301", "itemNumber": "13988", "model": "U1330", "url": "https://www.lowes.com/pd/Johns-Manville-R-13-Fiberglass-Batt-Insulation-with-Sound-Barrier-15-in-W-x-93-in-L/3013301"}],
+      "sourceRefs": ["https://www.lowes.com/pd/Johns-Manville-R-13-Fiberglass-Batt-Insulation-with-Sound-Barrier-15-in-W-x-93-in-L/3013301", "https://cedarbrooksauna.com/how-to-prepare-for-my-sauna-installation/", "https://cedarbrooksauna.com/faqs/page/2/"],
+      "application": {"role": "saunaInsulation", "evidence": "Conditional material-class match: unfaced fiberglass behind selected sauna layers; no exact SKU sauna endorsement"},
+      "profile": {"stockKind": "batt", "thicknessIn": 3.5, "widthIn": 15, "lengthIn": 93, "rValue": 13, "facing": "unfaced", "structuralSupport": false},
+      "purchase": {"unit": "bag", "pieceCount": 11, "coverageSqFt": 106.56},
+      "requirements": ["Tie product/facing/cavity and layer sequence to a selected sauna/heater system before author-reviewed role qualification", "Do not treat general cavity insulation as a heater shield", "Do not silently replace with retired U1330S or EFU001 listings", "No current store stock/price verified"]
+    },
+    {
+      "id": "knauf-505915-839011-r13-candidate",
+      "supplier": "Knauf Insulation",
+      "retailerModel": "505915/839011",
+      "channel": "home-depot",
+      "retailerOffers": [{"retailer": "home-depot", "productId": "303653618", "itemNumber": "1002835646", "model": "505915/839011", "url": "https://www.homedepot.com/p/R-13-EcoBatt-Unfaced-Fiberglass-Insulation-Batt-3-1-2-in-x-15-in-x-93-in-505915-839011/303653618"}],
+      "sourceRefs": ["https://www.homedepot.com/p/R-13-EcoBatt-Unfaced-Fiberglass-Insulation-Batt-3-1-2-in-x-15-in-x-93-in-505915-839011/303653618", "https://images.thdstatic.com/catalog/pdfImages/34/34775c82-3888-4090-9597-68d4fea64b41.pdf"],
+      "application": {"role": "saunaInsulation", "evidence": "Candidate only; facing description conflict and exact sauna assembly match unresolved"},
+      "profile": {"stockKind": "batt", "thicknessIn": 3.5, "widthIn": 15, "lengthIn": 93, "rValue": 13, "facing": "unfaced in title/specifications; kraft in generic prose", "structuralSupport": false},
+      "purchase": {"unit": "bag", "pieceCount": 12, "coverageSqFt": 116},
+      "requirements": ["Resolve actual label/factory variant and facing conflict before exact binding", "Do not turn general manufacturer data into sauna approval", "Preserve separate batt and bag dimensions"]
+    },
+    {
+      "id": "backyard-discovery-henley-2504769-kit",
+      "supplier": "Backyard Discovery",
+      "manufacturerPartNumber": "2504769",
+      "channel": "complete-retailer-kit",
+      "retailerOffers": [{"retailer": "home-depot", "productId": "341003031", "model": "2504769com", "url": "https://www.homedepot.com/p/Backyard-Discovery-Henley-4-Person-Outdoor-Cedar-Traditional-Wet-Dry-Cabin-Sauna-with-9kW-Electric-Heater-Wi-Fi-Control-LED-Lights-2504769com/341003031"}, {"retailer": "lowes", "productId": "5018283975", "itemNumber": "8638981", "model": "2504769COM", "url": "https://www.lowes.com/pd/Backyard-Discovery-81-5-in-H-x-89-in-W-x-62-25-in-D-Wood-Electric-sauna/5018283975"}],
+      "sourceRefs": ["https://www.backyarddiscovery.com/products/henley-2-4-person-outdoor-cabin-sauna", "https://www.backyarddiscovery.com/pages/outdoor-sauna-electrical-guide", "https://images.thdstatic.com/catalog/pdfImages/73/73fe6e20-2b3c-5460-8661-68718087d0bd.pdf", "https://pdf.lowes.com/productdocuments/8b3fab44-2650-4e93-8b90-72756a7c6d3b/80054895.pdf"],
+      "application": {"role": "completeSaunaKit", "evidence": "Manufacturer-designed traditional outdoor sauna; not a qualification for individual commodity cedar stock"},
+      "profile": {"stockKind": "assembly", "cuttable": false, "hdExteriorIn": {"width": 62.25, "depth": 90.75, "height": 81.5}, "manufacturerRoundedExteriorIn": {"width": 62.3, "depth": 90.8, "height": 81.5}, "interiorIn": {"width": 50.5, "depth": 63.2, "height": 73}, "wallThicknessMm": 30, "doorGlassThicknessMm": 8, "componentGeometry": null},
+      "purchase": {"unit": "complete kit", "pieceCount": 1, "includedComponentCounts": "Use the exact revision's manual; not extracted in this research"},
+      "requirements": ["Reconcile Lowe's89-inch width/62.25-inch depth convention before final placement geometry", "com suffix equivalence is specifically documented by this manufacturer; B revisions remain distinct", "Freeze the delivered revision/manual before electrical planning; older manual and current guide conflict", "Do not add synthetic insulation/foil layers to this solid-cedar kit design", "One kit purchase source must cover all included parts without double counting", "The large assembly PDF exceeded browser extraction; exact part dimensions/counts remain unparsed", "No current stock, price or purchase is asserted"]
+    }
+  ]
+}

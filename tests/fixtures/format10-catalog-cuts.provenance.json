@@ -1,0 +1,9 @@
+{
+  "source": "Isolated catalog and cut-source qualification, format 10",
+  "sourceQualification": "work/yardwork-catalog-cuts-20261117165504/qualification-summary.json",
+  "sha256": "9496ef61266b213f15d9d95ef6a9f3afecac628ffdec3a530a6d4839a88df7bb",
+  "revision": 1,
+  "schemaVersion": 10,
+  "originalBytesCopiedWithoutReserialization": true,
+  "syntheticSoftwareFixture": true
+}

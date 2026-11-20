@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   Box,
@@ -9,7 +9,11 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { material, type Project, type V3 } from "./model";
+import { material, type Project, type Section, type V3 } from "./model";
+import { LidMotionPanel } from "./LidMotionPanel";
+import type { LidPreview } from "./lidMotion";
+import { LidHingesPanel } from "./LidHingesPanel";
+import { removeLidHingePlan } from "./hinges";
 import {
   createSection,
   duplicateSection,
@@ -17,6 +21,8 @@ import {
   sectionModified,
   sectionSummary,
   transformSection,
+  previewRecipeResize,
+  setSectionLidOpen,
 } from "./sections";
 function AxisInput({
   label,
@@ -70,22 +76,229 @@ function AxisInput({
     </label>
   );
 }
+function RecipeEditor({
+  project,
+  section,
+  onChange,
+  onLidPreview,
+  lidPreviewSectionId,
+}: {
+  project: Project;
+  section: Section;
+  onChange: (project: Project) => void;
+  onLidPreview?: (preview: LidPreview | null) => void;
+  lidPreviewSectionId?: string | null;
+}) {
+  const recipe = section.recipe!;
+  const [showHinges, setShowHinges] = useState(false);
+  const [draft, setDraft] = useState({
+      width: String(recipe.width),
+      depth: String(recipe.depth),
+      height: String(recipe.height),
+    }),
+    [error, setError] = useState("");
+  useEffect(
+    () =>
+      setDraft({
+        width: String(recipe.width),
+        depth: String(recipe.depth),
+        height: String(recipe.height),
+      }),
+    [recipe.width, recipe.depth, recipe.height],
+  );
+  const preview = useMemo(() => {
+    try {
+      if (Object.values(draft).some((v) => !v.trim()))
+        throw Error("Enter all three section dimensions.");
+      return {
+        value: previewRecipeResize(project, section.id, {
+          width: Number(draft.width),
+          depth: Number(draft.depth),
+          height: Number(draft.height),
+        }),
+        error: null,
+      };
+    } catch (e) {
+      return {
+        value: null,
+        error: e instanceof Error ? e.message : "Invalid dimensions",
+      };
+    }
+  }, [project, section.id, draft]);
+  const changed =
+    Number(draft.width) !== recipe.width ||
+    Number(draft.depth) !== recipe.depth ||
+    Number(draft.height) !== recipe.height;
+  return (
+    <div className="section-description recipe-editor">
+      <span className="tag">
+        Editable {recipe.kind}
+        {recipe.storage ? " · enclosed storage" : ""}
+      </span>
+      <p>
+        {recipe.width} × {recipe.depth} in footprint · {recipe.height} in{" "}
+        {recipe.kind === "bench" ? "seat" : "overall"} height.
+      </p>
+      <div className="number-row">
+        {(["width", "depth", "height"] as const).map((field) => (
+          <label className="number-field" key={field}>
+            <span>
+              {field === "height" && recipe.kind === "bench"
+                ? "Seat height"
+                : field[0].toUpperCase() + field.slice(1)}
+            </span>
+            <div>
+              <input
+                aria-label={`Section ${field === "height" && recipe.kind === "bench" ? "seat height" : field}`}
+                type="number"
+                step="0.125"
+                min="0.125"
+                max="240"
+                value={draft[field]}
+                onChange={(e) => {
+                  onLidPreview?.(null);
+                  setDraft((d) => ({ ...d, [field]: e.target.value }));
+                }}
+              />
+              <small>in</small>
+            </div>
+          </label>
+        ))}
+      </div>
+      <p className="small-note">
+        Rebuilds cut lengths from the recipe while keeping stock thickness,
+        section placement and unrelated parts.
+      </p>
+      {!changed && preview.value?.manualEdits && (
+        <div className="notice">
+          <AlertTriangle size={16} />
+          <p>
+            This section has manual part edits. Applying dimensions replaces
+            them with recipe geometry and removes affected connections; preview
+            lid access preserves its edits around the provisional pivot.
+          </p>
+        </div>
+      )}
+      {changed && preview.value && (
+        <div className="notice">
+          <AlertTriangle size={16} />
+          <p>
+            Replace {preview.value.replacedParts} parts with{" "}
+            {preview.value.newParts}; remove {preview.value.removedConnections}{" "}
+            connection(s) involving them.{" "}
+            {preview.value.manualEdits
+              ? "Manual part edits in this section will be replaced. "
+              : ""}
+            {preview.value.incompleteEstimate
+              ? "Some cuts exceed available stock. "
+              : ""}
+            Undo is available.
+          </p>
+        </div>
+      )}
+      {preview.error && (
+        <p className="form-error" role="alert">
+          {preview.error}
+        </p>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <button
+        className="button primary full"
+        disabled={!changed || !preview.value}
+        onClick={() => {
+          onLidPreview?.(null);
+          if (preview.value) onChange(preview.value.project);
+        }}
+      >
+        Apply dimensions
+      </button>
+      {recipe.openingLid && (
+        <>
+          <label className="field">
+            <span>
+              <input
+                type="checkbox"
+                aria-label="Preview lid open"
+                checked={recipe.lidOpen}
+                onChange={(e) => {
+                  onLidPreview?.(null);
+                  try {
+                    onChange(
+                      setSectionLidOpen(project, section.id, e.target.checked),
+                    );
+                    setError("");
+                  } catch (e) {
+                    setError(
+                      e instanceof Error ? e.message : "Could not preview lid",
+                    );
+                  }
+                }}
+              />{" "}
+              Preview lid open
+            </span>
+          </label>
+          <p className="small-note">
+            This saves the selected measured hinge pose, or the provisional rear
+            pivot when no measured hinge is selected. Close the saved pose
+            before generating a closed build guide.
+          </p>
+          {onLidPreview && (
+            <LidMotionPanel
+              project={project}
+              section={section}
+              onPreview={onLidPreview}
+              onChange={onChange}
+              previewActive={lidPreviewSectionId === section.id}
+            />
+          )}
+          <button
+            className="button secondary full"
+            type="button"
+            aria-expanded={showHinges}
+            onClick={() => setShowHinges((value) => !value)}
+          >
+            Measured hinges
+          </button>
+          {showHinges && (
+            <LidHingesPanel
+              project={project}
+              sectionId={section.id}
+              onChange={onChange}
+              onPreview={onLidPreview}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 export function SectionsPanel({
   project,
   selectedId,
   onSelect,
   onChange,
   onGenerate,
+  onReviewFloorBase,
   onMoveTool,
   onPartTool,
+  onLidPreview,
+  lidPreviewSectionId,
 }: {
   project: Project;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onChange: (p: Project) => void;
   onGenerate: (id: string) => void;
+  onReviewFloorBase: (section: Section) => void;
   onMoveTool: () => void;
   onPartTool: () => void;
+  onLidPreview?: (preview: LidPreview | null) => void;
+  lidPreviewSectionId?: string | null;
 }) {
   const [error, setError] = useState("");
   const attempt = (fn: () => void) => {
@@ -105,6 +318,13 @@ export function SectionsPanel({
         .map((p) => p.assembly),
     ),
   ];
+  const orphanedHinges = project.lidHingePlans.filter(
+    (plan) =>
+      !project.sections.some(
+        (section) =>
+          section.id === plan.sectionId && !!section.recipe?.openingLid,
+      ),
+  );
   const members = section
     ? project.pieces.filter((p) => section.pieceIds.includes(p.id))
     : [];
@@ -123,11 +343,51 @@ export function SectionsPanel({
           part stays editable.
         </p>
       </div>
+      {orphanedHinges.length > 0 && (
+        <details
+          className="field-section"
+          aria-label="Hinge plans without an opening section"
+        >
+          <summary>
+            Hinge plans without an opening section ({orphanedHinges.length})
+          </summary>
+          <p className="small-note">
+            These saved intents no longer have an opening section. Select
+            another opening section’s Measured hinges controls to map one
+            explicitly, or remove an intent here. Other plans, purchases and
+            label history stay in place.
+          </p>
+          {orphanedHinges.map((plan) => (
+            <div key={plan.id}>
+              <p className="small-note">
+                <strong>
+                  {plan.label} · {plan.name}
+                </strong>
+              </p>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() =>
+                  attempt(() => {
+                    onLidPreview?.(null);
+                    onChange(removeLidHingePlan(project, plan.id));
+                  })
+                }
+              >
+                Remove {plan.label} hinge plan
+              </button>
+            </div>
+          ))}
+        </details>
+      )}
       <label className="field">
         Current section
         <select
           value={selectedId ?? ""}
-          onChange={(e) => onSelect(e.target.value || null)}
+          onChange={(e) => {
+            onLidPreview?.(null);
+            onSelect(e.target.value || null);
+          }}
         >
           <option value="">Choose a section…</option>
           {project.sections.map((s) => (
@@ -149,9 +409,11 @@ export function SectionsPanel({
               <span>
                 <strong>{s.name}</strong>
                 <small>
-                  {s.generator
-                    ? sectionSummary(s.generator)
-                    : `${s.pieceIds.length} grouped parts`}
+                  {s.recipe
+                    ? `${s.recipe.width} × ${s.recipe.depth} in ${s.recipe.kind}`
+                    : s.generator
+                      ? sectionSummary(s.generator)
+                      : `${s.pieceIds.length} grouped parts`}
                 </small>
               </span>
             </button>
@@ -171,7 +433,13 @@ export function SectionsPanel({
                   onChange({
                     ...project,
                     sections: project.sections.map((s) =>
-                      s.id === section.id ? { ...s, name } : s,
+                      s.id === section.id
+                        ? {
+                            ...s,
+                            name,
+                            recipe: s.recipe ? { ...s.recipe, name } : null,
+                          }
+                        : s,
                     ),
                     pieces: project.pieces.map((p) =>
                       section.pieceIds.includes(p.id)
@@ -182,7 +450,16 @@ export function SectionsPanel({
               }}
             />
           </label>
-          {section.generator ? (
+          {section.recipe ? (
+            <RecipeEditor
+              key={`${project.id}/${section.id}`}
+              project={project}
+              section={section}
+              onChange={onChange}
+              onLidPreview={onLidPreview}
+              lidPreviewSectionId={lidPreviewSectionId}
+            />
+          ) : section.generator ? (
             <div className="section-description">
               <span className="tag">
                 Generated {section.generator.type === "wall" ? "wall" : "base"}
@@ -195,6 +472,11 @@ export function SectionsPanel({
                 <Sparkles size={14} />
                 Revise this section
               </button>
+              {section.generator.type === "foundation" && (
+                <button type="button" className="button secondary full" onClick={() => onReviewFloorBase(section)}>
+                  Review floor-base joist ends
+                </button>
+              )}
               {sectionModified(project, section) && (
                 <div className="notice">
                   <AlertTriangle size={16} />

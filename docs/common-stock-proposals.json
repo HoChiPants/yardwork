@@ -1,0 +1,972 @@
+{
+  "researchedOn": "2026-11-16",
+  "purpose": "Research proposals only. No runtime registry/material changes or store stock observations.",
+  "storeContext": {
+    "zip": "84121",
+    "storeId": null,
+    "stockObserved": false,
+    "priceObserved": false
+  },
+  "readinessMeaning": {
+    "physical-variant-review-ready": "Actual source profile and retail pack sufficient for a separate reviewed material; still no installation/capacity approval.",
+    "procurement-reference-only": "Exact retailer/product and useful pack/length/coverage; complete physical geometry or exact count basis is unresolved.",
+    "candidate": "Conflicting or missing profile/sell-unit evidence prevents promotion."
+  },
+  "dimensionConvention": "Wood stockSizeIn=[thickness,width,length], all in inches. Null means not verified. Do not import research-only shapes without implementing schema support.",
+  "sources": [
+    {
+      "id": "hd-stud",
+      "url": "https://www.homedepot.com/p/2-in-x-4-in-x-96-in-Prime-Kiln-Dried-Douglas-Fir-Stud-785326/202046915",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "lowes-syp",
+      "url": "https://www.lowes.com/pd/Top-Choice-2-in-x-4-in-x-8-ft-Southern-Yellow-Pine-Kiln-dried-Lumber/5014110787",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "lowes-df",
+      "url": "https://www.lowes.com/pd/2-in-x-4-in-x-8-ft-2-Douglas-Fir-Kiln-Dried-Lumber/5003667531",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "lowes-unit294",
+      "url": "https://www.lowes.com/pd/Interfor-2-in-x-4-in-x-96-in-Spruce-Pine-Fir-S4See-Kiln-dried-Stud/5014776459",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "hd-pt",
+      "url": "https://www.homedepot.com/p/WeatherShield-2-in-x-4-in-x-8-ft-2-Prime-Ground-Contact-Pressure-Treated-Southern-Yellow-Pine-Lumber-291224/301836994",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "hd-pt-west",
+      "url": "https://www.homedepot.com/p/2-in-x-4-in-x-8-ft-Brown-Stain-Ground-Contact-Pressure-Treated-Lumber-WW-Actual-1-5-in-x-3-5-in-x-96-in-17463-08/206949446",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "lowes-pt",
+      "url": "https://www.lowes.com/pd/severe-weather-2-4-8-tc-treated-2-prime/5014119401",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "lowes-pt-hemlock",
+      "url": "https://www.lowes.com/pd/Severe-Weather-2-in-x-4-in-x-8-ft-Standard-Hem-fir-Ground-contact-Pressure-Treated-Lumber/5016087993",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "lowes-pt-11726",
+      "url": "https://www.lowes.com/pd/Severe-Weather-2-in-x-4-in-x-8-ft-2-Prime-Southern-yellow-pine-Ground-contact-Pressure-Treated-Lumber/1002269426",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "hd-post",
+      "url": "https://www.homedepot.com/p/4-in-x-4-in-x-8-ft-2-Ground-Contact-Pressure-Treated-Southern-Yellow-Pine-Wood-Post-194354/205220341",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "lowes-post",
+      "url": "https://www.lowes.com/pd/severe-weather-common-4-in-x-4-in-x-8-ft-actual-3-5-in-x-3-5-in-x-8-ft-2-treated-lumber/50121083",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "grip-manufacturer",
+      "url": "https://grip-rite.com/product/fasteners/hand-drive/screws/interior-screws/construction-screw/",
+      "type": "manufacturer-product",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "grip-hd",
+      "url": "https://www.homedepot.com/p/Grip-Rite-9-x-3-in-Star-Drive-Dual-Flat-Head-Coarse-Thread-Construction-Screws-1-lb-Box-3GCS1/204959258",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "grip-lowes",
+      "url": "https://www.lowes.com/pd/Grip-Rite-9-x-3-in-Gold-Yellow-Zinc-Bugle-Interior-Wood-Screws-1-lb/1000075795",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "csv-hd",
+      "url": "https://www.homedepot.com/p/Simpson-Strong-Tie-10-x-3-in-T25-Flat-Head-Strong-Drive-CSV-Construction-Screw-Yellow-Zinc-70-Pack-CSVZ3R70/321563361",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "csv-lowes",
+      "url": "https://www.lowes.com/pd/Simpson-Strong-Tie-Strong-Drive-174-CSV-Construction-Screw-8212-10-x-3-in-T-25-Flat-Head-Yellow-Zinc-70-Qty/1002623380",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "spax-hd",
+      "url": "https://www.homedepot.com/p/SPAX-10-x-3-in-Interior-Flat-Head-Wood-Screws-Construction-Phillips-Square-Unidrive-72-Each-1-LB-Bit-Included-4101010500754/315163702",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "spax-lowes",
+      "url": "https://www.lowes.com/pd/SPAX-10-x-3-in-SPAX-Flat-Head-Unidrive-Zinc-Coated-Screw-1LB-Box-72CT/5001701753",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "spax-manufacturer-table",
+      "url": "https://images.thdstatic.com/catalog/pdfImages/20/204f54c4-36ba-4b79-bdcc-3ef2012baab8.pdf",
+      "type": "retailer-hosted-manufacturer-catalog",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "short-hd",
+      "url": "https://www.homedepot.com/p/10-x-1-1-4-in-Zinc-Plated-Phillips-Flat-Head-Wood-Screw-100-Pack-822812/317479383",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "short-lowes",
+      "url": "https://www.lowes.com/pd/Hillman-10-x-1-1-4-in-Silver-Zinc-Plated-Flat-Interior-Wood-Screws-75-Count/3036075",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "cloth-hd",
+      "url": "https://www.homedepot.com/p/Everbilt-Galvanized-Steel-1-2-in-Mesh-2-ft-x-25-ft-19-Gauge-Hardware-Cloth-308224EB/205960837",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "cloth-hd-sellunit",
+      "url": "https://www.homedepot.com/b/Lumber-Composites-Fencing-Gates-Hardware-Cloth-Fencing/25-ft/N-5yc1vZcd55Z1z112x0",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "cloth-lowes",
+      "url": "https://www.lowes.com/pd/GARDEN-CRAFT/5013886931",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "cloth-manufacturer",
+      "url": "https://originpointbrands.com/wp-content/uploads/2020/10/OP20.OPB-CatalogMidyearUpdateWebRes-compressed.pdf",
+      "type": "manufacturer-catalog",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "cloth-lowes-retired1",
+      "url": "https://www.lowes.com/pd/GARDEN-CRAFT/5013886929",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    },
+    {
+      "id": "cloth-lowes-retired2",
+      "url": "https://www.lowes.com/pd/GARDEN-CRAFT/5002677367",
+      "type": "retailer-reference",
+      "reviewedOn": "2026-11-16"
+    }
+  ],
+  "proposals": [
+    {
+      "id": "hd-fir-2x4x96-202046915",
+      "name": "Home Depot regional fir 2×4×8",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "candidate",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": [
+          1.5,
+          3.5,
+          96
+        ],
+        "dimensionMeaning": "actual-stock",
+        "packCount": null
+      },
+      "specifications": {
+        "species": "Fir label; species may vary regionally",
+        "grade": "#2 Premium (title)",
+        "moisture": null,
+        "treatment": null
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "202046915",
+          "retailerModel": "785326",
+          "retailerItemNumber": "441317",
+          "url": "https://www.homedepot.com/p/2-in-x-4-in-x-96-in-Prime-Kiln-Dried-Douglas-Fir-Stud-785326/202046915",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "hd-stud"
+      ],
+      "blockers": [
+        "Explicit retail pack/unit not verified.",
+        "Do not infer one manufacturer, Douglas-fir species or kiln-drying from the stale URL."
+      ],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred."
+      ]
+    },
+    {
+      "id": "lowes-syp-2x4x96-5140",
+      "name": "Top Choice SYP 2×4×8",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "physical-variant-review-ready",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": [
+          1.5,
+          3.5,
+          96
+        ],
+        "dimensionMeaning": "actual-stock",
+        "packCount": 1
+      },
+      "specifications": {
+        "species": "Southern yellow pine",
+        "grade": "#2 in title/specs",
+        "moisture": "Kiln-dried",
+        "treatment": "No preservative-treatment qualification; above-ground listing"
+      },
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "5014110787",
+          "retailerModel": "020408#2 SYP",
+          "retailerItemNumber": "5140",
+          "url": "https://www.lowes.com/pd/Top-Choice-2-in-x-4-in-x-8-ft-Southern-Yellow-Pine-Kiln-dried-Lumber/5014110787",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "lowes-syp"
+      ],
+      "blockers": [],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred.",
+        "Overview calls grade #2 Prime while title/specs say #2; retain conservative #2 and require the actual stamp. Regional store availability unknown."
+      ]
+    },
+    {
+      "id": "lowes-df-2x4x96-330568",
+      "name": "Lowe’s Douglas-fir 2×4×8",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "candidate",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": [
+          1.5,
+          3.5,
+          96
+        ],
+        "dimensionMeaning": "actual-stock",
+        "packCount": null
+      },
+      "specifications": {
+        "species": "Douglas fir",
+        "grade": "#2",
+        "moisture": "Kiln-dried",
+        "treatment": null
+      },
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "5003667531",
+          "retailerModel": "20496 KDDFL",
+          "retailerItemNumber": "330568",
+          "url": "https://www.lowes.com/pd/2-in-x-4-in-x-8-ft-2-Douglas-Fir-Kiln-Dried-Lumber/5003667531",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "lowes-df"
+      ],
+      "blockers": [
+        "Explicit retail pack/unit not verified."
+      ],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred.",
+        "Already present as a registry candidate; update evidence rather than duplicate."
+      ]
+    },
+    {
+      "id": "hd-weathershield-2x4x96-301836994",
+      "name": "WeatherShield treated SYP 2×4×8",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "candidate",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": [
+          1.5,
+          3.5,
+          96
+        ],
+        "dimensionMeaning": "actual-stock",
+        "packCount": null
+      },
+      "specifications": {
+        "species": "Southern yellow pine",
+        "grade": "#2 Prime",
+        "moisture": null,
+        "treatment": "MCA; ground-contact title/highlights conflict with above-ground-only prose"
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "301836994",
+          "retailerModel": "291224",
+          "retailerItemNumber": "1001753743",
+          "url": "https://www.homedepot.com/p/WeatherShield-2-in-x-4-in-x-8-ft-2-Prime-Ground-Contact-Pressure-Treated-Southern-Yellow-Pine-Lumber-291224/301836994",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "hd-pt"
+      ],
+      "blockers": [
+        "Retail sell pack not verified.",
+        "Ground-contact suitability is internally inconsistent; retain unqualified until actual end tag/use category is verified."
+      ],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred."
+      ]
+    },
+    {
+      "id": "hd-western-treated-2x4x96-206949446",
+      "name": "Home Depot brown treated western-wood 2×4×8",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "candidate",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": [
+          1.5,
+          3.5,
+          96
+        ],
+        "dimensionMeaning": "actual-stock",
+        "packCount": null
+      },
+      "specifications": {
+        "species": "Western wood species; store variable",
+        "grade": null,
+        "moisture": null,
+        "treatment": "Copper azole; ground-contact title conflicts with above-ground highlight"
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "206949446",
+          "retailerModel": "17463-08",
+          "retailerItemNumber": "1001765205",
+          "url": "https://www.homedepot.com/p/2-in-x-4-in-x-8-ft-Brown-Stain-Ground-Contact-Pressure-Treated-Lumber-WW-Actual-1-5-in-x-3-5-in-x-96-in-17463-08/206949446",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "hd-pt-west"
+      ],
+      "blockers": [
+        "Retail sell pack not verified.",
+        "Treatment use category/grade not consistently specified."
+      ],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred."
+      ]
+    },
+    {
+      "id": "lowes-syp-treated-2x4x96-5302558",
+      "name": "Severe Weather treated SYP 2×4×8",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "candidate",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": [
+          1.5,
+          3.5,
+          96
+        ],
+        "dimensionMeaning": "actual-stock",
+        "packCount": null
+      },
+      "specifications": {
+        "species": "Southern yellow pine",
+        "grade": "#2 Prime",
+        "moisture": "Kiln-dried",
+        "treatment": "MCA; ground contact"
+      },
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "5014119401",
+          "retailerModel": "20408MGYPL",
+          "retailerItemNumber": "5302558",
+          "url": "https://www.lowes.com/pd/severe-weather-2-4-8-tc-treated-2-prime/5014119401",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "lowes-pt"
+      ],
+      "blockers": [
+        "Page package quantity is 104; whether this is a sell bundle or logistics unit is unresolved."
+      ],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred.",
+        "Do not replace this field with 1. A second exact-MCA source 1002269426 / 11726 also reports package104."
+      ]
+    },
+    {
+      "id": "lowes-hemfir-treated-2x4x96-2885596",
+      "name": "Severe Weather treated hem-fir 2×4×8",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "candidate",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": null,
+        "dimensionMeaning": "actual-stock",
+        "packCount": 1
+      },
+      "specifications": {
+        "species": "Hem fir",
+        "grade": "Standard in specs; #2 prose",
+        "moisture": "Green",
+        "treatment": "CAC per retailer; ground contact"
+      },
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "5016087993",
+          "retailerModel": "HS154CASL0204-08",
+          "retailerItemNumber": "2885596",
+          "url": "https://www.lowes.com/pd/Severe-Weather-2-in-x-4-in-x-8-ft-Standard-Hem-fir-Ground-contact-Pressure-Treated-Lumber/5016087993",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "lowes-pt-hemlock"
+      ],
+      "blockers": [
+        "Overview1.5×3.5in conflicts with actual specs1.562×3.562in; grade also differs."
+      ],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred.",
+        "Keep source dimensional values separate; do not average or bind to generic1.5×3.5."
+      ]
+    },
+    {
+      "id": "hd-syp-post-4x4x96-205220341",
+      "name": "Home Depot treated SYP 4×4×8 post",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "candidate",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": [
+          3.5,
+          3.5,
+          96
+        ],
+        "dimensionMeaning": "actual-stock",
+        "packCount": null
+      },
+      "specifications": {
+        "species": "Southern yellow pine",
+        "grade": "#2",
+        "moisture": null,
+        "treatment": "MCA; ground contact"
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "205220341",
+          "retailerModel": "194354",
+          "retailerItemNumber": "256276",
+          "url": "https://www.homedepot.com/p/4-in-x-4-in-x-8-ft-2-Ground-Contact-Pressure-Treated-Southern-Yellow-Pine-Wood-Post-194354/205220341",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "hd-post"
+      ],
+      "blockers": [
+        "Explicit current retail sell pack not verified."
+      ],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred."
+      ]
+    },
+    {
+      "id": "lowes-syp-post-4x4x96-552328",
+      "name": "Severe Weather treated SYP 4×4×8 post",
+      "identityBasis": "retailer-specification",
+      "manufacturer": null,
+      "manufacturerPartNumber": null,
+      "category": "lumber",
+      "readiness": "physical-variant-review-ready",
+      "physicalProfile": {
+        "stockKind": "linear",
+        "wood": true,
+        "stockSizeIn": [
+          3.5,
+          3.5,
+          96
+        ],
+        "dimensionMeaning": "actual-stock",
+        "packCount": 1
+      },
+      "specifications": {
+        "species": "Southern yellow pine",
+        "grade": "#2",
+        "moisture": "Kiln-dried in specifications",
+        "treatment": "MCA in product description; ground contact"
+      },
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "50121083",
+          "retailerModel": "Y2L40408-GC",
+          "retailerItemNumber": "552328",
+          "url": "https://www.lowes.com/pd/severe-weather-common-4-in-x-4-in-x-8-ft-actual-3-5-in-x-3-5-in-x-8-ft-2-treated-lumber/50121083",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "lowes-post"
+      ],
+      "blockers": [],
+      "requirements": [
+        "Measure purchased stock before precision joinery; inspect grade/treatment stamps.",
+        "No capacity, connection schedule or installation approval is inferred.",
+        "A highlight drops decimal points to35in; detailed actual-dimension fields and description agree on3.5in. Do not ingest that typo. No retention/use-category number verified."
+      ]
+    },
+    {
+      "id": "grip-rite-3gcs1",
+      "name": "Grip-Rite #9×3in interior construction screw,1lb box",
+      "identityBasis": "manufacturer-part",
+      "manufacturer": "Grip-Rite",
+      "manufacturerPartNumber": "3GCS1",
+      "category": "fastener",
+      "readiness": "procurement-reference-only",
+      "physicalProfile": {
+        "stockKind": "fastener",
+        "wood": false,
+        "stockSizeIn": null,
+        "dimensionMeaning": "unverified",
+        "packCount": 72,
+        "fastenerLengthIn": 3,
+        "headDiameterIn": null,
+        "shankDiameterIn": null
+      },
+      "specifications": {
+        "size": "#9",
+        "finish": "Yellow zinc",
+        "drive": "T25 star",
+        "packCountMeaning": "Manufacturer table72; Lowe’s explicitly says approximately72 pieces in weight-packed box"
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "204959258",
+          "retailerModel": "3GCS1",
+          "retailerItemNumber": "1000039818",
+          "url": "https://www.homedepot.com/p/Grip-Rite-9-x-3-in-Star-Drive-Dual-Flat-Head-Coarse-Thread-Construction-Screws-1-lb-Box-3GCS1/204959258",
+          "listingStatus": "reference"
+        },
+        {
+          "retailer": "lowes",
+          "productId": "1000075795",
+          "retailerModel": "3GCS1",
+          "retailerItemNumber": "787549",
+          "url": "https://www.lowes.com/pd/Grip-Rite-9-x-3-in-Gold-Yellow-Zinc-Bugle-Interior-Wood-Screws-1-lb/1000075795",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "grip-manufacturer",
+        "grip-hd",
+        "grip-lowes"
+      ],
+      "blockers": [
+        "Shank/head envelope not completely verified; no exact geometric binding."
+      ],
+      "requirements": [
+        "Treat72 as approximate yield, not guaranteed minimum; require count-basis support before exact pack rounding.",
+        "Interior wood-to-wood only; no arbitrary structural-connector or treated/exterior qualification."
+      ]
+    },
+    {
+      "id": "simpson-csvz3r70",
+      "name": "Strong-Drive CSV #10×3in,70-count box",
+      "identityBasis": "manufacturer-part",
+      "manufacturer": "Simpson Strong-Tie",
+      "manufacturerPartNumber": "CSVZ3R70",
+      "category": "fastener",
+      "readiness": "procurement-reference-only",
+      "physicalProfile": {
+        "stockKind": "fastener",
+        "wood": false,
+        "stockSizeIn": null,
+        "dimensionMeaning": "unverified",
+        "packCount": 70,
+        "fastenerLengthIn": 3,
+        "headDiameterIn": null,
+        "shankDiameterIn": null
+      },
+      "specifications": {
+        "size": "#10",
+        "finish": "Yellow zinc",
+        "drive": "T25; included bit",
+        "packCountMeaning": "Explicit fixed count in both retailer descriptions"
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "321563361",
+          "retailerModel": "CSVZ3R70",
+          "retailerItemNumber": "1008711183",
+          "url": "https://www.homedepot.com/p/Simpson-Strong-Tie-10-x-3-in-T25-Flat-Head-Strong-Drive-CSV-Construction-Screw-Yellow-Zinc-70-Pack-CSVZ3R70/321563361",
+          "listingStatus": "reference"
+        },
+        {
+          "retailer": "lowes",
+          "productId": "1002623380",
+          "retailerModel": "CSVZ3R70",
+          "retailerItemNumber": "2132121",
+          "url": "https://www.lowes.com/pd/Simpson-Strong-Tie-Strong-Drive-174-CSV-Construction-Screw-8212-10-x-3-in-T-25-Flat-Head-Yellow-Zinc-70-Qty/1002623380",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "csv-hd",
+        "csv-lowes"
+      ],
+      "blockers": [
+        "Shank/head envelope not completely verified; no exact geometric binding."
+      ],
+      "requirements": [
+        "Interior wood/engineered-wood scope; connector-specific approved fasteners remain a separate decision.",
+        "Do not substitute #9 GRK3-1/8in for this3in identity."
+      ]
+    },
+    {
+      "id": "spax-4101010500754",
+      "name": "SPAX #10×3in Unidrive interior,1lb box",
+      "identityBasis": "manufacturer-part",
+      "manufacturer": "SPAX",
+      "manufacturerPartNumber": "4101010500754",
+      "category": "fastener",
+      "readiness": "procurement-reference-only",
+      "physicalProfile": {
+        "stockKind": "fastener",
+        "wood": false,
+        "stockSizeIn": null,
+        "dimensionMeaning": "unverified",
+        "packCount": 72,
+        "fastenerLengthIn": 3,
+        "headDiameterIn": 0.39,
+        "shankDiameterIn": null
+      },
+      "specifications": {
+        "size": "#10",
+        "finish": "Zinc",
+        "drive": "Phillips#2 / Square#2 combination",
+        "packCountMeaning": "Retailer72; manufacturer table labels quantity approximate"
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "315163702",
+          "retailerModel": "4101010500754",
+          "retailerItemNumber": "1006213527",
+          "url": "https://www.homedepot.com/p/SPAX-10-x-3-in-Interior-Flat-Head-Wood-Screws-Construction-Phillips-Square-Unidrive-72-Each-1-LB-Bit-Included-4101010500754/315163702",
+          "listingStatus": "reference"
+        },
+        {
+          "retailer": "lowes",
+          "productId": "5001701753",
+          "retailerModel": "4101010500754",
+          "retailerItemNumber": "3753106",
+          "url": "https://www.lowes.com/pd/SPAX-10-x-3-in-SPAX-Flat-Head-Unidrive-Zinc-Coated-Screw-1LB-Box-72CT/5001701753",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "spax-hd",
+        "spax-lowes",
+        "spax-manufacturer-table"
+      ],
+      "blockers": [
+        "Shank/head envelope not completely verified; no exact geometric binding."
+      ],
+      "requirements": [
+        "Manufacturer table gives head0.390in and thread2.375in; shank diameter unverified.",
+        "Approximate72 per1lb box; manufacturer master5 means five retail boxes, not five screws or a retailer sell pack.",
+        "Scope to interior wood; no inferred approval for all materials in retailer marketing."
+      ]
+    },
+    {
+      "id": "everbilt-822812",
+      "name": "Everbilt #10×1-1/4in Phillips flat wood screw,100-count",
+      "identityBasis": "manufacturer-part",
+      "manufacturer": "Everbilt",
+      "manufacturerPartNumber": "822812",
+      "category": "fastener",
+      "readiness": "procurement-reference-only",
+      "physicalProfile": {
+        "stockKind": "fastener",
+        "wood": false,
+        "stockSizeIn": null,
+        "dimensionMeaning": "unverified",
+        "packCount": 100,
+        "fastenerLengthIn": 1.25,
+        "headDiameterIn": null,
+        "shankDiameterIn": null
+      },
+      "specifications": {
+        "size": "#10",
+        "finish": "Zinc plated",
+        "drive": "Phillips flat head",
+        "packCountMeaning": "Explicit100 screws per retail package"
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "317479383",
+          "retailerModel": "822812",
+          "retailerItemNumber": "1006547788",
+          "url": "https://www.homedepot.com/p/10-x-1-1-4-in-Zinc-Plated-Phillips-Flat-Head-Wood-Screw-100-Pack-822812/317479383",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "short-hd"
+      ],
+      "blockers": [
+        "Shank/head envelope not completely verified; no exact geometric binding."
+      ],
+      "requirements": [
+        "Retailer13/64in pilot suggestion is not shank diameter; do not use it as body geometry or universal pilot size.",
+        "Specific material, edge distance and hardware schedule still require review; no exterior/treatment qualification inferred."
+      ]
+    },
+    {
+      "id": "hillman-35062",
+      "name": "Hillman #10×1-1/4in Phillips flat wood screw,75-count",
+      "identityBasis": "manufacturer-part",
+      "manufacturer": "Hillman",
+      "manufacturerPartNumber": "35062",
+      "category": "fastener",
+      "readiness": "procurement-reference-only",
+      "physicalProfile": {
+        "stockKind": "fastener",
+        "wood": false,
+        "stockSizeIn": null,
+        "dimensionMeaning": "unverified",
+        "packCount": 75,
+        "fastenerLengthIn": 1.25,
+        "headDiameterIn": null,
+        "shankDiameterIn": null
+      },
+      "specifications": {
+        "size": "#10",
+        "finish": "Zinc plated",
+        "drive": "Phillips flat head",
+        "packCountMeaning": "Explicit75 pieces per retail package"
+      },
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "3036075",
+          "retailerModel": "35062",
+          "retailerItemNumber": "58358",
+          "url": "https://www.lowes.com/pd/Hillman-10-x-1-1-4-in-Silver-Zinc-Plated-Flat-Interior-Wood-Screws-75-Count/3036075",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "short-lowes"
+      ],
+      "blockers": [
+        "Shank/head envelope not completely verified; no exact geometric binding."
+      ],
+      "requirements": [
+        "Interior above-ground wood-to-wood; predrilling required; retailer ACQ-approved=false.",
+        "Not the same manufacturer/package as Everbilt100-count; keep separate identity."
+      ]
+    },
+    {
+      "id": "everbilt-308224eb",
+      "name": "Everbilt24in×25ft half-inch hardware cloth",
+      "identityBasis": "manufacturer-part",
+      "manufacturer": "Everbilt",
+      "manufacturerPartNumber": "308224EB",
+      "category": "wire-mesh",
+      "readiness": "procurement-reference-only",
+      "physicalProfile": {
+        "stockKind": "mesh",
+        "wood": false,
+        "stockSizeIn": null,
+        "dimensionMeaning": "coverage-only",
+        "packCount": 1
+      },
+      "specifications": {
+        "coverageWidthIn": 24,
+        "coverageLengthIn": 300,
+        "meshOpeningIn": [
+          0.5,
+          0.5
+        ],
+        "gaugeLabel": 19,
+        "wireDiameterIn": null,
+        "finish": "Galvanized steel"
+      },
+      "offers": [
+        {
+          "retailer": "home-depot",
+          "productId": "205960837",
+          "retailerModel": "308224EB",
+          "retailerItemNumber": "266795",
+          "url": "https://www.homedepot.com/p/Everbilt-Galvanized-Steel-1-2-in-Mesh-2-ft-x-25-ft-19-Gauge-Hardware-Cloth-308224EB/205960837",
+          "listingStatus": "reference"
+        }
+      ],
+      "sourceRefs": [
+        "cloth-hd",
+        "cloth-hd-sellunit"
+      ],
+      "blockers": [
+        "Wire diameter and welded-crossing envelope not verified."
+      ],
+      "requirements": [
+        "Retail category explicitly prices per roll; pack1 means one24×300in roll.",
+        "Do not preserve the generic0.05in slab thickness as an exact physical wire profile. No predator/security guarantee inferred."
+      ]
+    },
+    {
+      "id": "garden-craft-132425",
+      "name": "Garden Craft24in×25ft half-inch hardware cloth",
+      "identityBasis": "manufacturer-part",
+      "manufacturer": "Origin Point Brands",
+      "manufacturerPartNumber": "132425",
+      "category": "wire-mesh",
+      "readiness": "procurement-reference-only",
+      "physicalProfile": {
+        "stockKind": "mesh",
+        "wood": false,
+        "stockSizeIn": null,
+        "dimensionMeaning": "coverage-only",
+        "packCount": 1
+      },
+      "specifications": {
+        "coverageWidthIn": 24,
+        "coverageLengthIn": 300,
+        "meshOpeningIn": [
+          0.5,
+          0.5
+        ],
+        "gaugeLabel": null,
+        "wireDiameterIn": null,
+        "finish": "Steel, galvanized after welding"
+      },
+      "offers": [
+        {
+          "retailer": "lowes",
+          "productId": "5013886931",
+          "retailerModel": "132425",
+          "retailerItemNumber": "492435",
+          "url": "https://www.lowes.com/pd/GARDEN-CRAFT/5013886931",
+          "listingStatus": "reference"
+        },
+        {
+          "retailer": "lowes",
+          "productId": "5013886929",
+          "retailerModel": "132425",
+          "retailerItemNumber": "492435",
+          "url": "https://www.lowes.com/pd/GARDEN-CRAFT/5013886929",
+          "listingStatus": "retired"
+        },
+        {
+          "retailer": "lowes",
+          "productId": "5002677367",
+          "retailerModel": "132425",
+          "retailerItemNumber": "492435",
+          "url": "https://www.lowes.com/pd/GARDEN-CRAFT/5002677367",
+          "listingStatus": "retired"
+        }
+      ],
+      "sourceRefs": [
+        "cloth-lowes",
+        "cloth-manufacturer",
+        "cloth-lowes-retired1",
+        "cloth-lowes-retired2"
+      ],
+      "blockers": [
+        "Retailer gauge0 is invalid/unknown, and wire diameter is unverified."
+      ],
+      "requirements": [
+        "Retailer package1 is one roll; manufacturer catalog quantity4 is a logistics quantity, not four rolls per retailer purchase.",
+        "Keep Everbilt and Garden Craft as separate identities; matching coverage/opening is not a shared MPN or structural equivalence."
+      ]
+    }
+  ],
+  "implementationNotes": [
+    "No product is a confirmed84121 store offer until an exact product/store snapshot is supplied.",
+    "Commodity wood uses retailer-specification identity with manufacturerPartNumber=null, never a guessed mill/MPN.",
+    "Count approximate weight-packed fasteners separately from guaranteed fixed-count boxes.",
+    "Keep every retired offer filtered even where another same-item retailer page remains a reference.",
+    "Preserve existing generic geometry; add explicit reviewed variants instead of silently replacing saved parts."
+  ]
+}

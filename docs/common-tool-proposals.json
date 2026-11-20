@@ -1,0 +1,121 @@
+{
+  "researchedOn": "2026-11-16",
+  "purpose": "Research proposals only; not runtime registry records or live inventory.",
+  "bodyGeometry": "All stockSize/body envelopes remain null. Partial measurements below have explicit meanings.",
+  "proposals": [
+    {
+      "id": "dewalt-dwht38125s",
+      "manufacturer": "DEWALT",
+      "manufacturerPartNumber": "DWHT38125S",
+      "name": "25 ft compact tape measure",
+      "capabilities": ["measure"],
+      "retailUnitCount": 1,
+      "measurements": { "bladeLengthIn": 300 },
+      "sources": [
+        { "url": "https://www.dewalt.com/en-us/product/dwht38125s/25-ft-compact-tape-measure", "type": "manufacturer-product", "supports": ["measure", "model", "one included tape", "blade length"] }
+      ],
+      "offers": [
+        { "retailer": "home-depot", "productId": "317266301", "retailerItemNumber": "1007530074", "retailerModel": "DWHT38125S", "url": "https://www.homedepot.com/p/DEWALT-25-ft-x-1-1-8-in-Tape-Measure-with-Finger-Brake-DWHT38125S/317266301", "listingStatus": "reference" },
+        { "retailer": "lowes", "productId": "5019101837", "retailerItemNumber": "9038311", "retailerModel": "DWHT38125S", "url": "https://www.lowes.com/pd/DEWALT-Atomic-Compact-Series-25-ft-Tape-Measure-DWHT38125S/5019101837", "listingStatus": "retired", "seller": "Hearthshire" }
+      ],
+      "requirements": ["Manufacturer product specification evidence; a standalone model-specific instruction manual was not verified.", "Blade length and reach are not body geometry or a precision guarantee."]
+    },
+    {
+      "id": "swanson-s0101",
+      "manufacturer": "Swanson Tool Co.",
+      "manufacturerPartNumber": "S0101",
+      "name": "7 in Speed Square, carded with Blue Book",
+      "capabilities": ["square"],
+      "retailUnitCount": 1,
+      "measurements": { "measuringRangeIn": 7 },
+      "sources": [
+        { "url": "https://www.swansontoolco.com/shop/speed-square-7in-s0101", "type": "manufacturer-product", "supports": ["square", "exact package variant", "measuring size"] },
+        { "url": "https://www.swansontoolco.com/resources/blue-book", "type": "manufacturer-instruction-index", "supports": ["correct 7 in instruction family"] },
+        { "url": "https://www.swansontoolco.com/downloads/blue-book/The-Swanson-Speed-Square-Blue-Book.pdf", "type": "manufacturer-instruction-resource", "supports": ["resource link verified; image-only text not extracted"] }
+      ],
+      "offers": [
+        { "retailer": "lowes", "productId": "3048693", "retailerItemNumber": "99943", "retailerModel": "S0101", "url": "https://www.lowes.com/pd/Swanson-Tool-Company-Speed-Square/3048693", "listingStatus": "reference" }
+      ],
+      "requirements": ["Keep distinct from clip, bulk, plain-marking and combo packages.", "Lowe's 8.5 in width/title is not the 7 in measuring range.", "Manufacturer master carton 50 is not the retail pack count."]
+    },
+    {
+      "id": "swanson-s0101-c",
+      "manufacturer": "Swanson Tool Co.",
+      "manufacturerPartNumber": "S0101-C",
+      "name": "7 in Speed Square with Blue Book and Speed Clip",
+      "capabilities": ["square"],
+      "retailUnitCount": 1,
+      "measurements": { "measuringRangeIn": 7 },
+      "sources": [
+        { "url": "https://www.swansontoolco.com/shop/speed-square-7in-s0101", "type": "manufacturer-product", "supports": ["square", "explicit S0101-C variant includes clip"] },
+        { "url": "https://www.swansontoolco.com/resources/blue-book", "type": "manufacturer-instruction-index", "supports": ["7 in instruction family"] }
+      ],
+      "offers": [
+        { "retailer": "home-depot", "productId": "312986101", "retailerModel": "S0101-C", "url": "https://www.homedepot.com/p/Swanson-7-in-Speed-Square-Rafter-Carpenter-Square-Layout-Tool-with-Black-Gradations-and-Speed-Clip-S0101-C/312986101", "listingStatus": "reference" }
+      ],
+      "requirements": ["Do not attach the Lowe's S0101 offer to this different packaged model.", "The manufacturer S0101 HD dealer link resolves to this S0101-C variant."]
+    },
+    {
+      "id": "bessey-gscc2-524",
+      "manufacturer": "BESSEY",
+      "manufacturerPartNumber": "GSCC2.524",
+      "name": "24 in clutch-style bar clamp with wood handle",
+      "capabilities": ["clamp"],
+      "retailUnitCount": 1,
+      "measurements": { "openingCapacityIn": 24, "throatDepthIn": 2.5 },
+      "sources": [
+        { "url": "https://besseytools.com/getmedia/6accf9ec-a9a1-4eb6-bc3d-9d3fa720322e/BESSEY_Clutch-Style-bar-clamps_EN", "type": "manufacturer-catalog", "supports": ["clamp", "model", "opening and throat dimensions"] },
+        { "url": "https://besseytools.com/en-us/bessey-tools-north-america/support/cautions-warnings", "type": "manufacturer-use-instructions", "supports": ["clamp intended-use restrictions"] }
+      ],
+      "offers": [
+        { "retailer": "home-depot", "productId": "204986197", "retailerItemNumber": "1000039422", "retailerModel": "GSCC2.524", "url": "https://www.homedepot.com/p/BESSEY-Clutch-Style-24-in-Capacity-Bar-Clamp-with-Wood-Handle-and-2-1-2-in-Throat-Depth-GSCC2-524/204986197", "listingStatus": "reference" }
+      ],
+      "requirements": ["Temporary clamping only; not lifting, transport restraint or permanent installation.", "Manufacturer requires hand tightening without extensions.", "No exact Lowe's counterpart verified; do not manufacture one.", "Catalog clamping force is not an assembly capacity or tool quantity prescription."]
+    },
+    {
+      "id": "estwing-e3-16s",
+      "manufacturer": "Estwing",
+      "manufacturerPartNumber": "E3-16S",
+      "name": "16 oz smooth-face rip claw hammer",
+      "capabilities": ["drive-nail"],
+      "retailUnitCount": 1,
+      "measurements": { "overallLengthIn": 13, "headWeightOz": 16 },
+      "sources": [
+        { "url": "https://www.estwing.com/product/rip-hammer/", "type": "manufacturer-product", "supports": ["exact E3-16S option", "overall length", "head weight"] },
+        { "url": "https://www.estwing.com/resources/safety-and-product-care/", "type": "manufacturer-use-instructions", "supports": ["drive-nail for common nails", "appropriate tool and inspection"] },
+        { "url": "https://www.estwing.com/wp-content/uploads/2026/03/Estwing-Safety-Usage-Tips.pdf", "type": "manufacturer-use-instructions", "supports": ["printable use instructions"] }
+      ],
+      "offers": [
+        { "retailer": "home-depot", "productId": "100351734", "retailerItemNumber": "362263", "retailerModel": "E3-16S", "url": "https://www.homedepot.com/p/Estwing-16-oz-Straight-Claw-Hammer-with-Shock-Reduction-Grip-E3-16S/100351734", "listingStatus": "reference" },
+        { "retailer": "lowes", "productId": "1111955", "retailerItemNumber": "90519", "retailerModel": "E3-16S", "url": "https://www.lowes.com/pd/Estwing-16-oz-Steel-Head-Steel/1111955", "listingStatus": "reference" }
+      ],
+      "requirements": ["Manufacturer common-nail function only; not hardened nails or arbitrary connector installation.", "HD handle-length field 16 in conflicts with manufacturer 13 in overall; no body envelope derived.", "Head weight is not total tool mass."]
+    },
+    {
+      "id": "3m-90565-4dc-ps",
+      "manufacturer": "3M",
+      "manufacturerPartNumber": "90565-4DC-PS",
+      "manufacturerStockId": "7100107419",
+      "upc": "00076308873356",
+      "name": "Pro-Grade earmuff",
+      "capabilities": ["ppe-hearing"],
+      "retailUnitCount": 1,
+      "caseRetailUnits": 4,
+      "measurements": { "statedNRRdB": 30 },
+      "sources": [
+        { "url": "https://www.3mcanada.ca/3M/en_CA/p/d/v000271977/", "type": "manufacturer-product", "supports": ["ppe-hearing", "model", "one per pack and four per case", "stated NRR"] },
+        { "url": "https://images.thdstatic.com/catalog/pdfImages/ca/ca8fa917-ec2b-4a14-b903-9dffccddb39c.pdf", "type": "retailer-hosted-manufacturer-document", "supports": ["product function", "fit variation and fit-testing recommendation"] }
+      ],
+      "offers": [
+        { "retailer": "home-depot", "productId": "301277013", "retailerModel": "90565-4DC-PS", "url": "https://www.homedepot.com/p/3M-Pro-Grade-Earmuff-90565-4DC-PS/301277013", "listingStatus": "reference" }
+      ],
+      "requirements": ["No exact Lowe's counterpart verified.", "NRR is not an individual attenuation measurement or operation exposure assessment.", "Manufacturer fit limitations and actual product instructions remain relevant."]
+    }
+  ],
+  "implementationRequirements": [
+    "Extend the registry capabilities enum; do not mutate tools into construction materials.",
+    "Replace DEWALT-specific instruction URL filtering with author-reviewed exact source-capability evidence, including type and scope.",
+    "Keep unknown product IDs, candidate products and invalid/future review dates visible as unsupported.",
+    "Do not promote retired offers, infer live stock, or equate user review with ownership or safe operating setup."
+  ]
+}

@@ -1,0 +1,76 @@
+.guide-part-labels .button-row {
+  margin-top: 10px;
+}
+
+.guide-label-result small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+}
+
+.guide-label-result[aria-pressed="true"] {
+  background: #e7eee0;
+}
+
+.guide-part-view {
+  flex-wrap: wrap;
+}
+
+.guide-part-view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.print-assembly-part-labels {
+  display: none;
+}
+
+@media print {
+  .app-shell.printing-part-labels > .print-guide {
+    display: none !important;
+  }
+
+  .app-shell.printing-part-labels > .print-assembly-part-labels {
+    display: block !important;
+    font:
+      10pt/1.25 Arial,
+      sans-serif;
+  }
+
+  .print-assembly-part-labels h1 {
+    margin: 0 0 4mm;
+    font-size: 17pt;
+  }
+
+  .print-assembly-part-labels > p {
+    margin: 0 0 4mm;
+  }
+
+  .print-part-label-row {
+    display: flex;
+    align-items: stretch;
+    break-inside: avoid;
+  }
+
+  .print-part-label {
+    flex: 0 0 33.333%;
+    min-width: 0;
+    min-height: 32mm;
+    box-sizing: border-box;
+    padding: 3mm;
+    border: 0.3mm dashed #666;
+    overflow-wrap: anywhere;
+  }
+
+  .print-part-label h2 {
+    margin: 0 0 2mm;
+    font-size: 17pt;
+  }
+
+  .print-part-label span,
+  .print-part-label strong {
+    display: block;
+    margin-top: 1mm;
+  }
+}

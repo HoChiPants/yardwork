@@ -1,0 +1,61 @@
+Project: SYNTHETIC measured-hinge software demonstration
+Retailer: Home Depot
+Store: not selected | ZIP: 84121
+
+INCOMPLETE MATERIAL LIST — resolve the part, hardware, price and quantity questions below before ordering.
+
+PRICING COVERAGE
+$21.25 priced subtotal
+1 priced line of 3 purchase lines. $0.00 from 0 observed lines; $21.25 from 1 example-price line. 2 unpriced lines (3 × sheet; 1 × hinge purchase units). Unknown prices are excluded, not free. Hinge mounting/source measurements remain unresolved; the subtotal is not a complete installation takeoff (2 hinge plans).
+Calculated stock and selected supplies only. Tax, delivery, tools and unmodeled systems are outside this subtotal. This is not a complete-project quote.
+
+PURCHASE STOCK UNITS
+Use the whole-stock quantities below. Cut pieces and offcuts are already accounted for; do not add them again.
+
+- 3 sheets — Plytanium BC pine plywood · 23/32 category — 201428 · 47.938 × 95.938 in · .703 in actual · dry interior casework only
+  Reviewed product reference: 100061386 | model 201428
+  https://www.homedepot.com/p/100061386
+  Reference specifications only. Current price and store availability are unverified.
+- 5 boards — 2 × 4 framing lumber — 1½ × 3½ in actual · 8 ft
+  Exact product match and availability are unverified. Match the listed stock dimensions and purchase unit.
+
+
+## Hardware and supplies to purchase
+
+User-chosen purchase quantities. These records do not place or install parts. Product-specific mounting, fit and quantities remain to be checked.
+
+- 1 × hinge: Everbilt 48 in continuous lid hinge · placement unresolved — UNPRICED
+  - Each purchase contains: 1 × nominal 48 in continuous hinge.
+  - Home Depot product 314150989 · The Home Depot: https://www.homedepot.com/p/314150989
+  - Purpose: SYNTHETIC example physical hinge
+  - Note: SYNTHETIC manual purchase selection only; not real ownership, stock availability, installed hardware or evidence that all three lids are covered.
+  - Requirement: Verify hinge length, knuckle/pivot placement, opening clearance, fasteners and substrate for the actual lid.
+  - Requirement: Select a separate appropriate lid support/stay and resolve lid mass/center of gravity and access/pinch constraints; no generic soft-close or hold-open claim.
+  - Specification source: https://www.homedepot.com/p/314150989
+  - Specification source: https://images.thdstatic.com/catalog/pdfImages/43/43ad05ea-dd8a-438f-b10c-33d2ccdf1c95.pdf
+  - Review: Price and availability are unverified for the selected store/ZIP. Record a matching observation checked within 24 hours.
+
+PLANNED HINGE SOURCES — comparison only; selected supply rows above are the purchase quantities
+1 distinct physical hinge sources allocated; 1 whole hinges selected; 0 missing. Multiple retained segments from one source do not add purchase units.
+Unallocated or stale hinge plans do not establish complete demand. Supplied screws are not credited as generic fastener purchases. Entered axes and cut remnants are installation records, not extra shopping lines.
+Each allocated physical source is counted once even when distinct retained segments serve several lids. Manual supplies are the only priced rows; selected units are not proof of ownership, stock or installed fit. No on-hand hinge, remnant from another source or supplied screw count is inferred.
+
+PROJECT PHASES — organize the purchase list without duplicating its quantities
+1. Prepare the space and cut list
+2. Review wood-fastener locations: SYNTHETIC pending rear-panel carcass screw
+3. Banquette section 1: Dry-fit the storage bottom and frame
+4. Banquette section 1: Fit the storage shell
+5. SYNTHETIC demo checkoff — H001 fit-test inputs
+6. Banquette section 1: Dry-fit the seat lid
+7. Banquette section 2: Dry-fit the storage bottom and frame
+8. Banquette section 2: Fit the storage shell
+9. Review lid hinge H002: Banquette section 2 pending hinge
+10. Banquette section 2: Dry-fit the seat lid
+11. Banquette section 3: Dry-fit the storage bottom and frame
+12. Banquette section 3: Fit the storage shell
+13. Review lid hinge H003: Banquette section 3 pending hinge
+14. Banquette section 3: Dry-fit the seat lid
+15. Review connections and finish
+
+Review the retailer draft: quantities, units, exact products, substitutions, and store availability. Tax, delivery, waste allowance, roof overlaps, and construction adequacy are not established by this list.
+Keep the Yardwork JSON separately for the editable 3D plan, connections, and build guide. This text does not synchronize a Home Depot account.

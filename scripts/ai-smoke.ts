@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { AI_CLIENT_TIMEOUT_MS } from "../src/aiTiming";
 import {
   applyCommand,
   blank,
@@ -14,7 +15,7 @@ async function propose(prompt: string, context?: unknown) {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ prompt, context }),
-    signal: AbortSignal.timeout(75000),
+    signal: AbortSignal.timeout(AI_CLIENT_TIMEOUT_MS),
   });
   const data = (await response.json()) as {
     provider: string;

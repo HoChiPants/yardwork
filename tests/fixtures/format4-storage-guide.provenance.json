@@ -1,0 +1,8 @@
+{
+  "scope": "Synthetic actual-model format4 fixture; no user project data.",
+  "source": "work/yardwork-format4-20261117032418/artifacts/project.yardwork.json",
+  "image": "sha256:57912fc6ac892710666eeff1f1c0dc043d37c14c3985a38f804d97db4ab911da",
+  "sha256": "ae602c145b51c3c74ff41865d9988b384e9e50aa77d3e0e7dea709a2cf071d7c",
+  "bytes": 67853,
+  "transformation": "none; byte-exact copy"
+}

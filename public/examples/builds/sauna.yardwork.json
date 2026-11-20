@@ -1,0 +1,1761 @@
+{
+  "schemaVersion": 81,
+  "id": "04d0f672-dda4-4402-8641-eba268f7b82e",
+  "name": "Sauna interior envelope study",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "a3ccab3b-01ac-43f4-837e-9e10366e142e",
+      "label": "P001"
+    },
+    {
+      "partId": "c1092f5b-a046-4051-b287-546d27928acf",
+      "label": "P002"
+    },
+    {
+      "partId": "31c3dfc9-970a-460a-bf78-fc720566eeda",
+      "label": "P003"
+    },
+    {
+      "partId": "6707d924-a855-465d-9a8f-9ea56a7fcc39",
+      "label": "P004"
+    },
+    {
+      "partId": "413c4b19-ec99-40e5-90b9-906288394ea2",
+      "label": "P005"
+    },
+    {
+      "partId": "b1bb6050-e2c0-41b0-87b6-6ea461e9cd62",
+      "label": "P006"
+    },
+    {
+      "partId": "41c26596-3782-4ac7-bb73-cf379acd91f9",
+      "label": "P007"
+    },
+    {
+      "partId": "6a346092-53a9-456c-988e-9cfd77772c04",
+      "label": "P008"
+    },
+    {
+      "partId": "b090e882-bd16-49b2-a524-2edd7fa03439",
+      "label": "P009"
+    },
+    {
+      "partId": "9cb73810-bc78-4f3a-9e6f-321c4b74f4c2",
+      "label": "P010"
+    },
+    {
+      "partId": "0f2a7d71-4f45-43c8-883e-1d8255ee8b29",
+      "label": "P011"
+    },
+    {
+      "partId": "545f87ed-ce3a-4896-8798-72c88e2e105d",
+      "label": "P012"
+    },
+    {
+      "partId": "5e8f1649-4f81-4572-89ad-939489a69bdb",
+      "label": "P013"
+    },
+    {
+      "partId": "7b72c5e8-9fa3-4446-8763-1afe7aed3317",
+      "label": "P014"
+    },
+    {
+      "partId": "ae935baa-1405-4e82-b02b-7367eaa83802",
+      "label": "P015"
+    },
+    {
+      "partId": "832af74b-0f8e-4415-a1b2-3a9b38e12ea9",
+      "label": "P016"
+    },
+    {
+      "partId": "b6c2e10c-a5e9-4f73-b7b0-29df3d749129",
+      "label": "P017"
+    },
+    {
+      "partId": "ed447a92-b446-4c76-8092-98cf0d412a8f",
+      "label": "P018"
+    },
+    {
+      "partId": "f49c889e-21e5-4058-bb25-a5e3163cc9be",
+      "label": "P019"
+    },
+    {
+      "partId": "51d9525b-2ce5-424d-9998-ea31fb311f33",
+      "label": "P020"
+    },
+    {
+      "partId": "1e54fa2c-97b6-4a91-af47-fa7dddd8909c",
+      "label": "P021"
+    },
+    {
+      "partId": "b0bd1b36-c65a-4ad4-a4e6-5ef2bc6b8bff",
+      "label": "P022"
+    },
+    {
+      "partId": "7ea26b34-d946-4171-a3cc-69d02eb9dddc",
+      "label": "P023"
+    },
+    {
+      "partId": "8e9befa1-7000-4be9-a2d5-ee5bcd453de5",
+      "label": "P024"
+    },
+    {
+      "partId": "c766eebc-b475-46c4-b9ce-692f4f150969",
+      "label": "P025"
+    },
+    {
+      "partId": "936f708b-aa36-4e5b-b6a3-ed0445e9eac9",
+      "label": "P026"
+    },
+    {
+      "partId": "76e06c42-658c-430b-b7ef-87a91361f92b",
+      "label": "P027"
+    },
+    {
+      "partId": "c5fb4272-f0f3-40df-bf01-c745631d4b42",
+      "label": "P028"
+    },
+    {
+      "partId": "b58bfb2b-853e-472c-87a8-2631b9510534",
+      "label": "P029"
+    },
+    {
+      "partId": "474c09e6-9914-4e85-a625-8c14c241e077",
+      "label": "P030"
+    },
+    {
+      "partId": "307d00b2-29bd-428c-b178-58bb281eb813",
+      "label": "P031"
+    },
+    {
+      "partId": "bf961b8b-2b8a-42bf-b3ed-427802d8fbcd",
+      "label": "P032"
+    },
+    {
+      "partId": "ba15a45b-fd49-4958-a822-3eaa5d558ec7",
+      "label": "P033"
+    },
+    {
+      "partId": "75b3d26f-7ea3-46ac-81eb-4f2e38d7bfd5",
+      "label": "P034"
+    },
+    {
+      "partId": "422355bc-8c51-4ca8-9ff0-6212ca8b2b3e",
+      "label": "P035"
+    },
+    {
+      "partId": "c578a121-7660-4d51-8a0a-369b813dcf34",
+      "label": "P036"
+    },
+    {
+      "partId": "eaffc7b7-a8c1-4dcf-b76e-584485c1e655",
+      "label": "P037"
+    },
+    {
+      "partId": "7649e2e6-cecd-45b1-a971-e16f4bdeb13b",
+      "label": "P038"
+    },
+    {
+      "partId": "06b97a3c-7e46-407d-b5f6-3813dc82d6f3",
+      "label": "P039"
+    },
+    {
+      "partId": "796a43e4-ecd6-4a50-8cf5-347178a37398",
+      "label": "P040"
+    },
+    {
+      "partId": "c07ef6e8-0b58-4fce-919f-165c90289381",
+      "label": "P041"
+    },
+    {
+      "partId": "84da2f70-24a7-44b2-b939-9038ef456a44",
+      "label": "P042"
+    },
+    {
+      "partId": "6067999e-0b5e-48c5-baf1-11c6181e484e",
+      "label": "P043"
+    },
+    {
+      "partId": "017ab24d-1a77-498f-91aa-bae7a2794044",
+      "label": "P044"
+    },
+    {
+      "partId": "981a11d3-24c9-4d67-99fc-2d0596e41dbe",
+      "label": "P045"
+    },
+    {
+      "partId": "2adc627c-0963-42dc-8349-abad8fd4e1fa",
+      "label": "P046"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-17T11:43:49.720Z",
+  "pieces": [
+    {
+      "id": "a3ccab3b-01ac-43f4-837e-9e10366e142e",
+      "name": "Sauna exterior framing · bottom plate",
+      "material": "stud",
+      "size": [
+        82,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c1092f5b-a046-4051-b287-546d27928acf",
+      "name": "Sauna exterior framing · top plate",
+      "material": "stud",
+      "size": [
+        82,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        84.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "31c3dfc9-970a-460a-bf78-fc720566eeda",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -40.25,
+        42.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6707d924-a855-465d-9a8f-9ea56a7fcc39",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -25,
+        42.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "413c4b19-ec99-40e5-90b9-906288394ea2",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -9,
+        42.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b1bb6050-e2c0-41b0-87b6-6ea461e9cd62",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        7,
+        42.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "41c26596-3782-4ac7-bb73-cf379acd91f9",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        23,
+        42.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6a346092-53a9-456c-988e-9cfd77772c04",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        38.75,
+        42.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b090e882-bd16-49b2-a524-2edd7fa03439",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        40.25,
+        42.75,
+        -39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9cb73810-bc78-4f3a-9e6f-321c4b74f4c2",
+      "name": "Sauna exterior framing · bottom plate",
+      "material": "stud",
+      "size": [
+        75,
+        1.5,
+        3.5
+      ],
+      "position": [
+        -39.25,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0f2a7d71-4f45-43c8-883e-1d8255ee8b29",
+      "name": "Sauna exterior framing · top plate",
+      "material": "stud",
+      "size": [
+        75,
+        1.5,
+        3.5
+      ],
+      "position": [
+        -39.25,
+        84.75,
+        0
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "545f87ed-ce3a-4896-8798-72c88e2e105d",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -39.25,
+        42.75,
+        36.75
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "5e8f1649-4f81-4572-89ad-939489a69bdb",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -39.25,
+        42.75,
+        21.5
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "7b72c5e8-9fa3-4446-8763-1afe7aed3317",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -39.25,
+        42.75,
+        5.5
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ae935baa-1405-4e82-b02b-7367eaa83802",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -39.25,
+        42.75,
+        -10.5
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "832af74b-0f8e-4415-a1b2-3a9b38e12ea9",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -39.25,
+        42.75,
+        -26.5
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b6c2e10c-a5e9-4f73-b7b0-29df3d749129",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -39.25,
+        42.75,
+        -36.75
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ed447a92-b446-4c76-8092-98cf0d412a8f",
+      "name": "Sauna exterior framing · bottom plate",
+      "material": "stud",
+      "size": [
+        75,
+        1.5,
+        3.5
+      ],
+      "position": [
+        39.25,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f49c889e-21e5-4058-bb25-a5e3163cc9be",
+      "name": "Sauna exterior framing · top plate",
+      "material": "stud",
+      "size": [
+        75,
+        1.5,
+        3.5
+      ],
+      "position": [
+        39.25,
+        84.75,
+        0
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "51d9525b-2ce5-424d-9998-ea31fb311f33",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        39.25,
+        42.75,
+        36.75
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1e54fa2c-97b6-4a91-af47-fa7dddd8909c",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        39.25,
+        42.75,
+        21.5
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b0bd1b36-c65a-4ad4-a4e6-5ef2bc6b8bff",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        39.25,
+        42.75,
+        5.5
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "7ea26b34-d946-4171-a3cc-69d02eb9dddc",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        39.25,
+        42.75,
+        -10.5
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8e9befa1-7000-4be9-a2d5-ee5bcd453de5",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        39.25,
+        42.75,
+        -26.5
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c766eebc-b475-46c4-b9ce-692f4f150969",
+      "name": "Sauna exterior framing · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        39.25,
+        42.75,
+        -36.75
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "assembly": "Sauna exterior framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "936f708b-aa36-4e5b-b6a3-ed0445e9eac9",
+      "name": "Sauna door rough opening · top plate",
+      "material": "stud",
+      "size": [
+        82,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        84.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "76e06c42-658c-430b-b7ef-87a91361f92b",
+      "name": "Sauna door rough opening · bottom plate beside opening",
+      "material": "stud",
+      "size": [
+        25.5,
+        1.5,
+        3.5
+      ],
+      "position": [
+        -28.25,
+        0.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c5fb4272-f0f3-40df-bf01-c745631d4b42",
+      "name": "Sauna door rough opening · door jamb",
+      "material": "stud",
+      "size": [
+        1.5,
+        84,
+        3.5
+      ],
+      "position": [
+        -14.75,
+        42,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b58bfb2b-853e-472c-87a8-2631b9510534",
+      "name": "Sauna door rough opening · bottom plate beside opening",
+      "material": "stud",
+      "size": [
+        25.5,
+        1.5,
+        3.5
+      ],
+      "position": [
+        28.25,
+        0.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "474c09e6-9914-4e85-a625-8c14c241e077",
+      "name": "Sauna door rough opening · door jamb",
+      "material": "stud",
+      "size": [
+        1.5,
+        84,
+        3.5
+      ],
+      "position": [
+        14.75,
+        42,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "307d00b2-29bd-428c-b178-58bb281eb813",
+      "name": "Sauna door rough opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -40.25,
+        42.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "bf961b8b-2b8a-42bf-b3ed-427802d8fbcd",
+      "name": "Sauna door rough opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        -25,
+        42.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ba15a45b-fd49-4958-a822-3eaa5d558ec7",
+      "name": "Sauna door rough opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        23,
+        42.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "75b3d26f-7ea3-46ac-81eb-4f2e38d7bfd5",
+      "name": "Sauna door rough opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        38.75,
+        42.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "422355bc-8c51-4ca8-9ff0-6212ca8b2b3e",
+      "name": "Sauna door rough opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        82.5,
+        3.5
+      ],
+      "position": [
+        40.25,
+        42.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c578a121-7660-4d51-8a0a-369b813dcf34",
+      "name": "Sauna door rough opening · door header",
+      "material": "stud",
+      "size": [
+        28,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        73.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "eaffc7b7-a8c1-4dcf-b76e-584485c1e655",
+      "name": "Sauna door rough opening · stud above header",
+      "material": "stud",
+      "size": [
+        1.5,
+        8.5,
+        3.5
+      ],
+      "position": [
+        -13.25,
+        79.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "7649e2e6-cecd-45b1-a971-e16f4bdeb13b",
+      "name": "Sauna door rough opening · stud above header",
+      "material": "stud",
+      "size": [
+        1.5,
+        8.5,
+        3.5
+      ],
+      "position": [
+        2,
+        79.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "06b97a3c-7e46-407d-b5f6-3813dc82d6f3",
+      "name": "Sauna door rough opening · stud above header",
+      "material": "stud",
+      "size": [
+        1.5,
+        8.5,
+        3.5
+      ],
+      "position": [
+        13.25,
+        79.75,
+        39.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "assembly": "Sauna door rough opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "796a43e4-ecd6-4a50-8cf5-347178a37398",
+      "name": "Sauna ceiling framing · ceiling joist",
+      "material": "stud",
+      "size": [
+        82,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        87.25,
+        -40.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "68eefaff-2ed1-4213-a2ce-e68ebd360301",
+      "assembly": "Sauna ceiling framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c07ef6e8-0b58-4fce-919f-165c90289381",
+      "name": "Sauna ceiling framing · ceiling joist",
+      "material": "stud",
+      "size": [
+        82,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        87.25,
+        -25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "68eefaff-2ed1-4213-a2ce-e68ebd360301",
+      "assembly": "Sauna ceiling framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "84da2f70-24a7-44b2-b939-9038ef456a44",
+      "name": "Sauna ceiling framing · ceiling joist",
+      "material": "stud",
+      "size": [
+        82,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        87.25,
+        -9
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "68eefaff-2ed1-4213-a2ce-e68ebd360301",
+      "assembly": "Sauna ceiling framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6067999e-0b5e-48c5-baf1-11c6181e484e",
+      "name": "Sauna ceiling framing · ceiling joist",
+      "material": "stud",
+      "size": [
+        82,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        87.25,
+        7
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "68eefaff-2ed1-4213-a2ce-e68ebd360301",
+      "assembly": "Sauna ceiling framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "017ab24d-1a77-498f-91aa-bae7a2794044",
+      "name": "Sauna ceiling framing · ceiling joist",
+      "material": "stud",
+      "size": [
+        82,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        87.25,
+        23
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "68eefaff-2ed1-4213-a2ce-e68ebd360301",
+      "assembly": "Sauna ceiling framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "981a11d3-24c9-4d67-99fc-2d0596e41dbe",
+      "name": "Sauna ceiling framing · ceiling joist",
+      "material": "stud",
+      "size": [
+        82,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        87.25,
+        38.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "68eefaff-2ed1-4213-a2ce-e68ebd360301",
+      "assembly": "Sauna ceiling framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2adc627c-0963-42dc-8349-abad8fd4e1fa",
+      "name": "Sauna ceiling framing · ceiling joist",
+      "material": "stud",
+      "size": [
+        82,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        87.25,
+        40.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "68eefaff-2ed1-4213-a2ce-e68ebd360301",
+      "assembly": "Sauna ceiling framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "e52eec37-8e2d-4bc5-ad5b-a6bf2d30faff",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "04d0f672-dda4-4402-8641-eba268f7b82e",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-a3695043",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "f18d2e6c-708f-4da6-b3d1-8de5a59e882e",
+      "title": "Sauna: Dry-fit the sauna exterior frames",
+      "notes": "Dry-fit the listed dimensional wall framing around the reserved clear room and interior-layer allowance. Check square, actual clearances and access; plan temporary support before standing frames. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "e3ab999e-41b9-4ca7-b7fc-3d232b3c167d",
+        "stageKey": "walls",
+        "memberIds": [
+          "0f2a7d71-4f45-43c8-883e-1d8255ee8b29",
+          "1e54fa2c-97b6-4a91-af47-fa7dddd8909c",
+          "31c3dfc9-970a-460a-bf78-fc720566eeda",
+          "413c4b19-ec99-40e5-90b9-906288394ea2",
+          "41c26596-3782-4ac7-bb73-cf379acd91f9",
+          "51d9525b-2ce5-424d-9998-ea31fb311f33",
+          "545f87ed-ce3a-4896-8798-72c88e2e105d",
+          "5e8f1649-4f81-4572-89ad-939489a69bdb",
+          "6707d924-a855-465d-9a8f-9ea56a7fcc39",
+          "6a346092-53a9-456c-988e-9cfd77772c04",
+          "7b72c5e8-9fa3-4446-8763-1afe7aed3317",
+          "7ea26b34-d946-4171-a3cc-69d02eb9dddc",
+          "832af74b-0f8e-4415-a1b2-3a9b38e12ea9",
+          "8e9befa1-7000-4be9-a2d5-ee5bcd453de5",
+          "9cb73810-bc78-4f3a-9e6f-321c4b74f4c2",
+          "a3ccab3b-01ac-43f4-837e-9e10366e142e",
+          "ae935baa-1405-4e82-b02b-7367eaa83802",
+          "b090e882-bd16-49b2-a524-2edd7fa03439",
+          "b0bd1b36-c65a-4ad4-a4e6-5ef2bc6b8bff",
+          "b1bb6050-e2c0-41b0-87b6-6ea461e9cd62",
+          "b6c2e10c-a5e9-4f73-b7b0-29df3d749129",
+          "c1092f5b-a046-4051-b287-546d27928acf",
+          "c766eebc-b475-46c4-b9ce-692f4f150969",
+          "ed447a92-b446-4c76-8092-98cf0d412a8f",
+          "f49c889e-21e5-4058-bb25-a5e3163cc9be"
+        ],
+        "notes": "Dry-fit the listed dimensional wall framing around the reserved clear room and interior-layer allowance. Check square, actual clearances and access; plan temporary support before standing frames. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-9770db17",
+        "title": "Sauna: Dry-fit the sauna exterior frames"
+      }
+    },
+    {
+      "id": "7c72cf04-53f6-4b69-99c1-82a9257ae861",
+      "title": "Sauna: Check the sauna rough opening",
+      "notes": "Dry-fit the rough-opening members. Check bearing below both ends of the header and how it carries down to the floor. Verify the opening against the door specification and finished floor and walls, and keep access to the framing joints.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "e3ab999e-41b9-4ca7-b7fc-3d232b3c167d",
+        "stageKey": "opening",
+        "memberIds": [
+          "06b97a3c-7e46-407d-b5f6-3813dc82d6f3",
+          "307d00b2-29bd-428c-b178-58bb281eb813",
+          "422355bc-8c51-4ca8-9ff0-6212ca8b2b3e",
+          "474c09e6-9914-4e85-a625-8c14c241e077",
+          "75b3d26f-7ea3-46ac-81eb-4f2e38d7bfd5",
+          "7649e2e6-cecd-45b1-a971-e16f4bdeb13b",
+          "76e06c42-658c-430b-b7ef-87a91361f92b",
+          "936f708b-aa36-4e5b-b6a3-ed0445e9eac9",
+          "b58bfb2b-853e-472c-87a8-2631b9510534",
+          "ba15a45b-fd49-4958-a822-3eaa5d558ec7",
+          "bf961b8b-2b8a-42bf-b3ed-427802d8fbcd",
+          "c578a121-7660-4d51-8a0a-369b813dcf34",
+          "c5fb4272-f0f3-40df-bf01-c745631d4b42",
+          "eaffc7b7-a8c1-4dcf-b76e-584485c1e655"
+        ],
+        "notes": "Dry-fit the rough-opening members. Check bearing below both ends of the header and how it carries down to the floor. Verify the opening against the door specification and finished floor and walls, and keep access to the framing joints.",
+        "fingerprint": "phase-v1-502d928",
+        "title": "Sauna: Check the sauna rough opening"
+      }
+    },
+    {
+      "id": "68eefaff-2ed1-4213-a2ce-e68ebd360301",
+      "title": "Sauna: Dry-fit the ceiling framing",
+      "notes": "Dry-fit the actual ceiling members and check their contacts, clear room height and temporary support/tool access. Ceiling connections and the complete heated enclosure still require design.\nUnbuilt systems: foundation, actual door, insulation/foil/furring/lining, heated benches, heater/electrical and ventilation. The clear interior 72 × 72 × 84 in and bench 60 × 24 × 36 in are reservations, not installed or heat-qualified components.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "e3ab999e-41b9-4ca7-b7fc-3d232b3c167d",
+        "stageKey": "ceiling",
+        "memberIds": [
+          "017ab24d-1a77-498f-91aa-bae7a2794044",
+          "2adc627c-0963-42dc-8349-abad8fd4e1fa",
+          "6067999e-0b5e-48c5-baf1-11c6181e484e",
+          "796a43e4-ecd6-4a50-8cf5-347178a37398",
+          "84da2f70-24a7-44b2-b939-9038ef456a44",
+          "981a11d3-24c9-4d67-99fc-2d0596e41dbe",
+          "c07ef6e8-0b58-4fce-919f-165c90289381"
+        ],
+        "notes": "Dry-fit the actual ceiling members and check their contacts, clear room height and temporary support/tool access. Ceiling connections and the complete heated enclosure still require design.\nUnbuilt systems: foundation, actual door, insulation/foil/furring/lining, heated benches, heater/electrical and ventilation. The clear interior 72 × 72 × 84 in and bench 60 × 24 × 36 in are reservations, not installed or heat-qualified components.",
+        "fingerprint": "phase-v1-833e2060",
+        "title": "Sauna: Dry-fit the ceiling framing"
+      }
+    },
+    {
+      "id": "5f99bdb6-9c4b-4978-b609-aec45afa8a24",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "04d0f672-dda4-4402-8641-eba268f7b82e",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-5921b3c2",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [
+    {
+      "a": [
+        -36,
+        0,
+        -36
+      ],
+      "b": [
+        36,
+        0,
+        -36
+      ]
+    },
+    {
+      "a": [
+        36,
+        0,
+        -36
+      ],
+      "b": [
+        36,
+        0,
+        36
+      ]
+    },
+    {
+      "a": [
+        36,
+        0,
+        36
+      ],
+      "b": [
+        -36,
+        0,
+        36
+      ]
+    },
+    {
+      "a": [
+        -36,
+        0,
+        36
+      ],
+      "b": [
+        -36,
+        0,
+        -36
+      ]
+    }
+  ],
+  "notes": "ACCEPTANCE BASELINE STUDY — Actual exterior wall/door/ceiling framing reserves the clear interior. Heated layers, seating, door, equipment and trades remain incomplete.\n\nSauna cabin — PARTIAL DIMENSIONAL STUDY\nMissing material: material.frameLumber: Using generic 2 × 4 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nMissing material: material.saunaInterior: No source-qualified saunaInterior material/product has been selected; no substitute part is generated.\nMissing material: material.saunaBenchFrame: No source-qualified saunaBenchFrame material/product has been selected; no substitute part is generated.\nMissing material: material.saunaInsulation: No source-qualified saunaInsulation material/product has been selected; no substitute part is generated.\nMissing material: material.saunaVaporBarrier: No source-qualified saunaVaporBarrier material/product has been selected; no substitute part is generated.\nMissing material: material.saunaDoor: No source-qualified saunaDoor material/product has been selected; no substitute part is generated.\nUnresolved: sauna-equipment: No heater, guard, sensor, equipment clearance, supply circuit or wiring is inferred. Exact regional equipment/manual identity and qualified trade review are required.\nUnresolved: sauna-envelope: Reserved layer space is not installed insulation, foil, furring or lining. Heat/moisture suitability and complete wall/ceiling/floor assemblies remain unresolved.\nUnresolved: sauna-ventilation: Vent openings/ducts, sensor interaction, drying strategy and ventilation performance are unrepresented.\nUnresolved: sauna-supports: Framing, ceiling/bench loads, bracing, anchors, all attachment schedules and bench support details remain unqualified.\nUnresolved: sauna-bench-geometry: The requested bench is reserved as an access volume only; no ordinary plywood or treated stock is substituted for sourced sauna seating/slats.\nUnresolved: sauna-door: An actual heat-compatible outward-opening door and its hardware remain missing; only its framed rough opening is built.",
+  "sections": [
+    {
+      "id": "2555ae88-6fe4-4a0b-aa82-a3b7154483e7",
+      "name": "Sauna exterior framing",
+      "pieceIds": [
+        "a3ccab3b-01ac-43f4-837e-9e10366e142e",
+        "c1092f5b-a046-4051-b287-546d27928acf",
+        "31c3dfc9-970a-460a-bf78-fc720566eeda",
+        "6707d924-a855-465d-9a8f-9ea56a7fcc39",
+        "413c4b19-ec99-40e5-90b9-906288394ea2",
+        "b1bb6050-e2c0-41b0-87b6-6ea461e9cd62",
+        "41c26596-3782-4ac7-bb73-cf379acd91f9",
+        "6a346092-53a9-456c-988e-9cfd77772c04",
+        "b090e882-bd16-49b2-a524-2edd7fa03439",
+        "9cb73810-bc78-4f3a-9e6f-321c4b74f4c2",
+        "0f2a7d71-4f45-43c8-883e-1d8255ee8b29",
+        "545f87ed-ce3a-4896-8798-72c88e2e105d",
+        "5e8f1649-4f81-4572-89ad-939489a69bdb",
+        "7b72c5e8-9fa3-4446-8763-1afe7aed3317",
+        "ae935baa-1405-4e82-b02b-7367eaa83802",
+        "832af74b-0f8e-4415-a1b2-3a9b38e12ea9",
+        "b6c2e10c-a5e9-4f73-b7b0-29df3d749129",
+        "ed447a92-b446-4c76-8092-98cf0d412a8f",
+        "f49c889e-21e5-4058-bb25-a5e3163cc9be",
+        "51d9525b-2ce5-424d-9998-ea31fb311f33",
+        "1e54fa2c-97b6-4a91-af47-fa7dddd8909c",
+        "b0bd1b36-c65a-4ad4-a4e6-5ef2bc6b8bff",
+        "7ea26b34-d946-4171-a3cc-69d02eb9dddc",
+        "8e9befa1-7000-4be9-a2d5-ee5bcd453de5",
+        "c766eebc-b475-46c4-b9ce-692f4f150969"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "555abb57-55eb-4f68-bc55-6e05f79989df",
+      "name": "Sauna door rough opening",
+      "pieceIds": [
+        "936f708b-aa36-4e5b-b6a3-ed0445e9eac9",
+        "76e06c42-658c-430b-b7ef-87a91361f92b",
+        "c5fb4272-f0f3-40df-bf01-c745631d4b42",
+        "b58bfb2b-853e-472c-87a8-2631b9510534",
+        "474c09e6-9914-4e85-a625-8c14c241e077",
+        "307d00b2-29bd-428c-b178-58bb281eb813",
+        "bf961b8b-2b8a-42bf-b3ed-427802d8fbcd",
+        "ba15a45b-fd49-4958-a822-3eaa5d558ec7",
+        "75b3d26f-7ea3-46ac-81eb-4f2e38d7bfd5",
+        "422355bc-8c51-4ca8-9ff0-6212ca8b2b3e",
+        "c578a121-7660-4d51-8a0a-369b813dcf34",
+        "eaffc7b7-a8c1-4dcf-b76e-584485c1e655",
+        "7649e2e6-cecd-45b1-a971-e16f4bdeb13b",
+        "06b97a3c-7e46-407d-b5f6-3813dc82d6f3"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "c8688a79-1273-4b92-bea4-a94cd36c2e68",
+      "name": "Sauna ceiling framing",
+      "pieceIds": [
+        "796a43e4-ecd6-4a50-8cf5-347178a37398",
+        "c07ef6e8-0b58-4fce-919f-165c90289381",
+        "84da2f70-24a7-44b2-b939-9038ef456a44",
+        "6067999e-0b5e-48c5-baf1-11c6181e484e",
+        "017ab24d-1a77-498f-91aa-bae7a2794044",
+        "981a11d3-24c9-4d67-99fc-2d0596e41dbe",
+        "2adc627c-0963-42dc-8349-abad8fd4e1fa"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [
+    {
+      "version": 1,
+      "id": "1c9f7780-86de-4f42-a822-fdaaaa7cba97",
+      "revision": 2,
+      "currentFingerprint": "binding-v1-ed35df64d6b16ffd",
+      "reviewBlock": "Sauna cabin — PARTIAL DIMENSIONAL STUDY\nMissing material: material.frameLumber: Using generic 2 × 4 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nMissing material: material.saunaInterior: No source-qualified saunaInterior material/product has been selected; no substitute part is generated.\nMissing material: material.saunaBenchFrame: No source-qualified saunaBenchFrame material/product has been selected; no substitute part is generated.\nMissing material: material.saunaInsulation: No source-qualified saunaInsulation material/product has been selected; no substitute part is generated.\nMissing material: material.saunaVaporBarrier: No source-qualified saunaVaporBarrier material/product has been selected; no substitute part is generated.\nMissing material: material.saunaDoor: No source-qualified saunaDoor material/product has been selected; no substitute part is generated.\nUnresolved: sauna-equipment: No heater, guard, sensor, equipment clearance, supply circuit or wiring is inferred. Exact regional equipment/manual identity and qualified trade review are required.\nUnresolved: sauna-envelope: Reserved layer space is not installed insulation, foil, furring or lining. Heat/moisture suitability and complete wall/ceiling/floor assemblies remain unresolved.\nUnresolved: sauna-ventilation: Vent openings/ducts, sensor interaction, drying strategy and ventilation performance are unrepresented.\nUnresolved: sauna-supports: Framing, ceiling/bench loads, bracing, anchors, all attachment schedules and bench support details remain unqualified.\nUnresolved: sauna-bench-geometry: The requested bench is reserved as an access volume only; no ordinary plywood or treated stock is substituted for sourced sauna seating/slats.\nUnresolved: sauna-door: An actual heat-compatible outward-opening door and its hardware remain missing; only its framed rough opening is built.",
+      "generatedNotes": "Sauna cabin — PARTIAL DIMENSIONAL STUDY\nMissing material: material.frameLumber: Using generic 2 × 4 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nMissing material: material.saunaInterior: No source-qualified saunaInterior material/product has been selected; no substitute part is generated.\nMissing material: material.saunaBenchFrame: No source-qualified saunaBenchFrame material/product has been selected; no substitute part is generated.\nMissing material: material.saunaInsulation: No source-qualified saunaInsulation material/product has been selected; no substitute part is generated.\nMissing material: material.saunaVaporBarrier: No source-qualified saunaVaporBarrier material/product has been selected; no substitute part is generated.\nMissing material: material.saunaDoor: No source-qualified saunaDoor material/product has been selected; no substitute part is generated.\nUnresolved: sauna-equipment: No heater, guard, sensor, equipment clearance, supply circuit or wiring is inferred. Exact regional equipment/manual identity and qualified trade review are required.\nUnresolved: sauna-envelope: Reserved layer space is not installed insulation, foil, furring or lining. Heat/moisture suitability and complete wall/ceiling/floor assemblies remain unresolved.\nUnresolved: sauna-ventilation: Vent openings/ducts, sensor interaction, drying strategy and ventilation performance are unrepresented.\nUnresolved: sauna-supports: Framing, ceiling/bench loads, bracing, anchors, all attachment schedules and bench support details remain unqualified.\nUnresolved: sauna-bench-geometry: The requested bench is reserved as an access volume only; no ordinary plywood or treated stock is substituted for sourced sauna seating/slats.\nUnresolved: sauna-door: An actual heat-compatible outward-opening door and its hardware remain missing; only its framed rough opening is built.",
+      "title": "Sauna interior envelope study",
+      "summary": "Actual exterior wall/door/ceiling framing reserves the clear interior. Heated layers, seating, door, equipment and trades remain incomplete.",
+      "assumptions": [],
+      "questions": [],
+      "suggestions": [],
+      "entries": [
+        {
+          "id": "e3ab999e-41b9-4ca7-b7fc-3d232b3c167d",
+          "spec": {
+            "type": "structure",
+            "structure": {
+              "entryId": "e3ab999e-41b9-4ca7-b7fc-3d232b3c167d",
+              "kind": "sauna",
+              "parameters": {
+                "clearWidth": 72,
+                "clearDepth": 72,
+                "clearHeight": 84,
+                "interiorLayerAllowance": 1.5,
+                "doorWidth": 28,
+                "doorHeight": 72,
+                "benchWidth": 60,
+                "benchDepth": 24,
+                "benchHeight": 36,
+                "origin": [
+                  0,
+                  0,
+                  0
+                ],
+                "yaw": 0
+              },
+              "selections": {}
+            }
+          },
+          "generatedNotes": "Sauna cabin — PARTIAL DIMENSIONAL STUDY\nMissing material: material.frameLumber: Using generic 2 × 4 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nMissing material: material.saunaInterior: No source-qualified saunaInterior material/product has been selected; no substitute part is generated.\nMissing material: material.saunaBenchFrame: No source-qualified saunaBenchFrame material/product has been selected; no substitute part is generated.\nMissing material: material.saunaInsulation: No source-qualified saunaInsulation material/product has been selected; no substitute part is generated.\nMissing material: material.saunaVaporBarrier: No source-qualified saunaVaporBarrier material/product has been selected; no substitute part is generated.\nMissing material: material.saunaDoor: No source-qualified saunaDoor material/product has been selected; no substitute part is generated.\nUnresolved: sauna-equipment: No heater, guard, sensor, equipment clearance, supply circuit or wiring is inferred. Exact regional equipment/manual identity and qualified trade review are required.\nUnresolved: sauna-envelope: Reserved layer space is not installed insulation, foil, furring or lining. Heat/moisture suitability and complete wall/ceiling/floor assemblies remain unresolved.\nUnresolved: sauna-ventilation: Vent openings/ducts, sensor interaction, drying strategy and ventilation performance are unrepresented.\nUnresolved: sauna-supports: Framing, ceiling/bench loads, bracing, anchors, all attachment schedules and bench support details remain unqualified.\nUnresolved: sauna-bench-geometry: The requested bench is reserved as an access volume only; no ordinary plywood or treated stock is substituted for sourced sauna seating/slats.\nUnresolved: sauna-door: An actual heat-compatible outward-opening door and its hardware remain missing; only its framed rough opening is built.",
+          "pose": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "wall-framing",
+              "sectionId": "2555ae88-6fe4-4a0b-aa82-a3b7154483e7",
+              "stepId": "b38b9f52-f0f3-4e24-b71b-7d2b93c16954"
+            },
+            {
+              "role": "door-opening-framing",
+              "sectionId": "555abb57-55eb-4f68-bc55-6e05f79989df",
+              "stepId": "c27c769d-c607-4306-8162-ca018fc2d65c"
+            },
+            {
+              "role": "ceiling-framing",
+              "sectionId": "c8688a79-1273-4b92-bea4-a94cd36c2e68",
+              "stepId": "0e730bdc-f723-4c7e-be14-0b422cfa3f00"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": "design-v3-ad3cb10",
+  "history": []
+}

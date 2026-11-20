@@ -1,0 +1,14 @@
+{
+  "source": "work/yardwork-format5-20261117052349/deterministic-cleanup-20261117053933/final-artifacts/deterministic/project.yardwork.json",
+  "sourceSha256": "290299032e678d9533e2f5adc7ca53a2d603c8edddb35b3831010c299298cf32",
+  "sourceBytes": 83319,
+  "origin": "Exact format5 deterministic revision-2 storage/fastening project bytes from guarded cleanup archive. The separate native attempt failedHTTP504; this is NOT a successful AI proposal.",
+  "schemaVersion": 5,
+  "nativeAIQualified": false,
+  "typedRebuildHeights": [
+    18,
+    20,
+    18
+  ],
+  "retainedIntent": "Two W/F plans; target missing/stale, neighbor current, sources/cuts/offcuts/snapshots/guides retained."
+}

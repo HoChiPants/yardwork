@@ -13,8 +13,8 @@ COPY --from=build /app/package*.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && mkdir /app/data && chown node:node /app/data
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/server ./server
-COPY --from=build /app/src/model.ts ./src/model.ts
-COPY --from=build /app/src/spatial.ts ./src/spatial.ts
+# Server validation and planning share model, catalog, geometry and recipe modules.
+COPY --from=build /app/src ./src
 USER node
 VOLUME ["/app/data"]
 EXPOSE 4173

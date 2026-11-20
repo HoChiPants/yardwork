@@ -1,0 +1,9 @@
+{
+  "kind": "Exact original synthetic future8 wrapper from qualified format7 archive; not real user data or new server record",
+  "source": "Isolated layout qualification, format 8 unknown-field guard",
+  "qualifiedImage": "sha256:c59a282cfa461a9586b4aac83715191b756c9ad245c6cfa2a3bd822d748fe0a0",
+  "bytes": 103590,
+  "sha256": "2cd8374bc89df46fcf21724e33620f460287a2771166877419ca330311076c8f",
+  "unknownField": "syntheticFutureGuard",
+  "purpose": "Format8 recognition must not strip unrecognized prior future data or permit overwrite."
+}

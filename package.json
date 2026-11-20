@@ -7,9 +7,11 @@
     "dev": "tsx watch server/index.ts",
     "build": "tsc --noEmit && vite build",
     "start": "tsx server/index.ts",
-    "test": "tsx --test tests/*.test.ts",
+    "restore-workshop": "tsx server/restoreWorkshop.ts",
+    "test": "tsx --test --test-concurrency=4 tests/*.test.ts",
     "test:e2e": "playwright test",
-    "check": "npm run test && npm run build"
+    "check:examples": "tsx scripts/export-studies.ts --check",
+    "check": "npm run test && npm run check:examples && npm run build"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.6",

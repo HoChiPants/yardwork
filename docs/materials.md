@@ -1,0 +1,31 @@
+# Materials, physical sizes, and connection advice
+
+The expanded library contains **32 modeled stocks:11 exact reviewed product variants and21 generic planning choices**. The source registry contains **41 product records and55 retailer references**; the separate **10 tool/accessory records and14 purchase-only hardware/supply references** are not additional placed stock. Exact variants remain unpriced until an exact store snapshot is supplied; generic prices are examples. Public sources do not establish current inventory at ZIP 84121 or any other store. Decorative material artwork does not represent available quantities. You may add as many design parts as needed within the project size limit. See [catalog coverage](catalog-coverage.md) for the exact product and purchase units.
+
+## Nominal labels and modeled dimensions
+
+Wood is rendered and measured using actual physical dimensions in inches. Nominal names identify common stock sizes. Dry surfaced stock examples include 2×4 at 1½×3½ in, 2×6 at 1½×5½ in, 2×8 at 1½×7¼ in, and 1×4 at ¾×3½ in. These are based on the [Southern Forest Products Association standard sizing tables](https://www.southernpine.com/resources/specifying-southern-pine-lumber/standard-sizing/). They do not establish species, grade, moisture condition, or capacity for a purchased board.
+
+The 2×4 library offers distinct 8, 10, and 12 ft stock entries. Selecting a longer product changes the stock purchase unit, rather than stretching an 8 ft board. A modeled ½ in plywood example explicitly uses 15/32 in thickness; panel nominal sizes do not replace product measurements. Existing ¾ in plywood plans retain their modeled 0.75 in thickness for compatibility; verify the actual product.
+
+The reviewed Lowe’s SYP 2×4 uses actual 1.5 × 3.5 × 96 in stock and one board per pack. Its [source](https://www.lowes.com/pd/Top-Choice-2-in-x-4-in-x-8-ft-Southern-Yellow-Pine-Kiln-dried-Lumber/5014110787) says #2 in title/specifications and #2 Prime in overview; the catalog retains conservative #2 pending the purchased grade stamp. It is a source-identity/dimensional frame option, not structural approval or sauna lining/bench qualification. Its current product 5014110787 is distinct from the retired 1000069139 reference despite a shared retailer item number.
+
+The reviewed [Lowe’s treated SYP post](https://www.lowes.com/pd/severe-weather-common-4-in-x-4-in-x-8-ft-actual-3-5-in-x-3-5-in-x-8-ft-2-treated-lumber/50121083) uses actual 3.5 × 3.5 × 96 in and one post per pack. Its source describes #2 SYP/MCA/ground-contact use; retention and a specific AWPA use-category number remain unverified. It is **manual placement only**: placing, cutting, saving and matching an exact shopping snapshot remain available, while automatic greenhouse/sauna/other structure selection rejects it. It has no heat-environment qualification.
+
+Every material records its stock type, cutting support, and purchase pack count. Linear wood uses one-dimensional length packing with ⅛ in saw kerf. Straight cuts accept a local X/Y/Z axis, so panels can be ripped to width and rotated stock cuts correctly. Retained pieces/offcuts share validated physical-source lineage, counted once even after a width rip. Unrelated linear parts still use conservative length packing; new sheet blanks share feasible rectangular layouts with kerf. Fixed stock-length directions preserve grain/flute orientation. Generated clipped profiles persist, but arbitrary new bevels/miters have no direct cutting editor. No cutting plan claims globally optimal yield.
+
+## Fasteners and brackets
+
+The generic library includes 3 in exterior screws, 1¼ in wood screws, 1½ in connector screws, 3 in framing nails, and an angle bracket, with explicit example purchase packs. Reviewed Simpson SD9112R100 screws use 100-count boxes; N10DHDG-R nails use 120-count boxes. Brackets and purchase-only accessories retain their specific set/pack meanings. Products may be sold in other pack sizes, so snapshot products must match the modeled purchase unit. Physical requirements are converted into purchase packs once, with purchased-stock and surplus counts separate.
+
+A connection records an exact hardware material and quantity. Nails, screw lengths, and brackets have separate shopping rows. Older screw records resolve by their modeled length when an exact library option exists. An unmatched legacy length is flagged and excluded from the hardware estimate rather than silently counted as 3 in screws. A physical hardware part and a connection quantity are both included; do not record the same item twice.
+
+Bracket connections require a separate fastening specification. Ordinary wood/deck screws are not automatically suitable connector fasteners. [Simpson Strong-Tie's connector fastener guidance](https://www.strongtie.com/products/connectors/wood-construction-connectors/technical-notes/connector-holes-fastener-types) documents product-specific fastener requirements and tested alternatives. The generic angle bracket in this library does not infer a manufacturer-approved schedule or load capacity from its dimensions. Select compatible material, coating, size, quantity, and installation instructions for the exact purchased connector.
+
+## What the advice means
+
+Hardware is excluded from the geometric support and collision checks: a nail touching the floor cannot create an apparent support path for floating wood. The app reports unconnected parts, missing bracket attachment schedules, open wall frames without recorded panel/diagonal bracing, stock mismatches, and parts outside a configured work volume. Suggested bracing and connections identify design questions; they do not calculate strength or certify a structure.
+
+The work volume is centered on X/Z, with floor Y=0. Dimensions bound the full rotated geometry, not just part centers. Placement is warned about rather than forcibly clamped, so pieces can be staged while editing.
+
+Counted/mass purchase references retain exact sell units: SD9112R100 is a100-screw box; Grip-Rite16C5 is an advertised5-lb box with no known exact nail count. Selection quantities count whole boxes, never inferred nails from pounds. No new placed stock or automatic installation schedule is created. See [common-fastener purchases](common-fastener-purchases.md).

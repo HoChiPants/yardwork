@@ -1,0 +1,2241 @@
+{
+  "schemaVersion": 4,
+  "id": "3120d499-397b-4c39-a7e1-e705ba198829",
+  "name": "SYNTHETIC format4 storage-banquette stages persistence",
+  "kind": "custom",
+  "retailer": "lowes",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "partLabels": [
+    {
+      "partId": "a0799677-de25-4c17-bd6e-28467a4122c6",
+      "label": "P001"
+    },
+    {
+      "partId": "b021a010-b28e-4b9a-b98b-9dd358ac2750",
+      "label": "P002"
+    },
+    {
+      "partId": "66651324-2859-496a-98c1-5c57ed8a1a67",
+      "label": "P003"
+    },
+    {
+      "partId": "07c8ccd5-1355-4723-8ec9-42ee62a27747",
+      "label": "P004"
+    },
+    {
+      "partId": "0b5d02d4-cac1-42ec-a3d4-63031099efbf",
+      "label": "P005"
+    },
+    {
+      "partId": "3fbf6ce6-8ca4-44e5-a6ac-d3324e46603a",
+      "label": "P006"
+    },
+    {
+      "partId": "22be2154-affa-4d41-abb3-5413be059fdc",
+      "label": "P007"
+    },
+    {
+      "partId": "f4d9a93c-34d1-4078-ad82-e18658e7fc8d",
+      "label": "P008"
+    },
+    {
+      "partId": "78f8d296-ab23-4db4-8624-4b1ab58b4685",
+      "label": "P009"
+    },
+    {
+      "partId": "c90884c9-db4f-4f12-a007-b0ec5133c6f1",
+      "label": "P010"
+    },
+    {
+      "partId": "94c50f98-1cfe-4522-9ef6-d09adfe67868",
+      "label": "P011"
+    },
+    {
+      "partId": "85977658-a978-453a-a601-a319acf63c29",
+      "label": "P012"
+    },
+    {
+      "partId": "f410eebb-3500-4356-bc79-fd345e2fe5ba",
+      "label": "P013"
+    },
+    {
+      "partId": "ba025d6b-1a05-47cf-a2c8-62de930761c5",
+      "label": "P014"
+    },
+    {
+      "partId": "a41fb5f8-6838-42a4-a2b8-2907b276369b",
+      "label": "P015"
+    },
+    {
+      "partId": "6f480462-8ea8-471f-8907-f855c84e61c3",
+      "label": "P016"
+    },
+    {
+      "partId": "09ed43b4-23d0-42e2-9d7c-fb4e22400dda",
+      "label": "P017"
+    },
+    {
+      "partId": "75082e80-198f-486d-9209-9f60635c40fe",
+      "label": "P018"
+    },
+    {
+      "partId": "4bea4b59-0836-4638-abc7-54c24548d260",
+      "label": "P019"
+    },
+    {
+      "partId": "da50d6a0-1b0f-4245-9d25-a66a5c981c61",
+      "label": "P020"
+    },
+    {
+      "partId": "fdfe0e8e-1c09-4dc3-aa40-1c6f4aef57f5",
+      "label": "P021"
+    },
+    {
+      "partId": "b1d0d28e-fbd6-4cf8-8472-d4894f997dca",
+      "label": "P022"
+    },
+    {
+      "partId": "3cdc619c-01b9-46ed-87e3-ea3cec5dd79e",
+      "label": "P023"
+    },
+    {
+      "partId": "509cf7ce-70ec-4b9d-8fa9-ffc0094d9b53",
+      "label": "P024"
+    },
+    {
+      "partId": "5ea402ed-7b4d-47c2-9e27-8dee393cf335",
+      "label": "P025"
+    },
+    {
+      "partId": "f588de21-fb4d-4695-9b8f-06f4440d5fbe",
+      "label": "P026"
+    },
+    {
+      "partId": "04a861d1-f111-4420-862a-121d3c858a0f",
+      "label": "P027"
+    },
+    {
+      "partId": "37851c0b-f9b7-4bdd-b2fe-c7b318bd6e50",
+      "label": "P028"
+    },
+    {
+      "partId": "eca8f7c8-cc70-4055-9a3c-c4ed8bceb681",
+      "label": "P029"
+    },
+    {
+      "partId": "d1892fb3-5db7-4f11-95d4-6003eed580c1",
+      "label": "P030"
+    },
+    {
+      "partId": "854654be-3354-4aa0-b763-5be7e587326c",
+      "label": "P031"
+    },
+    {
+      "partId": "a59b8c4f-9f99-443b-8eb1-4ac83e6e0f59",
+      "label": "P032"
+    },
+    {
+      "partId": "86e435f9-3933-4ef0-bb58-2b80a8026911",
+      "label": "P033"
+    },
+    {
+      "partId": "8c195194-8413-46c0-9645-ab0fe8ea11ca",
+      "label": "P034"
+    },
+    {
+      "partId": "c9569b0b-77e8-4713-91ce-0d86abf67717",
+      "label": "P035"
+    },
+    {
+      "partId": "53c2cd9b-c8e0-4ca1-9430-f988481511e2",
+      "label": "P036"
+    },
+    {
+      "partId": "60e34c5a-85eb-4cb7-8c36-1eb9fea7cc9d",
+      "label": "P037"
+    },
+    {
+      "partId": "e64717bd-20da-4e67-a0a6-59071de02a3c",
+      "label": "P038"
+    },
+    {
+      "partId": "8c919572-3e98-42e3-8579-602bdbc8e927",
+      "label": "P039"
+    },
+    {
+      "partId": "0b886ab0-1116-4318-ab3c-2414451a39a5",
+      "label": "P040"
+    },
+    {
+      "partId": "aaeb07df-5520-4606-a472-bc67acb03415",
+      "label": "P041"
+    },
+    {
+      "partId": "bd82c1ed-2a2c-453b-829a-ca25d9c21eec",
+      "label": "P042"
+    },
+    {
+      "partId": "9ee7a87a-ddcd-43f1-9920-909e5ac27419",
+      "label": "O001"
+    },
+    {
+      "partId": "ac2cfef6-e6cd-4395-a47c-fd0a8ef7fc2c",
+      "label": "P043"
+    },
+    {
+      "partId": "e84f5aac-c5cf-4f12-9aee-59b2cb703f18",
+      "label": "O002"
+    },
+    {
+      "partId": "765ef7f0-abb0-4776-986a-5107e2639ebb",
+      "label": "P044"
+    },
+    {
+      "partId": "3b9a2ba7-6ca0-4ffe-895c-f435623147ec",
+      "label": "O003"
+    },
+    {
+      "partId": "31ffc725-15e6-494b-9af9-dfa1a09d639a",
+      "label": "P045"
+    },
+    {
+      "partId": "53c68dd6-c9ac-4e53-bd14-ba2c398ac10a",
+      "label": "P046"
+    },
+    {
+      "partId": "f944550e-b2dd-4f3f-b73d-ebcc980a89a8",
+      "label": "P047"
+    },
+    {
+      "partId": "be3acdab-29a1-46ec-a280-f857b71caf1d",
+      "label": "P048"
+    },
+    {
+      "partId": "3da1ff88-3e16-4e13-aee9-015e50e44377",
+      "label": "P049"
+    },
+    {
+      "partId": "dfda2983-2ef2-4fd0-9dd6-a4d53fd44478",
+      "label": "P050"
+    },
+    {
+      "partId": "d64a62c9-c28a-44ca-94d6-a13eddc56b9e",
+      "label": "P051"
+    },
+    {
+      "partId": "a6d3e7b2-cdc8-4b39-89e8-bf6d9ae57733",
+      "label": "P052"
+    },
+    {
+      "partId": "3455bfdb-5932-43ec-b58e-8a03e4d80ce5",
+      "label": "P053"
+    },
+    {
+      "partId": "fb88b484-ec91-40bd-bd6f-b464fe18cc80",
+      "label": "P054"
+    },
+    {
+      "partId": "fa11f0a2-f531-4083-af9d-a9ec5109821a",
+      "label": "P055"
+    },
+    {
+      "partId": "c54bbe0a-9d38-46d0-8b9b-382ca854a804",
+      "label": "P056"
+    },
+    {
+      "partId": "bb34a688-5623-48c5-ae8a-cddac5433887",
+      "label": "P057"
+    },
+    {
+      "partId": "ffb1c385-e7be-4336-96e5-57f071941335",
+      "label": "P058"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "SYNTHETIC-1841",
+  "updatedAt": "2026-11-17T03:26:08.999Z",
+  "pieces": [
+    {
+      "id": "a0799677-de25-4c17-bd6e-28467a4122c6",
+      "name": "Banquette section 1 · storage bottom",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        0.703,
+        24
+      ],
+      "position": [
+        -24,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "storage-bottom",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b021a010-b28e-4b9a-b98b-9dd358ac2750",
+      "name": "Banquette section 1 · storage rear",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        16.594,
+        0.703
+      ],
+      "position": [
+        -24,
+        9,
+        -11.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9408424c-d818-4709-84bc-5a9b498a2fd2",
+      "assembly": "Banquette section 1",
+      "designRole": "storage-rear",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "66651324-2859-496a-98c1-5c57ed8a1a67",
+      "name": "Banquette section 1 · storage front",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        16.594,
+        0.703
+      ],
+      "position": [
+        -24,
+        9,
+        11.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9408424c-d818-4709-84bc-5a9b498a2fd2",
+      "assembly": "Banquette section 1",
+      "designRole": "storage-front",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "07c8ccd5-1355-4723-8ec9-42ee62a27747",
+      "name": "Banquette section 1 · storage left",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        16.594,
+        22.594
+      ],
+      "position": [
+        -35.6485,
+        9,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9408424c-d818-4709-84bc-5a9b498a2fd2",
+      "assembly": "Banquette section 1",
+      "designRole": "storage-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0b5d02d4-cac1-42ec-a3d4-63031099efbf",
+      "name": "Banquette section 1 · storage right",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        16.594,
+        22.594
+      ],
+      "position": [
+        -12.3515,
+        9,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9408424c-d818-4709-84bc-5a9b498a2fd2",
+      "assembly": "Banquette section 1",
+      "designRole": "storage-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3fbf6ce6-8ca4-44e5-a6ac-d3324e46603a",
+      "name": "Banquette section 1 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        13.094000000000001,
+        3.5
+      ],
+      "position": [
+        -34.547,
+        7.250000000000001,
+        -9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "22be2154-affa-4d41-abb3-5413be059fdc",
+      "name": "Banquette section 1 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        13.094000000000001,
+        3.5
+      ],
+      "position": [
+        -34.547,
+        7.250000000000001,
+        9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f4d9a93c-34d1-4078-ad82-e18658e7fc8d",
+      "name": "Banquette section 1 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        13.094000000000001,
+        3.5
+      ],
+      "position": [
+        -13.453,
+        7.250000000000001,
+        -9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "78f8d296-ab23-4db4-8624-4b1ab58b4685",
+      "name": "Banquette section 1 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        13.094000000000001,
+        3.5
+      ],
+      "position": [
+        -13.453,
+        7.250000000000001,
+        9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c90884c9-db4f-4f12-a007-b0ec5133c6f1",
+      "name": "Banquette section 1 · top rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        22.594,
+        3.5,
+        1.5
+      ],
+      "position": [
+        -24,
+        15.547,
+        -10.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "top-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "94c50f98-1cfe-4522-9ef6-d09adfe67868",
+      "name": "Banquette section 1 · top rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        22.594,
+        3.5,
+        1.5
+      ],
+      "position": [
+        -24,
+        15.547,
+        10.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "top-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "85977658-a978-453a-a601-a319acf63c29",
+      "name": "Banquette section 1 · top cross rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        3.5,
+        19.594
+      ],
+      "position": [
+        -34.547,
+        15.547,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "top-cross-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f410eebb-3500-4356-bc79-fd345e2fe5ba",
+      "name": "Banquette section 1 · top cross rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        3.5,
+        19.594
+      ],
+      "position": [
+        -13.453,
+        15.547,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "assembly": "Banquette section 1",
+      "designRole": "top-cross-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ba025d6b-1a05-47cf-a2c8-62de930761c5",
+      "name": "Banquette section 1 · seat lid",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        0.703,
+        24
+      ],
+      "position": [
+        -24,
+        17.648500000000002,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "921f8471-2ed6-4eaa-9692-bdba8053af2f",
+      "assembly": "Banquette section 1",
+      "designRole": "seat-lid",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "eca8f7c8-cc70-4055-9a3c-c4ed8bceb681",
+      "name": "Banquette section 3 · storage bottom",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        0.703,
+        24
+      ],
+      "position": [
+        24,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "storage-bottom",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d1892fb3-5db7-4f11-95d4-6003eed580c1",
+      "name": "Banquette section 3 · storage rear",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        16.594,
+        0.703
+      ],
+      "position": [
+        24,
+        9,
+        -11.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "aab40cbe-aadc-4f54-af28-fcade086379a",
+      "assembly": "Banquette section 3",
+      "designRole": "storage-rear",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "854654be-3354-4aa0-b763-5be7e587326c",
+      "name": "Banquette section 3 · storage front",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        16.594,
+        0.703
+      ],
+      "position": [
+        24,
+        9,
+        11.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "aab40cbe-aadc-4f54-af28-fcade086379a",
+      "assembly": "Banquette section 3",
+      "designRole": "storage-front",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a59b8c4f-9f99-443b-8eb1-4ac83e6e0f59",
+      "name": "Banquette section 3 · storage left",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        16.594,
+        22.594
+      ],
+      "position": [
+        12.3515,
+        9,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "aab40cbe-aadc-4f54-af28-fcade086379a",
+      "assembly": "Banquette section 3",
+      "designRole": "storage-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "86e435f9-3933-4ef0-bb58-2b80a8026911",
+      "name": "Banquette section 3 · storage right",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        16.594,
+        22.594
+      ],
+      "position": [
+        35.6485,
+        9,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "aab40cbe-aadc-4f54-af28-fcade086379a",
+      "assembly": "Banquette section 3",
+      "designRole": "storage-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8c195194-8413-46c0-9645-ab0fe8ea11ca",
+      "name": "Banquette section 3 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        13.094000000000001,
+        3.5
+      ],
+      "position": [
+        13.453,
+        7.250000000000001,
+        -9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c9569b0b-77e8-4713-91ce-0d86abf67717",
+      "name": "Banquette section 3 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        13.094000000000001,
+        3.5
+      ],
+      "position": [
+        13.453,
+        7.250000000000001,
+        9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "53c2cd9b-c8e0-4ca1-9430-f988481511e2",
+      "name": "Banquette section 3 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        13.094000000000001,
+        3.5
+      ],
+      "position": [
+        34.547,
+        7.250000000000001,
+        -9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "60e34c5a-85eb-4cb7-8c36-1eb9fea7cc9d",
+      "name": "Banquette section 3 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        13.094000000000001,
+        3.5
+      ],
+      "position": [
+        34.547,
+        7.250000000000001,
+        9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e64717bd-20da-4e67-a0a6-59071de02a3c",
+      "name": "Banquette section 3 · top rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        22.594,
+        3.5,
+        1.5
+      ],
+      "position": [
+        24,
+        15.547,
+        -10.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "top-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8c919572-3e98-42e3-8579-602bdbc8e927",
+      "name": "Banquette section 3 · top rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        22.594,
+        3.5,
+        1.5
+      ],
+      "position": [
+        24,
+        15.547,
+        10.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "top-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0b886ab0-1116-4318-ab3c-2414451a39a5",
+      "name": "Banquette section 3 · top cross rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        3.5,
+        19.594
+      ],
+      "position": [
+        13.453,
+        15.547,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "top-cross-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "aaeb07df-5520-4606-a472-bc67acb03415",
+      "name": "Banquette section 3 · top cross rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        3.5,
+        19.594
+      ],
+      "position": [
+        34.547,
+        15.547,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "assembly": "Banquette section 3",
+      "designRole": "top-cross-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "bd82c1ed-2a2c-453b-829a-ca25d9c21eec",
+      "name": "Banquette section 3 · seat lid",
+      "material": "plytanium-703",
+      "size": [
+        12,
+        0.703,
+        24
+      ],
+      "position": [
+        18,
+        17.648500000000002,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "75c9c2cb-ee8e-4e90-b60e-988ae6261dc5",
+      "assembly": "Banquette section 3",
+      "designRole": "seat-lid",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "5a097f82-cf9b-405c-800a-a1464ab6e711",
+        "size": [
+          24,
+          0.703,
+          24
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "9ee7a87a-ddcd-43f1-9920-909e5ac27419",
+      "name": "Offcut · Banquette section 3 · seat lid",
+      "material": "plytanium-703",
+      "size": [
+        11.875,
+        0.703,
+        24
+      ],
+      "position": [
+        30.0625,
+        17.648500000000002,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7428958c-dc06-4b8f-b892-0808e2cd3d6a",
+      "assembly": "Banquette section 3",
+      "designRole": "seat-lid",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "5a097f82-cf9b-405c-800a-a1464ab6e711",
+        "size": [
+          24,
+          0.703,
+          24
+        ],
+        "offset": [
+          12.125,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ac2cfef6-e6cd-4395-a47c-fd0a8ef7fc2c",
+      "name": "SYNTHETIC manually cut lowes-whitewood-1x6",
+      "material": "lowes-whitewood-1x6",
+      "size": [
+        0.75,
+        36,
+        5.5
+      ],
+      "position": [
+        100,
+        18,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ef84ac2e-70ec-4102-8fb2-6cc5f26d4c38",
+      "assembly": "SYNTHETIC manual stock 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "713ff751-2236-4a3d-a3a9-a4b78a4a809f",
+        "size": [
+          0.75,
+          96,
+          5.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "e84f5aac-c5cf-4f12-9aee-59b2cb703f18",
+      "name": "Offcut · SYNTHETIC manually cut lowes-whitewood-1x6",
+      "material": "lowes-whitewood-1x6",
+      "size": [
+        0.75,
+        59.875,
+        5.5
+      ],
+      "position": [
+        100,
+        66.0625,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7428958c-dc06-4b8f-b892-0808e2cd3d6a",
+      "assembly": "SYNTHETIC manual stock 1",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "713ff751-2236-4a3d-a3a9-a4b78a4a809f",
+        "size": [
+          0.75,
+          96,
+          5.5
+        ],
+        "offset": [
+          0,
+          36.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "765ef7f0-abb0-4776-986a-5107e2639ebb",
+      "name": "SYNTHETIC manually cut lowes-syp-2x6",
+      "material": "lowes-syp-2x6",
+      "size": [
+        1.5,
+        36,
+        5.5
+      ],
+      "position": [
+        120,
+        18,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ae882940-123e-49d6-ade9-97d7182b2e1f",
+      "assembly": "SYNTHETIC manual stock 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "9add4983-6eb1-4a3a-bc56-b7ed21df6881",
+        "size": [
+          1.5,
+          96,
+          5.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "3b9a2ba7-6ca0-4ffe-895c-f435623147ec",
+      "name": "Offcut · SYNTHETIC manually cut lowes-syp-2x6",
+      "material": "lowes-syp-2x6",
+      "size": [
+        1.5,
+        59.875,
+        5.5
+      ],
+      "position": [
+        120,
+        66.0625,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7428958c-dc06-4b8f-b892-0808e2cd3d6a",
+      "assembly": "SYNTHETIC manual stock 2",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "9add4983-6eb1-4a3a-bc56-b7ed21df6881",
+        "size": [
+          1.5,
+          96,
+          5.5
+        ],
+        "offset": [
+          0,
+          36.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "31ffc725-15e6-494b-9af9-dfa1a09d639a",
+      "name": "Banquette section 2 · storage bottom",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        0.703,
+        24
+      ],
+      "position": [
+        0,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "storage-bottom",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "53c68dd6-c9ac-4e53-bd14-ba2c398ac10a",
+      "name": "Banquette section 2 · storage rear",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        18.594,
+        0.703
+      ],
+      "position": [
+        0,
+        10,
+        -11.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2a2275fc-a849-4fee-b12a-f3ef7091f7c2",
+      "assembly": "Banquette section 2",
+      "designRole": "storage-rear",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f944550e-b2dd-4f3f-b73d-ebcc980a89a8",
+      "name": "Banquette section 2 · storage front",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        18.594,
+        0.703
+      ],
+      "position": [
+        0,
+        10,
+        11.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2a2275fc-a849-4fee-b12a-f3ef7091f7c2",
+      "assembly": "Banquette section 2",
+      "designRole": "storage-front",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "be3acdab-29a1-46ec-a280-f857b71caf1d",
+      "name": "Banquette section 2 · storage left",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        18.594,
+        22.594
+      ],
+      "position": [
+        -11.6485,
+        10,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2a2275fc-a849-4fee-b12a-f3ef7091f7c2",
+      "assembly": "Banquette section 2",
+      "designRole": "storage-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3da1ff88-3e16-4e13-aee9-015e50e44377",
+      "name": "Banquette section 2 · storage right",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        18.594,
+        22.594
+      ],
+      "position": [
+        11.6485,
+        10,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2a2275fc-a849-4fee-b12a-f3ef7091f7c2",
+      "assembly": "Banquette section 2",
+      "designRole": "storage-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "dfda2983-2ef2-4fd0-9dd6-a4d53fd44478",
+      "name": "Banquette section 2 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        15.094000000000001,
+        3.5
+      ],
+      "position": [
+        -10.547,
+        8.25,
+        -9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d64a62c9-c28a-44ca-94d6-a13eddc56b9e",
+      "name": "Banquette section 2 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        15.094000000000001,
+        3.5
+      ],
+      "position": [
+        -10.547,
+        8.25,
+        9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a6d3e7b2-cdc8-4b39-89e8-bf6d9ae57733",
+      "name": "Banquette section 2 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        15.094000000000001,
+        3.5
+      ],
+      "position": [
+        10.547,
+        8.25,
+        -9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3455bfdb-5932-43ec-b58e-8a03e4d80ce5",
+      "name": "Banquette section 2 · leg",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        15.094000000000001,
+        3.5
+      ],
+      "position": [
+        10.547,
+        8.25,
+        9.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "fb88b484-ec91-40bd-bd6f-b464fe18cc80",
+      "name": "Banquette section 2 · top rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        22.594,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        17.547,
+        -10.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "top-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "fa11f0a2-f531-4083-af9d-a9ec5109821a",
+      "name": "Banquette section 2 · top rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        22.594,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        17.547,
+        10.547
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "top-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c54bbe0a-9d38-46d0-8b9b-382ca854a804",
+      "name": "Banquette section 2 · top cross rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        3.5,
+        19.594
+      ],
+      "position": [
+        -10.547,
+        17.547,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "top-cross-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "bb34a688-5623-48c5-ae8a-cddac5433887",
+      "name": "Banquette section 2 · top cross rail",
+      "material": "lowes-syp-2x4-8",
+      "size": [
+        1.5,
+        3.5,
+        19.594
+      ],
+      "position": [
+        10.547,
+        17.547,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "assembly": "Banquette section 2",
+      "designRole": "top-cross-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ffb1c385-e7be-4336-96e5-57f071941335",
+      "name": "Banquette section 2 · seat lid",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        0.703,
+        24
+      ],
+      "position": [
+        0,
+        19.648500000000002,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d1568fb1-ddf4-473d-8473-3d29543414c3",
+      "assembly": "Banquette section 2",
+      "designRole": "seat-lid",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "7428958c-dc06-4b8f-b892-0808e2cd3d6a",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "3120d499-397b-4c39-a7e1-e705ba198829",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-739eefa5",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "213c6107-d299-4720-9460-48101db06ee3",
+      "title": "SYNTHETIC custom before assembly",
+      "notes": "Keep measured access clear before this assembly.",
+      "complete": false
+    },
+    {
+      "id": "d194a512-8aff-47c4-9565-37b9bb123dcc",
+      "title": "Banquette section 1: Dry-fit the storage bottom and frame",
+      "notes": "Set the storage bottom in its intended orientation, then dry-fit the internal legs and top rails on it. Clamp and check square, contact and access for joining the frame. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": true,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7c7a09bb-24e5-4f57-b9b4-e42b31621494",
+        "stageKey": "bottom-frame",
+        "memberIds": [
+          "22be2154-affa-4d41-abb3-5413be059fdc",
+          "3fbf6ce6-8ca4-44e5-a6ac-d3324e46603a",
+          "78f8d296-ab23-4db4-8624-4b1ab58b4685",
+          "85977658-a978-453a-a601-a319acf63c29",
+          "94c50f98-1cfe-4522-9ef6-d09adfe67868",
+          "a0799677-de25-4c17-bd6e-28467a4122c6",
+          "c90884c9-db4f-4f12-a007-b0ec5133c6f1",
+          "f410eebb-3500-4356-bc79-fd345e2fe5ba",
+          "f4d9a93c-34d1-4078-ad82-e18658e7fc8d"
+        ],
+        "notes": "Set the storage bottom in its intended orientation, then dry-fit the internal legs and top rails on it. Clamp and check square, contact and access for joining the frame. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-e22c504c",
+        "title": "Banquette section 1: Dry-fit the storage bottom and frame"
+      }
+    },
+    {
+      "id": "9408424c-d818-4709-84bc-5a9b498a2fd2",
+      "title": "Banquette section 1: Fit the storage shell",
+      "notes": "Dry-fit the listed front, rear and end panels around the actual bottom and frame. Check outside dimensions and storage access; leave clamp and tool access for the chosen joints before closing the shell.",
+      "complete": true,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7c7a09bb-24e5-4f57-b9b4-e42b31621494",
+        "stageKey": "shell",
+        "memberIds": [
+          "07c8ccd5-1355-4723-8ec9-42ee62a27747",
+          "0b5d02d4-cac1-42ec-a3d4-63031099efbf",
+          "66651324-2859-496a-98c1-5c57ed8a1a67",
+          "b021a010-b28e-4b9a-b98b-9dd358ac2750"
+        ],
+        "notes": "Dry-fit the listed front, rear and end panels around the actual bottom and frame. Check outside dimensions and storage access; leave clamp and tool access for the chosen joints before closing the shell.",
+        "fingerprint": "phase-v1-bffff6a2",
+        "title": "Banquette section 1: Fit the storage shell"
+      }
+    },
+    {
+      "id": "921f8471-2ed6-4eaa-9692-bdba8053af2f",
+      "title": "Banquette section 1: Dry-fit the seat lid",
+      "notes": "Dry-fit the actual lid and any listed back panel. Check opening travel, wall clearance, storage access and pinch points. The preview pivot is provisional: hinge, lid stay/hold-open and attachment details remain to be designed unless explicitly documented.",
+      "complete": true,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7c7a09bb-24e5-4f57-b9b4-e42b31621494",
+        "stageKey": "seat-lid-back",
+        "memberIds": [
+          "ba025d6b-1a05-47cf-a2c8-62de930761c5"
+        ],
+        "notes": "Dry-fit the actual lid and any listed back panel. Check opening travel, wall clearance, storage access and pinch points. The preview pivot is provisional: hinge, lid stay/hold-open and attachment details remain to be designed unless explicitly documented.",
+        "fingerprint": "phase-v1-f996d05c",
+        "title": "Banquette section 1: Dry-fit the seat lid"
+      }
+    },
+    {
+      "id": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "title": "SYNTHETIC measured section 2 frame sequence",
+      "notes": "Set the storage bottom in its intended orientation, then dry-fit the internal legs and top rails on it. Clamp and check square, contact and access for joining the frame. Review the recorded connection schedule; unspecified joints still need fastening details.\n\nExisting instructions to review:\nSYNTHETIC QA note before generated assembly operations.\n\n\n\n\nSYNTHETIC QA note after generated assembly operations.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "e2057930-8afb-4380-a67d-ebeddaf4a989",
+        "stageKey": "bottom-frame",
+        "memberIds": [
+          "31ffc725-15e6-494b-9af9-dfa1a09d639a",
+          "3455bfdb-5932-43ec-b58e-8a03e4d80ce5",
+          "a6d3e7b2-cdc8-4b39-89e8-bf6d9ae57733",
+          "bb34a688-5623-48c5-ae8a-cddac5433887",
+          "c54bbe0a-9d38-46d0-8b9b-382ca854a804",
+          "d64a62c9-c28a-44ca-94d6-a13eddc56b9e",
+          "dfda2983-2ef2-4fd0-9dd6-a4d53fd44478",
+          "fa11f0a2-f531-4083-af9d-a9ec5109821a",
+          "fb88b484-ec91-40bd-bd6f-b464fe18cc80"
+        ],
+        "notes": "Set the storage bottom in its intended orientation, then dry-fit the internal legs and top rails on it. Clamp and check square, contact and access for joining the frame. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-19cb6c9b",
+        "title": "Banquette section 2: Dry-fit the storage bottom and frame"
+      }
+    },
+    {
+      "id": "2a2275fc-a849-4fee-b12a-f3ef7091f7c2",
+      "title": "Banquette section 2: Fit the storage shell",
+      "notes": "Dry-fit the listed front, rear and end panels around the actual bottom and frame. Check outside dimensions and storage access; leave clamp and tool access for the chosen joints before closing the shell.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "e2057930-8afb-4380-a67d-ebeddaf4a989",
+        "stageKey": "shell",
+        "memberIds": [
+          "3da1ff88-3e16-4e13-aee9-015e50e44377",
+          "53c68dd6-c9ac-4e53-bd14-ba2c398ac10a",
+          "be3acdab-29a1-46ec-a280-f857b71caf1d",
+          "f944550e-b2dd-4f3f-b73d-ebcc980a89a8"
+        ],
+        "notes": "Dry-fit the listed front, rear and end panels around the actual bottom and frame. Check outside dimensions and storage access; leave clamp and tool access for the chosen joints before closing the shell.",
+        "fingerprint": "phase-v1-28a6f82f",
+        "title": "Banquette section 2: Fit the storage shell"
+      }
+    },
+    {
+      "id": "d1568fb1-ddf4-473d-8473-3d29543414c3",
+      "title": "Banquette section 2: Dry-fit the seat lid",
+      "notes": "Dry-fit the actual lid and any listed back panel. Check opening travel, wall clearance, storage access and pinch points. The preview pivot is provisional: hinge, lid stay/hold-open and attachment details remain to be designed unless explicitly documented.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "e2057930-8afb-4380-a67d-ebeddaf4a989",
+        "stageKey": "seat-lid-back",
+        "memberIds": [
+          "ffb1c385-e7be-4336-96e5-57f071941335"
+        ],
+        "notes": "Dry-fit the actual lid and any listed back panel. Check opening travel, wall clearance, storage access and pinch points. The preview pivot is provisional: hinge, lid stay/hold-open and attachment details remain to be designed unless explicitly documented.",
+        "fingerprint": "phase-v1-fdeea78a",
+        "title": "Banquette section 2: Dry-fit the seat lid"
+      }
+    },
+    {
+      "id": "2cc6f300-5526-418b-8213-bd22c26e818f",
+      "title": "Banquette section 3: Dry-fit the storage bottom and frame",
+      "notes": "Set the storage bottom in its intended orientation, then dry-fit the internal legs and top rails on it. Clamp and check square, contact and access for joining the frame. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": true,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "30fe8601-a866-41ca-937a-57a73082d7fa",
+        "stageKey": "bottom-frame",
+        "memberIds": [
+          "0b886ab0-1116-4318-ab3c-2414451a39a5",
+          "53c2cd9b-c8e0-4ca1-9430-f988481511e2",
+          "60e34c5a-85eb-4cb7-8c36-1eb9fea7cc9d",
+          "8c195194-8413-46c0-9645-ab0fe8ea11ca",
+          "8c919572-3e98-42e3-8579-602bdbc8e927",
+          "aaeb07df-5520-4606-a472-bc67acb03415",
+          "c9569b0b-77e8-4713-91ce-0d86abf67717",
+          "e64717bd-20da-4e67-a0a6-59071de02a3c",
+          "eca8f7c8-cc70-4055-9a3c-c4ed8bceb681"
+        ],
+        "notes": "Set the storage bottom in its intended orientation, then dry-fit the internal legs and top rails on it. Clamp and check square, contact and access for joining the frame. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-1a39997d",
+        "title": "Banquette section 3: Dry-fit the storage bottom and frame"
+      }
+    },
+    {
+      "id": "aab40cbe-aadc-4f54-af28-fcade086379a",
+      "title": "Banquette section 3: Fit the storage shell",
+      "notes": "Dry-fit the listed front, rear and end panels around the actual bottom and frame. Check outside dimensions and storage access; leave clamp and tool access for the chosen joints before closing the shell.",
+      "complete": true,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "30fe8601-a866-41ca-937a-57a73082d7fa",
+        "stageKey": "shell",
+        "memberIds": [
+          "854654be-3354-4aa0-b763-5be7e587326c",
+          "86e435f9-3933-4ef0-bb58-2b80a8026911",
+          "a59b8c4f-9f99-443b-8eb1-4ac83e6e0f59",
+          "d1892fb3-5db7-4f11-95d4-6003eed580c1"
+        ],
+        "notes": "Dry-fit the listed front, rear and end panels around the actual bottom and frame. Check outside dimensions and storage access; leave clamp and tool access for the chosen joints before closing the shell.",
+        "fingerprint": "phase-v1-56fb023d",
+        "title": "Banquette section 3: Fit the storage shell"
+      }
+    },
+    {
+      "id": "75c9c2cb-ee8e-4e90-b60e-988ae6261dc5",
+      "title": "Banquette section 3: Dry-fit the seat lid",
+      "notes": "Dry-fit the actual lid and any listed back panel. Check opening travel, wall clearance, storage access and pinch points. The preview pivot is provisional: hinge, lid stay/hold-open and attachment details remain to be designed unless explicitly documented.",
+      "complete": true,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "30fe8601-a866-41ca-937a-57a73082d7fa",
+        "stageKey": "seat-lid-back",
+        "memberIds": [
+          "bd82c1ed-2a2c-453b-829a-ca25d9c21eec"
+        ],
+        "notes": "Dry-fit the actual lid and any listed back panel. Check opening travel, wall clearance, storage access and pinch points. The preview pivot is provisional: hinge, lid stay/hold-open and attachment details remain to be designed unless explicitly documented.",
+        "fingerprint": "phase-v1-9294b557",
+        "title": "Banquette section 3: Dry-fit the seat lid"
+      }
+    },
+    {
+      "id": "ef84ac2e-70ec-4102-8fb2-6cc5f26d4c38",
+      "title": "Assemble SYNTHETIC manual stock 1",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": true,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "3120d499-397b-4c39-a7e1-e705ba198829",
+        "stageKey": "assembly:SYNTHETIC manual stock 1",
+        "memberIds": [
+          "ac2cfef6-e6cd-4395-a47c-fd0a8ef7fc2c"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-29de0579",
+        "title": "Assemble SYNTHETIC manual stock 1"
+      }
+    },
+    {
+      "id": "ae882940-123e-49d6-ade9-97d7182b2e1f",
+      "title": "Assemble SYNTHETIC manual stock 2",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": true,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "3120d499-397b-4c39-a7e1-e705ba198829",
+        "stageKey": "assembly:SYNTHETIC manual stock 2",
+        "memberIds": [
+          "765ef7f0-abb0-4776-986a-5107e2639ebb"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-771664eb",
+        "title": "Assemble SYNTHETIC manual stock 2"
+      }
+    },
+    {
+      "id": "69f94be6-d655-4983-a39a-65eaa2742160",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "3120d499-397b-4c39-a7e1-e705ba198829",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-a8ca2d24",
+        "title": "Review connections and finish"
+      }
+    },
+    {
+      "id": "81705fb9-cd1a-4eb1-a757-d7149e95743d",
+      "title": "SYNTHETIC custom after final review",
+      "notes": "SYNTHETIC final finish selection after connection review.",
+      "complete": false
+    }
+  ],
+  "joints": [
+    {
+      "id": "daf82e17-394a-4b0e-b7ea-35e41ae31e08",
+      "a": "3fbf6ce6-8ca4-44e5-a6ac-d3324e46603a",
+      "b": "c90884c9-db4f-4f12-a007-b0ec5133c6f1",
+      "kind": "screw",
+      "material": "screw-short",
+      "quantity": 2,
+      "length": 1.25,
+      "stepId": "d194a512-8aff-47c4-9565-37b9bb123dcc"
+    }
+  ],
+  "inventory": [
+    {
+      "retailer": "lowes",
+      "material": "lowes-whitewood-1x6",
+      "internetNumber": "1001067086",
+      "name": "SYNTHETIC QA one-pack snapshot; not real stock",
+      "price": 11.5,
+      "available": 1,
+      "store": "SYNTHETIC-1841",
+      "zip": "84121",
+      "checkedAt": "2026-11-17T03:24:37.779Z",
+      "url": "https://www.lowes.com/pd/RELIABILT-1-in-x-6-in-x-8-ft-Unfinished-Pine-Board/1001067086"
+    },
+    {
+      "retailer": "lowes",
+      "material": "lowes-syp-2x6",
+      "internetNumber": "1000028789",
+      "name": "SYNTHETIC QA one-pack snapshot; not real stock",
+      "price": 15.5,
+      "available": 1,
+      "store": "SYNTHETIC-1841",
+      "zip": "84121",
+      "checkedAt": "2026-11-17T03:24:37.782Z",
+      "url": "https://www.lowes.com/pd/Top-Choice-2-in-x-6-in-x-8-ft-Southern-Yellow-Pine-Lumber-Common-1-5-in-x-5-5-in-x-8-ft-Actual/1000028789"
+    }
+  ],
+  "planLines": [],
+  "notes": "ACCEPTANCE BASELINE STUDY — Enclosed three-compartment geometry with provisional lid pivots; hinges, lid supports and fastening remain unspecified.\n\nPlanning review — 3-section storage banquette\n3 seating sections. Seating: 3 enclosed for storage, 3 opening lids, 0 with backs. Seat heights: 18, 20 in; depth: 24 in. Closed body footprint in workspace X × Z: 72 × 24 in.\nAssumption: This is an editable layout concept. Joinery, load capacity, bracing, anchoring, and finished tolerances still need design.\nAssumption: Storage is enclosed with a bottom, front/rear and side panels. Panel joints and fasteners are not specified.\nAssumption: Seat lids can be shown open for access review. The rear pivot is provisional; hinge selection, lid stays, pinch protection and wall clearance need design. Hinges and lid-support hardware are not specified or priced.\nAssumption: The 3 sections are arranged side by side in one straight run; confirm whether you instead want an L or U layout.\nAssumption: Casework and frame geometry use the selected actual stock thicknesses. Product identity and dimensions do not qualify seat loads, joinery, hinge/lid-support selection or current store inventory.\nAssumption: AI-interpreted measurements and features are provisional; review the visible geometry and exact stock before applying.\nOpen question: Is the panel and frame material for section 2 still preferred?\nOpen question: Should section 2 retain the same storage, opening lid, and backHeight settings?\nReview: Confirm table clearance, finished seat height/depth, cushion thickness, and access before building.\nReview: Seat lids are modeled; hinges, stays, pinch protection, wall clearance and attachment details still need design.\nReview: Long unsupported members and missing bracing/fasteners need review; this layout does not establish safe loads.\nReview: Verify the panel and frame material sources for section 2.\n\nStudy requirements to resolve:\nhardware.seat-hinges: Select compatible seat hinges and determine quantities has not been matched and qualified for this study. Generic starter stock is dimensional geometry only.\nhardware.lid-support: Select compatible lid supports and determine quantities has not been matched and qualified for this study. Generic starter stock is dimensional geometry only.\nhardware.assembly-fasteners: Select actual assembly fasteners and determine quantities has not been matched and qualified for this study. Generic starter stock is dimensional geometry only.\nmaterial.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.\noperation.cut-schedule: Record the actual panel and lumber cuts remains a design/installation requirement; this geometry is not a ready-to-build kit.\noperation.assembly-connections: Specify the actual attachment schedule and connection records remains a design/installation requirement; this geometry is not a ready-to-build kit.\noperation.lid-installation: Specify hinge/stay holes, pivots and installation details remains a design/installation requirement; this geometry is not a ready-to-build kit.\ndesign.load-and-joinery: Resolve intended loads, joinery and attachment details remains a design/installation requirement; this geometry is not a ready-to-build kit.\ndesign.site-and-anchor: Resolve site/wall substrate, support and anchoring remains a design/installation requirement; this geometry is not a ready-to-build kit.\ndesign.lid-safety: Resolve lid mass, support/hold-open action, pinch points and wall clearance remains a design/installation requirement; this geometry is not a ready-to-build kit.",
+  "sections": [
+    {
+      "id": "265c9ca2-92b4-4f76-9220-7161c7fe15b4",
+      "name": "Banquette section 1",
+      "pieceIds": [
+        "a0799677-de25-4c17-bd6e-28467a4122c6",
+        "b021a010-b28e-4b9a-b98b-9dd358ac2750",
+        "66651324-2859-496a-98c1-5c57ed8a1a67",
+        "07c8ccd5-1355-4723-8ec9-42ee62a27747",
+        "0b5d02d4-cac1-42ec-a3d4-63031099efbf",
+        "3fbf6ce6-8ca4-44e5-a6ac-d3324e46603a",
+        "22be2154-affa-4d41-abb3-5413be059fdc",
+        "f4d9a93c-34d1-4078-ad82-e18658e7fc8d",
+        "78f8d296-ab23-4db4-8624-4b1ab58b4685",
+        "c90884c9-db4f-4f12-a007-b0ec5133c6f1",
+        "94c50f98-1cfe-4522-9ef6-d09adfe67868",
+        "85977658-a978-453a-a601-a319acf63c29",
+        "f410eebb-3500-4356-bc79-fd345e2fe5ba",
+        "ba025d6b-1a05-47cf-a2c8-62de930761c5"
+      ],
+      "origin": [
+        -24,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": {
+        "entryId": "7c7a09bb-24e5-4f57-b9b4-e42b31621494",
+        "kind": "bench",
+        "name": "Banquette section 1",
+        "width": 24,
+        "height": 18,
+        "depth": 24,
+        "position": [
+          -24,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "frameMaterial": "lowes-syp-2x4-8",
+        "panelMaterial": "plytanium-703",
+        "backHeight": 0,
+        "levels": 3,
+        "storage": true,
+        "openingLid": true,
+        "lidOpen": false
+      }
+    },
+    {
+      "id": "bfe11a6c-e5dd-4d89-93b1-a0aa5013f245",
+      "name": "Banquette section 2",
+      "pieceIds": [
+        "31ffc725-15e6-494b-9af9-dfa1a09d639a",
+        "53c68dd6-c9ac-4e53-bd14-ba2c398ac10a",
+        "f944550e-b2dd-4f3f-b73d-ebcc980a89a8",
+        "be3acdab-29a1-46ec-a280-f857b71caf1d",
+        "3da1ff88-3e16-4e13-aee9-015e50e44377",
+        "dfda2983-2ef2-4fd0-9dd6-a4d53fd44478",
+        "d64a62c9-c28a-44ca-94d6-a13eddc56b9e",
+        "a6d3e7b2-cdc8-4b39-89e8-bf6d9ae57733",
+        "3455bfdb-5932-43ec-b58e-8a03e4d80ce5",
+        "fb88b484-ec91-40bd-bd6f-b464fe18cc80",
+        "fa11f0a2-f531-4083-af9d-a9ec5109821a",
+        "c54bbe0a-9d38-46d0-8b9b-382ca854a804",
+        "bb34a688-5623-48c5-ae8a-cddac5433887",
+        "ffb1c385-e7be-4336-96e5-57f071941335"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": {
+        "entryId": "e2057930-8afb-4380-a67d-ebeddaf4a989",
+        "kind": "bench",
+        "name": "Banquette section 2",
+        "width": 24,
+        "height": 20,
+        "depth": 24,
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "frameMaterial": "lowes-syp-2x4-8",
+        "panelMaterial": "plytanium-703",
+        "backHeight": 0,
+        "levels": 3,
+        "storage": true,
+        "openingLid": true,
+        "lidOpen": false
+      }
+    },
+    {
+      "id": "25146070-4814-47dd-b106-221a25c8ca1c",
+      "name": "Banquette section 3",
+      "pieceIds": [
+        "eca8f7c8-cc70-4055-9a3c-c4ed8bceb681",
+        "d1892fb3-5db7-4f11-95d4-6003eed580c1",
+        "854654be-3354-4aa0-b763-5be7e587326c",
+        "a59b8c4f-9f99-443b-8eb1-4ac83e6e0f59",
+        "86e435f9-3933-4ef0-bb58-2b80a8026911",
+        "8c195194-8413-46c0-9645-ab0fe8ea11ca",
+        "c9569b0b-77e8-4713-91ce-0d86abf67717",
+        "53c2cd9b-c8e0-4ca1-9430-f988481511e2",
+        "60e34c5a-85eb-4cb7-8c36-1eb9fea7cc9d",
+        "e64717bd-20da-4e67-a0a6-59071de02a3c",
+        "8c919572-3e98-42e3-8579-602bdbc8e927",
+        "0b886ab0-1116-4318-ab3c-2414451a39a5",
+        "aaeb07df-5520-4606-a472-bc67acb03415",
+        "bd82c1ed-2a2c-453b-829a-ca25d9c21eec"
+      ],
+      "origin": [
+        24,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": {
+        "entryId": "30fe8601-a866-41ca-937a-57a73082d7fa",
+        "kind": "bench",
+        "name": "Banquette section 3",
+        "width": 24,
+        "height": 18,
+        "depth": 24,
+        "position": [
+          24,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "frameMaterial": "lowes-syp-2x4-8",
+        "panelMaterial": "plytanium-703",
+        "backHeight": 0,
+        "levels": 3,
+        "storage": true,
+        "openingLid": true,
+        "lidOpen": false
+      }
+    }
+  ],
+  "ideaBindings": [
+    {
+      "version": 1,
+      "id": "a65029e9-124b-421c-9e9b-9b37d50f838e",
+      "revision": 5,
+      "currentFingerprint": "binding-v1-d0a886d5e4d52dec",
+      "reviewBlock": "Planning review — 3-section storage banquette\n3 seating sections. Seating: 3 enclosed for storage, 3 opening lids, 0 with backs. Seat heights: 18, 20 in; depth: 24 in. Closed body footprint in workspace X × Z: 72 × 24 in.\nAssumption: This is an editable layout concept. Joinery, load capacity, bracing, anchoring, and finished tolerances still need design.\nAssumption: Storage is enclosed with a bottom, front/rear and side panels. Panel joints and fasteners are not specified.\nAssumption: Seat lids can be shown open for access review. The rear pivot is provisional; hinge selection, lid stays, pinch protection and wall clearance need design. Hinges and lid-support hardware are not specified or priced.\nAssumption: The 3 sections are arranged side by side in one straight run; confirm whether you instead want an L or U layout.\nAssumption: Casework and frame geometry use the selected actual stock thicknesses. Product identity and dimensions do not qualify seat loads, joinery, hinge/lid-support selection or current store inventory.\nAssumption: AI-interpreted measurements and features are provisional; review the visible geometry and exact stock before applying.\nOpen question: Is the panel and frame material for section 2 still preferred?\nOpen question: Should section 2 retain the same storage, opening lid, and backHeight settings?\nReview: Confirm table clearance, finished seat height/depth, cushion thickness, and access before building.\nReview: Seat lids are modeled; hinges, stays, pinch protection, wall clearance and attachment details still need design.\nReview: Long unsupported members and missing bracing/fasteners need review; this layout does not establish safe loads.\nReview: Verify the panel and frame material sources for section 2.",
+      "generatedNotes": "",
+      "title": "3-section storage banquette",
+      "summary": "3 seating sections. Seating: 3 enclosed for storage, 3 opening lids, 0 with backs. Seat heights: 18, 20 in; depth: 24 in. Closed body footprint in workspace X × Z: 72 × 24 in.",
+      "assumptions": [
+        "This is an editable layout concept. Joinery, load capacity, bracing, anchoring, and finished tolerances still need design.",
+        "Storage is enclosed with a bottom, front/rear and side panels. Panel joints and fasteners are not specified.",
+        "Seat lids can be shown open for access review. The rear pivot is provisional; hinge selection, lid stays, pinch protection and wall clearance need design. Hinges and lid-support hardware are not specified or priced.",
+        "The 3 sections are arranged side by side in one straight run; confirm whether you instead want an L or U layout.",
+        "Casework and frame geometry use the selected actual stock thicknesses. Product identity and dimensions do not qualify seat loads, joinery, hinge/lid-support selection or current store inventory.",
+        "AI-interpreted measurements and features are provisional; review the visible geometry and exact stock before applying."
+      ],
+      "questions": [
+        "Is the panel and frame material for section 2 still preferred?",
+        "Should section 2 retain the same storage, opening lid, and backHeight settings?"
+      ],
+      "suggestions": [
+        "Confirm table clearance, finished seat height/depth, cushion thickness, and access before building.",
+        "Seat lids are modeled; hinges, stays, pinch protection, wall clearance and attachment details still need design.",
+        "Long unsupported members and missing bracing/fasteners need review; this layout does not establish safe loads.",
+        "Verify the panel and frame material sources for section 2."
+      ],
+      "entries": [
+        {
+          "id": "7c7a09bb-24e5-4f57-b9b4-e42b31621494",
+          "spec": {
+            "type": "furniture",
+            "recipe": {
+              "entryId": "7c7a09bb-24e5-4f57-b9b4-e42b31621494",
+              "kind": "bench",
+              "name": "Banquette section 1",
+              "width": 24,
+              "height": 18,
+              "depth": 24,
+              "position": [
+                -24,
+                0,
+                0
+              ],
+              "yaw": 0,
+              "frameMaterial": "lowes-syp-2x4-8",
+              "panelMaterial": "plytanium-703",
+              "backHeight": 0,
+              "levels": 3,
+              "storage": true,
+              "openingLid": true,
+              "lidOpen": false
+            }
+          },
+          "generatedNotes": "",
+          "pose": {
+            "origin": [
+              -24,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "body",
+              "sectionId": "265c9ca2-92b4-4f76-9220-7161c7fe15b4",
+              "stepId": "6e8085da-b444-4ad4-b34d-e3d22d332b3d"
+            }
+          ]
+        },
+        {
+          "id": "e2057930-8afb-4380-a67d-ebeddaf4a989",
+          "spec": {
+            "type": "furniture",
+            "recipe": {
+              "entryId": "e2057930-8afb-4380-a67d-ebeddaf4a989",
+              "kind": "bench",
+              "name": "Banquette section 2",
+              "width": 24,
+              "height": 20,
+              "depth": 24,
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "yaw": 0,
+              "frameMaterial": "lowes-syp-2x4-8",
+              "panelMaterial": "plytanium-703",
+              "backHeight": 0,
+              "levels": 3,
+              "storage": true,
+              "openingLid": true,
+              "lidOpen": false
+            }
+          },
+          "generatedNotes": "",
+          "pose": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "body",
+              "sectionId": "bfe11a6c-e5dd-4d89-93b1-a0aa5013f245",
+              "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901"
+            }
+          ]
+        },
+        {
+          "id": "30fe8601-a866-41ca-937a-57a73082d7fa",
+          "spec": {
+            "type": "furniture",
+            "recipe": {
+              "entryId": "30fe8601-a866-41ca-937a-57a73082d7fa",
+              "kind": "bench",
+              "name": "Banquette section 3",
+              "width": 24,
+              "height": 18,
+              "depth": 24,
+              "position": [
+                24,
+                0,
+                0
+              ],
+              "yaw": 0,
+              "frameMaterial": "lowes-syp-2x4-8",
+              "panelMaterial": "plytanium-703",
+              "backHeight": 0,
+              "levels": 3,
+              "storage": true,
+              "openingLid": true,
+              "lidOpen": false
+            }
+          },
+          "generatedNotes": "",
+          "pose": {
+            "origin": [
+              24,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "body",
+              "sectionId": "25146070-4814-47dd-b106-221a25c8ca1c",
+              "stepId": "6c30fae7-582f-4fcb-8600-dbf0237d71ba"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": "design-v3-5db2c5a7",
+  "history": [
+    {
+      "id": "1a84c9fd-0885-4094-bf55-7a2e04a22852",
+      "at": "2026-11-17T03:24:37.792Z",
+      "stepId": "d9ab1bfa-ff2b-42ee-b726-aea4b32a8901",
+      "message": "SYNTHETIC QA user recorded section 2 measurement; not actual construction"
+    }
+  ]
+}

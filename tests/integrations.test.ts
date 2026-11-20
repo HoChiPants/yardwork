@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
@@ -7,7 +8,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 test("optional provider contracts validate AI proposals and exact-store catalog responses without exposing tokens", async () => {
-  let badAI = false,
+  let truncatedAI = false,
+    badAI = false,
     badType = false,
     badStore = false,
     providerFailure = false;
@@ -30,7 +32,10 @@ test("optional provider contracts validate AI proposals and exact-store catalog 
     if (u.pathname === "/api/chat") {
       res.end(
         JSON.stringify({
+          done: true,
+          done_reason: truncatedAI ? "length" : "stop",
           message: {
+            role: "assistant",
             content: JSON.stringify({
               type: badType ? "foundation" : "wall",
               width: badAI ? 5000 : 96,
@@ -105,7 +110,12 @@ test("optional provider contracts validate AI proposals and exact-store catalog 
     }
     assert.ok(ready, diagnostics);
     const health = (await (await fetch(`${base}/api/health`)).json()) as any;
-    assert.deepEqual(health, { ok: true, ai: "ollama", catalog: true });
+    assert.deepEqual(health, {
+      ok: true,
+      ai: "ollama",
+      catalog: true,
+      projectFormatVersion: PROJECT_FORMAT_VERSION,
+    });
     assert.ok(!JSON.stringify(health).includes("protocol-test-token"));
     const proposal = await fetch(`${base}/api/assistant`, {
       method: "POST",
@@ -154,6 +164,16 @@ test("optional provider contracts validate AI proposals and exact-store catalog 
             m.content.includes("Keep unspecified dimensions"),
         ),
     );
+    truncatedAI = true;
+    const truncated = await fetch(`${base}/api/assistant`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt: "SYNTHETIC truncated wall" }),
+    });
+    assert.equal(truncated.status, 400);
+    const rejected = (await truncated.json()) as any;
+    assert.match(rejected.error, /truncated proposal/);
+    assert.equal(rejected.command, undefined);
+    truncatedAI = false;
     badType = true;
     assert.equal(
       (

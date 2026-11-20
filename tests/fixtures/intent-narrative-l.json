@@ -1,0 +1,55 @@
+{
+  "title": "2-section storage banquette",
+  "summary": "Revise L-shaped kitchenette banquette with two modules, 72\" overall return, 24\" deep, 18\" high, wood back. 2 editable seating sections with enclosed storage and individually opening seat lids. ",
+  "assumptions": [
+    "This is an editable layout concept. Joinery, load capacity, bracing, anchoring, and finished tolerances still need design.",
+    "Storage is enclosed with a bottom, front/rear and side panels. Panel joints and fasteners are not specified.",
+    "Seat lids can be shown open for access review. The rear pivot is provisional; hinge selection, lid stays, pinch protection and wall clearance need design. Hinges and lid-support hardware are not specified or priced.",
+    "Provisional back height: 18 in above the seat. Verify before cutting.",
+    "AI-interpreted measurements and features are provisional; review the visible geometry and exact stock before applying."
+  ],
+  "questions": [
+    "Are there any specific materials for the wood back?",
+    "Do you need storage under the banquette?"
+  ],
+  "suggestions": [
+    "Confirm table clearance, finished seat height/depth, cushion thickness, and access before building.",
+    "Seat lids are modeled; hinges, stays, pinch protection, wall clearance and attachment details still need design.",
+    "Long unsupported members and missing bracing/fasteners need review; this layout does not establish safe loads."
+  ],
+  "modules": [
+    {
+      "kind": "bench",
+      "name": "Banquette seat",
+      "width": 84,
+      "height": 18,
+      "depth": 24,
+      "position": [0, 0, -18],
+      "yaw": 0,
+      "frameMaterial": "stud",
+      "panelMaterial": "plywood",
+      "backHeight": 18,
+      "levels": 3,
+      "storage": false,
+      "openingLid": false,
+      "lidOpen": false
+    },
+    {
+      "kind": "bench",
+      "name": "Banquette return",
+      "width": 36,
+      "height": 18,
+      "depth": 24,
+      "position": [-30, 0, 12],
+      "yaw": 90,
+      "frameMaterial": "stud",
+      "panelMaterial": "plywood",
+      "backHeight": 18,
+      "levels": 3,
+      "storage": false,
+      "openingLid": false,
+      "lidOpen": false
+    }
+  ],
+  "structures": []
+}

@@ -1,0 +1,17 @@
+{
+  "kind": "Actual captured format9 storage wrapper, authored synthetic software fixture",
+  "capturedAt": "2026-11-17T16:06:22.393665+00:00",
+  "source": "work/yardwork-guide-placement-20261117160538/cleanup-20261117161638/final-data/0f12ab98-37be-4975-9990-a6921966e17a.json",
+  "qualificationReceipt": "work/yardwork-guide-placement-20261117160538/qualification-summary.json",
+  "imageId": "sha256:b977954294de76914d7886daef59369fe30d3afcd82b5ea8351158313894f114",
+  "schemaVersion": 9,
+  "revision": 1,
+  "projectId": "0f12ab98-37be-4975-9990-a6921966e17a",
+  "sha256": "e72664fc66066c731979e2554aa9f8790adfb821ba262cc86d75e839500350b9",
+  "projectSha256": "336707268fce863557a6c6bce59fbb709528f508eb8b1eabf103ffb4c16240c0",
+  "bytes": 112248,
+  "pieces": 44,
+  "activeParts": 43,
+  "placementPart": "P043",
+  "purpose": "Migration/data retention regression; entered hardware values are synthetic, not installation specifications"
+}

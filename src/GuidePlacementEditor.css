@@ -1,0 +1,12 @@
+.guide-placement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 4px 0 8px;
+}
+
+.guide-placement-actions > .text-button {
+  min-height: 44px;
+  padding: 8px 0;
+  text-align: left;
+}

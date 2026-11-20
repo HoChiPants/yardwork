@@ -1,0 +1,596 @@
+{
+  "schemaVersion": 81,
+  "id": "743b66bd-28f6-4904-b889-6ea2f632b8ef",
+  "name": "Freestanding adjustable shelf carcass",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "fb72ea13-4c63-480d-9961-be8672142c14",
+      "label": "P001"
+    },
+    {
+      "partId": "0b84ebca-4794-48c9-a8ed-aae48b8bc594",
+      "label": "P002"
+    },
+    {
+      "partId": "4588c404-97b5-47f2-8d66-daab5265fcf8",
+      "label": "P003"
+    },
+    {
+      "partId": "2b2c3439-1cab-4eaf-9fe5-b28201222da7",
+      "label": "P004"
+    },
+    {
+      "partId": "0050c68a-65d9-4e50-bf1e-fb0e8df0d17e",
+      "label": "P005"
+    },
+    {
+      "partId": "1be64a51-64e9-44f9-b452-867fe0e24fc1",
+      "label": "P006"
+    },
+    {
+      "partId": "ca53a503-e59f-432f-8f00-8891aafed09a",
+      "label": "P007"
+    },
+    {
+      "partId": "44b0ce4a-a6fa-4610-921c-beb280207dda",
+      "label": "P008"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-20T04:29:35.916Z",
+  "pieces": [
+    {
+      "id": "fb72ea13-4c63-480d-9961-be8672142c14",
+      "name": "Left side · panel",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        72,
+        15.297
+      ],
+      "position": [
+        -23.5235,
+        36,
+        0.3515
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dbaff2fe-2e80-49ca-b629-df33c8ecf70a",
+      "assembly": "Left side",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0b84ebca-4794-48c9-a8ed-aae48b8bc594",
+      "name": "Right side · panel",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        72,
+        15.297
+      ],
+      "position": [
+        23.5235,
+        36,
+        0.3515
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dbaff2fe-2e80-49ca-b629-df33c8ecf70a",
+      "assembly": "Right side",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4588c404-97b5-47f2-8d66-daab5265fcf8",
+      "name": "Back · panel",
+      "material": "plytanium-703",
+      "size": [
+        47.75,
+        72,
+        0.703
+      ],
+      "position": [
+        0,
+        36,
+        -7.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dbaff2fe-2e80-49ca-b629-df33c8ecf70a",
+      "assembly": "Back",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2b2c3439-1cab-4eaf-9fe5-b28201222da7",
+      "name": "Top · panel",
+      "material": "plytanium-703",
+      "size": [
+        46.344,
+        0.703,
+        15.297
+      ],
+      "position": [
+        0,
+        71.6485,
+        0.3515
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dbaff2fe-2e80-49ca-b629-df33c8ecf70a",
+      "assembly": "Top",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0050c68a-65d9-4e50-bf1e-fb0e8df0d17e",
+      "name": "Bottom · panel",
+      "material": "plytanium-703",
+      "size": [
+        46.344,
+        0.703,
+        15.297
+      ],
+      "position": [
+        0,
+        0.3515,
+        0.3515
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dbaff2fe-2e80-49ca-b629-df33c8ecf70a",
+      "assembly": "Bottom",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1be64a51-64e9-44f9-b452-867fe0e24fc1",
+      "name": "Adjustable shelf 1 · panel",
+      "material": "plytanium-703",
+      "size": [
+        46.344,
+        0.703,
+        15.047
+      ],
+      "position": [
+        0,
+        18.17575,
+        0.22649999999999998
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c600247-c797-40a4-9320-47567615ae71",
+      "assembly": "Adjustable shelf 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ca53a503-e59f-432f-8f00-8891aafed09a",
+      "name": "Adjustable shelf 2 · panel",
+      "material": "plytanium-703",
+      "size": [
+        46.344,
+        0.703,
+        15.047
+      ],
+      "position": [
+        0,
+        36.00000000000001,
+        0.22649999999999998
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c600247-c797-40a4-9320-47567615ae71",
+      "assembly": "Adjustable shelf 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "44b0ce4a-a6fa-4610-921c-beb280207dda",
+      "name": "Adjustable shelf 3 · panel",
+      "material": "plytanium-703",
+      "size": [
+        46.344,
+        0.703,
+        15.047
+      ],
+      "position": [
+        0,
+        53.82425,
+        0.22649999999999998
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7c600247-c797-40a4-9320-47567615ae71",
+      "assembly": "Adjustable shelf 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "09267f42-9074-4378-ad11-0063787111e6",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "743b66bd-28f6-4904-b889-6ea2f632b8ef",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-b8da4a1f",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "dbaff2fe-2e80-49ca-b629-df33c8ecf70a",
+      "title": "Bookcase: Dry-fit the bookcase carcass",
+      "notes": "Orient the listed sides, top, bottom and back by their actual labels. Dry-fit and clamp the body; check outside dimensions, square and back alignment. Keep tool access for the selected carcass and back fixings. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "de7294d6-a8ea-4986-8e8d-e2696394a8a5",
+        "stageKey": "carcass",
+        "memberIds": [
+          "0050c68a-65d9-4e50-bf1e-fb0e8df0d17e",
+          "0b84ebca-4794-48c9-a8ed-aae48b8bc594",
+          "2b2c3439-1cab-4eaf-9fe5-b28201222da7",
+          "4588c404-97b5-47f2-8d66-daab5265fcf8",
+          "fb72ea13-4c63-480d-9961-be8672142c14"
+        ],
+        "notes": "Orient the listed sides, top, bottom and back by their actual labels. Dry-fit and clamp the body; check outside dimensions, square and back alignment. Keep tool access for the selected carcass and back fixings. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-35baeaa9",
+        "title": "Bookcase: Dry-fit the bookcase carcass"
+      }
+    },
+    {
+      "id": "7c600247-c797-40a4-9320-47567615ae71",
+      "title": "Bookcase: Set up supports and place shelves",
+      "notes": "Review support and drilling plans for each shelf before placement. Only explicitly planned holes and supports are documented; other support details remain unresolved. Dry-fit the actual shelves at their planned levels and front setback. Check access and fit before loading; restraint and load decisions remain separate reviews.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "de7294d6-a8ea-4986-8e8d-e2696394a8a5",
+        "stageKey": "shelves",
+        "memberIds": [
+          "1be64a51-64e9-44f9-b452-867fe0e24fc1",
+          "44b0ce4a-a6fa-4610-921c-beb280207dda",
+          "ca53a503-e59f-432f-8f00-8891aafed09a"
+        ],
+        "notes": "Review support and drilling plans for each shelf before placement. Only explicitly planned holes and supports are documented; other support details remain unresolved. Dry-fit the actual shelves at their planned levels and front setback. Check access and fit before loading; restraint and load decisions remain separate reviews.",
+        "fingerprint": "phase-v1-ffe1af78",
+        "title": "Bookcase: Set up supports and place shelves"
+      }
+    },
+    {
+      "id": "e960abda-54ca-4963-b8ee-090ef30b5f0c",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "743b66bd-28f6-4904-b889-6ea2f632b8ef",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-ad161609",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "ACCEPTANCE BASELINE STUDY — Eight real carcass/shelf panels; support holes, pins, joints and anti-tip anchoring are not represented.\n\nCasework shelves — PARTIAL DIMENSIONAL STUDY\nMissing material: hardware.shelf-pins: Actual shelf supports, their quantities and a matching hole/installation system have not been selected or priced.\nMissing material: hardware.anti-tip: Substrate-compatible anti-tip hardware and its attachment details have not been selected or priced.\nMissing material: hardware.assembly-fasteners: Carcass/back-panel fastening hardware and purchase quantities have not been selected or priced.\nUnresolved: casework-shelf-supports: Shelf pins/supports, hole diameters, spacing, edge distances, engagement and drilling templates are unspecified. No shelf support or hole pattern is generated.\nUnresolved: casework-joinery: Carcass joints, rear-panel fixing, fastener quantities, edge treatment, backing/racking resistance and wall/anti-tip anchoring require design. No hardware is inferred as installed.\nUnresolved: casework-fit-loads: Panel grade, shelf spans, intended loads and measured wall/baseboard/door obstructions remain unresolved. Shelf front setback is a provisional layout dimension, and zero lateral clearance is nominal geometry, not a fitted joinery or capacity approval.\nUnresolved: material.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.",
+  "sections": [
+    {
+      "id": "eff4f0f7-15fc-4b71-904b-2e1852f99c31",
+      "name": "Left side",
+      "pieceIds": [
+        "fb72ea13-4c63-480d-9961-be8672142c14"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "9634b4c2-a6d0-4982-af49-b7a53a5ac9f0",
+      "name": "Right side",
+      "pieceIds": [
+        "0b84ebca-4794-48c9-a8ed-aae48b8bc594"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "eab65af6-fd8d-4e5e-bc55-ca8ded178faa",
+      "name": "Back",
+      "pieceIds": [
+        "4588c404-97b5-47f2-8d66-daab5265fcf8"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "44bf33f9-7479-4191-986e-db3bd7540f34",
+      "name": "Top",
+      "pieceIds": [
+        "2b2c3439-1cab-4eaf-9fe5-b28201222da7"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "ef4c4d58-7f91-440e-a436-c1d41806cf59",
+      "name": "Bottom",
+      "pieceIds": [
+        "0050c68a-65d9-4e50-bf1e-fb0e8df0d17e"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "3ed23e95-073b-45d6-9ca1-9b9ee4b04c7d",
+      "name": "Adjustable shelf 1",
+      "pieceIds": [
+        "1be64a51-64e9-44f9-b452-867fe0e24fc1"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "fbfa4e9a-e74c-4aca-baad-c2e0e9cd39c6",
+      "name": "Adjustable shelf 2",
+      "pieceIds": [
+        "ca53a503-e59f-432f-8f00-8891aafed09a"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "2f5a5722-c167-44a0-86fd-8215f0b98319",
+      "name": "Adjustable shelf 3",
+      "pieceIds": [
+        "44b0ce4a-a6fa-4610-921c-beb280207dda"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [
+    {
+      "version": 1,
+      "id": "58c42424-fe3c-460b-83d9-44b828a815c7",
+      "revision": 2,
+      "currentFingerprint": "binding-v1-a77086900b07f373",
+      "reviewBlock": "Casework shelves — PARTIAL DIMENSIONAL STUDY\nMissing material: hardware.shelf-pins: Actual shelf supports, their quantities and a matching hole/installation system have not been selected or priced.\nMissing material: hardware.anti-tip: Substrate-compatible anti-tip hardware and its attachment details have not been selected or priced.\nMissing material: hardware.assembly-fasteners: Carcass/back-panel fastening hardware and purchase quantities have not been selected or priced.\nUnresolved: casework-shelf-supports: Shelf pins/supports, hole diameters, spacing, edge distances, engagement and drilling templates are unspecified. No shelf support or hole pattern is generated.\nUnresolved: casework-joinery: Carcass joints, rear-panel fixing, fastener quantities, edge treatment, backing/racking resistance and wall/anti-tip anchoring require design. No hardware is inferred as installed.\nUnresolved: casework-fit-loads: Panel grade, shelf spans, intended loads and measured wall/baseboard/door obstructions remain unresolved. Shelf front setback is a provisional layout dimension, and zero lateral clearance is nominal geometry, not a fitted joinery or capacity approval.\nUnresolved: material.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.",
+      "generatedNotes": "Casework shelves — PARTIAL DIMENSIONAL STUDY\nMissing material: hardware.shelf-pins: Actual shelf supports, their quantities and a matching hole/installation system have not been selected or priced.\nMissing material: hardware.anti-tip: Substrate-compatible anti-tip hardware and its attachment details have not been selected or priced.\nMissing material: hardware.assembly-fasteners: Carcass/back-panel fastening hardware and purchase quantities have not been selected or priced.\nUnresolved: casework-shelf-supports: Shelf pins/supports, hole diameters, spacing, edge distances, engagement and drilling templates are unspecified. No shelf support or hole pattern is generated.\nUnresolved: casework-joinery: Carcass joints, rear-panel fixing, fastener quantities, edge treatment, backing/racking resistance and wall/anti-tip anchoring require design. No hardware is inferred as installed.\nUnresolved: casework-fit-loads: Panel grade, shelf spans, intended loads and measured wall/baseboard/door obstructions remain unresolved. Shelf front setback is a provisional layout dimension, and zero lateral clearance is nominal geometry, not a fitted joinery or capacity approval.\nUnresolved: material.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.",
+      "title": "Freestanding adjustable shelf carcass",
+      "summary": "Eight real carcass/shelf panels; support holes, pins, joints and anti-tip anchoring are not represented.",
+      "assumptions": [],
+      "questions": [],
+      "suggestions": [],
+      "entries": [
+        {
+          "id": "de7294d6-a8ea-4986-8e8d-e2696394a8a5",
+          "spec": {
+            "type": "structure",
+            "structure": {
+              "entryId": "de7294d6-a8ea-4986-8e8d-e2696394a8a5",
+              "kind": "casework-shelves",
+              "parameters": {
+                "width": 47.75,
+                "depth": 16,
+                "height": 72,
+                "shelfCount": 3,
+                "shelfClearance": 0.25,
+                "origin": [
+                  0,
+                  0,
+                  0
+                ],
+                "yaw": 0
+              },
+              "selections": {
+                "caseworkPanels": {
+                  "materialId": "plytanium-703",
+                  "productRegistryRef": "plytanium-bc-201428"
+                }
+              }
+            }
+          },
+          "generatedNotes": "Casework shelves — PARTIAL DIMENSIONAL STUDY\nMissing material: hardware.shelf-pins: Actual shelf supports, their quantities and a matching hole/installation system have not been selected or priced.\nMissing material: hardware.anti-tip: Substrate-compatible anti-tip hardware and its attachment details have not been selected or priced.\nMissing material: hardware.assembly-fasteners: Carcass/back-panel fastening hardware and purchase quantities have not been selected or priced.\nUnresolved: casework-shelf-supports: Shelf pins/supports, hole diameters, spacing, edge distances, engagement and drilling templates are unspecified. No shelf support or hole pattern is generated.\nUnresolved: casework-joinery: Carcass joints, rear-panel fixing, fastener quantities, edge treatment, backing/racking resistance and wall/anti-tip anchoring require design. No hardware is inferred as installed.\nUnresolved: casework-fit-loads: Panel grade, shelf spans, intended loads and measured wall/baseboard/door obstructions remain unresolved. Shelf front setback is a provisional layout dimension, and zero lateral clearance is nominal geometry, not a fitted joinery or capacity approval.\nUnresolved: material.caseworkPanels.installation: Dry interior cabinets, shelving and furniture using the selected BC sanded panel; nominal23/32 category uses reviewed .703-inch actual design thickness. Measure the purchased sheet and confirm panel stamp/grade before precision joinery; .703 inches is not .75 inches and manufacturer size tolerances still apply. This qualification is restricted to dry interior casework. Conflicting exposure descriptions do not establish wet-location, exterior, sauna or structural-seat suitability. The historical Lowe’s offer is retired; do not present it as a purchasable counterpart or import inventory for it.",
+          "pose": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "side-left",
+              "sectionId": "eff4f0f7-15fc-4b71-904b-2e1852f99c31",
+              "stepId": "b13d426c-a8e9-4467-87f2-783ec19d35fa"
+            },
+            {
+              "role": "side-right",
+              "sectionId": "9634b4c2-a6d0-4982-af49-b7a53a5ac9f0",
+              "stepId": "596e23d6-7f2a-4708-b339-0135542e6359"
+            },
+            {
+              "role": "back",
+              "sectionId": "eab65af6-fd8d-4e5e-bc55-ca8ded178faa",
+              "stepId": "b772af86-63ca-474c-b527-07839a1abe80"
+            },
+            {
+              "role": "top",
+              "sectionId": "44bf33f9-7479-4191-986e-db3bd7540f34",
+              "stepId": "2bddda09-c9b1-49e5-a2da-380ee1ddae94"
+            },
+            {
+              "role": "bottom",
+              "sectionId": "ef4c4d58-7f91-440e-a436-c1d41806cf59",
+              "stepId": "9f0ba88d-9258-4832-bdc0-0bbcdbc38ca5"
+            },
+            {
+              "role": "shelf-1",
+              "sectionId": "3ed23e95-073b-45d6-9ca1-9b9ee4b04c7d",
+              "stepId": "556da52a-2a8c-47b9-9394-3d8b45616151"
+            },
+            {
+              "role": "shelf-2",
+              "sectionId": "fbfa4e9a-e74c-4aca-baad-c2e0e9cd39c6",
+              "stepId": "e1000167-f2d5-440f-85b4-4da238cf2166"
+            },
+            {
+              "role": "shelf-3",
+              "sectionId": "2f5a5722-c167-44a0-86fd-8215f0b98319",
+              "stepId": "c08f16b9-cd48-4103-a1d2-ba6bc1745938"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": "design-v3-fa301997",
+  "history": []
+}

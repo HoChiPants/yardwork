@@ -1,0 +1,45 @@
+Project: Freestanding adjustable shelf carcass
+Retailer: Home Depot
+Store: not selected | ZIP: 84121
+
+INCOMPLETE MATERIAL LIST — resolve the part, hardware, price and quantity questions below before ordering.
+
+PRICING COVERAGE
+No priced subtotal
+0 priced lines of 1 purchase line. $0.00 from 0 observed lines; $0.00 from 0 example-price lines. 1 unpriced line (3 × sheet purchase units). Unknown prices are excluded, not free.
+Calculated stock and selected supplies only. Tax, delivery, tools and unmodeled systems are outside this subtotal. This is not a complete-project quote.
+
+ASSEMBLY CONNECTIONS TO REVIEW
+These findings identify hardware decisions to review against the actual parts. Purchase quantities come from the stock and hardware lines below.
+- Bookcase: Dry-fit the bookcase carcass · 5 parts without connection plans.
+- Bookcase: Set up supports and place shelves · 3 parts without connection plans.
+
+PURCHASE STOCK UNITS
+Use the whole-stock quantities below. Cut pieces and offcuts are already accounted for; do not add them again.
+
+- 3 sheets — Plytanium BC pine plywood · 23/32 category — 201428 · 47.938 × 95.938 in · .703 in actual · dry interior casework only
+  Reviewed product reference: 100061386 | model 201428
+  https://www.homedepot.com/p/100061386
+  Reference specifications only. Current price and store availability are unverified.
+
+TOOL CAPABILITIES TO CHECK
+Review the tools you already have or add needed tools from the Yardwork Tools tab.
+- Measure and mark dimensions
+- Check square and layout angles
+- Secure workpieces with clamps or a suitable fixture
+- Eye protection appropriate to the operation
+
+TOOLS TO CHECK FOR THE CHOSEN METHOD
+- Cut stock to length · The modeled part is smaller than its stock length; verify its cutting orientation and schedule.
+- Cut stock or panels to width · The modeled cross-section is smaller than stock; verify whether this is a width cut or a different orientation/product.
+- Hearing protection for powered operations · When using powered cutting tools, according to their instructions and exposure conditions.
+- Dust control and appropriate respiratory protection · When cutting creates dust; check the material, extraction setup, and exposure conditions.
+
+PROJECT PHASES — organize the purchase list without duplicating its quantities
+1. Prepare the space and cut list
+2. Bookcase: Dry-fit the bookcase carcass
+3. Bookcase: Set up supports and place shelves
+4. Review connections and finish
+
+Review the retailer draft: quantities, units, exact products, substitutions, and store availability. Tax, delivery, waste allowance, roof overlaps, and construction adequacy are not established by this list.
+Keep the Yardwork JSON separately for the editable 3D plan, connections, and build guide. This text does not synchronize a Home Depot account.

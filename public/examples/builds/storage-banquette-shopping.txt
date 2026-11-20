@@ -1,0 +1,73 @@
+Project: Three-section storage banquette
+Retailer: Home Depot
+Store: not selected | ZIP: 84121
+
+INCOMPLETE MATERIAL LIST — resolve the part, hardware, price and quantity questions below before ordering.
+
+PRICING COVERAGE
+$21.25 priced subtotal
+1 priced line of 2 purchase lines. $0.00 from 0 observed lines; $21.25 from 1 example-price line. 1 unpriced line (3 × sheet purchase units). Unknown prices are excluded, not free. Hinge mounting/source measurements remain unresolved; the subtotal is not a complete installation takeoff (3 hinge plans).
+Calculated stock and selected supplies only. Tax, delivery, tools and unmodeled systems are outside this subtotal. This is not a complete-project quote.
+
+ASSEMBLY CONNECTIONS TO REVIEW
+These findings identify hardware decisions to review against the actual parts. Purchase quantities come from the stock and hardware lines below.
+- Banquette section 1: Dry-fit the storage bottom and frame · 9 parts without connection plans.
+- Banquette section 1: Fit the storage shell · 4 parts without connection plans.
+- Banquette section 1: Dry-fit the seat lid · 1 part with setup started.
+- Banquette section 2: Dry-fit the storage bottom and frame · 9 parts without connection plans.
+- Banquette section 2: Fit the storage shell · 4 parts without connection plans.
+- Banquette section 2: Dry-fit the seat lid · 1 part with setup started.
+- Banquette section 3: Dry-fit the storage bottom and frame · 9 parts without connection plans.
+- Banquette section 3: Fit the storage shell · 4 parts without connection plans.
+- Banquette section 3: Dry-fit the seat lid · 1 part with setup started.
+
+PURCHASE STOCK UNITS
+Use the whole-stock quantities below. Cut pieces and offcuts are already accounted for; do not add them again.
+
+- 3 sheets — Plytanium BC pine plywood · 23/32 category — 201428 · 47.938 × 95.938 in · .703 in actual · dry interior casework only
+  Reviewed product reference: 100061386 | model 201428
+  https://www.homedepot.com/p/100061386
+  Reference specifications only. Current price and store availability are unverified.
+- 5 boards — 2 × 4 framing lumber — 1½ × 3½ in actual · 8 ft
+  Suggested regional listing: 338861827 | model 769887254790
+  https://www.homedepot.com/p/338861827
+  Confirm grade, species and treatment at your store.
+  Reference specifications only. Current price and store availability are unverified.
+
+TOOL CAPABILITIES TO CHECK
+Review the tools you already have or add needed tools from the Yardwork Tools tab.
+- Measure and mark dimensions
+- Check square and layout angles
+- Secure workpieces with clamps or a suitable fixture
+- Eye protection appropriate to the operation
+
+TOOLS TO CHECK FOR THE CHOSEN METHOD
+- Cut stock to length · The modeled part is smaller than its stock length; verify its cutting orientation and schedule.
+- Cut stock or panels to width · The modeled cross-section is smaller than stock; verify whether this is a width cut or a different orientation/product.
+- Follow the exact connector installation procedure · Review the exact delivered hinge, actual supplied screws/drive, mounting orientation and instructions; a generic wood-screw product does not identify the supplied hinge screws.
+- Hearing protection for powered operations · When using powered cutting tools, according to their instructions and exposure conditions.
+- Dust control and appropriate respiratory protection · When cutting creates dust; check the material, extraction setup, and exposure conditions.
+
+PLANNED HINGE SOURCES — comparison only; selected supply rows above are the purchase quantities
+0 distinct physical hinge sources allocated; 0 whole hinges selected; 0 missing. Multiple retained segments from one source do not add purchase units.
+Unallocated or stale hinge plans do not establish complete demand. Supplied screws are not credited as generic fastener purchases. Entered axes and cut remnants are installation records, not extra shopping lines.
+Hinge source ee2f3567-3d49-4cf0-8793-8b087f5c9d31: Measure the actual usable hinge length; nominal48in and the retailer48.03in field do not fill this value.
+
+PROJECT PHASES — organize the purchase list without duplicating its quantities
+1. Prepare the space and cut list
+2. Banquette section 1: Dry-fit the storage bottom and frame
+3. Banquette section 1: Fit the storage shell
+4. Review lid hinge H001: Banquette section 1 pending hinge
+5. Banquette section 1: Dry-fit the seat lid
+6. Banquette section 2: Dry-fit the storage bottom and frame
+7. Banquette section 2: Fit the storage shell
+8. Review lid hinge H002: Banquette section 2 pending hinge
+9. Banquette section 2: Dry-fit the seat lid
+10. Banquette section 3: Dry-fit the storage bottom and frame
+11. Banquette section 3: Fit the storage shell
+12. Review lid hinge H003: Banquette section 3 pending hinge
+13. Banquette section 3: Dry-fit the seat lid
+14. Review connections and finish
+
+Review the retailer draft: quantities, units, exact products, substitutions, and store availability. Tax, delivery, waste allowance, roof overlaps, and construction adequacy are not established by this list.
+Keep the Yardwork JSON separately for the editable 3D plan, connections, and build guide. This text does not synchronize a Home Depot account.

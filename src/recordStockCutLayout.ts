@@ -1,0 +1,254 @@
+import {
+  cutSourceFrame,
+  cutSourceRegion,
+  tubeGroupKey,
+  type CutSourceAxes,
+} from "./cutSourceAxes";
+import { inspectCutStock, setCutSourcesOnHand } from "./cutStock";
+import { bom } from "./engine";
+import {
+  material,
+  part,
+  projectSchema,
+  uid,
+  type Piece,
+  type Project,
+  type V3,
+} from "./model";
+import { ensurePartLabels } from "./partLabels";
+import { rotate } from "./spatial";
+import { stockAxes } from "./stockAxes";
+import { stockCutSequences, type StockCutLayout, type StockCutSequence } from "./stockCutSequence";
+import { formatStockLength } from "./measurement";
+
+function indexReviewedLayouts(project: Project, rows: ReturnType<typeof bom>, loss: number | null) {
+  const index = new Map<string, StockCutSequence>();
+  for (const sequences of stockCutSequences(project, rows, loss).values())
+    for (const sequence of sequences)
+      if (!sequence.review && sequence.layout.kept.length)
+        index.set(JSON.stringify(sequence.layout), sequence);
+  return index;
+}
+
+function currentStockCutLayout(index: ReadonlyMap<string, StockCutSequence>, requested: StockCutLayout) {
+  const current = index.get(JSON.stringify(requested));
+  if (!current)
+    throw Error(
+      "This cut layout changed. Open the current stock cut order and review it again.",
+    );
+  return current;
+}
+
+export function saveTubeCutLoss(project: Project, requested: StockCutLayout) {
+  const current = currentStockCutLayout(indexReviewedLayouts(project, bom(project), requested.tubeKerf ?? null), requested);
+  if (current.layout.kind !== "tube")
+    throw Error(
+      "Choose a tube stock layout to save its measured cutting loss.",
+    );
+  const rodIds = current.layout.kept.map(({ id }) => id).sort();
+  const kerf = current.layout.tubeKerf;
+  const key = tubeGroupKey(rodIds);
+  const { tubeCutPlans, ...rest } = project;
+  const retained = (tubeCutPlans ?? []).filter((plan) =>
+    kerf === undefined
+      ? tubeGroupKey(plan.rodIds) !== key
+      : !plan.rodIds.some((id) => rodIds.includes(id)),
+  );
+  const plans = kerf === undefined ? retained : [...retained, { rodIds, kerf }];
+  return projectSchema.parse({
+    ...rest,
+    ...(plans.length ? { tubeCutPlans: plans } : {}),
+    guideFingerprint: null,
+  });
+}
+
+function prepareStockUnit(
+  current: StockCutSequence,
+  pieces: ReadonlyMap<string, Piece>,
+  keptPieces: Map<string, Piece>,
+  labels: ReadonlyMap<string, string>,
+) {
+  const {
+    kind,
+    materialId,
+    thickness,
+    width,
+    length,
+    kept,
+    leftovers,
+    tubeKerf,
+  } = current.layout;
+  const measuredLoss = tubeKerf === undefined ? {} : { tubeKerf };
+  const sourceSize: V3 = [thickness, width, length];
+  const sourceId = uid();
+  for (const region of kept) {
+    const piece = pieces.get(region.id);
+    if (
+      !piece ||
+      keptPieces.has(region.id) ||
+      piece.offcut ||
+      piece.cutStock ||
+      piece.material !== materialId
+    )
+      throw Error(
+        "A kept part already has a source or is unavailable for this stock layout.",
+      );
+    const axes = stockAxes(piece);
+    const sourceAxes: CutSourceAxes = [axes.thickness, axes.width, axes.length];
+    const frame = cutSourceFrame(sourceAxes);
+    const keptSize = frame.toSourceSize(piece.size);
+    keptPieces.set(piece.id, {
+      ...piece,
+      cutStock: {
+        id: sourceId,
+        size: frame.toPartSize(sourceSize),
+        offset: frame.toPartOffset(
+          [0, region.x, region.y],
+          sourceSize,
+          keptSize,
+        ),
+        sourceAxes,
+        ...measuredLoss,
+      },
+    });
+  }
+  const anchor = keptPieces.get(kept[0].id)!;
+  const anchorRegion = cutSourceRegion(anchor);
+  const anchorCenter = anchorRegion.offset.map(
+    (value, axis) => value + anchorRegion.size[axis] / 2,
+  );
+  const remnantPieces = leftovers.map((region, index) => {
+    const size: V3 = [thickness, region.width, region.length];
+    const offset: V3 = [0, region.x, region.y];
+    const difference = offset.map(
+      (value, axis) => value + size[axis] / 2 - anchorCenter[axis],
+    ) as V3;
+    const shift = rotate(
+      anchorRegion.toPartDirection(difference),
+      anchor.rotation,
+    );
+    const position = anchor.position.map(
+      (value, axis) => value + shift[axis],
+    ) as V3;
+    const name =
+      `Offcut · ${material(materialId).name} · ${kind} remnant ${index + 1}`.slice(
+        0,
+        120,
+      );
+    const remnant = part(
+      name,
+      materialId,
+      anchorRegion.toPartSize(size),
+      position.every((value) => Math.abs(value) <= 12000)
+        ? position
+        : anchor.position,
+      anchor.stepId,
+      "",
+      anchor.rotation,
+    );
+    return {
+      ...remnant,
+      stockLengthAxis: anchor.stockLengthAxis ?? remnant.stockLengthAxis,
+      offcut: true,
+      cutStock: {
+        id: sourceId,
+        size: anchorRegion.toPartSize(sourceSize),
+        offset: anchorRegion.toPartOffset(offset, sourceSize, size),
+        sourceAxes: anchor.cutStock!.sourceAxes!,
+        ...measuredLoss,
+      },
+    };
+  });
+  const label = labels.get(anchor.id)!;
+  const notes = [
+    `Recorded one ${material(materialId).name} ${kind} for ${kept.length} ${kept.length === 1 ? "part" : "parts"} starting with ${label}. Added ${leftovers.length} ${kind === "tube" ? "tube" : "rectangular"} ${leftovers.length === 1 ? "offcut" : "offcuts"} to the Cut pool.`,
+    ...(tubeKerf === undefined
+      ? []
+      : [
+          `Recorded tube cutting loss for ${label} · ${formatStockLength(tubeKerf)} per cut.`,
+        ]),
+    ...current.steps.map(
+      (instruction, i) =>
+        `Stock cut order for ${label} · ${i + 1}. ${instruction}`,
+    ),
+  ];
+  return { sourceId, remnantPieces, notes, stepId: anchor.stepId };
+}
+
+/** Commit an exact set of reviewed cuts as one change, with no intermediate repacking. */
+export function recordStockCutLayouts(
+  project: Project,
+  requested: readonly StockCutLayout[],
+  onHand = false,
+) {
+  if (!requested.length) throw Error("Choose stock units to record.");
+  const before = bom(project);
+  const reviewsByLoss = new Map<number | null, ReturnType<typeof indexReviewedLayouts>>();
+  const current = requested.map((layout) => {
+    const loss = layout.tubeKerf ?? null;
+    if (!reviewsByLoss.has(loss)) reviewsByLoss.set(loss, indexReviewedLayouts(project, before, loss));
+    return currentStockCutLayout(reviewsByLoss.get(loss)!, layout);
+  });
+  const pieces = new Map(project.pieces.map((piece) => [piece.id, piece]));
+  const keptPieces = new Map<string, Piece>();
+  const labeled = ensurePartLabels(project);
+  const labels = new Map(labeled.partLabels.map(({ partId, label }) => [partId, label]));
+  const recorded = current.map((unit) => prepareStockUnit(unit, pieces, keptPieces, labels));
+  const remnants = recorded.flatMap(({ remnantPieces }) => remnantPieces);
+  const sourceIds = recorded.map(({ sourceId }) => sourceId);
+  const tubePartIds = new Set(
+    current.filter(({ layout }) => layout.kind === "tube").flatMap(({ partIds }) => partIds),
+  );
+  const { tubeCutPlans, ...rest } = labeled;
+  const remainingTubePlans = tubeCutPlans?.filter(
+    (plan) => !plan.rodIds.some((id) => tubePartIds.has(id)),
+  );
+  const activeProject =
+    tubePartIds.size
+      ? { ...rest, ...(remainingTubePlans?.length ? { tubeCutPlans: remainingTubePlans } : {}) }
+      : labeled;
+  const at = new Date().toISOString();
+  const next = projectSchema.parse(
+    ensurePartLabels({
+      ...activeProject,
+      pieces: [
+        ...project.pieces.map((piece) => keptPieces.get(piece.id) ?? piece),
+        ...remnants,
+      ],
+      history: [
+        ...project.history,
+        ...recorded.flatMap(({ notes, stepId }) => notes.map((message) => ({
+          id: uid(),
+          at,
+          stepId,
+          message,
+        }))),
+      ].slice(-5000),
+    }),
+  );
+  const checked = inspectCutStock(next);
+  for (const sourceId of sourceIds)
+    if (!checked.valid.has(sourceId))
+      throw Error(
+        checked.invalid.find((row) => row.sourceId === sourceId)?.detail ??
+          "The stock layout could not be recorded.",
+      );
+  const after = bom(next);
+  for (const materialId of new Set(current.map(({ layout }) => layout.materialId))) {
+    const oldCount = before.find((row) => row.id === materialId)?.physicalStockUnits;
+    const newCount = after.find((row) => row.id === materialId)?.physicalStockUnits;
+    if (oldCount !== newCount)
+      throw Error("Recording this layout changed how many stock units the project needs. Review the cut order.");
+  }
+  return {
+    project: onHand ? projectSchema.parse(setCutSourcesOnHand(next, sourceIds, true)) : next,
+    sourceIds,
+    offcuts: remnants.length,
+  };
+}
+
+/** Record a single reviewed purchase blank, keeping the existing part poses. */
+export function recordStockCutLayout(project: Project, requested: StockCutLayout, onHand = false) {
+  const { project: next, sourceIds, offcuts } = recordStockCutLayouts(project, [requested], onHand);
+  return { project: next, sourceId: sourceIds[0], offcuts };
+}

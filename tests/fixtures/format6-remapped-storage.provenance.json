@@ -1,0 +1,8 @@
+{
+  "source": "work/yardwork-format6-20261117062031/cleanup-20261117062851/final-data/qa-artifacts/project.yardwork.json",
+  "sha256": "b76a74b8590565818630966ea5abb346f64537dce22b89c7954bc2f6eb4083e7",
+  "bytes": 93834,
+  "origin": "Byte-exact format6 deterministic explicit-remap revision4 qualification artifact; no inference, synthetic observations only.",
+  "schemaVersion": 6,
+  "nativeInference": 0
+}

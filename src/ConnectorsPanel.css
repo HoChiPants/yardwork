@@ -1,0 +1,134 @@
+.connectors-panel {
+  min-width: 0;
+}
+.connectors-panel .connector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+.connectors-panel .connector-plan-list {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0;
+}
+.connectors-panel .connector-plan-list button {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.connectors-panel .connector-plan-list button > strong {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.connectors-panel .connector-plan-list button > span { min-width: 0; }
+.connectors-panel .connector-plan-list small,
+.connectors-panel .connector-entry summary small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 400;
+}
+.connectors-panel .connector-coordinate-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.connectors-panel .connector-vector {
+  min-width: 0;
+  margin: 14px 0;
+  border: 0;
+  padding: 0;
+}
+.connectors-panel .connector-vector legend {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.connectors-panel .connector-members p {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.connectors-panel .connector-members button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+.connectors-panel .connector-state {
+  border-left: 3px solid #c88b36;
+  padding-left: 9px;
+  font-size: 12px;
+}
+.connectors-panel .connector-entry {
+  min-width: 0;
+}
+.connectors-panel .connector-entry summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.connectors-panel .connector-entry details {
+  margin: 12px 0;
+}
+.connectors-panel .connector-datums {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 5px 8px;
+  font-size: 11px;
+}
+.connectors-panel .connector-datums dt {
+  color: var(--muted, #797970);
+}
+.connectors-panel .connector-datums dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.connectors-panel .connector-dimension-guide {
+  margin: 12px 0;
+}
+.connectors-panel .connector-dimension-guide svg {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  color: #60776b;
+}
+.connectors-panel .connector-dimension-guide text {
+  fill: currentColor;
+  font: 11px sans-serif;
+}
+.connectors-panel .connector-dimension-guide figcaption {
+  font-size: 11px;
+  line-height: 1.55;
+}
+.connectors-panel .connector-references ul,
+.connectors-panel .connector-path-review ul {
+  padding-left: 18px;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.connectors-panel .connector-history > details {
+  padding: 8px 0;
+  border-top: 1px solid var(--line, #e6e7df);
+}
+.connectors-panel .connector-purchase-row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line, #e6e7df);
+  font-size: 12px;
+}
+.connectors-panel .connector-editor input,
+.connectors-panel .connector-editor select,
+.connectors-panel .connector-editor textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+@media (max-width: 600px) {
+  .connectors-panel .connector-actions .button {
+    flex: 1 1 auto;
+  }
+}

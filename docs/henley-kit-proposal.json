@@ -1,0 +1,5351 @@
+{
+  "schema": "henley-kit-research-proposal-v1",
+  "researchedOn": "2026-11-16",
+  "runtimeChanged": false,
+  "identity": {
+    "manufacturer": "Backyard Discovery",
+    "baseModel": "2504769",
+    "manufacturerPartMapping": {
+      "prepaidPartNumber": "2504769com",
+      "baseUPC": "752113504769",
+      "prepaidUPC": "752113594760",
+      "market": "US/Canada"
+    },
+    "sourceUrl": "https://sites.salsify.com/40145723-90b1-446d-b736-b25f8237d96d/ca06ad7f-3732-4dad-aa25-5387e322f005/en-US/product/2504769/Henley-2-4-Person-Outdoor-Cabin-Sauna/",
+    "manufacturerLifecycleAsPublished": "Discontinued When Out of Stock",
+    "retailerReferences": [
+      {
+        "retailer": "home-depot",
+        "productId": "341003031",
+        "modelAsPrinted": "2504769com",
+        "url": "https://www.homedepot.com/p/341003031"
+      },
+      {
+        "retailer": "lowes",
+        "productId": "5018283975",
+        "itemNumber": "8638981",
+        "modelAsPrinted": "2504769COM",
+        "url": "https://www.lowes.com/pd/Backyard-Discovery-81-5-in-H-x-89-in-W-x-62-25-in-D-Wood-Electric-sauna/5018283975"
+      }
+    ],
+    "liveStock": null,
+    "price": null,
+    "notEquivalentModels": [
+      "2504769B",
+      "2504769B-V",
+      "2504776",
+      "2504776B"
+    ]
+  },
+  "purchaseModel": {
+    "purchaseUnit": "complete kit",
+    "quantityPerPlacedAssembly": 1,
+    "componentPurchaseQuantities": 0,
+    "notes": [
+      "Factory precut parts, subassemblies, heater and included hardware remain contained by one kit purchase.",
+      "No individual component retail offer was verified; replacement IDs do not establish retail availability.",
+      "Do not add kit parts to generic lumber or hardware boxes.",
+      "The chosen assembly revision must match the delivered cartons and contents before exact assembly playback."
+    ]
+  },
+  "documents": [
+    {
+      "id": "original-assembly-current",
+      "url": "https://images.salsify.com/image/upload/s--6Vrqf17_--/rzsfzdenm5rfqqauaxcs.pdf",
+      "sha256": "63e2f4330ea9bb282c893e2e8faa0206925fe9c66d86a46f6178bbd53bfdfac4",
+      "bytes": 43737358,
+      "pdfPages": 100,
+      "revisionAsPrinted": "3-12-2026",
+      "modelIdsAsPrinted": [
+        "2504769",
+        "2504769-V"
+      ]
+    },
+    {
+      "id": "original-assembly-retailer-sept",
+      "url": "https://images.thdstatic.com/catalog/pdfImages/73/73fe6e20-2b3c-5460-8661-68718087d0bd.pdf",
+      "sha256": "0f99fc3bcd13c7599ba1780bb705cb3c3437de9d4c441ba239062966de4196dc",
+      "bytes": 22188864,
+      "pdfPages": 96,
+      "revisionAsPrinted": "09-11-2025",
+      "modelIdsAsPrinted": [
+        "2504769"
+      ]
+    },
+    {
+      "id": "b-assembly",
+      "url": "https://images.salsify.com/image/upload/s--gOuOLc1O--/ryrddyxy2uiyp2yaumx4",
+      "sha256": "bf1a9d269752d480e9e9958c7f73bca092e1608e20009816dd2a549b6bd055d3",
+      "bytes": 6499082,
+      "pdfPages": 101,
+      "revisionAsPrinted": "8-12-2026",
+      "modelIdsAsPrinted": [
+        "2504769B",
+        "2504769B-V"
+      ]
+    },
+    {
+      "id": "original-heater",
+      "url": "https://images.salsify.com/image/upload/s--ZBuV8Q2w--/tuaqov3c8w2nhooqeah3.pdf",
+      "sha256": "114dfb127f00a052e87284728e4f16b8941ac8808422cceab6376cb8ca46e82d",
+      "bytes": 6210154,
+      "pdfPages": 30,
+      "revisionAsPrinted": "10-14-25",
+      "modelIdsAsPrinted": [
+        "9250253"
+      ]
+    },
+    {
+      "id": "current-b-owner",
+      "url": "https://images.salsify.com/image/upload/s--3JEkncDE--/melzftecsbs0zevtrzwh",
+      "sha256": "37325f6e2fca6527f4aa68a38a51a7e62c2acd50c3e74296f31f81b0ee04167e",
+      "bytes": 2835222,
+      "pdfPages": 19,
+      "revisionAsPrinted": null,
+      "modelIdsAsPrinted": [
+        "9250253B"
+      ]
+    }
+  ],
+  "geometry": {
+    "exactCAD": false,
+    "referenceEnvelope": {
+      "widthMm": 1583,
+      "planDepthMm": 2302,
+      "frontMaximumHeightMm": 2070,
+      "rearRoofHeightMm": 1909,
+      "sideSlopedRoofEdgeMm": 2306,
+      "shellBaseWidthMm": 1394,
+      "shellBaseDepthMm": 1716,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 2,
+        "printedPage": 2
+      },
+      "meaning": "Factory dimensioned views; roof plan projection and sloped-edge lengths differ. Rounded inch/mm pairs are retained as reference precision."
+    },
+    "retailerOuterDimensionsInches": {
+      "homeDepot": {
+        "width": 62.25,
+        "depth": 90.75,
+        "height": 81.5
+      },
+      "lowes": {
+        "width": 89,
+        "depth": 62.25,
+        "height": 81.5
+      },
+      "resolution": "Lowe\u2019s width/depth and89 in value conflict with model-specific drawing. Do not silently exchange axes or use carton size."
+    },
+    "publishedInteriorReferenceInches": {
+      "width": 50.5,
+      "depth": 63.2,
+      "height": 73,
+      "sourceUrl": "https://www.homedepot.com/p/341003031",
+      "clearHeightMeaning": null,
+      "unobstructedSpace": false,
+      "notes": [
+        "The sloped roof and included benches/heater occupy room volume. This is not a verified rectangular clearance volume.",
+        "Published130.5 cu ft is not the simple bounding-box product; do not infer floor-to-ceiling clearance everywhere from the single73 in label."
+      ]
+    },
+    "anchoringLayout": {
+      "widthMm": 1454,
+      "depthMm": 1630,
+      "diagonalMm": 2184,
+      "meaning": "Anchor-hole layout, not sauna footprint or body envelope",
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 3,
+        "printedPage": 3
+      }
+    },
+    "assembledPlacements": null,
+    "fullTandGProfiles": null,
+    "effectiveCoverWidths": null,
+    "hingePivotsAndDoorLeafEnvelope": null
+  },
+  "inventoryBasis": {
+    "documentId": "original-assembly-current",
+    "pdfPages": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "extraction": "Text-layer inventory facts; all rows retain page references. Noninventory sorting illustrations are excluded.",
+    "rowCount": 143,
+    "sumOfListedRowQuantities": 1248,
+    "quantitySumMeaning": "Mixed row units/assemblies/tool accessories; not a count of all atomic parts.",
+    "exactMachiningGeometryComplete": false,
+    "categoryCounts": {
+      "factory-wood-part": 71,
+      "factory-wood-assembly": 6,
+      "accessory": 1,
+      "factory-accessory": 29,
+      "hardware": 28,
+      "included-tool-accessory": 8
+    },
+    "referenceEnvelopeRows": 75,
+    "publishedMetricTripleRows": 85,
+    "visuallyReviewedAssemblyDrawingResolutions": 6
+  },
+  "components": [
+    {
+      "key": "N01",
+      "partIdAsPrinted": "W4L22411",
+      "stampAsPrinted": "N01",
+      "name": "HEATER MOUNT",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "5/8\"x2 3/8\"x16 9/16\"",
+        "metricMm": [
+          16.0,
+          60.0,
+          420.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        16.0,
+        60.0,
+        420.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "AM02",
+      "partIdAsPrinted": "W4L22361",
+      "stampAsPrinted": "AM02",
+      "name": "DOOR HANDLE",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "2 1/4\"x3\"x13 5/16\"",
+        "metricMm": [
+          57.0,
+          76.0,
+          338.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        57.0,
+        76.0,
+        338.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "NG04",
+      "partIdAsPrinted": "W4L22385",
+      "stampAsPrinted": "NG04",
+      "name": "SLAT",
+      "quantity": 3,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "13/16\"x3 3/8\"x50 1/4\"",
+        "metricMm": [
+          20.0,
+          86.0,
+          1276.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        20.0,
+        86.0,
+        1276.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "NG03",
+      "partIdAsPrinted": "W4L22910",
+      "stampAsPrinted": "NG03",
+      "name": "FASCIA",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "13/16\"x3 1/8\"x60 3/8\"",
+        "metricMm": [
+          20.0,
+          80.0,
+          1534.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        20.0,
+        80.0,
+        1534.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H01",
+      "partIdAsPrinted": "W4L22909",
+      "stampAsPrinted": "H01",
+      "name": "ROOF TRIM",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "15/16\"x3 3/8\"x89 3/8\"",
+        "metricMm": [
+          24.0,
+          86.0,
+          2270.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        24.0,
+        86.0,
+        2270.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "NR03",
+      "partIdAsPrinted": "W4L22413",
+      "stampAsPrinted": "NR03",
+      "name": "HEATER GUARD BOARD",
+      "quantity": 5,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "13/16\"x2 3/8\"x21 3/16\"",
+        "metricMm": [
+          20.0,
+          60.0,
+          538.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        20.0,
+        60.0,
+        538.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "NR04",
+      "partIdAsPrinted": "W4L22412",
+      "stampAsPrinted": "NR04",
+      "name": "HEATER GUARD BOARD",
+      "quantity": 5,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "13/16\"x2 3/8\"x16 15/16\"",
+        "metricMm": [
+          20.0,
+          60.0,
+          430.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        20.0,
+        60.0,
+        430.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "E01",
+      "partIdAsPrinted": "W4L22345",
+      "stampAsPrinted": "E01",
+      "name": "TRIM BOARD",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 7/16\"x3 3/8\"x60 3/8\"",
+        "metricMm": [
+          36.0,
+          86.0,
+          1534.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        36.0,
+        86.0,
+        1534.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG01",
+      "partIdAsPrinted": "W4L22363",
+      "stampAsPrinted": "OG01",
+      "name": "FLOOR JOIST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"3 3/8\"x63 1/16\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          1602.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Inch-side dimension omits the first x separator; metric triple is retained but not silently corrected."
+      ],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG02",
+      "partIdAsPrinted": "W4L22367",
+      "stampAsPrinted": "OG02",
+      "name": "FLOOR JOIST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x48 1/16\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          1220.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        1220.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "HB01",
+      "partIdAsPrinted": "W4L22356",
+      "stampAsPrinted": "HB01",
+      "name": "WALL BOARD",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "15/16\"x2 3/4\"x48 1/16\"",
+        "metricMm": [
+          24.0,
+          70.0,
+          1220.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        24.0,
+        70.0,
+        1220.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 4,
+        "printedPage": 4,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG11",
+      "partIdAsPrinted": "W4L22388",
+      "stampAsPrinted": "OG11",
+      "name": "WIREWAY BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x5 11/16\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          144.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        144.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG07",
+      "partIdAsPrinted": "W4L22382",
+      "stampAsPrinted": "OG07",
+      "name": "SEAT CLEAT",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x45 7/16\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          1154.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        1154.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG12",
+      "partIdAsPrinted": "W4L22389",
+      "stampAsPrinted": "OG12",
+      "name": "WIREWAY BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x19 3/4\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          501.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        501.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG10",
+      "partIdAsPrinted": "W4L22387",
+      "stampAsPrinted": "OG10",
+      "name": "WIREWAY BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x60 3/4\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          1543.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        1543.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG13",
+      "partIdAsPrinted": "W4L22391",
+      "stampAsPrinted": "OG13",
+      "name": "LIGHT MOUNT",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "30x3 3/8\"x35 7/16\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          900.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Inch-side dimension begins30 without an inch-fraction thickness; mixed-unit typo."
+      ],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ01",
+      "partIdAsPrinted": "W4L22347",
+      "stampAsPrinted": "OJ01",
+      "name": "WALL BOARD",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x63 1/16\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1602.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1602.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG08",
+      "partIdAsPrinted": "W4L22384",
+      "stampAsPrinted": "OG08",
+      "name": "SEAT CLEAT",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x19 1/8\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          486.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        486.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG15",
+      "partIdAsPrinted": "W4L22407",
+      "stampAsPrinted": "OG15",
+      "name": "SEAT CLEAT",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x19 1/8\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          486.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        486.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG06",
+      "partIdAsPrinted": "W4L22380",
+      "stampAsPrinted": "OG06",
+      "name": "FLOOR JOIST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x48 1/16\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          1220.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        1220.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG05",
+      "partIdAsPrinted": "W4L22372",
+      "stampAsPrinted": "OG05",
+      "name": "FLOOR JOIST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x61 7/8\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          1572.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        1572.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG04",
+      "partIdAsPrinted": "W4L22369",
+      "stampAsPrinted": "OG04",
+      "name": "FLOOR JOIST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x48 1/16\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          1220.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        1220.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OG03",
+      "partIdAsPrinted": "W4L22368",
+      "stampAsPrinted": "OG03",
+      "name": "FLOOR JOIST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 3/8\"x21 7/8\"",
+        "metricMm": [
+          30.0,
+          86.0,
+          556.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        86.0,
+        556.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 5,
+        "printedPage": 5,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ06",
+      "partIdAsPrinted": "W4L22352",
+      "stampAsPrinted": "OJ06",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x24 3/4\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          629.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        629.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ09",
+      "partIdAsPrinted": "W4L22357",
+      "stampAsPrinted": "OJ09",
+      "name": "WALL BOARD",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x63 1/16\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1602.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1602.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ07",
+      "partIdAsPrinted": "W4L22353",
+      "stampAsPrinted": "OJ07",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x24 3/4\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          629.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        629.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ02",
+      "partIdAsPrinted": "W4L22348",
+      "stampAsPrinted": "OJ02",
+      "name": "WALL BOARD",
+      "quantity": 28,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x63 1/16\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1602.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1602.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ03",
+      "partIdAsPrinted": "W4L22349",
+      "stampAsPrinted": "OJ03",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x50 3/8\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1280.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1280.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ08",
+      "partIdAsPrinted": "W4L22354",
+      "stampAsPrinted": "OJ08",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x50 3/8\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1280.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1280.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ04",
+      "partIdAsPrinted": "W4L22350",
+      "stampAsPrinted": "OJ04",
+      "name": "WALL BOARD",
+      "quantity": 10,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x50 3/8\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1280.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1280.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ10",
+      "partIdAsPrinted": "W4L22359",
+      "stampAsPrinted": "OJ10",
+      "name": "ROOF BOARD",
+      "quantity": 12,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x88 9/16\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          2250.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30,
+        134,
+        2250
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "W4L22359 is also printed for OR04/OR05 with a different cross-section."
+      ],
+      "drawingResolution": {
+        "partId": "W4L22359",
+        "referenceEnvelopeMm": [
+          30,
+          134,
+          2250
+        ],
+        "sourceRef": {
+          "documentId": "original-assembly-current",
+          "pdfPage": 60,
+          "printedPage": 60
+        },
+        "basis": "Step42 differentiatesOJ10/W4L22359 fromOR04/W4L22355 andOR05/W4L22358.",
+        "scope": "Reference geometry/identity resolution within this matched manual; full profiles and hole geometry remain unresolved."
+      }
+    },
+    {
+      "key": "OJ05",
+      "partIdAsPrinted": "W4L22351",
+      "stampAsPrinted": "OJ05",
+      "name": "WALL BOARD",
+      "quantity": 10,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x24 3/4\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          629.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        629.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 6,
+        "printedPage": 6,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ18",
+      "partIdAsPrinted": "W4L22395",
+      "stampAsPrinted": "OJ18",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x24 3/4\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          629.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        629.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ17",
+      "partIdAsPrinted": "W4L22394",
+      "stampAsPrinted": "OJ17",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x24 3/4\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          629.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        629.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ21",
+      "partIdAsPrinted": "W4L22408",
+      "stampAsPrinted": "OJ21",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x24 3/4\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          629.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        629.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ15",
+      "partIdAsPrinted": "W4L22390",
+      "stampAsPrinted": "OJ15",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x50 3/8\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1280.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1280.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ20",
+      "partIdAsPrinted": "W4L22397",
+      "stampAsPrinted": "OJ20",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x50 3/8\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1280.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1280.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ16",
+      "partIdAsPrinted": "W4L22392",
+      "stampAsPrinted": "OJ16",
+      "name": "WALL BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x50 3/8\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1280.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1280.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ12",
+      "partIdAsPrinted": "W4L22376",
+      "stampAsPrinted": "OJ12",
+      "name": "FLOOR BOARD",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x61 7/8\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1572.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1572.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ13",
+      "partIdAsPrinted": "W4L22377",
+      "stampAsPrinted": "OJ13",
+      "name": "FLOOR BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x63 1/16\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1602.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1602.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OJ14",
+      "partIdAsPrinted": "W4L22379",
+      "stampAsPrinted": "OJ14",
+      "name": "FLOOR BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x61 7/8\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          1572.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30,
+        134,
+        1572
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Metric width30 mm conflicts with printed5 1/4 in width; do not silently replace either."
+      ],
+      "drawingResolution": {
+        "partId": "W4L22379",
+        "referenceEnvelopeMm": [
+          30,
+          134,
+          1572
+        ],
+        "sourceRef": {
+          "documentId": "original-assembly-current",
+          "pdfPage": 39,
+          "printedPage": 39
+        },
+        "basis": "Step21 shows30x134x1572 mm matching the inch-side width; inventory30 mm width is inconsistent.",
+        "scope": "Reference geometry/identity resolution within this matched manual; full profiles and hole geometry remain unresolved."
+      }
+    },
+    {
+      "key": "OJ11",
+      "partIdAsPrinted": "W4L22374",
+      "stampAsPrinted": "OJ11",
+      "name": "FLOOR BOARD",
+      "quantity": 3,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x63 1/16\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          1602.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        1602.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 7,
+        "printedPage": 7,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO01",
+      "partIdAsPrinted": "W4L22404",
+      "stampAsPrinted": "OO01",
+      "name": "SLAT CLEAT",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x14\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          355.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        355.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO10",
+      "partIdAsPrinted": "W4L22401",
+      "stampAsPrinted": "OO10",
+      "name": "TRIM",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x17 5/16\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          439.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        439.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO04",
+      "partIdAsPrinted": "W4L22035",
+      "stampAsPrinted": "OO04",
+      "name": "HEATER GUARD BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x16 1/8\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          410.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        410.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO09",
+      "partIdAsPrinted": "W4L22400",
+      "stampAsPrinted": "OO09",
+      "name": "TRIM",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x29 11/16\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          754.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        754.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO03",
+      "partIdAsPrinted": "W4L22038",
+      "stampAsPrinted": "OO03",
+      "name": "HEATER GUARD BOARD",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x16 1/8\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          410.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        410.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO02",
+      "partIdAsPrinted": "W4L22365",
+      "stampAsPrinted": "OO02",
+      "name": "FLOOR TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x63 1/16\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          1602.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        1602.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO06",
+      "partIdAsPrinted": "W4L22373",
+      "stampAsPrinted": "OO06",
+      "name": "FLOOR TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x61 7/8\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          1572.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        1572.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO07",
+      "partIdAsPrinted": "W4L22378",
+      "stampAsPrinted": "OO07",
+      "name": "FLOOR TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x21 13/16\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          554.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        554.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO13",
+      "partIdAsPrinted": "W4L22414",
+      "stampAsPrinted": "OO13",
+      "name": "TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x61\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          1549.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        1549.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO05",
+      "partIdAsPrinted": "W4L22366",
+      "stampAsPrinted": "OO05",
+      "name": "FLOOR TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x48 1/16\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          1220.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        1220.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO15",
+      "partIdAsPrinted": "W4L22608",
+      "stampAsPrinted": "OO15",
+      "name": "TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x47 9/16\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          1208.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        1208.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO11",
+      "partIdAsPrinted": "W4L22402",
+      "stampAsPrinted": "OO11",
+      "name": "TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x59 13/16\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          1519.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        1519.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OO14",
+      "partIdAsPrinted": "W4L22607",
+      "stampAsPrinted": "OO14",
+      "name": "TRIM",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x37 7/8\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          962.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        962.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 8,
+        "printedPage": 8,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OR03",
+      "partIdAsPrinted": "W4L22405",
+      "stampAsPrinted": "OR03",
+      "name": "BENCH UPRIGHT",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x2 3/8\"x14\"",
+        "metricMm": [
+          30.0,
+          60.0,
+          355.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        60.0,
+        355.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OR01",
+      "partIdAsPrinted": "W4L22406",
+      "stampAsPrinted": "OR01",
+      "name": "SEAT UPRIGHT",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x2 3/8\"x28 3/4\"",
+        "metricMm": [
+          30.0,
+          60.0,
+          730.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        60.0,
+        730.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OR02",
+      "partIdAsPrinted": "W4L21946",
+      "stampAsPrinted": "OR02",
+      "name": "ANGLE BRACE",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x2 3/8\"x10 7/8\"",
+        "metricMm": [
+          30.0,
+          60.0,
+          276.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        60.0,
+        276.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "SP02",
+      "partIdAsPrinted": "W4L22342",
+      "stampAsPrinted": "SP02",
+      "name": "POST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "3 3/8\"x3 3/8\"x77 13/16\"",
+        "metricMm": [
+          86.0,
+          86.0,
+          1976.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        86.0,
+        86.0,
+        1976.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "SP04",
+      "partIdAsPrinted": "W4L22344",
+      "stampAsPrinted": "SP04",
+      "name": "POST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "3 3/8\"x3 3/8\"x74 1/4\"",
+        "metricMm": [
+          86.0,
+          86.0,
+          1862.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        86,
+        86,
+        1862
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Printed74 1/4 in length conflicts with1862 mm."
+      ],
+      "drawingResolution": {
+        "partId": "W4L22344",
+        "referenceEnvelopeMm": [
+          86,
+          86,
+          1862
+        ],
+        "sourceRef": {
+          "documentId": "original-assembly-current",
+          "pdfPage": 25,
+          "printedPage": 25
+        },
+        "basis": "Step7 repeats73 5/16 in and1862 mm; the inventory inch label is inconsistent.",
+        "scope": "Reference geometry/identity resolution within this matched manual; full profiles and hole geometry remain unresolved."
+      }
+    },
+    {
+      "key": "OR04",
+      "partIdAsPrinted": "W4L22359",
+      "stampAsPrinted": "OR04",
+      "name": "ROOF BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 1/2\"x88 9/16\"",
+        "metricMm": [
+          30.0,
+          38.0,
+          2250.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30,
+        38,
+        2250
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "W4L22359 is also printed for OJ10 and OR05 with different profiles/stamps; preserve row identity and confirm carton stamp."
+      ],
+      "drawingResolution": {
+        "partId": "W4L22355",
+        "referenceEnvelopeMm": [
+          30,
+          38,
+          2250
+        ],
+        "sourceRef": {
+          "documentId": "original-assembly-current",
+          "pdfPage": 60,
+          "printedPage": 60
+        },
+        "basis": "Step42 explicitly identifiesOR04 asW4L22355, distinct from the inventory duplicate22359.",
+        "scope": "Reference geometry/identity resolution within this matched manual; full profiles and hole geometry remain unresolved."
+      }
+    },
+    {
+      "key": "SP01",
+      "partIdAsPrinted": "W4L22341",
+      "stampAsPrinted": "SP01",
+      "name": "POST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "3 3/8\"x3 3/8\"x77 13/16\"",
+        "metricMm": [
+          86.0,
+          86.0,
+          1976.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        86.0,
+        86.0,
+        1976.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "SP03",
+      "partIdAsPrinted": "W4L22343",
+      "stampAsPrinted": "SP03",
+      "name": "POST",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "3 3/8\"x3 3/8\"x73 1/16\"",
+        "metricMm": [
+          86.0,
+          86.0,
+          1862.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        86,
+        86,
+        1862
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Printed73 1/16 in length conflicts with1862 mm."
+      ],
+      "drawingResolution": {
+        "partId": "W4L22343",
+        "referenceEnvelopeMm": [
+          86,
+          86,
+          1862
+        ],
+        "sourceRef": {
+          "documentId": "original-assembly-current",
+          "pdfPage": 26,
+          "printedPage": 26
+        },
+        "basis": "Step8 repeats73 5/16 in and1862 mm; the inventory inch label is inconsistent.",
+        "scope": "Reference geometry/identity resolution within this matched manual; full profiles and hole geometry remain unresolved."
+      }
+    },
+    {
+      "key": "OR05",
+      "partIdAsPrinted": "W4L22359",
+      "stampAsPrinted": "OR05",
+      "name": "ROOF BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 1/2\"x88 9/16\"",
+        "metricMm": [
+          30.0,
+          38.0,
+          2250.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30,
+        38,
+        2250
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "W4L22359 is also printed for OJ10 and OR04 with different profiles/stamps; preserve row identity and confirm carton stamp."
+      ],
+      "drawingResolution": {
+        "partId": "W4L22358",
+        "referenceEnvelopeMm": [
+          30,
+          38,
+          2250
+        ],
+        "sourceRef": {
+          "documentId": "original-assembly-current",
+          "pdfPage": 60,
+          "printedPage": 60
+        },
+        "basis": "Step42 explicitly identifiesOR05 asW4L22358, distinct from the inventory duplicate22359.",
+        "scope": "Reference geometry/identity resolution within this matched manual; full profiles and hole geometry remain unresolved."
+      }
+    },
+    {
+      "key": "OO16",
+      "partIdAsPrinted": "W4L22415",
+      "stampAsPrinted": "OO16",
+      "name": "TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x1 3/16\"x2 3/8\"",
+        "metricMm": [
+          30.0,
+          30.0,
+          60.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        30.0,
+        60.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OS01",
+      "partIdAsPrinted": "W4L22364",
+      "stampAsPrinted": "OS01",
+      "name": "FLOOR BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 1/4\"x63 1/16\"",
+        "metricMm": [
+          30.0,
+          82.0,
+          1602.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        82.0,
+        1602.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "OS02",
+      "partIdAsPrinted": "W4L22375",
+      "stampAsPrinted": "OS02",
+      "name": "FLOOR BOARD",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x3 11/16\"x61 7/8\"",
+        "metricMm": [
+          30.0,
+          94.0,
+          1572.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        94.0,
+        1572.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 9,
+        "printedPage": 9,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "W03",
+      "partIdAsPrinted": "W4L22409",
+      "stampAsPrinted": "W03",
+      "name": "ANGLE BRACE",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 15/16\"x3 3/8\"x11 1/4\"",
+        "metricMm": [
+          50.0,
+          86.0,
+          285.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        50.0,
+        86.0,
+        285.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "AM01",
+      "partIdAsPrinted": "W2A04917",
+      "stampAsPrinted": "AM01",
+      "name": "DOOR HANDLE",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-assembly",
+      "publishedDimensions": {
+        "inchText": "2 1/4\"x3\"x13 5/16\"",
+        "metricMm": [
+          57.0,
+          76.0,
+          338.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        57.0,
+        76.0,
+        338.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "TF01",
+      "partIdAsPrinted": "W2A04797",
+      "stampAsPrinted": "TF01",
+      "name": "TRIM FRAME",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-assembly",
+      "publishedDimensions": {
+        "inchText": "7/8\"x5 9/16\"x8 1/16\"",
+        "metricMm": [
+          22.0,
+          142.0,
+          204.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        22.0,
+        142.0,
+        204.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "W04",
+      "partIdAsPrinted": "W4L22912",
+      "stampAsPrinted": "W04",
+      "name": "FASCIA",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 15/16\"x3 3/8\"x62 5/16\"",
+        "metricMm": [
+          50.0,
+          86.0,
+          1583.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        50.0,
+        86.0,
+        1583.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "W02",
+      "partIdAsPrinted": "W4L22399",
+      "stampAsPrinted": "W02",
+      "name": "FOOT BRACE",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 15/16\"x3 3/8\"x10 1/4\"",
+        "metricMm": [
+          50.0,
+          86.0,
+          261.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        50.0,
+        86.0,
+        261.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "W01",
+      "partIdAsPrinted": "W4L22383",
+      "stampAsPrinted": "W01",
+      "name": "SEAT TRIM",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-part",
+      "publishedDimensions": {
+        "inchText": "1 9/16\"x3 3/8\"x50 1/4\"",
+        "metricMm": [
+          40.0,
+          86.0,
+          1276.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        40.0,
+        86.0,
+        1276.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "WB01",
+      "partIdAsPrinted": "W2A04921",
+      "stampAsPrinted": "WB01",
+      "name": "WALL BOARD ASSEMBLY",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-assembly",
+      "publishedDimensions": {
+        "inchText": "1 3/16\"x5 1/4\"x24 3/4\"",
+        "metricMm": [
+          30.0,
+          134.0,
+          629.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        30.0,
+        134.0,
+        629.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "WP01",
+      "partIdAsPrinted": "W2A04911",
+      "stampAsPrinted": "WP01",
+      "name": "DOOR WALL PANEL ASSEMBLY",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-assembly",
+      "publishedDimensions": {
+        "inchText": "2 3/8\"x27 1/4\"x77 5/8\"",
+        "metricMm": [
+          60.0,
+          692.0,
+          1972.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        60.0,
+        692.0,
+        1972.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "T01",
+      "partIdAsPrinted": "W4L21965",
+      "stampAsPrinted": "T01",
+      "name": "THERMOMETER",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "10",
+        "meaning": "no body dimensions supplied"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 10,
+        "printedPage": 10,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "BA02",
+      "partIdAsPrinted": "W2A04920",
+      "stampAsPrinted": "BA02",
+      "name": "BENCH ASSEMBLY",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-assembly",
+      "publishedDimensions": {
+        "inchText": "1 15/16\"x19 1/8\"x50 1/4\"",
+        "metricMm": [
+          50.0,
+          486.0,
+          1276.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        50.0,
+        486.0,
+        1276.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 11,
+        "printedPage": 11,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "BA01",
+      "partIdAsPrinted": "W2A04918",
+      "stampAsPrinted": "BA01",
+      "name": "BENCH ASSEMBLY",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-wood-assembly",
+      "publishedDimensions": {
+        "inchText": "1 15/16\"x19 1/8\"x50 1/4\"",
+        "metricMm": [
+          50.0,
+          486.0,
+          1276.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published factory part overall reference dimensions; profiles, machining and hole geometry remain unresolved"
+      },
+      "proposedReferenceEnvelopeMm": [
+        50.0,
+        486.0,
+        1276.0
+      ],
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 11,
+        "printedPage": 11,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "A4M05912",
+      "partIdAsPrinted": "A4M05912",
+      "stampAsPrinted": null,
+      "name": "29GA SHEETING",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": "1/4\"x18 7/8\"x90 1/16\"",
+        "metricMm": [
+          7.0,
+          480.0,
+          2287.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "profile-depth x full-width x length reference; 7 mm is not29-gauge metal material thickness; rib profile/effective cover unmeasured"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Do not represent a29-gauge profiled sheet as7 mm solid steel. Overlap is one rib per assembly step49, not a dimensioned rib pitch."
+      ],
+      "drawingResolution": null
+    },
+    {
+      "key": "A4M05913",
+      "partIdAsPrinted": "A4M05913",
+      "stampAsPrinted": null,
+      "name": "29GA SHEETING",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": "1/4\"x13 1/16\"x90 1/16\"",
+        "metricMm": [
+          7.0,
+          332.0,
+          2287.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "profile-depth x full-width x length reference; 7 mm is not29-gauge metal material thickness; rib profile/effective cover unmeasured"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Do not represent a29-gauge profiled sheet as7 mm solid steel. Overlap is one rib per assembly step49, not a dimensioned rib pitch."
+      ],
+      "drawingResolution": null
+    },
+    {
+      "key": "5916",
+      "partIdAsPrinted": "A4M05916",
+      "stampAsPrinted": "5916",
+      "name": "DRIP EDGE",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": ".01X4 1/4\"X60 1/4\"",
+        "metricMm": [
+          0.34,
+          109.0,
+          1530.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published thickness/flange/length or nominal accessory dimensions; not a complete bent profile/outer envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "B01",
+      "partIdAsPrinted": "A4M05673",
+      "stampAsPrinted": "B01",
+      "name": "BUCKET",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5914",
+      "partIdAsPrinted": "A4M05914",
+      "stampAsPrinted": "5914",
+      "name": "EDGE TRIM",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": "1/32\"x3 3/8\"x90 1/16\"",
+        "metricMm": [
+          0.5,
+          85.0,
+          2287.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published thickness/flange/length or nominal accessory dimensions; not a complete bent profile/outer envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5915",
+      "partIdAsPrinted": "A4M05915",
+      "stampAsPrinted": "5915",
+      "name": "EDGE TRIM",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": "1/32\"x2 9/16\"x62\"",
+        "metricMm": [
+          1.0,
+          66.0,
+          1575.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published thickness/flange/length or nominal accessory dimensions; not a complete bent profile/outer envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "1/32 in and1 mm first dimension differ; retain source precision/meaning rather than treating either as a verified body envelope."
+      ],
+      "drawingResolution": null
+    },
+    {
+      "key": "555",
+      "partIdAsPrinted": "A4M00555",
+      "stampAsPrinted": "555",
+      "name": "L BRACKET BLK",
+      "quantity": 8,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": "1 1/4\"x1 3/8\"x1 3/8\"",
+        "metricMm": [
+          32.0,
+          35.0,
+          35.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published thickness/flange/length or nominal accessory dimensions; not a complete bent profile/outer envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1526",
+      "partIdAsPrinted": "A6P01526",
+      "stampAsPrinted": "1526",
+      "name": "BASE FOOT",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": "1\"x5 7/8\"x5 7/8\"",
+        "metricMm": [
+          25.0,
+          150.0,
+          150.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1468",
+      "partIdAsPrinted": "A6P01468",
+      "stampAsPrinted": "1468",
+      "name": "30mm SILCONE GROMMET",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5285",
+      "partIdAsPrinted": "A4M05285",
+      "stampAsPrinted": "5285",
+      "name": "VENT",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "L01",
+      "partIdAsPrinted": "A4M05596",
+      "stampAsPrinted": "L01",
+      "name": "LADLE",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1467",
+      "partIdAsPrinted": "A6P01467",
+      "stampAsPrinted": "1467",
+      "name": "25mm SILICONE GROMMET",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5590-08",
+      "partIdAsPrinted": "A4M05590-08",
+      "stampAsPrinted": "5590-08",
+      "name": "TEMPERATURE SENSOR",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5592",
+      "partIdAsPrinted": "A4M05592",
+      "stampAsPrinted": "5592",
+      "name": "VENT ASSEMBLY",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "12",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 12,
+        "printedPage": 12,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5590-02",
+      "partIdAsPrinted": "A4M05590-02",
+      "stampAsPrinted": "5590-02",
+      "name": "CONTROL PANEL",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 13,
+        "printedPage": 13,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1448",
+      "partIdAsPrinted": "A6P01448",
+      "stampAsPrinted": "1448",
+      "name": "ZIP CABLE TIE",
+      "quantity": 10,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 13,
+        "printedPage": 13,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5590-03",
+      "partIdAsPrinted": "A4M05590-03",
+      "stampAsPrinted": "5590-03",
+      "name": "CONTROL PANEL MOUNTING BRACKET",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 13,
+        "printedPage": 13,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5667",
+      "partIdAsPrinted": "A4M05667",
+      "stampAsPrinted": "5667",
+      "name": "GROUND STAKE",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "1\"16\" (25xx406)",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 13,
+        "printedPage": 13,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Published dimension text is malformed (1in16in /25xx406); no third dimension or complete stake shape is established."
+      ],
+      "drawingResolution": null
+    },
+    {
+      "key": "5590-01",
+      "partIdAsPrinted": "A4M05590-01",
+      "stampAsPrinted": "5590-01",
+      "name": "CONTROL PANEL",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 13,
+        "printedPage": 13,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5672",
+      "partIdAsPrinted": "A4M05672",
+      "stampAsPrinted": "5672",
+      "name": "GARMENT HANGER ASSEMBLY",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 13,
+        "printedPage": 13,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5917",
+      "partIdAsPrinted": "A4M05917",
+      "stampAsPrinted": "5917",
+      "name": "ANCHOR BRACKET",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": "1/16\"x1 15/16\"x7 5/8\"",
+        "metricMm": [
+          2.0,
+          50.0,
+          193.0
+        ],
+        "otherSpecificationText": null,
+        "meaning": "published thickness/flange/length or nominal accessory dimensions; not a complete bent profile/outer envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 13,
+        "printedPage": 13,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1543",
+      "partIdAsPrinted": "A6P01543",
+      "stampAsPrinted": "1543",
+      "name": "SAUNA POWER WIRE",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 14,
+        "printedPage": 14,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "5590-10",
+      "partIdAsPrinted": "A4M05590-10",
+      "stampAsPrinted": "5590-10",
+      "name": "WIRING HARNESS",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 14,
+        "printedPage": 14,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "0253",
+      "partIdAsPrinted": "9250253",
+      "stampAsPrinted": "0253",
+      "name": "9KW ELECTRIC SAUNA HEATER",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 14,
+        "printedPage": 14,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1493-03",
+      "partIdAsPrinted": "A6P01493-03",
+      "stampAsPrinted": "1493-03",
+      "name": "LED POWER SUPPLY",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 14,
+        "printedPage": 14,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1493-02",
+      "partIdAsPrinted": "A6P01493-02",
+      "stampAsPrinted": "1493-02",
+      "name": "LED LIGHT",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 14,
+        "printedPage": 14,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "A6P01493-04",
+      "partIdAsPrinted": "A6P01493-04",
+      "stampAsPrinted": null,
+      "name": "LIGHT CLIP",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 14,
+        "printedPage": 14,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "A6P01493-05",
+      "partIdAsPrinted": "A6P01493-05",
+      "stampAsPrinted": null,
+      "name": "REMOTE",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 14,
+        "printedPage": 14,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1493-06",
+      "partIdAsPrinted": "A6P01493-06",
+      "stampAsPrinted": "1493-06",
+      "name": "REMOTE MODULE",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "factory-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "14",
+        "meaning": "no complete installed body geometry established"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 14,
+        "printedPage": 14,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101438",
+      "partIdAsPrinted": "H101438",
+      "stampAsPrinted": null,
+      "name": "SCREW TWH 8x3/4 SS-BLK",
+      "quantity": 20,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x3/4",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101428",
+      "partIdAsPrinted": "H101428",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X1 3/4 SS-BLK",
+      "quantity": 117,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x1-3/4",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101433",
+      "partIdAsPrinted": "H101433",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X3 SS-BLK",
+      "quantity": 9,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x3",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101431",
+      "partIdAsPrinted": "H101431",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X2 1/2 SS-BLK",
+      "quantity": 8,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x2-1/2",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101437",
+      "partIdAsPrinted": "H101437",
+      "stampAsPrinted": null,
+      "name": "SCREW TWH 8x5/8 SS-BLK",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x5/8",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101443",
+      "partIdAsPrinted": "H101443",
+      "stampAsPrinted": null,
+      "name": "SCREW TWH 8x1 1/2 SS-BLK",
+      "quantity": 16,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x1-1/2",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101430",
+      "partIdAsPrinted": "H101430",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X2 1/4 SS-BLK",
+      "quantity": 20,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x2-1/4",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1402",
+      "partIdAsPrinted": "H101402",
+      "stampAsPrinted": "1402",
+      "name": "SCREW TFH 1/4-20 X 1 5/8 SS",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "1403",
+      "partIdAsPrinted": "H101403",
+      "stampAsPrinted": "1403",
+      "name": "POLY WASHER",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101116",
+      "partIdAsPrinted": "H101116",
+      "stampAsPrinted": null,
+      "name": "SCREW SELF TAPPING 1/4x1 BLK",
+      "quantity": 8,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "1/4 x 1",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101117",
+      "partIdAsPrinted": "H101117",
+      "stampAsPrinted": null,
+      "name": "SCREW WOODGRIP",
+      "quantity": 38,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "10x3/4",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101468",
+      "partIdAsPrinted": "H101468",
+      "stampAsPrinted": null,
+      "name": "SCREW RAISED HEAD",
+      "quantity": 8,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x1",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101429",
+      "partIdAsPrinted": "H101429",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X2 SS-BLK",
+      "quantity": 629,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x2",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101427",
+      "partIdAsPrinted": "H101427",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X1 1/2 SS-BLK",
+      "quantity": 12,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x1-1/2",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100379",
+      "partIdAsPrinted": "H100379",
+      "stampAsPrinted": null,
+      "name": "T-NUT BLK",
+      "quantity": 8,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "5/16",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100205",
+      "partIdAsPrinted": "H100205",
+      "stampAsPrinted": null,
+      "name": "BOLT WH BLK",
+      "quantity": 8,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "5/16x2-1/4",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100627",
+      "partIdAsPrinted": "H100627",
+      "stampAsPrinted": null,
+      "name": "SCREW PFH BLK",
+      "quantity": 2,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "6x3/4",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101030",
+      "partIdAsPrinted": "H101030",
+      "stampAsPrinted": null,
+      "name": "SCREW CONFIRMAT BLK",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "7x2",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100487",
+      "partIdAsPrinted": "H100487",
+      "stampAsPrinted": null,
+      "name": "LAG SCREW WH BLK",
+      "quantity": 12,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "1/4x2",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100405",
+      "partIdAsPrinted": "H100405",
+      "stampAsPrinted": null,
+      "name": "WASHER LOCK EXT BLK",
+      "quantity": 12,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "6x15",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101434",
+      "partIdAsPrinted": "H101434",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X3 1/4 SS-BLK",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x3 1/4",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101409",
+      "partIdAsPrinted": "H101409",
+      "stampAsPrinted": null,
+      "name": "SCREW PPH 4x1/2 BLK",
+      "quantity": 10,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "4x1/2",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101165",
+      "partIdAsPrinted": "H101165",
+      "stampAsPrinted": null,
+      "name": "CONCRETE ANCHOR 3/8\"x3\" BLK",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "3/8x3",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101424",
+      "partIdAsPrinted": "H101424",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X1 SS-BLK",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x1",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101435",
+      "partIdAsPrinted": "H101435",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X3 1/2 SS-BLK",
+      "quantity": 8,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x3 1/2",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100147",
+      "partIdAsPrinted": "H100147",
+      "stampAsPrinted": null,
+      "name": "TORX BIT",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "included-tool-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "T-30",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100114",
+      "partIdAsPrinted": "H100114",
+      "stampAsPrinted": null,
+      "name": "TORX WRENCH",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "included-tool-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101440",
+      "partIdAsPrinted": "H101440",
+      "stampAsPrinted": null,
+      "name": "SCREW TWH 8x1 SS-BLK",
+      "quantity": 11,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x1",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101278",
+      "partIdAsPrinted": "H101278",
+      "stampAsPrinted": null,
+      "name": "6\" MAGNETIC DRIVER EXTENSION",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "included-tool-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100764",
+      "partIdAsPrinted": "H100764",
+      "stampAsPrinted": null,
+      "name": "SCREW SETTER",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "included-tool-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H100879",
+      "partIdAsPrinted": "H100879",
+      "stampAsPrinted": null,
+      "name": "TORX BIT",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "included-tool-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "T-20",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101114",
+      "partIdAsPrinted": "H101114",
+      "stampAsPrinted": null,
+      "name": "RIGHT ANGLE DRILL ADAPTER",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "included-tool-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "HEX DRIVER 5/16 (x1)",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101106",
+      "partIdAsPrinted": "H101106",
+      "stampAsPrinted": null,
+      "name": "HEX DRIVER",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "included-tool-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "5/16",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [
+        "Part label/quantity precede the part ID in PDF text order; transcribed as one5/16 hex driver from the same inventory drawing."
+      ],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101423",
+      "partIdAsPrinted": "H101423",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X7/8 SS-BLK",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x7/8",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101100",
+      "partIdAsPrinted": "H101100",
+      "stampAsPrinted": null,
+      "name": "MAGNETIC DRIVER",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "included-tool-accessory",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    },
+    {
+      "key": "H101426",
+      "partIdAsPrinted": "H101426",
+      "stampAsPrinted": null,
+      "name": "SCREW TFH 8X1 1/4 SS-BLK",
+      "quantity": 16,
+      "quantityUnit": "listed item",
+      "supply": "included-in-kit-per-manual",
+      "procurement": "count only through parent kit purchase",
+      "category": "hardware",
+      "publishedDimensions": {
+        "inchText": null,
+        "metricMm": null,
+        "otherSpecificationText": "8x1-1/4",
+        "meaning": "gauge, thread and length notation as printed; no measured head/shank/body envelope"
+      },
+      "proposedReferenceEnvelopeMm": null,
+      "profileOrInternalGeometry": null,
+      "assembledPlacement": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15,
+        "printedPage": 15,
+        "drawing": "parts identification"
+      },
+      "issues": [],
+      "drawingResolution": null
+    }
+  ],
+  "heaterContainedInventory": [
+    {
+      "partId": "A4M05590-04",
+      "name": "heater body",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "inside heater9250253",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "A4M05590-07",
+      "name": "bottom deflector",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "inside heater9250253",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "A4M05590-05",
+      "name": "heater wall bracket",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "inside heater9250253",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "A4M05590-12",
+      "name": "stone guard",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "inside heater9250253",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "A4M05590-15",
+      "name": "stone shelf",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "inside heater9250253",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "H101467",
+      "name": "screw PPH SS #8-32x1/2",
+      "quantity": 8,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "inside heater9250253",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "H101466",
+      "name": "screw PPH SS #8-32x6.5",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "inside heater9250253",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "H101246",
+      "name": "screw PWH #8x7/16 SS",
+      "quantity": 4,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "inside heater9250253",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "A4M05590-01",
+      "name": "control panel",
+      "quantity": 1,
+      "quantityUnit": "listed item",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "packaged with sauna, already present in kit inventory",
+      "samePhysicalItemAsKitComponentKey": "5590-01",
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    },
+    {
+      "partId": "A6P01495",
+      "name": "sauna rocks",
+      "quantity": 1,
+      "quantityUnit": "package",
+      "supply": "included within kit/heater; not an extra purchase",
+      "containment": "one supplied package, not one individual rock",
+      "samePhysicalItemAsKitComponentKey": null,
+      "bodyDimensions": null,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 8,
+        "printedPage": 8
+      }
+    }
+  ],
+  "otherHeaterContents": [
+    {
+      "name": "manufacturer warning/operating labels",
+      "partIds": null,
+      "geometry": null,
+      "included": true,
+      "sourceRef": {
+        "documentId": "original-heater",
+        "pdfPage": 14,
+        "printedPage": 14
+      },
+      "note": "Do not substitute app wording for manufacturer labels; no retail purchase added."
+    }
+  ],
+  "suppliedVsUserRequired": [
+    {
+      "name": "concrete anchors",
+      "supply": "included",
+      "componentKey": "H101165",
+      "quantity": 4,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 15
+      }
+    },
+    {
+      "name": "ground stakes",
+      "supply": "included",
+      "componentKey": "5667",
+      "quantity": 4,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 13
+      }
+    },
+    {
+      "name": "wood deck anchoring hardware",
+      "supply": "not included; conditional on deck installation",
+      "quantity": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 2
+      }
+    },
+    {
+      "name": "site foundation/base preparation",
+      "supply": "site provided; specification and quantity unresolved",
+      "quantity": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 2
+      }
+    },
+    {
+      "name": "service-side electrical installation and materials",
+      "supply": "site/professional work; no automatic wire/breaker BOM",
+      "quantity": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 1
+      }
+    },
+    {
+      "name": "general assembly tools",
+      "supply": "user tools; tools list is not a kit-included inventory",
+      "quantity": null,
+      "sourceRef": {
+        "documentId": "original-assembly-current",
+        "pdfPage": 17
+      }
+    }
+  ],
+  "assemblyDrawingIndex": [
+    {
+      "phase": "floor, walls and posts",
+      "pdfPageRange": [
+        19,
+        41
+      ]
+    },
+    {
+      "phase": "door handles",
+      "pdfPages": [
+        42
+      ]
+    },
+    {
+      "phase": "bench cleats, benches, braces and trim",
+      "pdfPageRanges": [
+        [
+          43,
+          45
+        ],
+        [
+          47,
+          53
+        ]
+      ],
+      "measuredReference": {
+        "cleatTopElevationsAboveFloorMm": [
+          355,
+          730
+        ],
+        "sideCleatLengthMm": 486,
+        "verifiedDrawingPage": 43,
+        "meaning": "cleat locations, not final top-of-seat heights"
+      }
+    },
+    {
+      "phase": "heater mounts, guard and heater",
+      "pdfPageRange": [
+        54,
+        58
+      ],
+      "verifiedDrawingPages": [
+        54,
+        58
+      ],
+      "clearanceApproval": false
+    },
+    {
+      "phase": "roof boards and metal sheets",
+      "pdfPageRange": [
+        59,
+        71
+      ],
+      "verifiedDrawingPage": 67,
+      "sheetsOrderLeftToRight": [
+        "A4M05913",
+        "A4M05912",
+        "A4M05912",
+        "A4M05913"
+      ],
+      "overlap": "one rib",
+      "sideGapAsPrinted": "1/4 in [6 mm]",
+      "ribPitchMm": null
+    },
+    {
+      "phase": "controls, lighting, sensor, accessories and trim",
+      "pdfPageRange": [
+        72,
+        96
+      ]
+    },
+    {
+      "phase": "anchor brackets and ground/concrete alternatives",
+      "pdfPageRange": [
+        97,
+        99
+      ],
+      "note": "Alternative anchoring methods, not both installed automatically."
+    },
+    {
+      "phase": "finish",
+      "pdfPages": [
+        100
+      ]
+    }
+  ],
+  "heaterQualification": {
+    "kitHeaterPartId": "9250253",
+    "matchedSupplementalManualDocumentId": "original-heater",
+    "identityEvidence": "Exact9250253 is in kit inventory page14 and manufacturer-linked heater cover page1.",
+    "manualLanguageAndRegion": "English, manufacturer US/Canada catalog; same PDF also contains French pages16-30.",
+    "operationApproval": false,
+    "bodyEnvelopeForOriginalHeater": null,
+    "numericHeatClearances": [],
+    "clearanceStatus": "No independent numeric combustible-clearance envelope was established. Kit mount/guard geometry is not a generic heat-clearance rule.",
+    "layoutSourceRefs": [
+      {
+        "documentId": "original-assembly-current",
+        "pdfPage": 54,
+        "meaning": "heater mount locations"
+      },
+      {
+        "documentId": "original-assembly-current",
+        "pdfPage": 57,
+        "meaning": "guard placement"
+      },
+      {
+        "documentId": "original-assembly-current",
+        "pdfPage": 58,
+        "meaning": "9250253 mounting to provided pilot holes"
+      }
+    ],
+    "revisionConflicts": [
+      "Old retailer assembly cover09-11-2025 says240V/30A; current original assembly3-12-2026 says240V/50A. Do not generate a30A recommendation.",
+      "Heater manual10-14-25 and current manufacturer electrical guide differ in conductor details; leave site wiring to matching delivered instructions and professional review.",
+      "Current manufacturer owners manual names9250253B; it is not automatically the original9250253 manual.",
+      "B kit inventory changes heater toA4M07271, controller toA4M07172/control boxA4M07170 and adds fanA4M07272; no loose cross-revision substitutions."
+    ]
+  },
+  "bVariantComparison": {
+    "documentId": "b-assembly",
+    "models": [
+      "2504769B",
+      "2504769B-V"
+    ],
+    "differentKit": true,
+    "notBoundToOriginalCOMOffers": true,
+    "changedExamples": [
+      {
+        "function": "heater",
+        "original": "9250253",
+        "b": "A4M07271"
+      },
+      {
+        "function": "control panel",
+        "original": "A4M05590-02",
+        "b": "A4M07172"
+      },
+      {
+        "function": "control box",
+        "original": "A4M05590-01",
+        "b": "A4M07170"
+      },
+      {
+        "function": "fan",
+        "original": null,
+        "b": "A4M07272"
+      },
+      {
+        "function": "OJ04 wall quantity",
+        "original": 10,
+        "b": 9
+      },
+      {
+        "function": "OJ05 wall quantity",
+        "original": 10,
+        "b": 8
+      }
+    ],
+    "exactBHeaterManualPartMapping": null
+  },
+  "blockingUnknowns": [
+    "Delivered original versus B kit/revision and stock availability must be confirmed.",
+    "Several inventory-table dimensions/part IDs conflict. Six rows have explicit same-manual drawing resolutions; raw conflicting entries remain retained. Other unknowns remain flagged.",
+    "No full CAD transforms, end profiles, T&G cover/pitch, hole coordinates, hinge pivots or exact heater/accessory envelopes were extracted.",
+    "Part inventory quantities were not reconciled against every step/carton; included spare counts are not established.",
+    "No code, heat, foundation, electrical or structural-capacity approval is granted."
+  ],
+  "nextModelingStep": "Create a versioned one-kit assembly with nonpurchasable child records. Model dimensioned unambiguous parts as labeled reference geometry; digitize placements from the matched factory steps and preserve unresolved profile/identity fields. Keep the purchase list at one kit plus explicit site-work questions."
+}

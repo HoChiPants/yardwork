@@ -1,0 +1,4206 @@
+{
+  "schemaVersion": 81,
+  "id": "378d16e7-55bd-4056-89f6-0cd53ea0d0ac",
+  "name": "Gabled greenhouse framing study",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "00e7c0f4-7cb9-4c3e-aa38-0376b0712bc7",
+      "label": "P001"
+    },
+    {
+      "partId": "1ef8ad22-247c-4fca-857a-5df431003536",
+      "label": "P002"
+    },
+    {
+      "partId": "d28bfd03-9c5e-43d6-97b8-fc0a437da192",
+      "label": "P003"
+    },
+    {
+      "partId": "b3904aa4-7372-4416-bd9e-6cce1cfd63c8",
+      "label": "P004"
+    },
+    {
+      "partId": "76c85efc-c35f-4848-bb39-c57bf0d97de7",
+      "label": "P005"
+    },
+    {
+      "partId": "48b4f8a7-8b86-4d85-9b73-c72502abc68c",
+      "label": "P006"
+    },
+    {
+      "partId": "a0a34a8b-a9e4-499b-96ff-c3e284da04e1",
+      "label": "P007"
+    },
+    {
+      "partId": "e2109d0d-f6fa-45f9-9141-cf0314b44288",
+      "label": "P008"
+    },
+    {
+      "partId": "d57435b5-edd1-4667-90c6-a4e01a166237",
+      "label": "P009"
+    },
+    {
+      "partId": "aed776c0-f2bb-463d-9e46-b11e9be63933",
+      "label": "P010"
+    },
+    {
+      "partId": "2f9c45f2-0cd3-4fce-8563-e5d8f00e8d1a",
+      "label": "P011"
+    },
+    {
+      "partId": "d43f6dd0-944a-4328-b754-1a5c995b6d07",
+      "label": "P012"
+    },
+    {
+      "partId": "01d71715-70d6-4b93-aecc-381ec928077a",
+      "label": "P013"
+    },
+    {
+      "partId": "e1fba5f9-9d73-4f29-ad04-2a0d5f08c1aa",
+      "label": "P014"
+    },
+    {
+      "partId": "12fd461b-5c1a-4cd0-94cc-1caacdd0d4a0",
+      "label": "P015"
+    },
+    {
+      "partId": "331c41e4-7252-4a70-aab5-6480ad59b5e1",
+      "label": "P016"
+    },
+    {
+      "partId": "5d89a802-aad6-422b-a106-b9f2f935bd3b",
+      "label": "P017"
+    },
+    {
+      "partId": "fac83539-1e86-43b9-9fe5-cb0ece78dfa0",
+      "label": "P018"
+    },
+    {
+      "partId": "eedb7f06-a1f7-41b3-9c30-d72557dc2f42",
+      "label": "P019"
+    },
+    {
+      "partId": "e07c5c6f-4f3e-4c07-9b53-cad06e168b48",
+      "label": "P020"
+    },
+    {
+      "partId": "9828c417-635a-42e9-b98b-159536d7f8d0",
+      "label": "P021"
+    },
+    {
+      "partId": "f308fd39-a619-40b6-a4a9-44c3bc711c72",
+      "label": "P022"
+    },
+    {
+      "partId": "84915871-2c4e-4d29-ac95-bc179897286e",
+      "label": "P023"
+    },
+    {
+      "partId": "6e47dd56-7f47-4cc4-b480-021332c9656c",
+      "label": "P024"
+    },
+    {
+      "partId": "050d2da9-761e-460c-8fde-500417a1d495",
+      "label": "P025"
+    },
+    {
+      "partId": "f061369b-7a22-4ece-ad64-5a5255882049",
+      "label": "P026"
+    },
+    {
+      "partId": "2f38d675-3fa7-446c-a835-6ba779bc3377",
+      "label": "P027"
+    },
+    {
+      "partId": "68c76949-343f-4965-ab41-af7d0433bc7a",
+      "label": "P028"
+    },
+    {
+      "partId": "a68fd35b-f07a-4790-a787-e0630d1b550d",
+      "label": "P029"
+    },
+    {
+      "partId": "8ae4dcb8-2099-41af-8d05-735f9c6262f6",
+      "label": "P030"
+    },
+    {
+      "partId": "bb4d3f98-a957-492a-9eb6-158b75d50595",
+      "label": "P031"
+    },
+    {
+      "partId": "32aaccbc-cc55-4bfd-9298-9891cdf0c29a",
+      "label": "P032"
+    },
+    {
+      "partId": "38fe800c-bfab-4521-b271-5de193485e7b",
+      "label": "P033"
+    },
+    {
+      "partId": "8cfcc794-3044-45d5-b313-f448be4266de",
+      "label": "P034"
+    },
+    {
+      "partId": "c7187a5f-8d86-460a-90a7-97fdcd5e5aff",
+      "label": "P035"
+    },
+    {
+      "partId": "63a68ec7-c69c-44d4-9352-1e4a806e5c9c",
+      "label": "P036"
+    },
+    {
+      "partId": "16b72403-169e-4c9c-8e73-f1e31a4622bf",
+      "label": "P037"
+    },
+    {
+      "partId": "e23b4f54-93fe-463f-8c63-b7840b6c8bf7",
+      "label": "P038"
+    },
+    {
+      "partId": "96e57ba7-3aff-45fe-bb3e-4eb0e52ee8b7",
+      "label": "P039"
+    },
+    {
+      "partId": "8becdb63-ece2-4e5e-a61b-3e6982003c6d",
+      "label": "P040"
+    },
+    {
+      "partId": "ed90c0a5-581d-4ef5-ba99-6ab92b6e066b",
+      "label": "P041"
+    },
+    {
+      "partId": "5dcad471-7c9b-43d7-85de-eb77d5b43d39",
+      "label": "P042"
+    },
+    {
+      "partId": "424c0dbc-8aa0-444e-952a-0e366e1051f0",
+      "label": "P043"
+    },
+    {
+      "partId": "38c056f9-e9db-463e-b5e7-443e33f66378",
+      "label": "P044"
+    },
+    {
+      "partId": "13457aac-d262-49b2-bd48-3e3a8b5e11c3",
+      "label": "P045"
+    },
+    {
+      "partId": "2bea01a2-5938-4d88-8e7c-273149b905b8",
+      "label": "P046"
+    },
+    {
+      "partId": "b6b9da17-2299-46af-99e1-dca78650288d",
+      "label": "P047"
+    },
+    {
+      "partId": "b85c736b-a1b2-4ee0-9a10-49a4540c9fac",
+      "label": "P048"
+    },
+    {
+      "partId": "6d479767-b7e5-45ca-af83-1f71cfd761be",
+      "label": "P049"
+    },
+    {
+      "partId": "970daad5-fe2f-4b29-9fcb-dc9a14dcb06b",
+      "label": "P050"
+    },
+    {
+      "partId": "7217f7fe-765c-4fe4-b08c-6be70bd5f25a",
+      "label": "P051"
+    },
+    {
+      "partId": "5f882818-b152-4b1f-86a9-5da42ed309f7",
+      "label": "P052"
+    },
+    {
+      "partId": "c0fa936e-572a-43b0-92e6-f5d36ad43ca8",
+      "label": "P053"
+    },
+    {
+      "partId": "f9c6deb2-5386-4b47-a33c-e6213cc65be0",
+      "label": "P054"
+    },
+    {
+      "partId": "525c6fc8-5bce-43b6-a52b-786fd98aca26",
+      "label": "P055"
+    },
+    {
+      "partId": "9e2c252b-83d8-4102-8e2e-b53890983c2a",
+      "label": "P056"
+    },
+    {
+      "partId": "cfb8e27e-b045-4ea0-a369-4bebc500ceef",
+      "label": "P057"
+    },
+    {
+      "partId": "b63efe27-45a8-4493-8665-54379e3bf81a",
+      "label": "P058"
+    },
+    {
+      "partId": "93e3a113-3936-463f-92b2-b440a3e840f5",
+      "label": "P059"
+    },
+    {
+      "partId": "ac32d733-1b52-4290-ae2b-3367a29704a0",
+      "label": "P060"
+    },
+    {
+      "partId": "de62ede7-7819-4ab8-b1f0-d78af3863afc",
+      "label": "P061"
+    },
+    {
+      "partId": "46e8f699-a0de-45d1-9bda-39360e62d309",
+      "label": "P062"
+    },
+    {
+      "partId": "4a912f5a-2b38-443a-bcc5-5ef2db0fbe31",
+      "label": "P063"
+    },
+    {
+      "partId": "6cf23f21-e7f2-431e-8b5e-6bc1f97e6a99",
+      "label": "P064"
+    },
+    {
+      "partId": "b0c1e9f6-9021-4199-87bf-9fdb9ba3f20f",
+      "label": "P065"
+    },
+    {
+      "partId": "1da72fd0-55a0-46ba-83ee-ada63064a1c3",
+      "label": "P066"
+    },
+    {
+      "partId": "d105e7c3-5306-4cce-9225-6587b323c875",
+      "label": "P067"
+    },
+    {
+      "partId": "194bd82a-3e0e-4298-be71-09978778949b",
+      "label": "P068"
+    },
+    {
+      "partId": "288db19c-99f8-42ff-a5d1-4bd9f8c06353",
+      "label": "P069"
+    },
+    {
+      "partId": "41520df8-467d-4d9c-b53e-42fe382de69c",
+      "label": "P070"
+    },
+    {
+      "partId": "cf2492b5-e0a5-456a-b773-12add58c133c",
+      "label": "P071"
+    },
+    {
+      "partId": "66f7e68c-3be6-4efa-97e6-30e472904804",
+      "label": "P072"
+    },
+    {
+      "partId": "0f1540a2-21f9-43c4-98d1-700328807b58",
+      "label": "P073"
+    },
+    {
+      "partId": "456a0bd5-a85f-4b82-9d81-1c818a9d2b75",
+      "label": "P074"
+    },
+    {
+      "partId": "59355b0a-698d-4a80-9e7f-bb1793a50b00",
+      "label": "P075"
+    },
+    {
+      "partId": "c592c0b1-eb44-430c-9001-2068553b231b",
+      "label": "P076"
+    },
+    {
+      "partId": "4d426161-be59-4a32-bfe9-5a88366d60cc",
+      "label": "P077"
+    },
+    {
+      "partId": "75fc2e10-d068-4554-aa91-1b466240df61",
+      "label": "P078"
+    },
+    {
+      "partId": "8af6f232-17c4-4e01-b8e7-f5930288e43c",
+      "label": "P079"
+    },
+    {
+      "partId": "3b6e2220-b42f-4c4a-98f0-1acbc062bc32",
+      "label": "P080"
+    },
+    {
+      "partId": "325f6eaf-9ecf-4e08-9d92-bd35ae5ab086",
+      "label": "P081"
+    },
+    {
+      "partId": "d850a6a2-dc20-41c9-bd17-4fbf2ad2a90b",
+      "label": "P082"
+    },
+    {
+      "partId": "d192d6c1-6d59-4929-86ad-bdebe87eff5e",
+      "label": "P083"
+    },
+    {
+      "partId": "2125a51c-aeab-4484-b772-8c18af80c3e5",
+      "label": "P084"
+    },
+    {
+      "partId": "4bda5aa8-17f8-4eb1-a7fb-747938bd34bb",
+      "label": "P085"
+    },
+    {
+      "partId": "b477c061-7bf5-42c7-9579-d27387765004",
+      "label": "P086"
+    },
+    {
+      "partId": "4dc79d4c-b6ab-4ca3-b7ec-7d314ee0183d",
+      "label": "P087"
+    },
+    {
+      "partId": "65036203-1c12-4f86-b23d-b25d1ee3390c",
+      "label": "P088"
+    },
+    {
+      "partId": "501c08f9-0776-422b-ad89-c39ed0eb2b14",
+      "label": "P089"
+    },
+    {
+      "partId": "eda8ceeb-dd05-4981-9634-a7b796795581",
+      "label": "P090"
+    },
+    {
+      "partId": "7894ae74-7459-4a59-bf10-d3aed9a997b5",
+      "label": "P091"
+    },
+    {
+      "partId": "9989b9f6-3e54-4a59-bc4b-6bc3bcfa5388",
+      "label": "P092"
+    },
+    {
+      "partId": "8de3c280-3815-4ef2-a0b7-616545ccda11",
+      "label": "P093"
+    },
+    {
+      "partId": "54167b27-737a-4f21-8295-cf100e9e00f0",
+      "label": "P094"
+    },
+    {
+      "partId": "8a18eec5-52b4-425b-b53d-7a6ad52c0892",
+      "label": "P095"
+    },
+    {
+      "partId": "76c7cc72-20c1-4dce-af36-ca73e255bf03",
+      "label": "P096"
+    },
+    {
+      "partId": "33585081-04a1-47b0-bea7-dcfdebdbbc3e",
+      "label": "P097"
+    },
+    {
+      "partId": "7169eebf-2e88-4f85-a4d7-5f72cbf01ee2",
+      "label": "P098"
+    },
+    {
+      "partId": "f9d80568-80c2-46bc-8620-e161e7d63fe6",
+      "label": "P099"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-17T04:48:37.363Z",
+  "pieces": [
+    {
+      "id": "00e7c0f4-7cb9-4c3e-aa38-0376b0712bc7",
+      "name": "Greenhouse base · perimeter rail",
+      "material": "stud",
+      "size": [
+        71.37007874015748,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        1.75,
+        -46.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dfdd8f97-da0f-440f-8a25-c5194fd0b62e",
+      "assembly": "Greenhouse base",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1ef8ad22-247c-4fca-857a-5df431003536",
+      "name": "Greenhouse base · perimeter rail",
+      "material": "stud",
+      "size": [
+        71.37007874015748,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        1.75,
+        46.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dfdd8f97-da0f-440f-8a25-c5194fd0b62e",
+      "assembly": "Greenhouse base",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d28bfd03-9c5e-43d6-97b8-fc0a437da192",
+      "name": "Greenhouse base · perimeter rail",
+      "material": "stud",
+      "size": [
+        1.5,
+        3.5,
+        92.37007874015748
+      ],
+      "position": [
+        -34.93503937007874,
+        1.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dfdd8f97-da0f-440f-8a25-c5194fd0b62e",
+      "assembly": "Greenhouse base",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b3904aa4-7372-4416-bd9e-6cce1cfd63c8",
+      "name": "Greenhouse base · perimeter rail",
+      "material": "stud",
+      "size": [
+        1.5,
+        3.5,
+        92.37007874015748
+      ],
+      "position": [
+        34.93503937007874,
+        1.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "dfdd8f97-da0f-440f-8a25-c5194fd0b62e",
+      "assembly": "Greenhouse base",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "76c85efc-c35f-4848-bb39-c57bf0d97de7",
+      "name": "Greenhouse walls · bottom plate",
+      "material": "stud",
+      "size": [
+        71.37007874015748,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        4.25,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "48b4f8a7-8b86-4d85-9b73-c72502abc68c",
+      "name": "Greenhouse walls · top plate",
+      "material": "stud",
+      "size": [
+        71.37007874015748,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        78.66498794498084,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a0a34a8b-a9e4-499b-96ff-c3e284da04e1",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -34.93503937007874,
+        41.45749397249042,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e2109d0d-f6fa-45f9-9141-cf0314b44288",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -19.68503937007874,
+        41.45749397249042,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d57435b5-edd1-4667-90c6-a4e01a166237",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -3.6850393700787407,
+        41.45749397249042,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "aed776c0-f2bb-463d-9e46-b11e9be63933",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        12.31496062992126,
+        41.45749397249042,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2f9c45f2-0cd3-4fce-8563-e5d8f00e8d1a",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        28.31496062992126,
+        41.45749397249042,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d43f6dd0-944a-4328-b754-1a5c995b6d07",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        34.93503937007874,
+        41.45749397249042,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "01d71715-70d6-4b93-aecc-381ec928077a",
+      "name": "Greenhouse walls · bottom plate",
+      "material": "stud",
+      "size": [
+        88.37007874015748,
+        1.5,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        4.25,
+        0
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e1fba5f9-9d73-4f29-ad04-2a0d5f08c1aa",
+      "name": "Greenhouse walls · top plate",
+      "material": "stud",
+      "size": [
+        88.37007874015748,
+        1.5,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        78.66498794498084,
+        0
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "12fd461b-5c1a-4cd0-94cc-1caacdd0d4a0",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        41.45749397249042,
+        43.43503937007874
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "331c41e4-7252-4a70-aab5-6480ad59b5e1",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        41.45749397249042,
+        28.18503937007874
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "5d89a802-aad6-422b-a106-b9f2f935bd3b",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        41.45749397249042,
+        12.18503937007874
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "fac83539-1e86-43b9-9fe5-cb0ece78dfa0",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        41.45749397249042,
+        -3.814960629921259
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "eedb7f06-a1f7-41b3-9c30-d72557dc2f42",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        41.45749397249042,
+        -19.81496062992126
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e07c5c6f-4f3e-4c07-9b53-cad06e168b48",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        41.45749397249042,
+        -35.81496062992126
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9828c417-635a-42e9-b98b-159536d7f8d0",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -33.93503937007874,
+        41.45749397249042,
+        -43.43503937007874
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f308fd39-a619-40b6-a4a9-44c3bc711c72",
+      "name": "Greenhouse walls · bottom plate",
+      "material": "stud",
+      "size": [
+        88.37007874015748,
+        1.5,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        4.25,
+        0
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "84915871-2c4e-4d29-ac95-bc179897286e",
+      "name": "Greenhouse walls · top plate",
+      "material": "stud",
+      "size": [
+        88.37007874015748,
+        1.5,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        78.66498794498084,
+        0
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6e47dd56-7f47-4cc4-b480-021332c9656c",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        41.45749397249042,
+        43.43503937007874
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "050d2da9-761e-460c-8fde-500417a1d495",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        41.45749397249042,
+        28.18503937007874
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f061369b-7a22-4ece-ad64-5a5255882049",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        41.45749397249042,
+        12.18503937007874
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2f38d675-3fa7-446c-a835-6ba779bc3377",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        41.45749397249042,
+        -3.814960629921259
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "68c76949-343f-4965-ab41-af7d0433bc7a",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        41.45749397249042,
+        -19.81496062992126
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a68fd35b-f07a-4790-a787-e0630d1b550d",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        41.45749397249042,
+        -35.81496062992126
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8ae4dcb8-2099-41af-8d05-735f9c6262f6",
+      "name": "Greenhouse walls · stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        33.93503937007874,
+        41.45749397249042,
+        -43.43503937007874
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "assembly": "Greenhouse walls",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "bb4d3f98-a957-492a-9eb6-158b75d50595",
+      "name": "Greenhouse door opening · top plate",
+      "material": "stud",
+      "size": [
+        71.37007874015748,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        78.66498794498084,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "32aaccbc-cc55-4bfd-9298-9891cdf0c29a",
+      "name": "Greenhouse door opening · bottom plate beside opening",
+      "material": "stud",
+      "size": [
+        19.18503937007874,
+        1.5,
+        3.5
+      ],
+      "position": [
+        -26.09251968503937,
+        4.25,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "38fe800c-bfab-4521-b271-5de193485e7b",
+      "name": "Greenhouse door opening · door jamb",
+      "material": "stud",
+      "size": [
+        1.5,
+        74.41498794498084,
+        3.5
+      ],
+      "position": [
+        -15.75,
+        40.70749397249042,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8cfcc794-3044-45d5-b313-f448be4266de",
+      "name": "Greenhouse door opening · bottom plate beside opening",
+      "material": "stud",
+      "size": [
+        19.18503937007874,
+        1.5,
+        3.5
+      ],
+      "position": [
+        26.09251968503937,
+        4.25,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c7187a5f-8d86-460a-90a7-97fdcd5e5aff",
+      "name": "Greenhouse door opening · door jamb",
+      "material": "stud",
+      "size": [
+        1.5,
+        74.41498794498084,
+        3.5
+      ],
+      "position": [
+        15.75,
+        40.70749397249042,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "63a68ec7-c69c-44d4-9352-1e4a806e5c9c",
+      "name": "Greenhouse door opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -34.93503937007874,
+        41.45749397249042,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "16b72403-169e-4c9c-8e73-f1e31a4622bf",
+      "name": "Greenhouse door opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        -19.68503937007874,
+        41.45749397249042,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e23b4f54-93fe-463f-8c63-b7840b6c8bf7",
+      "name": "Greenhouse door opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        28.31496062992126,
+        41.45749397249042,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "96e57ba7-3aff-45fe-bb3e-4eb0e52ee8b7",
+      "name": "Greenhouse door opening · stud beside opening",
+      "material": "stud",
+      "size": [
+        1.5,
+        72.91498794498084,
+        3.5
+      ],
+      "position": [
+        34.93503937007874,
+        41.45749397249042,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8becdb63-ece2-4e5e-a61b-3e6982003c6d",
+      "name": "Greenhouse door opening · door header",
+      "material": "stud",
+      "size": [
+        30,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        73.25,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ed90c0a5-581d-4ef5-ba99-6ab92b6e066b",
+      "name": "Greenhouse door opening · stud above header",
+      "material": "stud",
+      "size": [
+        1.5,
+        2.9149879449808367,
+        3.5
+      ],
+      "position": [
+        -14.25,
+        76.45749397249043,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "5dcad471-7c9b-43d7-85de-eb77d5b43d39",
+      "name": "Greenhouse door opening · stud above header",
+      "material": "stud",
+      "size": [
+        1.5,
+        2.9149879449808367,
+        3.5
+      ],
+      "position": [
+        1,
+        76.45749397249043,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "424c0dbc-8aa0-444e-952a-0e366e1051f0",
+      "name": "Greenhouse door opening · stud above header",
+      "material": "stud",
+      "size": [
+        1.5,
+        2.9149879449808367,
+        3.5
+      ],
+      "position": [
+        14.25,
+        76.45749397249043,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door opening",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "38c056f9-e9db-463e-b5e7-443e33f66378",
+      "name": "Greenhouse door frame · stile",
+      "material": "stud",
+      "size": [
+        3.5,
+        67.75,
+        1.5
+      ],
+      "position": [
+        -13.125,
+        37.5,
+        46.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "13457aac-d262-49b2-bd48-3e3a8b5e11c3",
+      "name": "Greenhouse door frame · stile",
+      "material": "stud",
+      "size": [
+        3.5,
+        67.75,
+        1.5
+      ],
+      "position": [
+        13.125,
+        37.5,
+        46.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2bea01a2-5938-4d88-8e7c-273149b905b8",
+      "name": "Greenhouse door frame · rail",
+      "material": "stud",
+      "size": [
+        22.75,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        5.375,
+        46.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b6b9da17-2299-46af-99e1-dca78650288d",
+      "name": "Greenhouse door frame · rail",
+      "material": "stud",
+      "size": [
+        22.75,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        69.625,
+        46.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "assembly": "Greenhouse door frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b85c736b-a1b2-4ee0-9a10-49a4540c9fac",
+      "name": "Greenhouse roof · ridge",
+      "material": "two-six",
+      "size": [
+        1.5,
+        5.5,
+        95.37007874015748
+      ],
+      "position": [
+        0,
+        104.37146443302215,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6d479767-b7e5-45ca-af83-1f71cfd761be",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        -18.375,
+        93.2682261890015,
+        -46.93503937007874
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "970daad5-fe2f-4b29-9fcb-dc9a14dcb06b",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        18.375,
+        93.2682261890015,
+        -46.93503937007874
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "7217f7fe-765c-4fe4-b08c-6be70bd5f25a",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        -18.375,
+        93.2682261890015,
+        -23.68503937007874
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "5f882818-b152-4b1f-86a9-5da42ed309f7",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        18.375,
+        93.2682261890015,
+        -23.68503937007874
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c0fa936e-572a-43b0-92e6-f5d36ad43ca8",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        -18.375,
+        93.2682261890015,
+        0.3149606299212593
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f9c6deb2-5386-4b47-a33c-e6213cc65be0",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        18.375,
+        93.2682261890015,
+        0.3149606299212593
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "525c6fc8-5bce-43b6-a52b-786fd98aca26",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        -18.375,
+        93.2682261890015,
+        24.31496062992126
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9e2c252b-83d8-4102-8e2e-b53890983c2a",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        18.375,
+        93.2682261890015,
+        24.31496062992126
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "cfb8e27e-b045-4ea0-a369-4bebc500ceef",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        -18.375,
+        93.2682261890015,
+        46.93503937007874
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b63efe27-45a8-4493-8665-54379e3bf81a",
+      "name": "Greenhouse roof · plumb-cut rafter",
+      "material": "stud",
+      "size": [
+        1.5,
+        44.698560820035205,
+        3.5
+      ],
+      "position": [
+        18.375,
+        93.2682261890015,
+        46.93503937007874
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse roof",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 17.625
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 17.625
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "93e3a113-3936-463f-92b2-b440a3e840f5",
+      "name": "Greenhouse gable framing · ridge support stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        22.206476488041318,
+        3.5
+      ],
+      "position": [
+        0,
+        90.5182261890015,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ac32d733-1b52-4290-ae2b-3367a29704a0",
+      "name": "Greenhouse gable framing · sloped-top gable stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        11.376640419947506,
+        3.5
+      ],
+      "position": [
+        -19.68503937007874,
+        85.10330815495459,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 4.316943357827644
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "de62ede7-7819-4ab8-b1f0-d78af3863afc",
+      "name": "Greenhouse gable framing · sloped-top gable stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        22.043307086614174,
+        3.5
+      ],
+      "position": [
+        -3.6850393700787407,
+        90.43664148828792,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 8.754544927629478
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "46e8f699-a0de-45d1-9bda-39360e62d309",
+      "name": "Greenhouse gable framing · sloped-top gable stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        16.29002624671916,
+        3.5
+      ],
+      "position": [
+        12.31496062992126,
+        87.56000106834041,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 6.361035419508017
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4a912f5a-2b38-443a-bcc5-5ef2db0fbe31",
+      "name": "Greenhouse gable framing · sloped-top gable stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        5.623359580052494,
+        3.5
+      ],
+      "position": [
+        28.31496062992126,
+        82.22666773500708,
+        -45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 1.9234338497061834
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6cf23f21-e7f2-431e-8b5e-6bc1f97e6a99",
+      "name": "Greenhouse gable framing · ridge support stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        22.206476488041318,
+        3.5
+      ],
+      "position": [
+        0,
+        90.5182261890015,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b0c1e9f6-9021-4199-87bf-9fdb9ba3f20f",
+      "name": "Greenhouse gable framing · sloped-top gable stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        11.376640419947506,
+        3.5
+      ],
+      "position": [
+        -19.68503937007874,
+        85.10330815495459,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 4.316943357827644
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1da72fd0-55a0-46ba-83ee-ada63064a1c3",
+      "name": "Greenhouse gable framing · sloped-top gable stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        22.043307086614174,
+        3.5
+      ],
+      "position": [
+        -3.6850393700787407,
+        90.43664148828792,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 8.754544927629478
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d105e7c3-5306-4cce-9225-6587b323c875",
+      "name": "Greenhouse gable framing · sloped-top gable stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        16.29002624671916,
+        3.5
+      ],
+      "position": [
+        12.31496062992126,
+        87.56000106834041,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 6.361035419508017
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "194bd82a-3e0e-4298-be71-09978778949b",
+      "name": "Greenhouse gable framing · sloped-top gable stud",
+      "material": "stud",
+      "size": [
+        1.5,
+        5.623359580052494,
+        3.5
+      ],
+      "position": [
+        28.31496062992126,
+        82.22666773500708,
+        45.93503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "assembly": "Greenhouse gable framing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 1.9234338497061834
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "288db19c-99f8-42ff-a5d1-4bd9f8c06353",
+      "name": "Greenhouse wall glazing · back panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        75.91498794498084,
+        0.31496062992125984
+      ],
+      "position": [
+        -24,
+        41.45749397249042,
+        -47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "41520df8-467d-4d9c-b53e-42fe382de69c",
+      "name": "Greenhouse wall glazing · back panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        75.91498794498084,
+        0.31496062992125984
+      ],
+      "position": [
+        0,
+        41.45749397249042,
+        -47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "cf2492b5-e0a5-456a-b773-12add58c133c",
+      "name": "Greenhouse wall glazing · back panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        75.91498794498084,
+        0.31496062992125984
+      ],
+      "position": [
+        24,
+        41.45749397249042,
+        -47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "66f7e68c-3be6-4efa-97e6-30e472904804",
+      "name": "Greenhouse wall glazing · front panel beside opening · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        21,
+        75.91498794498084,
+        0.31496062992125984
+      ],
+      "position": [
+        -25.5,
+        41.45749397249042,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "0f1540a2-21f9-43c4-98d1-700328807b58",
+      "name": "Greenhouse wall glazing · front panel beside opening · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        21,
+        75.91498794498084,
+        0.31496062992125984
+      ],
+      "position": [
+        25.5,
+        41.45749397249042,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "456a0bd5-a85f-4b82-9d81-1c818a9d2b75",
+      "name": "Greenhouse wall glazing · front panel above opening · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        7.914987944980837,
+        0.31496062992125984
+      ],
+      "position": [
+        -3,
+        75.45749397249043,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "59355b0a-698d-4a80-9e7f-bb1793a50b00",
+      "name": "Greenhouse wall glazing · front panel above opening · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        6,
+        7.914987944980837,
+        0.31496062992125984
+      ],
+      "position": [
+        12,
+        75.45749397249043,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "c592c0b1-eb44-430c-9001-2068553b231b",
+      "name": "Greenhouse wall glazing · side panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        0.31496062992125984,
+        76.12496169826167,
+        24
+      ],
+      "position": [
+        -35.84251968503937,
+        41.562480849130836,
+        -35.68503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 31.582544032137584
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "4d426161-be59-4a32-bfe9-5a88366d60cc",
+      "name": "Greenhouse wall glazing · side panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        0.31496062992125984,
+        76.12496169826167,
+        24
+      ],
+      "position": [
+        -35.84251968503937,
+        41.562480849130836,
+        -11.68503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 31.582544032137584
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "75fc2e10-d068-4554-aa91-1b466240df61",
+      "name": "Greenhouse wall glazing · side panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        0.31496062992125984,
+        76.12496169826167,
+        24
+      ],
+      "position": [
+        -35.84251968503937,
+        41.562480849130836,
+        12.31496062992126
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 31.582544032137584
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "8af6f232-17c4-4e01-b8e7-f5930288e43c",
+      "name": "Greenhouse wall glazing · side panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        0.31496062992125984,
+        76.12496169826167,
+        23.37007874015748
+      ],
+      "position": [
+        -35.84251968503937,
+        41.562480849130836,
+        36
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 31.582544032137584
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "3b6e2220-b42f-4c4a-98f0-1acbc062bc32",
+      "name": "Greenhouse wall glazing · side panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        0.31496062992125984,
+        76.12496169826167,
+        24
+      ],
+      "position": [
+        35.84251968503937,
+        41.562480849130836,
+        -35.68503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 31.582544032137584
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "325f6eaf-9ecf-4e08-9d92-bd35ae5ab086",
+      "name": "Greenhouse wall glazing · side panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        0.31496062992125984,
+        76.12496169826167,
+        24
+      ],
+      "position": [
+        35.84251968503937,
+        41.562480849130836,
+        -11.68503937007874
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 31.582544032137584
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "d850a6a2-dc20-41c9-bd17-4fbf2ad2a90b",
+      "name": "Greenhouse wall glazing · side panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        0.31496062992125984,
+        76.12496169826167,
+        24
+      ],
+      "position": [
+        35.84251968503937,
+        41.562480849130836,
+        12.31496062992126
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 31.582544032137584
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "d192d6c1-6d59-4929-86ad-bdebe87eff5e",
+      "name": "Greenhouse wall glazing · side panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        0.31496062992125984,
+        76.12496169826167,
+        23.37007874015748
+      ],
+      "position": [
+        35.84251968503937,
+        41.562480849130836,
+        36
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse wall glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 31.582544032137584
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "2125a51c-aeab-4484-b772-8c18af80c3e5",
+      "name": "Greenhouse gable glazing · clipped gable panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        28.20647648804132,
+        0.31496062992125984
+      ],
+      "position": [
+        -24,
+        93.5182261890015,
+        -47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse gable glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": -1.5782011773513744
+        },
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 25.04740824145962
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "4bda5aa8-17f8-4eb1-a7fb-747938bd34bb",
+      "name": "Greenhouse gable glazing · clipped gable panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        28.20647648804132,
+        0.31496062992125984
+      ],
+      "position": [
+        0,
+        93.5182261890015,
+        -47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse gable glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 11.734603532054123
+        },
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 11.734603532054123
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "b477c061-7bf5-42c7-9579-d27387765004",
+      "name": "Greenhouse gable glazing · clipped gable panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        28.20647648804132,
+        0.31496062992125984
+      ],
+      "position": [
+        24,
+        93.5182261890015,
+        -47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse gable glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 25.04740824145962
+        },
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": -1.5782011773513744
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "4dc79d4c-b6ab-4ca3-b7ec-7d314ee0183d",
+      "name": "Greenhouse gable glazing · clipped gable panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        28.20647648804132,
+        0.31496062992125984
+      ],
+      "position": [
+        -24,
+        93.5182261890015,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse gable glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": -1.5782011773513744
+        },
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 25.04740824145962
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "65036203-1c12-4f86-b23d-b25d1ee3390c",
+      "name": "Greenhouse gable glazing · clipped gable panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        28.20647648804132,
+        0.31496062992125984
+      ],
+      "position": [
+        0,
+        93.5182261890015,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse gable glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 11.734603532054123
+        },
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 11.734603532054123
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "501c08f9-0776-422b-ad89-c39ed0eb2b14",
+      "name": "Greenhouse gable glazing · clipped gable panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        28.20647648804132,
+        0.31496062992125984
+      ],
+      "position": [
+        24,
+        93.5182261890015,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse gable glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            -0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": 25.04740824145962
+        },
+        {
+          "normal": [
+            0.554700196225229,
+            0.8320502943378437,
+            0
+          ],
+          "constant": -1.5782011773513744
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "eda8ceeb-dd05-4981-9634-a7b796795581",
+      "name": "Greenhouse roof glazing · plumb-cut roof panel · downslope flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        43.47658905884871,
+        0.31496062992125984
+      ],
+      "position": [
+        -18,
+        95.81073221651107,
+        -36
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse roof glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 18
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 18
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "7894ae74-7459-4a59-bf10-d3aed9a997b5",
+      "name": "Greenhouse roof glazing · plumb-cut roof panel · downslope flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        43.47658905884871,
+        0.31496062992125984
+      ],
+      "position": [
+        18,
+        95.81073221651107,
+        -36
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse roof glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 18
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 18
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "9989b9f6-3e54-4a59-bc4b-6bc3bcfa5388",
+      "name": "Greenhouse roof glazing · plumb-cut roof panel · downslope flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        43.47658905884871,
+        0.31496062992125984
+      ],
+      "position": [
+        -18,
+        95.81073221651107,
+        -12
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse roof glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 18
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 18
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "8de3c280-3815-4ef2-a0b7-616545ccda11",
+      "name": "Greenhouse roof glazing · plumb-cut roof panel · downslope flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        43.47658905884871,
+        0.31496062992125984
+      ],
+      "position": [
+        18,
+        95.81073221651107,
+        -12
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse roof glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 18
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 18
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "54167b27-737a-4f21-8295-cf100e9e00f0",
+      "name": "Greenhouse roof glazing · plumb-cut roof panel · downslope flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        43.47658905884871,
+        0.31496062992125984
+      ],
+      "position": [
+        -18,
+        95.81073221651107,
+        12
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse roof glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 18
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 18
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "8a18eec5-52b4-425b-b53d-7a6ad52c0892",
+      "name": "Greenhouse roof glazing · plumb-cut roof panel · downslope flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        43.47658905884871,
+        0.31496062992125984
+      ],
+      "position": [
+        18,
+        95.81073221651107,
+        12
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse roof glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 18
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 18
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "76c7cc72-20c1-4dce-af36-ca73e255bf03",
+      "name": "Greenhouse roof glazing · plumb-cut roof panel · downslope flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        43.47658905884871,
+        0.31496062992125984
+      ],
+      "position": [
+        -18,
+        95.81073221651107,
+        36
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        -0.5880026035475674,
+        -1.5707963267948966
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse roof glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 18
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 18
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "33585081-04a1-47b0-bea7-dcfdebdbbc3e",
+      "name": "Greenhouse roof glazing · plumb-cut roof panel · downslope flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        43.47658905884871,
+        0.31496062992125984
+      ],
+      "position": [
+        18,
+        95.81073221651107,
+        36
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0.5880026035475674,
+        1.5707963267948966
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse roof glazing",
+      "offcut": false,
+      "cutPlanes": [
+        {
+          "normal": [
+            0,
+            -0.8320502943378437,
+            0.554700196225229
+          ],
+          "constant": 18
+        },
+        {
+          "normal": [
+            0,
+            0.8320502943378437,
+            -0.554700196225229
+          ],
+          "constant": 18
+        }
+      ],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "7169eebf-2e88-4f85-a4d7-5f72cbf01ee2",
+      "name": "Greenhouse door glazing · door panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        24,
+        67.75,
+        0.31496062992125984
+      ],
+      "position": [
+        -2.875,
+        37.5,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse door glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "f9d80568-80c2-46bc-8620-e161e7d63fe6",
+      "name": "Greenhouse door glazing · door panel · vertical flutes",
+      "material": "sunlite-8mm",
+      "size": [
+        5.75,
+        67.75,
+        0.31496062992125984
+      ],
+      "position": [
+        12,
+        37.5,
+        47.84251968503937
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "assembly": "Greenhouse door glazing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "cfbd507d-7244-41db-a29a-6395ab47cdb1",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "378d16e7-55bd-4056-89f6-0cd53ea0d0ac",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-c98462b3",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "dfdd8f97-da0f-440f-8a25-c5194fd0b62e",
+      "title": "Greenhouse: Lay out the greenhouse base",
+      "notes": "Dry-fit the listed base members. Check the measured footprint, level and square, then review the four rail-end joints under Connections. Resolve the foundation, anchoring and tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4187554f-fbdf-46c0-a527-56e30651382d",
+        "stageKey": "base",
+        "memberIds": [
+          "00e7c0f4-7cb9-4c3e-aa38-0376b0712bc7",
+          "1ef8ad22-247c-4fca-857a-5df431003536",
+          "b3904aa4-7372-4416-bd9e-6cce1cfd63c8",
+          "d28bfd03-9c5e-43d6-97b8-fc0a437da192"
+        ],
+        "notes": "Dry-fit the listed base members. Check the measured footprint, level and square, then review the four rail-end joints under Connections. Resolve the foundation, anchoring and tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-92f94afa",
+        "title": "Greenhouse: Lay out the greenhouse base"
+      }
+    },
+    {
+      "id": "c27524c1-cb7f-428a-9e06-91770aaa6c8a",
+      "title": "Greenhouse: Dry-fit and support the wall frames",
+      "notes": "Dry-fit the listed wall members on the actual base. Check square, alignment and the intended opening. Plan temporary support and bracing before standing frames; their connections and anchoring still require an explicit detail.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4187554f-fbdf-46c0-a527-56e30651382d",
+        "stageKey": "walls",
+        "memberIds": [
+          "01d71715-70d6-4b93-aecc-381ec928077a",
+          "050d2da9-761e-460c-8fde-500417a1d495",
+          "12fd461b-5c1a-4cd0-94cc-1caacdd0d4a0",
+          "2f38d675-3fa7-446c-a835-6ba779bc3377",
+          "2f9c45f2-0cd3-4fce-8563-e5d8f00e8d1a",
+          "331c41e4-7252-4a70-aab5-6480ad59b5e1",
+          "48b4f8a7-8b86-4d85-9b73-c72502abc68c",
+          "5d89a802-aad6-422b-a106-b9f2f935bd3b",
+          "68c76949-343f-4965-ab41-af7d0433bc7a",
+          "6e47dd56-7f47-4cc4-b480-021332c9656c",
+          "76c85efc-c35f-4848-bb39-c57bf0d97de7",
+          "84915871-2c4e-4d29-ac95-bc179897286e",
+          "8ae4dcb8-2099-41af-8d05-735f9c6262f6",
+          "9828c417-635a-42e9-b98b-159536d7f8d0",
+          "a0a34a8b-a9e4-499b-96ff-c3e284da04e1",
+          "a68fd35b-f07a-4790-a787-e0630d1b550d",
+          "aed776c0-f2bb-463d-9e46-b11e9be63933",
+          "d43f6dd0-944a-4328-b754-1a5c995b6d07",
+          "d57435b5-edd1-4667-90c6-a4e01a166237",
+          "e07c5c6f-4f3e-4c07-9b53-cad06e168b48",
+          "e1fba5f9-9d73-4f29-ad04-2a0d5f08c1aa",
+          "e2109d0d-f6fa-45f9-9141-cf0314b44288",
+          "eedb7f06-a1f7-41b3-9c30-d72557dc2f42",
+          "f061369b-7a22-4ece-ad64-5a5255882049",
+          "f308fd39-a619-40b6-a4a9-44c3bc711c72",
+          "fac83539-1e86-43b9-9fe5-cb0ece78dfa0"
+        ],
+        "notes": "Dry-fit the listed wall members on the actual base. Check square, alignment and the intended opening. Plan temporary support and bracing before standing frames; their connections and anchoring still require an explicit detail.",
+        "fingerprint": "phase-v1-11facc28",
+        "title": "Greenhouse: Dry-fit and support the wall frames"
+      }
+    },
+    {
+      "id": "23c38afe-65be-43a2-af8d-2dd17c1bfdbe",
+      "title": "Greenhouse: Fit the door opening and dry-fit the leaf",
+      "notes": "Dry-fit the opening and leaf members. Check bearing below both ends of the header and how it carries down to the base. Verify the clear opening, leaf swing and tool access. Review hinges, latches, weathering and attachment details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4187554f-fbdf-46c0-a527-56e30651382d",
+        "stageKey": "opening",
+        "memberIds": [
+          "13457aac-d262-49b2-bd48-3e3a8b5e11c3",
+          "16b72403-169e-4c9c-8e73-f1e31a4622bf",
+          "2bea01a2-5938-4d88-8e7c-273149b905b8",
+          "32aaccbc-cc55-4bfd-9298-9891cdf0c29a",
+          "38c056f9-e9db-463e-b5e7-443e33f66378",
+          "38fe800c-bfab-4521-b271-5de193485e7b",
+          "424c0dbc-8aa0-444e-952a-0e366e1051f0",
+          "5dcad471-7c9b-43d7-85de-eb77d5b43d39",
+          "63a68ec7-c69c-44d4-9352-1e4a806e5c9c",
+          "8becdb63-ece2-4e5e-a61b-3e6982003c6d",
+          "8cfcc794-3044-45d5-b313-f448be4266de",
+          "96e57ba7-3aff-45fe-bb3e-4eb0e52ee8b7",
+          "b6b9da17-2299-46af-99e1-dca78650288d",
+          "bb4d3f98-a957-492a-9eb6-158b75d50595",
+          "c7187a5f-8d86-460a-90a7-97fdcd5e5aff",
+          "e23b4f54-93fe-463f-8c63-b7840b6c8bf7",
+          "ed90c0a5-581d-4ef5-ba99-6ab92b6e066b"
+        ],
+        "notes": "Dry-fit the opening and leaf members. Check bearing below both ends of the header and how it carries down to the base. Verify the clear opening, leaf swing and tool access. Review hinges, latches, weathering and attachment details.",
+        "fingerprint": "phase-v1-ecbdc9d8",
+        "title": "Greenhouse: Fit the door opening and dry-fit the leaf"
+      }
+    },
+    {
+      "id": "af3f68bb-3e1e-4a03-8421-bb2194387bed",
+      "title": "Greenhouse: Dry-fit the pitched roof and gables",
+      "notes": "Use the listed cut profiles and labeled members to dry-fit the rafters, ridge and gables. Use Checks to locate the contacts and review the separate attachment at each side of a fitted eave block. Resolve the actual bearing, bracing, roof fastening and tool access before building.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4187554f-fbdf-46c0-a527-56e30651382d",
+        "stageKey": "roof",
+        "memberIds": [
+          "194bd82a-3e0e-4298-be71-09978778949b",
+          "1da72fd0-55a0-46ba-83ee-ada63064a1c3",
+          "46e8f699-a0de-45d1-9bda-39360e62d309",
+          "4a912f5a-2b38-443a-bcc5-5ef2db0fbe31",
+          "525c6fc8-5bce-43b6-a52b-786fd98aca26",
+          "5f882818-b152-4b1f-86a9-5da42ed309f7",
+          "6cf23f21-e7f2-431e-8b5e-6bc1f97e6a99",
+          "6d479767-b7e5-45ca-af83-1f71cfd761be",
+          "7217f7fe-765c-4fe4-b08c-6be70bd5f25a",
+          "93e3a113-3936-463f-92b2-b440a3e840f5",
+          "970daad5-fe2f-4b29-9fcb-dc9a14dcb06b",
+          "9e2c252b-83d8-4102-8e2e-b53890983c2a",
+          "ac32d733-1b52-4290-ae2b-3367a29704a0",
+          "b0c1e9f6-9021-4199-87bf-9fdb9ba3f20f",
+          "b63efe27-45a8-4493-8665-54379e3bf81a",
+          "b85c736b-a1b2-4ee0-9a10-49a4540c9fac",
+          "c0fa936e-572a-43b0-92e6-f5d36ad43ca8",
+          "cfb8e27e-b045-4ea0-a369-4bebc500ceef",
+          "d105e7c3-5306-4cce-9225-6587b323c875",
+          "de62ede7-7819-4ab8-b1f0-d78af3863afc",
+          "f9c6deb2-5386-4b47-a33c-e6213cc65be0"
+        ],
+        "notes": "Use the listed cut profiles and labeled members to dry-fit the rafters, ridge and gables. Use Checks to locate the contacts and review the separate attachment at each side of a fitted eave block. Resolve the actual bearing, bracing, roof fastening and tool access before building.",
+        "fingerprint": "phase-v1-b17ecdd2",
+        "title": "Greenhouse: Dry-fit the pitched roof and gables"
+      }
+    },
+    {
+      "id": "69ca1c20-da3a-4d11-8abf-580388dafe1b",
+      "title": "Greenhouse: Dry-fit the actual glazing panels",
+      "notes": "Match the listed panels and actual cut profiles to their wall, gable, roof and door locations. Keep the specified flute orientation. Use Checks to locate gaps beneath shared SUNLITE roof seams. Review closures, seals, fixing locations, thermal allowances and access before installation.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4187554f-fbdf-46c0-a527-56e30651382d",
+        "stageKey": "glazing",
+        "memberIds": [
+          "0f1540a2-21f9-43c4-98d1-700328807b58",
+          "2125a51c-aeab-4484-b772-8c18af80c3e5",
+          "288db19c-99f8-42ff-a5d1-4bd9f8c06353",
+          "325f6eaf-9ecf-4e08-9d92-bd35ae5ab086",
+          "33585081-04a1-47b0-bea7-dcfdebdbbc3e",
+          "3b6e2220-b42f-4c4a-98f0-1acbc062bc32",
+          "41520df8-467d-4d9c-b53e-42fe382de69c",
+          "456a0bd5-a85f-4b82-9d81-1c818a9d2b75",
+          "4bda5aa8-17f8-4eb1-a7fb-747938bd34bb",
+          "4d426161-be59-4a32-bfe9-5a88366d60cc",
+          "4dc79d4c-b6ab-4ca3-b7ec-7d314ee0183d",
+          "501c08f9-0776-422b-ad89-c39ed0eb2b14",
+          "54167b27-737a-4f21-8295-cf100e9e00f0",
+          "59355b0a-698d-4a80-9e7f-bb1793a50b00",
+          "65036203-1c12-4f86-b23d-b25d1ee3390c",
+          "66f7e68c-3be6-4efa-97e6-30e472904804",
+          "7169eebf-2e88-4f85-a4d7-5f72cbf01ee2",
+          "75fc2e10-d068-4554-aa91-1b466240df61",
+          "76c7cc72-20c1-4dce-af36-ca73e255bf03",
+          "7894ae74-7459-4a59-bf10-d3aed9a997b5",
+          "8a18eec5-52b4-425b-b53d-7a6ad52c0892",
+          "8af6f232-17c4-4e01-b8e7-f5930288e43c",
+          "8de3c280-3815-4ef2-a0b7-616545ccda11",
+          "9989b9f6-3e54-4a59-bc4b-6bc3bcfa5388",
+          "b477c061-7bf5-42c7-9579-d27387765004",
+          "c592c0b1-eb44-430c-9001-2068553b231b",
+          "cf2492b5-e0a5-456a-b773-12add58c133c",
+          "d192d6c1-6d59-4929-86ad-bdebe87eff5e",
+          "d850a6a2-dc20-41c9-bd17-4fbf2ad2a90b",
+          "eda8ceeb-dd05-4981-9634-a7b796795581",
+          "f9d80568-80c2-46bc-8620-e161e7d63fe6"
+        ],
+        "notes": "Match the listed panels and actual cut profiles to their wall, gable, roof and door locations. Keep the specified flute orientation. Use Checks to locate gaps beneath shared SUNLITE roof seams. Review closures, seals, fixing locations, thermal allowances and access before installation.",
+        "fingerprint": "phase-v1-a2eed73",
+        "title": "Greenhouse: Dry-fit the actual glazing panels"
+      }
+    },
+    {
+      "id": "bf6a858d-ba93-4b7b-92d5-ff1cac89c8a6",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "378d16e7-55bd-4056-89f6-0cd53ea0d0ac",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-19ebc9c0",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [
+    {
+      "a": [
+        -36,
+        0,
+        -48
+      ],
+      "b": [
+        36,
+        0,
+        -48
+      ]
+    },
+    {
+      "a": [
+        36,
+        0,
+        -48
+      ],
+      "b": [
+        36,
+        0,
+        48
+      ]
+    },
+    {
+      "a": [
+        36,
+        0,
+        48
+      ],
+      "b": [
+        -36,
+        0,
+        48
+      ]
+    },
+    {
+      "a": [
+        -36,
+        0,
+        48
+      ],
+      "b": [
+        -36,
+        0,
+        -48
+      ]
+    }
+  ],
+  "notes": "ACCEPTANCE BASELINE STUDY — Actual framing, door and source-sized wall/gable/roof glazing envelopes with angled cuts; glazing accessories/allowances, ventilation, load-bearing connections and anchoring remain incomplete.\n\nGreenhouse — PARTIAL DIMENSIONAL STUDY\nMissing material: material.frameLumber: Using generic 2 × 4 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nMissing material: material.ridgeLumber: Using generic 2 × 6 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nUnresolved: greenhouse-loads: Site wind/snow loads, framing grade/species, spans, bracing and foundation/anchors are not qualified.\nUnresolved: roof-bearing: Rafters have real plumb-cut geometry, but birdsmouths, rafter hangers/bearings, tie-downs and their installation schedules are not generated or approved.\nUnresolved: greenhouse-glazing-system: Source-matched SUNLITE multiwall sheet envelopes and real gable/roof cuts are represented, with flutes along vertical or roof-slope lengths. Thermal gaps, edge/profile engagement, horizontal eave/gable seams, UV-side marking, tapes, drainage, expansion drilling and actual fastening/support schedules are unresolved; shown cut blanks have no system allowance deductions.\nUnresolved: greenhouse-ventilation: An opening roof vent, its framed opening, hardware, vent sizing/control and condensation plan remain unrepresented.\nUnresolved: door-hardware: The closed/open door frame is a dimensional pivot preview. Actual hinges, latch, stops, glazing and mounting hardware are unspecified and unpriced.\nUnresolved: material.greenhouseGlazing.installation: 132506 8 mm SUNLITE multiwall greenhouse glazing only; source-listed material application, not approval of a generated roof or enclosure. Use the SUNLITE 8 mm multiwall accessory family; do not substitute corrugated sheets, metal roofing or PVC glazing by matching overall dimensions. Resolve support spacing, site loads, roof slope, thermal movement and fastening from the selected panel installation instructions. Orient the UV-protected face and flutes correctly; provide appropriate top/bottom tapes, U/H profiles, drainage and ridge/edge details.\nUnresolved: greenhouse-envelope-profile: Sheets are represented as physical 8 mm outer envelopes, not internal cell ribs. No end-to-end flute splice, panel load capacity or weather-tight installation is approved. Oversized downslope blanks require different stock/geometry, not an invented H-profile end joint.",
+  "sections": [
+    {
+      "id": "a5db04ad-e43e-45ea-9d1d-302f8a89d68b",
+      "name": "Greenhouse base",
+      "pieceIds": [
+        "00e7c0f4-7cb9-4c3e-aa38-0376b0712bc7",
+        "1ef8ad22-247c-4fca-857a-5df431003536",
+        "d28bfd03-9c5e-43d6-97b8-fc0a437da192",
+        "b3904aa4-7372-4416-bd9e-6cce1cfd63c8"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "7e93003c-5850-41ba-9746-3980cb10e790",
+      "name": "Greenhouse walls",
+      "pieceIds": [
+        "76c85efc-c35f-4848-bb39-c57bf0d97de7",
+        "48b4f8a7-8b86-4d85-9b73-c72502abc68c",
+        "a0a34a8b-a9e4-499b-96ff-c3e284da04e1",
+        "e2109d0d-f6fa-45f9-9141-cf0314b44288",
+        "d57435b5-edd1-4667-90c6-a4e01a166237",
+        "aed776c0-f2bb-463d-9e46-b11e9be63933",
+        "2f9c45f2-0cd3-4fce-8563-e5d8f00e8d1a",
+        "d43f6dd0-944a-4328-b754-1a5c995b6d07",
+        "01d71715-70d6-4b93-aecc-381ec928077a",
+        "e1fba5f9-9d73-4f29-ad04-2a0d5f08c1aa",
+        "12fd461b-5c1a-4cd0-94cc-1caacdd0d4a0",
+        "331c41e4-7252-4a70-aab5-6480ad59b5e1",
+        "5d89a802-aad6-422b-a106-b9f2f935bd3b",
+        "fac83539-1e86-43b9-9fe5-cb0ece78dfa0",
+        "eedb7f06-a1f7-41b3-9c30-d72557dc2f42",
+        "e07c5c6f-4f3e-4c07-9b53-cad06e168b48",
+        "9828c417-635a-42e9-b98b-159536d7f8d0",
+        "f308fd39-a619-40b6-a4a9-44c3bc711c72",
+        "84915871-2c4e-4d29-ac95-bc179897286e",
+        "6e47dd56-7f47-4cc4-b480-021332c9656c",
+        "050d2da9-761e-460c-8fde-500417a1d495",
+        "f061369b-7a22-4ece-ad64-5a5255882049",
+        "2f38d675-3fa7-446c-a835-6ba779bc3377",
+        "68c76949-343f-4965-ab41-af7d0433bc7a",
+        "a68fd35b-f07a-4790-a787-e0630d1b550d",
+        "8ae4dcb8-2099-41af-8d05-735f9c6262f6"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "e0e0f7f3-1c14-4503-8a1f-afd4b6475c2c",
+      "name": "Greenhouse door opening",
+      "pieceIds": [
+        "bb4d3f98-a957-492a-9eb6-158b75d50595",
+        "32aaccbc-cc55-4bfd-9298-9891cdf0c29a",
+        "38fe800c-bfab-4521-b271-5de193485e7b",
+        "8cfcc794-3044-45d5-b313-f448be4266de",
+        "c7187a5f-8d86-460a-90a7-97fdcd5e5aff",
+        "63a68ec7-c69c-44d4-9352-1e4a806e5c9c",
+        "16b72403-169e-4c9c-8e73-f1e31a4622bf",
+        "e23b4f54-93fe-463f-8c63-b7840b6c8bf7",
+        "96e57ba7-3aff-45fe-bb3e-4eb0e52ee8b7",
+        "8becdb63-ece2-4e5e-a61b-3e6982003c6d",
+        "ed90c0a5-581d-4ef5-ba99-6ab92b6e066b",
+        "5dcad471-7c9b-43d7-85de-eb77d5b43d39",
+        "424c0dbc-8aa0-444e-952a-0e366e1051f0"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "d6173d64-3f6d-479e-8085-eda051490856",
+      "name": "Greenhouse door frame",
+      "pieceIds": [
+        "38c056f9-e9db-463e-b5e7-443e33f66378",
+        "13457aac-d262-49b2-bd48-3e3a8b5e11c3",
+        "2bea01a2-5938-4d88-8e7c-273149b905b8",
+        "b6b9da17-2299-46af-99e1-dca78650288d"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "844afe08-8432-4f66-a95e-4afc7942d85d",
+      "name": "Greenhouse roof",
+      "pieceIds": [
+        "b85c736b-a1b2-4ee0-9a10-49a4540c9fac",
+        "6d479767-b7e5-45ca-af83-1f71cfd761be",
+        "970daad5-fe2f-4b29-9fcb-dc9a14dcb06b",
+        "7217f7fe-765c-4fe4-b08c-6be70bd5f25a",
+        "5f882818-b152-4b1f-86a9-5da42ed309f7",
+        "c0fa936e-572a-43b0-92e6-f5d36ad43ca8",
+        "f9c6deb2-5386-4b47-a33c-e6213cc65be0",
+        "525c6fc8-5bce-43b6-a52b-786fd98aca26",
+        "9e2c252b-83d8-4102-8e2e-b53890983c2a",
+        "cfb8e27e-b045-4ea0-a369-4bebc500ceef",
+        "b63efe27-45a8-4493-8665-54379e3bf81a"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "88042607-0991-4e0a-a044-c6c693069c72",
+      "name": "Greenhouse gable framing",
+      "pieceIds": [
+        "93e3a113-3936-463f-92b2-b440a3e840f5",
+        "ac32d733-1b52-4290-ae2b-3367a29704a0",
+        "de62ede7-7819-4ab8-b1f0-d78af3863afc",
+        "46e8f699-a0de-45d1-9bda-39360e62d309",
+        "4a912f5a-2b38-443a-bcc5-5ef2db0fbe31",
+        "6cf23f21-e7f2-431e-8b5e-6bc1f97e6a99",
+        "b0c1e9f6-9021-4199-87bf-9fdb9ba3f20f",
+        "1da72fd0-55a0-46ba-83ee-ada63064a1c3",
+        "d105e7c3-5306-4cce-9225-6587b323c875",
+        "194bd82a-3e0e-4298-be71-09978778949b"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "ee84e250-2bb7-446b-92f2-1bd2d50fd06c",
+      "name": "Greenhouse wall glazing",
+      "pieceIds": [
+        "288db19c-99f8-42ff-a5d1-4bd9f8c06353",
+        "41520df8-467d-4d9c-b53e-42fe382de69c",
+        "cf2492b5-e0a5-456a-b773-12add58c133c",
+        "66f7e68c-3be6-4efa-97e6-30e472904804",
+        "0f1540a2-21f9-43c4-98d1-700328807b58",
+        "456a0bd5-a85f-4b82-9d81-1c818a9d2b75",
+        "59355b0a-698d-4a80-9e7f-bb1793a50b00",
+        "c592c0b1-eb44-430c-9001-2068553b231b",
+        "4d426161-be59-4a32-bfe9-5a88366d60cc",
+        "75fc2e10-d068-4554-aa91-1b466240df61",
+        "8af6f232-17c4-4e01-b8e7-f5930288e43c",
+        "3b6e2220-b42f-4c4a-98f0-1acbc062bc32",
+        "325f6eaf-9ecf-4e08-9d92-bd35ae5ab086",
+        "d850a6a2-dc20-41c9-bd17-4fbf2ad2a90b",
+        "d192d6c1-6d59-4929-86ad-bdebe87eff5e"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "d401170a-e3ed-43c3-a2cb-45fd1eadabf3",
+      "name": "Greenhouse gable glazing",
+      "pieceIds": [
+        "2125a51c-aeab-4484-b772-8c18af80c3e5",
+        "4bda5aa8-17f8-4eb1-a7fb-747938bd34bb",
+        "b477c061-7bf5-42c7-9579-d27387765004",
+        "4dc79d4c-b6ab-4ca3-b7ec-7d314ee0183d",
+        "65036203-1c12-4f86-b23d-b25d1ee3390c",
+        "501c08f9-0776-422b-ad89-c39ed0eb2b14"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "46714958-3509-4bab-8b2e-4a7edab17924",
+      "name": "Greenhouse roof glazing",
+      "pieceIds": [
+        "eda8ceeb-dd05-4981-9634-a7b796795581",
+        "7894ae74-7459-4a59-bf10-d3aed9a997b5",
+        "9989b9f6-3e54-4a59-bc4b-6bc3bcfa5388",
+        "8de3c280-3815-4ef2-a0b7-616545ccda11",
+        "54167b27-737a-4f21-8295-cf100e9e00f0",
+        "8a18eec5-52b4-425b-b53d-7a6ad52c0892",
+        "76c7cc72-20c1-4dce-af36-ca73e255bf03",
+        "33585081-04a1-47b0-bea7-dcfdebdbbc3e"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "5d1b100f-d5e5-490f-b069-1a9f64ad207f",
+      "name": "Greenhouse door glazing",
+      "pieceIds": [
+        "7169eebf-2e88-4f85-a4d7-5f72cbf01ee2",
+        "f9d80568-80c2-46bc-8620-e161e7d63fe6"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [
+    {
+      "version": 1,
+      "id": "0cfa949f-bdfb-43b2-857a-ea01c2dee61a",
+      "revision": 2,
+      "currentFingerprint": "binding-v1-25e8c2bf2d70cf02",
+      "reviewBlock": "Greenhouse — PARTIAL DIMENSIONAL STUDY\nMissing material: material.frameLumber: Using generic 2 × 4 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nMissing material: material.ridgeLumber: Using generic 2 × 6 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nUnresolved: greenhouse-loads: Site wind/snow loads, framing grade/species, spans, bracing and foundation/anchors are not qualified.\nUnresolved: roof-bearing: Rafters have real plumb-cut geometry, but birdsmouths, rafter hangers/bearings, tie-downs and their installation schedules are not generated or approved.\nUnresolved: greenhouse-glazing-system: Source-matched SUNLITE multiwall sheet envelopes and real gable/roof cuts are represented, with flutes along vertical or roof-slope lengths. Thermal gaps, edge/profile engagement, horizontal eave/gable seams, UV-side marking, tapes, drainage, expansion drilling and actual fastening/support schedules are unresolved; shown cut blanks have no system allowance deductions.\nUnresolved: greenhouse-ventilation: An opening roof vent, its framed opening, hardware, vent sizing/control and condensation plan remain unrepresented.\nUnresolved: door-hardware: The closed/open door frame is a dimensional pivot preview. Actual hinges, latch, stops, glazing and mounting hardware are unspecified and unpriced.\nUnresolved: material.greenhouseGlazing.installation: 132506 8 mm SUNLITE multiwall greenhouse glazing only; source-listed material application, not approval of a generated roof or enclosure. Use the SUNLITE 8 mm multiwall accessory family; do not substitute corrugated sheets, metal roofing or PVC glazing by matching overall dimensions. Resolve support spacing, site loads, roof slope, thermal movement and fastening from the selected panel installation instructions. Orient the UV-protected face and flutes correctly; provide appropriate top/bottom tapes, U/H profiles, drainage and ridge/edge details.\nUnresolved: greenhouse-envelope-profile: Sheets are represented as physical 8 mm outer envelopes, not internal cell ribs. No end-to-end flute splice, panel load capacity or weather-tight installation is approved. Oversized downslope blanks require different stock/geometry, not an invented H-profile end joint.",
+      "generatedNotes": "Greenhouse — PARTIAL DIMENSIONAL STUDY\nMissing material: material.frameLumber: Using generic 2 × 4 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nMissing material: material.ridgeLumber: Using generic 2 × 6 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nUnresolved: greenhouse-loads: Site wind/snow loads, framing grade/species, spans, bracing and foundation/anchors are not qualified.\nUnresolved: roof-bearing: Rafters have real plumb-cut geometry, but birdsmouths, rafter hangers/bearings, tie-downs and their installation schedules are not generated or approved.\nUnresolved: greenhouse-glazing-system: Source-matched SUNLITE multiwall sheet envelopes and real gable/roof cuts are represented, with flutes along vertical or roof-slope lengths. Thermal gaps, edge/profile engagement, horizontal eave/gable seams, UV-side marking, tapes, drainage, expansion drilling and actual fastening/support schedules are unresolved; shown cut blanks have no system allowance deductions.\nUnresolved: greenhouse-ventilation: An opening roof vent, its framed opening, hardware, vent sizing/control and condensation plan remain unrepresented.\nUnresolved: door-hardware: The closed/open door frame is a dimensional pivot preview. Actual hinges, latch, stops, glazing and mounting hardware are unspecified and unpriced.\nUnresolved: material.greenhouseGlazing.installation: 132506 8 mm SUNLITE multiwall greenhouse glazing only; source-listed material application, not approval of a generated roof or enclosure. Use the SUNLITE 8 mm multiwall accessory family; do not substitute corrugated sheets, metal roofing or PVC glazing by matching overall dimensions. Resolve support spacing, site loads, roof slope, thermal movement and fastening from the selected panel installation instructions. Orient the UV-protected face and flutes correctly; provide appropriate top/bottom tapes, U/H profiles, drainage and ridge/edge details.\nUnresolved: greenhouse-envelope-profile: Sheets are represented as physical 8 mm outer envelopes, not internal cell ribs. No end-to-end flute splice, panel load capacity or weather-tight installation is approved. Oversized downslope blanks require different stock/geometry, not an invented H-profile end joint.",
+      "title": "Gabled greenhouse framing study",
+      "summary": "Actual base, wall/door frames and plumb-cut pitched roof; glazing, ventilation, qualified bearings and anchoring remain incomplete.",
+      "assumptions": [],
+      "questions": [],
+      "suggestions": [],
+      "entries": [
+        {
+          "id": "4187554f-fbdf-46c0-a527-56e30651382d",
+          "spec": {
+            "type": "structure",
+            "structure": {
+              "entryId": "4187554f-fbdf-46c0-a527-56e30651382d",
+              "kind": "greenhouse",
+              "parameters": {
+                "width": 72,
+                "depth": 96,
+                "eaveHeight": 84,
+                "roofRise": 24,
+                "doorWidth": 30,
+                "doorHeight": 68,
+                "rafterSpacing": 24,
+                "doorSwing": 0,
+                "origin": [
+                  0,
+                  0,
+                  0
+                ],
+                "yaw": 0
+              },
+              "selections": {
+                "greenhouseGlazing": {
+                  "materialId": "sunlite-8mm",
+                  "productRegistryRef": "sunlite-132506"
+                }
+              }
+            }
+          },
+          "generatedNotes": "Greenhouse — PARTIAL DIMENSIONAL STUDY\nMissing material: material.frameLumber: Using generic 2 × 4 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nMissing material: material.ridgeLumber: Using generic 2 × 6 framing lumber dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nUnresolved: greenhouse-loads: Site wind/snow loads, framing grade/species, spans, bracing and foundation/anchors are not qualified.\nUnresolved: roof-bearing: Rafters have real plumb-cut geometry, but birdsmouths, rafter hangers/bearings, tie-downs and their installation schedules are not generated or approved.\nUnresolved: greenhouse-glazing-system: Source-matched SUNLITE multiwall sheet envelopes and real gable/roof cuts are represented, with flutes along vertical or roof-slope lengths. Thermal gaps, edge/profile engagement, horizontal eave/gable seams, UV-side marking, tapes, drainage, expansion drilling and actual fastening/support schedules are unresolved; shown cut blanks have no system allowance deductions.\nUnresolved: greenhouse-ventilation: An opening roof vent, its framed opening, hardware, vent sizing/control and condensation plan remain unrepresented.\nUnresolved: door-hardware: The closed/open door frame is a dimensional pivot preview. Actual hinges, latch, stops, glazing and mounting hardware are unspecified and unpriced.\nUnresolved: material.greenhouseGlazing.installation: 132506 8 mm SUNLITE multiwall greenhouse glazing only; source-listed material application, not approval of a generated roof or enclosure. Use the SUNLITE 8 mm multiwall accessory family; do not substitute corrugated sheets, metal roofing or PVC glazing by matching overall dimensions. Resolve support spacing, site loads, roof slope, thermal movement and fastening from the selected panel installation instructions. Orient the UV-protected face and flutes correctly; provide appropriate top/bottom tapes, U/H profiles, drainage and ridge/edge details.\nUnresolved: greenhouse-envelope-profile: Sheets are represented as physical 8 mm outer envelopes, not internal cell ribs. No end-to-end flute splice, panel load capacity or weather-tight installation is approved. Oversized downslope blanks require different stock/geometry, not an invented H-profile end joint.",
+          "pose": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "base-framing",
+              "sectionId": "a5db04ad-e43e-45ea-9d1d-302f8a89d68b",
+              "stepId": "6f05bfc9-f698-4e57-8235-f8e1147e2871"
+            },
+            {
+              "role": "wall-framing",
+              "sectionId": "7e93003c-5850-41ba-9746-3980cb10e790",
+              "stepId": "dae70150-d037-42fb-8df6-bd290600fe13"
+            },
+            {
+              "role": "door-opening-framing",
+              "sectionId": "e0e0f7f3-1c14-4503-8a1f-afd4b6475c2c",
+              "stepId": "0b450d7e-4305-4465-96ec-bfba217153bc"
+            },
+            {
+              "role": "door-leaf",
+              "sectionId": "d6173d64-3f6d-479e-8085-eda051490856",
+              "stepId": "db29f0a2-68a4-4bc5-950f-a4f67da56874"
+            },
+            {
+              "role": "roof-framing",
+              "sectionId": "844afe08-8432-4f66-a95e-4afc7942d85d",
+              "stepId": "8e2dd6a8-a615-4cd4-bed0-2e57a35a2a4c"
+            },
+            {
+              "role": "gable-framing",
+              "sectionId": "88042607-0991-4e0a-a044-c6c693069c72",
+              "stepId": "049ab114-8d54-467d-9463-4fa2f0b8f725"
+            },
+            {
+              "role": "glazing-wall-panels",
+              "sectionId": "ee84e250-2bb7-446b-92f2-1bd2d50fd06c",
+              "stepId": "b95685ae-4146-4491-a304-f5c350388c3e"
+            },
+            {
+              "role": "glazing-gable-panels",
+              "sectionId": "d401170a-e3ed-43c3-a2cb-45fd1eadabf3",
+              "stepId": "b701fb3c-206b-4394-af98-a47073e8f42f"
+            },
+            {
+              "role": "glazing-roof-panels",
+              "sectionId": "46714958-3509-4bab-8b2e-4a7edab17924",
+              "stepId": "1c9d999e-5441-4d3d-838b-78684fa615c8"
+            },
+            {
+              "role": "glazing-door-panels",
+              "sectionId": "5d1b100f-d5e5-490f-b069-1a9f64ad207f",
+              "stepId": "67976895-a456-415c-a694-457b8d5f504f"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": "design-v3-9ff9f302",
+  "history": []
+}

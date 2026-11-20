@@ -1,0 +1,72 @@
+.banquette-review-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #e6e5dc;
+  overflow-wrap: anywhere;
+}
+.banquette-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.banquette-review-actions button {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
+.banquette-construction-review summary {
+  padding: 10px 0;
+  cursor: pointer;
+}
+.banquette-construction-review li {
+  margin: 8px 0;
+}
+.banquette-construction-review select {
+  width: 100%;
+}
+.banquette-construction-review .text-button {
+  min-height: 44px;
+}
+@media print {
+  .banquette-construction-appendix {
+    break-before: page;
+  }
+  .banquette-construction-appendix > section + section {
+    break-before: page;
+  }
+  .banquette-construction-appendix .banquette-review-row {
+    display: inline-block;
+    width: calc(50% - 10px);
+    padding: 5px;
+    margin-right: 8px;
+    box-sizing: border-box;
+    vertical-align: top;
+    break-inside: avoid;
+  }
+  .banquette-construction-appendix .banquette-review-row p {
+    margin: 4px 0;
+  }
+  .banquette-construction-appendix table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  .banquette-construction-appendix th,
+  .banquette-construction-appendix td {
+    overflow-wrap: anywhere;
+    padding: 6px 8px;
+    border-bottom: 1px solid #dce0d7;
+    vertical-align: top;
+    text-align: left;
+  }
+  .banquette-construction-appendix th:first-child {
+    width: 20%;
+  }
+  .banquette-construction-appendix th:nth-child(2) {
+    width: 30%;
+  }
+  .banquette-construction-appendix tr {
+    break-inside: avoid;
+  }
+}

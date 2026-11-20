@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 81,
+  "id": "60ff2a1f-212f-4fe8-89ef-fe94473d360e",
+  "name": "Crosscut practice with one board",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "4ab845f7-7776-49f2-8ae8-d1454268bb7e",
+      "label": "P001"
+    },
+    {
+      "partId": "c6c2f722-801e-4dbd-a89c-5c060124a0a0",
+      "label": "O001"
+    },
+    {
+      "partId": "6d9b35df-afa5-48d9-9a4e-ed0e3ecf67d7",
+      "label": "P002"
+    },
+    {
+      "partId": "9b65813f-7dd3-40f2-a863-6d1b98c45ade",
+      "label": "P003"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-20T22:17:44.899Z",
+  "pieces": [
+    {
+      "id": "4ab845f7-7776-49f2-8ae8-d1454268bb7e",
+      "name": "Long practice piece",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        36,
+        3.5
+      ],
+      "position": [
+        30,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "3a11449e-9721-4dcb-8728-930cf89d9297",
+      "assembly": "Crosscut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "116601a2-f11d-456f-90af-0cb13250ba7f",
+        "size": [
+          1.5,
+          96,
+          3.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "c6c2f722-801e-4dbd-a89c-5c060124a0a0",
+      "name": "Offcut · Long practice piece",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        59.875,
+        3.5
+      ],
+      "position": [
+        -18.0625,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "91dd56b9-e516-48cd-bd84-e845273e3487",
+      "assembly": "Crosscut practice",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "116601a2-f11d-456f-90af-0cb13250ba7f",
+        "size": [
+          1.5,
+          96,
+          3.5
+        ],
+        "offset": [
+          0,
+          36.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "6d9b35df-afa5-48d9-9a4e-ed0e3ecf67d7",
+      "name": "Jig setup blank",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        18,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "3a11449e-9721-4dcb-8728-930cf89d9297",
+      "assembly": "Crosscut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9b65813f-7dd3-40f2-a863-6d1b98c45ade",
+      "name": "Finish test blank",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        12,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        24
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "3a11449e-9721-4dcb-8728-930cf89d9297",
+      "assembly": "Crosscut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "91dd56b9-e516-48cd-bd84-e845273e3487",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "60ff2a1f-212f-4fe8-89ef-fe94473d360e",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-8da81c9a",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "3a11449e-9721-4dcb-8728-930cf89d9297",
+      "title": "Assemble Crosscut practice",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "60ff2a1f-212f-4fe8-89ef-fe94473d360e",
+        "stageKey": "assembly:Crosscut practice",
+        "memberIds": [
+          "4ab845f7-7776-49f2-8ae8-d1454268bb7e",
+          "6d9b35df-afa5-48d9-9a4e-ed0e3ecf67d7",
+          "9b65813f-7dd3-40f2-a863-6d1b98c45ade"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-44790af7",
+        "title": "Assemble Crosscut practice"
+      }
+    },
+    {
+      "id": "1e7947a7-078a-4d4e-baa6-082e37d489a8",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "60ff2a1f-212f-4fe8-89ef-fe94473d360e",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-cee30b8",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice planning straight cuts on one 8 ft board. The first 36 in cut is recorded; assign its offcut to the 18 in jig setup blank and 12 in finish test blank. Keep the final remnant for a future compatible practice cut. Confirm the actual stock and kerf before cutting.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-43292ad6",
+  "history": [
+    {
+      "id": "1de12e57-2f19-480b-b7df-e261f2d3f93a",
+      "at": "2026-11-20T22:17:44.901Z",
+      "stepId": "91dd56b9-e516-48cd-bd84-e845273e3487",
+      "message": "Cut Long practice piece to 1.5″ × 3′ × 3.5″. Kept the offcut; ⅛ in saw kerf removed."
+    }
+  ]
+}

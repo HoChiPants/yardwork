@@ -163,20 +163,36 @@ export function saveMotionPlan(
   };
 }
 
-/** Default pivot on a selected edge in model coordinates, including rotated parts. */
+export type MotionReferenceFrame = "workspace" | "moving-part";
+
+/** Return the selected edge datum in workspace coordinates. */
 export function motionPivotPreset(
   project: Project,
   ids: string[],
   edge: "left" | "right" | "back" | "front",
+  frame: MotionReferenceFrame = "workspace",
 ) {
-  const { min, max } = bounds(
-    members(project, ids).flatMap((part) => shape(part).solid.vertices),
-  );
+  const parts = members(project, ids);
+  if (!parts.length) throw Error("Choose a moving part for the hinge.");
+  const reference = frame === "moving-part" ? parts[0] : undefined;
+  const vertices = reference
+    ? localVertices(reference)
+    : parts.flatMap((part) => shape(part).solid.vertices);
+  const { min, max } = bounds(vertices);
   const center = min.map((n, i) => (n + max[i]) / 2) as V3;
   if (edge === "left" || edge === "right")
     center[0] = edge === "left" ? min[0] : max[0];
   else center[2] = edge === "back" ? min[2] : max[2];
-  return center;
+  return reference
+    ? add(reference.position, rotate(center, reference.rotation))
+    : center;
+}
+
+function localVertices(part: Piece) {
+  const inverse = inverseRotation(part.rotation);
+  return shape(part).solid.vertices.map((point) =>
+    rotate(subtract(point, part.position), inverse),
+  );
 }
 
 type WorldMechanism = ReturnType<typeof motionSetup>["mechanism"];

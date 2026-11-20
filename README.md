@@ -46,6 +46,8 @@ In **List → Stock cut order**, use **Record multiple stock units** after check
 
 After following a board or sheet’s **Stock cut order**, choose **Record this stock unit**. Yardwork links the existing parts to one source, keeps the cut order in the guide, and puts rectangular leftovers in the **Cut pool**. Reusing one of those leftovers keeps the original material source and purchase count.
 
+Import the [crosscut practice plan](public/examples/cut-pool/crosscut-practice.yardwork.json), then choose **Cut pool → Review offcut reuse**. The 18 in jig blank and 12 in finish test blank come from the remnant of the first 36 in cut. The stock estimate drops from two boards to one and leaves a 29⅝ in remnant. [Completed cut guide](public/examples/cut-pool/crosscut-practice-guide.md)
+
 For board crosscuts, Yardwork can move or swap pieces between planned boards to leave room for the blade while keeping the board count. A unit with an unresolved edge trim stays marked for review.
 
 ![Blank Yardwork workspace](docs/blank-workspace.png)

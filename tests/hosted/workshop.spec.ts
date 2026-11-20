@@ -68,3 +68,31 @@ test("saved studies open under the hosted base path", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Three-section storage banquette · example copy", exact: true })).toBeVisible();
   await expect(page.locator(".statusbar")).toContainText("42 parts");
 });
+
+test("a crosscut practice plan reuses the first scrap on two blanks", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("button", { name: "Cut pool (0)", exact: true }).click();
+  const example = page.getByRole("link", { name: "Download crosscut practice plan" });
+  const href = await example.getAttribute("href");
+  expect(href).toMatch(/\/yardwork\/examples\/cut-pool\/crosscut-practice\.yardwork\.json$/);
+  const file = await page.request.get(href!);
+  expect(file.ok()).toBe(true);
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "crosscut-practice.yardwork.json", mimeType: "application/json", buffer: await file.body(),
+  });
+  await expect(dialog).toHaveCount(0);
+  const pool = page.getByRole("region", { name: "Cut pool", exact: true });
+  if (!(await pool.isVisible())) await page.getByRole("button", { name: "Cut pool (1)", exact: true }).click();
+  await pool.getByRole("button", { name: "Review offcut reuse" }).click();
+  const cuts = dialog.getByRole("list", { name: "Proposed cuts in order" }).getByRole("listitem");
+  await expect(cuts).toHaveCount(2);
+  await expect(cuts.nth(0)).toContainText("Jig setup blank");
+  await expect(cuts.nth(1)).toContainText("From an earlier cut");
+  await expect(cuts.nth(1)).toContainText("Finish test blank");
+  await expect(dialog.getByRole("list", { name: "Purchase changes" })).toContainText("2 → 1 board");
+  await dialog.getByRole("button", { name: "Apply offcut plan" }).click();
+  await expect(pool).toContainText("29.625");
+});

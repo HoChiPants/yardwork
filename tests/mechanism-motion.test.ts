@@ -531,6 +531,46 @@ test("hinged travel checks interior work-zone extrema, including a swing with bo
   near(review.preview(180).pieces[0].position[2], 0);
 });
 
+test("hinge presets follow a rotated reference leaf even when another moving part extends its bounds", () => {
+  const project = blank("Rotated hinge setup");
+  const leaf = panel(project, "Angled door", [24, 30, 0.75], [10, 20, 30]);
+  leaf.rotation = [0.15, Math.PI / 6, -0.2];
+  const handle = panel(project, "Door handle", [1, 3, 6], [25, 20, 24]);
+  project.pieces = [leaf, handle];
+
+  const memberIds = [leaf.id, handle.id];
+  const worldDatum = (offset: V3) =>
+    rotate(offset, leaf.rotation).map((value, i) => value + leaf.position[i]);
+  const presets: Record<"left" | "right" | "back" | "front", V3> = {
+    left: [-12, 0, 0],
+    right: [12, 0, 0],
+    back: [0, 0, -0.375],
+    front: [0, 0, 0.375],
+  };
+  for (const edge of Object.keys(presets) as Array<keyof typeof presets>) {
+    const expected = worldDatum(presets[edge]);
+    motionPivotPreset(project, memberIds, edge, "moving-part").forEach(
+      (value, i) => near(value, expected[i]),
+    );
+  }
+  assert.notDeepEqual(
+    motionPivotPreset(project, memberIds, "left"),
+    motionPivotPreset(project, memberIds, "left", "moving-part"),
+  );
+
+  const pivot = motionPivotPreset(project, memberIds, "left", "moving-part");
+  const axis = rotate([0, 1, 0], leaf.rotation);
+  const saved = saveMotionPlan(project, {
+    label: leaf.name,
+    memberIds,
+    mechanism: { kind: "hinge", pivot, axis, travel: 90 },
+  });
+  const setup = motionSetup(projectSchema.parse(saved.project), saved.plan);
+  assert.equal(setup.mechanism.kind, "hinge");
+  setup.mechanism.pivot.forEach((value, i) => near(value, pivot[i]));
+  setup.mechanism.axis.forEach((value, i) => near(value, axis[i]));
+});
+
 test("a saved mechanism follows its reference part and legacy file reads preserve the closed shape", () => {
   const project = blank();
   const door = panel(project, "Door", [24, 14, 0.75], [12, 15, 0]);

@@ -689,6 +689,111 @@ test("named clearance tests save both door and drawer orders and reopen from bui
   ]);
 });
 
+test("a rotated cabinet uses moving-part axes for a drawer and the reference leaf for a hinge", async ({ page }) => {
+  page.setDefaultTimeout(15000);
+  const base = blank(`Angled cabinet ${uid().slice(0, 8)}`);
+  const step = base.steps[0].id;
+  const yaw = Math.PI / 6;
+  const drawer = part(
+    "Angled drawer", "plywood", [1, 1, 1], [0, 12, 0], step, "Cabinet", [0, yaw, 0],
+  );
+  const drawerStop = part(
+    "Drawer obstruction", "plywood", [1, 1, 1], [4, 12, 4 * Math.sqrt(3)], step, "Cabinet",
+  );
+  const door = part(
+    "Angled door", "plywood", [24, 36, 0.75], [48, 20, 12], step, "Cabinet", [0, yaw, 0],
+  );
+  const handle = part("Door handle", "plywood", [1, 1, 2], [53, 20, 9], step, "Cabinet");
+  const hingeX = 48 - 6 * Math.sqrt(3);
+  const strikeYaw = yaw - (40 * Math.PI) / 180;
+  const doorStop = part(
+    "Door obstruction", "plywood", [1, 2, 1],
+    [hingeX + 12 * Math.cos(strikeYaw), 20, 18 - 12 * Math.sin(strikeYaw)],
+    step, "Cabinet",
+  );
+  base.pieces = [drawer, drawerStop, door, handle, doorStop];
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "angled-cabinet.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(base)),
+  });
+  await expect(dialog).toHaveCount(0);
+
+  const motionButton = page.getByRole("button", { name: "Test movement", exact: true });
+  await motionButton.click();
+  const panel = page.getByRole("region", { name: "Motion and clearance" });
+  const pose = page.getByTestId("motion-preview-label");
+  const start = panel.getByRole("button", { name: "New motion", exact: true });
+  const saveMotion = panel.getByRole("button", { name: "Save and test motion", exact: true });
+  const playOpening = panel.getByRole("button", { name: "Play opening", exact: true });
+  const referenceFrame = panel.getByRole("combobox", { name: "Reference frame", exact: true });
+  const movingPart = panel.getByRole("combobox", { name: "Add moving part", exact: true });
+  await start.click();
+  await panel.getByLabel("Motion name", { exact: true }).fill(drawer.name);
+  await panel.getByRole("combobox", { name: "Movement", exact: true }).selectOption("slide");
+  await movingPart.selectOption(drawer.id);
+  await expect(referenceFrame).toHaveValue("moving-part");
+  await referenceFrame.selectOption("workspace");
+  await saveMotion.click();
+  await expect(panel.getByText("No modeled interference found along this travel.")).toBeVisible();
+  await panel.getByRole("button", { name: "Edit setup", exact: true }).click();
+  await expect(referenceFrame).toHaveValue("workspace");
+  await referenceFrame.selectOption("moving-part");
+  await saveMotion.click();
+  await playOpening.click();
+  await expect(pose).toContainText("Contact ahead · Parts in red");
+  await expect(pose).toContainText(drawerStop.name);
+  await expect.poll(async () => Number(await pose.getAttribute("data-pose"))).toBeCloseTo(6.827, 3);
+
+  await start.click();
+  await panel.getByLabel("Motion name", { exact: true }).fill(door.name);
+  await movingPart.selectOption(handle.id);
+  await movingPart.selectOption(door.id);
+  await panel.getByRole("button", { name: /Use .* Angled door as motion reference/ }).click();
+  await expect(panel.getByText(/Uses the axes of .*Angled door/)).toBeVisible();
+  const edge = panel.getByRole("combobox", { name: "Hinge position", exact: true });
+  await edge.selectOption("exact");
+  const pivotZ = panel.getByLabel("Pivot Z (in)", { exact: true });
+  await expect.poll(async () => Number(await pivotZ.inputValue())).toBeCloseTo(18, 6);
+  await edge.selectOption("left");
+  await saveMotion.click();
+  await playOpening.click();
+  await expect(pose).toContainText("Contact ahead · Parts in red");
+  await expect(pose).toContainText(doorStop.name);
+  await expect.poll(async () => Number(await pose.getAttribute("data-pose"))).toBeCloseTo(35.64, 1);
+
+  const saveResponse = page.waitForResponse(
+    (response) => response.request().method() === "PUT" && response.url().includes("/api/projects/"),
+  );
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const record = await saveResponse;
+  expect(record.ok()).toBe(true);
+  const saved = projectSchema.parse((await record.json()).project);
+  expect(saved.pieces).toEqual(base.pieces);
+  const [savedDrawer, savedDoor] = saved.motionPlans!;
+  expect(savedDrawer.mechanism.axis).toEqual([0, 0, 1]);
+  expect(savedDoor.memberIds).toEqual([door.id, handle.id]);
+  expect(savedDoor.mechanism).toMatchObject({ kind: "hinge", axis: [0, 1, 0] });
+  expect(savedDoor.mechanism.kind === "hinge" && savedDoor.mechanism.pivot[0]).toBeCloseTo(-12, 6);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await page.locator(".project-list > button").filter({ hasText: base.name }).click();
+  await motionButton.click();
+  await panel.getByRole("combobox", { name: "Saved motion", exact: true }).selectOption(savedDrawer.id);
+  await panel.getByRole("button", { name: "Edit setup", exact: true }).click();
+  await expect(referenceFrame).toHaveValue("moving-part");
+  await expect(panel.getByRole("combobox", { name: "Slide direction", exact: true })).toHaveValue("4");
+  await saveMotion.click();
+  await playOpening.click();
+  await expect(pose).toContainText(drawerStop.name);
+});
+
 test("a custom door and drawer reveal different obstructions during opening and closing", async ({
   page,
 }) => {

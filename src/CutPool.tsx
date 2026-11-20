@@ -4,6 +4,7 @@ import { partLabel } from "./partLabels";
 import { formatStockLength } from "./measurement";
 import { pieceThroughOpenings } from "./throughOpenings";
 import { orientedStockSize } from "./stockAxes";
+import { workshopAsset } from "./workshopTransport";
 export function CutPool({
   project,
   onInspect,
@@ -60,6 +61,11 @@ export function CutPool({
             ? "Measure scrap you already have or collect offcuts as you cut parts."
             : "Parts with recorded cuts appear here."}
         </p>
+      )}
+      {view === "scrap" && scrap.length === 0 && (
+        <a className="text-button" href={workshopAsset("/examples/cut-pool/crosscut-practice.yardwork.json")} download>
+          Download crosscut practice plan
+        </a>
       )}
       {pieces.map((piece) => (
         <div

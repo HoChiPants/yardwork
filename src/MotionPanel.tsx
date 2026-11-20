@@ -32,6 +32,7 @@ import {
   type HeldMotion,
   type MotionPhase,
   type MotionPreview,
+  type MotionReferenceFrame,
   type MotionReview,
   type MotionTestSelection,
 } from "./mechanismMotion";
@@ -53,6 +54,7 @@ import {
   reviewDrawerSlide,
 } from "./drawerSlides";
 import { ensurePartLabels } from "./partLabels";
+import { rotate } from "./spatial";
 import { useMotionPlayback } from "./useMotionPlayback";
 import type { MotionCollisionFocus } from "./motionCamera";
 
@@ -60,6 +62,10 @@ const drawerSideKeys = Object.keys(drawerSideLabels) as Array<
   keyof typeof drawerSideLabels
 >;
 const hingeEdgeDirections = { left: 2, right: 3, back: 0, front: 1 };
+const directionIndex = (axis: V3) =>
+  directions.findIndex((row) =>
+    row.axis.every((n, i) => Math.abs(n - axis[i]) < 1e-6),
+  );
 
 function MotionEditor({
   project,
@@ -109,10 +115,22 @@ function MotionEditor({
   const [edge, setEdge] = useState<
     "left" | "right" | "back" | "front" | "exact"
   >(existing ? "exact" : "left");
+  const [frame, setFrame] = useState<MotionReferenceFrame>(() => {
+    if (!existing) return "moving-part";
+    if (
+      initial &&
+      directionIndex(initial.mechanism.axis) < 0 &&
+      directionIndex(existing.mechanism.axis) >= 0
+    )
+      return "moving-part";
+    return "workspace";
+  });
   const [axis, setAxis] = useState<number>(() => {
     if (!initial) return 2;
-    return directions.findIndex((row) =>
-      row.axis.every((n, i) => Math.abs(n - initial.mechanism.axis[i]) < 1e-6),
+    return directionIndex(
+      frame === "moving-part" && existing
+        ? existing.mechanism.axis
+        : initial.mechanism.axis,
     );
   });
   const [name, setName] = useState(existing?.label ?? "");
@@ -121,6 +139,7 @@ function MotionEditor({
     initial?.mechanism.kind === "hinge" ? initial.mechanism.pivot : [0, 0, 0],
   );
   const [error, setError] = useState("");
+  const reference = active.find((p) => p.id === ids[0]);
   const partName = (id: string) =>
     `${labels.get(id) ?? "Part"} · ${active.find((p) => p.id === id)?.name ?? "Missing part"}`;
   function chooseKind(next: typeof kind) {
@@ -134,14 +153,18 @@ function MotionEditor({
   }
   function chooseEdge(next: typeof edge) {
     if (next === "exact" && edge !== "exact" && ids.length)
-      setPivot(motionPivotPreset(project, ids, edge));
+      setPivot(motionPivotPreset(project, ids, edge, frame));
     if (next !== "exact") setAxis(hingeEdgeDirections[next]);
     setEdge(next);
   }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
-      const worldAxis = directions[axis]?.axis ?? initial?.mechanism.axis;
+      const direction = directions[axis]?.axis;
+      const worldAxis =
+        direction && frame === "moving-part" && reference
+          ? rotate(direction, reference.rotation)
+          : direction ?? initial?.mechanism.axis;
       if (!worldAxis) throw Error("Choose the direction of movement.");
       onSave({
         label:
@@ -163,7 +186,7 @@ function MotionEditor({
                 pivot:
                   edge === "exact"
                     ? pivot
-                    : motionPivotPreset(project, ids, edge),
+                    : motionPivotPreset(project, ids, edge, frame),
               },
       });
     } catch (e) {
@@ -213,9 +236,21 @@ function MotionEditor({
         </select>
       </label>
       <ul className="motion-findings">
-        {ids.map((id) => (
+        {ids.map((id, index) => (
           <li key={id}>
             {partName(id)}{" "}
+            {frame === "moving-part" && index > 0 && (
+              <button
+                type="button"
+                className="text-button"
+                aria-label={`Use ${partName(id)} as motion reference`}
+                onClick={() =>
+                  setIds([id, ...ids.filter((partId) => partId !== id)])
+                }
+              >
+                Use as reference
+              </button>
+            )}
             <button
               type="button"
               className="text-button"
@@ -227,6 +262,21 @@ function MotionEditor({
           </li>
         ))}
       </ul>
+      <label className="field">
+        Reference frame
+        <select
+          value={frame}
+          onChange={(e) =>
+            setFrame(e.target.value === "moving-part" ? "moving-part" : "workspace")
+          }
+        >
+          <option value="moving-part">Moving part axes</option>
+          <option value="workspace">Workspace axes</option>
+        </select>
+      </label>
+      {frame === "moving-part" && reference && (
+        <p className="small-note">Uses the axes of {partName(reference.id)}.</p>
+      )}
       {kind === "hinge" && (
         <label className="field">
           Hinge position
@@ -243,24 +293,27 @@ function MotionEditor({
         </label>
       )}
       {kind === "hinge" && edge === "exact" && (
-        <div className="three-col">
-          {(["X", "Y", "Z"] as const).map((letter, index) => (
-            <label key={letter} className="field">
-              Pivot {letter} (in)
-              <input
-                type="number"
-                step="any"
-                required
-                value={Number.isFinite(pivot[index]) ? pivot[index] : ""}
-                onChange={(e) => {
-                  const next = [...pivot] as V3;
-                  next[index] = e.target.valueAsNumber;
-                  setPivot(next);
-                }}
-              />
-            </label>
-          ))}
-        </div>
+        <>
+          <p className="small-note">Enter the exact pivot on the workspace grid.</p>
+          <div className="three-col">
+            {(["X", "Y", "Z"] as const).map((letter, index) => (
+              <label key={letter} className="field">
+                Pivot {letter} (in)
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  value={Number.isFinite(pivot[index]) ? pivot[index] : ""}
+                  onChange={(e) => {
+                    const next = [...pivot] as V3;
+                    next[index] = e.target.valueAsNumber;
+                    setPivot(next);
+                  }}
+                />
+              </label>
+            ))}
+          </div>
+        </>
       )}
       <label className="field">
         {kind === "hinge"

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ollamaTimeoutMs } from "./ollamaTimeout";
-import { materialIds } from "../src/model";
+import { material, materialIds } from "../src/model";
 import { prepareIntentEdits, applyIntentEdits } from "./intentEdits";
 import { reconcileNarrative } from "./intentNarrative";
 import { toOllamaSchema } from "./ollamaSchema";
@@ -16,6 +16,7 @@ import {
   referencedFamily,
   namedMeasurement,
   editCaseworkShelfCount,
+  normalizeIdeaText,
 } from "../src/ideaEdits";
 import {
   ideaPlanSchema,
@@ -118,13 +119,37 @@ export function wireIntentToPlan(
   request: PlannerRequest,
   raw: unknown,
 ): IdeaPlan {
-  const wire = intentWireSchema.parse(raw);
-  return intentToPlan(
-    request,
-    wire.family === "clarify"
-      ? { family: "clarify", operation: "clarify", questions: [wire.question] }
-      : wire,
-  );
+  let input = raw;
+  if (
+    raw && typeof raw === "object" && "family" in raw &&
+    (raw.family === "banquette" || raw.family === "bench")
+  ) {
+    const seating = { ...raw } as Record<string, unknown>;
+    // Some model responses fill irrelevant opening and roof slots with zero.
+    for (const key of ["roofRise", "doorWidth", "doorHeight"])
+      if (seating[key] === 0) delete seating[key];
+    input = seating;
+  }
+  const wire = intentWireSchema.parse(input);
+  if (wire.family === "clarify")
+    return intentToPlan(request, {
+      family: "clarify",
+      operation: "clarify",
+      questions: [wire.question],
+    });
+  if (!request.previousPlan) delete wire.targetSection;
+  const prompt = normalizeIdeaText(request.prompt);
+  const explicitlyNamed = (id: (typeof materialIds)[number]) =>
+    prompt.includes(id) || prompt.includes(normalizeIdeaText(material(id).name));
+  const namesFramingStock =
+    /\b(?:use|frame|build)\b[^.,;\n]{0,90}\b(?:pressure[- ]treated|lumber|studs?|boards?|cedar|pine|fir|2\s*x\s*4)\b/.test(prompt);
+  const namesPanelStock =
+    /\b(?:plywood|plytanium|purebond|mdf|osb|melamine|sheet stock)\b/.test(prompt);
+  if (wire.frameMaterial && !explicitlyNamed(wire.frameMaterial) && !namesFramingStock)
+    delete wire.frameMaterial;
+  if (wire.panelMaterial && !explicitlyNamed(wire.panelMaterial) && !namesPanelStock)
+    delete wire.panelMaterial;
+  return intentToPlan(request, wire);
 }
 
 /** Small local models sometimes fill unused optional slots with zero/null.

@@ -144,6 +144,36 @@ test("sparse wire retains raw measurement priority and actual L geometry", () =>
   assert.equal(plan.modules.length, 2);
 });
 
+test("a real seating response with unused zeros and undirected stock retains the requested footprint", () => {
+  const prompt = "Plan an L-shaped kitchenette banquette, seven feet along the back with a five-foot overall return, seats twenty-four inches deep and eighteen inches high. Include a wood back. Use two bench modules and count the corner once.";
+  const workZone = { width: 84, depth: 60, height: 84 };
+  const response = {
+    family: "banquette", operation: "append", width: 84, depth: 24,
+    height: 18, shape: "straight", returnLength: 15, sectionCount: 2,
+    targetSection: 1, storage: false, openingLid: false, backHeight: 18,
+    shelfCount: 1, roofRise: 0, doorWidth: 0, doorHeight: 0,
+    frameMaterial: "cedarbrook-cedar-tg-72", panelMaterial: "cedarbrook-cedar-tg-72",
+  };
+  const plan = wireIntentToPlan({ prompt, workZone }, response);
+  assert.equal(plan.modules.length, 2);
+  assert.ok(plan.modules.every((bench) =>
+    bench.height === 18 && bench.depth === 24 &&
+    bench.frameMaterial === "stud" && bench.panelMaterial === "plywood"));
+  const preview = previewIdeaPlan({ ...blank(), workZone }, plan);
+  assert.equal(preview.max[0] - preview.min[0], 84);
+  assert.equal(preview.max[2] - preview.min[2], 60);
+  assert.equal(preview.workZoneFits, true);
+  assert.throws(() => wireIntentToPlan({ prompt }, { ...response, width: 0 }));
+  assert.throws(() => wireIntentToPlan({ prompt }, { ...response, family: "greenhouse" }));
+  assert.throws(() => wireIntentToPlan({ prompt }, { ...response, panelMaterial: "unlisted-source" }));
+
+  const explicit = wireIntentToPlan(
+    { prompt: prompt + " Use Plytanium plywood for the panels." },
+    { ...response, panelMaterial: "plytanium-703" },
+  );
+  assert.ok(explicit.modules.every((bench) => bench.panelMaterial === "plytanium-703"));
+});
+
 test("named section wire edits preserve entry IDs, selected sources and unrequested neighbor geometry", () => {
   const previous = localIdeaPlan({
     prompt:

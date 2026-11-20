@@ -29,6 +29,9 @@ import { bounds } from "./engine";
 import { Scene } from "./Scene";
 import { LengthInput } from "./LengthInput";
 import { PricingSummary } from "./PricingSummary";
+import { ConnectionQuestionResult, type ConnectionQuestionAction } from "./ConnectionQuestionResult";
+import { answerConnectionQuestion, connectionQuestion, type ConnectionQuestion } from "./connectionQuestions";
+import { partLabel } from "./partLabels";
 import { updateStructureParameter } from "./structureIdeas";
 import { editFurniturePlan, straightRun } from "./ideaEdits";
 import {
@@ -107,11 +110,13 @@ export default function IdeaPlanner({
   project,
   initialTarget = null,
   onApply,
+  onConnectionAction,
   onClose,
 }: {
   project: Project;
   initialTarget?: { bindingId: string; entryIds?: string[] } | null;
   onApply: (next: Project) => void;
+  onConnectionAction: (action: ConnectionQuestionAction) => void;
   onClose: () => void;
 }) {
   const previousPlan = useRef<IdeaPlan | null>(null);
@@ -130,6 +135,7 @@ export default function IdeaPlanner({
   } | null>(null);
   const [planningStatus, setPlanningStatus] = useState("");
   const [exploredPrompt, setExploredPrompt] = useState("");
+  const [jointRequest, setJointRequest] = useState<{ prompt: string; question: ConnectionQuestion } | null>(null);
   const [prompt, setPrompt] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -138,6 +144,10 @@ export default function IdeaPlanner({
       provider: string;
       message: string;
     } | null>(null);
+  const jointAnswer = useMemo(() => jointRequest?.prompt === prompt
+    ? answerConnectionQuestion(project, jointRequest.question) : null,
+  [jointRequest, project, prompt]);
+  const sampleWood = project.pieces.find((piece) => !piece.offcut && material(piece.material).wood);
   function loadTarget(next: typeof target) {
     const active = activeRequest.current;
     activeRequest.current = null;
@@ -149,6 +159,7 @@ export default function IdeaPlanner({
     originalPlan.current = null;
     previousPlan.current = null;
     setResult(null);
+    setJointRequest(null);
     setPrompt("");
     setExploredPrompt("");
     setBusy(false);
@@ -273,6 +284,14 @@ export default function IdeaPlanner({
   }
   async function generate() {
     if (activeRequest.current || !prompt.trim()) return;
+    const question = connectionQuestion(project, prompt);
+    if (question) {
+      setJointRequest({ prompt, question });
+      setError("");
+      setPlanningStatus("");
+      return;
+    }
+    setJointRequest(null);
     const previous = result?.plan ?? previousPlan.current,
       previousResult = result;
     const request = {
@@ -453,6 +472,7 @@ export default function IdeaPlanner({
           placeholder="An L-shaped kitchenette banquette, 6 ft along the back with a 4 ft return. I want storage below and a wood back."
           onChange={(e) => {
             setPrompt(e.target.value);
+            setJointRequest(null);
             setError("");
           }}
         />
@@ -479,6 +499,16 @@ export default function IdeaPlanner({
               {example}
             </button>
           ))}
+          {sampleWood && (
+            <button type="button" disabled={busy} onClick={() => {
+              setPrompt(`Review screw joints for ${partLabel(project, sampleWood.id)}`);
+              setJointRequest(null);
+              setError("");
+              setPlanningStatus("");
+            }}>
+              Review a joint
+            </button>
+          )}
         </div>
       )}
       <button
@@ -525,7 +555,7 @@ export default function IdeaPlanner({
           “rotate the whole design 90 degrees around the workspace origin.”
         </p>
       )}
-      {result && prompt !== exploredPrompt && (
+      {!jointAnswer && result && prompt !== exploredPrompt && (
         <p className="notice">
           Description changed. Explore again to refine this proposal while
           keeping unspecified dimensions.
@@ -537,7 +567,8 @@ export default function IdeaPlanner({
           <p>{error}</p>
         </div>
       )}
-      {result && (
+      {jointAnswer && <ConnectionQuestionResult answer={jointAnswer} onAction={onConnectionAction} />}
+      {!jointAnswer && result && (
         <div className="proposal idea-proposal">
           <div>
             <CheckCircle2 size={19} />

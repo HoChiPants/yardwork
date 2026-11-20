@@ -18,10 +18,10 @@ type Props = {
   onPreview: (proposal: ReturnType<typeof suggestCenteredFastener>) => void;
 };
 
-export function FastenerEntryComparison(props: Props) {
-  const [open, setOpen] = useState(false);
+export function FastenerEntryComparison({ initiallyOpen = false, ...props }: Props & { initiallyOpen?: boolean }) {
+  const [open, setOpen] = useState(initiallyOpen);
   return (
-    <details className="field-section" onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details className="field-section" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Compare screw entry sides</summary>
       {open && <EntryOptions {...props} />}
     </details>

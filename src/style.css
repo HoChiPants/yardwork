@@ -1704,6 +1704,19 @@ small {
   display: block;
   margin-top: 8px;
 }
+.connection-question h3 {
+  margin: 0;
+  color: #35452d;
+}
+.connection-question article {
+  border-top: 1px solid #d8e1c7;
+  padding: 12px 0;
+  margin-top: 10px;
+}
+.connection-question p {
+  color: #4d6142;
+  font-size: 12px;
+}
 .proposal > .floor-base-fields {
   display: block;
   color: var(--ink);

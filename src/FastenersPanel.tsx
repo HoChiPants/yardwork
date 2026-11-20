@@ -52,7 +52,7 @@ export type FastenersPanelProps = {
   onChange: (project: Project) => void;
   onBack: () => void;
   backLabel?: string;
-  initialPair?: { headId: string; receiverId: string; nonce: number };
+  initialPair?: { headId: string; receiverId: string; nonce: number; compareSides?: boolean };
   selectedPieceId?: string | null;
   selectedPlanId?: string | null;
   onSelectPlan?: (id: string | null) => void;
@@ -1697,10 +1697,12 @@ export function FastenersPanel({
           )}
           {validPair && !selectedPlan && !centeredCurrent && !contactCurrent && (
             <FastenerEntryComparison
+              key={initialPair?.nonce}
               project={project}
               headId={headId}
               receiverId={receiverId}
               productId={productId}
+              initiallyOpen={initialPair?.compareSides}
               onPreview={showCentered}
             />
           )}

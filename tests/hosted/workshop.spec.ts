@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { restoreWorkshopArchive } from "../../server/workshopArchive";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { blank, part } from "../../src/model";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
   const backendRequests: string[] = [];
@@ -67,6 +68,64 @@ test("saved studies open under the hosted base path", async ({ page }) => {
   await dialog.getByRole("button", { name: "Open saved example", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Three-section storage banquette · example copy", exact: true })).toBeVisible();
   await expect(page.locator(".statusbar")).toContainText("42 parts");
+});
+
+test("a joint question finds actual parts, previews a direction and reopens its saved plan", async ({ page }) => {
+  const project = blank("Named casework joints");
+  const step = project.steps[0].id;
+  const front = part("Front panel", "plytanium-703", [10, 10, 0.703], [0, 6, 0], step, "Casework");
+  const rail = part("Front rail", "stud", [1.5, 4, 2], [0.5, 4, -1.3515], step, "Casework");
+  project.pieces.push(front, rail);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "casework-joints.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const ask = async (request: string) => {
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await page.getByRole("textbox", { name: "Describe your idea" }).fill(request);
+    await page.getByRole("button", { name: "Explore idea", exact: true }).click();
+    return page.getByRole("region", { name: "Workspace joint review" });
+  };
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  const result = await ask("How can I attach the Front panel to the Front rail?");
+  await expect(result).toContainText("P001 · Front panel → P002 · Front rail");
+  await expect(result).toContainText("Wood faces meet · 0 in gap.");
+  expect((await draft()).project.fastenerPlans).toEqual([]);
+  await result.getByRole("button", { name: "Compare screw entry sides", exact: true }).click();
+  const editor = page.getByRole("region", { name: "Wood fastener plans" });
+  const comparison = editor.getByRole("region", { name: "Screw entry comparison" });
+  await expect(comparison).toBeVisible();
+  await comparison.getByRole("button", { name: "Preview from P001", exact: true }).click();
+  await expect(page.getByTestId("fastener-centered-entry-marker")).toHaveCount(1);
+  await editor.getByRole("button", { name: "Use centered entry", exact: true }).click();
+  await expect.poll(async () => (await draft()).project.fastenerPlans.length).toBe(1);
+  const plan = (await draft()).project.fastenerPlans[0];
+  expect(plan.head.pieceId).toBe(front.id);
+  expect(plan.receiver.pieceId).toBe(rail.id);
+  expect(plan.measurements.surfaceToTipDepth).toBeNull();
+  expect((await draft()).project.supplies).toEqual([]);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await page.getByRole("dialog").locator(".project-list > button").filter({ hasText: "Named casework joints" }).click();
+  const neighbors = await ask("What can I screw P002 to?");
+  await expect(neighbors).toContainText("P002 · Front rail → P001 · Front panel");
+  await neighbors.getByRole("button", { name: `Open screw plan ${plan.label}`, exact: true }).click();
+  await expect(editor.locator(`[data-fastener-plan-id="${plan.id}"]`)).toBeVisible();
+  expect((await draft()).project.fastenerPlans).toEqual([plan]);
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("dialog").getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Centered entry chosen after comparing both sides");
 });
 
 test("a crosscut practice plan reuses the first scrap on two blanks", async ({ page }) => {

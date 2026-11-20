@@ -73,6 +73,7 @@ import * as THREE from "three";
 import { Scene } from "./Scene";
 import { useInspectorFocus } from "./useInspectorFocus";
 import IdeaPlanner from "./IdeaPlanner";
+import type { ConnectionQuestionAction } from "./ConnectionQuestionResult";
 import { AppliedDesignsPanel } from "./AppliedDesignsPanel";
 import { GreenhouseFoundationsPanel } from "./GreenhouseFoundationsPanel";
 import { greenhouseFoundationGuide, greenhouseFoundationReviews, greenhouseFoundationScope } from "./greenhouseFoundation";
@@ -714,7 +715,7 @@ export function App() {
   const entrancePickNonce = useRef(0);
   const [connectionContext, setConnectionContext] = useState<{projectId:string;scope:ConnectionReviewScope;backPanel:"part"|"checks"|"step"|"sections"|"prep";constructionEntryId?:string}|null>(null);
   const [returnToConnections, setReturnToConnections] = useState(false);
-  const [initialFastenerPair, setInitialFastenerPair] = useState<{projectId:string;headId:string;receiverId:string;nonce:number}|null>(null);
+  const [initialFastenerPair, setInitialFastenerPair] = useState<{projectId:string;headId:string;receiverId:string;nonce:number;compareSides?:boolean}|null>(null);
   const [initialConnectorPair, setInitialConnectorPair] = useState<{projectId:string;baseId:string;postId:string;nonce:number}|null>(null);
   const connectionNavigationNonce = useRef(0);
   const [hingeRequest, setHingeRequest] = useState<{planId:string;nonce:number}|null>(null);
@@ -1118,10 +1119,37 @@ export function App() {
     setSelected(id); setSelectedSectionId(null); setSelectionScope("part"); setMode("select"); setStage(null);
     inspectWorkspace();
   }
-  function planConnectionPair(headId: string, receiverId: string) {
+  function planConnectionPair(headId: string, receiverId: string, compareSides = false) {
     if (headId === receiverId || ![headId,receiverId].every((id) => project.pieces.some((piece) => piece.id === id && !piece.offcut && material(piece.material).wood)))
       throw Error("Choose two actual active wood members.");
-    openFasteners(); setSelected(headId); setInitialFastenerPair({projectId:project.id,headId,receiverId,nonce:++connectionNavigationNonce.current}); setReturnToConnections(true);
+    openFasteners(); setSelected(headId); setInitialFastenerPair({projectId:project.id,headId,receiverId,compareSides,nonce:++connectionNavigationNonce.current}); setReturnToConnections(true);
+  }
+  function openAskedConnection(action: ConnectionQuestionAction) {
+    if (!canLeaveWorkingDraft()) return;
+    const memberIds = action.secondId
+      ? [action.firstId, action.secondId]
+      : [action.firstId];
+    const live = current.current;
+    if (new Set(memberIds).size !== memberIds.length || memberIds.some((id) =>
+      !live.pieces.some((piece) => piece.id === id && !piece.offcut && material(piece.material).wood)))
+      throw Error("The parts changed. Explore this joint again.");
+    const plan = action.kind === "open-plan"
+      ? live.fastenerPlans.find(({ id }) => id === action.planId)
+      : undefined;
+    if (action.kind === "open-plan" && (!plan ||
+        !memberIds.includes(plan.head.pieceId) || !memberIds.includes(plan.receiver.pieceId)))
+      throw Error("The screw plan changed. Explore this joint again.");
+    openConnectionReview({
+      title: memberIds.map((id) => partLabel(live, id)).join(" and "),
+      memberIds,
+    });
+    if (action.kind === "compare") planConnectionPair(action.firstId, action.secondId, true);
+    if (plan) {
+      openFasteners(plan.id);
+      setSelected(plan.head.pieceId);
+      setReturnToConnections(true);
+    }
+    setModal(null);
   }
   function reviewConnectionIntent(intent: ConnectionIntent, scope?: ConnectionReviewScope) {
     if (scope) openConnectionReview(scope);
@@ -4728,6 +4756,7 @@ export function App() {
               <IdeaPlanner
                 project={project}
                 initialTarget={ideaTarget}
+                onConnectionAction={(action) => safe(() => openAskedConnection(action))}
                 onApply={(next) => {
                   safe(() => {
                     change(next);

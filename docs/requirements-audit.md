@@ -6,6 +6,8 @@ November 21, 2026. The current evidence covers the measured sink drain release i
 
 Both production builds and all 1,617 domain tests passed. Five whole-build examples passed their generated-artifact checks. The new Chrome workflow used a 390-pixel viewport to open an earlier kitchenette plan, preview a flat tube and correct the measured fall. It confirmed that the pullout approached the tube envelope at 9.91 inches of travel. The saved project reopened with a 5.75098-inch cut, a 1.37402-inch remnant from the same blank and the exact HDC9704B kit. Markdown and print kept the measured vent review. The measurements in the portable study exercise the software checks. Field measurements, the actual kit and the concealed installation still need verification. [Kitchenette drain plan](../public/examples/plumbing/kitchen-drain.yardwork.json) · [Build guide](../public/examples/plumbing/kitchen-drain-guide.md)
 
+The sauna heater and closet rod panels had the same component key. The heater panel could duplicate after a saved clearance edit. Giving each panel its own key restored the heater review. The Home Depot heater placement and the sourced-bench clearance workflows passed on rerun.
+
 ## Container save and reopen, format 81
 
 On macOS arm64, rootless Podman 6.1.4 built the production image from the Dockerfile, and Docker Compose 2.38.2 started the service on a separate loopback port with an isolated project volume. The Compose health check reached healthy on the original and replacement containers. The image ran as `node` and stored projects in the named volume mounted at `/app/data`.

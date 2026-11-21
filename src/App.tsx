@@ -3912,7 +3912,7 @@ export function App() {
                   ? { project, value, target: "bench" }
                   : current?.target === "bench" ? null : current)}
               />
-              <SaunaHeaterPanel key={project.id} project={project} onChange={change} shownId={shownSaunaHeaterId}
+              <SaunaHeaterPanel key={`sauna-heater-${project.id}`} project={project} onChange={change} shownId={shownSaunaHeaterId}
                 onShow={(id) => {
                   setShownSaunaHeaterId(id);
                   if (id) setShownSaunaVentilationId(null);
@@ -3931,7 +3931,7 @@ export function App() {
                   }
                 }}
               />
-              <RodFitsPanel key={project.id} project={project} onChange={change} shownId={shownRodSupportId}
+              <RodFitsPanel key={`rod-fits-${project.id}`} project={project} onChange={change} shownId={shownRodSupportId}
                 onShow={(id) => {
                   setShownRodSupportId(id);
                   if (id) { setStage(null); setPlaying(false); setExplode(false); inspectWorkspace(); }

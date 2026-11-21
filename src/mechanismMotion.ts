@@ -8,6 +8,7 @@ import { hingePoseAroundAxis } from "./hinges";
 import { sweepLidSiteFaces } from "./lidSiteClearance";
 import { formatPreciseInches } from "./measurement";
 import { uid, type Piece, type Project, type V3 } from "./model";
+import { sweepPairClearance, type PairClearanceResult } from "./motionPairClearance";
 import {
   motionPlanInputSchema,
   motionPlanSchema,
@@ -15,6 +16,7 @@ import {
   motionTestScenarioSchema,
   motionTestSetupSchema,
   type MotionPlan,
+  type MotionPairClearance,
   type MotionTestSetup,
 } from "./motionPlanSchema";
 import { partLabel } from "./partLabels";
@@ -202,6 +204,7 @@ type MovingShape = Shape & {
   extrema: ReturnType<typeof sweptExtrema>;
 };
 type ContactShape = MovingShape | (Shape & { motion?: undefined });
+type PairClearanceFinding = { requirement: MotionPairClearance; result: PairClearanceResult; phase?: MotionPhase };
 
 type SiteMotionRow = { row: MovingShape; plane: SiteClearance };
 export type MotionPhase = 0 | 1;
@@ -431,6 +434,18 @@ function motionSolid(row: ContactShape, travel: number) {
     : row.solid;
 }
 
+function separationSpeed(first: ContactShape, second: ContactShape, axis?: V3) {
+  if (first.motion === second.motion) return 0;
+  const velocity = (row: ContactShape) =>
+    row.motion && row.motion.kind === "slide" ? scale(row.motion.axis, row.rate) : [0, 0, 0] as V3;
+  const relative = vector(subtract(velocity(first), velocity(second)));
+  return (axis ? Math.abs(relative.dot(vector(axis))) : relative.length()) +
+    [first, second].reduce((sum, row) => row.motion && row.motion.kind === "hinge"
+      ? sum + row.rate * row.extrema.radius * radians *
+        (axis ? vector(row.motion.axis).cross(vector(axis)).length() : 1)
+      : sum, 0);
+}
+
 function pairOverlap(a: ContactShape, b: ContactShape, travel: number) {
   return solidOverlap(
     motionSolid(a, travel),
@@ -612,6 +627,15 @@ function checkMotionTestReferences(project: Project, active: MotionPlan, setup: 
       throw Error("Choose test motions with their own active moving parts.");
     occupied.push(other);
   }
+  if (setup.clearance) {
+    members(project, [setup.clearance.movingId, setup.clearance.otherId]);
+    if (!hasClearanceMovingPart(active, linked, setup.clearance))
+      throw Error("Choose a part moving in this test for the clearance check.");
+  }
+}
+
+function hasClearanceMovingPart(active: MotionPlan, linked: MotionPlan | undefined, requirement: MotionPairClearance) {
+  return [active, linked].some((plan) => plan?.memberIds.includes(requirement.movingId));
 }
 
 export function saveMotionTestSetup(
@@ -903,6 +927,26 @@ export function reviewMotionPath(
     ),
     unresolvedIds,
     bounds: sweepBounds,
+    pairClearance(requirement: MotionPairClearance): PairClearanceFinding {
+      const get = (id: string) => moving.find(({ piece }) => piece.id === id) ??
+        fixed.find(({ piece }) => piece.id === id);
+      const first = get(requirement.movingId);
+      const second = get(requirement.otherId);
+      if (!first || !second)
+        return { requirement, result: { status: "needs-review", reason: "A selected part is missing or has no usable geometry." } };
+      if (first.solid.kind === "envelope" || second.solid.kind === "envelope")
+        return { requirement, result: { status: "needs-review", reason: "A selected part has an exterior envelope only. Measure the actual gap." } };
+      try {
+        return {
+          requirement,
+          result: sweepPairClearance(requirement.minimum, mechanism.travel,
+            (at) => [motionSolid(first, at), motionSolid(second, at)],
+            (axis) => separationSpeed(first, second, axis)),
+        };
+      } catch {
+        return { requirement, result: { status: "needs-review", reason: "The modeled profiles could not be measured. Verify the gap on site." } };
+      }
+    },
     playbackLimit(
       requestedFrom: number,
       requestedTo: number,
@@ -1057,6 +1101,7 @@ type SingleMotionReview = ReturnType<typeof reviewMotion>;
 type PhaseRows<T extends ReadonlyArray<object>> = (T[number] & { phase?: MotionPhase })[];
 export type MotionReview = Omit<SingleMotionReview, "hits" | "zone" | "site" | "siteFindings" | "preview"> & {
   sequence?: readonly [MotionPlan, MotionPlan];
+  clearance?: PairClearanceFinding;
   hits: PhaseRows<SingleMotionReview["hits"]>;
   zone: PhaseRows<SingleMotionReview["zone"]>;
   site: PhaseRows<SingleMotionReview["site"]>;
@@ -1116,6 +1161,15 @@ function reviewMotionSequence(
     site,
     siteFindings: site.filter(({ status }) => status === "short" || status === "needs-review"),
     unresolvedIds: [...new Set(phases.flatMap(({ unresolvedIds }) => unresolvedIds))],
+    pairClearance(requirement) {
+      const checks = phases.map((motion) => motion.pairClearance(requirement));
+      for (const phase of phaseIndices) {
+        const { result } = checks[phase];
+        if (result.status === "short")
+          return { requirement, phase, result: { ...result, at: asProgress(phase, result.at) } };
+      }
+      return checks.find(({ result }) => result.status === "needs-review") ?? checks[0];
+    },
     playbackLimit(requestedFrom, requestedTo) {
       const from = motionPosition(requestedFrom, sequenceEnd);
       const to = motionPosition(requestedTo, sequenceEnd);
@@ -1201,11 +1255,18 @@ export function runMotionTest(
 ): MotionTestResult {
   try {
     const { held, linked } = resolveMotionTestSetup(project, setup);
+    let review: MotionReview;
     if (linked && setup?.openingOrder) {
       const sequence = setup.openingOrder === "selected-first" ? [plan, linked] as const : [linked, plan] as const;
-      return { review: reviewMotionSequence(project, plan, sequence, held) };
+      review = reviewMotionSequence(project, plan, sequence, held);
+    } else {
+      review = reviewMotion(project, plan, held, linked);
     }
-    return { review: reviewMotion(project, plan, held, linked) };
+    if (setup?.clearance)
+      review.clearance = hasClearanceMovingPart(plan, linked, setup.clearance)
+        ? review.pairClearance(setup.clearance)
+        : { requirement: setup.clearance, result: { status: "needs-review", reason: "The selected part no longer moves in this test." } };
+    return { review };
   } catch (problem) {
     return { error: problem instanceof Error ? problem.message : "Confirm the current moving parts." };
   }
@@ -1250,6 +1311,16 @@ function motionSiteLine(project: Project, review: MotionReview, entry: MotionRev
   return `${plane.label} · ${partLabel(project, movingId)} · ${result}.`;
 }
 
+export function motionPairClearanceLine(project: Project, review: MotionReview) {
+  const finding = review.clearance;
+  if (!finding) return "";
+  const { requirement: { movingId, otherId, minimum }, result, phase } = finding;
+  const label = `${formatPreciseInches(minimum)} minimum gap · ${partLabel(project, movingId)} and ${partLabel(project, otherId)}`;
+  if (result.status === "needs-review") return `${label} · Needs review. ${result.reason}`;
+  if (result.status === "met") return `${label} · Met throughout the modeled travel.`;
+  return `${label} · Shortfall. Observed ${formatPreciseInches(result.gap)} near ${motionReviewDistance(review, result.at, phase)}.`;
+}
+
 export type MotionTestFinding = {
   id: string;
   detail: string;
@@ -1284,6 +1355,11 @@ export function motionTestFindings(project: Project, result: MotionTestResult, i
   ];
   if (review.unresolvedIds.length)
     findings.push({ id: "geometry", detail: unresolvedMotionLine(project, review) });
+  if (review.clearance) {
+    const { result, phase } = review.clearance;
+    findings.push({ id: "pair-clearance", detail: motionPairClearanceLine(project, review),
+      travel: result.status === "short" ? result.at : undefined, phase });
+  }
   if (includeClear && !findings.length)
     findings.push({ id: "clear", detail: "No modeled clearance findings along the tested travel." });
   return findings;
@@ -1302,6 +1378,7 @@ function motionClearanceLines(project: Project, review: MotionReview) {
       ? [`Work-zone limits exceeded at ${[...new Set(review.zone.map((issue) => issue.label))].join(", ")}.`]
       : []),
     ...review.site.map((entry) => motionSiteLine(project, review, entry)),
+    ...(review.clearance ? [motionPairClearanceLine(project, review)] : []),
   ];
 }
 

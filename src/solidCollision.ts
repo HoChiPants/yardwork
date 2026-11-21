@@ -1,4 +1,4 @@
-import { Euler, Vector3 } from "three";
+import { Euler, Line3, Triangle, Vector3 } from "three";
 import { clipBox, type ConvexSolid } from "./cutProfiles";
 import { material, type Piece, type V3 } from "./model";
 import { pieceThroughOpenings, throughOpeningPrisms } from "./throughOpenings";
@@ -9,6 +9,8 @@ type ConvexCollisionSolid = {
   faceNormals: V3[];
   /** Unit directions of actual polygon perimeter edges, not triangle diagonals. */
   edgeDirections: V3[];
+  /** Retained polygon boundaries, indexed into vertices, for distance queries. */
+  faceLoops?: number[][];
   bounds: { min: V3; max: V3 };
   /** An envelope overlap requires review; it is not a known filled material profile. */
   kind: "solid" | "envelope";
@@ -149,6 +151,7 @@ function prepareConvex(
     vertices,
     faceNormals,
     edgeDirections,
+    faceLoops: local.faces.map(({ indices }) => indices),
     bounds: boundsOf(vertices),
     kind,
   };
@@ -165,12 +168,14 @@ export function translateCollisionSolid(
     bounds,
     faceNormals,
     edgeDirections,
+    faceLoops,
     kind,
   }: ConvexCollisionSolid) => ({
     vertices: vertices.map(move),
     bounds: { min: move(bounds.min), max: move(bounds.max) },
     faceNormals,
     edgeDirections,
+    faceLoops,
     kind,
   });
   return {
@@ -192,6 +197,7 @@ export function transformCollisionSolid(
       kind: part.kind,
       faceNormals: part.faceNormals.map(direction),
       edgeDirections: part.edgeDirections.map(direction),
+      faceLoops: part.faceLoops,
     };
   };
   return {
@@ -426,6 +432,64 @@ function convexOverlap(
     if (aa.max - bb.min <= contact || bb.max - aa.min <= contact) return false;
   }
   return true;
+}
+
+function surfaceFeatures(shape: ConvexCollisionSolid) {
+  if (!shape.faceLoops)
+    throw Error("Distance review needs the modeled part surfaces.");
+  const vertices = shape.vertices.map((point) => new Vector3(...point));
+  const triangles: Triangle[] = [];
+  const edges = new Map<string, Line3>();
+  for (const loop of shape.faceLoops) {
+    for (let i = 1; i + 1 < loop.length; i++) {
+      const triangle = new Triangle(vertices[loop[0]], vertices[loop[i]], vertices[loop[i + 1]]);
+      if (triangle.getArea() > 0) triangles.push(triangle);
+    }
+    for (const [i, a] of loop.entries()) {
+      const b = loop[(i + 1) % loop.length];
+      const key = a < b ? `${a}/${b}` : `${b}/${a}`;
+      if (!edges.has(key)) edges.set(key, new Line3(vertices[a], vertices[b]));
+    }
+  }
+  return { vertices, triangles, edges: [...edges.values()] };
+}
+
+/** Euclidean gap at one pose. For separated convex solids, the closest features
+ * are covered by vertex-to-face and edge-to-edge distances, including endpoints.
+ * Through-openings use the retained cells, never their filled outer hull. */
+export function solidGap(first: CollisionSolid, second: CollisionSolid): number {
+  if (solidOverlap(first, second, 0)) return 0;
+  const checked = new Map<ConvexCollisionSolid, ReturnType<typeof surfaceFeatures>>();
+  const features = (shape: ConvexCollisionSolid) => {
+    const cached = checked.get(shape);
+    if (cached) return cached;
+    const prepared = surfaceFeatures(shape);
+    checked.set(shape, prepared);
+    return prepared;
+  };
+  const point = new Vector3();
+  let bestSquared = Infinity;
+  for (const a of first.cells ?? [first]) {
+    for (const b of second.cells ?? [second]) {
+      const bound = dimensions.reduce<number>((sum, i) =>
+        sum + Math.max(0, a.bounds.min[i] - b.bounds.max[i], b.bounds.min[i] - a.bounds.max[i]) ** 2, 0);
+      if (bound >= bestSquared) continue;
+      const firstFeatures = features(a);
+      const secondFeatures = features(b);
+      for (const [from, to] of [[firstFeatures, secondFeatures], [secondFeatures, firstFeatures]]) {
+        for (const vertex of from.vertices)
+          for (const face of to.triangles) {
+            face.closestPointToPoint(vertex, point);
+            bestSquared = Math.min(bestSquared, vertex.distanceToSquared(point));
+          }
+      }
+      for (const edgeA of firstFeatures.edges)
+        for (const edgeB of secondFeatures.edges)
+          bestSquared = Math.min(bestSquared, edgeA.distanceSqToLine3(edgeB));
+    }
+  }
+  if (!Number.isFinite(bestSquared)) throw Error("Could not measure the modeled contact gap.");
+  return Math.sqrt(Math.max(0, bestSquared));
 }
 
 /** null means an unsupported profile, never a proven clear space. */

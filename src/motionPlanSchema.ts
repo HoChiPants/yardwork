@@ -118,10 +118,18 @@ export const motionPlanInputSchema = z.strictObject({
 const motionOpeningOrder = z.enum(["selected-first", "companion-first"]);
 export type MotionOpeningOrder = z.infer<typeof motionOpeningOrder>;
 
+const motionPairClearanceSchema = z.strictObject({
+  movingId: z.uuid(),
+  otherId: z.uuid(),
+  minimum: z.number().finite().min(0.001).max(24),
+}).refine(({ movingId, otherId }) => movingId !== otherId, "Choose two different parts.");
+export type MotionPairClearance = z.infer<typeof motionPairClearanceSchema>;
+
 export const motionTestSetupSchema = z
   .strictObject({
     linkedId: z.uuid().optional(),
     openingOrder: motionOpeningOrder.optional(),
+    clearance: motionPairClearanceSchema.optional(),
     held: z
       .array(
         z.strictObject({
@@ -132,10 +140,10 @@ export const motionTestSetupSchema = z
       .max(49),
   })
   .refine(
-    ({ linkedId, held, openingOrder }) =>
+    ({ linkedId, held, openingOrder, clearance }) =>
       new Set(held.map(({ motionId }) => motionId)).size === held.length &&
-      (linkedId ? !held.some(({ motionId }) => motionId === linkedId) : !openingOrder && held.length > 0),
-    "Choose distinct motions to move together or hold in place.",
+      (linkedId ? !held.some(({ motionId }) => motionId === linkedId) : !openingOrder && (held.length > 0 || !!clearance)),
+    "Choose distinct motions to move or hold, or enter a clearance between two parts.",
   );
 
 export const motionTestScenarioLimit = 8;

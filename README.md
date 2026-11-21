@@ -172,6 +172,8 @@ Use **Test movement** in the workspace toolbar or **Sections → Test door or dr
 
 Choose **Focus these parts** in a door, drawer or lid collision result to frame the two pieces involved. **Show full project** restores the surrounding model at the same preview position.
 
+In **Test movement → Check a minimum gap**, choose the moving part, a nearby modeled part and your required spacing. The check covers the whole tested path, including linked motions and saved opening orders. A shortfall shows an observed gap and opens that pose in 3D. Save the test setup or name the test to include it in the build guide. Choose hardware spacing from its own instructions and model accessories you want to check. [Accuride 3732 installation reference](https://www.accuride.com/media/amasty/amfile/attach/a3bcba75b0b82de060a661de95ce9f44.pdf)
+
 Choose **Edit obstruction** from that view to open the obstructing piece in the Part inspector. After moving or resizing it, choose **Retest clearance**. The motion starts closed with the same held parts and opening order, using your current layout.
 
 

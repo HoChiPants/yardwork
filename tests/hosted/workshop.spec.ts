@@ -9,6 +9,8 @@ import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings"
 import { saveWoodJointDecision } from "../../src/woodJointDecisions";
 import { bounds } from "../../src/engine";
 import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
+import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
+import { saveMotionPlan } from "../../src/mechanismMotion";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
   const backendRequests: string[] = [];
@@ -233,7 +235,7 @@ test("glue and seam details follow actual parts into the saved project and both 
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   await expect.poll(async () => (await draft())?.revision).toBe(1);
   const saved = (await draft()).project;
-  expect(saved.schemaVersion).toBe(82);
+  expect(saved.schemaVersion).toBe(PROJECT_FORMAT_VERSION);
   expect(saved.woodJointDecisions.map(({ method }: { method: string }) => method)).toEqual(["glue", "sealant"]);
   expect(saved.fastenerPlans).toEqual([]);
   expect(saved.supplies).toEqual([]);
@@ -421,4 +423,57 @@ test("relative wording revises one applied section and exports the resized build
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/Seat heights: 18, 20 in/);
   expect(guide).toContain("Cut");
+});
+
+test("a drawer can pass without touching and still fail a saved minimum gap test", async ({ page }) => {
+  const project = blank("Cabinet lip clearance");
+  const step = project.steps[0].id;
+  const drawer = part("Drawer front", "plywood", [4, 2, 2], [0, 4, 0], step, "Cabinet");
+  const lip = part("Cabinet lip", "plywood", [2, 2, 1], [0, 6.0625, 6], step, "Cabinet");
+  const saved = saveMotionPlan({ ...project, pieces: [drawer, lip] }, {
+    label: "Drawer", memberIds: [drawer.id], mechanism: { kind: "slide", axis: [0, 0, 1], travel: 12 },
+  }).project;
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "cabinet-lip.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...saved, schemaVersion: 82 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  const openMotion = () => page.getByRole("button", { name: "Test movement", exact: true }).click();
+  await openMotion();
+  const panel = page.getByRole("region", { name: "Motion and clearance" });
+  await panel.getByText("Check a minimum gap", { exact: true }).click();
+  await panel.getByRole("combobox", { name: "Part to clear", exact: true }).selectOption(lip.id);
+  await panel.getByRole("spinbutton", { name: "Required minimum gap", exact: true }).fill("0.125");
+  await panel.getByRole("button", { name: "Check gap through travel", exact: true }).click();
+  const result = panel.getByRole("region", { name: "Minimum gap result" });
+  await expect(result.getByRole("status")).toContainText("Shortfall. Observed 0.0625 in near 6 in.");
+  await expect(panel.getByText("No modeled interference found along this travel.")).toBeVisible();
+  await result.getByRole("button", { name: "Inspect the gap", exact: true }).click();
+  await expect(page.getByTestId("motion-preview-label")).toHaveAttribute("data-pose", "6");
+  await panel.getByText("Keep this test under a name", { exact: true }).click();
+  await panel.getByLabel("Clearance test name", { exact: true }).fill("Drawer lip check");
+  await panel.getByRole("button", { name: "Save named test", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  expect((await readDraft()).project.motionPlans[0].testScenarios[0]).toMatchObject({
+    name: "Drawer lip check", setup: { clearance: { movingId: drawer.id, otherId: lip.id, minimum: 0.125 } },
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: "Cabinet lip clearance" }).click();
+  await openMotion();
+  await panel.getByRole("combobox", { name: "Clearance test", exact: true }).selectOption({ label: "Drawer lip check" });
+  await expect(result).toContainText("0.0625 in");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Named clearance test · Drawer lip check");
+  expect(guide).toContain("Shortfall. Observed 0.0625 in near 6 in.");
 });

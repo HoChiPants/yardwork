@@ -11,6 +11,7 @@ import {
 import { greenhouseVentChoices, greenhouseVentReview } from "./greenhouseVents";
 import { useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
+import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
 import {
   GreenhouseDoorDetails,
   GreenhouseDoorEditor,
@@ -20,6 +21,7 @@ import {
   canParkMotion,
   motionDirections as directions,
   motionDistance,
+  motionPairClearanceLine,
   motionPivotPreset,
   motionReviewDistance,
   motionReviewTravel,
@@ -45,6 +47,7 @@ import {
   type MotionOpeningOrder,
   type MotionPlan,
   type MotionPlanInput,
+  type MotionPairClearance,
   type MotionTestSetup,
 } from "./motionPlanSchema";
 import { accuride3732 } from "./drawerSlideReference";
@@ -463,11 +466,12 @@ function heldMotions(
   return held;
 }
 
-function testSetupFrom(linkedId: string, positions: ReadonlyMap<string, number>, openingOrder?: MotionOpeningOrder): MotionTestSetup | undefined {
-  if (!linkedId && !positions.size) return undefined;
+function testSetupFrom(linkedId: string, positions: ReadonlyMap<string, number>, openingOrder?: MotionOpeningOrder, clearance?: MotionPairClearance): MotionTestSetup | undefined {
+  if (!linkedId && !positions.size && !clearance) return undefined;
   return {
     ...(linkedId && { linkedId }),
     ...(linkedId && openingOrder && { openingOrder }),
+    ...(clearance && { clearance }),
     held: [...positions].map(([motionId, percent]) => ({ motionId, percent })),
   };
 }
@@ -509,12 +513,14 @@ export function MotionPanel({
     motionId: string;
     linkedId: string;
     openingOrder?: MotionOpeningOrder;
+    clearance?: MotionPairClearance;
     positions: Map<string, number>;
   } | null>(() =>
     initialTest ? {
       motionId: initialTest.plan.id,
       linkedId: initialTest.setup?.linkedId ?? "",
       openingOrder: initialTest.setup?.openingOrder,
+      clearance: initialTest.setup?.clearance,
       positions: heldPositionsFrom(initialTest.setup),
     } : null,
   );
@@ -540,9 +546,10 @@ export function MotionPanel({
   const heldPositions = draft?.positions ?? savedPositions;
   const linkedId = draft ? draft.linkedId : savedSetup?.linkedId ?? "";
   const openingOrder = draft ? draft.openingOrder : savedSetup?.openingOrder;
-  const testSetup = testSetupFrom(linkedId, heldPositions, openingOrder);
+  const clearance = draft ? draft.clearance : savedSetup?.clearance;
+  const testSetup = testSetupFrom(linkedId, heldPositions, openingOrder, clearance);
   const sameSetup = JSON.stringify(testSetup) === JSON.stringify(
-    testSetupFrom(savedSetup?.linkedId ?? "", savedPositions, savedSetup?.openingOrder),
+    testSetupFrom(savedSetup?.linkedId ?? "", savedPositions, savedSetup?.openingOrder, savedSetup?.clearance),
   );
   const trimmedName = scenarioName.trim();
   const nameMatch = scenarios.find(({ name }) => name.toLowerCase() === trimmedName.toLowerCase());
@@ -600,7 +607,7 @@ export function MotionPanel({
   function loadTestSetup(plan: MotionPlan, setup?: MotionTestSetup, startClosed = false) {
     const positions = heldPositionsFrom(setup);
     const companion = setup?.linkedId ?? "";
-    setSetupDraft({ motionId: plan.id, linkedId: companion, positions, openingOrder: setup?.openingOrder });
+    setSetupDraft({ motionId: plan.id, linkedId: companion, positions, openingOrder: setup?.openingOrder, clearance: setup?.clearance });
     const restart = startClosed || openingOrder !== setup?.openingOrder || (openingOrder && linkedId !== companion);
     test(plan, project, restart ? 0 : preview?.travel ?? 0, setup ?? null);
   }
@@ -656,8 +663,8 @@ export function MotionPanel({
     const next = new Map(heldPositions);
     if (percent === undefined) next.delete(id);
     else next.set(id, percent);
-    setSetupDraft({ motionId: selected.id, linkedId, positions: next, openingOrder });
-    if (preview) test(selected, project, preview.travel, testSetupFrom(linkedId, next, openingOrder) ?? null);
+    setSetupDraft({ motionId: selected.id, linkedId, positions: next, openingOrder, clearance });
+    if (preview) test(selected, project, preview.travel, testSetupFrom(linkedId, next, openingOrder, clearance) ?? null);
     else {
       setActiveReview(null);
       setError("");
@@ -676,9 +683,9 @@ export function MotionPanel({
   function link(id: string, order: MotionOpeningOrder | null | undefined = openingOrder) {
     if (!selected) return;
     const nextOrder = id ? order ?? undefined : undefined;
-    setSetupDraft({ motionId: selected.id, linkedId: id, positions: heldPositions, openingOrder: nextOrder });
+    setSetupDraft({ motionId: selected.id, linkedId: id, positions: heldPositions, openingOrder: nextOrder, clearance });
     if (preview)
-      test(selected, project, openingOrder || nextOrder ? 0 : preview.travel, testSetupFrom(id, heldPositions, nextOrder) ?? null);
+      test(selected, project, openingOrder || nextOrder ? 0 : preview.travel, testSetupFrom(id, heldPositions, nextOrder, clearance) ?? null);
     else {
       setActiveReview(null);
       setError("");
@@ -924,6 +931,16 @@ export function MotionPanel({
           )}
         </details>
       )}
+      {selected && editing === null && (
+        <MotionPairClearanceFields
+          key={JSON.stringify([selected.id, linked?.id, clearance])}
+          pieces={project.pieces}
+          movingIds={[...selected.memberIds, ...linked?.memberIds ?? []]}
+          labels={labels}
+          current={clearance}
+          onTest={(next) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, next))}
+        />
+      )}
       {selected && editing === null && (testSetup || savedSetup) && (
         <section className="field-section motion-test-setup" aria-label="Motion test setup">
           {savedSetup && <p className="small-note">{sameSetup ? selectedScenario ? "Named test setup saved" : "Saved test setup" : testSetup ? "Test setup changed" : "Testing motion alone"}</p>}
@@ -1139,6 +1156,20 @@ export function MotionPanel({
               </button>
             )}
           </div>
+          {review.clearance && (
+            <section aria-label="Minimum gap result" className="field-section">
+              <p className="small-note" role="status">{motionPairClearanceLine(project, review)}</p>
+              {review.clearance.result.status === "short" && (() => {
+                const { requirement, result, phase } = review.clearance;
+                return (
+                  <button type="button" className="text-button"
+                    onClick={() => show(result.at, undefined, phase, [requirement.movingId, requirement.otherId])}>
+                    Inspect the gap
+                  </button>
+                );
+              })()}
+            </section>
+          )}
           {!review.hits.length &&
             !review.zone.length &&
             !review.siteFindings.length &&

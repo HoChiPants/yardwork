@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { test } from "node:test";
 import { bearingConnections } from "../src/bearingConnections";
 import { connectionCoverage } from "../src/connectionCoverage";
@@ -27,7 +28,7 @@ function contacts(project: Project) {
 test("a named method is saved once for the actual pair and appears in the guide", () => {
   const { project, panel, rail } = aJoint();
   const legacy = projectSchema.parse({ ...project, schemaVersion: 81 });
-  assert.equal(legacy.schemaVersion, 82);
+  assert.equal(legacy.schemaVersion, PROJECT_FORMAT_VERSION);
   assert.equal(legacy.woodJointDecisions, undefined);
   const guided = generateBuildGuide(legacy);
   assert.ok(guideIsCurrent(guided));

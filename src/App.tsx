@@ -5430,6 +5430,7 @@ export function App() {
             {modal === "idea" && (
               <IdeaPlanner
                 project={project}
+                connectedPlanner={health?.ai === "ollama"}
                 initialTarget={ideaTarget}
                 onConnectionAction={(action) => safe(() => openAskedConnection(action))}
                 findings={findings}

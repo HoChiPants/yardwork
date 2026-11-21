@@ -49,6 +49,14 @@ import {
 } from "./planning";
 
 const noop = () => {};
+type PlannerChoice = "server" | "built-in";
+type PlannerResult = { plan: IdeaPlan; provider: string; message: string };
+type PlanSubmission = {
+  prompt: string;
+  body: string;
+  previous: IdeaPlan | null;
+  previousResult: PlannerResult | null;
+};
 function PlacementFields({
   name,
   position,
@@ -115,6 +123,7 @@ class PreviewBoundary extends Component<
 
 export default function IdeaPlanner({
   project,
+  connectedPlanner,
   initialTarget = null,
   onApply,
   onConnectionAction,
@@ -123,6 +132,7 @@ export default function IdeaPlanner({
   onClose,
 }: {
   project: Project;
+  connectedPlanner: boolean;
   initialTarget?: { bindingId: string; entryIds?: string[] } | null;
   onApply: (next: Project, source: Project) => void;
   onConnectionAction: (action: ConnectionQuestionAction) => void;
@@ -146,7 +156,12 @@ export default function IdeaPlanner({
     controller: AbortController;
     timeout: AbortSignal;
     cancelled: boolean;
+    choice: PlannerChoice;
+    submission: PlanSubmission;
   } | null>(null);
+  const [plannerChoice, setPlannerChoice] = useState<PlannerChoice>("server");
+  const [pendingPlanner, setPendingPlanner] = useState<PlannerChoice | null>(null);
+  const busy = pendingPlanner !== null;
   const [planningStatus, setPlanningStatus] = useState("");
   const [exploredPrompt, setExploredPrompt] = useState("");
   const [unavailablePrompt, setUnavailablePrompt] = useState<string>();
@@ -154,13 +169,8 @@ export default function IdeaPlanner({
     prompt: string;
   } & ({ kind: "joint"; question: ConnectionQuestion } | { kind: "build"; question: BuildQuestion }) | null>(null);
   const [prompt, setPrompt] = useState(""),
-    [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [result, setResult] = useState<{
-      plan: IdeaPlan;
-      provider: string;
-      message: string;
-    } | null>(null);
+    [result, setResult] = useState<PlannerResult | null>(null);
   const jointAnswer = useMemo(() => workspaceRequest?.kind === "joint" && workspaceRequest.prompt === prompt
     ? answerConnectionQuestion(project, workspaceRequest.question) : null,
   [workspaceRequest, project, prompt]);
@@ -187,7 +197,7 @@ export default function IdeaPlanner({
     setPrompt("");
     setExploredPrompt("");
     setUnavailablePrompt(undefined);
-    setBusy(false);
+    setPendingPlanner(null);
     setError("");
     setPlanningStatus("");
     if (next) {
@@ -322,13 +332,13 @@ export default function IdeaPlanner({
     request.cancelled = true;
     request.controller.abort();
   }
-  async function generate(useBuiltIn = false) {
-    if (activeRequest.current || !prompt.trim()) return;
+  function prepareSubmission(): PlanSubmission | null {
+    if (!prompt.trim()) return null;
     const stockRequest = proposalStockRequest(prompt);
     if (stockRequest) {
       if (!preview?.value) {
         setError("Explore or open a design before previewing its cuts. To check existing parts, ask what scraps you can reuse.");
-        return;
+        return null;
       }
       setWorkspaceRequest(null);
       setStockOpen(true);
@@ -337,7 +347,7 @@ export default function IdeaPlanner({
       setExploredPrompt(prompt);
       setError("");
       setPlanningStatus("");
-      return;
+      return null;
     }
     const joint = connectionQuestion(project, prompt);
     const review = joint ? null : buildQuestion(prompt);
@@ -347,63 +357,61 @@ export default function IdeaPlanner({
       setWorkspaceRequest(workspace);
       setError("");
       setPlanningStatus("");
-      return;
+      return null;
     }
     setWorkspaceRequest(null);
-    const previous = result?.plan ?? previousPlan.current,
-      previousResult = result;
+    const previous = result?.plan ?? previousPlan.current;
+    const targetSections = new Set(
+      target ? (project.ideaBindings
+        .find((binding) => binding.id === target.bindingId)
+        ?.entries.filter((entry) => !target.entryIds || target.entryIds.includes(entry.id))
+        .flatMap((entry) => entry.sections.map((section) => section.sectionId)) ?? []) : [],
+    );
+    const existingSections = project.sections
+      .filter((section) => !targetSections.has(section.id))
+      .map((s) => {
+        const boxes = project.pieces.filter((piece) => s.pieceIds.includes(piece.id)).map(bounds);
+        return {
+          name: s.name,
+          min: [0, 1, 2].map((i) => Math.min(...boxes.map((box) => box.min[i]))),
+          max: [0, 1, 2].map((i) => Math.max(...boxes.map((box) => box.max[i]))),
+        };
+      })
+      .filter((s) => s.min.every(Number.isFinite) && s.max.every(Number.isFinite));
+    return {
+      prompt, previous, previousResult: result,
+      body: JSON.stringify({ prompt, workZone: zone ?? null, existingSections, previousPlan: previous ?? undefined }),
+    };
+  }
+  async function generate(choice = plannerChoice) {
+    const held = activeRequest.current;
+    if (held && (choice !== "built-in" || held.choice === "built-in" || held.cancelled)) return;
+    // A switch reuses the submitted draft, even if the description has since changed.
+    const submission = held ? held.submission : prepareSubmission();
+    if (!submission) return;
+    const { previous, previousResult } = submission;
     const request = {
       controller: new AbortController(),
       timeout: AbortSignal.timeout(AI_CLIENT_TIMEOUT_MS),
       cancelled: false,
+      choice,
+      submission,
     };
     activeRequest.current = request;
+    held?.controller.abort();
     previousPlan.current = previous;
-    setBusy(true);
+    if (connectedPlanner) setPlannerChoice(choice);
+    setPendingPlanner(choice);
     setError("");
     setUnavailablePrompt(undefined);
     setPlanningStatus("");
     setResult(null);
     try {
-      const targetSections = new Set(
-        target
-          ? (project.ideaBindings
-              .find((binding) => binding.id === target.bindingId)
-              ?.entries.filter(
-                (entry) =>
-                  !target.entryIds || target.entryIds.includes(entry.id),
-              )
-              .flatMap((entry) =>
-                entry.sections.map((section) => section.sectionId),
-              ) ?? [])
-          : [],
-      );
-      const existingSections = project.sections
-        .filter((section) => !targetSections.has(section.id))
-        .map((s) => {
-          const pieces = project.pieces.filter((p) =>
-              s.pieceIds.includes(p.id),
-            ),
-            boxes = pieces.map(bounds);
-          return {
-            name: s.name,
-            min: [0, 1, 2].map((i) => Math.min(...boxes.map((b) => b.min[i]))),
-            max: [0, 1, 2].map((i) => Math.max(...boxes.map((b) => b.max[i]))),
-          };
-        })
-        .filter(
-          (s) => s.min.every(Number.isFinite) && s.max.every(Number.isFinite),
-        );
-      const requestPlan = useBuiltIn ? browserWorkshopRequest : workshopRequest;
+      const requestPlan = choice === "built-in" ? browserWorkshopRequest : workshopRequest;
       const response = await requestPlan("/api/planner", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          prompt,
-          workZone: zone ?? null,
-          existingSections,
-          previousPlan: previous ?? undefined,
-        }),
+        body: submission.body,
         signal: AbortSignal.any([request.controller.signal, request.timeout]),
       });
       const data = await response.json();
@@ -417,12 +425,12 @@ export default function IdeaPlanner({
         );
       const plan = ideaPlanSchema.parse(data.plan);
       previousPlan.current = plan;
-      setExploredPrompt(prompt);
+      setExploredPrompt(submission.prompt);
       setResult({ plan, provider: data.provider, message: data.message });
     } catch (error) {
       if (activeRequest.current !== request) return;
       setResult(previousResult);
-      if (!request.cancelled && !useBuiltIn && !browserWorkshop) setUnavailablePrompt(prompt);
+      if (!request.cancelled && choice === "server" && !browserWorkshop) setUnavailablePrompt(submission.prompt);
       if (request.cancelled)
         setPlanningStatus(
           previous
@@ -444,7 +452,7 @@ export default function IdeaPlanner({
     } finally {
       if (activeRequest.current === request) {
         activeRequest.current = null;
-        setBusy(false);
+        setPendingPlanner(null);
       }
     }
   }
@@ -587,6 +595,14 @@ export default function IdeaPlanner({
           </div>
         </details>
       )}
+      {connectedPlanner && <label className="field">
+        Planner
+        <select value={plannerChoice} disabled={busy}
+          onChange={(event) => setPlannerChoice(event.target.value === "built-in" ? "built-in" : "server")}>
+          <option value="server">Connected model</option>
+          <option value="built-in">Built-in layout</option>
+        </select>
+      </label>}
       <button
         className="button primary full"
         disabled={busy || !prompt.trim()}
@@ -601,10 +617,13 @@ export default function IdeaPlanner({
       </button>
       {busy && (
         <>
-          <p className="small-note" role="status">
-            A cold local model may take up to three minutes to start and plan
-            your layout.
-          </p>
+          {connectedPlanner && pendingPlanner === "server" && <>
+            <p className="small-note" role="status">
+              A cold local model may take up to three minutes. {activeRequest.current?.submission.prompt !== prompt
+                ? "Switching uses the idea already submitted." : ""}
+            </p>
+            <button type="button" className="button secondary full" onClick={() => void generate("built-in")}>Use built-in layout</button>
+          </>}
           <button className="button secondary full" onClick={cancelPlanning}>
             Cancel planning
           </button>
@@ -644,7 +663,7 @@ export default function IdeaPlanner({
             <p>{error}</p>
           </div>
           {unavailablePrompt === prompt && <button type="button" className="button secondary full" disabled={busy}
-            onClick={() => void generate(true)}>Use built-in layout</button>}
+            onClick={() => void generate("built-in")}>Use built-in layout</button>}
         </>
       )}
       {jointAnswer && <ConnectionQuestionResult answer={jointAnswer} onAction={onConnectionAction} />}

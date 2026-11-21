@@ -1,6 +1,10 @@
 # Current evidence and remaining qualification
 
-November 21, 2026. The current evidence covers the bottom plate air-seal release and the banquette planning correction in project format 114. Earlier checkpoints below cover the tested versions and workflows they identify.
+November 21, 2026. This ledger records the tested versions and workflows at each checkpoint.
+
+## Planner switching and native qualification, format 118
+
+On Apple M2 with native Ollama 0.40.17 and Qwen2.5 3B, the original kitchenette prompt produced three straight storage benches with opening seats and no backs in 9.2 seconds. The separate L-banquette check and seven family and refinement scenarios passed using the same engine. In Chrome, switching from a running model follow-up to the built-in planner preserved a manually edited 90-inch run. The built-in preview showed the requested 22-inch seat height after about 0.6 seconds. The model request canceled, and the resulting 42-part layout saved and reopened at revision 1. Browser tests also passed with a late model result and with extra text typed while the request was running. The published browser workshop uses the built-in planner. These timings came from the test hardware and prompts. [Ollama response fields](https://docs.ollama.com/api/chat)
 
 ## Native model planning and the original kitchenette prompt
 

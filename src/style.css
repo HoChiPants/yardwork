@@ -2536,11 +2536,11 @@ small {
     right: 54px;
     flex-wrap: wrap;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
   }
-  .scene-tools i { margin-inline: 3px; }
+  .scene-tools i { margin-inline: 2px; }
   .scene-tools button {
-    width: 29px;
+    width: 27px;
     height: 29px;
   }
   .timeline-heading h3 {
@@ -3813,6 +3813,8 @@ small {
   border: 1px solid #dce2d3;
   border-radius: 6px;
   cursor: pointer;
+  white-space: nowrap;
 }
+.stock-size-options input[type="radio"] { flex: none; width: auto; margin: 0; }
 .stock-size-options label:has(:checked) { background: #eef3e8; border-color: #a6b89a; }
 .stock-size-options + details { margin: 0 0 16px; }

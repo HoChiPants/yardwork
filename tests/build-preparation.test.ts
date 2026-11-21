@@ -8,7 +8,7 @@ import { makeConnectorPlan, saveConnectorPlan } from "../src/connectors";
 import { makeFastenerPlan, saveFastenerPlan } from "../src/fastenings";
 import { makeRestraintPlan, saveRestraintPlan, selectRestraintReceiver } from "../src/restraints";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
-import { bom, guideMarkdown, validate } from "../src/engine";
+import { bom, cutPiece, guideMarkdown, validate } from "../src/engine";
 import { connectionCoverage } from "../src/connectionCoverage";
 import { homeDepotShoppingList } from "../src/handoff";
 import { stockCutSequences } from "../src/stockCutSequence";
@@ -18,6 +18,9 @@ import { lidTravelPose, projectLidTravelChecks } from "../src/lidTravelFindings"
 import { lidPreview } from "../src/lidMotion";
 import { supplyRows } from "../src/supplies";
 import type { Project } from "../src/model";
+import { editRoundOpening } from "../src/throughOpeningCuts";
+import { addMeasuredOffcut } from "../src/measuredOffcuts";
+import { treatedWoodCuts } from "../src/treatedWood";
 
 function preparation(project: Project) {
   const stock = bom(project),
@@ -327,4 +330,41 @@ test("each storage lid links to its own obstruction and exact measured face", ()
   assert.ok(rows.some(({ action }) => action.kind === "lid" && action.sectionId === section.id && action.findingId === hit.id));
   assert.match(guideMarkdown(project), /Lid travel · Lid interference · P\d+ Upper trim/);
   assert.deepEqual(project, before);
+});
+
+test("treated wood review follows planned cuts, saved cut faces, holes and leftover pieces", () => {
+  const project = blank("Treated field cuts");
+  const stepId = project.steps[0].id;
+  const rail = part("Sill", "hd-treated-2x6-8", [5.5, 1.5, 96], [0, 0.75, 0], stepId, "Base");
+  const brace = part("Brace", "treated", [5.5, 1.5, 48], [0, 0.75, 6], stepId, "Base");
+  const whole = part("Whole treated piece", "treated", [5.5, 1.5, 96], [0, 0.75, 12], stepId, "Base");
+  const dry = part("Dry stud", "stud", [3.5, 1.5, 48], [0, 0.75, 18], stepId, "Base");
+  project.pieces = [rail, brace, whole, dry];
+  const cut = cutPiece(project, rail.id, 60, 2);
+  const opened = editRoundOpening(cut, rail.id, null, { axis: 1, diameter: 0.5, fromEdges: [12, 2.75] });
+  const before = structuredClone(opened);
+  const rows = preparation(opened).find(({ id }) => id === "treated-wood")!.items;
+  const leftover = opened.pieces.find(({ offcut }) => offcut)!;
+  assert.deepEqual(rows.map(({ action, detail }) => [action, detail]), [
+    [{ kind: "part", id: rail.id }, "Recorded cut face · local +Z. 1 round opening."],
+    [{ kind: "part", id: brace.id }, "Planned trim from selected stock · length to 4 ft."],
+    [{ kind: "offcut", id: leftover.id }, "Recorded cut face · local −Z."],
+  ]);
+  const guide = guideMarkdown(opened);
+  assert.match(guide, /### Pressure-treated wood cuts[\s\S]*American Wood Council field treatment guidance[\s\S]*P001 · Sill[\s\S]*O001 · Offcut · Sill/);
+  assert.deepEqual(opened, before);
+
+  const damaged = structuredClone(opened);
+  damaged.pieces.find(({ id }) => id === leftover.id)!.cutStock!.offset[2] = 0;
+  const [review] = treatedWoodCuts(damaged);
+  assert.match(review.detail, /Confirm cut faces from the original blank/);
+  assert.doesNotMatch(review.detail, /local \+Z/);
+
+  const shop = blank();
+  const onHand = addMeasuredOffcut(shop, shop.steps[0].id, "treated", [30, 5.5, 1.5]);
+  assert.equal(
+    treatedWoodCuts(onHand)[0].detail,
+    "On-hand blank · check which faces were previously cut and treated.",
+  );
+  assert.equal(preparation(onHand)[0].items[0].action.kind, "offcut");
 });

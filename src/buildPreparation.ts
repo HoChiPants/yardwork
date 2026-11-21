@@ -17,9 +17,11 @@ import { sunliteTapeProductId } from "./sunliteTapeSchema";
 import { edgeBandingProductIds } from "./edgeBandingReference";
 import { selectedToolsForProject } from "./toolGuide";
 import { toolChecklist } from "./tools";
+import { fieldTreatmentReference, fieldTreatmentScope, fieldTreatmentTitle, isPressureTreated, treatedWoodCuts } from "./treatedWood";
 
 export type BuildPreparationAction =
   | { kind: "part"; id: string }
+  | { kind: "offcut"; id: string }
   | { kind: "guide-step"; id: string }
   | { kind: "connections"; scope: ConnectionReviewScope }
   | { kind: "stock"; id: MaterialId }
@@ -36,10 +38,11 @@ export type BuildPreparationItem = {
 };
 
 export type BuildPreparationGroup = {
-  id: "order" | "cuts" | "connections" | "wood-contacts" | "motion" | "shopping" | "tools" | "checks";
+  id: "order" | "cuts" | "treated-wood" | "connections" | "wood-contacts" | "motion" | "shopping" | "tools" | "checks";
   title: string;
   empty: string;
   intro?: string;
+  reference?: { label: string; url: string };
   reviewCount?: number;
   items: BuildPreparationItem[];
 };
@@ -198,7 +201,9 @@ export function buildPreparation(
   input: PreparationInputs,
 ): BuildPreparationGroup[] {
   const hasMotion = input.motions.length > 0 || input.lids.length > 0;
-  if (!project.pieces.some(({ offcut }) => !offcut) && !project.supplies.length && !hasMotion && !project.woodJointDecisions?.length)
+  const hasBuild = project.pieces.some(({ offcut }) => !offcut) ||
+    project.supplies.length > 0 || hasMotion || !!project.woodJointDecisions?.length;
+  if (!hasBuild && !project.pieces.some(({ material: id }) => isPressureTreated(id)))
     return [];
   const labels = new Map(
     ensurePartLabels(project).partLabels.map(({ partId, label }) => [
@@ -217,6 +222,21 @@ export function buildPreparation(
         action: { kind: "part", id: part.id },
       });
   const inspection = inspectCutStock(project);
+  const treated = treatedWoodCuts(project, inspection);
+  const treatment: BuildPreparationGroup[] = treated.length ? [{
+    id: "treated-wood",
+    title: fieldTreatmentTitle,
+    intro: fieldTreatmentScope,
+    reference: fieldTreatmentReference,
+    empty: "No modeled field cuts or holes.",
+    items: treated.map(({ piece, detail }) => ({
+      id: piece.id,
+      title: `${labels.get(piece.id)} · ${piece.name}`,
+      detail,
+      action: { kind: piece.offcut ? "offcut" : "part", id: piece.id },
+    })),
+  }] : [];
+  if (!hasBuild) return treatment;
   const invalidSources = inspection.invalid;
   for (const row of offcutCutRows(project, inspection)) {
     if (!row.issues.length) continue;
@@ -393,6 +413,7 @@ export function buildPreparation(
       empty: "The current layouts have no listed stock conflicts.",
       items: cuts,
     },
+    ...treatment,
     {
       id: "connections",
       title: "Assembly connections",
@@ -435,10 +456,11 @@ export function buildPreparationMarkdown(
     "",
     buildPreparationScope,
     "",
-    ...groups.flatMap(({ title, empty, intro, items }) => [
+    ...groups.flatMap(({ title, empty, intro, reference, items }) => [
       `### ${title}`,
       "",
       ...(intro ? [intro, ""] : []),
+      ...(reference ? [`[${md(reference.label)}](${reference.url})`, ""] : []),
       ...(items.length
         ? items.map((item) => `- ${md(item.title)} · ${md(item.detail)}`)
         : [empty]),

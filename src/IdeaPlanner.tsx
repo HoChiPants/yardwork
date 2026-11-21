@@ -25,6 +25,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { format, material, type Project, type V3 } from "./model";
+import { isPressureTreated } from "./treatedWood";
 import { bounds, type Finding } from "./engine";
 import { Scene } from "./Scene";
 import { LengthInput } from "./LengthInput";
@@ -526,6 +527,8 @@ export default function IdeaPlanner({
               ...((project.motionPlans?.length || project.sections.some((section) => section.recipe?.openingLid))
                 ? [["Check movement", `Check motion for "${project.motionPlans?.[0]?.label ?? project.sections.find((section) => section.recipe?.openingLid)?.name}"`]] : []),
               ...(project.pieces.some(({ offcut }) => offcut) ? [["Find uses for scraps", "What scraps can I reuse?"]] : []),
+              ...(project.pieces.some(({ material: id }) => isPressureTreated(id))
+                ? [["Review treated wood cuts", "Which cuts need field treatment?"]] : []),
             ].map(([label, example]) => (
               <button type="button" key={label} disabled={busy} onClick={() => {
                 setPrompt(example);

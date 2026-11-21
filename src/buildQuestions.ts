@@ -11,10 +11,12 @@ import type { Project } from "./model";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
+import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./treatedWood";
 
 export type BuildQuestion =
   | { kind: "checks" }
   | { kind: "motion"; subject: string }
+  | { kind: "treated-wood" }
   | { kind: "offcuts"; label?: string };
 
 export type BuildQuestionAction =
@@ -22,8 +24,9 @@ export type BuildQuestionAction =
   | { kind: "checks" }
   | { kind: "cut-pool" }
   | { kind: "motion-setup" }
+  | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
-  | Extract<BuildPreparationAction, { kind: "motion" | "lid" }>;
+  | Extract<BuildPreparationAction, { kind: "motion" | "lid" | "part" | "offcut" }>;
 
 type ReviewLink = { label: string; action: BuildQuestionAction };
 type ReviewRow = {
@@ -58,6 +61,8 @@ const labelKey = (value: string) => {
 };
 const weaknessQuestion =
   /^(?:what (?:looks|is|seems) weak(?: (?:here|in (?:this|my|the) (?:build|design|plan|project)))?|(?:where|what) are (?:the |my )?weak (?:spots|points)(?: in .+)?|what should i (?:fix|check|review) before (?:i )?build(?:ing)?|(?:review|check|show) (?:the )?(?:weak spots|weak points|structural checks)(?: in .+)?)$/i;
+const treatmentQuestion =
+  /^(?:which (?:cuts|parts|holes|cut ends) (?:need|require) (?:field )?treatment|(?:which|what) (?:treated|pressure[- ]treated) (?:wood|lumber) (?:cuts|parts|holes|cut ends) (?:need|require) (?:field )?treatment|(?:do|should) i (?:need to )?treat (?:the |my )?(?:cut ends|drilled holes)|(?:show|review|check) (?:the )?(?:field treatment|pressure[- ]treated wood cuts))$/i;
 const scrapQuestion =
   /^(?:what (?:could|can|should) i (?:use|reuse) ([op]\d{1,6}) for|(?:show|find|suggest) (?:uses|reuse options) for (?:offcut |scrap )?([op]\d{1,6})|(?:can|could) i reuse (?:offcut |scrap )?([op]\d{1,6}))$/i;
 const offcutQuestion =
@@ -71,6 +76,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
     "",
   );
   if (weaknessQuestion.test(text)) return { kind: "checks" };
+  if (treatmentQuestion.test(text)) return { kind: "treated-wood" };
   const scrap = scrapQuestion.exec(text);
   if (scrap)
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
@@ -377,6 +383,29 @@ export function answerBuildQuestion(
       return answerChecks(project, findings);
     case "motion":
       return answerMotion(project, question.subject);
+    case "treated-wood": {
+      const cuts = treatedWoodCuts(project);
+      const labels = new Map(ensurePartLabels(project).partLabels.map(({ partId, label }) => [partId, label]));
+      return {
+        title: fieldTreatmentTitle,
+        detail: cuts.length
+          ? `Showing ${Math.min(6, cuts.length)} of ${cuts.length} labeled pieces with cuts or holes to review.`
+          : "The model has no listed cuts or holes in pressure-treated wood.",
+        scope: fieldTreatmentScope,
+        rows: cuts.slice(0, 6).map(({ piece, detail }) => ({
+          id: piece.id,
+          title: `${labels.get(piece.id)} · ${piece.name}`,
+          detail,
+          link: {
+            label: piece.offcut ? "Inspect offcut" : "Inspect part",
+            action: { kind: piece.offcut ? "offcut" : "part", id: piece.id },
+          },
+        })),
+        ...(cuts.length && {
+          link: { label: "Open build preparation", action: { kind: "treated-wood" } },
+        }),
+      };
+    }
     case "offcuts":
       return answerOffcuts(project, question.label);
   }

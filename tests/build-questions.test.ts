@@ -113,3 +113,14 @@ test("a labeled scrap answer plans cuts only from its recorded source and leaves
   );
   assert.deepEqual(project, before);
 });
+
+test("asking about cut end treatment identifies the affected part from current stock", () => {
+  const project = blank();
+  project.pieces = [part("Treated brace", "treated", [5.5, 1.5, 36], [0, 0.75, 0], project.steps[0].id, "Base")];
+  const question = buildQuestion("Which treated wood cuts need field treatment?");
+  assert.deepEqual(question, { kind: "treated-wood" });
+  const answer = answerBuildQuestion(project, question!, []);
+  assert.match(answer.rows?.[0].detail ?? "", /length to 3 ft/);
+  assert.deepEqual(answer.rows?.[0].link?.action, { kind: "part", id: project.pieces[0].id });
+  assert.equal(buildQuestion("Build a frame with treated wood"), null);
+});

@@ -7,7 +7,8 @@ import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { applyCommand, blank, part } from "../../src/model";
 import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
 import { saveWoodJointDecision } from "../../src/woodJointDecisions";
-import { bounds } from "../../src/engine";
+import { bounds, cutPiece } from "../../src/engine";
+import { editRoundOpening } from "../../src/throughOpeningCuts";
 import { homeDepotShoppingList } from "../../src/handoff";
 import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
 import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
@@ -950,4 +951,49 @@ test("the store checklist sorts recorded aisles and keeps partial pickups with t
   await expect(dialog.getByRole("region", { name: "Aisle 7", exact: true })).toContainText("Bay 1");
   await expect(dialog.getByRole("region", { name: "Aisle 2", exact: true })).toHaveCount(0);
   await expect(hingeCount).toHaveValue("0");
+});
+
+test("treated wood field cuts and scraps follow the model through build questions and guide export", async ({ page }) => {
+  const project = blank("Treated sill cut review");
+  const step = project.steps[0].id;
+  const sill = part("Treated sill", "hd-treated-2x6-8", [5.5, 1.5, 96], [0, 0.75, 0], step, "Sill");
+  const full = part("Uncut stock", "treated", [5.5, 1.5, 96], [20, 0.75, 0], step, "Sill");
+  project.pieces = [sill, full];
+  const cut = cutPiece(project, sill.id, 60, 2);
+  const fixture = editRoundOpening(cut, sill.id, null, { axis: 1, fromEdges: [12, 2.75], diameter: 0.5 });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "treated-sill.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(fixture)),
+  });
+  await expect(dialog).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByText("Questions about this build", { exact: true }).click();
+  await dialog.getByRole("button", { name: "Review treated wood cuts", exact: true }).click();
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Pressure-treated wood cuts", exact: true });
+  await expect(answer).toContainText("P001 · Treated sill");
+  await expect(answer).toContainText("O001 · Offcut · Treated sill");
+  await expect(answer).not.toContainText("Uncut stock");
+  await answer.getByRole("button", { name: "Open build preparation", exact: true }).click();
+  const review = page.getByRole("region", { name: "Build preparation", exact: true })
+    .locator("details.preparation-group").filter({ hasText: "Pressure-treated wood cuts" });
+  await review.locator(":scope > summary").click();
+  await expect(review).toContainText("Recorded cut face · local +Z. 1 round opening.");
+  await expect(review.getByRole("link", { name: "American Wood Council field treatment guidance" })).toHaveAttribute("href", /awc\.org/);
+  await review.getByRole("button", { name: /O001.*Offcut/ }).click();
+  await expect(page.locator(".part-title")).toContainText("REUSABLE OFFCUT");
+  await expect(page.getByText("Recorded cut face · local −Z.", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/### Pressure-treated wood cuts[\s\S]*P001 · Treated sill · Recorded cut face · local \+Z. 1 round opening\.[\s\S]*O001 · Offcut · Treated sill/);
+  await expect(page.locator(".print-guide .build-preparation-print")).toContainText("1 round opening.");
 });

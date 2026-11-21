@@ -978,6 +978,9 @@ export function App() {
         setPanel("step");
         inspectorFocus.scrollRef.current?.scrollTo(0, 0);
         break;
+      case "offcut":
+        inspectStock(action.id);
+        break;
       case "part":
         inspectConnectionPiece(action.id);
         setPanel("part");
@@ -1231,6 +1234,11 @@ export function App() {
         setMotionTestSelection(null);
         setPanel("motion");
         break;
+      case "treated-wood":
+        setPanel("prep");
+        break;
+      case "part":
+      case "offcut":
       case "motion":
       case "lid":
         openBuildPreparationItem(action, false);
@@ -1610,6 +1618,9 @@ export function App() {
     lids: lidTravelChecks,
     handoff: project.retailer === "lowes" ? undefined : homeDepotShoppingList(project, rows, supplyPurchases),
   }).filter(({ id }) => guideReady || id !== "order"), [project, rows, supplyPurchases, cutSequences, connectionReview, modeledContacts, findings, motionReviews, lidTravelChecks, guideReady]);
+  const selectedTreatment = panel === "part"
+    ? preparation.find(({ id }) => id === "treated-wood")?.items.find(({ id }) => id === selected)
+    : undefined;
   const activeRemovalContact = activeRemoval
     ? bearingReview.pairs.find(({ top, base }) => top.id === activeRemoval.topId && base.id === activeRemoval.baseId)
     : undefined;
@@ -3760,6 +3771,12 @@ export function App() {
                     }}
                   />
                 </label>
+                {selectedTreatment && (
+                  <div className="field-section">
+                    <h4>Field treatment</h4>
+                    <p className="small-note">{selectedTreatment.detail}</p>
+                  </div>
+                )}
                 {movementTools}
                 {findings.find((finding)=>finding.id==="collision")?.pieceIds?.includes(piece.id)&&<div className="placement-warning" role="status">This wood overlaps another part. <button className="button secondary" onClick={()=>move(piece.id,piece.position,piece.rotation)}>Separate overlapping wood</button></div>}
                 <div className="field-section">

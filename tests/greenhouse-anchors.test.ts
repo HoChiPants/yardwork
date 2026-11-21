@@ -15,6 +15,7 @@ import {
 import { findRetailerProduct } from "../src/retailerCatalog";
 import { addSupply, recordSupplyInventory, supplyRows } from "../src/supplies";
 import { toolChecklist } from "../src/tools";
+import { treatedWoodCuts } from "../src/treatedWood";
 
 function fixture() {
   const { project } = createBuildStudy("greenhouse");
@@ -247,5 +248,16 @@ test("Home Depot handoff aggregates reviewed sites against the project quantity 
   assert.equal(
     addHomeDepotPurchaseNeed(ordered, concreteAnchor.productId),
     ordered,
+  );
+});
+
+test("field treatment follows the valid wood bore and withdraws it when the rail no longer seats", () => {
+  const { project, rail } = fixture();
+  rail.material = "treated";
+  assert.match(treatedWoodCuts(project).find(({ piece }) => piece.id === rail.id)!.detail, /1 planned foundation anchor bore through the rail/);
+  rail.position[1] += 0.25;
+  assert.doesNotMatch(
+    treatedWoodCuts(project).find(({ piece }) => piece.id === rail.id)?.detail ?? "",
+    /foundation anchor bore/,
   );
 });

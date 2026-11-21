@@ -18,6 +18,7 @@ import { orientedStockSize } from "./stockAxes";
 import { everbiltClosetRod } from "./closetRodReference";
 import { reviewRodFit } from "./rodFits";
 import { tubeGroupKey, tubeKerfSchema } from "./cutSourceAxes";
+import { fieldTreatmentReference, fieldTreatmentScope, isPressureTreated } from "./treatedWood";
 
 const EPSILON = 1e-8;
 
@@ -57,6 +58,8 @@ export function stockCutMaterialNotes(id: MaterialId) {
         url: "https://www.palram.com/product/sunlite-diy-polycarbonate-multi-wall/",
       },
     };
+  if (isPressureTreated(id))
+    return { text: fieldTreatmentScope, link: fieldTreatmentReference };
   if (isBatt(id))
     return {
       text: "Batt layouts assume zero cutting loss from a knife and keep the full thickness. Measure the actual cavity and follow the insulation maker’s handling instructions.",

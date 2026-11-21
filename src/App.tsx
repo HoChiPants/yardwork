@@ -12,6 +12,8 @@ import { sillGasketScope } from "./sillGasketReference";
 import { SillGasketPanel } from "./SillGasketPanel";
 import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
 import { WindowWallFields, windowWallExample } from "./WindowWallFields";
+import { DoorOpeningFields, DoorwayPanel, doorwayExample } from "./DoorwayPanel";
+import { previewDoorway } from "./doorwayPreview";
 import { generatedWindowMembers, windowFramingSource, windowWallScope } from "./windowWall";
 import { homeDepotFraming } from "./homeDepotFramingReference";
 import { openingFlashingGuideLines, reviewGeneratedWindowWalls, reviewOpeningFlashings, type OpeningFlashingPreview } from "./openingFlashing";
@@ -350,6 +352,7 @@ type Modal =
   | "settings"
   | "import"
   | "drawing"
+  | "doorway"
   | "export"
   | "assistant"
   | "base"
@@ -1900,6 +1903,11 @@ export function App() {
   const preview = useMemo(() => {
     if (!proposal) return null;
     try {
+      if (proposal.command.doorOpening) {
+        const door = previewDoorway(project, proposal.command, proposal.targetSectionId, proposal.reuseWindowOffcuts);
+        return { impact: door.impact, error: door.blockers.length ? `The doorway intersects ${door.blockers.slice(0, 3).join(", ")}.` :
+          door.impact.wallCuts.some(({ oversize }) => oversize > 0) ? "Some doorway cuts exceed the selected framing stock." : null };
+      }
       return {
         impact: previewSectionCommand(
           project,
@@ -3659,6 +3667,7 @@ export function App() {
               <MotionPanel key={project.id} project={project}
               drawerRequest={drawerBoxRequest?.projectId === project.id ? drawerBoxRequest : undefined}
               onDrawerRequestHandled={() => setDrawerBoxRequest(null)}
+              onEditDoorway={(id) => { setSelectedSectionId(id); setModal("doorway"); }}
               initialTest={motionTestSelection?.project === project ? motionTestSelection : undefined}
               ventBacking={ventBacking}
               shownDrawerMountId={shownDrawerMountId}
@@ -3806,6 +3815,7 @@ export function App() {
                 }
               />
               <button type="button" className="button secondary full" onClick={() => openSiteClearances("sections")}>Measured site clearances</button>
+              <button type="button" className="button secondary full" onClick={() => setModal("doorway")}>Plan an interior doorway</button>
               <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
@@ -5216,7 +5226,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5254,6 +5264,26 @@ export function App() {
                 onClose={() => setModal(null)}
               />
             )}
+            {modal === "doorway" && <DoorwayPanel project={project} initialSectionId={selectedSectionId} onApply={(draft) => safe(() => {
+              if (current.current !== project) throw Error("The project changed. Preview the doorway again.");
+              const next = change(draft.impact.candidate);
+              const plan = next.motionPlans?.find(({ id }) => id === draft.plan?.id);
+              setSelectedSectionId(draft.section.id);
+              setSelected(null);
+              setSelectionScope("section");
+              setStage(null);
+              setPlaying(false);
+              setExplode(false);
+              setMode("select");
+              setModal(null);
+              if (plan) {
+                const result = runMotionTest(next, plan, plan.testSetup);
+                setPanel("motion");
+                setMotionTestSelection({ project: next, plan, setup: plan.testSetup, result });
+                setMotionPreview(result.review ? { project: next, value: result.review.preview(0) } : null);
+              } else setPanel("sections");
+              notify(plan ? "Doorway and swing saved. Review the opening before building." : "Doorway framing saved. Review the cuts and build guide.");
+            })} />}
             {modal === "catalog" && <CatalogReferences />}
             {modal === "studies" && (
               <BuildStudies
@@ -5433,6 +5463,10 @@ export function App() {
                     setPrompt(windowWallExample);
                     setProposal(null);
                   }}>Wall with a window</button>
+                  {!!assistantTarget && <button type="button" onClick={() => {
+                    setPrompt(doorwayExample);
+                    setProposal(null);
+                  }}>Add a doorway</button>}
                 </div>
                 <button
                   className="button primary full"
@@ -5473,18 +5507,20 @@ export function App() {
                         ? "Fixed 6 × 4 ft footprint · elevated coop concept. This replaces the current canvas; undo is available."
                         : `${format(proposal.command.width)} wide × ${format(proposal.command.height)} tall · ${proposal.command.spacing} in spacing. ${proposal.targetSectionId ? "Replaces the selected section at its current placement." : "Added beside existing parts."}`}
                     </p>}
-                    {proposal.command.type === "wall" && <WindowWallFields
+                    {proposal.command.type === "wall" && !proposal.command.doorOpening && <WindowWallFields
                       command={proposal.command} onChange={(command) => setProposal({ ...proposal, command })} />}
-                    {proposal.command.windowOpening && (
+                    {proposal.command.doorOpening && <DoorOpeningFields opening={proposal.command.doorOpening}
+                      onChange={(doorOpening) => setProposal({ ...proposal, command: { ...proposal.command, doorOpening } })} />}
+                    {(proposal.command.windowOpening || proposal.command.doorOpening) && (
                       <details className="field-section">
-                        <summary>Window wall cuts and scraps</summary>
+                        <summary>{proposal.command.doorOpening ? "Doorway cuts and scraps" : "Window wall cuts and scraps"}</summary>
                         <label className="checkbox-field">
                           <input type="checkbox" checked={proposal.reuseWindowOffcuts ?? false}
                             onChange={({ currentTarget }) => setProposal({ ...proposal, reuseWindowOffcuts: currentTarget.checked })} />
                           Use matching Cut pool scraps for new members
                         </label>
                         {preview?.impact?.offcuts && (
-                          <ul aria-label="Matching window wall scraps">
+                          <ul aria-label={proposal.command.doorOpening ? "Matching doorway scraps" : "Matching window wall scraps"}>
                             {preview.impact.offcuts.assignments.length ? preview.impact.offcuts.assignments.map(({ partId, target, from }) =>
                               <li key={partId}>{target} from {from}</li>) : <li>There are no matching scraps for these cuts.</li>}
                           </ul>
@@ -5492,7 +5528,7 @@ export function App() {
                         {preview?.impact?.wallCuts.map(({ id, quantity, bins, oversizedParts }) => (
                           <div key={id}>
                             <p>{quantity} {quantity === 1 ? "board" : "boards"} of {material(id).name} for unassigned members</p>
-                            <ol aria-label="Window wall board cuts">
+                            <ol aria-label={proposal.command.doorOpening ? "Doorway board cuts" : "Window wall board cuts"}>
                               {bins.map(({ cuts, remaining }, index) => (
                                 <li key={index}>{cuts.map(({ name, length }) =>
                                   `${name.replace(/^.*? · /, "")}, ${formatStockLength(length)}`).join(" / ")}
@@ -5554,7 +5590,7 @@ export function App() {
                       disabled={!!preview?.error}
                       onClick={() =>
                         safe(() => {
-                          const next = proposal.command.windowOpening && preview?.impact
+                          const next = (proposal.command.windowOpening || proposal.command.doorOpening) && preview?.impact
                             ? preview.impact.candidate : applyCommand(
                             project,
                             proposal.command,

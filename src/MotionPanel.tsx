@@ -563,6 +563,7 @@ export function MotionPanel({
   initialTest,
   drawerRequest,
   onDrawerRequestHandled,
+  onEditDoorway,
   onPreview,
   onChange,
 }: {
@@ -572,6 +573,7 @@ export function MotionPanel({
   initialTest?: MotionTestSelection;
   drawerRequest?: { panelIds: [string, string] };
   onDrawerRequestHandled?: () => void;
+  onEditDoorway: (sectionId: string) => void;
   onPreview: (preview: MotionPreview | null, source?: Project) => void;
   ventBacking: readonly VentBackingReview[];
   onShowSashGaps: (entryId: string) => void;
@@ -1200,7 +1202,11 @@ export function MotionPanel({
             <button
               className="text-button"
               type="button"
-              onClick={() => edit(selected.id)}
+              onClick={() => {
+                if (selected.mechanism.kind === "hinge" && selected.mechanism.doorway)
+                  onEditDoorway(selected.mechanism.doorway.sectionId);
+                else edit(selected.id);
+              }}
             >
               Edit setup
             </button>

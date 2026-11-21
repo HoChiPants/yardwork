@@ -4,8 +4,10 @@ import {
   projectSchema,
   commandSchema,
   applyCommand,
+  material,
   sectionParts,
   step,
+  syncDoorwayMotion,
   uid,
   type Command,
   type SectionCommand,
@@ -104,7 +106,7 @@ export function removeSection(p: Project, id: string): Project {
   if (!section) throw Error("Choose a section first.");
   const ids = new Set(section.pieceIds);
   return projectSchema.parse(
-    forgetBoundSection(
+    syncDoorwayMotion(forgetBoundSection(
       {
         ...p,
         pieces: p.pieces.filter((a) => !ids.has(a.id)),
@@ -112,7 +114,7 @@ export function removeSection(p: Project, id: string): Project {
         sections: p.sections.filter((s) => s.id !== id),
       },
       id,
-    ),
+    ), id),
   );
 }
 export function duplicateSection(
@@ -177,7 +179,7 @@ export function duplicateSection(
       stepId: newStep.id,
     }));
   const project = projectSchema.parse(
-    copyBoundFurniture(
+    syncDoorwayMotion(copyBoundFurniture(
       {
         ...p,
         steps: [...p.steps, newStep],
@@ -187,7 +189,7 @@ export function duplicateSection(
       },
       id,
       clone.id,
-    ),
+    ), clone.id),
   );
   return { project, sectionId: clone.id };
 }
@@ -271,7 +273,8 @@ export function sectionContext(s: Section) {
 export function sectionSummary(command: Command) {
   return command.type === "wall"
     ? `${command.width} × ${command.height} in wall · ${command.spacing} in spacing${command.windowOpening
-      ? ` · ${command.windowOpening.width} × ${command.windowOpening.height} in rough window` : ""}`
+      ? ` · ${command.windowOpening.width} × ${command.windowOpening.height} in rough window` : command.doorOpening
+      ? ` · ${command.doorOpening.width} × ${command.doorOpening.height} in rough doorway` : ""}`
     : `${command.width} × ${command.depth} in base · ${command.spacing} in spacing`;
 }
 
@@ -279,16 +282,16 @@ export function previewSectionCommand(
   project: Project,
   command: SectionCommand,
   targetId?: string,
-  reuseWindowOffcuts = false,
+  reuseOpeningOffcuts = false,
 ) {
   const planned = projectSchema.parse(
     applyCommand(project, command, targetId),
   );
   const oldIds = new Set(project.pieces.map((a) => a.id)),
     generatedIds = new Set(planned.pieces.filter(({ id }) => !oldIds.has(id)).map(({ id }) => id));
-  const wall = command.windowOpening &&
+  const wall = (command.windowOpening || command.doorOpening) &&
     (targetId ? planned.sections.find(({ id }) => id === targetId) : planned.sections.at(-1));
-  const offcuts = wall && reuseWindowOffcuts
+  const offcuts = wall && reuseOpeningOffcuts
     ? planOffcutReuse(planned, undefined, generatedIds) : null;
   const candidate = offcuts?.project ?? planned;
   const newIds = new Set(candidate.pieces.map((a) => a.id));
@@ -296,7 +299,7 @@ export function previewSectionCommand(
   const beforeRows = bom(project);
   const added = candidate.pieces.filter(({ id, offcut }) => !oldIds.has(id) && !offcut);
   const wallCuts = wall ? bom({
-    ...candidate, pieces: candidate.pieces.filter(({ id, cutStock }) => wall.pieceIds.includes(id) && !cutStock), joints: [],
+    ...candidate, pieces: candidate.pieces.filter(({ id, cutStock, material: idOfStock }) => wall.pieceIds.includes(id) && !cutStock && material(idOfStock).wood), joints: [],
   }) : [];
   return {
     added: added.length,

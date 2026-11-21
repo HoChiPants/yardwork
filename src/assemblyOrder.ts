@@ -70,6 +70,11 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
       requireBefore(panelsByWall.get(wall % walls + 1)?.at(-1)?.step, panels[0]?.step);
     }
   }
+  for (const { id, generator } of project.sections) {
+    if (!generator?.doorUnit) continue;
+    const stages = byOwner.get(id);
+    requireBefore(stages?.get("section"), stages?.get("fit-door"));
+  }
 
   function reviewBeforeJoining(kind: ReviewKind, planId: string, a: string, b: string) {
     const first = stageByMember.get(a), second = stageByMember.get(b);

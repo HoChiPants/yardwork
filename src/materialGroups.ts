@@ -91,6 +91,7 @@ export function groupedMaterials(
   const result: MaterialGroup[] = [];
   const query = search.trim().toLowerCase();
   for (const item of catalog) {
+    if (item.includedComponent) continue;
     const family = families.find((f) => f.ids.includes(item.id));
     const id = family?.id ?? item.id;
     if (result.some((row) => row.id === id)) continue;

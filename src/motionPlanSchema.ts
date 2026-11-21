@@ -95,10 +95,11 @@ const motionMechanism = z.discriminatedUnion("kind", [
       greenhouseDoor: greenhouseDoorSetupSchema.optional(),
       greenhouseVent: greenhouseVentMotionSchema.optional(),
       saunaDoor: saunaDoorSetupSchema.optional(),
+      doorway: z.strictObject({ sectionId: z.uuid() }).optional(),
     })
     .refine(
       (setup) =>
-        [setup.greenhouseDoor, setup.greenhouseVent, setup.saunaDoor, setup.hingePath].filter(
+        [setup.greenhouseDoor, setup.greenhouseVent, setup.saunaDoor, setup.doorway, setup.hingePath].filter(
           Boolean,
         ).length <= 1,
       "Choose one moving assembly path.",

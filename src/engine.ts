@@ -353,6 +353,7 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
   const cutStock = inspectCutStock(p);
   const onHand = new Set(p.onHandCutSources);
   return catalog
+    .filter((material) => !material.includedComponent)
     .map((m) => {
       const parts = p.pieces.filter((x) => x.material === m.id),
         bins: CutBin[] = [],

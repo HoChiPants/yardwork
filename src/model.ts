@@ -12,6 +12,7 @@ import { offcutCutSchema } from "./offcutCutSchema";
 import { greenhouseDoorSealsSchema } from "./greenhouseDoorSealSchema";
 import { openingFlashingPlansSchema } from "./openingFlashingSchema";
 import { wallFramingStockIds, windowOpeningSchema, windowWallPrompt, windowWallScope, windowWallTemplate } from "./windowWall";
+import { doorJambMaterial, doorOpeningSchema, doorUnitSchema, doorwayGuideNote, doorwayHinge, doorwayLeafRole, doorwayTemplate, interiorDoor, measuredDoorMaterial, wallStudPositions, doorWallPrompt } from "./doorWall";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -169,7 +170,8 @@ export const pieceSchema = z
       });
     if (
       stock?.stockKind === "equipment" &&
-      (piece.size.some((value, axis) => Math.abs(value - stock.size[axis]) > 0.000001) ||
+      ((!stock.measuredEquipment && piece.size.some((value, axis) =>
+        Math.abs(value - stock.size[axis]) > (stock.id === interiorDoor.materialId ? 0.125 : 0.000001))) ||
         piece.cutPlanes.length || piece.cutStock || piece.offcut)
     )
       ctx.addIssue({
@@ -376,12 +378,15 @@ export const commandSchema = z.object({
     .describe("Stud/joist spacing in inches; default 16."),
   windowOpening: windowOpeningSchema.nullable().optional()
     .describe("One nonbearing rough window opening in a wall. All dimensions are inches. Sill is measured above the bottom of the wall. Offset is signed from the wall center. Use null only to explicitly remove a saved opening."),
+  doorOpening: doorOpeningSchema.nullable().optional()
+    .describe("One explicitly measured rough doorway in a nonbearing wall. Width and height are inches, floor is the finished floor rise above the wall base, and offset is signed from the wall center. Use null only to remove a saved doorway."),
 });
 export type Command = z.infer<typeof commandSchema>;
 const baseBoardSchema = z.enum(baseBoardIds);
 const sectionCommandSchema = commandSchema.extend({
   baseStock: z.strictObject({ rim: baseBoardSchema, joist: baseBoardSchema }).optional(),
   wallStock: z.enum(wallFramingStockIds).optional(),
+  doorUnit: doorUnitSchema.nullable().optional(),
 }).superRefine((command, ctx) => {
   if (command.wallStock && command.type !== "wall") {
     ctx.addIssue({ code: "custom", message: "Wall lumber needs a wall section.", path: ["wallStock"] });
@@ -393,6 +398,16 @@ const sectionCommandSchema = commandSchema.extend({
       windowWallTemplate(command, command.windowOpening, 3.5);
     } catch (issue) {
       ctx.addIssue({ code: "custom", message: (issue as Error).message, path: ["windowOpening"] });
+    }
+  }
+  if (((command.doorOpening || command.doorUnit) && command.type !== "wall") ||
+      (command.doorUnit && !command.doorOpening) || (command.doorOpening && command.windowOpening)) {
+    ctx.addIssue({ code: "custom", message: "Plan one doorway or one window per generated wall panel. A fitted door needs its rough doorway.", path: ["doorOpening"] });
+  } else if (command.doorOpening) {
+    try {
+      doorwayTemplate(command, command.doorOpening, framingStockDimensions(command.wallStock ?? "stud").depth, command.doorUnit);
+    } catch (issue) {
+      ctx.addIssue({ code: "custom", message: (issue as Error).message, path: ["doorOpening"] });
     }
   }
   if (!command.baseStock) return;
@@ -505,6 +520,14 @@ export const currentProjectSchema = z
     motionPlans: z.array(motionPlanSchema).max(50).refine(
       (plans) => new Set(plans.map((plan) => plan.id)).size === plans.length,
       "Retain distinct motion plans.",
+    ).refine(
+      (plans) => {
+        const doorwayIds = plans.flatMap(({ mechanism }) =>
+          mechanism.kind === "hinge" && mechanism.doorway ? [mechanism.doorway.sectionId] : [],
+        );
+        return new Set(doorwayIds).size === doorwayIds.length;
+      },
+      "Retain one linked swing per interior doorway.",
     ).optional(),
     attachmentPlans: z.array(attachmentPlanSchema).max(100).default([]),
     restraintPlans: z.array(restraintPlanSchema).max(100).default([]),
@@ -796,6 +819,10 @@ export type Material = {
   productReference?: string;
   /** Exact standalone stock without an author-reviewed generated-structure application. */
   placementOnly?: boolean;
+  /** Geometry included in a purchased assembly, rather than a separate list item. */
+  includedComponent?: boolean;
+  /** Equipment dimensions established from field measurements. */
+  measuredEquipment?: boolean;
   shape?: "tube-envelope" | "glazing-envelope" | "insulation-batt" | "door-leaf-envelope" | "pedestal-bench-envelope";
   priceKind?: "example" | "unpriced";
   size: V3;
@@ -1325,6 +1352,27 @@ export const catalog: Material[] = [
     unit: "kit",
     search: cedarbrookDoor.productCode,
   },
+  {
+    id: measuredDoorMaterial,
+    name: "Field-measured prehung door",
+    subtitle: "Measure the unit and hinge line in the doorway planner",
+    category: "Doors", stockKind: "equipment", shape: "door-leaf-envelope", wood: false, cuttable: false, packCount: 1, measuredEquipment: true,
+    size: interiorDoor.leaf, color: "#f0e5d6", priceKind: "unpriced", price: 0, unit: "kit", search: "interior prehung door",
+  },
+  {
+    id: interiorDoor.materialId,
+    name: "Masonite 75777 prehung door",
+    subtitle: "30 × 80 in leaf · right hand · adjustable split jamb",
+    category: "Doors", stockKind: "equipment", shape: "door-leaf-envelope", wood: false, cuttable: false, packCount: 1,
+    size: interiorDoor.leaf, color: "#f0e5d6", productReference: interiorDoor.productId, priceKind: "unpriced", price: 0, unit: "kit", search: "Masonite 75777 301300984",
+  },
+  {
+    id: doorJambMaterial,
+    name: "Included door jamb",
+    subtitle: "Fitted frame component",
+    category: "Doors", stockKind: "equipment", wood: false, cuttable: false, packCount: 1, includedComponent: true, measuredEquipment: true,
+    size: [0.625, 81, 4.5], color: "#d5c8b6", priceKind: "unpriced", price: 0, unit: "piece", search: "interior door jamb",
+  },
   ...cedarbrookBenches.map((bench): Material => ({
     id: bench.materialId,
     name: `Cedarbrook ${bench.length / 12} ft pedestal sauna bench`,
@@ -1651,20 +1699,17 @@ export function wallParts(
       assembly,
     ),
   ];
-  const locations = [0.75];
-  const end = width - 0.75;
-  for (let c = spacing; stock ? c <= end - 1.5 : c < width - 1.5; c += spacing)
-    locations.push(c);
-  const last = locations.at(-1)!;
-  if (stock && end - last > spacing) locations.push((end + last) / 2);
-  locations.push(end);
-  locations.forEach((c, i) =>
+  const legacyLocations = [0.75];
+  for (let c = spacing; c < width - 1.5; c += spacing) legacyLocations.push(c);
+  legacyLocations.push(width - 0.75);
+  const locations = stock ? wallStudPositions(width, spacing) : legacyLocations.map((offset) => offset - width / 2);
+  locations.forEach((offset, i) =>
     pieces.push(
       part(
         `${assembly} · stud ${i + 1}`,
         materialId,
         [1.5, height - 3, depth],
-        [x - width / 2 + c, y + height / 2, z],
+        [x + offset, y + height / 2, z],
         stepId,
         assembly,
       ),
@@ -1938,7 +1983,14 @@ export function sectionParts(
   rotation: V3,
 ): Piece[] {
   let pieces: Piece[] = [];
-  if (command.type === "wall" && command.windowOpening) {
+  if (command.type === "wall" && command.doorOpening) {
+    const stock = command.wallStock ?? "stud";
+    const { depth } = framingStockDimensions(stock);
+    pieces = doorwayTemplate(command, command.doorOpening, depth, command.doorUnit).map((member) => ({
+      ...part(`${name} · ${member.name}`, member.material ?? stock, member.size, member.position, stepId, name),
+      designRole: member.role,
+    }));
+  } else if (command.type === "wall" && command.windowOpening) {
     const stock = command.windowOpening.stock ?? command.wallStock ?? "stud";
     const { depth } = framingStockDimensions(stock);
     pieces = windowWallTemplate(command, command.windowOpening, depth).map((member) => ({
@@ -1996,8 +2048,27 @@ export function sectionParts(
 }
 export function commandStepTitle(command: Command) {
   return command.type === "wall"
-    ? `Frame a ${format(command.width)} × ${format(command.height)} wall${command.windowOpening ? " with a window opening" : ""}`
+    ? `Frame a ${format(command.width)} × ${format(command.height)} wall${command.windowOpening ? " with a window opening" : command.doorOpening ? " with a doorway" : ""}`
     : `Lay a ${format(command.width)} × ${format(command.depth)} base`;
+}
+export function syncDoorwayMotion(project: Project, sectionId: string): Project {
+  const section = project.sections.find(({ id }) => id === sectionId);
+  const unit = section?.generator?.doorUnit;
+  const existing = project.motionPlans?.find(({ mechanism }) => mechanism.kind === "hinge" && mechanism.doorway?.sectionId === sectionId);
+  if (!unit) return existing ? { ...project, motionPlans: project.motionPlans?.filter(({ id }) => id !== existing.id) } : project;
+  const leaf = project.pieces.find(({ id, designRole }) => designRole === doorwayLeafRole && section.pieceIds.includes(id));
+  if (!leaf) throw Error("The fitted door has no active leaf.");
+  if (!existing && (project.motionPlans?.length ?? 0) >= 50) throw Error("The project already has 50 motion plans. Remove an unused motion before adding the door swing.");
+  const plan = motionPlanSchema.parse({
+    ...existing,
+    id: existing?.id ?? uid(),
+    label: `${section.name}: interior door swing`.slice(0, 100),
+    memberIds: [leaf.id],
+    mechanism: { ...doorwayHinge(unit), doorway: { sectionId } },
+  });
+  return { ...project, motionPlans: existing
+    ? project.motionPlans?.map((row) => row.id === existing.id ? plan : row)
+    : [...(project.motionPlans ?? []), plan] };
 }
 export function applyCommand(
   project: Project,
@@ -2017,10 +2088,19 @@ export function applyCommand(
     if (command.type === "foundation" && !command.baseStock && section.generator.baseStock) {
       command = sectionCommandSchema.parse({ ...command, baseStock: section.generator.baseStock });
     }
-    if (command.type === "wall" && command.windowOpening === undefined && section.generator.windowOpening)
-      command = sectionCommandSchema.parse({ ...command, windowOpening: section.generator.windowOpening });
-    if (command.type === "wall" && !command.wallStock && section.generator.wallStock)
-      command = sectionCommandSchema.parse({ ...command, wallStock: section.generator.wallStock });
+    if (command.type === "wall") {
+      const wallStock = command.wallStock ?? section.generator.wallStock;
+      const windowOpening = command.windowOpening === undefined ? section.generator.windowOpening : command.windowOpening;
+      const doorOpening = command.doorOpening === undefined ? section.generator.doorOpening : command.doorOpening;
+      const doorUnit = doorOpening && (command.doorUnit === undefined ? section.generator.doorUnit : command.doorUnit);
+      command = sectionCommandSchema.parse({
+        ...command,
+        ...(wallStock && { wallStock }),
+        ...(windowOpening !== undefined && { windowOpening }),
+        ...(doorOpening !== undefined && { doorOpening }),
+        ...(doorOpening && doorUnit !== undefined && { doorUnit }),
+      });
+    }
     const oldIds = new Set(section.pieceIds);
     const existing = project.pieces.filter(({ id }) => oldIds.has(id));
     if (!existing.length) throw Error("The section has no active parts. Choose a wall or base with framing.");
@@ -2032,7 +2112,7 @@ export function applyCommand(
       section.origin,
       section.rotation,
     );
-    const keepMatchingParts = (command.windowOpening && section.generator.windowOpening) ||
+    const keepMatchingParts = (command.windowOpening && section.generator.windowOpening) || command.doorOpening || section.generator.doorOpening ||
       (command.wallStock && section.generator.wallStock);
     const pieces = keepMatchingParts ? generated.map((candidate) => {
       const prior = existing.find((piece) =>
@@ -2045,7 +2125,7 @@ export function applyCommand(
     }) : generated;
     const removed = new Set(oldIds);
     for (const { id } of pieces) removed.delete(id);
-    return {
+    return syncDoorwayMotion({
       ...project,
       pieces: [...project.pieces.filter((a) => !oldIds.has(a.id)), ...pieces],
       joints: project.joints.filter(
@@ -2057,7 +2137,9 @@ export function applyCommand(
         project.pieces
           .filter((a) => a.stepId === stepId)
           .every((a) => oldIds.has(a.id))
-          ? { ...step, title: commandStepTitle(command) }
+          ? { ...step, title: commandStepTitle(command),
+            notes: command.doorOpening && !step.notes.includes(doorwayGuideNote) ? `${step.notes}\n\n${doorwayGuideNote}`.trim()
+              : !command.doorOpening && section.generator?.doorOpening ? step.notes.replace(doorwayGuideNote, "").trim() : step.notes }
           : step,
       ),
       sections: project.sections.map((s) =>
@@ -2065,7 +2147,7 @@ export function applyCommand(
           ? { ...s, generator: command, pieceIds: pieces.map((a) => a.id) }
           : s,
       ),
-    };
+    }, section.id);
   }
   if (command.type === "coop") {
     const p = coop();
@@ -2079,7 +2161,7 @@ export function applyCommand(
   const p = structuredClone(project),
     s = step(
       commandStepTitle(command),
-      placement?.stepNotes ?? (command.windowOpening ? windowWallScope
+      placement?.stepNotes ?? (command.windowOpening ? windowWallScope : command.doorOpening ? doorwayGuideNote
         : "Generated concept. Review connections, support, bracing, and stock dimensions."),
     );
   p.steps.push(s);
@@ -2119,8 +2201,9 @@ export function applyCommand(
   const name = `${prefix} ${n}`,
     pieces = sectionParts(command, s.id, name, origin, rotation);
   p.pieces.push(...pieces);
+  const sectionId = uid();
   p.sections.push({
-    id: uid(),
+    id: sectionId,
     name,
     pieceIds: pieces.map((a) => a.id),
     generator: command,
@@ -2129,7 +2212,7 @@ export function applyCommand(
     rotation,
     ...(placement?.roomFraming ? { roomFraming: placement.roomFraming } : {}),
   });
-  return p;
+  return syncDoorwayMotion(p, sectionId);
 }
 export function format(inches: number) {
   const n = Math.round(inches * 100) / 100;
@@ -2139,11 +2222,12 @@ export function format(inches: number) {
 }
 export function parsePrompt(prompt: string, context?: Command): Command {
   const text = prompt.toLowerCase();
-  const window = windowWallPrompt(text, context?.windowOpening);
+  const door = doorWallPrompt(text, context?.doorOpening);
+  const window = windowWallPrompt(door.wallText, context?.windowOpening);
   const wallText = window.wallText;
   let type: Command["type"];
   if (/\b(coop|chicken)\b/.test(text)) type = "coop";
-  else if (window.opening !== undefined) type = "wall";
+  else if (window.opening !== undefined || door.opening !== undefined) type = "wall";
   else if (/\b(wall|frame|framed)\b/.test(text)) type = "wall";
   else if (/\b(base|floor|foundation)\b/.test(text)) type = "foundation";
   else if (context) type = context.type;
@@ -2190,7 +2274,7 @@ export function parsePrompt(prompt: string, context?: Command): Command {
     w === undefined &&
     h === undefined &&
     d === undefined &&
-    window.opening === undefined &&
+    window.opening === undefined && door.opening === undefined &&
     !/\b(12|16|24)\s*(?:inches|inch|in|["″])?\s*(?:on[ -]cent(?:er|re)|o\.?c\.?|spacing)/.test(
       text,
     )
@@ -2213,5 +2297,7 @@ export function parsePrompt(prompt: string, context?: Command): Command {
     spacing,
     ...(window.opening !== undefined && { windowOpening: window.opening }),
     ...(window.opening === undefined && context?.windowOpening && { windowOpening: context.windowOpening }),
+    ...(door.opening !== undefined && { doorOpening: door.opening }),
+    ...(door.opening === undefined && context?.doorOpening && { doorOpening: context.doorOpening }),
   });
 }

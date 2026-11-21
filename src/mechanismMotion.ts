@@ -1,5 +1,6 @@
 import { Quaternion, Vector3 } from "three";
 import { drawerSlideMountGuideLines } from "./drawerSlideMounts";
+import { doorwayHinge, doorwayLeafRole, doorJambMaterial } from "./doorWall";
 import { drawerSlideKey, drawerSlidePurchaseReview, reviewDrawerSlide } from "./drawerSlides";
 import { greenhouseDoorReview } from "./greenhouseDoors";
 import { greenhouseVentReview } from "./greenhouseVents";
@@ -8,7 +9,7 @@ import { hingePoseAroundAxis } from "./hinges";
 import { reviewSiteSweepBand, sweepLidSiteFaces } from "./lidSiteClearance";
 import { formatPreciseInches } from "./measurement";
 import { hingeComponentExtrema, hingeOffsetAt, hingeOffsetSegments, hingeOffsetSpeed } from "./measuredHingePath";
-import { uid, type Piece, type Project, type V3 } from "./model";
+import { sectionParts, uid, type Piece, type Project, type V3 } from "./model";
 import { sweepPairClearance, type PairClearanceResult } from "./motionPairClearance";
 import {
   motionPlanInputSchema,
@@ -738,11 +739,34 @@ export function removeMotionTestScenario(project: Project, planId: string, scena
   };
 }
 
+function doorwayMotionReview(project: Project, plan: MotionPlan): { warning: string | null; lines?: string[] } | null {
+  if (plan.mechanism.kind !== "hinge" || !plan.mechanism.doorway) return null;
+  const { sectionId } = plan.mechanism.doorway;
+  const section = project.sections.find(({ id }) => id === sectionId);
+  const command = section?.generator;
+  const leaf = project.pieces.find(({ id, offcut }) => id === plan.memberIds[0] && !offcut);
+  const warning = { warning: "The fitted door or hinge measurements changed. Open the doorway planner and preview the door again." };
+  if (!section || !command?.doorUnit || !leaf || plan.memberIds.length !== 1 || leaf.designRole !== doorwayLeafRole || !section.pieceIds.includes(leaf.id)) return warning;
+  const same = (a: V3, b: V3) => a.every((value, i) => Math.abs(value - b[i]) < 1e-6);
+  if (!same(rotate([0, 1, 0], section.rotation), [0, 1, 0]))
+    return { warning: "The wall is tilted. Restore an upright wall before reviewing the interior door swing." };
+  const hinge = doorwayHinge(command.doorUnit);
+  if (!same(hinge.pivot, plan.mechanism.pivot) || !same(hinge.axis, plan.mechanism.axis) || hinge.travel !== plan.mechanism.travel) return warning;
+  const actual = project.pieces.filter(({ id, offcut }) => !offcut && section.pieceIds.includes(id));
+  const expected = sectionParts(command, leaf.stepId, section.name, section.origin, section.rotation)
+    .filter(({ designRole, material }) => designRole === doorwayLeafRole || material === doorJambMaterial);
+  if (!expected.every((part) => actual.some(({ designRole, material, position, rotation, size, cutPlanes, rectangularOpenings, roundOpenings }) =>
+    part.designRole === designRole && part.material === material && same(part.position, position) && same(part.rotation, rotation) &&
+    same(part.size, size) && !cutPlanes.length && !rectangularOpenings?.length && !roundOpenings?.length))) return warning;
+  return { warning: null, lines: ["Swing uses the measured closed leaf and vertical hinge pin. Check the installed stops, casing and hardware before fitting the trim."] };
+}
+
 function boundMotionReview(project: Project, plan: MotionPlan) {
   return (
     greenhouseDoorReview(project, plan) ??
     greenhouseVentReview(project, plan) ??
-    saunaDoorReview(project, plan)
+    saunaDoorReview(project, plan) ??
+    doorwayMotionReview(project, plan)
   );
 }
 

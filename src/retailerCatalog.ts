@@ -14,6 +14,7 @@ import { cedarDoorStop, greenhouseDoorKits } from "./greenhouseDoorReference";
 import { harviaKit, steel6 } from "./saunaHeaterReference";
 import { cedarbrookLining } from "./saunaLiningReference";
 import { cedarbrookDoor } from "./saunaDoorReference";
+import { interiorDoor } from "./doorWall";
 import { cedarbrookFoil } from "./saunaFoilReference";
 import { saunaCeilingBatt, saunaCeilingJoists, saunaCeilingJoistSize, saunaCeilingReviewedAt } from "./saunaCeilingReference";
 import { owensCorningWallBatt as wallBatt } from "./saunaWallReference";
@@ -51,6 +52,7 @@ const sourceHosts = new Set([
   "hdsupplysolutions.com",
   "homedepot.com",
   "www.homedepot.com",
+  "www.masonite.com",
   "lowes.com",
   "www.lowes.com",
   "strongtie.com",
@@ -134,6 +136,7 @@ export const roleQualificationSchema = z.strictObject({
     "saunaCeilingJoists",
     "saunaVaporBarrier",
     "saunaDoor",
+    "interiorDoor",
     "closetRod",
     "closetRodSupport",
     "storageLidHinge",
@@ -3296,6 +3299,27 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
         "Specify the jamb using the measured finished wall and verify the actual leaf position, mounted hinge axes, handle, trim and release from inside with the supplier.",
       ],
     }],
+    limitToQualifiedRoles: true,
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: interiorDoor.productId,
+    name: "Masonite 75777 right-hand prehung interior door",
+    manufacturer: "Masonite",
+    manufacturerPartNumber: interiorDoor.model,
+    category: "equipment",
+    status: "reviewed-specs",
+    verifiedAt: interiorDoor.reviewedAt,
+    profile: profile("equipment", interiorDoor.leaf, 1),
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [interiorDoor.listing] },
+    offers: [hd(interiorDoor.internetNumber, interiorDoor.model, interiorDoor.storeSku)],
+    sources: [
+      { url: interiorDoor.listing, verifiedAt: interiorDoor.reviewedAt, note: "Manufacturer confirms a 32 × 82 in rough opening. One kit includes the right-hand 30 × 80 × 1⅜ in slab, hinges and split jamb. The listing describes a 4¼–4½ in finished wall range. Select a compatible lockset separately." },
+      { url: interiorDoor.installation, verifiedAt: interiorDoor.reviewedAt, note: "Masonite describes shimming the frame, checking level and reveal, and testing movement before installing casing." },
+    ],
+    roleQualifications: [{ role: "interiorDoor", scope: "Measured prehung kit for a compatible ordinary interior doorway.", sourceRefs: [interiorDoor.listing, interiorDoor.installation],
+      requirements: ["Confirm the delivered handing, frame, finished floor clearance, trim and lockset before installation."] }],
     limitToQualifiedRoles: true,
     discrepancies: [],
     capabilities: [],

@@ -37,6 +37,10 @@ test("expanded stock retains actual dimensions and distinct purchase lengths", (
   for (const m of catalog) {
     const base = blank(m.name);
     const p = addMaterial(base, m.id, [0, 0, 0], base.steps[0].id);
+    if (m.includedComponent) {
+      assert.equal(bom(p).length, 0, `${m.id} is included in the kit`);
+      continue;
+    }
     assert.equal(
       bom(p)[0].quantity,
       m.orderRollWidth ? Math.ceil(m.size[0] / 12) : 1,

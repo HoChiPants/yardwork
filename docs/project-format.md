@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 105**. Yardwork reads valid formats 1–104 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 106**. Yardwork reads valid formats 1–105 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 106 optionally records a rough doorway and measured prehung assembly on a generated nonbearing wall. A fitted door has one linked hinge motion with its pin expressed relative to the closed leaf. Wall moves retain that local hinge. Swing findings are recalculated from the saved geometry, and earlier walls open with their original framing.
 
 Format 105 optionally keeps visible straight PDF lines in coordinates relative to the saved sheet. Yardwork derives their workspace coordinates from the sheet’s current scale, rotation and center. Reimporting the source PDF reads its vectors and retains calibration when the rendered sheet matches the saved one exactly. Older saved sheets remain available for manual tracing.
 

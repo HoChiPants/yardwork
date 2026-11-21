@@ -285,8 +285,9 @@ test("whole-section copies retain a group and fresh member IDs without inheritin
 test("one palette card per family retains every exact catalog variant and separates treated uses", () => {
   const groups = groupedMaterials(),
     ids = groups.flatMap((row) => row.variants.map((m) => m.id));
-  assert.deepEqual([...ids].sort(), catalog.map((m) => m.id).sort());
-  assert.equal(new Set(ids).size, catalog.length);
+  const standalone = catalog.filter((material) => !material.includedComponent);
+  assert.deepEqual([...ids].sort(), standalone.map((m) => m.id).sort());
+  assert.equal(new Set(ids).size, standalone.length);
   const framing = groups.find((row) => row.id === "framing-2x4")!;
   assert.deepEqual(
     framing.variants.map((m) => m.id).sort(),

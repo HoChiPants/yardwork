@@ -1,4 +1,5 @@
 import type { Piece, Project } from "./model";
+import { doorwayGuideNote, doorwayLeafRole, doorJambMaterial } from "./doorWall";
 import type { IdeaEntry } from "./ideaBindingSchema";
 import { resolveGuidePlacements } from "./guidePlacementResolution";
 import { saunaPedestalRole } from "./saunaBenchReference";
@@ -454,16 +455,26 @@ export function baseAssemblyStages(project: Project): AssemblyStage[] {
     if (!first || !second) return 0;
     return second.wall % 2 - first.wall % 2 || first.wall - second.wall || first.panel - second.panel;
   });
-  for (const section of orderedSections)
+  const fittedDoorParts = (section: Project["sections"][number]) => section.pieceIds.flatMap((id) => {
+    const part = activeById.get(id);
+    return part && (part.designRole === doorwayLeafRole || part.material === doorJambMaterial) ? [part] : [];
+  });
+  for (const section of orderedSections) {
+    const fitted = new Set(fittedDoorParts(section).map(({ id }) => id));
     append(
       section.id,
       "section",
       section.roomFraming ? `Frame ${section.name} · room wall ${section.roomFraming.wall}` : `Assemble ${section.name}`,
-      section.pieceIds.flatMap((id) => activeById.get(id) ?? []),
+      section.pieceIds.flatMap((id) => fitted.has(id) ? [] : activeById.get(id) ?? []),
       section.roomFraming
-        ? `Dry-fit panel ${section.roomFraming.panel} of ${section.roomFraming.panels} at the actual measured corner or panel joint. Verify both corner contacts, finish backing and fastening. ${connectionReview}`
+        ? `Dry-fit panel ${section.roomFraming.panel} of ${section.roomFraming.panels} at the actual measured corner or panel joint. Verify both corner contacts, finish backing and fastening. ${connectionReview}${section.generator?.doorOpening ? ` ${doorwayGuideNote}` : ""}`
+        : section.generator?.doorOpening ? `${doorwayGuideNote} ${connectionReview}`
         : `Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. ${connectionReview}`,
     );
+  }
+  for (const section of orderedSections.filter(({ generator }) => generator?.doorUnit))
+    append(section.id, "fit-door", `Fit and swing-test the door in ${section.name}`, fittedDoorParts(section),
+      "Measure both diagonals and confirm the frame is plumb. Shim and fasten through actual backing per the selected manufacturer. Check the swing with handles, stops, casing and nearby obstructions in place.");
   const looseGroups = new Map<string, Piece[]>();
   for (const piece of active) {
     if (claimed.has(piece.id)) continue;

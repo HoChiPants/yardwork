@@ -1,5 +1,7 @@
 import { openingSilicone } from "./openingAirSealReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
+import { isPexPipe, pexCutter, pexInstallation } from "./wallWaterReference";
+import { reviewWaterRun } from "./wallWater";
 import { flashingKnife, flexWrap } from "./openingFlashingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
@@ -187,6 +189,11 @@ const definitions: Record<
     review:
       "Use this panel manufacturer's cutting instructions, supported setup and specified blade. A wood saw selection does not establish compatibility with polycarbonate. The modeled kerf is an estimate to verify.",
     referenceUrls: [],
+  },
+  "pex-cut": {
+    name: "Square-cut PEX tubing",
+    review: "Use a cutter documented for the selected PEX size. Check the cut is clean and square, and verify end preparation and fitting insertion.",
+    referenceUrls: [pexCutter.listing, pexInstallation],
   },
   "metal-cut": {
     name: "Shorten the selected metal rod",
@@ -770,16 +777,19 @@ export function toolChecklist(
       label,
     ]),
   );
+  const currentWaterRuns = new Set((project.waterRuns ?? []).filter((run) => reviewWaterRun(project, run).measured).map(({ id }) => id));
   for (const piece of project.pieces) {
     const m = material(piece.material);
     for (const opening of piece.offcut ? [] : (piece.roundOpenings ?? [])) {
+      const waterBore = opening.source && "waterRunId" in opening.source;
+      if (opening.source && "waterRunId" in opening.source && !currentWaterRuns.has(opening.source.waterRunId)) continue;
       const source: ToolProcessSource = {
         kind: "piece",
         id: piece.id,
         reason: `${labels.get(piece.id)} · ${m.name} · ${formatStockLength(opening.diameter)} opening through ${formatStockLength(piece.size[opening.axis])} of stock.`,
       };
       add("round-opening-setup", source);
-      if (m.wood)
+      if (m.wood && !waterBore)
         add(
           "wood-pocket-cut",
           source,
@@ -854,14 +864,14 @@ export function toolChecklist(
         size.some((v, i) => v < stock[i] - 0.001)
       ) {
         add(
-          m.shape === "tube-envelope" ? "metal-cut" : "plastic-cut",
+          isPexPipe(m.id) ? "pex-cut" : m.shape === "tube-envelope" ? "metal-cut" : "plastic-cut",
           source,
           piece.cutStock ? "required" : "conditional",
           piece.cutStock
             ? null
             : "Confirm the dimensional cut schedule and the selected material's instructions.",
         );
-        if (m.shape === "tube-envelope") {
+        if (m.shape === "tube-envelope" && !isPexPipe(m.id)) {
           if (m.id === everbiltClosetRod.materialId) {
             const row = requirements.get("metal-cut")!;
             row.referenceUrls = [...new Set([...row.referenceUrls, everbiltClosetRod.listing])];
@@ -960,7 +970,7 @@ export function toolChecklist(
       .filter(
         (r) => ([
           "wood-crosscut", "wood-angle-crosscut", "wood-rip", "profile-cut",
-          "plastic-cut", "metal-cut",
+          "plastic-cut", "metal-cut", "pex-cut",
         ] as ToolCapability[]).includes(r.capability),
       )
       .flatMap((r) => r.sources);

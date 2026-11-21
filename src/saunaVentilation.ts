@@ -368,7 +368,7 @@ export function saunaVentOpeningsReview(
   review: SaunaVentilationReview,
 ) {
   const roomId = review.plan.roomId;
-  const owned = (opening: RoundOpening) => opening.source?.roomId === roomId;
+  const owned = (opening: RoundOpening) => opening.source && "roomId" in opening.source && opening.source.roomId === roomId;
   const applied = project.pieces.filter((piece) =>
     piece.roundOpenings?.some(owned),
   );
@@ -467,13 +467,13 @@ export function removeSaunaVentOpenings(project: Project, roomId: string) {
     pieces: project.pieces.map((piece) => {
       if (
         !piece.roundOpenings?.some(
-          (opening) => opening.source?.roomId === roomId,
+          (opening) => opening.source && "roomId" in opening.source && opening.source.roomId === roomId,
         )
       )
         return piece;
       const { roundOpenings, ...blank } = piece;
       const kept = roundOpenings.filter(
-        (opening) => opening.source?.roomId !== roomId,
+        (opening) => !opening.source || !("roomId" in opening.source) || opening.source.roomId !== roomId,
       );
       return { ...blank, ...(kept.length ? { roundOpenings: kept } : {}) };
     }),

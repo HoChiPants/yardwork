@@ -17,6 +17,7 @@ import {
   type V3,
 } from "./model";
 import { composeRotation, inverseRotation, rotate } from "./spatial";
+import { clearWaterBores, removeWaterRun, waterRunMembers } from "./wallWater";
 import { planOffcutReuse } from "./offcutReusePlan";
 import { persistLidPose, transformRecordedLidMotion } from "./lidMotion";
 import {
@@ -41,6 +42,11 @@ export function reconcileSections(p: Project): Project {
       .filter((s) => s.pieceIds.length > 0),
   });
 }
+export function movingSectionIds(project: Project, section: Section) {
+  return new Set([...section.pieceIds, ...(project.waterRuns ?? [])
+    .filter((run) => run.sectionId === section.id).flatMap(waterRunMembers)]);
+}
+
 export function transformSection(
   p: Project,
   id: string,
@@ -66,7 +72,7 @@ export function transformSection(
       (value, axis) => value + origin[axis],
     ) as V3;
   };
-  const ids = new Set(section.pieceIds);
+  const ids = movingSectionIds(p, section);
   const next = {
     ...p,
     pieces: p.pieces.map((a) => {
@@ -104,6 +110,7 @@ export function transformSection(
 export function removeSection(p: Project, id: string): Project {
   const section = p.sections.find((s) => s.id === id);
   if (!section) throw Error("Choose a section first.");
+  for (const run of (p.waterRuns ?? []).filter((row) => row.sectionId === id)) p = removeWaterRun(p, run);
   const ids = new Set(section.pieceIds);
   return projectSchema.parse(
     syncDoorwayMotion(forgetBoundSection(
@@ -138,7 +145,7 @@ export function duplicateSection(
     pieces = p.pieces
       .filter((a) => members.has(a.id))
       .map((a) => ({
-        ...structuredClone(a),
+        ...structuredClone(clearWaterBores(a)),
         cutStock: null,
         id: ids.get(a.id)!,
         assembly: name,
@@ -326,7 +333,7 @@ export function snapSectionOrigin(
 ): V3 {
   const candidate = transformSection(project, id, origin, rotation),
     section = candidate.sections.find((s) => s.id === id)!;
-  const ids = new Set(section.pieceIds),
+  const ids = movingSectionIds(candidate, section),
     members = candidate.pieces.filter((p) => ids.has(p.id)),
     others = project.pieces
       .filter((p) => !ids.has(p.id) && !p.offcut)

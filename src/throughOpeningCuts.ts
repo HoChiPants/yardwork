@@ -83,7 +83,7 @@ export function editThroughOpening(
     if (!existing || !Number.isInteger(index))
       throw Error("Choose an existing opening.");
     if ("source" in existing && existing.source)
-      throw Error("Edit this opening in the sauna ventilation layout.");
+      throw Error("waterRunId" in existing.source ? "Edit this bore in the wall water-line planner." : "Edit this opening in the sauna ventilation layout.");
   }
   if (!marks && index === null) return project;
   const updated = [...openings] as ThroughOpening[];

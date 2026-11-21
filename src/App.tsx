@@ -13,6 +13,9 @@ import { SillGasketPanel } from "./SillGasketPanel";
 import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
 import { WindowWallFields, windowWallExample } from "./WindowWallFields";
 import { DoorOpeningFields, DoorwayPanel, doorwayExample } from "./DoorwayPanel";
+import { WallWaterPanel } from "./WallWaterPanel";
+import { removeWaterRun, waterRunGuide } from "./wallWater";
+import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { previewDoorway } from "./doorwayPreview";
 import { generatedWindowMembers, windowFramingSource, windowWallScope } from "./windowWall";
 import { homeDepotFraming } from "./homeDepotFramingReference";
@@ -353,6 +356,7 @@ type Modal =
   | "import"
   | "drawing"
   | "doorway"
+  | "wall-water"
   | "export"
   | "assistant"
   | "base"
@@ -691,6 +695,7 @@ export function App() {
       ? measureBetween(measurement.a, measurement.b)
       : null;
   const [assistantTarget, setAssistantTarget] = useState("");
+  const [waterRunTarget, setWaterRunTarget] = useState<string>();
   const [snap, setSnap] = useState(true),
     [explode, setExplode] = useState(false),
     [xray, setXray] = useState(false),
@@ -1321,6 +1326,10 @@ export function App() {
         break;
       case "window-wall":
         configureWindowWall(action.command);
+        break;
+      case "wall-water":
+        setWaterRunTarget(action.runId);
+        setModal("wall-water");
         break;
       case "greenhouse-weatherseal": {
         const plan = project.motionPlans?.find(({ id }) => id === action.motionId);
@@ -3816,6 +3825,7 @@ export function App() {
               />
               <button type="button" className="button secondary full" onClick={() => openSiteClearances("sections")}>Measured site clearances</button>
               <button type="button" className="button secondary full" onClick={() => setModal("doorway")}>Plan an interior doorway</button>
+              <button type="button" className="button secondary full" onClick={() => { setWaterRunTarget(undefined); setModal("wall-water"); }}>Plan a wall water line</button>
               <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
@@ -5226,7 +5236,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5284,6 +5294,29 @@ export function App() {
               } else setPanel("sections");
               notify(plan ? "Doorway and swing saved. Review the opening before building." : "Doorway framing saved. Review the cuts and build guide.");
             })} />}
+            {modal === "wall-water" && <WallWaterPanel project={project} initialWall={selectedSectionId} initialRun={waterRunTarget}
+              onApply={(draft) => safe(() => {
+                if (current.current !== project) throw Error("The workspace changed. Preview the water line again.");
+                change(draft.project);
+                setStage(null);
+                setPlaying(false);
+                setExplode(false);
+                setMode("select");
+                setSelected(draft.run.pipeId);
+                setSelectedSectionId(null);
+                setSelectionScope("part");
+                setPanel("part");
+                setModal(null);
+                notify("Water line added with its bores, shields and cut length.");
+              })}
+              onRemove={(run) => safe(() => {
+                change((live) => removeWaterRun(live, run));
+                setSelected(null);
+                setStage(null);
+                setPanel("sections");
+                setModal(null);
+                notify("Planned water line removed.");
+              })} />}
             {modal === "catalog" && <CatalogReferences />}
             {modal === "studies" && (
               <BuildStudies
@@ -6660,6 +6693,13 @@ export function App() {
             <h2>Window rough framing</h2>
             <p>{windowWallScope} <a href={windowFramingSource}>PNNL window framing</a></p>
             <ul>{printWindowWalls.map(({ section, detail }) => <li key={section.id}>{section.name} · {detail}</li>)}</ul>
+          </section>
+        )}
+        {!!exportGuide.waterRuns?.length && (
+          <section className="water-run-print">
+            <h2>Wall water-line schedule</h2>
+            <ul>{exportGuide.waterRuns.flatMap((run) => waterRunGuide(exportGuide, run)).map((line, i) => <li key={i}>{line}</li>)}</ul>
+            <p><a href={studBoreSource}>Stud boring</a>{" · "}<a href={pipeProtectionSource}>Pipe protection</a>{" · "}<a href={pexInstallation}>SharkBite installation</a></p>
           </section>
         )}
         {printOpeningFlashing.length > 0 && (

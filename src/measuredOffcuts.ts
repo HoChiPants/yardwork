@@ -1,5 +1,6 @@
 import { setCutSourceOnHand } from "./cutStock";
 import { formatPreciseInches } from "./measurement";
+import { isPexPipe } from "./wallWaterReference";
 import {
   catalog,
   part,
@@ -12,7 +13,7 @@ import {
 
 export const measuredOffcutMaterials = catalog.filter(
   (stock) =>
-    stock.wood &&
+    (stock.wood || isPexPipe(stock.id)) &&
     stock.cuttable &&
     (stock.stockKind === "linear" || stock.stockKind === "sheet"),
 );
@@ -32,7 +33,7 @@ export function addMeasuredOffcut(
   label = "",
 ) {
   const stock = measuredOffcutMaterials.find(({ id }) => id === materialId);
-  if (!stock) throw Error("Choose a cuttable wood board or panel.");
+  if (!stock) throw Error("Choose cuttable wood or supported straight PEX pipe.");
   if (!project.steps.some(({ id }) => id === stepId))
     throw Error("Choose a current build step.");
   const limits = measuredOffcutLimits(stock);
@@ -47,13 +48,16 @@ export function addMeasuredOffcut(
       );
     return Math.min(value, limit);
   });
-  const size: V3 = [width, thickness, length];
+  const pipe = isPexPipe(materialId);
+  if (pipe && (Math.abs(width - limits[1]) > 0.000001 || Math.abs(thickness - limits[2]) > 0.000001))
+    throw Error("Choose the exact pipe stock diameter and measure only its length.");
+  const size: V3 = pipe ? [width, length, thickness] : [width, thickness, length];
   const name = `Offcut · ${label.trim() || stock.name}`.slice(0, 120);
   const offcut = part(
     name,
     materialId,
     size,
-    [0, thickness / 2, 0],
+    [0, (pipe ? length : thickness) / 2, 0],
     stepId,
     "",
   );
@@ -65,10 +69,10 @@ export function addMeasuredOffcut(
       {
         ...offcut,
         offcut: true,
-        stockLengthAxis: 2 as const,
+        stockLengthAxis: pipe ? 1 as const : 2 as const,
         cutStock: {
           id: sourceId,
-          sourceAxes: [1, 0, 2] as [1, 0, 2],
+          ...(!pipe && { sourceAxes: [1, 0, 2] as [1, 0, 2] }),
           size: [...size] as V3,
           offset: [0, 0, 0] as V3,
         },

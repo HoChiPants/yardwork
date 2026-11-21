@@ -13,6 +13,7 @@ import {
 } from "./mechanismMotion";
 import { parsePrompt, type Command, type Project } from "./model";
 import { windowWallScope } from "./windowWall";
+import { reviewWaterRun } from "./wallWater";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
@@ -26,6 +27,7 @@ export type BuildQuestion =
   | { kind: "greenhouse-weatherseal" }
   | { kind: "opening-flashing"; sillLabel?: string }
   | { kind: "window-wall"; prompt: string }
+  | { kind: "wall-water"; subject?: string }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
   | { kind: "offcuts"; label?: string };
@@ -38,6 +40,7 @@ export type BuildQuestionAction =
   | { kind: "greenhouse-weatherseal"; motionId: string }
   | { kind: "opening-flashing"; sillId?: string }
   | { kind: "window-wall"; command?: Command }
+  | { kind: "wall-water"; runId?: string }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
@@ -87,6 +90,7 @@ const doorSealQuestion =
   /^(?:how (?:can|do|should) i (?:weatherstrip|weatherseal|seal) (?:the |my )?greenhouse door|(?:check|review|plan|show) (?:the )?(?:weatherstrip|weatherseal|weatherstripping) (?:for|on) (?:the |my )?greenhouse door)$/i;
 const openingFlashingQuestion = /^(?:how (?:can|do|should) i (?:flash|air[ -]seal) (?:the |my )?(?:window|door) opening|(?:plan|review|check|show) (?:(?:(?:sill|opening|window|door|jamb and head) )?flashing|(?:the )?interior air[ -]seal))(?: (?:at|on|for) (p\d{1,6}))?$/i;
 const windowWallQuestion = /^(?:(?:(?:build|frame|design|plan|make|create|add)\s+(?:(?:a|an|the)\s+)?)?(?:window wall|(?:(?:nonbearing|framed)\s+)?wall\b.*\bwindows?\b))/i;
+const wallWaterQuestion = /^(?:(?:plan|route|add|lay out) (?:a |the )?(?:pex|water(?: supply)?) (?:line|pipe)(?: through (?:the |a )?(?:wall|studs))?|(?:review|check) (?:the |my )?water line(?: (.+))?|how (?:do|can|should) i run (?:a )?(?:pex|water) (?:line|pipe) through (?:the |a )?(?:wall|studs))$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -106,6 +110,8 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (doorSealQuestion.test(text)) return { kind: "greenhouse-weatherseal" };
   const flashing = openingFlashingQuestion.exec(text);
   if (flashing) return { kind: "opening-flashing", ...(flashing[1] && { sillLabel: labelKey(flashing[1]) }) };
+  const water = wallWaterQuestion.exec(text);
+  if (water) return { kind: "wall-water", ...(water[1] && { subject: water[1] }) };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
   const motion = motionQuestion.exec(text);
   return motion
@@ -436,6 +442,24 @@ export function answerBuildQuestion(
             link: { label: "Open door movement", action: { kind: "greenhouse-weatherseal", motionId: motion.id } },
           };
         }),
+      };
+    }
+    case "wall-water": {
+      const runs = (project.waterRuns ?? []).filter(({ name }) => !question.subject || searchName(name) === searchName(question.subject));
+      return {
+        title: "Plan a straight water line",
+        detail: "Choose a generated nonbearing wall, then enter the actual endpoints, center height, depth and bore. The preview uses the retained studs and checks the pipe route and face protection.",
+        scope: "Confirm the wall type, concealed services, fittings, support and local requirements before drilling.",
+        rows: runs.map((run) => {
+          const review = reviewWaterRun(project, run);
+          return {
+            id: run.id,
+            title: run.name,
+            detail: review.problem ?? `${review.measured?.studs.length ?? 0} modeled stud bores and ${run.shields.length} shield plates.`,
+            link: { label: "Open water-line layout", action: { kind: "wall-water", runId: run.id } },
+          };
+        }),
+        link: { label: "Plan a wall water line", action: { kind: "wall-water" } },
       };
     }
     case "opening-flashing": {

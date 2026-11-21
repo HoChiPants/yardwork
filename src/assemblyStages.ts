@@ -1,5 +1,6 @@
 import type { Piece, Project } from "./model";
 import { doorwayGuideNote, doorwayLeafRole, doorJambMaterial } from "./doorWall";
+import { waterRunMembers, waterRunStageKey } from "./wallWater";
 import type { IdeaEntry } from "./ideaBindingSchema";
 import { resolveGuidePlacements } from "./guidePlacementResolution";
 import { saunaPedestalRole } from "./saunaBenchReference";
@@ -475,6 +476,10 @@ export function baseAssemblyStages(project: Project): AssemblyStage[] {
   for (const section of orderedSections.filter(({ generator }) => generator?.doorUnit))
     append(section.id, "fit-door", `Fit and swing-test the door in ${section.name}`, fittedDoorParts(section),
       "Measure both diagonals and confirm the frame is plumb. Shim and fasten through actual backing per the selected manufacturer. Check the swing with handles, stops, casing and nearby obstructions in place.");
+  for (const run of project.waterRuns ?? [])
+    append(run.id, waterRunStageKey, `Rough in ${run.name}`,
+      waterRunMembers(run).flatMap((id) => activeById.get(id) ?? []),
+      "Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.");
   const looseGroups = new Map<string, Piece[]>();
   for (const piece of active) {
     if (claimed.has(piece.id)) continue;

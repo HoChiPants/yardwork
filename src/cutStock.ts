@@ -10,10 +10,11 @@ import {
   type V3,
 } from "./model";
 import { orientedStockSize } from "./stockAxes";
+import { isPexPipe } from "./wallWaterReference";
 
 export const KERF = 0.125;
 export const cutKerf = (materialId: MaterialId) =>
-  isBatt(materialId) ? 0 : KERF;
+  isBatt(materialId) || isPexPipe(materialId) ? 0 : KERF;
 export const plannedCutKerf = (project: Project, id: MaterialId) =>
   project.woodKerfs?.[id] ?? cutKerf(id);
 

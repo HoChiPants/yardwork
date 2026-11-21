@@ -157,7 +157,7 @@ export function ThroughOpeningEditor({
       {!rectangular &&
         openings.some((opening) => "source" in opening && opening.source) && (
           <p className="small-note">
-            Ventilation openings are edited in the sauna layout.
+            Edit sauna vents and water-line bores in the planner that created them.
           </p>
         )}
       <p className="small-note">

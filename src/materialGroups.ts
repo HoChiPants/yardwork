@@ -73,6 +73,12 @@ const families: {
     ids: ["screw", "screw-short"],
     preferred: "screw",
   },
+  {
+    id: "pex-b",
+    name: "Straight PEX-B pipe",
+    ids: ["hd-pex-u860w10", "hd-pex-u870w10"],
+    preferred: "hd-pex-u860w10",
+  },
 ];
 export type MaterialGroup = {
   id: string;

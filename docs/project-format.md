@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 106**. Yardwork reads valid formats 1–105 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 107**. Yardwork reads valid formats 1–106 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 107 can retain straight wall water lines. Each line connects the measured wall-local endpoints and bore dimensions to its pipe, stud IDs and shield faces. Bores owned by a water line carry `source.waterRunId`. The guide rechecks the current geometry before printing drilling coordinates. Moving the wall moves its linked pipe and shields. Earlier projects retain ordinary round cuts and existing sauna ventilation source records unchanged.
 
 Format 106 optionally records a rough doorway and measured prehung assembly on a generated nonbearing wall. A fitted door has one linked hinge motion with its pin expressed relative to the closed leaf. Wall moves retain that local hinge. Swing findings are recalculated from the saved geometry, and earlier walls open with their original framing.
 

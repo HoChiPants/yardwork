@@ -63,6 +63,8 @@ import { purchaseCount } from "./purchaseUnits";
 import { freshStoreCheck } from "./storeSnapshotTime";
 import { suppliesMarkdown, supplyRows, formatSupplyContent } from "./supplies";
 import { projectCodeMarkdown, reviewProjectCode } from "./projectCode";
+import { reviewWaterRun, waterRunGuide } from "./wallWater";
+import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { reviewShingleRoof, roofAreaText, roofPitchText } from "./shingleRoof";
 import { saunaHeaterMarkdown, saunaHeaterReview } from "./saunaHeaters";
 import { saunaVentilationMarkdown, saunaVentilationReview, saunaVentOpeningsReview } from "./saunaVentilation";
@@ -132,7 +134,7 @@ import {
   type PriceSource,
   type UnresolvedPricingQuantity,
 } from "./pricing";
-import { inspectCutStock, KERF, pieceCutKerf, plannedCutKerf } from "./cutStock";
+import { inspectCutStock, pieceCutKerf, plannedCutKerf } from "./cutStock";
 export { cutKerf, inspectCutStock, KERF, pieceCutKerf } from "./cutStock";
 export { rotate } from "./spatial";
 import { rotate } from "./spatial";
@@ -398,7 +400,7 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
                   0,
                   length -
                     originalLength -
-                    (originalLength < length - 0.000001 ? piece.cutStock.woodKerf ?? KERF : 0),
+                    (originalLength < length - 0.000001 ? pieceCutKerf(piece) : 0),
                 ),
                 cuts: [
                   {
@@ -777,6 +779,13 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
         ].join(" "),
       });
     }
+  }
+  for (const run of p.waterRuns ?? []) {
+    const review = reviewWaterRun(p, run);
+    if (review.problem) findings.push({
+      id: `water-line-${run.id}`, severity: "warning", title: `Review water line · ${run.name}`, detail: review.problem,
+      ...(p.pieces.some(({ id }) => id === run.pipeId) && { pieceId: run.pipeId }),
+    });
   }
   if (p.projectCode) {
     for (const row of reviewProjectCode(p.projectCode, p).rows) {
@@ -2121,6 +2130,9 @@ export function guideMarkdown(p: Project) {
     (saunaBenchTravel.length ? "\n\n## Sauna bench carry-in\n\n" +
       saunaBenchTravel.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     projectCodeMarkdown(p) +
+    (p.waterRuns?.length ? "\n\n## Wall water-line schedule\n\n" +
+      p.waterRuns.flatMap((run) => waterRunGuide(p, run)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
+      `\n\n[Stud boring](${studBoreSource}) · [Pipe protection](${pipeProtectionSource}) · [SharkBite installation](${pexInstallation})\n` : "") +
     (motions.length ? "\n\n## Motion and clearance\n\n" +
       motions.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") : "") +
     (latch.length ? "\n\n## Greenhouse door latch layout\n\n" +

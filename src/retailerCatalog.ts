@@ -15,6 +15,7 @@ import { harviaKit, steel6 } from "./saunaHeaterReference";
 import { cedarbrookLining } from "./saunaLiningReference";
 import { cedarbrookDoor } from "./saunaDoorReference";
 import { interiorDoor } from "./doorWall";
+import { nailShield, pexCutter, pexInstallation, pexPipes, pexSpec, pexStockLength, wallWaterReviewedAt, type PexPipeId } from "./wallWaterReference";
 import { cedarbrookFoil } from "./saunaFoilReference";
 import { saunaCeilingBatt, saunaCeilingJoists, saunaCeilingJoistSize, saunaCeilingReviewedAt } from "./saunaCeilingReference";
 import { owensCorningWallBatt as wallBatt } from "./saunaWallReference";
@@ -53,6 +54,7 @@ const sourceHosts = new Set([
   "homedepot.com",
   "www.homedepot.com",
   "www.masonite.com",
+  "www.sharkbite.com",
   "lowes.com",
   "www.lowes.com",
   "strongtie.com",
@@ -137,6 +139,8 @@ export const roleQualificationSchema = z.strictObject({
     "saunaVaporBarrier",
     "saunaDoor",
     "interiorDoor",
+    "potableWaterPipe",
+    "pipeNailShield",
     "closetRod",
     "closetRodSupport",
     "storageLidHinge",
@@ -233,6 +237,7 @@ export const retailerProductSchema = z
     category: z.enum([
       "lumber",
       "rod",
+      "pipe",
       "panel",
       "fastener",
       "connector",
@@ -411,6 +416,7 @@ export const retailerProductSchema = z
     const kinds = {
       lumber: ["linear"],
       rod: ["linear"],
+      pipe: ["linear"],
       panel: ["sheet", "roll"],
       fastener: ["fastener"],
       connector: ["connector"],
@@ -3323,6 +3329,53 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     limitToQualifiedRoles: true,
     discrepancies: [],
     capabilities: [],
+  },
+  ...(Object.keys(pexPipes) as PexPipeId[]).map((id): RetailerProduct => {
+    const pipe = pexPipes[id], listing = `https://www.homedepot.com/p/${pipe.internet}`;
+    return {
+      id, name: `SharkBite ${pipe.nominal} in × 10 ft white PEX-B stick`,
+      manufacturer: "SharkBite", manufacturerPartNumber: pipe.model,
+      identityBasis: "manufacturer-part", toolCapabilityEvidence: [],
+      category: "pipe", status: "reviewed-specs", verifiedAt: wallWaterReviewedAt,
+      profile: profile("linear", [pipe.outside, pexStockLength, pipe.outside], 1),
+      purchaseSpec: { kind: "counted", count: 1, sourceRefs: [listing] },
+      offers: [hd(pipe.internet, pipe.model, pipe.sku)],
+      sources: [
+        { url: listing, verifiedAt: wallWaterReviewedAt, note: "One 10 ft straight white PEX-B pipe. Select the exact nominal size." },
+        { url: pexSpec, verifiedAt: wallWaterReviewedAt, note: `Manufacturer stock identity and ${pipe.outside} in outside diameter.` },
+        { url: pexInstallation, verifiedAt: wallWaterReviewedAt, note: "Cut square with a PEX cutter and follow the selected connection system instructions." },
+      ],
+      roleQualifications: [{ role: "potableWaterPipe", scope: "Straight concealed potable-water pipe stock.", sourceRefs: [pexSpec, pexInstallation],
+        requirements: ["Confirm fitting system, insertion, support, service access and test requirements before cutting and installation."] }],
+      limitToQualifiedRoles: true, discrepancies: [], capabilities: [],
+    };
+  }),
+  toolReference({
+    id: "hd-sharkbite-u701a", name: "SharkBite U701A PEX pipe cutter",
+    manufacturer: "SharkBite", manufacturerPartNumber: pexCutter.model, verifiedAt: wallWaterReviewedAt,
+    offers: [hd(pexCutter.internet, pexCutter.model, pexCutter.sku)],
+    sources: [
+      { url: pexCutter.listing, verifiedAt: wallWaterReviewedAt, note: "Exact U701A listing shows PEX sizes 1/4 through 1 inch." },
+      { url: pexCutter.product, verifiedAt: wallWaterReviewedAt, note: "SharkBite scissor cutter family is documented for a clean cut in PEX. Use the overlap of the documented model and family size ranges." },
+    ],
+    toolCapabilityEvidence: [toolEvidence(["pex-cut"], "manufacturer-product-specification",
+      [pexCutter.product], "Square-cut the supported 1/2 and 3/4 in PEX sizes.",
+      ["Check the delivered model, blade and actual pipe; confirm fitting-specific end preparation."])],
+  }),
+  {
+    id: nailShield.productId, name: "Simpson Strong-Tie NS1 1½ × 3 in nail stop",
+    manufacturer: "Simpson Strong-Tie", manufacturerPartNumber: nailShield.model,
+    category: "equipment", status: "reviewed-specs", verifiedAt: wallWaterReviewedAt,
+    profile: profile("equipment", [nailShield.width, nailShield.length, nailShield.thickness], 1),
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [nailShield.listing] },
+    offers: [hd(nailShield.internet, nailShield.model, nailShield.sku)],
+    sources: [
+      { url: nailShield.listing, verifiedAt: wallWaterReviewedAt, note: "One steel nail stop for protecting pipes or wires at framing penetrations." },
+      { url: nailShield.manufacturer, verifiedAt: wallWaterReviewedAt, note: "Confirm steel thickness, fastening method and fit of the delivered protection hardware." },
+    ],
+    roleQualifications: [{ role: "pipeNailShield", scope: "Protection of an eligible bore through a single ordinary stud face.", sourceRefs: [nailShield.listing, nailShield.manufacturer],
+      requirements: ["Confirm actual installed coverage, metal thickness and attachment. Plate and wider-member penetrations need their own protection detail."] }],
+    limitToQualifiedRoles: true, discrepancies: [], capabilities: [],
   },
   ...cedarbrookBenches.map((bench) => ({
     id: bench.productId,

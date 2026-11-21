@@ -6,6 +6,7 @@ import {
   measuredOffcutMaterials,
 } from "./measuredOffcuts";
 import { material, type MaterialId, type V3 } from "./model";
+import { isPexPipe } from "./wallWaterReference";
 
 function defaults(id: MaterialId): V3 {
   const [, width, thickness] = measuredOffcutLimits(material(id));
@@ -38,8 +39,7 @@ export function MeasuredOffcutForm({
     <form onSubmit={submit}>
       <h2 id="modal-title">Add a measured offcut</h2>
       <p className="small-note">
-        Measure the rectangular piece you have. Use the grain direction for
-        length.
+        {isPexPipe(id) ? "Measure the usable length of this exact pipe with clean ends." : "Measure the rectangular piece you have along the grain for length."}
       </p>
       <label className="field">
         Matching stock
@@ -58,7 +58,7 @@ export function MeasuredOffcutForm({
               label={kind === "linear" ? "Boards" : "Wood panels"}
             >
               {measuredOffcutMaterials
-                .filter(({ stockKind }) => stockKind === kind)
+                .filter(({ stockKind, id }) => stockKind === kind && !isPexPipe(id))
                 .map((stock) => (
                   <option key={stock.id} value={stock.id}>
                     {stock.name} · {stock.subtitle}
@@ -66,13 +66,17 @@ export function MeasuredOffcutForm({
                 ))}
             </optgroup>
           ))}
+          <optgroup label="PEX pipe">
+            {measuredOffcutMaterials.filter((stock) => isPexPipe(stock.id)).map((stock) =>
+              <option key={stock.id} value={stock.id}>{stock.name} · {stock.subtitle}</option>)}
+          </optgroup>
         </select>
         <small>
-          Stock limits · {limits.map(formatPreciseInches).join(" × ")} · length,
-          width, thickness
+          {isPexPipe(id) ? `Outside diameter ${formatPreciseInches(limits[1])} · up to ${formatPreciseInches(limits[0])} long`
+            : `Stock limits · ${limits.map(formatPreciseInches).join(" × ")} · length, width, thickness`}
         </small>
       </label>
-      {(["Length", "Width", "Thickness"] as const).map((label, index) => (
+      {(isPexPipe(id) ? ["Length"] as const : ["Length", "Width", "Thickness"] as const).map((label, index) => (
         <LengthInput
           key={`${id}/${label}`}
           label={label}

@@ -1,0 +1,73 @@
+import { readFile } from "node:fs/promises";
+import { expect, test } from "@playwright/test";
+import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { blank } from "../../src/model";
+import { emptyWallTrace, reviewWallTrace } from "../../src/wallTrace";
+
+test("plan a measured water line from a PEX scrap, check the bores and reopen the saved layout", async ({ page }) => {
+  test.setTimeout(90_000);
+  const source = reviewWallTrace(blank("Kitchen rough-in"), { ...emptyWallTrace(), a: [-48, 0], b: [48, 0] }).candidate;
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "kitchen-wall.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(source)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Cut pool (0)", exact: true }).click();
+  await page.getByRole("region", { name: "Cut pool" }).getByRole("button", { name: "Add measured offcut", exact: true }).click();
+  await dialog.getByRole("combobox", { name: /^Matching stock/ }).selectOption("hd-pex-u860w10");
+  await expect(dialog.getByRole("spinbutton", { name: "Width", exact: true })).toHaveCount(0);
+  await dialog.getByRole("spinbutton", { name: "Length", exact: true }).fill("100");
+  await dialog.getByRole("textbox", { name: "Name (optional)", exact: true }).fill("Clean PEX remnant");
+  await dialog.getByRole("button", { name: "Add to Cut pool", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("Plan a water line through the wall");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await dialog.getByRole("button", { name: "Plan a wall water line", exact: true }).click();
+  await dialog.getByRole("textbox", { name: "Line name", exact: true }).fill("Sink cold supply");
+  await dialog.getByRole("combobox", { name: "Pipe center above wall base units", exact: true }).selectOption("ft");
+  await dialog.getByRole("spinbutton", { name: "Pipe center above wall base", exact: true }).fill("2");
+  const bore = dialog.getByRole("spinbutton", { name: "Measured bore diameter", exact: true });
+  await bore.fill("2.25");
+  await dialog.getByRole("checkbox", { name: /interior nonbearing wall/ }).check();
+  const preview = dialog.getByRole("button", { name: "Preview water line", exact: true });
+  await preview.click();
+  await expect(dialog.getByRole("alert")).toContainText("60% of actual stud depth");
+  await bore.fill("0.875");
+  await preview.click();
+  const proposal = dialog.getByRole("region", { name: "Water-line proposal" });
+  await expect(proposal).toContainText("90 in pipe cut · 5 stud bores · 10 shield plates");
+  await expect(proposal).toContainText("Clean PEX remnant");
+  await expect(proposal).toContainText("Keep 10 in for another run");
+  await proposal.getByText("Bore marks and face protection", { exact: true }).click();
+  await expect(proposal).toContainText("22.5 in from stud bottom");
+  await proposal.getByRole("button", { name: "Add water line", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision, { timeout: 15_000 }).toBe(1);
+  const saved = (await draft()).project;
+  expect(saved.waterRuns[0].studs).toHaveLength(5);
+  expect(saved.waterRuns[0].shields).toHaveLength(10);
+  expect(saved.pieces.find((p: { offcut: boolean; material: string }) => p.offcut && p.material === "hd-pex-u860w10").size[1]).toBe(10);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").first().click();
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("button", { name: "Plan a wall water line", exact: true }).click();
+  await dialog.getByRole("combobox", { name: "Water line", exact: true }).selectOption(saved.waterRuns[0].id);
+  await expect(dialog.getByRole("spinbutton", { name: "Pipe center above wall base", exact: true })).toHaveValue("24");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/Rough in Sink cold supply/);
+  expect(guide).toMatch(/Wall water-line schedule[\s\S]*22\.5 in above the stud’s lower end/);
+  await expect(page.locator(".print-guide .water-run-print")).toContainText("NS1 shield on front and back");
+});

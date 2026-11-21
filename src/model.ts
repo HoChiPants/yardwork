@@ -13,6 +13,8 @@ import { greenhouseDoorSealsSchema } from "./greenhouseDoorSealSchema";
 import { openingFlashingPlansSchema } from "./openingFlashingSchema";
 import { wallFramingStockIds, windowOpeningSchema, windowWallPrompt, windowWallScope, windowWallTemplate } from "./windowWall";
 import { doorJambMaterial, doorOpeningSchema, doorUnitSchema, doorwayGuideNote, doorwayHinge, doorwayLeafRole, doorwayTemplate, interiorDoor, measuredDoorMaterial, wallStudPositions, doorWallPrompt } from "./doorWall";
+import { nailShield, pexPipes, pexStockLength, type PexPipeId } from "./wallWaterReference";
+import { waterRunSchema } from "./wallWaterSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -488,6 +490,11 @@ export const currentProjectSchema = z
         "Keep one cut plan per stock source.")
       .optional(),
     projectCode: projectCodeSchema.optional(),
+    waterRuns: z.array(waterRunSchema).max(32)
+      .refine((runs) => {
+        const members = runs.flatMap((run) => [run.pipeId, ...run.shields.map(({ id }) => id)]);
+        return new Set(runs.map(({ id }) => id)).size === runs.length && new Set(members).size === members.length;
+      }, "Each water line owns a separate pipe and its shield plates.").optional(),
     shelfSagPlans: shelfSagPlansSchema.optional(),
     saunaHeaterPlans: z.array(saunaHeaterPlanSchema).max(50).refine(
       (plans) => new Set(plans.map((plan) => plan.roomId)).size === plans.length,
@@ -1373,6 +1380,22 @@ export const catalog: Material[] = [
     category: "Doors", stockKind: "equipment", wood: false, cuttable: false, packCount: 1, includedComponent: true, measuredEquipment: true,
     size: [0.625, 81, 4.5], color: "#d5c8b6", priceKind: "unpriced", price: 0, unit: "piece", search: "interior door jamb",
   },
+  ...(Object.keys(pexPipes) as PexPipeId[]).map((id): Material => {
+    const pipe = pexPipes[id];
+    return {
+      id, name: `SharkBite ${pipe.nominal} in PEX-B`, subtitle: `10 ft straight · ${pipe.outside} in outside diameter`,
+      category: "Plumbing", stockKind: "linear", wood: false, cuttable: true, packCount: 1, shape: "tube-envelope",
+      size: [pipe.outside, pexStockLength, pipe.outside],
+      color: "#e6e9eb", productReference: id, priceKind: "unpriced", price: 0, unit: "stick",
+      search: `pex plumbing potable tubing ${pipe.model}`,
+    };
+  }),
+  {
+    id: nailShield.id, name: "Simpson Strong-Tie NS1 nail shield", subtitle: "1½ × 3 in · single plate",
+    category: "Plumbing", stockKind: "equipment", wood: false, cuttable: false, packCount: 1,
+    size: [nailShield.width, nailShield.length, nailShield.thickness],
+    color: "#a7b2be", productReference: nailShield.productId, priceKind: "unpriced", price: 0, unit: "plate", search: "ns1 steel nail plate shield pipe",
+  },
   ...cedarbrookBenches.map((bench): Material => ({
     id: bench.materialId,
     name: `Cedarbrook ${bench.length / 12} ft pedestal sauna bench`,
@@ -2113,11 +2136,12 @@ export function applyCommand(
       section.rotation,
     );
     const keepMatchingParts = (command.windowOpening && section.generator.windowOpening) || command.doorOpening || section.generator.doorOpening ||
-      (command.wallStock && section.generator.wallStock);
+      (command.wallStock && section.generator.wallStock) || project.waterRuns?.some((run) => run.sectionId === section.id);
     const pieces = keepMatchingParts ? generated.map((candidate) => {
       const prior = existing.find((piece) =>
         piece.designRole === candidate.designRole && piece.material === candidate.material &&
-        !piece.offcut && !piece.cutPlanes.length && !pieceThroughOpenings(piece).length &&
+        !piece.offcut && !piece.cutPlanes.length && pieceThroughOpenings(piece).every((opening) =>
+          "source" in opening && opening.source && "waterRunId" in opening.source) &&
         piece.size.every((n, i) => Math.abs(n - candidate.size[i]) < 1e-7) &&
         piece.position.every((n, i) => Math.abs(n - candidate.position[i]) < 1e-7) &&
         piece.rotation.every((n, i) => Math.abs(n - candidate.rotation[i]) < 1e-7));

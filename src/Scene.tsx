@@ -27,7 +27,7 @@ import { clipBox, triangulateSolid } from "./cutProfiles";
 import { pieceThroughOpenings, throughOpeningTriangles } from "./throughOpenings";
 import { alignNearbyFaces, surfacePlacement } from "./editing";
 import { createWoodGroupSlide, createWoodSlide, placeWood, woodSlideStopLabel } from "./placement";
-import { snapSectionOrigin } from "./sections";
+import { movingSectionIds, snapSectionOrigin } from "./sections";
 import { liftDistanceInches } from "./editorMotion";
 import { composeRotation } from "./spatial";
 import type { SaunaHeaterReview } from "./saunaHeaters";
@@ -1344,7 +1344,7 @@ function World(props: SceneProps) {
   const section = props.project.sections.find(
     (s) => s.id === props.selectedSectionId,
   );
-  const grouped = new Set(section?.pieceIds ?? []);
+  const grouped = section ? movingSectionIds(props.project, section) : new Set<string>();
   const markedRun = props.shownTrimSeam ?? props.shownBandingEdge ?? props.shownProfileRun;
   return (
     <>

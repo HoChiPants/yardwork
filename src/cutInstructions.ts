@@ -85,6 +85,7 @@ export function cutInstructions(
   piece: Piece,
   options: { kerf?: number; lineageStatus?: "validated" | "unverified" } = {},
 ): CutInstructionPlan {
+  const independentRoundOpenings = piece.roundOpenings?.filter((opening) => !opening.source || !("waterRunId" in opening.source));
   if (
     options.kerf !== undefined &&
     (!Number.isFinite(options.kerf) || options.kerf < 0)
@@ -261,9 +262,9 @@ export function cutInstructions(
     (piece.roundOpenings?.length || piece.rectangularOpenings?.length)
       ? { openingDatum: "visible-foil-face" as const }
       : {}),
-    ...(piece.roundOpenings?.length
+    ...(independentRoundOpenings?.length
       ? {
-          openings: piece.roundOpenings.map((opening) => {
+          openings: independentRoundOpenings.map((opening) => {
             const axes = openingAxes(opening.axis);
             return {
               boreAxis: names[opening.axis],

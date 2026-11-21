@@ -9,10 +9,10 @@ export const roundOpeningSchema = z.strictObject({
   ...location,
   diameter: z.number().finite().min(0.125).max(48),
   source: z
-    .strictObject({
-      roomId: z.uuid(),
-      kind: z.enum(["intake", "exhaust", "drying"]),
-    })
+    .union([
+      z.strictObject({ roomId: z.uuid(), kind: z.enum(["intake", "exhaust", "drying"]) }),
+      z.strictObject({ waterRunId: z.uuid() }),
+    ])
     .optional(),
 });
 export type RoundOpening = z.infer<typeof roundOpeningSchema>;

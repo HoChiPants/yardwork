@@ -10,6 +10,7 @@ export const toolCapabilities = [
   "staple-foil",
   "wood-rip",
   "plastic-cut",
+  "pex-cut",
   "metal-cut",
   "metal-deburr",
   "profile-cut",

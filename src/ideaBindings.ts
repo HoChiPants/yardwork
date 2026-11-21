@@ -943,9 +943,17 @@ export function applyIdeaRevision(
     expectedToken,
     options,
   );
+  return acceptIdeaRevisionPreview(preview, options.allowRebuild);
+}
+
+/** Accept the same candidate shown in the workspace, with its original part IDs. */
+export function acceptIdeaRevisionPreview(
+  preview: ReturnType<typeof previewIdeaRevision>,
+  allowRebuild = false,
+) {
   if (preview.clearanceConflicts.length)
     throw Error("This revision reduces a measured site clearance below its minimum.");
-  if (preview.requiresRebuild && !options.allowRebuild)
+  if (preview.requiresRebuild && !allowRebuild)
     throw Error(
       "This revision replaces custom edits, recorded stock or connections. Review the impact and explicitly allow the rebuild before applying.",
     );

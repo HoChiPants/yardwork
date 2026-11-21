@@ -30,7 +30,7 @@ export function MaterialCutNote({ id }: { id: BomRow["id"] }) {
   );
 }
 
-function SequenceBody({ sequence }: { sequence: StockCutSequence }) {
+export function SequenceBody({ sequence }: { sequence: StockCutSequence }) {
   if (sequence.review) return <p className="small-note">{sequence.review}</p>;
   return (
     <>

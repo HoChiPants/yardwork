@@ -3,14 +3,19 @@ import { bom } from "./engine";
 import { material, type Project } from "./model";
 import { assignOffcutToPart, fittingOffcuts } from "./offcutAssignment";
 import { ensurePartLabels, partLabel } from "./partLabels";
+import { orientedStockSize } from "./stockAxes";
 
-export function planOffcutReuse(input: Project, offcutIds?: readonly string[]) {
+export function planOffcutReuse(
+  input: Project,
+  offcutIds?: readonly string[],
+  targetIds?: ReadonlySet<string>,
+) {
   let project = ensurePartLabels(input);
   let inspection = inspectCutStock(project);
   const allowed = offcutIds ? new Set(offcutIds) : undefined;
   const originalIds = new Set(project.pieces.map(({ id }) => id));
   const candidates = project.pieces
-    .filter((piece) => !piece.offcut && !piece.cutStock)
+    .filter((piece) => !piece.offcut && !piece.cutStock && (!targetIds || targetIds.has(piece.id)))
     .map((target) => {
       const fits = fittingOffcuts(project, target, inspection, allowed);
       return {
@@ -58,7 +63,10 @@ export function planOffcutReuse(input: Project, offcutIds?: readonly string[]) {
       }
     }
   }
-  return { source: input, project, assignments, purchases };
+  const remnants = project.pieces.flatMap((piece) => piece.offcut && !originalIds.has(piece.id)
+    ? [{ id: piece.id, label: partLabel(project, piece.id), size: orientedStockSize(piece) }]
+    : []);
+  return { source: input, project, assignments, purchases, remnants };
 }
 
 export type OffcutReusePlan = ReturnType<typeof planOffcutReuse>;

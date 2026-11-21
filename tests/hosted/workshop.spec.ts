@@ -1260,3 +1260,80 @@ test("compare drawer slide lengths, play the fitted travel and reopen the exact 
   expect(guide).toContain("T46322G18");
   expect(guide).toContain("Closed rail length 17.72 in");
 });
+
+test("a proposal shows board cuts, reuses a named scrap and saves the exact cut order", async ({ page }) => {
+  const base = blank("Workbench proposal stock");
+  const existing = part("Existing blank", "stud", [3.5, 1.5, 10], [90, 0.75, 0], base.steps[0].id, "Existing");
+  base.pieces.push(existing);
+  const stocked = addMeasuredOffcut(base, base.steps[0].id, "stud", [88, 3.5, 1.5], "Long shop scrap");
+  const fixture = addMeasuredOffcut(stocked, base.steps[0].id, "stud", [12, 3.5, 1.5], "Small shop scrap");
+  const originalScrap = fixture.pieces.find(({ name }) => name.includes("Long shop scrap"))!;
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "workbench-stock.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(fixture)),
+  });
+  await expect(dialog).toHaveCount(0);
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.project.name).toContain(fixture.name);
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  async function ask(text: string) {
+    await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(text);
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  }
+  const apply = dialog.getByRole("button", { name: "Add proposed layout", exact: true });
+  await ask("Build a workbench 48 inches wide, 20 inches deep and 36 inches tall");
+  await expect(apply).toBeEnabled();
+  await ask("Show cuts for this proposal");
+  const stock = dialog.getByRole("region", { name: "Proposal cuts and stock" });
+  const board = stock.getByRole("region", { name: "2 × 4 framing lumber", exact: true });
+  await expect(board).toContainText("4 boards to buy for the project");
+  const firstBoard = board.locator("details").first();
+  await firstBoard.locator("summary").click();
+  await expect(firstBoard.locator("ol").getByRole("listitem").first()).toBeVisible();
+
+  await ask("Use O999 for this proposal");
+  await expect(stock.getByRole("alert")).toContainText("O999 is missing from the Cut pool");
+  await expect(apply).toBeDisabled();
+  await ask("Use O001 for this proposal");
+  await expect(board).toContainText("3 boards to buy for the project");
+  const cuts = stock.getByRole("list", { name: "Proposed cuts in order" }).getByRole("listitem");
+  await expect(cuts).toHaveCount(2);
+  await expect(cuts.nth(0)).toContainText("O001");
+  await expect(cuts.nth(0)).toContainText("Crosscut to 4 ft");
+  await expect(cuts.nth(1)).toContainText("From an earlier cut");
+  await expect(stock.getByRole("list", { name: "Scraps to keep after these cuts" })).toContainText("O004 · 1.5 in × 3.5 in × 8 in");
+  expect((await draft()).project.pieces.some(({ id }: { id: string }) => id === originalScrap.id)).toBe(true);
+
+  await apply.click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(async () => (await draft())?.project.ideaBindings.length).toBe(1);
+  const accepted = (await draft()).project;
+  const acceptedCuts = accepted.history.flatMap(({ offcutCut }: { offcutCut?: { sourceId: string; inputId: string } }) =>
+    offcutCut ? [offcutCut] : []);
+  expect(acceptedCuts).toHaveLength(2);
+  expect(acceptedCuts[0].inputId).toBe(originalScrap.id);
+  expect(acceptedCuts.every(({ sourceId }: { sourceId: string }) => sourceId === originalScrap.cutStock?.id)).toBe(true);
+  expect(accepted.pieces.find(({ id }: { id: string }) => id === existing.id).cutStock).toBeNull();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect.poll(async () => (await draft())?.project.ideaBindings.length).toBe(0);
+  expect((await draft()).project.pieces.some(({ id }: { id: string }) => id === originalScrap.id)).toBe(true);
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect.poll(async () => (await draft())?.project.ideaBindings.length).toBe(1);
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: fixture.name }).click();
+  expect((await draft()).project.pieces).toEqual(accepted.pieces);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/Recorded offcut cut order[\s\S]+O001[\s\S]+O004/);
+});

@@ -4945,9 +4945,12 @@ export function App() {
                 onConnectionAction={(action) => safe(() => openAskedConnection(action))}
                 findings={findings}
                 onBuildQuestionAction={(action) => safe(() => openAskedBuildReview(action))}
-                onApply={(next) => {
+                onApply={(next, source) => {
                   safe(() => {
-                    change(next);
+                    change((live) => {
+                      if (live !== source) throw Error("The workspace changed. Review the current proposal before applying it.");
+                      return next;
+                    });
                     setStage(null);
                     setSelected(null);
                     setSelectedSectionId(null);

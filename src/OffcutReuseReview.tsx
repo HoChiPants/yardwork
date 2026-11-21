@@ -1,4 +1,5 @@
 import { type OffcutReusePlan } from "./offcutReusePlan";
+import { formatStockLength } from "./measurement";
 import { purchaseUnitLabel } from "./purchaseUnits";
 
 export function OffcutReuseReview({
@@ -53,6 +54,16 @@ export function OffcutReusePlanDetails({ plan, fromCut = false }: {
               </li>
             ))}
           </ol>
+          {plan.remnants.length > 0 && (
+            <>
+              <h3>Scraps to keep</h3>
+              <ul aria-label="Scraps to keep after these cuts">
+                {plan.remnants.map(({ id, label, size }) => (
+                  <li key={id}>{label} · {size.map(formatStockLength).join(" × ")}</li>
+                ))}
+              </ul>
+            </>
+          )}
           <h3>{fromCut ? "Stock to buy after reuse" : "Stock to buy"}</h3>
           {plan.purchases.length ? (
             <ul aria-label="Purchase changes">

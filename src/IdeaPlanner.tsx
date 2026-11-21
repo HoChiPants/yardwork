@@ -11,7 +11,7 @@ import {
 } from "react";
 import { AI_CLIENT_TIMEOUT_MS } from "./aiTiming";
 import {
-  applyIdeaRevision,
+  acceptIdeaRevisionPreview,
   bindingPlan,
   bindingReview,
   previewIdeaRevision,
@@ -34,6 +34,8 @@ import { ConnectionQuestionResult, type ConnectionQuestionAction } from "./Conne
 import { answerConnectionQuestion, connectionQuestion, type ConnectionQuestion } from "./connectionQuestions";
 import { BuildQuestionResult } from "./BuildQuestionResult";
 import { answerBuildQuestion, buildQuestion, type BuildQuestion, type BuildQuestionAction } from "./buildQuestions";
+import { ProposalStockReview } from "./ProposalStockReview";
+import { previewProposalStock, proposalStockRequest } from "./proposalStock";
 import { partLabel } from "./partLabels";
 import { updateStructureParameter } from "./structureIdeas";
 import { editFurniturePlan, straightRun } from "./ideaEdits";
@@ -120,7 +122,7 @@ export default function IdeaPlanner({
 }: {
   project: Project;
   initialTarget?: { bindingId: string; entryIds?: string[] } | null;
-  onApply: (next: Project) => void;
+  onApply: (next: Project, source: Project) => void;
   onConnectionAction: (action: ConnectionQuestionAction) => void;
   findings: readonly Finding[];
   onBuildQuestionAction: (action: BuildQuestionAction) => void;
@@ -130,6 +132,8 @@ export default function IdeaPlanner({
   const originalPlan = useRef<IdeaPlan | null>(null);
   const [target, setTarget] = useState(initialTarget);
   const [targetToken, setTargetToken] = useState<string | null>(null);
+  const [stockOpen, setStockOpen] = useState(false);
+  const [offcutLabels, setOffcutLabels] = useState<string[] | null>(null);
   const [rebuildReviewed, setRebuildReviewed] = useState(false);
   const [baselineChanges, setBaselineChanges] = useState({
     manualEdits: 0,
@@ -167,6 +171,8 @@ export default function IdeaPlanner({
     active?.controller.abort();
     setTarget(next);
     setTargetToken(null);
+    setStockOpen(false);
+    setOffcutLabels(null);
     setRebuildReviewed(false);
     setBaselineChanges({ manualEdits: 0, missingRoles: 0 });
     originalPlan.current = null;
@@ -250,6 +256,14 @@ export default function IdeaPlanner({
       };
     }
   }, [project, result, target, targetToken]);
+  const stock = useMemo(() => {
+    if (!preview?.value || (!stockOpen && offcutLabels === null)) return {};
+    try {
+      return { value: previewProposalStock(project, preview.value.project, offcutLabels) };
+    } catch (issue) {
+      return { error: issue instanceof Error ? issue.message : "Could not check the cuts for this proposal." };
+    }
+  }, [project, preview, stockOpen, offcutLabels]);
   const revisionChanged =
     !!result &&
     JSON.stringify(result.plan) !== JSON.stringify(originalPlan.current);
@@ -297,6 +311,20 @@ export default function IdeaPlanner({
   }
   async function generate() {
     if (activeRequest.current || !prompt.trim()) return;
+    const stockRequest = proposalStockRequest(prompt);
+    if (stockRequest) {
+      if (!preview?.value) {
+        setError("Explore or open a design before previewing its cuts. To check existing parts, ask what scraps you can reuse.");
+        return;
+      }
+      setWorkspaceRequest(null);
+      setStockOpen(true);
+      if (stockRequest.kind === "reuse") setOffcutLabels(stockRequest.labels);
+      setExploredPrompt(prompt);
+      setError("");
+      setPlanningStatus("");
+      return;
+    }
     const joint = connectionQuestion(project, prompt);
     const review = joint ? null : buildQuestion(prompt);
     const workspace = joint ? { prompt, kind: "joint" as const, question: joint }
@@ -614,7 +642,7 @@ export default function IdeaPlanner({
             <div className="idea-preview" aria-label="Proposed layout preview">
               <PreviewBoundary>
                 <Scene
-                  project={preview.value.project}
+                  project={stock.value?.project ?? preview.value.project}
                   selected={null}
                   onSelect={noop}
                   onMove={noop}
@@ -1161,8 +1189,10 @@ export default function IdeaPlanner({
                   Sections.
                 </p>
               )}
-              <PricingSummary coverage={preview.value.pricing} compact />
-              {preview.value.findings.slice(0, 4).map((f) => (
+              <ProposalStockReview project={project} open={stockOpen} setOpen={setStockOpen}
+                offcuts={offcutLabels} setOffcuts={setOffcutLabels} review={stock.value} error={stock.error} />
+              <PricingSummary coverage={stock.value?.pricing ?? preview.value.pricing} compact />
+              {(stock.value?.findings ?? preview.value.findings).slice(0, 4).map((f) => (
                 <p key={f.id}>
                   <AlertTriangle size={12} /> {f.title}
                 </p>
@@ -1176,6 +1206,7 @@ export default function IdeaPlanner({
               disabled={
                 !preview?.value ||
                 !preview.value.workZoneFits ||
+                (offcutLabels !== null && !!stock.error) ||
                 !!preview.revision?.clearanceConflicts.length ||
                 !!result.plan.pendingPlacement?.length ||
                 (target &&
@@ -1186,20 +1217,12 @@ export default function IdeaPlanner({
               onClick={() => {
                 if (!preview?.value || !result) return;
                 try {
-                  onApply(
-                    target && targetToken
-                      ? applyIdeaRevision(
-                          project,
-                          target.bindingId,
-                          result.plan,
-                          targetToken,
-                          {
-                            entryIds: target.entryIds,
-                            allowRebuild: rebuildReviewed,
-                          },
-                        )
-                      : preview.value.project,
-                  );
+                  if (result.plan.pendingPlacement?.length)
+                    throw Error("Resolve or set aside the remaining placement requests before applying.");
+                  const approved = preview.revision
+                    ? acceptIdeaRevisionPreview(preview.revision, rebuildReviewed)
+                    : preview.value.project;
+                  onApply(stock.value?.project ?? approved, project);
                 } catch (error) {
                   setError(
                     error instanceof Error

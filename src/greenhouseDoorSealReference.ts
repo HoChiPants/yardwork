@@ -1,0 +1,18 @@
+export const doorSeal = {
+  id: "frost-king-v25ga",
+  name: "Frost King V25GA gray D-profile weatherseal",
+  model: "V25GA",
+  internetNumber: "100081207",
+  storeSku: "760714",
+  listing: "https://www.homedepot.com/p/100081207",
+  specification: "https://www.frostking.com/products/weatherstripping/epdm-rubber-weatherseal-10-year-guarantee",
+  instructions: "https://www.frostking.com/attachments/Product/144/documents/Instruction-Sheet-EPDM.pdf",
+  packReference: "https://hdsupplysolutions.com/p/frost-king-5-16w-x-1-4h-x-17-epdm-rubber-weatherstrip-gray-p808506",
+  width: 5 / 16,
+  minGap: 1 / 8,
+  thickness: 1 / 4,
+  modeledGap: 3 / 16,
+  stripLength: 102,
+  stripCount: 2,
+  reviewedAt: "2026-11-21T06:02:00.000Z",
+} as const;

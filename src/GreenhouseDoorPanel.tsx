@@ -1,3 +1,4 @@
+import { doorSeal } from "./greenhouseDoorSealReference";
 import { useState, type FormEvent } from "react";
 import {
   doorKitDemand,
@@ -324,6 +325,12 @@ function DoorStops({
               setSealGap(value);
             }}
           />
+          <button type="button" className="text-button" onClick={() => {
+            clear();
+            setSealGap(doorSeal.modeledGap);
+          }}>
+            Set 3/16 in gap for D-profile seal
+          </button>
           <LengthInput
             label="Jamb stop clearance above sill"
             min={0}

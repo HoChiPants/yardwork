@@ -1,6 +1,7 @@
 import type { BuildPreparationAction } from "./buildPreparation";
 import type { Finding } from "./engine";
 import { drawerBoxOpening } from "./drawerBoxes";
+import { checkGreenhouseDoorSeal, reviewGreenhouseDoorSeal } from "./greenhouseDoorSeal";
 import { formatPreciseInches } from "./measurement";
 import { inspectLidTravel } from "./lidTravelFindings";
 import {
@@ -18,6 +19,7 @@ import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./tre
 export type BuildQuestion =
   | { kind: "checks" }
   | { kind: "motion"; subject: string }
+  | { kind: "greenhouse-weatherseal" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
   | { kind: "offcuts"; label?: string };
@@ -27,6 +29,7 @@ export type BuildQuestionAction =
   | { kind: "checks" }
   | { kind: "cut-pool" }
   | { kind: "motion-setup" }
+  | { kind: "greenhouse-weatherseal"; motionId: string }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
@@ -72,6 +75,8 @@ const scrapQuestion =
 const offcutQuestion =
   /^(?:(?:what|which) (?:offcuts|scraps|leftovers) (?:could|can|should) i (?:use|reuse)|(?:can|could) i reuse (?:any |my |the )?(?:offcuts|scraps|leftovers)|(?:review|show|plan|find) (?:the )?(?:offcut reuse|scrap reuse|uses for (?:my |the )?(?:scraps|offcuts)))$/i;
 const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (p\d{1,6}) and (p\d{1,6})$/i;
+const doorSealQuestion =
+  /^(?:how (?:can|do|should) i (?:weatherstrip|weatherseal|seal) (?:the |my )?greenhouse door|(?:check|review|plan|show) (?:the )?(?:weatherstrip|weatherseal|weatherstripping) (?:for|on) (?:the |my )?greenhouse door)$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -88,6 +93,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (scrap)
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
   if (offcutQuestion.test(text)) return { kind: "offcuts" };
+  if (doorSealQuestion.test(text)) return { kind: "greenhouse-weatherseal" };
   const motion = motionQuestion.exec(text);
   return motion
     ? { kind: "motion", subject: motion.slice(1).find(Boolean)! }
@@ -390,6 +396,35 @@ export function answerBuildQuestion(
       return answerChecks(project, findings);
     case "motion":
       return answerMotion(project, question.subject);
+    case "greenhouse-weatherseal": {
+      const title = "Greenhouse door weatherseal review";
+      const motions = new Map<string, MotionPlan>();
+      for (const motion of project.motionPlans ?? []) {
+        const entryId = motion.mechanism.kind === "hinge" ? motion.mechanism.greenhouseDoor?.entryId : undefined;
+        if (!entryId) continue;
+        const isSavedSeal = project.greenhouseDoorSeals?.some(({ motionId }) => motionId === motion.id);
+        if (!motions.has(entryId) || isSavedSeal) motions.set(entryId, motion);
+      }
+      if (!motions.size) return {
+        title,
+        detail: "Set up the greenhouse door swing and fit its stops before checking the weatherseal.",
+        link: { label: "Open movement setup", action: { kind: "motion-setup" } },
+      };
+      return {
+        title,
+        detail: "Closed gaps and travel are checked against the modeled door and its stops.",
+        rows: [...motions.values()].slice(0, 5).map((motion) => {
+          const saved = project.greenhouseDoorSeals?.find(({ motionId }) => motionId === motion.id);
+          const result = saved ? reviewGreenhouseDoorSeal(project, saved) : checkGreenhouseDoorSeal(project, motion);
+          return {
+            id: motion.id,
+            title: motion.label,
+            detail: [result.detail, ...result.rows.flatMap(({ name, issues }) => issues.map((issue) => `${name} · ${issue}`))].join(" "),
+            link: { label: "Open door movement", action: { kind: "greenhouse-weatherseal", motionId: motion.id } },
+          };
+        }),
+      };
+    }
     case "drawer-box": {
       const title = "Drawer opening";
       const { partLabels } = ensurePartLabels(project);

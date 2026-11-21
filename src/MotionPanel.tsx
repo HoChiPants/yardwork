@@ -4,6 +4,7 @@ import { DrawerBoxPanel } from "./DrawerBoxPanel";
 import { drawerCabinetPanels } from "./drawerBoxes";
 import { clearGreenhouseLatch } from "./greenhouseLatch";
 import { GreenhouseLatchPanel } from "./GreenhouseLatchPanel";
+import { GreenhouseDoorSealPanel } from "./GreenhouseDoorSealPanel";
 import { ventBackingSummary, type VentBackingReview } from "./greenhouseVentBacking";
 import { GreenhouseVentEditor } from "./GreenhouseVentPanel";
 import { SaunaDoorEditor } from "./SaunaDoorPanel";
@@ -1440,6 +1441,19 @@ export function MotionPanel({
         />
       )}
       {selected && editing === null && (
+        <GreenhouseDoorSealPanel key={selected.id} project={project} motion={selected}
+          onPreview={(inspection) => {
+            cancel();
+            setActiveReview(null);
+            onPreview(inspection, project);
+          }}
+          onChange={(next) => {
+            cancel();
+            onPreview(null);
+            onChange(next);
+          }} />
+      )}
+      {selected && editing === null && (
         <GreenhouseDoorDetails
           project={project}
           plan={selected}
@@ -1508,6 +1522,7 @@ export function MotionPanel({
             onChange(clearDrawerSlideMount(clearGreenhouseLatch({
               ...project,
               motionPlans: plans.filter((row) => row.id !== selected.id),
+              greenhouseDoorSeals: project.greenhouseDoorSeals?.filter(({ motionId }) => motionId !== selected.id),
             }, selected.id), selected.id));
             onShowLatch(null);
             setScenarioId("");

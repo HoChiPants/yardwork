@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 62 editable stocks. The registry contains 127 product records and 145 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 62 editable stocks. The registry contains 128 product records and 146 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 20, 2026 · Greenhouse door weatherseal
+
+From the fitted cedar stops, **Plan door weatherseal** checks where the 5/16 in D-profile tape can fit against retained wood. It checks the closed gap against the listed ⅛–¼ in range and runs a minimum-gap collision envelope through the saved swing. The cut plan fits continuous head and jamb runs onto 8½ ft strips and labels leftovers. Save and recheck changed layouts before selecting the exact Home Depot pack. Verify compression, latching and drainage on the installed door. [Frost King instructions](https://www.frostking.com/attachments/Product/144/documents/Instruction-Sheet-EPDM.pdf) · [Home Depot V25GA](https://www.homedepot.com/p/100081207) · [V25GA pack contents](https://hdsupplysolutions.com/p/frost-king-5-16w-x-1-4h-x-17-epdm-rubber-weatherstrip-gray-p808506)
 
 ## November 20, 2026 · Revise an uncut stock plan
 
@@ -129,7 +133,7 @@ The final build passed 1,169 automated tests. A focused production browser run c
 
 ## November 19, 2026 · Greenhouse door
 
-The applied greenhouse can use its bound leaf and glazing in an outward swing. The closed exterior edge provides the initial preview pivot, with both horizontal offsets editable to match the measured axis. The saved plan tracks actual members and identifies changed geometry for review. The two separate retail kits add one purchase pack per bound door on explicit request through the snapshot inventory workflow. Finished hinge mounting, latch release, weather sealing, load and wind resistance still require design and field verification.
+The applied greenhouse can use its bound leaf and glazing in an outward swing. The closed exterior edge provides the initial preview pivot, with both horizontal offsets editable to match the measured axis. The saved plan tracks actual members and identifies changed geometry for review. The two separate retail kits add one purchase pack per bound door on explicit request through the snapshot inventory workflow. The head and jamb weatherseal has a separate cut and clearance review. Finished hinge mounting, latch release, sill drainage, load and wind resistance require design and field verification.
 
 The production bundle passed 1,166 automated tests and 11 focused browser cases, including the 99-part glazed study, both direction controls, optional hardware and reopening. The two product references are the [Everbilt 24417 set at Home Depot](https://www.homedepot.com/p/327600104) and [National Hardware N109-025 kit at Lowe’s](https://www.lowes.com/pd/national-hardware-8-13-16-in-gate-hardware-kit/50414118).
 

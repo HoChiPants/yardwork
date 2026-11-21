@@ -14,6 +14,7 @@ import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
+import { doorSeal } from "./greenhouseDoorSealReference";
 import { woodGlue } from "./woodGlueReference";
 import { sillGaskets, sillGasketScope } from "./sillGasketReference";
 import { everbiltAngleShelfPinIds, everbiltAngleShelfPins, shelfPinProducts } from "./shelfPinReference";
@@ -370,6 +371,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "2,000-nail box",
     contents: [{ name: paslodeFinishNails.name, quantity: paslodeFinishNails.packCount }],
     requirements: [paslodeFinishNails.requirement],
+  },
+  [doorSeal.id]: {
+    purchaseUnit: "weatherseal pack",
+    contents: [{ name: "8 ft 6 in D-profile EPDM strip", quantity: doorSeal.stripCount }],
+    requirements: ["Confirm the delivered seal fits the closed gap, then dry-fit the strip and check door and latch operation."],
   },
   [trimSealant.id]: {
     purchaseUnit: "cartridge",

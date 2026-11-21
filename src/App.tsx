@@ -119,6 +119,8 @@ import { clearBearingRemovalPath, saveBearingRemovalPath } from "./recordedRemov
 import { motionDistance, motionReviewLines, motionTestFindings, projectMotionReviews, runMotionTest, type MotionPreview, type MotionTestSelection } from "./mechanismMotion";
 import { everbiltLatch, greenhouseLatchGuideLines } from "./greenhouseLatch";
 import { greenhouseDoorStopGuideLines } from "./greenhouseDoorStops";
+import { greenhouseDoorSealGuideLines } from "./greenhouseDoorSeal";
+import { doorSeal } from "./greenhouseDoorSealReference";
 import { LidMotionPanel } from "./LidMotionPanel";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { RestraintsPanel } from "./RestraintsPanel";
@@ -1252,6 +1254,20 @@ export function App() {
       case "treated-wood":
         setPanel("prep");
         break;
+      case "greenhouse-weatherseal": {
+        const plan = project.motionPlans?.find(({ id }) => id === action.motionId);
+        if (!plan) throw Error("This door swing has changed. Explore the question again.");
+        setRemovalTarget(null);
+        const result = runMotionTest(project, plan);
+        setMotionTestSelection({ project, plan, result });
+        setMotionPreview(result.review ? { project, value: result.review.preview(0) } : null);
+        setStage(null);
+        setPlaying(false);
+        setExplode(false);
+        inspectorFocus.scrollRef.current?.scrollTo(0, 0);
+        setPanel("motion");
+        break;
+      }
       case "part":
       case "offcut":
       case "motion":
@@ -1606,6 +1622,7 @@ export function App() {
   const printMotions = useMemo(() => motionReviewLines(project, motionReviews), [project, motionReviews]);
   const printGreenhouseLatch = useMemo(() => greenhouseLatchGuideLines(project), [project]);
   const printDoorStops = useMemo(() => greenhouseDoorStopGuideLines(project), [project]);
+  const printDoorSeals = useMemo(() => greenhouseDoorSealGuideLines(project), [project]);
   const printRodFits = useMemo(() => rodFitGuideLines(project), [project]);
   const toolsReview = useMemo(
     () => toolChecklist(project, selectedToolsForProject(project).tools),
@@ -6443,6 +6460,14 @@ export function App() {
             <h2>Greenhouse door latch layout</h2>
             <ul>{printGreenhouseLatch.map((line, index) => <li key={index}>{line}</li>)}</ul>
             <p><a href={everbiltLatch.instructions}>Everbilt 24417 installation instructions</a></p>
+          </section>
+        )}
+        {printDoorSeals.length > 0 && (
+          <section>
+            <h2>Greenhouse door weatherseal</h2>
+            <ul>{printDoorSeals.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={doorSeal.instructions}>Frost King installation instructions</a>
+              {" · "}<a href={doorSeal.listing}>Home Depot weatherseal</a></p>
           </section>
         )}
         {printDoorStops.length > 0 && (

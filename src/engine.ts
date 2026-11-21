@@ -70,6 +70,8 @@ import { reviewDrawerSlide } from "./drawerSlides";
 import { everbiltLatch, greenhouseLatchGuideLines, reviewGreenhouseLatch } from "./greenhouseLatch";
 import { greenhouseDoorReview } from "./greenhouseDoors";
 import { greenhouseDoorStopGuideLines, greenhouseDoorStopReview } from "./greenhouseDoorStops";
+import { greenhouseDoorSealGuideLines, reviewGreenhouseDoorSeal } from "./greenhouseDoorSeal";
+import { doorSeal } from "./greenhouseDoorSealReference";
 import { greenhouseVentReview } from "./greenhouseVents";
 import { saunaDoorReview } from "./saunaDoors";
 import { saunaBenchTravelGuideLines } from "./saunaBenchTravel";
@@ -893,6 +895,15 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       title: `Review sauna lining backing · ${review.label}`,
       detail: `${review.title} · ${liningBackingText(review)}. Inspect ${partLabel(p, pieceId)}. Confirm the layer stack and add solid backing where needed before fastening.`,
       pieceId,
+    });
+  }
+  for (const saved of p.greenhouseDoorSeals ?? []) {
+    const review = reviewGreenhouseDoorSeal(p, saved);
+    if (!review.ready) findings.push({
+      id: `greenhouse-door-seal-${saved.entryId}`,
+      severity: "warning",
+      title: "Review greenhouse door weatherseal",
+      detail: review.detail,
     });
   }
   for (const plan of p.greenhouseLatchPlans ?? []) {
@@ -1859,6 +1870,7 @@ export function guideMarkdown(p: Project) {
     return kit ? [kit] : [];
   }));
   const doorStops = greenhouseDoorStopGuideLines(p);
+  const doorSeals = greenhouseDoorSealGuideLines(p);
   const latch = greenhouseLatchGuideLines(p);
   const supplies = supplyRows(p);
   const preparation = buildPreparation(p, {
@@ -2070,6 +2082,9 @@ export function guideMarkdown(p: Project) {
     (latch.length ? "\n\n## Greenhouse door latch layout\n\n" +
       latch.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       `\n\n[Everbilt 24417 installation instructions](${everbiltLatch.instructions})\n` : "") +
+    (doorSeals.length ? "\n\n## Greenhouse door weatherseal\n\n" +
+      doorSeals.map((line) => `- ${line.replace(/[\r\n]+/g, " ")}`).join("\n") +
+      `\n\n[Frost King installation instructions](${doorSeal.instructions}) · [Home Depot weatherseal](${doorSeal.listing})\n` : "") +
     (doorStops.length ? "\n\n## Fitted greenhouse door stops\n\n" +
       doorStops.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") : "") +
     (p.motionPlans?.some((plan) => plan.mechanism.kind === "slide" && plan.mechanism.drawerSlide)

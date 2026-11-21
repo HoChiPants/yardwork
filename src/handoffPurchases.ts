@@ -1,4 +1,6 @@
 import { trimSealant } from "./trimSealantReference";
+import { greenhouseDoorSealTakeoff } from "./greenhouseDoorSeal";
+import { doorSeal } from "./greenhouseDoorSealReference";
 import { trimSeamPurchaseSummary } from "./woodJointDecisions";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { assemblyStages } from "./assemblyStages";
@@ -163,6 +165,11 @@ export function homeDepotPurchaseNeeds(
     const trim = trimSeamPurchaseSummary(project);
     if (trim) include(trimSealant.id, "Measured wood trim seams", trim.required,
       trim.required === null ? "Review measured seams and cartridge coverage." : undefined);
+  }
+  if (project.greenhouseDoorSeals?.length) {
+    const seal = greenhouseDoorSealTakeoff(project);
+    include(doorSeal.id, "Reviewed greenhouse door weatherseal cuts", seal.required,
+      seal.required === null ? "Review the saved door weatherseal plans before adding packs." : undefined);
   }
   if (project.motionPlans?.length) {
     const slideReview = drawerSlidePurchaseReview(project);

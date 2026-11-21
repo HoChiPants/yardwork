@@ -34,12 +34,15 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
+import { doorSeal } from "./greenhouseDoorSealReference";
 import { woodGlue } from "./woodGlueReference";
 import { sillGasketInstructions, sillGasketListing, sillGasketReviewedAt, sillGaskets } from "./sillGasketReference";
 
 export const retailerSchema = z.enum(["home-depot", "lowes"]);
 export type Retailer = z.infer<typeof retailerSchema>;
 const sourceHosts = new Set([
+  "www.frostking.com",
+  "hdsupplysolutions.com",
   "homedepot.com",
   "www.homedepot.com",
   "lowes.com",
@@ -4123,6 +4126,29 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       capabilities: [],
     };
   }),
+  {
+    id: doorSeal.id,
+    name: doorSeal.name,
+    manufacturer: "Frost King",
+    manufacturerPartNumber: doorSeal.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: doorSeal.reviewedAt,
+    profile: profile("consumable", null, doorSeal.stripCount, {
+      materialFamily: "EPDM weatherseal",
+      finish: "Gray",
+    }),
+    offers: [hd(doorSeal.internetNumber, doorSeal.model, doorSeal.storeSku)],
+    sources: [
+      { url: doorSeal.listing, verifiedAt: doorSeal.reviewedAt, note: "Exact V25GA gray EPDM D-profile pack, listed for ⅛–¼ in gaps." },
+      { url: doorSeal.specification, verifiedAt: doorSeal.reviewedAt, note: "The manufacturer lists a 5/16 in wide and ¼ in thick section, 17 ft total." },
+      { url: doorSeal.packReference, verifiedAt: doorSeal.reviewedAt, note: "The exact V25GA pack contains two 8.5 ft strips." },
+      { url: doorSeal.instructions, verifiedAt: doorSeal.reviewedAt, note: "Dry, clean mounting surfaces. Mount along the head and hinge stop and inside the door along the latch side." },
+    ],
+    purchaseSpec: { kind: "counted", count: doorSeal.stripCount, sourceRefs: [doorSeal.listing, doorSeal.packReference] },
+    discrepancies: [],
+    capabilities: [],
+  },
   {
     id: trimSealant.id,
     name: trimSealant.name,

@@ -19,6 +19,10 @@ import { saveMotionPlan, saveMotionTestScenario } from "../../src/mechanismMotio
 import { addMeasuredOffcut } from "../../src/measuredOffcuts";
 import { partLabel } from "../../src/partLabels";
 import { addSupply } from "../../src/supplies";
+import { createBuildStudy } from "../../src/buildFixtures";
+import { greenhouseDoorChoices, greenhouseDoorMotionInput } from "../../src/greenhouseDoors";
+import { previewGreenhouseDoorStops } from "../../src/greenhouseDoorStops";
+import { doorSeal } from "../../src/greenhouseDoorSealReference";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
   const backendRequests: string[] = [];
@@ -1591,4 +1595,70 @@ test("drawer rail marks catch breakthrough and reopen with checked coordinates a
   await buy.click();
   await expect(buy).toHaveCount(0);
   await expect(dialog.getByText("1 screw pack · #204275069", { exact: true })).toBeVisible();
+});
+
+
+test("a fitted greenhouse door saves a checked weatherseal and exports the strips and exact Home Depot pack", async ({ page }) => {
+  const base = createBuildStudy("greenhouse", undefined, undefined, {
+    greenhouseGlazing: { materialId: "sunlite-8mm", productRegistryRef: "sunlite-132506" },
+  }).project;
+  const [{ entry }] = greenhouseDoorChoices(base);
+  const motion = saveMotionPlan(base, greenhouseDoorMotionInput(base, {
+    entryId: entry.id, side: "left", outset: 0, sideOffset: 0, kitId: null,
+  }, 90));
+  const { project } = previewGreenhouseDoorStops(motion.project, motion.plan, {
+    sealGap: doorSeal.modeledGap, sillGap: 0.25, reuse: false,
+  });
+
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "greenhouse-weatherseal.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 95 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  const openSeal = async () => {
+    await page.getByRole("button", { name: "Test movement", exact: true }).click();
+    await page.getByText("Plan door weatherseal", { exact: true }).click();
+  };
+  await openSeal();
+  const seal = page.getByRole("region", { name: "Greenhouse door weatherseal", exact: true });
+  await seal.getByRole("button", { name: "Check weatherseal fit", exact: true }).click();
+  await expect(seal.getByRole("status")).toContainText("clear the minimum-gap sweep");
+  await expect(seal.getByRole("list", { name: "Weatherseal runs" })).toContainText("29.75 in long");
+  await expect(seal.getByRole("list", { name: "Weatherseal runs" })).toContainText("inside of latch-side door stile");
+  await seal.getByRole("button", { name: "Inspect seal clearance in 3D", exact: true }).click();
+  await expect(page.getByTestId("motion-obstacle")).toHaveCount(3);
+  await seal.getByRole("button", { name: "Save weatherseal plan", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  expect((await draft()).project.greenhouseDoorSeals[0].entryId).toBe(entry.id);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("How should I weatherstrip the greenhouse door?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Greenhouse door weatherseal review", exact: true });
+  await expect(answer).toContainText("clear the minimum-gap sweep");
+  await answer.getByRole("button", { name: "Open door movement", exact: true }).click();
+  await page.getByText("Plan door weatherseal", { exact: true }).click();
+  await expect(seal.getByRole("status")).toContainText("clear the minimum-gap sweep");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Greenhouse door weatherseal");
+  expect(guide).toMatch(/Package 1, strip 1.*Keep 5.25 in/);
+  await expect(page.locator(".print-guide")).toContainText("minimum-gap sweep");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await dialog.getByRole("button", { name: "Add 1 weatherseal pack of Frost King V25GA gray D-profile weatherseal", exact: true }).click();
+  await expect(dialog.getByText("1 weatherseal pack · #100081207", { exact: true })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: doorSeal.name })).toHaveAttribute("href", doorSeal.listing);
 });

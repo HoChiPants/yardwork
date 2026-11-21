@@ -8,6 +8,7 @@ import { siteClearanceSchema } from "./siteClearanceSchema";
 import { z } from "zod";
 import { cutSourceAxesSchema, tubeCutPlansSchema, tubeKerfSchema, woodKerfSchema } from "./cutSourceAxes";
 import { offcutCutSchema } from "./offcutCutSchema";
+import { greenhouseDoorSealsSchema } from "./greenhouseDoorSealSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -452,6 +453,7 @@ export const currentProjectSchema = z
       "Retain one heater review per sauna.",
     ).optional(),
     drawerSlideMounts: drawerSlideMountsSchema.optional(),
+    greenhouseDoorSeals: greenhouseDoorSealsSchema.optional(),
     greenhouseLatchPlans: z.array(greenhouseLatchSchema).max(50).refine(
       (plans) => new Set(plans.map(({ motionId }) => motionId)).size === plans.length,
       "Keep one latch layout per door swing.",

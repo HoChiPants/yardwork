@@ -15,6 +15,7 @@ import { subfloorBlockingLines, subfloorReviews, trackSubfloorPanel } from "../s
 import { reviewSubfloorAdhesive, saveSubfloorAdhesive, subfloorAdhesiveTakeoff } from "../src/subfloorAdhesive";
 import { previewSubfloorBlocking } from "../src/subfloorBlocking";
 import { reviewSubfloorFastening, saveSubfloorFastening, subfloorCommonNailTakeoff } from "../src/subfloorFastening";
+import { reviewSubfloorJoists, saveSubfloorJoists, subfloorJoistReviews } from "../src/subfloorJoists";
 import { subfloorAdhesive, subfloorNails } from "../src/subfloorReference";
 import { addSupply } from "../src/supplies";
 import { toolChecklist } from "../src/tools";
@@ -294,4 +295,70 @@ test("pool common-nail counts across sheets, pause changed plans, and flag treat
     { ...piece, material: "treated", cutStock: null } : piece) };
   assert.match(reviewSubfloorFastening(treated, subfloorReviews(treated)[0], "common-8d").problem!, /treated framing/);
   assert.deepEqual(buildQuestion("How many nails for P10?"), { kind: "subfloor-support", panelLabel: "P010" });
+});
+
+function supportedFloor(length: number, startWidth = 1.5) {
+  const { repaired, panel } = fixture();
+  const step = repaired.steps[0].id;
+  const pieces = repaired.pieces.map((piece) => ({
+    ...piece, position: [piece.position[0], piece.position[1] + 7.25, piece.position[2]] as V3,
+    ...(piece.name.startsWith("Joist ") ? { size: [1.5, 7.25, length] as V3, cutStock: null } : {}),
+  }));
+  const first = part("Start support", "two-eight", [startWidth, 7.25, 74], [(startWidth - length) / 2, 3.625, 0], step, "Bearing");
+  const last = part("Far support", "two-eight", [1.5, 7.25, 74], [(length - 1.5) / 2, 3.625, 0], step, "Bearing");
+  const center = part("Middle support", "two-eight", [1.5, 7.25, 74], [0, 3.625, 0], step, "Bearing");
+  return { project: { ...repaired, pieces: [...pieces, first, last] }, panel, first, last, center };
+}
+
+test("follow actual wood seats, show an end shortage and flag a modeled overhang", () => {
+  const { project, panel, first, last } = supportedFloor(36, 0.75);
+  const view = (p: Project) => reviewSubfloorJoists(p, subfloorReviews(p)[0]);
+  const rows = view(project).rows;
+  assert.equal(rows.length, 4);
+  for (const row of rows) {
+    assert.equal(row.ends[0].inches, 0.75);
+    assert.equal(row.ends[0].supportId, first.id);
+    assert.match(row.ends[0].issue!, /0\.75 in more wood seat/);
+    assert.equal(row.ends[1].inches, 1.5);
+    assert.equal(row.ends[1].supportId, last.id);
+    assert.deepEqual(row.clear, []);
+    assert.ok(row.marks[0].problem);
+  }
+  const shifted: Project = { ...project, pieces: project.pieces.map((piece) => piece.id === first.id
+    ? { ...piece, position: [piece.position[0] + 2, piece.position[1], piece.position[2]] } : piece) };
+  assert.match(view(shifted).rows[0].ends[0].issue!, /2 in inboard/);
+  const saved = saveSubfloorJoists(project, panel.id, { reference: null });
+  assert.ok(validate(saved).some(({ title, detail }) => title === "Review joist P001" && detail.includes("0.75 in more")));
+  assert.match(guideMarkdown(generateBuildGuide(saved)), /Joist bearing and span[\s\S]*0.75 in more wood seat/);
+  assert.deepEqual(buildQuestion("Check joist bearing under P10"), { kind: "subfloor-support", panelLabel: "P010" });
+});
+
+test("compare clear spans to the confirmed table row and recalculate after an interior support", () => {
+  const { project, panel, center } = supportedFloor(121);
+  assert.throws(() => saveSubfloorJoists(project, panel.id, { reference: { species: "syp", spacing: 16 } }), /actual maximum spacing/);
+  const saved = saveSubfloorJoists(project, panel.id, { reference: { species: "syp", spacing: 24 } });
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(saved)));
+  const [inspection] = subfloorJoistReviews(reopened);
+  assert.equal(inspection.referenceProblem, undefined);
+  assert.ok(inspection.rows.every(({ clear, limit, issue }) => clear[0] === 118 && limit === 106 && issue?.includes("1 ft")));
+  assert.match(guideMarkdown(generateBuildGuide(saved)), /Clear span 118 in · reference limit 106 in/);
+  const added = { ...saved, pieces: [...saved.pieces, center] };
+  const [withCenter] = subfloorJoistReviews(added);
+  for (const row of withCenter.rows) {
+    assert.equal(row.clear.length, 2);
+    assert.ok(row.clear.every((span) => Math.abs(span - 58.25) < 1e-5));
+    assert.equal(row.issue, undefined);
+    assert.ok(row.supportIds.includes(center.id));
+    assert.ok(row.marks.every(({ problem }) => !problem));
+  }
+  const yaw: V3 = [0, Math.PI / 7, 0];
+  const rotated: Project = { ...added, pieces: added.pieces.map((piece) => ({
+    ...piece, position: rotate(piece.position, yaw), rotation: [0, piece.rotation[1] + yaw[1], 0],
+  })) };
+  assert.ok(subfloorJoistReviews(rotated)[0].rows.every(({ clear, issue }) =>
+    clear.length === 2 && clear.every((span) => Math.abs(span - 58.25) < 1e-5) && !issue));
+  const changed: Project = { ...added, pieces: added.pieces.map((piece) => piece.name === "Joist 1"
+    ? { ...piece, material: "treated" } : piece) };
+  assert.match(subfloorJoistReviews(changed)[0].referenceProblem!, /Confirm the species and grade stamps again/);
+  assert.ok(subfloorJoistReviews(changed)[0].rows.every(({ limit }) => limit === null));
 });

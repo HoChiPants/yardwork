@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { part, projectSchema, type V3 } from "../../src/model";
 
 const samplePath = "examples/flooring/subfloor.yardwork.json";
 
@@ -108,4 +109,51 @@ test("subfloor support updates after fitting a recorded blocking offcut and stay
   await expect(page.locator(".print-guide .subfloor-support-print")).toContainText("48 estimated panel nailing locations");
   await expect(page.locator(".print-guide .subfloor-adhesive-print")).toContainText("10 framing bead runs");
   await expect(page.locator(".print-guide .subfloor-fasteners-print")).toContainText("48 × Grip-Rite 8C1");
+});
+
+test("joist bearing measures a long span over actual wood seats and saves the comparison", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto("./");
+  const response = await page.request.get(samplePath);
+  expect(response.ok()).toBe(true);
+  const sample = projectSchema.parse(await response.json());
+  const step = sample.steps[0].id;
+  const pieces = sample.pieces.map((piece) => ({
+    ...piece, position: [piece.position[0], piece.position[1] + 7.25, piece.position[2]] as V3,
+    ...(piece.name.startsWith("Joist ") ? { size: [1.5, 7.25, 121] as V3, cutStock: null } : {}),
+  }));
+  for (const x of [-59.75, 59.75]) {
+    pieces.push(part("Bearing timber", "two-eight", [1.5, 7.25, 74], [x, 3.625, 0], step, "Bearing"));
+  }
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "floor-over-wood-bearing.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...sample, pieces })),
+  });
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("button", { name: "Check subfloor support", exact: true }).click();
+  await dialog.getByText("Joist bearing and span", { exact: true }).click();
+  await expect(dialog.getByText("Clear span 118 in.", { exact: true })).toHaveCount(4);
+  await dialog.getByRole("combobox", { name: "Confirmed lumber stamp" }).selectOption("syp");
+  const save = dialog.getByRole("button", { name: "Save joist check", exact: true });
+  await expect(save).toBeDisabled();
+  await dialog.getByRole("checkbox", { name: "These stamps, spacing and reference loads match the floor I’m reviewing." }).check();
+  await expect(dialog.getByText("Clear span 118 in · reference limit 106 in.", { exact: true })).toHaveCount(4);
+  await save.click();
+  await expect(dialog.getByText("Joist check saved")).toBeVisible();
+  await dialog.getByRole("button", { name: "Show joist bearing in 3D" }).click();
+  await expect(page.getByTestId("subfloor-joists-marker")).toHaveText("Joists · 4 to review");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!)?.revision, CURRENT_DRAFT_KEY)).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").first().click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const downloadable = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await downloadable).path())!, "utf8");
+  expect(guide).toMatch(/Joist bearing and span[\s\S]*Clear span 118 in · reference limit 106 in/);
+  await expect(page.locator(".print-guide .subfloor-joists-print")).toContainText("exceeds the reference by 1 ft");
 });

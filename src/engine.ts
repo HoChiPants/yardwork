@@ -1,6 +1,8 @@
 import { subfloorReport, subfloorReviews } from "./subfloor";
 import { subfloorAdhesiveReport, subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReport, subfloorFasteningReviews } from "./subfloorFastening";
+import { subfloorJoistReport, subfloorJoistReviews } from "./subfloorJoists";
+import { floorJoistReference } from "./floorJoistReference";
 import { subfloorAdhesive, subfloorNails, subfloorReference } from "./subfloorReference";
 import { bottomPlateSealGuide, bottomPlateSealReviews } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
@@ -844,6 +846,18 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       title: "Review subfloor fasteners", detail: problem,
       ...(p.pieces.some(({ id }) => id === panelId) && { pieceId: panelId }),
     });
+  }
+  for (const review of subfloorJoistReviews(p)) {
+    const { panelId, rows, problem, referenceProblem } = review;
+    const issue = problem ?? referenceProblem;
+    if (issue) findings.push({ id: `subfloor-joists-${panelId}`, severity: "warning",
+      title: "Review joist bearing and span", detail: issue,
+      ...(p.pieces.some(({ id }) => id === panelId) && { pieceId: panelId }) });
+    for (const { id, ends, issue } of rows) {
+      const detail = [...ends.flatMap(({ label, issue }) => issue ? [`${label}. ${issue}`] : []), issue].filter(Boolean).join(" ");
+      if (detail) findings.push({ id: `subfloor-joist-${panelId}-${id}`, severity: "warning",
+        title: `Review joist ${partLabel(p, id)}`, detail, pieceId: id });
+    }
   }
   for (const { record, title, layout, problem } of bottomPlateSealReviews(p)) {
     const detail = problem || layout?.runs.find(({ problem }) => problem)?.problem;
@@ -2248,6 +2262,10 @@ export function guideMarkdown(p: Project) {
       subfloorFasteningReport(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[APA fastening schedule](${subfloorReference.specification}) · [Grip-Rite specifications](${subfloorNails.specification})\n` : "") +
+    (p.subfloorJoistPlans?.length ? "\n\n## Joist bearing and span\n\n" +
+      subfloorJoistReport(p).map((line) =>
+        "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[R502.6 and floor joist span table](${floorJoistReference.code}) · [AWC span measurement](${floorJoistReference.spanGuide})\n` : "") +
     (p.bottomPlateSeals?.length ? "\n\n## Bottom plate air seals\n\n" +
       bottomPlateSealGuide(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

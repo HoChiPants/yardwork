@@ -25,3 +25,14 @@ export const subfloorNailPlansSchema = z.array(subfloorNailPlanSchema).max(32).r
 );
 
 export type SubfloorNailPlan = z.infer<typeof subfloorNailPlanSchema>;
+
+export const subfloorJoistSpanInputSchema = z.strictObject({
+  species: z.enum(["spf", "dfir", "hemfir", "syp"]),
+  spacing: z.literal([12, 16, 19.2, 24]),
+});
+export const subfloorJoistPlansSchema = z.array(z.strictObject({
+  panelId: z.uuid(),
+  reference: subfloorJoistSpanInputSchema.extend({ members: z.string().min(1).max(4000) }).nullable(),
+})).max(32).refine((rows) => new Set(rows.map(({ panelId }) => panelId)).size === rows.length,
+  "Keep one joist bearing check per subfloor sheet.");
+export type SubfloorJoistSpanInput = z.infer<typeof subfloorJoistSpanInputSchema>;

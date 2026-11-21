@@ -5,6 +5,7 @@ import { partLabel } from "./partLabels";
 import { isSubfloorPanel, subfloorBlockingLines, subfloorReviews } from "./subfloor";
 import { reviewSubfloorAdhesive } from "./subfloorAdhesive";
 import { SubfloorFastenerPlan } from "./SubfloorFastenerPlan";
+import { SubfloorJoistPanel } from "./SubfloorJoistPanel";
 import { previewSubfloorBlocking, type SubfloorBlockingPreview } from "./subfloorBlocking";
 import { workshopAsset } from "./workshopTransport";
 import { subfloorAdhesive, subfloorAdhesiveScope, subfloorNailing, subfloorNails, subfloorReference, subfloorScope } from "./subfloorReference";
@@ -18,15 +19,18 @@ type Props = {
   onAdhesive: (id: string, signature: string | null) => void;
   onFastening: React.ComponentProps<typeof SubfloorFastenerPlan>["onSave"];
   onShowFastening: React.ComponentProps<typeof SubfloorFastenerPlan>["onShow"];
+  onJoists: React.ComponentProps<typeof SubfloorJoistPanel>["onSave"];
+  onShowJoists: React.ComponentProps<typeof SubfloorJoistPanel>["onShow"];
 };
 
-export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTrack, onAdhesive, onFastening, onShowFastening }: Props) {
+export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTrack, onAdhesive, onFastening, onShowFastening, onJoists, onShowJoists }: Props) {
   const saved = project.subfloorChecks ?? [];
   const panels = useMemo(() => project.pieces.filter((piece) =>
     isSubfloorPanel(piece) || project.subfloorChecks?.includes(piece.id)), [project]);
   const options = [...new Set([...panels.map(({ id }) => id), ...saved,
     ...(project.subfloorAdhesivePlans ?? []).map(({ panelId }) => panelId),
-    ...(project.subfloorNailPlans ?? []).map(({ panelId }) => panelId)])];
+    ...(project.subfloorNailPlans ?? []).map(({ panelId }) => panelId),
+    ...(project.subfloorJoistPlans ?? []).map(({ panelId }) => panelId)])];
   const [id, setId] = useState(() => initialId && options.includes(initialId) ? initialId : saved[0] ?? options[0] ?? "");
   const review = useMemo(() => subfloorReviews(project, id ? [id] : [])[0], [project, id]);
   const layout = review?.layout;
@@ -119,7 +123,8 @@ export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTr
       {adhesive.saved && <button type="button" className="text-button" onClick={() => onAdhesive(id, null)}>Remove adhesive plan</button>}
     </details>}
     {review && (layout?.nails.length || project.subfloorNailPlans?.some(({ panelId }) => panelId === id)) ?
-      <SubfloorFastenerPlan key={id} project={project} panel={review} onSave={onFastening} onShow={onShowFastening} /> : null}
+      <SubfloorFastenerPlan key={`fasteners-${id}`} project={project} panel={review} onSave={onFastening} onShow={onShowFastening} /> : null}
+    {review && <SubfloorJoistPanel key={`joists-${id}`} project={project} panel={review} onSave={onJoists} onShow={onShowJoists} />}
     {tracking && <button type="button" className="text-button" onClick={() => onTrack(id, false)}>Remove saved check</button>}
     <p className="small-note"><a href={subfloorReference.guide} target="_blank" rel="noreferrer">APA floor construction</a>{" · "}
       <a href={subfloorReference.specification} target="_blank" rel="noreferrer">APA Table 14 and Figure 1</a>{" · "}

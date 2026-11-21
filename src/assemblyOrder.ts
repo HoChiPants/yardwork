@@ -6,6 +6,7 @@ import { waterStopStageKey } from "./waterStops";
 import { subfloorReviews } from "./subfloor";
 import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReviews } from "./subfloorFastening";
+import { subfloorJoistReviews } from "./subfloorJoists";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { sinkDrainStageKey } from "./sinkDrain";
 import { waterFittingPorts } from "./waterFittingSchema";
@@ -148,6 +149,12 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
   }
   for (const { panelId, groups } of subfloorFasteningReviews(project)) {
     for (const { id } of groups) requireBefore(stageByMember.get(id), stageByMember.get(panelId));
+  }
+  for (const { panelId, rows } of subfloorJoistReviews(project)) {
+    for (const { id, supportIds } of rows) {
+      for (const supportId of supportIds) requireBefore(stageByMember.get(supportId), stageByMember.get(id));
+      requireBefore(stageByMember.get(id), stageByMember.get(panelId));
+    }
   }
   for (const { record, layout } of bottomPlateSealReviews(project)) {
     const seal = reviewSteps.get(reviewKey("bottom-plate-air-seal", record.id));

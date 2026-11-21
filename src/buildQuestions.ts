@@ -115,8 +115,8 @@ const wallWaterQuestion = /^(?:(?:plan|route|add|lay out) (?:a |the )?(?:pex|wat
 const fittingQuestion = /^(?:(?:how (?:do|can|should) i )?(?:connect|join) (?:two |my |these |the )?(?:pex|water) (?:runs|lines|pipes)(?: (?:at|around) (?:a |the )?corner)?|(?:review|check|plan) (?:the |my |a )?pex (?:fittings?|connections?))$/i;
 const teeQuestion = /^(?:(?:how (?:do|can|should) i )?(?:branch|tee off) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)|(?:add|plan) (?:a |the )?tee (?:in|into|on|to) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)(?: for .+)?)$/i;
 const pressureQuestion = /^(?:(?:how (?:do|can|should) i )?pressure[- ]test (?:the |my |a )?(?:pex|water(?: supply)?) (?:main|runs?|lines?|pipes?|system)|(?:log|record|review|check|show) (?:a |the |my )?(?:pex |water )?pressure tests?)$/i;
-const namedSubfloorQuestion = /^(?:(?:plan|fit|add|preview|check|show) (?:(?:subfloor )?blocking|subfloor adhesive|subfloor fasteners)|(?:count|how many) (?:subfloor )?nails) (?:under|at|for) (p\d{1,6})$/i;
-const subfloorQuestion = /^(?:(?:check|review|show|plan) (?:the |my )?(?:subfloor(?: support| blocking| joist spacing| adhesive| fasteners)?|floor joist spacing)|does (?:the |my )?subfloor need (?:more )?blocking|(?:count|how many) subfloor nails)$/i;
+const namedSubfloorQuestion = /^(?:(?:plan|fit|add|preview|check|show) (?:(?:subfloor )?blocking|subfloor adhesive|subfloor fasteners|(?:floor )?joist (?:bearing|span))|(?:count|how many) (?:subfloor )?nails) (?:under|at|for) (p\d{1,6})$/i;
+const subfloorQuestion = /^(?:(?:check|review|show|plan) (?:the |my )?(?:subfloor(?: support| blocking| joist spacing| adhesive| fasteners)?|(?:floor )?joist (?:spacing|bearing|span))|does (?:the |my )?subfloor need (?:more )?blocking|(?:count|how many) subfloor nails|how far do (?:my |the )?(?:floor )?joists span)$/i;
 const bottomPlateQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[ -]seal|seal|caulk) (?:the |a |my )?(?:wall )?(?:bottom|sole) plates?(?: to (?:the )?(?:wood )?subfloor)?|(?:plan|review|check|show) (?:the |a )?(?:bottom|sole) plate (?:air[ -]seals?|seals?))$/i;
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
@@ -508,7 +508,7 @@ export function answerBuildQuestion(
         title: "Check subfloor support",
         detail: question.panelLabel && !selected
           ? `No supported subfloor sheet matches ${question.panelLabel}. Select an actual horizontal sheet to check joist spacing and blocking.`
-          : "Choose the subfloor sheet to check joist spacing and perimeter backing. Fit blocking from recorded stock, preview adhesive routes and count fasteners.",
+          : "Choose a sheet to check its joist bearing, span and perimeter backing. Fit blocking from recorded stock, preview adhesive routes and count fasteners.",
         rows: rows.map(({ panelId, layout, problem }) => ({
           id: panelId, title: layout?.piece.name ?? "Saved subfloor check",
           detail: problem || layout?.issues.join(" ") || `${layout?.joistCount} continuous joist lines. ${layout?.nails.length} estimated panel nailing locations.`,

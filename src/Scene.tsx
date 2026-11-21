@@ -1,6 +1,7 @@
 import type { SubfloorReview } from "./subfloor";
 import type { SubfloorAdhesiveReview } from "./subfloorAdhesive";
 import type { SubfloorFasteningReview } from "./subfloorFastening";
+import type { SubfloorJoistReview } from "./subfloorJoists";
 import { DrawingReferenceMesh } from "./DrawingReferenceMesh";
 import type { WallTracePoint } from "./wallTrace";
 import { drawingReferenceBounds } from "./drawingReference";
@@ -89,6 +90,7 @@ export type SceneProps = {
   shownSubfloor?: SubfloorReview["layout"];
   shownSubfloorAdhesive?: SubfloorAdhesiveReview;
   shownSubfloorFasteners?: SubfloorFasteningReview;
+  shownSubfloorJoists?: SubfloorJoistReview;
   shownBottomPlate?: { start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownOpeningFlashing?: OpeningFlashingPreview;
@@ -1559,6 +1561,9 @@ function World(props: SceneProps) {
       {!isolated && props.shownSubfloorAdhesive?.layout && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <SubfloorAdhesiveMarkers layout={props.shownSubfloorAdhesive.layout} />
       )}
+      {!isolated && props.shownSubfloorJoists?.center && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <SubfloorJoistMarkers review={props.shownSubfloorJoists} center={props.shownSubfloorJoists.center} />
+      )}
       {!isolated && props.shownBottomPlate && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <group>
           {props.shownBottomPlate.runs.map(({ points, problem }, index) =>
@@ -1876,6 +1881,23 @@ function SubfloorAdhesiveMarkers({ layout }: { layout: NonNullable<SubfloorAdhes
       zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
       <span className="site-clearance-marker" data-testid="subfloor-adhesive-marker">
         Adhesive · {layout.runs.length} framing bead runs
+      </span>
+    </Html>
+  </group>;
+}
+
+function SubfloorJoistMarkers({ review, center }: { review: SubfloorJoistReview; center: V3 }) {
+  const feet = (point: V3) => point.map((value) => value / 12) as V3;
+  const problems = review.rows.filter((row) => row.issue || row.ends.some(({ issue }) => issue)).length;
+  return <group>
+    {review.rows.flatMap(({ id, marks }) => marks.map(({ points, problem }, index) =>
+      <Line key={`${id}/${index}`} points={points.map(feet)} color={problem ? "#bd481d" : "#206575"}
+        lineWidth={problem ? 6 : 3} depthTest={false} renderOrder={10} raycast={() => null} />))}
+    <Html center position={feet([center[0], center[1] + 4, center[2]])}
+      zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+      <span className="site-clearance-marker" data-testid="subfloor-joists-marker">
+        {problems ? `Joists · ${problems} to review` : review.referenceProblem ? "Joists · Check span reference"
+          : `Joists · ${review.rows.length} bearing lines`}
       </span>
     </Html>
   </group>;

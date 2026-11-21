@@ -171,7 +171,8 @@ function reviewSurface(surface: Surface, pieces: Map<string, Piece>) {
       path: (along: number, sideways: number) => across ? at(sideways, along) : at(along, sideways),
     };
   });
-  return { piece, supportIds: [...new Set(contacts.map(({ piece }) => piece.id))], bearingStrips, joistCount: joists.length, widest, issues, edges, spans, details, blocking, nails: [...points.values()],
+  return { piece, supportIds: [...new Set(contacts.map(({ piece }) => piece.id))], bearingStrips,
+    joistIds: [...new Set(joists.map(({ piece }) => piece.id))], joistCount: joists.length, widest, issues, edges, spans, details, blocking, nails: [...points.values()],
     center: toWorld(length / 2, width / 2) };
 }
 

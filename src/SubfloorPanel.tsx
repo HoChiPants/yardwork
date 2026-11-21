@@ -3,26 +3,31 @@ import { formatPreciseInches } from "./measurement";
 import type { Project } from "./model";
 import { partLabel } from "./partLabels";
 import { isSubfloorPanel, subfloorBlockingLines, subfloorReviews } from "./subfloor";
+import { reviewSubfloorAdhesive } from "./subfloorAdhesive";
 import { previewSubfloorBlocking, type SubfloorBlockingPreview } from "./subfloorBlocking";
 import { workshopAsset } from "./workshopTransport";
-import { subfloorNailing, subfloorNails, subfloorReference, subfloorScope } from "./subfloorReference";
+import { subfloorAdhesive, subfloorAdhesiveScope, subfloorNailing, subfloorNails, subfloorReference, subfloorScope } from "./subfloorReference";
 
 type Props = {
   project: Project;
   initialId?: string;
-  onShow: (id: string) => void;
+  onShow: (id: string, view?: "support" | "adhesive") => void;
   onPreviewBlock: (preview: SubfloorBlockingPreview) => void;
   onTrack: (id: string, enabled: boolean) => void;
+  onAdhesive: (id: string, signature: string | null) => void;
 };
 
-export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTrack }: Props) {
+export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTrack, onAdhesive }: Props) {
   const saved = project.subfloorChecks ?? [];
   const panels = useMemo(() => project.pieces.filter((piece) =>
     isSubfloorPanel(piece) || project.subfloorChecks?.includes(piece.id)), [project]);
-  const options = [...new Set([...panels.map(({ id }) => id), ...saved])];
+  const options = [...new Set([...panels.map(({ id }) => id), ...saved,
+    ...(project.subfloorAdhesivePlans ?? []).map(({ panelId }) => panelId)])];
   const [id, setId] = useState(() => initialId && options.includes(initialId) ? initialId : saved[0] ?? options[0] ?? "");
   const review = useMemo(() => subfloorReviews(project, id ? [id] : [])[0], [project, id]);
   const layout = review?.layout;
+  const adhesive = useMemo(() => review && reviewSubfloorAdhesive(project, review), [project, review]);
+  const [confirmed, setConfirmed] = useState(false);
   const tracking = saved.includes(id);
   const [bayId, setBayId] = useState("");
   const [placement, setPlacement] = useState<"under-sheet" | "centered">("under-sheet");
@@ -42,7 +47,7 @@ export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTr
     <h2 id="modal-title">Check subfloor support</h2>
     <p>{subfloorScope}</p>
     {options.length ? <label className="field">Subfloor sheet
-      <select value={id} onChange={(event) => { setId(event.target.value); setError(""); }}>
+      <select value={id} onChange={(event) => { setId(event.target.value); setError(""); setConfirmed(false); }}>
         {options.map((option) => <option value={option} key={option}>
           {partLabel(project, option)} · {panels.find(({ id }) => id === option)?.name ?? "Missing panel"}
           {saved.includes(option) ? " · Saved check" : ""}
@@ -90,6 +95,25 @@ export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTr
         {!tracking && <button type="button" className="button primary" onClick={() => onTrack(id, true)}>Save check to guide</button>}
       </div>
     </section>}
+    {adhesive && <details className="field-section" open={adhesive.saved}>
+      <summary>Subfloor adhesive</summary>
+      {adhesive.problem && <p>{adhesive.problem}</p>}
+      {adhesive.layout && <>
+        <p><strong>{adhesive.layout.runs.length} bead runs · About {(adhesive.layout.inches / 12).toFixed(1)} linear ft</strong></p>
+        <p className="small-note">{subfloorAdhesiveScope} <a href={subfloorAdhesive.specification} target="_blank" rel="noreferrer">Adhesive instructions</a></p>
+        {!adhesive.planCurrent && <label className="checkbox-field">
+          <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
+          The delivered panel allows this adhesive on these framing surfaces.
+        </label>}
+        <div className="inline">
+          <button type="button" className="button secondary" onClick={() => onShow(id, "adhesive")}>Show adhesive in 3D</button>
+          {adhesive.planCurrent ? <span>Adhesive saved</span> :
+            <button type="button" className="button primary" disabled={!confirmed}
+              onClick={() => { onAdhesive(id, adhesive.layout!.signature); setConfirmed(false); }}>Save adhesive plan</button>}
+        </div>
+      </>}
+      {adhesive.saved && <button type="button" className="text-button" onClick={() => onAdhesive(id, null)}>Remove adhesive plan</button>}
+    </details>}
     {tracking && <button type="button" className="text-button" onClick={() => onTrack(id, false)}>Remove saved check</button>}
     <p className="small-note"><a href={subfloorReference.guide} target="_blank" rel="noreferrer">APA floor construction</a>{" · "}
       <a href={subfloorReference.specification} target="_blank" rel="noreferrer">APA Table 14 and Figure 1</a>{" · "}

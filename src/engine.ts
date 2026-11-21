@@ -1,5 +1,6 @@
 import { subfloorReport, subfloorReviews } from "./subfloor";
-import { subfloorNails, subfloorReference } from "./subfloorReference";
+import { subfloorAdhesiveReport, subfloorAdhesiveReviews } from "./subfloorAdhesive";
+import { subfloorAdhesive, subfloorNails, subfloorReference } from "./subfloorReference";
 import { bottomPlateSealGuide, bottomPlateSealReviews } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { drawingReferenceDescription } from "./drawingReference";
@@ -828,6 +829,12 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     const detail = problem || layout?.issues.join(" ");
     if (detail) findings.push({ id: `subfloor-${panelId}`, severity: "warning",
       title: `Review subfloor support${layout ? ` · ${layout.piece.name}` : ""}`, detail,
+      ...(p.pieces.some(({ id }) => id === panelId) && { pieceId: panelId }),
+    });
+  }
+  for (const { panelId, problem } of subfloorAdhesiveReviews(p)) {
+    if (problem) findings.push({ id: `subfloor-adhesive-${panelId}`, severity: "warning",
+      title: "Review subfloor adhesive", detail: problem,
       ...(p.pieces.some(({ id }) => id === panelId) && { pieceId: panelId }),
     });
   }
@@ -2226,6 +2233,10 @@ export function guideMarkdown(p: Project) {
     (p.subfloorChecks?.length ? "\n\n## Subfloor support and blocking\n\n" +
       subfloorReport(p).map((line) => "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[APA Table 14 and Figure 1](${subfloorReference.specification}) · [2021 IRC floor table (Seattle edition)](${subfloorReference.code}) · [8d common nail example](${subfloorNails.listing})\n` : "") +
+    (p.subfloorAdhesivePlans?.length ? "\n\n## Subfloor adhesive\n\n" +
+      subfloorAdhesiveReport(p).map((line) =>
+        "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[Adhesive instructions](${subfloorAdhesive.specification}) · [APA glued floor guide](${subfloorAdhesive.apa})\n` : "") +
     (p.bottomPlateSeals?.length ? "\n\n## Bottom plate air seals\n\n" +
       bottomPlateSealGuide(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

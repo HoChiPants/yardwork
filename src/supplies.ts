@@ -16,6 +16,7 @@ import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { bottomPlateScope, bottomPlateSealant } from "./bottomPlateSealReference";
+import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
 import { trimSealant } from "./trimSealantReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
 import { trimBackerRodScope, trimBackerRods } from "./trimBackerRodReference";
@@ -386,6 +387,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "cartridge",
     contents: [{ name: "28 fl oz white draft sealant cartridge", quantity: 1 }],
     requirements: [bottomPlateScope, "Check that the cartridge gun accepts the delivered body and that the bead fits the actual seam."],
+  },
+  [subfloorAdhesive.id]: {
+    purchaseUnit: "cartridge",
+    contents: [{ name: "28 fl oz subfloor adhesive cartridge", quantity: 1 }],
+    requirements: [subfloorAdhesiveScope, "Check that the gun fits the delivered cartridge."],
   },
   [trimSealant.id]: {
     purchaseUnit: "cartridge",

@@ -1,4 +1,6 @@
 import { subfloorReviews } from "./subfloor";
+import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
+import { subfloorAdhesiveInstallation } from "./subfloorReference";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import {
   projectSchema,
@@ -76,6 +78,7 @@ function preparationScope(project: Project) {
     ...(project.waterStops?.length ? { waterStops: project.waterStops } : {}),
     ...(project.sinkDrains?.length ? { sinkDrains: project.sinkDrains } : {}),
     ...(project.subfloorChecks?.length ? { subfloorChecks: project.subfloorChecks } : {}),
+    ...(project.subfloorAdhesivePlans?.length ? { subfloorAdhesivePlans: project.subfloorAdhesivePlans } : {}),
     ...(project.bottomPlateSeals?.length ? { bottomPlateSeals: project.bottomPlateSeals } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
@@ -599,21 +602,34 @@ export function generateBuildGuide(input: Project): Project {
       { kind: "lid-hinge-preparation", planId: review.plan.id }, hingeReviewInputs(project, review));
     addedHinges.add(review.plan.id);
   };
+  const adhesiveByPanel = new Map(subfloorAdhesiveReviews(project).map((review) => [review.panelId, review]));
   for (const stage of stages) {
     // Typed storage stages place shell/frame before the actual lid. Legacy
     // combined stages retain an explicit dry-fit instruction in the hinge phase.
     for (const review of hingeReviewCache)
       if (!addedHinges.has(review.plan.id) && stage.memberIds.includes(review.plan.moving.pieceId)) addHingePhase(review);
+    const adhesive = stage.memberIds.flatMap((id) => {
+      const review = adhesiveByPanel.get(id);
+      return review ? [review] : [];
+    });
+    const adhesiveNotes = adhesive.flatMap(({ panelId, problem }) =>
+      problem ? [`${partLabel(project, panelId)} · ${problem}`] : []);
+    const activeBeads = adhesive.filter(({ planCurrent }) => planCurrent);
+    if (activeBeads.length) adhesiveNotes.push(
+      `Subfloor adhesive for ${activeBeads.map(({ panelId }) => partLabel(project, panelId)).join(", ")}. ${subfloorAdhesiveInstallation}`,
+    );
+    const scope = stageScope(project, stage, fastenerReviewCache, hingeReviewCache, connectorReviewCache);
     const phase = addPhase(
       stage.title,
-      stage.notes,
+      [stage.notes, ...adhesiveNotes].join(" "),
       {
         kind: "assembly-stage",
         planId: stage.ownerId,
         stageKey: stage.key,
         memberIds: stage.memberIds,
       },
-      stageScope(project, stage, fastenerReviewCache, hingeReviewCache, connectorReviewCache),
+      adhesive.length ? { stage: scope, adhesive: adhesive.map(({ panelId, planCurrent, layout }) =>
+        ({ panelId, planCurrent, contact: layout?.signature })) } : scope,
     );
     for (const id of stage.memberIds) {
       if (pieceSteps.has(id))

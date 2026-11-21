@@ -1,4 +1,4 @@
-import { subfloorNails } from "./subfloorReference";
+import { subfloorAdhesive, subfloorNails } from "./subfloorReference";
 import { openingFoam, openingSealMaterials, openingAirSealReviewedAt } from "./openingAirSealReference";
 import { sdwsFramingName, sdwsFramingPacks, sdwsFramingReview, sdwsFramingSources } from "./sdwsFramingReference";
 import { pureBondCasework } from "./homeDepotCaseworkReference";
@@ -4381,6 +4381,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: subfloorPanel.floorGuide, verifiedAt: bottomPlateSealant.reviewedAt, note: "APA guidance on joint spacing, panel orientation, support and attachments. It gives general floor guidance independently of this retailer listing." },
     ],
     roleQualifications: [],
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: subfloorAdhesive.id,
+    name: subfloorAdhesive.name,
+    manufacturer: "Liquid Nails",
+    manufacturerPartNumber: subfloorAdhesive.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: subfloorAdhesive.reviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "latex subfloor adhesive" }),
+    offers: [hd(subfloorAdhesive.internet, subfloorAdhesive.model, subfloorAdhesive.sku)],
+    sources: [
+      { url: subfloorAdhesive.listing, verifiedAt: subfloorAdhesive.reviewedAt, note: "Exact 28 fl oz single cartridge, model LNP-902." },
+      { url: subfloorAdhesive.specification, verifiedAt: subfloorAdhesive.reviewedAt, note: "The manufacturer lists OSB, APA AFG-01 and ASTM D3498, with approximately 85 ft at a ¼ in bead for the 28 fl oz cartridge." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [subfloorAdhesive.listing, subfloorAdhesive.specification] },
     discrepancies: [],
     capabilities: [],
   },

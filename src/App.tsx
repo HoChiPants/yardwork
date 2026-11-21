@@ -11,8 +11,9 @@ import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
 import type { SubfloorBlockingPreview } from "./subfloorBlocking";
 import { SubfloorPanel } from "./SubfloorPanel";
+import { reviewSubfloorAdhesive, saveSubfloorAdhesive, subfloorAdhesiveReport } from "./subfloorAdhesive";
 import { subfloorReport, subfloorReviews, trackSubfloorPanel } from "./subfloor";
-import { subfloorReference } from "./subfloorReference";
+import { subfloorAdhesive, subfloorReference } from "./subfloorReference";
 import { BottomPlateSealPanel } from "./BottomPlateSealPanel";
 import { bottomPlateSealGuide, bottomPlateSealReviews, removeBottomPlateSeal } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
@@ -619,7 +620,7 @@ export function App() {
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
   const [shownTrimSeam, setShownTrimSeam] = useState<{ project: Project; pair: string; marker: TrimSeamMarker } | null>(null);
   const [subfloorBlockDraft, setSubfloorBlockDraft] = useState<{ project: Project; fit: SubfloorBlockingPreview } | null>(null);
-  const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string } | null>(null);
+  const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string; view: "support" | "adhesive" } | null>(null);
   const [subfloorTarget, setSubfloorTarget] = useState<string>();
   const [shownBottomPlate, setShownBottomPlate] = useState<{ projectId: string; id: string } | null>(null);
   const [bottomPlateTarget, setBottomPlateTarget] = useState<string>();
@@ -1789,12 +1790,16 @@ export function App() {
   const woodJointDetails = useMemo(() => woodJointDecisionEntries(project), [project]);
   const sillGasketReview = useMemo(() => reviewSillGaskets(project), [project]);
   const openingFlashingReview = useMemo(() => reviewOpeningFlashings(project), [project]);
-  const visibleSubfloor = useMemo(() => shownSubfloor?.projectId === project.id && panel === "sections"
-    ? subfloorReviews(project, [shownSubfloor.panelId])[0]?.layout : undefined, [panel, project, shownSubfloor]);
-  function showSubfloor(panelId: string) {
+  const visibleSubfloor = useMemo(() => {
+    if (shownSubfloor?.projectId !== project.id || panel !== "sections") return undefined;
+    return subfloorReviews(project, [shownSubfloor.panelId])[0];
+  }, [panel, project, shownSubfloor]);
+  const visibleAdhesive = useMemo(() => shownSubfloor?.view === "adhesive" && visibleSubfloor
+    ? reviewSubfloorAdhesive(project, visibleSubfloor) : undefined, [project, visibleSubfloor, shownSubfloor]);
+  function showSubfloor(panelId: string, view: "support" | "adhesive" = "support") {
     setSubfloorBlockDraft(null);
     if (guidePartFocus) exitGuidePartView();
-    setShownSubfloor({ projectId: project.id, panelId });
+    setShownSubfloor({ projectId: project.id, panelId, view });
     setShownBottomPlate(null);
     setShownSillGasketId(null);
     setPlaying(false);
@@ -3054,7 +3059,8 @@ export function App() {
               shownTrimSeam={panel === "connections" && shownTrimSeam?.project === project &&
                 shownTrimSeam.pair === liveConnectionContext?.scope.focusPair?.slice().sort().join("/")
                 ? shownTrimSeam.marker : undefined}
-              shownSubfloor={visibleSubfloor}
+              shownSubfloor={shownSubfloor?.view === "support" ? visibleSubfloor?.layout : undefined}
+              shownSubfloorAdhesive={visibleAdhesive}
               shownBottomPlate={visibleBottomPlate?.layout ? {
                 start: visibleBottomPlate.layout.ends[0], outdated: !!visibleBottomPlate.outdated,
                 runs: visibleBottomPlate.layout.runs,
@@ -3964,7 +3970,7 @@ export function App() {
                 setSubfloorTarget(shownSubfloor?.projectId === project.id ? shownSubfloor.panelId : selected ?? undefined);
                 setModal("subfloor-support");
               }}>Check subfloor support</button>
-              {visibleSubfloor && <button type="button" className="text-button" onClick={() => setShownSubfloor(null)}>Hide subfloor support</button>}
+              {visibleSubfloor && <button type="button" className="text-button" onClick={() => setShownSubfloor(null)}>{visibleAdhesive ? "Hide adhesive routes" : "Hide subfloor support"}</button>}
               {visibleBottomPlate && <button type="button" className="text-button" onClick={() => setShownBottomPlate(null)}>Hide bottom plate seam</button>}
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
                 shownId={shownSillGasketId} onChange={change} onShow={(id) => {
@@ -5508,6 +5514,9 @@ export function App() {
               }} onTrack={(id, enabled) => safe(() => {
                 change((live) => trackSubfloorPanel(live, id, enabled));
                 notify(enabled ? "Subfloor check saved to the project and guide." : "Subfloor check removed from the guide.");
+              })} onAdhesive={(id, signature) => safe(() => {
+                change((live) => saveSubfloorAdhesive(live, id, signature));
+                notify(signature ? "Subfloor adhesive plan saved." : "Subfloor adhesive plan removed.");
               })} />}
             {modal === "bottom-plate-seal" && <BottomPlateSealPanel project={project} selectedPart={selected} initialId={bottomPlateTarget}
               onSave={(draft) => safe(() => {
@@ -6969,6 +6978,14 @@ export function App() {
             <ul>{subfloorReport(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
             <p><a href={subfloorReference.specification}>APA Table 14 and Figure 1</a>{" · "}
               <a href={subfloorReference.code}>2021 IRC floor table (Seattle edition)</a></p>
+          </section>
+        )}
+        {!!exportGuide.subfloorAdhesivePlans?.length && (
+          <section className="subfloor-adhesive-print">
+            <h2>Subfloor adhesive</h2>
+            <ul>{subfloorAdhesiveReport(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={subfloorAdhesive.specification}>Adhesive instructions</a>{" · "}
+              <a href={subfloorAdhesive.apa}>APA glued floor guide</a></p>
           </section>
         )}
         {!!exportGuide.bottomPlateSeals?.length && (

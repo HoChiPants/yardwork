@@ -1,4 +1,5 @@
 import type { SubfloorReview } from "./subfloor";
+import type { SubfloorAdhesiveReview } from "./subfloorAdhesive";
 import { DrawingReferenceMesh } from "./DrawingReferenceMesh";
 import type { WallTracePoint } from "./wallTrace";
 import { drawingReferenceBounds } from "./drawingReference";
@@ -85,6 +86,7 @@ export type SceneProps = {
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
   shownTrimSeam?: TrimSeamMarker;
   shownSubfloor?: SubfloorReview["layout"];
+  shownSubfloorAdhesive?: SubfloorAdhesiveReview;
   shownBottomPlate?: { start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownOpeningFlashing?: OpeningFlashingPreview;
@@ -1552,6 +1554,9 @@ function World(props: SceneProps) {
       {!isolated && props.shownSubfloor && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <SubfloorMarkers layout={props.shownSubfloor} />
       )}
+      {!isolated && props.shownSubfloorAdhesive?.layout && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <SubfloorAdhesiveMarkers layout={props.shownSubfloorAdhesive.layout} />
+      )}
       {!isolated && props.shownBottomPlate && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <group>
           {props.shownBottomPlate.runs.map(({ points, problem }, index) =>
@@ -1858,6 +1863,20 @@ export function Scene(props: SceneProps) {
       </Suspense>
     </Canvas>
   );
+}
+
+function SubfloorAdhesiveMarkers({ layout }: { layout: NonNullable<SubfloorAdhesiveReview["layout"]> }) {
+  const feet = (point: V3) => point.map((value) => value / 12) as V3;
+  return <group>
+    {layout.runs.map(({ points, supportId }, index) => <Line key={`${supportId}-${index}`}
+      points={points.map(feet)} color="#8d4200" lineWidth={4} depthTest={false} renderOrder={10} raycast={() => null} />)}
+    <Html center position={feet([layout.center[0], layout.center[1] + 4, layout.center[2]])}
+      zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+      <span className="site-clearance-marker" data-testid="subfloor-adhesive-marker">
+        Adhesive · {layout.runs.length} framing bead runs
+      </span>
+    </Html>
+  </group>;
 }
 
 function SubfloorMarkers({ layout }: { layout: NonNullable<SubfloorReview["layout"]> }) {

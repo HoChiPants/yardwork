@@ -7,12 +7,14 @@ import { inspectCutStock } from "../src/cutStock";
 import { guideMarkdown, validate } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import { homeDepotShoppingList } from "../src/handoff";
+import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
 import { saveMotionPlan } from "../src/mechanismMotion";
 import { part, projectSchema, type Project, type V3 } from "../src/model";
 import { rotate } from "../src/spatial";
 import { subfloorBlockingLines, subfloorReviews, trackSubfloorPanel } from "../src/subfloor";
+import { reviewSubfloorAdhesive, saveSubfloorAdhesive, subfloorAdhesiveTakeoff } from "../src/subfloorAdhesive";
 import { previewSubfloorBlocking } from "../src/subfloorBlocking";
-import { subfloorNails } from "../src/subfloorReference";
+import { subfloorAdhesive, subfloorNails } from "../src/subfloorReference";
 import { addSupply } from "../src/supplies";
 import { toolChecklist } from "../src/tools";
 
@@ -166,4 +168,64 @@ test("preview flags blocking that stops a recorded slide between its open and cl
   const drafted = previewSubfloorBlocking(withMotion, panel.id, bay.id, "under-sheet", "prefer-offcut");
   assert.deepEqual(drafted.motionConflicts, ["Service drawer"]);
   assert.ok(!withMotion.pieces.some(({ id }) => id === drafted.block.id));
+});
+
+test("save the adhesive takeoff with the sheet installation and review it again when contact changes", () => {
+  const { project, repaired, panel } = fixture();
+  const review = (source: Project) => reviewSubfloorAdhesive(source, subfloorReviews(source, [panel.id])[0]);
+  assert.match(review(project).problem!, /support and spacing/);
+  const initial = review(repaired);
+  assert.equal(initial.saved, false);
+  const layout = initial.layout!;
+  assert.equal(layout.runs.length, 10);
+  assert.ok(layout.runs.every(({ points }) => points.every(([, y]) => Math.abs(y - 7.25) < 1e-5)));
+  assert.ok(layout.inches > 260 && layout.inches < 262);
+  const saved = saveSubfloorAdhesive(repaired, panel.id, layout.signature);
+  assert.equal(review(projectSchema.parse(JSON.parse(JSON.stringify(saved)))).planCurrent, true);
+  assert.deepEqual(subfloorAdhesiveTakeoff(saved), { inches: layout.inches, required: 1 });
+  assert.equal(homeDepotPurchaseNeeds(saved).find(({ id }) => id === subfloorAdhesive.id)?.canAdd, true);
+  const withSupply = addHomeDepotPurchaseNeed(saved, subfloorAdhesive.id);
+  const item = homeDepotShoppingList(withSupply).items.find(({ productId }) => productId === subfloorAdhesive.internet);
+  assert.equal(item?.quantity, 1);
+  assert.equal(item?.snapshot, null);
+  assert.ok(toolChecklist(saved).requirements.some(({ capability }) => capability === "apply-quart-sealant"));
+  const guide = generateBuildGuide(saved);
+  assert.match(guide.steps.find(({ id }) => id === guide.pieces.find(({ id }) => id === panel.id)!.stepId)!.notes,
+    /Install and check the joists and blocking first.*seat and fasten/);
+  assert.match(guideMarkdown(guide), /Subfloor adhesive[\s\S]*1 × 28 fl oz LNP-902 cartridge/);
+  assert.deepEqual(buildQuestion("Plan subfloor adhesive under P10"), { kind: "subfloor-support", panelLabel: "P010" });
+  const moved: Project = { ...saved, pieces: saved.pieces.map((piece) => ({
+    ...piece, position: [piece.position[0] + 3, piece.position[1], piece.position[2]],
+  })) };
+  assert.match(review(moved).problem!, /bearing strips changed/);
+  assert.throws(() => saveSubfloorAdhesive(moved, panel.id, layout.signature), /bearing strips changed/);
+  assert.equal(subfloorAdhesiveTakeoff(moved).required, null);
+  assert.equal(homeDepotPurchaseNeeds(moved).find(({ id }) => id === subfloorAdhesive.id)?.canAdd, false);
+  assert.ok(validate(moved).some(({ id }) => id === `subfloor-adhesive-${panel.id}`));
+  assert.deepEqual(saveSubfloorAdhesive(moved, panel.id, null).subfloorAdhesivePlans, []);
+});
+
+test("neighboring sheets get separate bead paths on their shared joist and share the cartridge budget", () => {
+  const { project } = fixture();
+  const stepId = project.steps[0].id;
+  const rows = [-39.3125, -20.0625, 0, 20.0625, 39.3125];
+  const joists = rows.map((z) => ({
+    ...part("Joist", "two-eight", [1.5, 7.25, 32], [0, 3.625, z], stepId, "Floor"),
+    rotation: [0, Math.PI / 2, 0] as V3,
+  }));
+  const blocks = rows.slice(1).flatMap((end, i) => [-15.25, 15.25].map((x) =>
+    part("Blocking", "two-eight", [1.5, 7.25, end - rows[i] - 1.5],
+      [x, 3.625, (end + rows[i]) / 2], stepId, "Floor")));
+  const sheets = [-20.0625, 20.0625].map((z) => part("Deck", "hd-osb-subfloor-486701",
+    [32, 0.703, 40], [0, 7.6015, z], stepId, "Floor"));
+  let assembly: Project = { ...project, pieces: [...joists, ...blocks, ...sheets], subfloorChecks: [] };
+  const layouts = subfloorReviews(assembly, sheets.map(({ id }) => id)).map((review) => {
+    const adhesive = reviewSubfloorAdhesive(assembly, review);
+    assert.equal(adhesive.problem, undefined);
+    return adhesive.layout!;
+  });
+  assert.ok(layouts[0].runs.find(({ supportId }) => supportId === joists[2].id)!.points.every(([, , z]) => z < -0.0625));
+  assert.ok(layouts[1].runs.find(({ supportId }) => supportId === joists[2].id)!.points.every(([, , z]) => z > 0.0625));
+  for (const [index, panel] of sheets.entries()) assembly = saveSubfloorAdhesive(assembly, panel.id, layouts[index].signature);
+  assert.deepEqual(subfloorAdhesiveTakeoff(assembly), { required: 1, inches: layouts[0].inches + layouts[1].inches });
 });

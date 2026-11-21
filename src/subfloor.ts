@@ -158,7 +158,20 @@ function reviewSurface(surface: Surface, pieces: Map<string, Piece>) {
     for (const center of centerlines)
       for (const z of nailPositions(width, ref.fieldSpacing).slice(1, -1)) add(center, z);
   }
-  return { piece, supportIds: [...new Set(contacts.map(({ piece }) => piece.id))], joistCount: joists.length, widest, issues, edges, spans, details, blocking, nails: [...points.values()],
+  const bearingStrips = contacts.map(({ piece: support, length, width, across }) => {
+    const at = (x: number, z: number): V3 => {
+      const point = toWorld(x, z);
+      point[1] -= piece.size[axes.thickness] + 0.015;
+      return point;
+    };
+    return {
+      support,
+      length, width, across,
+      corners: [at(length[0], width[0]), at(length[1], width[1])] as [V3, V3],
+      path: (along: number, sideways: number) => across ? at(sideways, along) : at(along, sideways),
+    };
+  });
+  return { piece, supportIds: [...new Set(contacts.map(({ piece }) => piece.id))], bearingStrips, joistCount: joists.length, widest, issues, edges, spans, details, blocking, nails: [...points.values()],
     center: toWorld(length / 2, width / 2) };
 }
 

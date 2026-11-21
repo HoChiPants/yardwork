@@ -44,11 +44,29 @@ test("subfloor support updates after fitting a recorded blocking offcut and stay
   await preview.getByRole("button", { name: "Preview blocking in 3D", exact: true }).click();
   await fitted.getByRole("button", { name: "Add fitted blocking" }).click();
   await expect(page.getByTestId("subfloor-support-marker")).toContainText("48 estimated nailing locations");
+  await page.getByRole("button", { name: "Check subfloor support", exact: true }).click();
+  await dialog.getByText("Subfloor adhesive", { exact: true }).click();
+  await expect(dialog.getByText("10 bead runs · About 21.7 linear ft")).toBeVisible();
+  const saveAdhesive = dialog.getByRole("button", { name: "Save adhesive plan" });
+  await expect(saveAdhesive).toBeDisabled();
+  await dialog.getByRole("checkbox", { name: "The delivered panel allows this adhesive on these framing surfaces." }).check();
+  await saveAdhesive.click();
+  await expect(dialog.getByText("Adhesive saved", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Show adhesive in 3D" }).click();
+  await expect(page.getByTestId("subfloor-adhesive-marker")).toHaveText("Adhesive · 10 framing bead runs");
+  await expect(page.getByTestId("subfloor-support-marker")).toHaveCount(0);
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await dialog.getByRole("button", { name: "Add 1 cartridge of Liquid Nails subfloor adhesive" }).click();
+  await expect(dialog.getByRole("list", { name: "Home Depot purchase review" })
+    .getByRole("listitem").filter({ hasText: "#202203997" })).toContainText("1 cartridge");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const saved = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
   await expect.poll(async () => (await saved())?.revision).toBe(1);
   expect((await saved()).project.subfloorChecks).toEqual([trackedPanel]);
   const stored = (await saved()).project;
+  expect(stored.subfloorAdhesivePlans).toEqual([{ panelId: trackedPanel, contactSignature: expect.any(String) }]);
   expect(stored.pieces.some(({ id }: { id: string }) => id === scrap.id)).toBe(false);
   const installed = stored.pieces.find(({ name }: { name: string }) => name.startsWith("Subfloor blocking ·"));
   expect(installed.offcut).toBe(false);
@@ -65,6 +83,8 @@ test("subfloor support updates after fitting a recorded blocking offcut and stay
   expect(guide).toMatch(/Subfloor support and blocking[\s\S]*48 estimated panel nailing locations/);
   expect(guide).toContain("Check 72 × 32 in OSB deck support before covering");
   expect(guide).toContain("202308488");
+  expect(guide).toMatch(/Subfloor adhesive[\s\S]*1 × 28 fl oz LNP-902/);
   expect(guide).toMatch(/O003[^\n]*Subfloor blocking|Subfloor blocking[^\n]*O003/);
   await expect(page.locator(".print-guide .subfloor-support-print")).toContainText("48 estimated panel nailing locations");
+  await expect(page.locator(".print-guide .subfloor-adhesive-print")).toContainText("10 framing bead runs");
 });

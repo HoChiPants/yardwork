@@ -1,4 +1,6 @@
 import { subfloorReviews } from "./subfloor";
+import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
+import { subfloorAdhesive } from "./subfloorReference";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { bottomPlateSealant, quartCartridgeGun } from "./bottomPlateSealReference";
 import { openingSilicone } from "./openingAirSealReference";
@@ -252,9 +254,9 @@ const definitions: Record<
     referenceUrls: [flexWrap.instructions, flashingKnife.specification],
   },
   "apply-quart-sealant": {
-    name: "Apply the bottom plate bead with a cartridge gun",
-    review: "Check the 28 fl oz cartridge fit in the actual gun. Use a nozzle cutter and seal punch. Test the bead on matching scrap before sealing the installation.",
-    referenceUrls: [bottomPlateSealant.specification, quartCartridgeGun],
+    name: "Apply a bead with a 28 fl oz cartridge gun",
+    review: "Check that the gun fits the delivered cartridge. Use a nozzle cutter and seal punch. Test the bead on matching scrap.",
+    referenceUrls: [bottomPlateSealant.specification, subfloorAdhesive.specification, quartCartridgeGun],
   },
   "apply-window-sealant": {
     name: "Apply window sealant with a cartridge gun",
@@ -468,6 +470,10 @@ export function toolChecklist(
   }
   for (const { record, problem, title } of bottomPlateSealReviews(project)) {
     if (!problem) add("apply-quart-sealant", { kind: "piece", id: record.plateId, reason: title });
+  }
+  for (const { panelId, planCurrent } of subfloorAdhesiveReviews(project)) {
+    if (planCurrent) add("apply-quart-sealant", { kind: "piece", id: panelId,
+      reason: "Apply subfloor adhesive to the marked support strips before seating and fastening this sheet." });
   }
   if (project.openingFlashings?.some(({ measurements }) => measurements.jambHead || measurements.airSeal)) {
     for (const { plan, title, result, issues } of reviewOpeningFlashings(project).rows) {

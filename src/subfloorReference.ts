@@ -26,3 +26,23 @@ export const subfloorScope =
 
 export const subfloorNailing =
   "APA Table 14 shows up to 6 in at supported edges, up to 12 in at intermediate supports and a ⅜ in panel edge inset. Its glue-nailed 23/32 in, 24 oc row permits 8d common nails when the specified ring- or screw-shank nails are unavailable. For this example, confirm the substitution and adhesive with the panel instructions and local authority. Check ASTM D3498 or APA AFG-01 compatibility and avoid bright nails in treated, wet or exterior work.";
+
+export const subfloorAdhesive = {
+  id: "liquid-nails-lnp-902",
+  name: "Liquid Nails subfloor adhesive",
+  model: "LNP-902",
+  internet: "202203997",
+  sku: "515581",
+  listing: "https://www.homedepot.com/p/202203997",
+  specification: "https://images.thdstatic.com/catalog/pdfImages/a5/a5de5c38-8ef2-478d-b888-8b289022c0f0.pdf",
+  apa: "https://stage.apawood.org/buildertips/pages/Q300.html",
+  reviewedAt: "2026-11-21T18:16:00.000Z",
+  coverageFeet: 85,
+  bead: 0.25,
+} as const;
+
+export const subfloorAdhesiveScope =
+  "The map estimates ¼ in zigzag beads where the sheet touches the framing. Follow the actual sheet and cartridge instructions for bare or coated faces, shared seams, tongue-and-groove joints and spacing. Allow extra adhesive for field changes and nozzle waste.";
+
+export const subfloorAdhesiveInstallation =
+  "Install and check the joists and blocking first. Dry-fit on clean, sound framing and have fasteners ready. Work one sheet at a time, laying beads over its marked bearing strips, then seat and fasten the sheet before the adhesive skins. Aim to finish within 15 minutes or sooner if the label or conditions call for it. Use the delivered panel's fastening schedule.";

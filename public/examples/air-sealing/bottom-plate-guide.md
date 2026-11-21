@@ -53,7 +53,7 @@ The current layouts have no listed stock conflicts.
 - Eye protection appropriate to the operation · Review a tool and accessory for this required operation.
 - Hearing protection for powered operations · When using powered cutting tools, according to their instructions and exposure conditions.
 - Dust control and appropriate respiratory protection · When cutting creates dust; check the material, extraction setup, and exposure conditions.
-- Apply the bottom plate bead with a cartridge gun · Review a tool and accessory for this required operation.
+- Apply a bead with a 28 fl oz cartridge gun · Review a tool and accessory for this required operation.
 
 ### Design checks
 

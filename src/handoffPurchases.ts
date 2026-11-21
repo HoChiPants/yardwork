@@ -1,4 +1,6 @@
 import { bottomPlateSealReviews, bottomPlateSealTakeoff } from "./bottomPlateSeal";
+import { subfloorAdhesiveTakeoff } from "./subfloorAdhesive";
+import { subfloorAdhesive } from "./subfloorReference";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
@@ -164,6 +166,11 @@ export function homeDepotPurchaseNeeds(
       hingePurchaseAllocations(project),
     );
     include(row.productId, "Allocated physical lid hinges", row.requiredHinges);
+  }
+  if (project.subfloorAdhesivePlans?.length) {
+    const { required } = subfloorAdhesiveTakeoff(project);
+    include(subfloorAdhesive.id, "Measured subfloor framing bead routes", required,
+      required === null ? "Review changed or incomplete subfloor sheets to finish the adhesive estimate." : undefined);
   }
   if (project.bottomPlateSeals?.length) {
     const seals = bottomPlateSealReviews(project);

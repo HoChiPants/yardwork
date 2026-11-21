@@ -28,7 +28,10 @@ export function PrintOffcutCutOrder({
                   Starting size {row.inputSize}
                   {row.prior ? ` · remnant from cut ${row.prior}` : row.preparedBy ? ` · blank from cut ${row.preparedBy}` : ""}.
                 </p>
-                {row.waitForStockCuts && <p>Complete the source stock cut order before using this blank.</p>}
+                {row.waitForStockCuts && <p>
+                  Complete the source stock cut order before using this blank.
+                  {row.sourceOrderLabel && ` Find ${row.sourceOrderLabel} under Planned stock cuts.`}
+                </p>}
                 <p>
                   {row.cuts.length
                     ? row.cuts.join(" · ") + "."

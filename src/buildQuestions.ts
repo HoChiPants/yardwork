@@ -2,7 +2,7 @@ import { isSubfloorPanel, subfloorReviews } from "./subfloor";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { openingAirSealSummary } from "./openingAirSeal";
 import type { BuildPreparationAction } from "./buildPreparation";
-import type { Finding } from "./engine";
+import { inspectCutStock, type Finding } from "./engine";
 import { drawerBoxOpening } from "./drawerBoxes";
 import { checkGreenhouseDoorSeal, reviewGreenhouseDoorSeal } from "./greenhouseDoorSeal";
 import { formatPreciseInches, formatStockLength } from "./measurement";
@@ -23,10 +23,13 @@ import { reviewSinkDrain } from "./sinkDrain";
 import { longSupportSpan, waterSupportNetwork, waterSupportSpanLine } from "./waterSupportNetwork";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
-import { ensurePartLabels } from "./partLabels";
+import { ensurePartLabels, partLabel } from "./partLabels";
 import { openingDrainageNote, reviewOpeningFlashings } from "./openingFlashing";
 import { openingFlashingScope } from "./openingFlashingReference";
 import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./treatedWood";
+import { groupedMaterials, materialFamilyVariants } from "./materialGroups";
+import { fittingBoardOffcut } from "./offcutAssignment";
+import { normalizeIdeaText } from "./ideaEdits";
 
 export type BuildQuestion =
   | { kind: "checks" }
@@ -44,6 +47,7 @@ export type BuildQuestion =
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
+  | { kind: "board-offcut"; length: number; nominal: string; treated: boolean }
   | { kind: "offcuts"; label?: string };
 
 export type BuildQuestionAction =
@@ -65,6 +69,7 @@ export type BuildQuestionAction =
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
+  | { kind: "board-placement"; groupId: string; length: number }
   | Extract<BuildPreparationAction, { kind: "motion" | "lid" | "part" | "offcut" }>;
 
 type ReviewLink = { label: string; action: BuildQuestionAction };
@@ -106,6 +111,12 @@ const scrapQuestion =
   /^(?:what (?:could|can|should) i (?:use|reuse) ([op]\d{1,6}) for|(?:show|find|suggest) (?:uses|reuse options) for (?:offcut |scrap )?([op]\d{1,6})|(?:can|could) i reuse (?:offcut |scrap )?([op]\d{1,6}))$/i;
 const offcutQuestion =
   /^(?:(?:what|which) (?:offcuts|scraps|leftovers) (?:could|can|should) i (?:use|reuse)|(?:can|could) i reuse (?:any |my |the )?(?:offcuts|scraps|leftovers)|(?:review|show|plan|find) (?:the )?(?:offcut reuse|scrap reuse|uses for (?:my |the )?(?:scraps|offcuts)))$/i;
+const boardOffcutQuestion =
+  /^(?:(?:can|could) i (?:make|cut|get) (?:a |one )?(.+) from (?:an? |my |the |any )?(?:offcuts?|scraps?|leftovers?|cut pool)|do i have (?:any |an? )?(?:offcuts?|scraps?|leftovers?) for (?:a |one )?(.+))$/i;
+const boardOffcutSize =
+  /^(.+?)\s+(?:(pressure[- ]treated|treated)\s+)?(\d{1,2})\s*(?:[x×]|by)\s*(\d{1,2})(?:\s+(?:board|post|framing lumber))?$/i;
+const boardFeet = /^(\d+(?:\.\d+)?)\s*(?:feet|foot|ft|['′])(?:\s*(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″]))?$/i;
+const boardInches = /^(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″])$/i;
 const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (p\d{1,6}) and (p\d{1,6})$/i;
 const doorSealQuestion =
   /^(?:how (?:can|do|should) i (?:weatherstrip|weatherseal|seal) (?:the |my )?greenhouse door|(?:check|review|plan|show) (?:the )?(?:weatherstrip|weatherseal|weatherstripping) (?:for|on) (?:the |my )?greenhouse door)$/i;
@@ -136,6 +147,14 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   const scrap = scrapQuestion.exec(text);
   if (scrap)
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
+  const stock = boardOffcutQuestion.exec(text);
+  const size = stock && boardOffcutSize.exec(normalizeIdeaText(stock[1] ?? stock[2]));
+  if (size) {
+    const feet = boardFeet.exec(size[1]), inches = boardInches.exec(size[1]);
+    const length = feet ? Number(feet[1]) * 12 + Number(feet[2] ?? 0) : Number(inches?.[1]);
+    if (Number.isFinite(length) && length > 0)
+      return { kind: "board-offcut", length, nominal: `${Number(size[3])} × ${Number(size[4])}`, treated: !!size[2] };
+  }
   if (offcutQuestion.test(text)) return { kind: "offcuts" };
   if (doorSealQuestion.test(text)) return { kind: "greenhouse-weatherseal" };
   const flashing = openingFlashingQuestion.exec(text);
@@ -260,6 +279,37 @@ function answerOffcuts(project: Project, label?: string): BuildQuestionAnswer {
       label: "Review cuts and stock to buy",
       action: { kind: "offcut-reuse", plan },
     },
+  };
+}
+
+function answerBoardOffcut(
+  project: Project,
+  question: Extract<BuildQuestion, { kind: "board-offcut" }>,
+): BuildQuestionAnswer {
+  const { nominal, treated, length } = question;
+  const title = "Offcut for a finished board";
+  const group = groupedMaterials("Lumber").find(({ name, id }) =>
+    treated ? name.includes(nominal) && id.startsWith("treated-") :
+      name.startsWith(`${nominal} `) && !id.startsWith("treated-"));
+  if (!group) return {
+    title,
+    detail: `No ${treated ? "treated " : ""}${nominal} board matches the material shelf. Check the nominal size and treatment.`,
+    link: { label: "Open Cut pool", action: { kind: "cut-pool" } },
+  };
+  const remnant = fittingBoardOffcut(project, materialFamilyVariants(group.preferred), length, inspectCutStock(project));
+  const needed = `${formatStockLength(length)} of ${group.name}`;
+  return {
+    title,
+    detail: remnant
+      ? `${partLabel(project, remnant.piece.id)} fits ${needed}.`
+      : `No recorded offcut fits ${needed}. Review new stock lengths for this board.`,
+    rows: remnant ? [{
+      id: remnant.piece.id,
+      title: `${partLabel(project, remnant.piece.id)} · ${formatStockLength(remnant.available[2])}`,
+      detail: [remnant.sourceCutPending && "Complete the source stock cut order first.",
+        remnant.operations.length ? remnant.operations.map(({ text }) => text).join(" · ") : "Fits as measured."].filter(Boolean).join(" "),
+    }] : undefined,
+    link: { label: "Review board placement", action: { kind: "board-placement", groupId: group.id, length } },
   };
 }
 
@@ -453,6 +503,8 @@ export function answerBuildQuestion(
   switch (question.kind) {
     case "checks":
       return answerChecks(project, findings);
+    case "board-offcut":
+      return answerBoardOffcut(project, question);
     case "motion":
       return answerMotion(project, question.subject);
     case "greenhouse-weatherseal": {

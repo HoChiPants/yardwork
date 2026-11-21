@@ -3,6 +3,7 @@ import { inspectCutStock } from "./cutStock";
 import { formatStockLength } from "./measurement";
 import type { Project } from "./model";
 import { partLabel } from "./partLabels";
+import { plannedStockCutOrders, type PlannedStockCutOrder } from "./plannedCutSources";
 
 export const offcutCutOrderTitle = "Recorded offcut cut order";
 export const offcutCutOrderScope =
@@ -18,6 +19,7 @@ export const formatCutDimensions = (size: readonly number[]) =>
 export function offcutCutRows(
   project: Project,
   inspection?: ReturnType<typeof inspectCutStock>,
+  stockOrders?: readonly PlannedStockCutOrder[],
 ) {
   const records = project.history.flatMap(({ id, offcutCut }) =>
     offcutCut && !offcutCut.releasedAt ? [{ id, record: offcutCut }] : [],
@@ -63,6 +65,8 @@ export function offcutCutRows(
   }
   const invalid = new Set<number>();
   const plannedSources = new Set(project.plannedCutSources?.map(({ sourceId }) => sourceId));
+  const sourceOrderLabels = new Map((stockOrders ?? plannedStockCutOrders(project, checked))
+    .map(({ sourceId, anchorLabel }) => [sourceId, anchorLabel]));
   const priorResult = new Map<string, number>();
   return records.map(({ id, record }, index) => {
     const part = pieces.get(record.targetId);
@@ -99,6 +103,7 @@ export function offcutCutRows(
       issues,
       preparedBy: earlierPartIndex === undefined ? undefined : earlierPartIndex + 1,
       waitForStockCuts: plannedSources.has(record.sourceId) && !prior && earlierPartIndex === undefined,
+      sourceOrderLabel: sourceOrderLabels.get(record.sourceId),
       prior:
         prior && prior.index < index && prior.sourceId === record.sourceId
           ? prior.index + 1
@@ -137,7 +142,9 @@ export function offcutCutOrderMarkdown(rows: readonly OffcutCutRow[]) {
         ? [`   **Review needed.** ${row.issues.join(" ")}`]
         : [
             `   Starting size ${row.inputSize}${row.prior ? ` · remnant from cut ${row.prior}` : row.preparedBy ? ` · blank from cut ${row.preparedBy}` : ""}.`,
-            ...(row.waitForStockCuts ? ["   Complete the source stock cut order before using this blank."] : []),
+            ...(row.waitForStockCuts ? [
+              `   Complete the source stock cut order before using this blank.${row.sourceOrderLabel ? ` Find ${row.sourceOrderLabel} under Planned stock cuts.` : ""}`,
+            ] : []),
             `   ${row.cuts.length ? row.cuts.join(" · ") + "." : "Fits as measured."}`,
             ...(row.cuttingLoss ? [`   ${row.cuttingLoss}`] : []),
             ...(row.remnants.length

@@ -166,7 +166,19 @@ test("a planned unit stays reserved when a scrap is assigned until that assignme
   assert.ok(match);
   const used = assignOffcutToPart(planned.project, existing.id, match.piece.id);
   assert.throws(() => releasePlannedCutSources(used, [sourceId]), /dependent offcut assignments/);
-  assert.match(guideMarkdown(used), /Complete the source stock cut order before using this blank/);
+  const guide = guideMarkdown(used);
+  assert.match(guide, /## Planned stock cuts[\s\S]+1\. Crosscut/);
+  assert.match(guide, /Complete the source stock cut order before using this blank\. Find P\d+ under Planned stock cuts\./);
+  assert.ok(guide.indexOf("## Planned stock cuts") < guide.indexOf("## Recorded offcut cut order"));
+  assert.doesNotMatch(guide, /Operation: Stock cut order for/);
+  const plan = used.plannedCutSources!.find((entry) => entry.sourceId === sourceId)!;
+  const missing = used.history.find(({ id, message }) =>
+    plan.historyIds.includes(id) && message.startsWith("Stock cut order for "))!;
+  const incomplete = guideMarkdown({ ...used, history: used.history.filter(({ id }) => id !== missing.id) });
+  assert.match(incomplete, /The saved cut order is incomplete\. Review the layout before cutting\./);
+  const completedGuide = guideMarkdown(completePlannedCutSource(used, sourceId));
+  assert.doesNotMatch(completedGuide, /## Planned stock cuts/);
+  assert.doesNotMatch(completedGuide, /Complete the source stock cut order before using this blank/);
   const receipt = used.history.at(-1)!;
   const returned = planOffcutRelease(used, receipt.id);
   const released = releasePlannedCutSources(returned.project, [sourceId]);

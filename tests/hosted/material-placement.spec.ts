@@ -5,6 +5,7 @@ import { blank, part, projectSchema } from "../../src/model";
 import { bom } from "../../src/engine";
 import { planStockCutLayouts } from "../../src/recordStockCutLayout";
 import { stockCutSequences } from "../../src/stockCutSequence";
+import { addMeasuredOffcut } from "../../src/measuredOffcuts";
 
 const group = "2 × 4 framing lumber";
 
@@ -152,12 +153,55 @@ test("a scheduled offcut warns about the prerequisite and adds it to the build g
   await expect(dialog).toContainText("Expected offcut");
   await expect(dialog).toContainText("Complete the source stock cut order first.");
   await dialog.getByRole("button", { name: /^Place from O/ }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const source = page.locator(".inspector-scroll .recorded-source-layout");
+  await source.locator(":scope > summary").click();
+  await expect(source.getByRole("heading", { name: "Saved cutting order" })).toBeVisible();
+  await expect(source).toContainText("Crosscut 3 ft from the current end");
+  const print = page.locator(".print-guide");
+  await expect(print.locator(".planned-stock-cut-order-print")).toContainText("Crosscut 3 ft from the current end");
+  await expect(print.locator(".offcut-cut-order-print")).toContainText("Find P001 under Planned stock cuts.");
+  const printOrder = await print.evaluate((element) => {
+    const stock = element.querySelector(".planned-stock-cut-order-print");
+    const offcuts = element.querySelector(".offcut-cut-order-print");
+    return !!stock && !!offcuts && !!(stock.compareDocumentPosition(offcuts) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(printOrder).toBe(true);
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const downloaded = page.waitForEvent("download");
   await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
   const guide = await readFile((await (await downloaded).path())!, "utf8");
+  expect(guide).toMatch(/## Planned stock cuts[\s\S]+1\. Crosscut 3 ft from the current end/);
+  expect(guide.indexOf("## Planned stock cuts")).toBeLessThan(guide.indexOf("## Recorded offcut cut order"));
   expect(guide).toContain("Complete the source stock cut order before using this blank.");
   expect(guide).toContain("Crosscut to 4 ft");
+});
+
+test("a question about one board previews the matching scrap before placing it", async ({ page }) => {
+  const base = blank("Ask about a remnant");
+  const project = addMeasuredOffcut(base, base.steps[0].id, "stud-10", [65, 3.5, 1.5]);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "measured-scrap.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Can I make a four-foot two by four from scrap?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const result = dialog.getByRole("region", { name: "Offcut for a finished board", exact: true });
+  await expect(result).toContainText("O001 fits 4 ft of 2 × 4 framing lumber");
+  await result.getByRole("button", { name: "Review board placement", exact: true }).click();
+  await expect(dialog.getByRole("spinbutton", { name: "Needed finished length", exact: true })).toHaveValue("48");
+  const useScrap = dialog.getByRole("button", { name: "Place from O001", exact: true });
+  await expect(useScrap).toBeVisible();
+  await useScrap.click();
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator(".inspector-scroll .bom-row")).toContainText("0 boards");
 });
 
 test.describe("phone material placement", () => {

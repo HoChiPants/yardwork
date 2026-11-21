@@ -273,13 +273,14 @@ import BuildStudies from "./BuildStudies";
 import { SheetLayouts, sheetPlansMarkdown } from "./SheetLayouts";
 import { PrintStockCutSequences, StockCutSequenceList, WoodStockKerf } from "./StockCutSequenceList";
 import { PrintOffcutCutOrder } from "./PrintOffcutCutOrder";
+import { PrintPlannedStockCutOrder } from "./PlannedStockCutOrder";
 import { offcutCutRows } from "./offcutCutGuide";
 import { stockCutSequences, type StockCutLayout } from "./stockCutSequence";
 import { PartStockPlan } from "./PartStockPlan";
 import { StockGroupComparison } from "./StockGroupComparison";
 import { previewGroupStockReplacement, previewPartStockReplacement } from "./partStockReplacement";
 import { CutStockLayout } from "./CutStockLayoutView";
-import { completePlannedCutSource, releasePlannedCutSources } from "./plannedCutSources";
+import { completePlannedCutSource, plannedStockCutOrders, releasePlannedCutSources } from "./plannedCutSources";
 import { cutStockLayoutMarkdown } from "./cutStockLayout";
 import "./CutStockLayout.css";
 import { cutInstructions, cutInstructionsText } from "./cutInstructions";
@@ -303,7 +304,7 @@ import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSli
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
 import { MaterialPlacement, type PlacementOffcut } from "./MaterialPlacement";
-import { materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
+import { groupedMaterials, materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
 import { addMeasuredOffcut } from "./measuredOffcuts";
@@ -917,7 +918,12 @@ export function App() {
     [connectionTarget, setConnectionTarget] = useState(""),
     [screws, setScrews] = useState(2),
     [screwLength, setScrewLength] = useState(3);
-  const [pendingMaterial, setPendingMaterial] = useState<{ projectId: string; group: MaterialGroup; position?: V3 }>();
+  const [pendingMaterial, setPendingMaterial] = useState<{
+    projectId: string;
+    group: MaterialGroup;
+    position?: V3;
+    finishedLength?: number;
+  }>();
   const viewport = useRef<HTMLDivElement>(null),
     camera = useRef<THREE.Camera | null>(null),
     file = useRef<HTMLInputElement>(null);
@@ -1349,6 +1355,13 @@ export function App() {
       case "cut-pool":
         setLibrary("cuts");
         break;
+      case "board-placement": {
+        const group = groupedMaterials("Lumber").find(({ id }) => id === action.groupId);
+        if (!group) throw Error("This material changed. Explore the question again.");
+        setPendingMaterial({ projectId: project.id, group, finishedLength: action.length });
+        setModal("place-material");
+        break;
+      }
       case "drawer-box":
         setDrawerBoxRequest({ projectId: project.id, panelIds: action.panelIds });
         setRemovalTarget(null);
@@ -1998,11 +2011,19 @@ export function App() {
     () => inspectCutStock(exportGuide),
     [exportGuide],
   );
-  const printOffcutCuts = useMemo(
-    () => offcutCutRows(exportGuide, printCutSources),
+  const printSavedStockOrders = useMemo(
+    () => plannedStockCutOrders(exportGuide, printCutSources),
     [exportGuide, printCutSources],
   );
+  const printOffcutCuts = useMemo(
+    () => offcutCutRows(exportGuide, printCutSources, printSavedStockOrders),
+    [exportGuide, printCutSources, printSavedStockOrders],
+  );
   const currentCutSources = useMemo(() => inspectCutStock(project), [project]);
+  const currentSavedStockOrders = useMemo(
+    () => new Map(plannedStockCutOrders(project, currentCutSources).map((order) => [order.sourceId, order])),
+    [project, currentCutSources],
+  );
   const focusedGuidePiece = activeGuidePart && project.pieces.find(({ id }) => id === activeGuidePart.row.pieceId);
   const stockPlanPiece = modal === "part-stock" && project.pieces.find(({ id }) => id === stockPlanPartId);
   const sourceIdsByMaterial = useMemo(() => {
@@ -5006,6 +5027,7 @@ export function App() {
                         project.plannedCutSources?.some((plan) => plan.sourceId === sourceId) ? "cuts planned" : "parts and offcuts"
                       }</summary>
                       <CutStockLayout project={project} sourceId={sourceId} inspection={currentCutSources}
+                        savedOrder={currentSavedStockOrders.get(sourceId)}
                         onStockOnHand={(onHand) => markStockOnHand(sourceId, onHand)}
                         onCompleteCut={() => completeStockCuts(sourceId)}
                         onReleaseCut={() => releaseStockCuts(sourceId)}
@@ -5460,7 +5482,8 @@ export function App() {
               <X size={20} />
             </button>
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
-              <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources} onPlace={(id, offcut) => {
+              <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
+                finishedLength={pendingMaterial.finishedLength} onPlace={(id, offcut) => {
                 add(id, pendingMaterial.group.name, pendingMaterial.position, offcut);
               }} />
             )}
@@ -6740,6 +6763,7 @@ export function App() {
           <img src={exportGuide.drawingReference.image} alt="Imported drawing sheet" />
         </section>}
         <PrintBuildPreparation groups={printPreparation} />
+        <PrintPlannedStockCutOrder orders={printSavedStockOrders} />
         <PrintOffcutCutOrder rows={printOffcutCuts} />
         {exportGuide.ideaBindings.map((binding) => (
           <section key={binding.id}>

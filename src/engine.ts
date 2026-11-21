@@ -18,6 +18,7 @@ import { nonbearingHeaderSource, windowFramingSource, windowWallScope } from "./
 import { flexWrap, openingAirSealGuide, openingFlashingScope } from "./openingFlashingReference";
 import { sillGasketBuildingGuide, sillGasketInstructions, sillGasketScope } from "./sillGasketReference";
 import { offcutCutOrderMarkdown, offcutCutRows } from "./offcutCutGuide";
+import { plannedStockCutOrders, plannedStockCutOrdersMarkdown } from "./plannedCutSources";
 import { beamSource, reviewShelfSag, shelfSagGuideLines, shelfSagScope, shelfSagSummary, stiffnessSource } from "./shelfSag";
 import { homeDepotShoppingList } from "./handoff";
 import { stockCutSequences } from "./stockCutSequence";
@@ -1979,6 +1980,8 @@ export function guideMarkdown(p: Project) {
   const homeDepotStock = guideHomeDepotStock(p, materialRows);
   const onHand = stockOnHand(materialRows);
   const lineage = inspectCutStock(p);
+  const savedStockOrders = plannedStockCutOrders(p, lineage);
+  const savedStockStepIds = new Set(savedStockOrders.flatMap(({ stepIds }) => stepIds));
   const connections = connectionCoverage(p);
   const motionReviews = projectMotionReviews(p);
   const motions = motionReviewLines(p, motionReviews);
@@ -2061,7 +2064,8 @@ export function guideMarkdown(p: Project) {
       : "") +
     "Geometric planning only. Verify engineering, code, connections, and site conditions before construction.\n\n" +
     buildPreparationMarkdown(preparation) +
-    offcutCutOrderMarkdown(offcutCutRows(p, lineage)) +
+    plannedStockCutOrdersMarkdown(savedStockOrders) +
+    offcutCutOrderMarkdown(offcutCutRows(p, lineage, savedStockOrders)) +
     ((p.siteClearances ?? []).length
       ? "## Measured site clearances\n\n" +
         p.siteClearances!.map((plane) => `- ${plane.label.replace(/\r?\n/g, " ")} · ${siteClearanceText(p, reviewSiteClearance(p, plane))}`).join("\n") +
@@ -2146,7 +2150,7 @@ export function guideMarkdown(p: Project) {
             .join("\n") +
           "\n" +
           p.history
-            .filter((h) => h.stepId === s.id)
+            .filter((h) => h.stepId === s.id && !savedStockStepIds.has(h.id))
             .map((h) => `- ${h.offcutCut?.releasedAt ? "Released plan" : "Operation"}: ${h.message}`)
             .join("\n") +
           connectionStageMarkdown(p, s.id, connections),

@@ -2,7 +2,8 @@ import { useId, useMemo } from "react";
 import { material, type Project } from "./model";
 import { formatPreciseInches } from "./measurement";
 import { fitLayoutLabel } from "./layoutLabels";
-import { cutPlanCanRelease } from "./plannedCutSources";
+import { cutPlanCanRelease, type PlannedStockCutOrder } from "./plannedCutSources";
+import { SavedStockCutSteps } from "./PlannedStockCutOrder";
 import {
   cutStockLayout,
   type CutStockGap,
@@ -25,6 +26,7 @@ export function CutStockLayout({
   focusedId,
   printable = false,
   inspection,
+  savedOrder,
 }: {
   project: Project;
   sourceId: string;
@@ -35,6 +37,7 @@ export function CutStockLayout({
   focusedId?: string;
   printable?: boolean;
   inspection?: CutStockInspection;
+  savedOrder?: PlannedStockCutOrder;
 }) {
   const layout = useMemo(
     () => cutStockLayout(project, sourceId, inspection),
@@ -106,6 +109,10 @@ export function CutStockLayout({
       {plan && (
         <div className="field-section">
           <p className="small-note">Cuts planned. The listed leftovers are expected after cutting this stock.</p>
+          {savedOrder && !printable && <>
+            <h5>Saved cutting order</h5>
+            <SavedStockCutSteps order={savedOrder} />
+          </>}
           {!printable && onCompleteCut && (
             <div className="button-row">
               <button type="button" className="button secondary small" onClick={onCompleteCut}>Mark cuts complete</button>

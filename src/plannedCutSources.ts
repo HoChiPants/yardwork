@@ -1,8 +1,80 @@
 import { inspectCutStock, setCutSourceOnHand } from "./cutStock";
 import { cutSourceRegion } from "./cutSourceAxes";
 import { bindingHash } from "./ideaBindingState";
+import { formatStockLength } from "./measurement";
 import { material, part, projectSchema, uid, type Piece, type Project, type V3 } from "./model";
 import { ensurePartLabels, partLabel } from "./partLabels";
+
+const savedCutPrefix = "Stock cut order for ";
+const savedCutStep = /^Stock cut order for ([PO]\d+) · ([1-9]\d*)\. (.+)$/s;
+export const plannedStockCutOrderTitle = "Planned stock cuts";
+
+export type PlannedStockCutOrder = {
+  sourceId: string;
+  anchorLabel?: string;
+  title: string;
+  size?: string;
+  steps: string[];
+  stepIds: string[];
+  issue?: string;
+  review?: string;
+};
+
+export function plannedStockCutOrders(
+  project: Project,
+  inspection?: ReturnType<typeof inspectCutStock>,
+): PlannedStockCutOrder[] {
+  if (!project.plannedCutSources?.length) return [];
+  const { groups, valid } = inspection ?? inspectCutStock(project);
+  const history = new Map(project.history.map((entry) => [entry.id, entry]));
+  return project.plannedCutSources.map((plan) => {
+    const pieces = groups.get(plan.sourceId);
+    const first = pieces?.[0];
+    const entries = plan.historyIds.map((id) => history.get(id));
+    const cutEntries = entries.filter((entry) => entry?.message.startsWith(savedCutPrefix));
+    const instructions = cutEntries.map((entry) => savedCutStep.exec(entry!.message));
+    const label = instructions[0]?.[1];
+    const complete = entries.every(Boolean) && instructions.length > 0 &&
+      instructions.every((match, index) => match?.[1] === label && Number(match?.[2]) === index + 1);
+    const usable = valid.has(plan.sourceId) && complete;
+    return {
+      sourceId: plan.sourceId,
+      anchorLabel: label,
+      title: [label, first && material(first.material).name].filter(Boolean).join(" · ") || "Saved stock plan",
+      size: first && cutSourceRegion(first).sourceSize.slice().reverse().map(formatStockLength).join(" × "),
+      steps: usable ? instructions.map((match) => match![3]) : [],
+      stepIds: cutEntries.map((entry) => entry!.id),
+      issue: !valid.has(plan.sourceId)
+        ? "Review the current cut source before following the order."
+        : !complete ? "The saved cut order is incomplete. Review the layout before cutting." : undefined,
+      review: usable && !cutPlanCanRelease(plan, pieces)
+        ? "The source layout has changed since this order was saved. Check the steps against the current layout and later trims."
+        : undefined,
+    };
+  });
+}
+
+export function plannedStockCutOrdersMarkdown(orders: readonly PlannedStockCutOrder[]) {
+  if (!orders.length) return "";
+  const line = (value: string) => value.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ");
+  return [
+    `## ${plannedStockCutOrderTitle}`,
+    "",
+    "Use the saved board or sheet order before cutting any offcuts it supplies.",
+    "",
+    ...orders.flatMap((order) => [
+      `### ${line(order.title)}`,
+      "",
+      ...(order.size ? [`Starting stock · ${order.size} (length × width × thickness).`, ""] : []),
+      ...(order.issue ? [`**Review needed.** ${order.issue}`] : [
+        ...(order.review ? [order.review, ""] : []),
+        ...order.steps.map((step, index) => `${index + 1}. ${line(step)}`),
+      ]),
+      "",
+    ]),
+    "",
+  ].join("\n");
+}
 
 export function cutPlanFingerprint(pieces: readonly Piece[]) {
   return bindingHash([...pieces].sort((a, b) => a.id.localeCompare(b.id)).map((piece) => {

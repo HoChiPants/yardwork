@@ -2,6 +2,12 @@
 
 November 21, 2026. This ledger records the tested versions and workflows at each checkpoint.
 
+## Saved stock cut order and scrap questions, format 118
+
+List shows the saved cut order for a scheduled source board or sheet. The printed and Markdown guides place that order before its dependent offcut cuts. Each dependent cut identifies the original stock order by part label. Missing or incomplete instructions call for a review of the cut layout. Layout changes, including later trims, are called out alongside the saved steps.
+
+The idea planner can answer whether a recorded scrap fits a requested nominal board and finished length, such as “Can I make a four-foot two by four from scrap?” It checks material, retained size and kerf and opens a prefilled placement dialog for review. The same workflow identifies a scheduled scrap when the source cut still needs to happen. The 1,637 domain tests and five example guide validations passed.
+
 ## Direct placement from the Cut pool, format 118
 
 The finished-length field checks family stock, retained dimensions, grain direction and blade kerf. Compatible measured offcuts take priority over expected scraps. A saved stock plan still shows its prerequisite even when the original stock has been marked on hand. Placing a finished part reserves its region in the original source and records any new trim and remnant in the build guide.

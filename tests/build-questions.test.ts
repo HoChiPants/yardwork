@@ -23,6 +23,23 @@ test("workspace questions leave layout and edit requests to the planner", () => 
   });
 });
 
+test("an offcut question checks one finished board and links to prefilled placement", () => {
+  const project = blank("Scrap check");
+  const stock = addMeasuredOffcut(project, project.steps[0].id, "stud-10", [65, 3.5, 1.5]);
+  const request = buildQuestion("Do I have scrap for a 4 ft 2x4?")!;
+  assert.deepEqual(request, { kind: "board-offcut", length: 48, nominal: "2 × 4", treated: false });
+  assert.deepEqual(buildQuestion("Can I make a four-foot two by four from scrap?"), request);
+  const answer = answerBuildQuestion(stock, request, []);
+  assert.equal(answer.detail, "O001 fits 4 ft of 2 × 4 framing lumber.");
+  assert.equal(answer.rows?.[0].detail, "Crosscut to 4 ft");
+  assert.deepEqual(answer.link?.action, { kind: "board-placement", groupId: "framing-2x4", length: 48 });
+
+  const treated = buildQuestion("Can I cut a 4 ft 2 in pressure-treated 2x4 from an offcut?")!;
+  assert.deepEqual(treated, { kind: "board-offcut", length: 50, nominal: "2 × 4", treated: true });
+  assert.match(answerBuildQuestion(stock, treated, []).detail, /No recorded offcut fits 50 in of Ground-contact 2 × 4/);
+  assert.equal(buildQuestion("Add two 4 ft 2x4s to the workbench using scraps"), null);
+});
+
 test("the support answer surfaces the current model check and ignores shopping warnings", () => {
   const project = blank("Unsupported frame");
   project.pieces.push(

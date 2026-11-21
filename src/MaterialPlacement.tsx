@@ -9,15 +9,16 @@ import { partLabel } from "./partLabels";
 
 export type PlacementOffcut = { id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] };
 
-export function MaterialPlacement({ group, project, inspection, onPlace }: {
+export function MaterialPlacement({ group, project, inspection, finishedLength, onPlace }: {
   group: MaterialGroup;
   project: Project;
   inspection: ReturnType<typeof inspectCutStock>;
+  finishedLength?: number;
   onPlace: (id: MaterialId, offcut?: PlacementOffcut) => void;
 }) {
   const { preferred, label, options } = materialPlacementOptions(group);
   const [selected, select] = useState(preferred.id);
-  const [needed, setNeeded] = useState(NaN);
+  const [needed, setNeeded] = useState(finishedLength ?? NaN);
   const choice = options.find(({ id }) => id === selected)!;
   const compare = preferred.wood && preferred.cuttable && preferred.stockKind === "linear";
   const fits = (length: number, id: MaterialId) =>

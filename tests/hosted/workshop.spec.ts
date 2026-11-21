@@ -1631,7 +1631,7 @@ test("a proposal reuses a named scrap and saves board and sheet cut orders with 
   await dialog.getByRole("button", { name: /^Build guide/ }).click();
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/Recorded offcut cut order[\s\S]+O001[\s\S]+O004/);
-  expect(guide).toMatch(/Stock cut order for P\d+ · 1\. Crosscut/);
+  expect(guide).toMatch(/## Planned stock cuts[\s\S]+### P\d+[^\n]*\n\nStarting stock[^\n]*\n\n1\. Crosscut/);
   expect(guide).toMatch(/Recorded one .* sheet for .* Added 2 rectangular offcuts to the Cut pool/);
 });
 

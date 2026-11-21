@@ -14,7 +14,7 @@ import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
-import { flexWrap, openingFlashingScope } from "./openingFlashingReference";
+import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
 import { trimBackerRodScope, trimBackerRods } from "./trimBackerRodReference";
 import { doorSeal } from "./greenhouseDoorSealReference";
 import { woodGlue } from "./woodGlueReference";
@@ -392,6 +392,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     contents: [{ name: "9 in × 75 ft formable flashing membrane", quantity: 1 }],
     requirements: [openingFlashingScope],
   },
+  ...Object.fromEntries(windowFlashingTape.products.map((tape) => [tape.id, {
+    purchaseUnit: "4-roll box",
+    contents: [{ name: `${tape.width} in × 75 ft DuPont Flashing Tape roll`, quantity: windowFlashingTape.rollsPerBox }],
+    requirements: [windowFlashingTapeScope],
+  }])),
   ...Object.fromEntries(trimBackerRods.map((rod) => [rod.id, {
     purchaseUnit: "roll",
     contents: [{ name: `${rod.name} · 20 ft`, quantity: 1 }],

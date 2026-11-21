@@ -177,9 +177,11 @@ export function homeDepotPurchaseNeeds(
       seal.required === null ? "Review the saved door weatherseal plans before adding packs." : undefined);
   }
   if (project.openingFlashings?.length) {
-    const { groups } = reviewOpeningFlashings(project);
+    const { groups, tapeGroups } = reviewOpeningFlashings(project);
     const retail = groups.find(({ width }) => width === flexWrap.retailWidth);
     if (retail) include(flexWrap.id, "Checked rough opening sill cuts", retail.rolls.length);
+    for (const { product, boxes } of tapeGroups)
+      include(product.id, "Checked jamb and head tape cuts", boxes);
   }
   if (project.motionPlans?.length) {
     const slideReview = drawerSlidePurchaseReview(project);

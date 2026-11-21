@@ -1,7 +1,7 @@
 import { attachmentGeometryFingerprint } from "./attachments";
 import { formatPreciseInches, formatStockLength } from "./measurement";
 import { material, type Piece, type Project, type V3 } from "./model";
-import { flexWrap } from "./openingFlashingReference";
+import { flexWrap, windowFlashingTape } from "./openingFlashingReference";
 import {
   openingFlashingMeasurementsSchema,
   openingFlashingPlansSchema,
@@ -13,6 +13,7 @@ import {
 import { ensurePartLabels } from "./partLabels";
 import { sillPlateFootprint } from "./sillGaskets";
 import { inverseRotation, rotate } from "./spatial";
+import { purchaseCount } from "./purchaseUnits";
 import { packRuns } from "./stockRunPacking";
 import { pieceThroughOpenings } from "./throughOpenings";
 import { generatedWindowMembers } from "./windowWall";
@@ -84,11 +85,62 @@ export function roughOpeningFrame(project: Project, members: OpeningMembers) {
   };
 }
 
+function checkWindowFlashingTape(frame: ReturnType<typeof roughOpeningFrame>, measured: OpeningFlashingMeasurements,
+  exteriorFace: number, fromLeft: (offset: number) => number, drains: number[]) {
+  const tape = measured.jambHead;
+  if (!tape) return null;
+  const { left, right, head, tapeWidth, pastApron, pastJambs } = tape;
+  const issues: string[] = [];
+  if (measured.unit !== "window")
+    issues.push("Use this jamb and head cut layout with a rectangular flanged window.");
+  const bodyWidth = frame.width - left.inset - right.inset;
+  if (bodyWidth <= epsilon || head.inset >= frame.height - epsilon)
+    issues.push("The entered frame offsets must leave room for the unit inside the rough opening.");
+  const clearance = [
+    ["Left jamb", left], ["Right jamb", right], ["Head", head],
+  ] as const;
+  for (const [label, edge] of clearance) {
+    if (edge.flange <= edge.inset + epsilon)
+      issues.push(`${label} flange does not reach backing outside the rough opening.`);
+    if (tapeWidth <= edge.flange + epsilon)
+      issues.push(`${label} tape must cover the flange and reach exposed backing.`);
+  }
+  const headStart = frame.y1 - head.inset;
+  const jambTop = headStart + head.flange + windowFlashingTape.aboveHeadFlange;
+  if (headStart + tapeWidth + epsilon < jambTop)
+    issues.push("The head tape must cover the jamb tops, including their 1 in rise above the head flange.");
+  if (drains.length && (drains[0] - flexWrap.minDrainageWidth / 2 < left.inset - epsilon ||
+    drains.at(-1)! + flexWrap.minDrainageWidth / 2 > frame.width - right.inset + epsilon))
+    issues.push("A jamb strip reaches into a planned sill drainage gap. Check its width from the exterior corner.");
+  const jambBottom = frame.y0 - measured.faceLap - pastApron;
+  const headLeft = left.inset - tapeWidth - pastJambs;
+  const headRight = frame.width - right.inset + tapeWidth + pastJambs;
+  const cuts = [
+    { edge: "Left jamb", length: clean(jambTop - jambBottom) },
+    { edge: "Right jamb", length: clean(jambTop - jambBottom) },
+    { edge: "Head", length: clean(headRight - headLeft) },
+  ];
+  if (cuts.some(({ length }) => length > windowFlashingTape.rollLength + epsilon))
+    issues.push("A continuous window flashing cut exceeds a 75 ft roll.");
+  const rectangle = (x0: number, x1: number, y0: number, y1: number) =>
+    ([[x0, y0], [x0, y1], [x1, y1], [x1, y0], [x0, y0]] as const)
+      .map(([x, y]) => frame.at(fromLeft(x), y, exteriorFace));
+  return {
+    cuts, issues,
+    outlines: [
+      rectangle(left.inset - tapeWidth, left.inset, jambBottom, jambTop),
+      rectangle(frame.width - right.inset, frame.width - right.inset + tapeWidth, jambBottom, jambTop),
+      rectangle(headLeft, headRight, headStart, headStart + tapeWidth),
+    ],
+  };
+}
+
 export type OpeningFlashingPreview = {
   pan: V3[];
   apron: V3[];
   drainage: V3[][];
   interiorSeal: V3[];
+  jambHead?: V3[][];
 };
 
 export function checkOpeningFlashing(project: Project, members: OpeningMembers, measured: OpeningFlashingMeasurements) {
@@ -130,15 +182,18 @@ export function checkOpeningFlashing(project: Project, members: OpeningMembers, 
   const xAt = (offset: number) => sign > 0 ? x0 + offset : x1 - offset;
   const drainLine = (from: number, to: number) => [at(xAt(from), y0, outside), at(xAt(to), y0, outside)];
   const seal = inside(frameDepth);
+  const jambHead = checkWindowFlashingTape(frame, measured, outside, xAt, centers);
+  if (jambHead) issues.push(...jambHead.issues);
   const preview: OpeningFlashingPreview = {
     pan: [at(x0, y0 + jambReturn, inside(bed)), at(x0, y0, inside(bed)),
       at(x1, y0, inside(bed)), at(x1, y0 + jambReturn, inside(bed))],
     apron: [at(x0, y0, outside), at(x0, y0 - faceLap, outside), at(x1, y0 - faceLap, outside), at(x1, y0, outside)],
     drainage: drainage.kind === "open" ? [drainLine(0, width)]
       : centers.map((center) => drainLine(center - halfDrain, center + halfDrain)),
+    jambHead: jambHead?.outlines,
     interiorSeal: [at(x0, y0, seal), at(x0, y1, seal), at(x1, y1, seal), at(x1, y0, seal), at(x0, y0, seal)],
   };
-  return { frame, length, bed, issues, preview };
+  return { frame, length, bed, issues, preview, jambHead };
 }
 
 export function saveOpeningFlashing(project: Project, members: OpeningMembers, proposed: OpeningFlashingMeasurements) {
@@ -166,7 +221,7 @@ export function openingDrainageNote(measured: OpeningFlashingMeasurements) {
 
 export function reviewOpeningFlashings(project: Project) {
   const plans = project.openingFlashings ?? [];
-  if (!plans.length) return { rows: [], groups: [] };
+  if (!plans.length) return { rows: [], groups: [], tapeGroups: [] };
   const labels = new Map(ensurePartLabels(project).partLabels.map(({ partId, label }) => [partId, label]));
   const pieces = new Map(project.pieces.map((part) => [part.id, part]));
   const rows = plans.map((plan) => {
@@ -188,7 +243,28 @@ export function reviewOpeningFlashings(project: Project) {
         ? [{ title, step, length: result.length }] : []);
     return runs.length ? [{ width, rolls: packRuns(runs, flexWrap.rollLength).bins }] : [];
   });
-  return { rows, groups };
+  const tapeGroups = windowFlashingTape.products.flatMap((product) => {
+    const runs = rows.flatMap(({ plan, title, result, issues }) =>
+      !issues.length && plan.measurements.jambHead?.tapeWidth === product.width && result?.jambHead
+        ? result.jambHead.cuts.map(({ edge, length }) => ({ title: `${title} · ${edge}`, length })) : []);
+    if (!runs.length) return [];
+    const { bins: rolls } = packRuns(runs, windowFlashingTape.rollLength);
+    return [{ product, rolls, boxes: purchaseCount(rolls.length, windowFlashingTape.rollsPerBox).quantity }];
+  });
+  return { rows, groups, tapeGroups };
+}
+
+export function openingFlashingRollLines({ groups, tapeGroups }: ReturnType<typeof reviewOpeningFlashings>) {
+  const rollLine = ({ runs, left }: { runs: { title: string; length: number }[]; left: number }) =>
+    `${runs.map(({ title, length }) => `Cut ${formatStockLength(length)} for ${title}`).join(" / ")} · ${left ? `Keep ${formatStockLength(left)} for matching cuts.` : "Full roll used."}`;
+  return [
+    ...groups.flatMap(({ width, rolls }) => rolls.map((roll, i) =>
+      `${width} in FlexWrap · Roll ${i + 1} · ${rollLine(roll)}`)),
+    ...tapeGroups.flatMap(({ product, rolls, boxes }) => [
+      ...rolls.map((roll, i) => `${product.width} in DuPont Flashing Tape · Roll ${i + 1} · ${rollLine(roll)}`),
+      `Home Depot ${product.model} · ${boxes} ${boxes === 1 ? "box" : "boxes"} of four 75 ft rolls · ${boxes * windowFlashingTape.rollsPerBox - rolls.length} unopened rolls left if purchased new.`,
+    ]),
+  ];
 }
 
 export function openingFlashingGuideLines(review: ReturnType<typeof reviewOpeningFlashings>) {
@@ -202,12 +278,17 @@ export function openingFlashingGuideLines(review: ReturnType<typeof reviewOpenin
         measured.pan.kind === "back-dam"
           ? `Verify the measured ${formatPreciseInches(measured.pan.rise)} back dam on the interior side.`
           : "Verify the sill slopes toward the exterior.",
+        "Apply compatible sealant at the head and jambs before setting the unit.",
         openingDrainageNote(measured),
+        ...(result.jambHead ? [
+          `After setting the window, cut ${result.jambHead.cuts.map(({ edge, length }) => `${edge.toLowerCase()} ${formatStockLength(length)}`).join(", ")} from ${measured.jambHead!.tapeWidth} in DuPont Flashing Tape.`,
+          "Lap the jambs over the sill pan and onto the wall wrap below. Apply the head across both jamb strips and onto the exposed backing.",
+          "Fold down the wall-wrap flap and seal its horizontal and diagonal seams. Check the flap trim and drip cap against the installation instructions.",
+        ] : []),
         "After setting the unit, air-seal its entire interior perimeter before installing trim.",
       ].join(" · ");
     }),
-    ...review.groups.flatMap(({ width, rolls }) => rolls.map(({ runs, left }, i) =>
-      `${width} in FlexWrap · Roll ${i + 1} · ${runs.map(({ title, length }) => `Cut ${formatStockLength(length)} for ${title}`).join(" / ")} · ${left ? `Keep ${formatStockLength(left)} for matching cuts.` : "Full roll used."}`)),
+    ...openingFlashingRollLines(review),
   ];
 }
 

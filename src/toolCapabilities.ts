@@ -34,6 +34,7 @@ export const toolCapabilities = [
   "drive-five-sixteenths-hex",
   "drive-three-quarter-hex",
   "cut-flashing",
+  "trim-flashing-tape",
   "apply-edge-banding",
   "trim-edge-banding",
   "drive-16ga-straight-finish-nail",

@@ -6,8 +6,10 @@ import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
 import { blank, part, projectSchema, type Project, type V3 } from "../src/model";
 import { checkOpeningFlashing, reviewOpeningFlashings, roughOpeningFrame, saveOpeningFlashing } from "../src/openingFlashing";
-import { flexWrap } from "../src/openingFlashingReference";
-import type { OpeningFlashingMeasurements } from "../src/openingFlashingSchema";
+import { flashingKnife, flexWrap, windowFlashingTape } from "../src/openingFlashingReference";
+import { findRetailerProduct } from "../src/retailerCatalog";
+import { toolChecklist } from "../src/tools";
+import type { OpeningFlashingMeasurements, WindowFlashingTape } from "../src/openingFlashingSchema";
 import { composeRotation, rotate } from "../src/spatial";
 
 function frame(project = blank(), x = 0, depth = 5.5) {
@@ -104,4 +106,77 @@ test("one continuous cut per opening is shared across rolls of the right width",
   assert.deepEqual(groups.map(({ width, rolls }) => [width, rolls.map(({ left }) => left)]), [[6, [852]], [9, [36, 852]]]);
   const bought = addHomeDepotPurchaseNeed(project, flexWrap.id);
   assert.deepEqual(bought.supplies.map(({ productId, quantity }) => [productId, quantity]), [[flexWrap.id, 2]]);
+});
+
+const jambHead: WindowFlashingTape = {
+  tapeWidth: 4, pastApron: 1, pastJambs: 1,
+  left: { inset: 0.25, flange: 1.5 }, right: { inset: 0.375, flange: 1.5 }, head: { inset: 0.25, flange: 1.5 },
+};
+
+test("window tape uses the measured flange and actual sill apron, mirrors exterior labels, and protects drainage", () => {
+  const { project, members } = frame();
+  const withTape = { ...measured, jambHead };
+  const checked = checkOpeningFlashing(project, members, withTape);
+  assert.deepEqual(checked.issues, []);
+  assert.deepEqual(checked.jambHead?.cuts.map(({ length }) => length), [53.75, 53.75, 45.375]);
+  const [left, , upper] = checked.preview.jambHead!;
+  assert.deepEqual(left[0], [-21.75, 30, 3.25]);
+  assert.equal(left[1][1], 83.75);
+  assert.deepEqual(upper[0], [-22.75, 81.25, 3.25]);
+  const reverse = checkOpeningFlashing(project, members, { ...withTape, exterior: "negative" });
+  assert.deepEqual(reverse.preview.jambHead?.[0][0], [21.75, 30, -3.25]);
+  assert.throws(() => saveOpeningFlashing(project, members, {
+    ...withTape, jambHead: { ...jambHead, right: { inset: 0, flange: 4 } },
+  }), /Right jamb tape must cover the flange/);
+  assert.throws(() => saveOpeningFlashing(project, members, {
+    ...withTape, jambHead: { ...jambHead, head: { inset: 0, flange: 3.5 } },
+  }), /head tape must cover the jamb tops/);
+  assert.throws(() => saveOpeningFlashing(project, members, {
+    ...withTape, jambHead: { ...jambHead, left: { inset: 2.5, flange: 3 } },
+  }), /planned sill drainage gap/);
+  assert.throws(() => saveOpeningFlashing(project, members, {
+    ...withTape, jambHead: { ...jambHead, right: { inset: 2, flange: 1.5 } },
+  }), /Right jamb flange does not reach backing/);
+  assert.throws(() => saveOpeningFlashing(project, members, { ...withTape, unit: "door" }), /rectangular flanged window/);
+});
+
+test("only current jamb and head cuts count toward exact boxes, offcuts, and preparation tools", () => {
+  const { project, members } = frame();
+  const [tape4, tape6] = windowFlashingTape.products;
+  const old = saveOpeningFlashing(projectSchema.parse({ ...project, schemaVersion: 99 }), members, measured);
+  assert.deepEqual(reviewOpeningFlashings(old).tapeGroups, []);
+  const saved = saveOpeningFlashing(old, members, { ...measured, jambHead });
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(saved)));
+  assert.deepEqual(reopened.openingFlashings, saved.openingFlashings);
+  const { tapeGroups } = reviewOpeningFlashings(reopened);
+  assert.deepEqual(tapeGroups.map(({ product, rolls, boxes }) => [product.width, rolls[0].left, boxes]), [[4, 747.125, 1]]);
+  const needs = homeDepotPurchaseNeeds(reopened);
+  assert.equal(needs.find(({ id }) => id === tape4.id)?.missing, 1);
+  assert.equal(needs.some(({ id }) => id === tape6.id), false);
+  assert.equal(findRetailerProduct(tape4.id)?.profile.packCount, 4);
+  const tool = toolChecklist(reopened).requirements.find(({ capability }) => capability === "trim-flashing-tape");
+  assert.equal(tool?.sources[0].id, members.sill);
+  assert.ok(findRetailerProduct(flashingKnife.id)?.capabilities.includes("trim-flashing-tape"));
+  assert.match(guideMarkdown(reopened), /lap the jambs over the sill pan[\s\S]+box of four 75 ft rolls/i);
+  const answer = answerBuildQuestion(reopened, buildQuestion("Review jamb and head flashing")!, []);
+  assert.match(answer.rows?.[0].detail ?? "", /window tape cuts are left jamb 53.75 in/i);
+  const moved = { ...reopened, pieces: reopened.pieces.filter(({ id }) => id !== members.head) };
+  assert.equal(homeDepotPurchaseNeeds(moved).some(({ id }) => id === tape4.id), false);
+  assert.equal(toolChecklist(moved).requirements.some(({ capability }) => capability === "trim-flashing-tape"), false);
+});
+
+test("rolls group by actual tape width and wrap into four-roll boxes after sharing leftover lengths", () => {
+  let project: Project = blank();
+  for (let i = 0; i < 27; i++) {
+    const { members } = frame(project, i * 60);
+    project = saveOpeningFlashing(project, members, { ...measured, jambHead });
+  }
+  const { members } = frame(project, 1800);
+  project = saveOpeningFlashing(project, members, { ...measured, jambHead: { ...jambHead, tapeWidth: 6 } });
+  const { tapeGroups } = reviewOpeningFlashings(project);
+  assert.deepEqual(tapeGroups.map(({ product, rolls, boxes }) => [product.width, rolls.length, boxes]),
+    [[4, 5, 2], [6, 1, 1]]);
+  const withBox = addHomeDepotPurchaseNeed(project, windowFlashingTape.products[0].id);
+  assert.equal(withBox.supplies.find(({ productId }) => productId === windowFlashingTape.products[0].id)?.quantity, 2);
+  assert.equal(homeDepotPurchaseNeeds(withBox).some(({ id }) => id === windowFlashingTape.products[0].id), false);
 });

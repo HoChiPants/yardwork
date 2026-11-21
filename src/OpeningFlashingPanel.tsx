@@ -5,14 +5,14 @@ import { formatPreciseInches, formatStockLength } from "./measurement";
 import type { Project } from "./model";
 import { partLabel } from "./partLabels";
 import {
-  checkOpeningFlashing, openingDrainageNote, openingFlashingGuideLines, openingFramingStock,
+  checkOpeningFlashing, openingDrainageNote, openingFlashingRollLines, openingFramingStock,
   removeOpeningFlashing, reviewOpeningFlashings, saveOpeningFlashing,
   type OpeningFlashingPreview,
 } from "./openingFlashing";
-import { flexWrap, openingAirSealGuide, openingFlashingScope } from "./openingFlashingReference";
+import { flexWrap, openingAirSealGuide, openingFlashingScope, windowFlashingSequence, windowFlashingTapeScope } from "./openingFlashingReference";
 import {
   openingFlashingMeasurementsSchema, openingMembersSchema,
-  type OpeningFlashingPlan, type OpeningFlashingMeasurements, type OpeningMembers,
+  type OpeningFlashingPlan, type OpeningFlashingMeasurements, type OpeningMembers, type WindowFlashingTape,
 } from "./openingFlashingSchema";
 import { sillPlateFootprint } from "./sillGaskets";
 import { generatedWindowMembers } from "./windowWall";
@@ -21,6 +21,40 @@ const initial: OpeningFlashingMeasurements = {
   unit: "window", exterior: "positive", sheathing: 0, frameDepth: NaN, faceLap: 2,
   jambReturn: 6, tapeWidth: 9, pan: { kind: "slope" }, drainage: { kind: "open" },
 };
+
+const initialWindowTape: WindowFlashingTape = {
+  tapeWidth: 4, pastApron: 1, pastJambs: 1,
+  left: { inset: 0, flange: NaN }, right: { inset: 0, flange: NaN }, head: { inset: 0, flange: NaN },
+};
+
+function WindowFlangeFields({ tape, onChange }: { tape: WindowFlashingTape; onChange: (tape: WindowFlashingTape) => void }) {
+  return (
+    <section className="field-section" aria-label="Window flange measurements">
+      <p className="small-note">Measure from outside. Inset is the gap between the rough opening and the unit. Flange width runs from the unit to the outer edge of its mounting flange.</p>
+      {([["left", "Left"], ["right", "Right"], ["head", "Head"]] as const).map(([edge, label]) => (
+        <div key={edge} className="two-col">
+          <LengthInput label={`${label} frame inset`} value={tape[edge].inset} min={0} max={4} required
+            onChange={(inset) => onChange({ ...tape, [edge]: { ...tape[edge], inset } })} />
+          <LengthInput label={`${label} flange width`} value={tape[edge].flange} min={0.001} max={12} required
+            onChange={(flange) => onChange({ ...tape, [edge]: { ...tape[edge], flange } })} />
+        </div>
+      ))}
+      <div className="two-col">
+        <LengthInput label="Jamb extension below apron" value={tape.pastApron} min={0.001} max={12} required
+          onChange={(pastApron) => onChange({ ...tape, pastApron })} />
+        <LengthInput label="Head extension beyond each jamb" value={tape.pastJambs} min={0.001} max={12} required
+          onChange={(pastJambs) => onChange({ ...tape, pastJambs })} />
+      </div>
+      <label className="field">Jamb and head tape width
+        <select value={tape.tapeWidth} onChange={({ currentTarget }) => onChange({ ...tape, tapeWidth: currentTarget.value === "6" ? 6 : 4 })}>
+          <option value="4">4 in DuPont Flashing Tape</option>
+          <option value="6">6 in DuPont Flashing Tape</option>
+        </select>
+      </label>
+      <p className="small-note">{windowFlashingTapeScope}</p>
+    </section>
+  );
+}
 
 function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
   project: Project;
@@ -98,7 +132,11 @@ function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
       )}
       <div className="two-col">
         <label className="field">Flanged unit
-          <select value={measured.unit} onChange={({ currentTarget }) => measure("unit", currentTarget.value === "door" ? "door" : "window")}>
+          <select value={measured.unit} onChange={({ currentTarget }) => {
+            const unit = currentTarget.value === "door" ? "door" : "window";
+            setMeasured((previous) => ({ ...previous, unit, jambHead: unit === "window" ? previous.jambHead : undefined }));
+            clearPreview();
+          }}>
             <option value="window">Window</option><option value="door">Door</option>
           </select>
         </label>
@@ -139,6 +177,12 @@ function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
           clearPreview();
         }} />
       </label>}
+      {measured.unit === "window" && <label className="checkbox-field">
+        <input type="checkbox" checked={Boolean(measured.jambHead)}
+          onChange={({ currentTarget }) => measure("jambHead", currentTarget.checked ? initialWindowTape : undefined)} />
+        Plan jamb and head tape
+      </label>}
+      {measured.jambHead && <WindowFlangeFields tape={measured.jambHead} onChange={(tape) => measure("jambHead", tape)} />}
       <button type="submit" className="button secondary full">Check flashing fit</button>
       {current && (
         <div role="status" className="field-section">
@@ -146,7 +190,12 @@ function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
           <p>{formatStockLength(current.result.frame.width)} opening · {formatPreciseInches(current.result.bed)} on the sill bed</p>
           {current.result.issues.length ? <ul>{current.result.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul> : <>
             <p>One continuous {formatStockLength(current.result.length)} cut. {openingDrainageNote(current.data)}</p>
-            <p className="small-note">Orange marks the pan and apron. Dashed green marks drainage. Blue marks the interior air seal after setting the unit.</p>
+            {current.result.jambHead && (
+              <ul aria-label="Jamb and head tape cuts">
+                {current.result.jambHead.cuts.map(({ edge, length }) => <li key={edge}>{edge} · {formatStockLength(length)}</li>)}
+              </ul>
+            )}
+            <p className="small-note">Orange marks the pan and apron. Dashed green marks drainage. Blue marks the interior air seal after setting the unit.{current.result.jambHead ? " Purple marks the jamb and head strips." : ""}</p>
             <button type="button" className="button secondary full" onClick={save}>Save flashing plan</button>
           </>}
         </div>
@@ -187,7 +236,7 @@ export function OpeningFlashingPanel({ project, initialSillId, review, onChange,
           {review.rows.map(({ plan, title, result, issues }) => (
             <li key={plan.members.sill}>
               <strong>{title}</strong>
-              <p className="small-note">{issues.length || !result ? issues.join(" ") : `Saved · Cut ${formatStockLength(result.length)}`}</p>
+              <p className="small-note">{issues.length || !result ? issues.join(" ") : `Saved · Cut ${formatStockLength(result.length)}${result.jambHead ? " · 3 jamb and head cuts" : ""}`}</p>
               <div className="inline">
                 {result && !issues.length && <button type="button" className="text-button" onClick={() => onShow(result.preview)}>Show saved flashing in 3D</button>}
                 <button type="button" className="text-button" onClick={() => {
@@ -201,13 +250,14 @@ export function OpeningFlashingPanel({ project, initialSillId, review, onChange,
       )}
       {review.groups.length > 0 && <details>
         <summary>Flashing cuts and leftovers</summary>
-        <ul>{openingFlashingGuideLines(review).slice(review.rows.length).map((line, i) => <li key={i}>{line}</li>)}</ul>
+        <ul>{openingFlashingRollLines(review).map((line, i) => <li key={i}>{line}</li>)}</ul>
         {review.groups.some(({ width }) => width === flexWrap.retailWidth) &&
           <p className="small-note">Select the reviewed 9 in roll in the Home Depot purchase review.</p>}
       </details>}
       <p className="small-note">
         <a href={flexWrap.instructions} target="_blank" rel="noreferrer">DuPont installation guide</a>{" · "}
         <a href={openingAirSealGuide} target="_blank" rel="noreferrer">PNNL interior air seal</a>
+        {review.tapeGroups.length > 0 && <>{" · "}<a href={windowFlashingSequence} target="_blank" rel="noreferrer">Flashing sequence drawings</a></>}
       </p>
     </section>
   );

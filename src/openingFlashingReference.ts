@@ -26,3 +26,29 @@ export const panFlashingGuide = "https://buildingscience.com/documents/informati
 export const openingAirSealGuide = "https://basc.pnnl.gov/resource-guides/air-sealing-window-and-door-rough-openings";
 export const openingFlashingScope =
   "For a drained integral-flanged unit installed after DuPont Tyvek. Check the delivered unit instructions, substrate, folds and drainage. Plan the continuous interior air seal after setting the unit.";
+
+export const windowFlashingTape = {
+  specification: "https://www.dupont.com/products/dupont-flashing-tape.html",
+  reviewedAt: "2026-11-21T00:00:00.000Z",
+  rollLength: 75 * 12,
+  rollsPerBox: 4,
+  aboveHeadFlange: 1,
+  products: [
+    { width: 4, id: "dupont-flashing-tape-4-75", model: "HDXXTYVK7", internetNumber: "205187035", listing: "https://www.homedepot.com/p/205187035" },
+    { width: 6, id: "dupont-flashing-tape-6-75", model: "HDXXTYVK6", internetNumber: "205187028", listing: "https://www.homedepot.com/p/205187028" },
+  ],
+} as const;
+
+export const windowFlashingSequence = "https://www.dupont.com/content/dam/dupont/amer/us/en/performance-building-solutions/public/documents/en/Integral-Flanged-Window-After-WRB-Installation-Sequence.pdf";
+export const windowFlashingTapeScope =
+  "For a rectangular integral-flanged window over installed Tyvek. Verify substrate, flange position, adhesion area and any drip cap in the unit instructions before cutting.";
+
+export const flashingKnife = {
+  id: "stanley-10-099-utility-knife",
+  model: "10-099",
+  name: "Stanley Classic 99 utility knife",
+  internetNumber: "100000053",
+  storeSku: "184861",
+  listing: "https://www.homedepot.com/p/100000053",
+  specification: "https://www.stanleytools.com/product/10-099/stanley-99e-classic-retractable-blade-utility-knife",
+} as const;

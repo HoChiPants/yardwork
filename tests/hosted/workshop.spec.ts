@@ -446,7 +446,7 @@ test("an interrupted trim seam leaves access open and adds one exact backer rod 
   await expect(page.locator(".print-guide .trim-backer-rod-print")).toContainText("Keep 237 in");
 });
 
-test("rough opening flashing checks drainage and exports the continuous cut with the exact roll", async ({ page }) => {
+test("rough opening flashing checks drainage and exports sill, jamb and head cuts with exact packs", async ({ page }) => {
   const project = blank("Flanged window rough opening");
   const step = project.steps[0].id;
   const board = (name: string, width: number, height: number, x: number, y: number) =>
@@ -498,19 +498,35 @@ test("rough opening flashing checks drainage and exports the continuous cut with
   await expect(panel.getByRole("status")).toContainText("6 to 12 in apart");
   await expect(panel.getByRole("button", { name: "Save flashing plan", exact: true })).toHaveCount(0);
   await centers.fill("3, 13, 23, 33");
+  await panel.getByRole("checkbox", { name: "Plan jamb and head tape", exact: true }).check();
+  const flange = panel.getByRole("region", { name: "Window flange measurements", exact: true });
+  for (const edge of ["Left", "Right", "Head"])
+    await flange.getByRole("spinbutton", { name: `${edge} flange width`, exact: true }).fill("1.5");
+  await flange.getByRole("spinbutton", { name: "Head flange width", exact: true }).fill("3.5");
+  await review.click();
+  await expect(panel.getByRole("status")).toContainText("head tape must cover the jamb tops");
+  await expect(panel.getByRole("button", { name: "Save flashing plan", exact: true })).toHaveCount(0);
+  await flange.getByRole("spinbutton", { name: "Head flange width", exact: true }).fill("1.5");
   await review.click();
   await expect(panel.getByRole("status")).toContainText("One continuous 4 ft cut");
+  const cuts = panel.getByRole("list", { name: "Jamb and head tape cuts", exact: true });
+  await expect(cuts).toContainText("Left jamb · 54 in");
+  await expect(cuts).toContainText("Head · 46 in");
+  await expect(page.getByTestId("opening-flashing-jamb-head")).toContainText("Jamb and head tape");
   await expect(page.getByTestId("opening-flashing-apron")).toContainText("Exterior apron and drainage");
   await expect(page.getByTestId("opening-flashing-air-seal")).toContainText("Interior air seal");
   await panel.getByRole("button", { name: "Save flashing plan", exact: true }).click();
   await expect(panel.getByRole("list", { name: "Saved flashing plans" })).toContainText("Saved · Cut 4 ft");
   await panel.getByText("Flashing cuts and leftovers", { exact: true }).click();
   await expect(panel.getByText(/Keep 71 ft for matching cuts/)).toBeVisible();
+  await expect(panel.getByText(/3 unopened rolls left if purchased new/)).toBeVisible();
 
   await page.getByRole("button", { name: "List", exact: true }).click();
   await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
   await dialog.getByRole("button", { name: "Add 1 roll of DuPont FlexWrap 9 in × 75 ft", exact: true }).click();
   await expect(dialog.getByText("1 roll · #205187045", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Add 1 4-roll box of DuPont 4 in × 75 ft Flashing Tape (4 rolls)", exact: true }).click();
+  await expect(dialog.getByText(/4-roll box · #205187035/)).toBeVisible();
   await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
@@ -522,6 +538,7 @@ test("rough opening flashing checks drainage and exports the continuous cut with
   const answer = await ask("Review flashing for P001");
   await expect(answer).toContainText("Cut one 4 ft piece");
   await expect(answer).toContainText("3 in, 13 in, 23 in, 33 in");
+  await expect(answer).toContainText("head 46 in");
   await answer.getByRole("button", { name: "Open flashing plan", exact: true }).click();
   await panel.getByRole("button", { name: "Show saved flashing in 3D", exact: true }).click();
   await expect(page.getByTestId("opening-flashing-air-seal")).toBeVisible();
@@ -531,6 +548,8 @@ test("rough opening flashing checks drainage and exports the continuous cut with
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/## Opening flashing and drainage[\s\S]+Cut 4 ft[\s\S]+entire interior perimeter[\s\S]+Keep 71 ft/);
   await expect(page.locator(".print-guide .opening-flashing-print")).toContainText("Keep 71 ft");
+  expect(guide).toMatch(/head 46 in[\s\S]+4 in DuPont Flashing Tape[\s\S]+1 box of four 75 ft rolls/);
+  expect((await draft()).project.openingFlashings[0].measurements.jambHead.tapeWidth).toBe(4);
 });
 
 test("a window wall from the planner reuses a shop offcut and starts with the correct flashing members", async ({ page }) => {

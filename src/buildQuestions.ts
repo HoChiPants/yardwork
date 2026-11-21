@@ -84,7 +84,7 @@ const offcutQuestion =
 const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (p\d{1,6}) and (p\d{1,6})$/i;
 const doorSealQuestion =
   /^(?:how (?:can|do|should) i (?:weatherstrip|weatherseal|seal) (?:the |my )?greenhouse door|(?:check|review|plan|show) (?:the )?(?:weatherstrip|weatherseal|weatherstripping) (?:for|on) (?:the |my )?greenhouse door)$/i;
-const openingFlashingQuestion = /^(?:how (?:can|do|should) i (?:flash|air[ -]seal) (?:the |my )?(?:window|door) opening|(?:plan|review|check|show) (?:(?:sill|opening|window|door) )?flashing)(?: (?:at|on|for) (p\d{1,6}))?$/i;
+const openingFlashingQuestion = /^(?:how (?:can|do|should) i (?:flash|air[ -]seal) (?:the |my )?(?:window|door) opening|(?:plan|review|check|show) (?:(?:sill|opening|window|door|jamb and head) )?flashing)(?: (?:at|on|for) (p\d{1,6}))?$/i;
 const windowWallQuestion = /^(?:(?:(?:build|frame|design|plan|make|create|add)\s+(?:(?:a|an|the)\s+)?)?(?:window wall|(?:(?:nonbearing|framed)\s+)?wall\b.*\bwindows?\b))/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
@@ -449,14 +449,14 @@ export function answerBuildQuestion(
       return {
         title,
         detail: relevant.length
-          ? "The recorded sill cuts and drainage details follow the four framing members."
+          ? "The recorded flashing cuts and drainage details follow the four framing members."
           : "Choose the modeled sill, two jambs and head. Keep the exterior sill outlets clear, then seal the interior perimeter after setting the unit.",
         scope: openingFlashingScope,
         rows: relevant.slice(0, 6).map(({ plan, title, issues, result }) => ({
           id: plan.members.sill,
           title,
           detail: !result || issues.length ? issues.join(" ") :
-            `Cut one ${formatStockLength(result.length)} piece of ${plan.measurements.tapeWidth} in FlexWrap. ${openingDrainageNote(plan.measurements)}`,
+            `Cut one ${formatStockLength(result.length)} piece of ${plan.measurements.tapeWidth} in FlexWrap. ${openingDrainageNote(plan.measurements)}${result.jambHead ? ` Window tape cuts are ${result.jambHead.cuts.map(({ edge, length }) => `${edge.toLowerCase()} ${formatStockLength(length)}`).join(", ")}.` : ""}`,
           link: { label: "Open flashing plan", action: { kind: "opening-flashing", sillId: plan.members.sill } },
         })),
         link: { label: "Plan opening flashing", action: { kind: "opening-flashing", sillId } },

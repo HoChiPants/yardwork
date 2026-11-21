@@ -34,7 +34,7 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
-import { flexWrap } from "./openingFlashingReference";
+import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
 import { doorSeal } from "./greenhouseDoorSealReference";
 import { woodGlue } from "./woodGlueReference";
@@ -59,6 +59,7 @@ const sourceHosts = new Set([
   "www.grkfasteners.com",
   "dewalt.com",
   "www.dewalt.com",
+  "www.stanleytools.com",
   "images.thdstatic.com",
   "pdf.lowes.com",
   "www.palram.com",
@@ -4193,6 +4194,50 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     discrepancies: [],
     capabilities: [],
   },
+  {
+    id: flashingKnife.id,
+    name: flashingKnife.name,
+    manufacturer: "Stanley",
+    manufacturerPartNumber: flashingKnife.model,
+    category: "tool",
+    status: "reviewed-specs",
+    verifiedAt: windowFlashingTape.reviewedAt,
+    profile: profile("tool", null, 1),
+    offers: [hd(flashingKnife.internetNumber, flashingKnife.model, flashingKnife.storeSku)],
+    sources: [
+      { url: flashingKnife.listing, verifiedAt: windowFlashingTape.reviewedAt, note: "Exact single 10-099 utility knife." },
+      { url: flashingKnife.specification, verifiedAt: windowFlashingTape.reviewedAt, note: "Stanley documents a retractable utility blade secured by the interlocking nose." },
+      { url: flexWrap.instructions, verifiedAt: windowFlashingTape.reviewedAt, note: "DuPont illustrates trimming the wall wrap with a knife and specifies protecting the underlying flashing." },
+    ],
+    discrepancies: ["Listings differ on blade positions and storage capacity. Those details are not used for the tool match."],
+    capabilities: ["trim-flashing-tape"],
+    toolCapabilityEvidence: [{
+      evidenceType: "manufacturer-product-specification",
+      capabilities: ["trim-flashing-tape"],
+      sourceRefs: [flashingKnife.specification, flexWrap.instructions],
+      scope: "Hand trimming of flexible flashing tape and wall wrap with a utility blade.",
+      requirements: ["Confirm the blade and backing for the delivered membrane. Do not cut the installed flashing when trimming the wall-wrap flap."],
+    }],
+  },
+  ...windowFlashingTape.products.map((tape): z.input<typeof retailerProductSchema> => ({
+    id: tape.id,
+    name: `DuPont ${tape.width} in × 75 ft Flashing Tape (4 rolls)`,
+    manufacturer: "DuPont",
+    manufacturerPartNumber: tape.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: windowFlashingTape.reviewedAt,
+    profile: profile("consumable", null, windowFlashingTape.rollsPerBox, { materialFamily: "butyl-backed polypropylene flashing" }),
+    offers: [hd(tape.internetNumber, tape.model)],
+    sources: [
+      { url: tape.listing, verifiedAt: windowFlashingTape.reviewedAt, note: "Exact Home Depot model sold as a box of four 75 ft rolls." },
+      { url: windowFlashingTape.specification, verifiedAt: windowFlashingTape.reviewedAt, note: "DuPont specifies the width and length of the individual roll." },
+      { url: windowFlashingSequence, verifiedAt: windowFlashingTape.reviewedAt, note: "DuPont illustrates fitting the jamb strips over the sill pan and the head strip over the jamb strips." },
+    ],
+    purchaseSpec: { kind: "counted", count: windowFlashingTape.rollsPerBox, sourceRefs: [tape.listing, windowFlashingTape.specification] },
+    discrepancies: [],
+    capabilities: [],
+  })),
   ...trimBackerRods.map((rod): z.input<typeof retailerProductSchema> => ({
     id: rod.id,
     name: rod.name,

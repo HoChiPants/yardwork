@@ -8,6 +8,22 @@ export const openingMembersSchema = z.strictObject({
   head: z.uuid(),
 }).refine((members) => new Set(Object.values(members)).size === 4, "Choose four distinct framing members.");
 
+const windowFlangeEdge = z.strictObject({
+  inset: z.number().nonnegative().max(4),
+  flange: z.number().positive().max(12),
+});
+
+export const windowFlashingTapeSchema = z.strictObject({
+  tapeWidth: z.union([z.literal(4), z.literal(6)]),
+  left: windowFlangeEdge,
+  right: windowFlangeEdge,
+  head: windowFlangeEdge,
+  pastApron: z.number().positive().max(12),
+  pastJambs: z.number().positive().max(12),
+});
+
+export type WindowFlashingTape = z.infer<typeof windowFlashingTapeSchema>;
+
 export const openingFlashingMeasurementsSchema = z.strictObject({
   unit: z.enum(["window", "door"]),
   exterior: z.enum(["positive", "negative"]),
@@ -16,6 +32,7 @@ export const openingFlashingMeasurementsSchema = z.strictObject({
   faceLap: z.number().min(flexWrap.minFaceLap).max(flexWrap.maxFaceLap),
   jambReturn: z.number().min(flexWrap.minJambReturn).max(48),
   tapeWidth: z.union([z.literal(6), z.literal(9)]),
+  jambHead: windowFlashingTapeSchema.optional(),
   pan: z.discriminatedUnion("kind", [
     z.strictObject({ kind: z.literal("slope") }),
     z.strictObject({ kind: z.literal("back-dam"), rise: z.number().positive().max(3) }),

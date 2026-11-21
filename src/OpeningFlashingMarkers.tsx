@@ -6,11 +6,16 @@ const feet = (point: V3) => point.map((value) => value / 12) as V3;
 const mid = (a: V3, b: V3) => a.map((value, i) => (value + b[i]) / 24) as V3;
 
 export function OpeningFlashingMarkers({ preview }: { preview: OpeningFlashingPreview }) {
-  const { apron, pan, drainage, interiorSeal } = preview;
+  const { apron, pan, drainage, interiorSeal, jambHead } = preview;
   return (
     <group>
       {[pan, apron].map((points, i) => <Line key={i} points={points.map(feet)}
         color="#bc621c" lineWidth={3} depthTest={false} raycast={() => null} />)}
+      {jambHead?.map((points, i) => <Line key={i} points={points.map(feet)}
+        color="#7750a3" lineWidth={3} depthTest={false} raycast={() => null} />)}
+      {jambHead && <Html center position={mid(jambHead[2][1], jambHead[2][2])} style={{ pointerEvents: "none" }} zIndexRange={[35, 0]}>
+        <span className="site-clearance-marker" data-testid="opening-flashing-jamb-head">Jamb and head tape</span>
+      </Html>}
       {drainage.map((points, i) => <Line key={i} points={points.map(feet)}
         color="#187043" lineWidth={4} dashed dashSize={0.055} gapSize={0.04} depthTest={false} raycast={() => null} />)}
       <Line points={interiorSeal.map(feet)} color="#237fa1" lineWidth={3} depthTest={false} raycast={() => null} />

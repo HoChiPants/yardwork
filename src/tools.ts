@@ -1,3 +1,5 @@
+import { reviewOpeningFlashings } from "./openingFlashing";
+import { flashingKnife, flexWrap } from "./openingFlashingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { isBatt, isHardware, material, type Project } from "./model";
@@ -56,6 +58,7 @@ export type ToolProcessSource = {
     | "foundation-anchor"
     | "sunlite-mount"
     | "roof-drip-edge"
+    | "opening-flashing"
     | "greenhouse-latch";
   id: string;
   reason: string;
@@ -199,6 +202,11 @@ const definitions: Record<
     name: "Cut galvanized drip edge",
     review: "Review aviation snip capacity for the delivered steel and access across the formed profile. Check edge protection, the corner setup and any finish requirements.",
     referenceUrls: [gibraltarDripEdge.instructions, wissSnips.specification],
+  },
+  "trim-flashing-tape": {
+    name: "Cut flexible flashing tape and trim the wall-wrap flap",
+    review: "Measure and cut strips on a suitable backing. When trimming the flap, protect the flashing below. Press the membrane evenly onto the prepared wall face with firm hand pressure or a smooth roller.",
+    referenceUrls: [flexWrap.instructions, flashingKnife.specification],
   },
   "pilot-bit-1-16": {
     name: "Review a 1/16 in pilot bit",
@@ -399,6 +407,13 @@ export function toolChecklist(
         kind: "roof-drip-edge", id: gibraltarDripEdge.id,
         reason: "The saved drip edge layout includes partial cuts or corner trim allowances.",
       });
+  }
+  if (project.openingFlashings?.some(({ measurements }) => measurements.jambHead)) {
+    for (const { plan, title, result, issues } of reviewOpeningFlashings(project).rows) {
+      if (!result?.jambHead || issues.length) continue;
+      add("trim-flashing-tape", { kind: "opening-flashing", id: plan.members.sill,
+        reason: `${title} · three jamb and head cuts and a wall-wrap head flap.` });
+    }
   }
   for (const mount of project.sunliteMounts ?? []) {
     if (!mount.holes.length) continue;

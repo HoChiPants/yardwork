@@ -14,7 +14,10 @@ import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
 import { WindowWallFields, windowWallExample } from "./WindowWallFields";
 import { DoorOpeningFields, DoorwayPanel, doorwayExample } from "./DoorwayPanel";
 import { WallWaterPanel } from "./WallWaterPanel";
+import { WaterFittingPanel } from "./WaterFittingPanel";
 import { removeWaterRun, waterRunGuide } from "./wallWater";
+import { removeWaterFitting, waterFittingGuide } from "./waterFittings";
+import { maxInsertionChart, maxFittingInstructions } from "./waterFittingReference";
 import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { previewDoorway } from "./doorwayPreview";
 import { generatedWindowMembers, windowFramingSource, windowWallScope } from "./windowWall";
@@ -357,6 +360,7 @@ type Modal =
   | "drawing"
   | "doorway"
   | "wall-water"
+  | "water-fitting"
   | "export"
   | "assistant"
   | "base"
@@ -696,6 +700,7 @@ export function App() {
       : null;
   const [assistantTarget, setAssistantTarget] = useState("");
   const [waterRunTarget, setWaterRunTarget] = useState<string>();
+  const [waterFittingTarget, setWaterFittingTarget] = useState<string>();
   const [snap, setSnap] = useState(true),
     [explode, setExplode] = useState(false),
     [xray, setXray] = useState(false),
@@ -1330,6 +1335,10 @@ export function App() {
       case "wall-water":
         setWaterRunTarget(action.runId);
         setModal("wall-water");
+        break;
+      case "water-fitting":
+        setWaterFittingTarget(action.fittingId);
+        setModal("water-fitting");
         break;
       case "greenhouse-weatherseal": {
         const plan = project.motionPlans?.find(({ id }) => id === action.motionId);
@@ -3826,6 +3835,8 @@ export function App() {
               <button type="button" className="button secondary full" onClick={() => openSiteClearances("sections")}>Measured site clearances</button>
               <button type="button" className="button secondary full" onClick={() => setModal("doorway")}>Plan an interior doorway</button>
               <button type="button" className="button secondary full" onClick={() => { setWaterRunTarget(undefined); setModal("wall-water"); }}>Plan a wall water line</button>
+              {((project.waterRuns?.length ?? 0) >= 2 || !!project.waterFittings?.length) &&
+                <button type="button" className="button secondary full" onClick={() => { setWaterFittingTarget(undefined); setModal("water-fitting"); }}>Connect PEX runs</button>}
               <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
@@ -5236,7 +5247,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5316,6 +5327,29 @@ export function App() {
                 setPanel("sections");
                 setModal(null);
                 notify("Planned water line removed.");
+              })} />}
+            {modal === "water-fitting" && <WaterFittingPanel project={project} initialFitting={waterFittingTarget}
+              onApply={(draft) => safe(() => {
+                if (current.current !== project) throw Error("The workspace changed. Preview the connection again.");
+                change(draft.project);
+                setStage(null);
+                setPlaying(false);
+                setExplode(false);
+                setMode("select");
+                setSelected(draft.fitting.pieceId);
+                setSelectedSectionId(null);
+                setSelectionScope("part");
+                setPanel("part");
+                setModal(null);
+                notify("PEX connection and both pipe cuts updated.");
+              })}
+              onRemove={(fitting) => safe(() => {
+                change((live) => removeWaterFitting(live, fitting));
+                setSelected(null);
+                setStage(null);
+                setPanel("sections");
+                setModal(null);
+                notify("Fitting removed. The pipe cuts stay in the plan.");
               })} />}
             {modal === "catalog" && <CatalogReferences />}
             {modal === "studies" && (
@@ -6700,6 +6734,13 @@ export function App() {
             <h2>Wall water-line schedule</h2>
             <ul>{exportGuide.waterRuns.flatMap((run) => waterRunGuide(exportGuide, run)).map((line, i) => <li key={i}>{line}</li>)}</ul>
             <p><a href={studBoreSource}>Stud boring</a>{" · "}<a href={pipeProtectionSource}>Pipe protection</a>{" · "}<a href={pexInstallation}>SharkBite installation</a></p>
+          </section>
+        )}
+        {!!exportGuide.waterFittings?.length && (
+          <section className="water-fitting-print">
+            <h2>PEX fittings and insertion marks</h2>
+            <ul>{exportGuide.waterFittings.flatMap((fitting) => waterFittingGuide(exportGuide, fitting)).map((line, i) => <li key={i}>{line}</li>)}</ul>
+            <p><a href={maxInsertionChart}>Insertion chart</a>{" · "}<a href={maxFittingInstructions}>SharkBite installation</a></p>
           </section>
         )}
         {printOpeningFlashing.length > 0 && (

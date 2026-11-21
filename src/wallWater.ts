@@ -51,7 +51,7 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
   if (!closeVector(rotate([0, 1, 0], wall.rotation), [0, 1, 0])) throw Error("Restore the wall upright before planning a horizontal pipe.");
   const spec = pexPipes[input.materialId];
   const length = input.end - input.start;
-  if (length <= 0 || input.end > command.width + tolerance) throw Error("Enter increasing endpoints within this wall panel.");
+  if (length <= tolerance) throw Error("Enter increasing endpoints from the wall’s left end.");
   if (length > pexStockLength + tolerance) throw Error("This straight run exceeds one 10 ft stick. Plan separately measured runs and fittings.");
   if (input.bore <= spec.outside + spec.tolerance + tolerance)
     throw Error(`The bore needs clearance around the actual ${dim(spec.outside)} pipe and its manufacturing tolerance.`);
@@ -77,6 +77,8 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
   };
   const envelope = prepareCollisionBox(pipe.size, pipe.position, pipe.rotation);
   const members = new Set(wall.pieceIds), owned = new Set(run ? waterRunMembers(run) : []);
+  if (run) for (const fitting of project.waterFittings ?? [])
+    if (fitting.a.runId === run.id || fitting.b.runId === run.id) owned.add(fitting.pieceId);
   if (project.workZone) {
     const { width, height, depth } = project.workZone;
     const extents = [[-width / 2, width / 2], [0, height], [-depth / 2, depth / 2]];
@@ -204,8 +206,11 @@ export function waterRunGuide(project: Project, run: WaterRun) {
   ];
 }
 
-export function removeWaterRun(project: Project, run: WaterRun, keepPipe = false): Project {
+export function removeWaterRun(project: Project, run: WaterRun, keepPipe = false, keepFittings = false): Project {
   const ids = new Set(waterRunMembers(run));
+  const attached = new Set(keepFittings ? [] : (project.waterFittings ?? [])
+    .filter(({ a, b }) => a.runId === run.id || b.runId === run.id).map(({ pieceId }) => pieceId));
+  for (const id of attached) ids.add(id);
   const runs = project.waterRuns?.filter(({ id }) => id !== run.id);
   const pieces = project.pieces.flatMap((piece) => {
     if (!ids.has(piece.id)) return clearWaterBores(piece, run.id);
@@ -216,6 +221,7 @@ export function removeWaterRun(project: Project, run: WaterRun, keepPipe = false
   });
   return {
     ...project, waterRuns: runs, pieces,
+    ...(attached.size && { waterFittings: project.waterFittings?.filter(({ pieceId }) => !attached.has(pieceId)) }),
     joints: project.joints.filter(({ a, b }) => !ids.has(a) && !ids.has(b)),
     guideFingerprint: null,
   };

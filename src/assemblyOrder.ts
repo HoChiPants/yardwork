@@ -1,6 +1,7 @@
 import { assemblyOrderRules } from "./assemblyStages";
 import type { Project, Step } from "./model";
 import { waterRunStageKey } from "./wallWater";
+import { waterFittingStageKey } from "./waterFittings";
 
 type NumberedStep = { step: Step; number: number };
 type ReviewKind = Exclude<NonNullable<Step["generated"]>["kind"], "assembly-stage">;
@@ -78,6 +79,11 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
   }
   for (const run of project.waterRuns ?? [])
     requireBefore(byOwner.get(run.sectionId)?.get("section"), byOwner.get(run.id)?.get(waterRunStageKey));
+  for (const fitting of project.waterFittings ?? []) {
+    const installed = byOwner.get(fitting.id)?.get(waterFittingStageKey);
+    for (const { runId } of [fitting.a, fitting.b])
+      requireBefore(byOwner.get(runId)?.get(waterRunStageKey), installed);
+  }
 
   function reviewBeforeJoining(kind: ReviewKind, planId: string, a: string, b: string) {
     const first = stageByMember.get(a), second = stageByMember.get(b);

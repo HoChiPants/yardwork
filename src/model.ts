@@ -15,6 +15,8 @@ import { wallFramingStockIds, windowOpeningSchema, windowWallPrompt, windowWallS
 import { doorJambMaterial, doorOpeningSchema, doorUnitSchema, doorwayGuideNote, doorwayHinge, doorwayLeafRole, doorwayTemplate, interiorDoor, measuredDoorMaterial, wallStudPositions, doorWallPrompt } from "./doorWall";
 import { nailShield, pexPipes, pexStockLength, type PexPipeId } from "./wallWaterReference";
 import { waterRunSchema } from "./wallWaterSchema";
+import { waterFittingDimensions, waterFittingIds, waterFittingProducts } from "./waterFittingReference";
+import { waterFittingSchema } from "./waterFittingSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -495,6 +497,11 @@ export const currentProjectSchema = z
         const members = runs.flatMap((run) => [run.pipeId, ...run.shields.map(({ id }) => id)]);
         return new Set(runs.map(({ id }) => id)).size === runs.length && new Set(members).size === members.length;
       }, "Each water line owns a separate pipe and its shield plates.").optional(),
+    waterFittings: z.array(waterFittingSchema).max(64).refine((rows) => {
+      const ports = rows.flatMap(({ a, b }) => [a, b]).map(({ runId, end }) => `${runId}/${end}`);
+      return new Set(ports).size === ports.length && new Set(rows.map(({ id }) => id)).size === rows.length &&
+        new Set(rows.map(({ pieceId }) => pieceId)).size === rows.length;
+    }, "Each PEX endpoint and fitting can belong to one connection.").optional(),
     shelfSagPlans: shelfSagPlansSchema.optional(),
     saunaHeaterPlans: z.array(saunaHeaterPlanSchema).max(50).refine(
       (plans) => new Set(plans.map((plan) => plan.roomId)).size === plans.length,
@@ -1396,6 +1403,16 @@ export const catalog: Material[] = [
     size: [nailShield.width, nailShield.length, nailShield.thickness],
     color: "#a7b2be", productReference: nailShield.productId, priceKind: "unpriced", price: 0, unit: "plate", search: "ns1 steel nail plate shield pipe",
   },
+  ...waterFittingIds.map((id): Material => {
+    const record = waterFittingProducts[id];
+    const label = record.kind === "elbow" ? "90° elbow" : "straight coupling";
+    return {
+      id, name: `SharkBite Max ${pexPipes[record.pipe].nominal} in ${label}`, subtitle: record.model,
+      category: "Plumbing", stockKind: "equipment", wood: false, cuttable: false, packCount: 1, measuredEquipment: true,
+      size: waterFittingDimensions(id), color: "#ba9252", productReference: id, priceKind: "unpriced", price: 0,
+      unit: "fitting", search: `pex line water plumbing brass fitting ${record.model}`,
+    };
+  }),
   ...cedarbrookBenches.map((bench): Material => ({
     id: bench.materialId,
     name: `Cedarbrook ${bench.length / 12} ft pedestal sauna bench`,

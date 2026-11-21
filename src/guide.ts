@@ -67,6 +67,7 @@ function preparationScope(project: Project) {
     ...(project.lidStayFits?.length ? { lidStayFits: project.lidStayFits } : {}),
     ...(project.projectCode ? { projectCode: project.projectCode } : {}),
     ...(project.waterRuns?.length ? { waterRuns: project.waterRuns } : {}),
+    ...(project.waterFittings?.length ? { waterFittings: project.waterFittings } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),
     ...(project.saunaBenchTravelPlans?.length ? { saunaBenchTravelPlans: project.saunaBenchTravelPlans } : {}),

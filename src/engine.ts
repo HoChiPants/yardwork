@@ -64,6 +64,8 @@ import { freshStoreCheck } from "./storeSnapshotTime";
 import { suppliesMarkdown, supplyRows, formatSupplyContent } from "./supplies";
 import { projectCodeMarkdown, reviewProjectCode } from "./projectCode";
 import { reviewWaterRun, waterRunGuide } from "./wallWater";
+import { reviewWaterFitting, waterFittingGuide } from "./waterFittings";
+import { maxFittingInstructions, maxInsertionChart, waterFittingProducts } from "./waterFittingReference";
 import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { reviewShingleRoof, roofAreaText, roofPitchText } from "./shingleRoof";
 import { saunaHeaterMarkdown, saunaHeaterReview } from "./saunaHeaters";
@@ -785,6 +787,13 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (review.problem) findings.push({
       id: `water-line-${run.id}`, severity: "warning", title: `Review water line · ${run.name}`, detail: review.problem,
       ...(p.pieces.some(({ id }) => id === run.pipeId) && { pieceId: run.pipeId }),
+    });
+  }
+  for (const fitting of p.waterFittings ?? []) {
+    const review = reviewWaterFitting(p, fitting);
+    if (review.problem) findings.push({
+      id: `water-fitting-${fitting.id}`, severity: "warning", title: `Review PEX connection · ${waterFittingProducts[fitting.materialId].model}`,
+      detail: review.problem, ...(p.pieces.some(({ id }) => id === fitting.pieceId) && { pieceId: fitting.pieceId }),
     });
   }
   if (p.projectCode) {
@@ -2133,6 +2142,9 @@ export function guideMarkdown(p: Project) {
     (p.waterRuns?.length ? "\n\n## Wall water-line schedule\n\n" +
       p.waterRuns.flatMap((run) => waterRunGuide(p, run)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[Stud boring](${studBoreSource}) · [Pipe protection](${pipeProtectionSource}) · [SharkBite installation](${pexInstallation})\n` : "") +
+    (p.waterFittings?.length ? "\n\n## PEX fittings and insertion marks\n\n" +
+      p.waterFittings.flatMap((fitting) => waterFittingGuide(p, fitting)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
+      `\n\n[SharkBite Max insertion depth](${maxInsertionChart}) · [SharkBite installation guide](${maxFittingInstructions})\n` : "") +
     (motions.length ? "\n\n## Motion and clearance\n\n" +
       motions.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") : "") +
     (latch.length ? "\n\n## Greenhouse door latch layout\n\n" +

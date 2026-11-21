@@ -14,7 +14,7 @@ export function previewWaterRun(project: Project, input: unknown, runId?: string
   const id = previous?.id ?? uid();
   const priorPipe = project.pieces.find(({ id, offcut }) => id === previous?.pipeId && !offcut);
   const samePipe = priorPipe?.material === draft.materialId && Math.abs(priorPipe.size[1] - layout.length) < 1e-6;
-  let candidate = previous ? removeWaterRun(project, previous, samePipe) : project;
+  let candidate = previous ? removeWaterRun(project, previous, samePipe, true) : project;
   const title = `Rough in ${draft.name}`;
   const currentStepId = priorPipe?.stepId ?? previous?.stepId;
   const newStep = candidate.steps.find(({ id }) => id === currentStepId) ?? step(title);

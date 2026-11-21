@@ -6,7 +6,7 @@ import type { Project, Section } from "./model";
 import { reviewWaterRun } from "./wallWater";
 import { previewWaterRun } from "./wallWaterApply";
 import { nailShield, pexCutter, pexPipes, pipePlanningCover, pipeProtectionSource, studBoreSource, type PexPipeId } from "./wallWaterReference";
-import type { WaterRun, WaterRunInput } from "./wallWaterSchema";
+import { waterRunDraft, type WaterRun, type WaterRunInput } from "./wallWaterSchema";
 
 type Proposal = ReturnType<typeof previewWaterRun>;
 
@@ -49,10 +49,7 @@ function WaterRunFields({ project, wall, run, onApply }: {
   onApply: (proposal: Proposal) => void;
 }) {
   const width = wall.generator!.width;
-  const [draft, setDraft] = useState<WaterRunInput>(() => run ? {
-    name: run.name, sectionId: run.sectionId, materialId: run.materialId, start: run.start,
-    end: run.end, height: run.height, depth: run.depth, bore: run.bore, reuse: run.reuse,
-  } : {
+  const [draft, setDraft] = useState<WaterRunInput>(() => run ? waterRunDraft(run) : {
     name: "Water supply", sectionId: wall.id, materialId: "hd-pex-u860w10", start: 3,
     end: Math.min(width - 3, 123), height: NaN, depth: 0, bore: NaN, reuse: true,
   });
@@ -82,7 +79,7 @@ function WaterRunFields({ project, wall, run, onApply }: {
     }
   }
   return <>
-    <p>Lay out one straight PEX-B run in {wall.name}. Endpoint measurements start at the left of the wall elevation. Positive depth moves toward the front face.</p>
+    <p>Lay out one straight PEX-B run in {wall.name}. Measure endpoints from the left of the wall elevation. Use a negative distance for a stub beyond the left end. Positive depth moves toward the front face.</p>
     {savedProblem && <p className="form-error" role="alert">{savedProblem}</p>}
     <div className="two-col">
       <label className="field">Line name<input maxLength={60} value={draft.name} onChange={(event) => change("name", event.target.value)} /></label>
@@ -92,8 +89,8 @@ function WaterRunFields({ project, wall, run, onApply }: {
             <option key={id} value={id}>{pexPipes[id].nominal} in · SharkBite {pexPipes[id].model}</option>)}
         </select>
       </label>
-      {length("start", "Start from left wall end", 0, width)}
-      {length("end", "End from left wall end", 0, width)}
+      {length("start", "Start from left wall end", -120, width + 120)}
+      {length("end", "End from left wall end", -120, width + 120)}
       {length("height", "Pipe center above wall base", 0.125, wall.generator!.height)}
       {length("depth", "Signed depth from wall center", -9, 9)}
       {length("bore", "Measured bore diameter", 0.125, 6)}

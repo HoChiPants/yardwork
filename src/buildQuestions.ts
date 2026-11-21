@@ -14,6 +14,8 @@ import {
 import { parsePrompt, type Command, type Project } from "./model";
 import { windowWallScope } from "./windowWall";
 import { reviewWaterRun } from "./wallWater";
+import { fittingLabel, reviewWaterFitting } from "./waterFittings";
+import { waterFittingProducts } from "./waterFittingReference";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
@@ -28,6 +30,7 @@ export type BuildQuestion =
   | { kind: "opening-flashing"; sillLabel?: string }
   | { kind: "window-wall"; prompt: string }
   | { kind: "wall-water"; subject?: string }
+  | { kind: "water-fitting" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
   | { kind: "offcuts"; label?: string };
@@ -41,6 +44,7 @@ export type BuildQuestionAction =
   | { kind: "opening-flashing"; sillId?: string }
   | { kind: "window-wall"; command?: Command }
   | { kind: "wall-water"; runId?: string }
+  | { kind: "water-fitting"; fittingId?: string }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
@@ -91,6 +95,7 @@ const doorSealQuestion =
 const openingFlashingQuestion = /^(?:how (?:can|do|should) i (?:flash|air[ -]seal) (?:the |my )?(?:window|door) opening|(?:plan|review|check|show) (?:(?:(?:sill|opening|window|door|jamb and head) )?flashing|(?:the )?interior air[ -]seal))(?: (?:at|on|for) (p\d{1,6}))?$/i;
 const windowWallQuestion = /^(?:(?:(?:build|frame|design|plan|make|create|add)\s+(?:(?:a|an|the)\s+)?)?(?:window wall|(?:(?:nonbearing|framed)\s+)?wall\b.*\bwindows?\b))/i;
 const wallWaterQuestion = /^(?:(?:plan|route|add|lay out) (?:a |the )?(?:pex|water(?: supply)?) (?:line|pipe)(?: through (?:the |a )?(?:wall|studs))?|(?:review|check) (?:the |my )?water line(?: (.+))?|how (?:do|can|should) i run (?:a )?(?:pex|water) (?:line|pipe) through (?:the |a )?(?:wall|studs))$/i;
+const fittingQuestion = /^(?:(?:how (?:do|can|should) i )?(?:connect|join) (?:two |my |these |the )?(?:pex|water) (?:runs|lines|pipes)(?: (?:at|around) (?:a |the )?corner)?|(?:review|check|plan) (?:the |my |a )?pex (?:fittings?|connections?))$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -112,6 +117,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (flashing) return { kind: "opening-flashing", ...(flashing[1] && { sillLabel: labelKey(flashing[1]) }) };
   const water = wallWaterQuestion.exec(text);
   if (water) return { kind: "wall-water", ...(water[1] && { subject: water[1] }) };
+  if (fittingQuestion.test(text)) return { kind: "water-fitting" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
   const motion = motionQuestion.exec(text);
   return motion
@@ -444,6 +450,17 @@ export function answerBuildQuestion(
         }),
       };
     }
+    case "water-fitting":
+      return {
+        title: "Connect two measured PEX runs",
+        detail: "Pick the two pipe ends and measure the fitting. Yardwork checks the centerlines and the space around the proposed fitting, then shows both adjusted pipe cuts and insertion marks.",
+        rows: (project.waterFittings ?? []).map((fitting) => ({
+          id: fitting.id, title: fittingLabel(waterFittingProducts[fitting.materialId]),
+          detail: reviewWaterFitting(project, fitting).problem ?? "The saved pipe ends match the fitting layout.",
+          link: { label: "Review this connection", action: { kind: "water-fitting", fittingId: fitting.id } },
+        })),
+        link: { label: "Connect PEX runs", action: { kind: "water-fitting" } },
+      };
     case "wall-water": {
       const runs = (project.waterRuns ?? []).filter(({ name }) => !question.subject || searchName(name) === searchName(question.subject));
       return {

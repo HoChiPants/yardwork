@@ -16,6 +16,7 @@ import { cedarbrookLining } from "./saunaLiningReference";
 import { cedarbrookDoor } from "./saunaDoorReference";
 import { interiorDoor } from "./doorWall";
 import { nailShield, pexCutter, pexInstallation, pexPipes, pexSpec, pexStockLength, wallWaterReviewedAt, type PexPipeId } from "./wallWaterReference";
+import { maxFittingInstructions, maxFittingSpec, maxInsertionChart, waterFittingDimensions, waterFittingIds, waterFittingProducts, waterFittingsReviewedAt } from "./waterFittingReference";
 import { cedarbrookFoil } from "./saunaFoilReference";
 import { saunaCeilingBatt, saunaCeilingJoists, saunaCeilingJoistSize, saunaCeilingReviewedAt } from "./saunaCeilingReference";
 import { owensCorningWallBatt as wallBatt } from "./saunaWallReference";
@@ -141,6 +142,7 @@ export const roleQualificationSchema = z.strictObject({
     "interiorDoor",
     "potableWaterPipe",
     "pipeNailShield",
+    "pexConnection",
     "closetRod",
     "closetRodSupport",
     "storageLidHinge",
@@ -3377,6 +3379,29 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       requirements: ["Confirm actual installed coverage, metal thickness and attachment. Plate and wider-member penetrations need their own protection detail."] }],
     limitToQualifiedRoles: true, discrepancies: [], capabilities: [],
   },
+  ...waterFittingIds.map((id): RetailerProduct => {
+    const fitting = waterFittingProducts[id];
+    const url = `https://www.homedepot.com/p/${fitting.internet}`;
+    const kind = fitting.kind === "elbow" ? "90° elbow" : "straight coupling";
+    return {
+      id, name: `SharkBite Max ${pexPipes[fitting.pipe].nominal} in ${kind}`,
+      manufacturer: "SharkBite", manufacturerPartNumber: fitting.model, identityBasis: "manufacturer-part",
+      category: "equipment", status: "reviewed-specs", verifiedAt: waterFittingsReviewedAt,
+      profile: profile("equipment", waterFittingDimensions(id), 1, { finish: "Brass" }),
+      purchaseSpec: { kind: "counted", count: 1, sourceRefs: [url] },
+      offers: [hd(fitting.internet, fitting.model, fitting.sku)],
+      sources: [
+        { url, verifiedAt: waterFittingsReviewedAt, note: "Exact SharkBite Max single fitting, with the pictured model and nominal pipe size." },
+        { url: maxFittingSpec, verifiedAt: waterFittingsReviewedAt, note: "Max family dimensional drawing. Published dimensions indicate the nominal exterior envelope." },
+        { url: maxInsertionChart, verifiedAt: waterFittingsReviewedAt, note: `Max insertion depth ${fitting.insertion} in for the selected nominal size.` },
+        { url: maxFittingInstructions, verifiedAt: waterFittingsReviewedAt, note: "Verify the square end, depth mark, seating, service spacing and local testing requirements." },
+      ],
+      roleQualifications: [{ role: "pexConnection", scope: "One SharkBite Max fitting between two compatible same-size PEX runs.",
+        sourceRefs: [maxFittingSpec, maxInsertionChart, maxFittingInstructions],
+        requirements: ["Confirm delivered dimensions and pipe approval. Field-check support, insertion access and test requirements."] }],
+      limitToQualifiedRoles: true, discrepancies: [], capabilities: [], toolCapabilityEvidence: [],
+    };
+  }),
   ...cedarbrookBenches.map((bench) => ({
     id: bench.productId,
     name: `Cedarbrook ${bench.length / 12} ft freestanding pedestal sauna bench`,

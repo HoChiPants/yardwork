@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 107**. Yardwork reads valid formats 1–106 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 108**. Yardwork reads valid formats 1–107 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 108 optionally saves `waterFittings` linking a distinct PEX run end on each side of a measured SharkBite Max elbow or coupling. The connection stores the exact material and fitted part ID and two center-to-socket distances in inches. Applying it updates both straight runs and their owned bores and hardware in one edit. Export recomputes clearances and the seating comparison against the retained model. Older straight runs remain editable and can extend beyond the panel ends to a measured service opening.
 
 Format 107 can retain straight wall water lines. Each line connects the measured wall-local endpoints and bore dimensions to its pipe, stud IDs and shield faces. Bores owned by a water line carry `source.waterRunId`. The guide rechecks the current geometry before printing drilling coordinates. Moving the wall moves its linked pipe and shields. Earlier projects retain ordinary round cuts and existing sauna ventilation source records unchanged.
 

@@ -20,6 +20,8 @@ import * as THREE from "three";
 import { bounds, type Finding } from "./engine";
 import { fitPerspectiveBounds, workshopViewOffset, WORKSHOP_MAX_POLAR_ANGLE, type PerspectiveBounds } from "./cameraFit";
 import { motionViewport, unionBounds } from "./motionCamera";
+import { isWaterFitting, waterFittingProducts } from "./waterFittingReference";
+import { isPexPipe } from "./wallWaterReference";
 import { DryerDuctMarkers } from "./DryerDuctMarkers";
 import { reviewDryerDuctLayout } from "./dryerDuctLayout";
 import type { DryerDuctLayout } from "./dryerExhaustSchema";
@@ -191,6 +193,37 @@ function wireTexture(size: V3) {
   texture.repeat.set(size[axes[0]] / 4, size[axes[1]] / 4);
   return texture;
 }
+function WaterFittingMesh({ size, color, elbow }: { size: V3; color: string; elbow: boolean }) {
+  const [x, y, diameter] = size;
+  const radius = diameter / 2;
+  const socket = (axis: "x" | "y", length: number, position: V3, end: -1 | 1) => {
+    const collar = Math.min(length / 3, diameter / 4);
+    return <group position={position} rotation={axis === "x" ? [0, 0, -Math.PI / 2] : [0, 0, 0]}>
+      <mesh castShadow receiveShadow>
+        <cylinderGeometry args={[radius * 0.82, radius * 0.82, length, 20, 1, true]} />
+        <meshStandardMaterial color={color} metalness={0.55} roughness={0.35} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, end * (length - collar) / 2, 0]} castShadow>
+        <cylinderGeometry args={[radius, radius, collar, 20, 1, true]} />
+        <meshStandardMaterial color="#aeb5b2" metalness={0.6} roughness={0.34} side={THREE.DoubleSide} />
+      </mesh>
+    </group>;
+  };
+  if (!elbow) return <>
+    {socket("x", x / 2, [-x / 4, 0, 0], -1)}
+    {socket("x", x / 2, [x / 4, 0, 0], 1)}
+  </>;
+  const corner: V3 = [radius - x / 2, radius - y / 2, 0];
+  return <>
+    <mesh position={corner} castShadow>
+      <sphereGeometry args={[radius * 0.82, 18, 12]} />
+      <meshStandardMaterial color={color} metalness={0.55} roughness={0.35} />
+    </mesh>
+    {socket("x", x - radius, [radius / 2, corner[1], 0], 1)}
+    {socket("y", y - radius, [corner[0], radius / 2, 0], 1)}
+  </>;
+}
+
 function PedestalBenchMesh({ size, color, texture }: {
   size: V3;
   color: string;
@@ -388,6 +421,8 @@ function PartMesh({
       >
         {m.shape === "pedestal-bench-envelope" && !measuring && !fastenerPicking && !fittedFacePicking ? (
           <PedestalBenchMesh size={size} color={color} texture={texture} />
+        ) : isWaterFitting(m.id) && !measuring && !fastenerPicking && !fittedFacePicking ? (
+          <WaterFittingMesh size={size} color={color} elbow={waterFittingProducts[m.id].kind === "elbow"} />
         ) : m.shape === "tube-envelope" ? (
           <mesh castShadow receiveShadow>
             <cylinderGeometry
@@ -396,8 +431,8 @@ function PartMesh({
             <meshStandardMaterial
               color={color}
               side={THREE.DoubleSide}
-              metalness={0.6}
-              roughness={0.35}
+              metalness={isPexPipe(m.id) ? 0 : 0.6}
+              roughness={isPexPipe(m.id) ? 0.58 : 0.35}
               transparent={xray || piece.offcut}
               opacity={piece.offcut ? 0.45 : 1}
             />

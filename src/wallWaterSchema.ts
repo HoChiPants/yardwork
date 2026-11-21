@@ -6,8 +6,8 @@ export const waterRunInput = z.strictObject({
   name: z.string().trim().min(1).max(60),
   sectionId: id,
   materialId: z.enum(Object.keys(pexPipes) as [PexPipeId, ...PexPipeId[]]),
-  start: z.number().min(0).max(192),
-  end: z.number().positive().max(192),
+  start: z.number().min(-120).max(312),
+  end: z.number().min(-120).max(312),
   height: z.number().positive().max(120),
   depth: z.number().min(-9).max(9),
   bore: z.number().min(0.125).max(6),
@@ -22,3 +22,8 @@ export const waterRunSchema = waterRunInput.extend({
   shields: z.array(z.strictObject({ id, studId: id, face: z.enum(["front", "back"]) })).max(200),
 });
 export type WaterRun = z.infer<typeof waterRunSchema>;
+
+export function waterRunDraft(run: WaterRun): WaterRunInput {
+  const { id, pipeId, stepId, studs, shields, ...draft } = run;
+  return draft;
+}

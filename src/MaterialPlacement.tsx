@@ -20,43 +20,44 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
   offcutId?: string;
   onPlace: (id: MaterialId, placement?: BoardPlacement) => void;
 }) {
-  const { preferred, label, options } = materialPlacementOptions(group);
+  const { preferred, canCutToLength, label, options } = materialPlacementOptions(group);
   const [selected, select] = useState(preferred.id);
   const [needed, setNeeded] = useState(finishedLength ?? NaN);
   const [selectedOffcut, selectOffcut] = useState(offcutId);
   const choice = options.find(({ id }) => id === selected)!;
-  const compare = preferred.wood && preferred.cuttable && preferred.stockKind === "linear";
   const kerf = plannedCutKerf(project, choice.id);
   const fits = (length: number, id: MaterialId) => {
     const state = stockSplitState(length, needed, plannedCutKerf(project, id));
     return state === "whole" || state === "cut";
   };
-  const shortest = needed > 0 ? options.find(({ id, value }) => fits(value, id)) : undefined;
-  const enough = !(needed > 0) || fits(choice.value, choice.id);
-  const planCut = compare && needed > 0 && stockSplitState(choice.value, needed, kerf) === "cut";
+  const validLength = needed >= 0.125;
+  const shortest = validLength ? options.find(({ id, value }) => fits(value, id)) : undefined;
+  const enough = Number.isNaN(needed) || (validLength && fits(choice.value, choice.id));
+  const planCut = canCutToLength && validLength && stockSplitState(choice.value, needed, kerf) === "cut";
   const leftover = choice.value - needed - kerf;
-  const remnants = compare && needed > 0
+  const remnants = canCutToLength && validLength
     ? fittingBoardOffcuts(project, materialFamilyVariants(preferred.id), needed, inspection)
     : [];
   const remnant = selectedOffcut
     ? remnants.find(({ piece }) => piece.id === selectedOffcut)
     : remnants[0];
-  const changedOffcut = selectedOffcut && !remnant && needed > 0
+  const changedOffcut = selectedOffcut && !remnant && validLength
     ? partLabel(project, selectedOffcut)
     : undefined;
   return <>
     <h2 id="modal-title">{group.name}</h2>
-    <fieldset className="stock-size-options">
+    {options.length > 1 ? <fieldset className="stock-size-options">
       <legend>{label}</legend>
       {options.map((option) => <label key={option.id}>
         <input type="radio" name="placement-stock-size" value={option.id} checked={selected === option.id}
           onChange={() => select(option.id)} /><span>{option.label}</span>
       </label>)}
-    </fieldset>
-    {compare && <div className="stock-length-check">
+    </fieldset> : <p className="single-stock-size">{choice.label} stock</p>}
+    {canCutToLength && <div className="stock-length-check">
       <LengthInput label="Finished length (optional)" ariaLabel="Needed finished length" value={needed}
         defaultUnit={preferredLengthUnit(finishedLength ?? NaN)} onChange={setNeeded} />
-      {needed > 0 && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p role="status">
+      {!Number.isNaN(needed) && !validLength && <p role="status">Enter at least ⅛ in or clear the finished length.</p>}
+      {validLength && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p role="status">
         {enough ? `${shortest.label} stock fits this cut with ${formatStockLength(choice.value - shortest.value)} less length to buy.` : `${shortest.label} stock fits this cut.`}{" "}
         <button type="button" className="text-button" onClick={() => select(shortest.id)}>Use {shortest.label}</button>
       </p> : <p role="status">{choice.label} stock fits this cut.</p>)}
@@ -103,7 +104,7 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
         {remnant ? "Plan cut from new stock" : "Plan cut and place"}
       </button>
     </div>}
-    <button type="button" className={`button ${remnant || planCut ? "secondary" : "primary"}`} onClick={() => onPlace(choice.id)}>
+    <button type="button" disabled={!enough} className={`button ${remnant || planCut ? "secondary" : "primary"}`} onClick={() => onPlace(choice.id)}>
       {planCut ? "Place full board" : remnant ? "Place new stock" : "Place material"}
     </button>
   </>;

@@ -18,7 +18,7 @@ import { pieceOverlap } from "../src/solidCollision";
 import { snapPlacement } from "../src/editing";
 import { copyObjects, pasteObjects } from "../src/editorClipboard";
 import { catalog } from "../src/model";
-import { groupedMaterials } from "../src/materialGroups";
+import { groupedMaterials, materialPlacementOptions } from "../src/materialGroups";
 import { formatStockLength, preferredLengthUnit } from "../src/measurement";
 import { liftDistanceInches } from "../src/editorMotion";
 
@@ -307,6 +307,14 @@ test("one palette card per family retains every exact catalog variant and separa
       .every((m) => `${m.name} ${m.subtitle} ${m.search}`.includes("144")),
     true,
   );
+  const filteredFraming = groupedMaterials("Lumber", "2x4 framing lumber");
+  assert.deepEqual(filteredFraming.map(({ name }) => name), ["2 × 4 framing lumber"]);
+  assert.deepEqual(materialPlacementOptions(filteredFraming[0]).options.map(({ id, label }) => [id, label]), [
+    ["stud", "8 ft"], ["stud-10", "10 ft"], ["stud-12", "12 ft"],
+  ]);
+  const rods = groupedMaterials("Rods");
+  assert.deepEqual(rods.map(({ name }) => name), ["Closet rod"]);
+  assert.deepEqual(materialPlacementOptions(rods[0]).options.map(({ id }) => id), ["closet-rod-72", "hd-everbilt-closet-rod-96"]);
 });
 test("whole feet display as feet while non-whole feet and exact product dimensions stay in inches", () => {
   assert.equal(formatStockLength(96), "8 ft");

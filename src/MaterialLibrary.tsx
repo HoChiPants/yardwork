@@ -6,10 +6,10 @@ import { groupedMaterials, materialPlacementOptions, type MaterialGroup } from "
 type Point = { x: number; y: number };
 type Drag = { pointer: number; start: Point; group: MaterialGroup; stock: MaterialGroup["variants"][number]; active: boolean };
 
-export function MaterialLibrary({ category, search, canDrop, onPlace }: {
+export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   category: string;
   search: string;
-  canDrop: (point: Point) => boolean;
+  onPreview: (point: Point | null) => boolean;
   onPlace: (group: MaterialGroup, pointer?: Point) => void;
 }) {
   const groups = useMemo(() => groupedMaterials(category, search).map((group) => ({
@@ -30,18 +30,22 @@ export function MaterialLibrary({ category, search, canDrop, onPlace }: {
     const point = pointOf(event);
     if (!active.active && Math.hypot(point.x - active.start.x, point.y - active.start.y) < 6) return;
     active.active = true;
-    setGhost({ drag: active, point, overCanvas: canDrop(point) });
+    setGhost({ drag: active, point, overCanvas: onPreview(point) });
   }
   function art(stock: Drag["stock"]) {
-    return <div className={`material-art ${stock.id} ${stock.stockKind}`} aria-hidden="true"
-      style={{ "--material-color": stock.color } as CSSProperties}><div /></div>;
+    const profile = stock.wood && stock.stockKind === "linear" ? stock.size.slice().sort((a, b) => a - b)[1] : null;
+    return <div className={`material-art ${stock.id} ${stock.stockKind}${stock.shape === "tube-envelope" ? " tube" : ""}`} aria-hidden="true"
+      style={{ "--material-color": stock.color, "--board-width": profile ? `${Math.min(27, 8 + profile * 1.8)}px` : undefined } as CSSProperties}><div /></div>;
   }
   function finish(event: PointerEvent<HTMLDivElement>, place: boolean) {
     const active = drag.current;
     if (!active || active.pointer !== event.pointerId) return;
     drag.current = null;
     setGhost(null);
-    if (place && active.active) onPlace(active.group, pointOf(event));
+    if (active.active) {
+      onPreview(null);
+      if (place) onPlace(active.group, pointOf(event));
+    }
   }
   return <>
     <div className="section-label">

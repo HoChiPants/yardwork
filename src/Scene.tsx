@@ -5,7 +5,7 @@ import type { SubfloorJoistReview } from "./subfloorJoists";
 import { DrawingReferenceMesh } from "./DrawingReferenceMesh";
 import type { WallTracePoint } from "./wallTrace";
 import { drawingReferenceBounds } from "./drawingReference";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import {
   Canvas,
   useFrame,
@@ -151,6 +151,7 @@ export type SceneProps = {
   onSelectAttachmentPlan?: (id: string | null) => void;
   onSelectAttachmentPart?: (id: string) => void;
   onCamera: (camera: THREE.Camera) => void;
+  materialDropMarker?: RefObject<((point: V3 | null) => void) | null>;
 };
 function woodTexture() {
   const canvas = document.createElement("canvas");
@@ -1314,6 +1315,38 @@ function CameraRig({
     />
   );
 }
+function MaterialDropMarker({ marker }: { marker: NonNullable<SceneProps["materialDropMarker"]> }) {
+  const group = useRef<THREE.Group>(null);
+  const { invalidate, gl } = useThree();
+  useLayoutEffect(() => {
+    const node = group.current!;
+    marker.current = (point) => {
+      if (!point && !node.visible) return;
+      if (point) {
+        node.position.set(point[0] / 12, point[1] / 12 + 0.035, point[2] / 12);
+        gl.domElement.dataset.materialDropPoint = JSON.stringify(point);
+      } else {
+        delete gl.domElement.dataset.materialDropPoint;
+      }
+      node.visible = point !== null;
+      invalidate();
+    };
+    return () => {
+      marker.current = null;
+      delete gl.domElement.dataset.materialDropPoint;
+    };
+  }, [gl, invalidate, marker]);
+  return <group ref={group} visible={false}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+      <ringGeometry args={[0.19, 0.25, 32]} />
+      <meshBasicMaterial color="#356c3d" />
+    </mesh>
+    <mesh position={[0, 0.09, 0]} raycast={() => null}>
+      <sphereGeometry args={[0.052, 12, 8]} />
+      <meshBasicMaterial color="#356c3d" />
+    </mesh>
+  </group>;
+}
 function WorkZone({ project }: { project: Project }) {
   const zone = project.workZone;
   if (!zone) return null;
@@ -1544,6 +1577,7 @@ function World(props: SceneProps) {
         </mesh>
       )}
       {!isolated && !props.focusedMotion && <WorkZone project={props.project} />}
+      {props.materialDropMarker && <MaterialDropMarker marker={props.materialDropMarker} />}
       {props.shownCheckArea && !props.explode && props.stage === null && (
         <CheckAreaMarkers area={props.shownCheckArea} />
       )}

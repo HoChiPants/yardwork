@@ -18,16 +18,19 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(tile.getByRole("combobox")).toHaveCount(0);
   await expect(page.getByText("Home Depot sourcing", { exact: true })).toHaveCount(0);
   const canvas = page.locator("canvas").first();
-  const view = await canvas.boundingBox();
-  expect(view).not.toBeNull();
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
   const art = (await tile.locator(".material-art").boundingBox())!;
+  const actions = (await page.locator(".empty-workspace .inline").boundingBox())!;
   await page.mouse.move(art.x + art.width / 2, art.y + art.height / 2);
   await page.mouse.down();
-  await page.mouse.move(view!.x + view!.width * 0.68, view!.y + view!.height * 0.66, { steps: 8 });
+  await page.mouse.move(actions.x + actions.width / 2, actions.y + actions.height / 2, { steps: 8 });
   await expect(page.locator(".material-drag-preview.can-drop .material-art")).toBeVisible();
+  const [x, y, z] = JSON.parse((await canvas.getAttribute("data-material-drop-point"))!);
+  expect(y).toBe(0);
   await page.mouse.up();
   const placement = page.getByRole("dialog");
   await expect(page.locator(".material-drag-preview")).toHaveCount(0);
+  await expect(canvas).not.toHaveAttribute("data-material-drop-point");
   await expect(placement.getByRole("radio")).toHaveCount(3);
   await expect(placement.getByRole("radio", { name: "8 ft" })).toBeChecked();
   await placement.getByRole("radio", { name: "12 ft" }).check();
@@ -38,10 +41,11 @@ test("one material tile supports drop, length choice and a separate selected-par
   await placement.getByRole("button", { name: "Place full board", exact: true }).click();
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("96");
   await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("48");
-  await expect(page.getByRole("spinbutton", { name: "X", exact: true })).not.toHaveValue("0");
+  await expect(page.getByRole("spinbutton", { name: "X", exact: true })).toHaveValue(String(x));
+  await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue(String(z));
   const workspaceTools = page.getByRole("toolbar", { name: "Model tools", exact: true });
   const partTools = page.getByRole("toolbar", { name: "Selected part tools", exact: true });
-  for (const width of [1440, 1024, 390]) {
+  for (const width of [1440, 1024, 901, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     const general = (await workspaceTools.boundingBox())!;
     const part = (await partTools.boundingBox())!;
@@ -50,17 +54,65 @@ test("one material tile supports drop, length choice and a separate selected-par
     expect(part.y).toBeGreaterThan(general.y + general.height);
     const viewTools = (await page.locator(".view-tools").boundingBox())!;
     expect(general.x + general.width).toBeLessThanOrEqual(viewTools.x + 1);
+    expect(viewTools.x + viewTools.width).toBeLessThanOrEqual(width);
+    const save = (await page.getByRole("button", { name: "Save project", exact: true }).boundingBox())!;
+    expect(save.x + save.width).toBeLessThanOrEqual(width);
+    if (width <= 900) {
+      const expand = (await page.getByRole("button", { name: "Expand inspector", exact: true }).boundingBox())!;
+      expect(expand.y + expand.height).toBeLessThanOrEqual(ground.y + 1);
+    }
   }
   await page.screenshot({ path: info.outputPath("material-placement-phone.png"), fullPage: false });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await add.click();
   await confirmMaterialPlacement(page, "10 ft");
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("120");
+  await expect(page.getByRole("spinbutton", { name: "X", exact: true })).toHaveValue("0");
+  await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("0");
   await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(page.locator(".bom-row").first()).not.toContainText(/Unpriced|\$/);
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toHaveCount(0);
   await page.getByText("Project cost estimate", { exact: true }).click();
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toBeVisible();
+});
+
+test("an existing surface receives a dropped board and single-stock boards can be cut before placement", async ({ page }) => {
+  const project = blank("Landing on the work surface");
+  project.pieces = [part("Work surface", "plywood", [36, 0.75, 36], [0, 12, 0], project.steps[0].id, "Bench")];
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "work-surface.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("button", { name: "Top", exact: true }).click();
+  const canvas = page.locator("canvas");
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
+  await page.getByRole("textbox", { name: "Find a material" }).fill("1x2 board");
+  const add = page.getByRole("button", { name: "Add 1 × 2 board", exact: true });
+  const image = page.locator(".material-card").filter({ has: add }).locator(".material-art");
+  const art = (await image.boundingBox())!;
+  const view = (await canvas.boundingBox())!;
+  await page.mouse.move(art.x + art.width / 2, art.y + art.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(view.x + view.width / 2, view.y + view.height / 2, { steps: 8 });
+  await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
+  const [, surface] = JSON.parse((await canvas.getAttribute("data-material-drop-point"))!);
+  expect(surface).toBeCloseTo(12.375);
+  await page.mouse.up();
+  await expect(dialog).toHaveAccessibleName("1 × 2 board");
+  await expect(dialog).toContainText("8 ft stock");
+  await expect(dialog.getByRole("radio")).toHaveCount(0);
+  const finished = dialog.getByRole("spinbutton", { name: "Needed finished length", exact: true });
+  await finished.fill("120");
+  await expect(dialog.getByRole("button", { name: "Place material", exact: true })).toBeDisabled();
+  await finished.fill("24");
+  await dialog.getByRole("button", { name: "Plan cut and place", exact: true }).click();
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("24");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("24.375");
 });
 
 test("front-view drops stay at the workspace depth and ignore controls", async ({ page }) => {

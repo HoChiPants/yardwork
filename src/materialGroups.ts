@@ -80,6 +80,18 @@ const families: {
     ids: ["hd-pex-u860w10", "hd-pex-u870w10"],
     preferred: "hd-pex-u860w10",
   },
+  {
+    id: "closet-rod",
+    name: "Closet rod",
+    ids: ["closet-rod-72", "hd-everbilt-closet-rod-96"],
+    preferred: "hd-everbilt-closet-rod-96",
+  },
+  {
+    id: "pedestal-sauna-bench",
+    name: "Pedestal sauna bench",
+    ids: ["cedarbrook-pedestal-48", "cedarbrook-pedestal-60"],
+    preferred: "cedarbrook-pedestal-48",
+  },
 ];
 export type MaterialGroup = {
   id: string;
@@ -90,13 +102,16 @@ export type MaterialGroup = {
 export function materialFamilyVariants(id: MaterialId): readonly MaterialId[] {
   return families.find(({ ids }) => ids.includes(id))?.ids ?? [id];
 }
+
+const paletteSearch = (text: string) => text.toLowerCase().replace(/(\d)\s*[×x]\s*(?=\d)/g, "$1x");
+
 /** Palette grouping only. Each exact stock/product ID and its physical/source facts remain distinct. */
 export function groupedMaterials(
   category = "All",
   search = "",
 ): MaterialGroup[] {
   const result: MaterialGroup[] = [];
-  const query = search.trim().toLowerCase();
+  const query = paletteSearch(search.trim());
   for (const item of catalog) {
     if (item.includedComponent) continue;
     const family = families.find((f) => f.ids.includes(item.id));
@@ -109,18 +124,14 @@ export function groupedMaterials(
       (m) =>
         (category === "All" || m.category === category) &&
         (!query ||
-          `${family?.name ?? ""} ${m.name} ${m.subtitle} ${m.search}`
-            .toLowerCase()
-            .includes(query)),
+          paletteSearch(`${family?.name ?? ""} ${paletteStockName(m.name)} ${m.name} ${m.subtitle} ${m.search}`).includes(query)),
     );
     if (variants.length)
       result.push({
         id,
         name: family?.name ?? paletteStockName(item.name),
         variants,
-        preferred: variants.some((m) => m.id === family?.preferred)
-          ? family!.preferred
-          : variants[0].id,
+        preferred: family?.preferred ?? item.id,
       });
   }
   const order=(group:MaterialGroup)=>Math.min(...group.variants.map((m)=>materialIds.indexOf(m.id)));
@@ -130,7 +141,8 @@ export function groupedMaterials(
 
 function paletteStockName(name: string) {
   return name.replace(/^(?:The )?(?:Home Depot|Lowe[’']s)\s+/i, "")
-    .replace(/\s*·\s*(?:The )?(?:Home Depot|Lowe[’']s)(?: reference)?(?:\s*·\s*\d+ ft)?/gi, "")
+    .replace(/\s*·\s*(?:The )?(?:Home Depot|Lowe[’']s)(?: reference)?(?=\s*·|\s*$)/gi, "")
+    .replace(/\s*·\s*\d+(?:\.\d+)? ft\s*$/i, "")
     .replace(/\s*·\s*[^·]*\bactual\s*$/i, "")
     .replace(/^(.*)\s+·\s+(\S+) category$/, "$2 in $1")
     .trim();
@@ -139,7 +151,7 @@ function paletteStockName(name: string) {
 export function materialPlacementOptions(group: MaterialGroup) {
   const ids = materialFamilyVariants(group.preferred);
   const all = catalog.filter((stock) => ids.includes(stock.id));
-  const preferred = all.find(({ id }) => id === families.find((family) => family.id === group.id)?.preferred) ?? all[0];
+  const preferred = all.find(({ id }) => id === group.preferred)!;
   const dimension = (stock: Material) => group.id === "birch-plywood" ? Math.min(...stock.size) :
     group.id === "pex-b" ? stock.id === "hd-pex-u860w10" ? 0.5 : 0.75 : Math.max(...(stock.stockSize ?? stock.size));
   const label = (value: number) => group.id === "birch-plywood" || group.id === "pex-b"
@@ -148,6 +160,7 @@ export function materialPlacementOptions(group: MaterialGroup) {
     .reverse().map((stock) => [dimension(stock), stock]));
   return {
     preferred,
+    canCutToLength: preferred.wood && preferred.cuttable && preferred.stockKind === "linear",
     label: group.id === "birch-plywood" ? "Panel thickness" : group.id === "pex-b" ? "Pipe size" : "Stock length",
     options: [...representatives].sort(([a], [b]) => a - b).map(([value, stock]) => ({ value, id: stock.id, label: label(value) })),
   };

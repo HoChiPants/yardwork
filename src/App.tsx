@@ -304,7 +304,7 @@ import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSli
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
 import { MaterialPlacement, type BoardPlacement } from "./MaterialPlacement";
-import { groupedMaterials, materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
+import { groupedMaterials, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
 import { addMeasuredOffcut } from "./measuredOffcuts";
@@ -928,6 +928,7 @@ export function App() {
   const viewport = useRef<HTMLDivElement>(null),
     camera = useRef<THREE.Camera | null>(null),
     file = useRef<HTMLInputElement>(null);
+  const materialDropMarker = useRef<((point: V3 | null) => void) | null>(null);
   const onCamera = useCallback((c: THREE.Camera) => {
     camera.current = c;
   }, []);
@@ -2589,7 +2590,8 @@ export function App() {
     const origin = ray.ray.origin.toArray().map((value) => value * 12) as V3;
     const point = surfacePlacement(project, origin, ray.ray.direction.toArray());
     const forward = activeCamera.getWorldDirection(new THREE.Vector3());
-    if (point && (point[1] > 0 || Math.abs(forward.y) > 0.08)) {
+    const nearHorizon = Math.abs(forward.y) <= 0.08;
+    if (point && (point[1] > 0 || !nearHorizon)) {
       if (!snap) return point;
       const x = Math.round(point[0]), z = Math.round(point[2]);
       const snapped = surfacePlacement(project, [x, Math.max(origin[1], point[1] + 1), z], [0, -1, 0]);
@@ -2597,11 +2599,17 @@ export function App() {
       return snapped && Math.abs(snapped[1] - point[1]) <= 0.8 ? snapped : point;
     }
     // Near the floor horizon, use the workspace center plane for ground depth.
+    if (!nearHorizon) return;
     const normal = forward.setY(0);
     if (normal.lengthSq() < 1e-8) return;
     const hit = ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal.normalize(), new THREE.Vector3()), new THREE.Vector3());
     if (!hit) return;
     return [snap ? Math.round(hit.x * 12) : hit.x * 12, 0, snap ? Math.round(hit.z * 12) : hit.z * 12];
+  }
+  function previewMaterialDrop(pointer: { x: number; y: number } | null) {
+    const point = pointer ? pointOnWorkspace(pointer) : undefined;
+    materialDropMarker.current?.(point ?? null);
+    return !!point;
   }
   function requestMaterial(group: MaterialGroup, pointer?: { x: number; y: number }) {
     if (!canLeaveWorkingDraft()) return;
@@ -2612,12 +2620,8 @@ export function App() {
       }
       return;
     }
-    const { options, preferred } = materialPlacementOptions(group);
-    const family = materialFamilyVariants(preferred.id);
-    const canCompareOffcut = preferred.wood && preferred.cuttable && preferred.stockKind === "linear" &&
-      project.pieces.some((part) => part.offcut && part.cutStock &&
-        family.includes(part.material) && currentCutSources.valid.has(part.cutStock.id));
-    if (options.length === 1 && !canCompareOffcut) {
+    const { options, canCutToLength } = materialPlacementOptions(group);
+    if (options.length === 1 && !canCutToLength) {
       add(options[0].id, group.name, position);
       return;
     }
@@ -2723,18 +2727,20 @@ export function App() {
           <button
             onClick={() => setModal("export")}
             className="button secondary"
+            aria-label="Export"
           >
             <ArrowUpFromLine size={15} />
-            Export
+            <span>Export</span>
           </button>
           <button
             id="save-project"
             onClick={save}
             disabled={busy}
             className="button primary"
+            aria-label="Save project"
           >
             {busy ? <Loader2 size={15} className="spin" /> : <Save size={15} />}
-            Save project
+            <span>Save project</span>
           </button>
         </div>
       </header>
@@ -2806,8 +2812,7 @@ export function App() {
                 </button>
               ))}
             </div>
-            <MaterialLibrary category={filter} search={search}
-              canDrop={(point) => canDropMaterial && !!materialDropCanvas(point)} onPlace={requestMaterial} />
+            <MaterialLibrary category={filter} search={search} onPreview={previewMaterialDrop} onPlace={requestMaterial} />
             <div className="drag-hint">
               <MousePointer2 size={15} />
               <span>Drag into the workspace or use +.</span>
@@ -2899,6 +2904,13 @@ export function App() {
               <Sparkles size={16} />
               Plan an idea
             </button>
+            <button
+              type="button"
+              className="button secondary inspector-focus-toggle"
+              aria-controls="workshop-inspector"
+              aria-expanded={inspectorFocus.focused}
+              onClick={inspectorFocus.expand}
+            ><Expand size={14} />{inspectorFocus.returnable ? "Return to inspector" : "Expand inspector"}</button>
           </div>
         </div>
           {activeFastenerLayoutPreview && (
@@ -3096,6 +3108,7 @@ export function App() {
           <SceneBoundary>
             <Scene
               project={project}
+              materialDropMarker={materialDropMarker}
               showOffcuts={!shownCheckArea && showOffcuts}
               readOnly={!!shownCheckArea || !!activeGuidePart || !!activeFastenerLayoutPreview || !!activeConnectorPreview || !!baseRailPreview || (panel === "fit-stock" && mode !== "fit-face")}
               guidePartFocus={activeGuidePart ? {
@@ -4307,7 +4320,6 @@ export function App() {
                     {piece.offcut ? "REUSABLE OFFCUT" : "SELECTED PART"}
                   </span>
                   <h2>{piece.name}</h2>
-                  <span className="tag">{material(piece.material).name}</span>
                 </div>
                 {project.waterStops?.some(({ pieceId }) => pieceId === piece.id) &&
                   <button type="button" className="button secondary full" onClick={() => {
@@ -5428,14 +5440,6 @@ export function App() {
           </span>
         </div>
       </aside>
-      <button
-        type="button"
-        className="button primary inspector-focus-toggle"
-        hidden={inspectorFocus.focused}
-        aria-controls="workshop-inspector"
-        aria-expanded={inspectorFocus.focused}
-        onClick={inspectorFocus.expand}
-      ><Expand size={16} />{inspectorFocus.returnable ? "Return to inspector" : "Expand inspector"}</button>
       <footer className="statusbar">
         <span>
           <span className="green-dot" />

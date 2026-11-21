@@ -11,6 +11,7 @@ import { bounds } from "../../src/engine";
 import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
 import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
 import { saveMotionPlan } from "../../src/mechanismMotion";
+import { partLabel } from "../../src/partLabels";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
   const backendRequests: string[] = [];
@@ -589,4 +590,60 @@ test("a measured sill gasket checks support, shows its footprint and exports exa
   expect(guide).toContain("## Sill gasket cut plan");
   expect(guide).toContain("Cut 98 in including 2 in for overlaps and trimming.");
   await expect(page.locator(".print-guide .sill-gaskets-print")).toContainText("502 in remaining");
+});
+
+test("a banquette seat highlights an interrupted support and the live guide follows the repair", async ({ page }) => {
+  const project = blank("Seat support study");
+  const step = project.steps[0].id;
+  const seat = {
+    ...part("Seat lid", "plytanium-703", [24, 0.703, 12], [0, 4.3515, 0], step, "Seat"),
+    designRole: "seat-lid",
+  };
+  const left = part("Left seat rail", "stud", [3, 2, 8], [-6, 3, 0], step, "Support");
+  const right = part("Right seat rail", "stud", [3, 2, 8], [6, 3, 0], step, "Support");
+  const leftBase = part("Left base", "stud", [3, 2, 8], [-6, 1, 0], step, "Support");
+  const rightBase = part("Right base", "stud", [3, 2, 8], [16, 1, 0], step, "Support");
+  project.pieces = [seat, left, right, leftBase, rightBase];
+
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "seat-support.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  const checks = page.getByRole("button", { name: /^Checks/ }).first();
+  const finding = page.getByRole("button", { name: new RegExp(`^Seat support to floor · ${partLabel(project, seat.id)}`) });
+  await checks.click();
+  await expect(finding).toHaveClass(/warning/);
+  await expect(finding).toContainText("1 of 2 wood supports has an interrupted contact trace");
+  await expect(finding).toContainText("Right seat rail");
+  await finding.click();
+  const marker = page.getByTestId("panel-floor-bearing-marker");
+  await expect(marker).toHaveAttribute("data-contact-patches", "1");
+  await expect(marker).toContainText("Contacts to review");
+  await page.getByRole("button", { name: "Hide highlighted area", exact: true }).click();
+
+  await page.getByRole("button", { name: "Guide", exact: true }).click();
+  await page.locator(`button.step-part[data-part-id="${rightBase.id}"]`).click();
+  const x = page.getByRole("spinbutton", { name: "X", exact: true });
+  await x.fill("6");
+  await x.press("Tab");
+  await expect(x).toHaveValue("6");
+  await checks.click();
+  await expect(finding).toHaveClass(/info/);
+  await expect(finding).toContainText("All wood supports have continuous contact traces to the modeled floor");
+  await finding.click();
+  await expect(marker).toHaveAttribute("data-contact-patches", "2");
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("## Shelf and seat bearing");
+  expect(guide).toContain("All wood supports have continuous contact traces to the modeled floor");
+  await expect(page.locator(".print-guide")).toContainText("All wood supports have continuous contact traces to the modeled floor");
 });

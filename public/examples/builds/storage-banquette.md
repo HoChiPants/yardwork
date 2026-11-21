@@ -645,11 +645,11 @@ Assemblies: Banquette section 1; Banquette section 2; Banquette section 3.
 
 ## Shelf and seat bearing
 
-Wood patches show where modeled surfaces meet. Use them to locate bearing and check the panel’s span, load and attachment details. Shelf-pin entries describe a plan for hardware and its fit.
+Wood patches show where modeled surfaces meet. The floor check follows wood faces beneath those patches. Verify the actual panel grade, span, hardware, attachment and capacity for the intended load. Shelf-pin entries describe a plan for hardware and its fit.
 
-- P014 · Banquette section 1 · seat lid · 8 wood contacts underneath (P002, P003, P004, P005, P010, P011, P012, P013). Longest unsupported runs measured at three lines in each direction. Across the seat, 19.594 in between contacts. Along the depth, 19.594 in between contacts. Seating capacity still needs review.
-- P028 · Banquette section 2 · seat lid · 8 wood contacts underneath (P016, P017, P018, P019, P024, P025, P026, P027). Longest unsupported runs measured at three lines in each direction. Across the seat, 19.594 in between contacts. Along the depth, 19.594 in between contacts. Seating capacity still needs review.
-- P042 · Banquette section 3 · seat lid · 8 wood contacts underneath (P030, P031, P032, P033, P038, P039, P040, P041). Longest unsupported runs measured at three lines in each direction. Across the seat, 19.594 in between contacts. Along the depth, 19.594 in between contacts. Seating capacity still needs review.
+- P014 · Banquette section 1 · seat lid · 8 wood contacts underneath (P002, P003, P004, P005, P010, P011, P012, P013). All wood supports have continuous contact traces to the modeled floor. Longest unsupported runs measured at three lines in each direction. Across the seat, 19.594 in between contacts. Along the depth, 19.594 in between contacts. Seating capacity still needs review.
+- P028 · Banquette section 2 · seat lid · 8 wood contacts underneath (P016, P017, P018, P019, P024, P025, P026, P027). All wood supports have continuous contact traces to the modeled floor. Longest unsupported runs measured at three lines in each direction. Across the seat, 19.594 in between contacts. Along the depth, 19.594 in between contacts. Seating capacity still needs review.
+- P042 · Banquette section 3 · seat lid · 8 wood contacts underneath (P030, P031, P032, P033, P038, P039, P040, P041). All wood supports have continuous contact traces to the modeled floor. Longest unsupported runs measured at three lines in each direction. Across the seat, 19.594 in between contacts. Along the depth, 19.594 in between contacts. Seating capacity still needs review.
 
 
 ## Wood contact to floor

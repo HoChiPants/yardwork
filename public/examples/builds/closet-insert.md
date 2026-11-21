@@ -278,7 +278,7 @@ Assemblies: closet insert.
 
 ## Shelf and seat bearing
 
-Wood patches show where modeled surfaces meet. Use them to locate bearing and check the panel’s span, load and attachment details. Shelf-pin entries describe a plan for hardware and its fit.
+Wood patches show where modeled surfaces meet. The floor check follows wood faces beneath those patches. Verify the actual panel grade, span, hardware, attachment and capacity for the intended load. Shelf-pin entries describe a plan for hardware and its fit.
 
 - P007 · Closet casework · tower shelf · No wood surface meets the underside. Check for cleats or plan the shelf hardware.
 - P008 · Closet casework · tower shelf · No wood surface meets the underside. Check for cleats or plan the shelf hardware.

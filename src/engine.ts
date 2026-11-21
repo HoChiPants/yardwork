@@ -84,7 +84,7 @@ import {
   reviewSunliteRoofBacking, roofBackingGuideLines, roofBackingScope,
   roofBackingSummary, sunliteRoofDetail,
 } from "./sunliteRoofBacking";
-import { panelBearingGuideLines, panelBearingScope, panelBearingSummary, reviewPanelBearing } from "./panelBearing";
+import { panelBearingGuideLines, panelBearingScope, panelBearingSummary, panelFloorBearing, panelFloorBearingSummary, reviewPanelBearing } from "./panelBearing";
 import { seatSpanSummary, shelfSpanSummary } from "./panelSpans";
 import { rafterBearingGuideLines, rafterBearingScope, rafterJointSummary, reviewGreenhouseRafterBearing } from "./greenhouseRafterBearing";
 import { greenhouseAttachmentScope, greenhouseRoofAttachmentLines, greenhouseRoofAttachments, roofAttachmentSummary } from "./greenhouseRoofAttachments";
@@ -621,7 +621,7 @@ export type Finding = {
     boundaries?: V3[][];
     lines?: [V3, V3][];
     referenceLines?: [V3, V3][];
-    kind?: "glazing-hole-layout" | "vent-sash-gap" | "roof-seam-gap" | "wall-batt-gap" | "panel-bearing" | "seat-span" | "shelf-span" | "rafter-eave" | "rafter-ridge" | "eave-block-preview" | "roof-plane" | "shelf-divider-preview";
+    kind?: "glazing-hole-layout" | "vent-sash-gap" | "roof-seam-gap" | "wall-batt-gap" | "panel-bearing" | "panel-floor-bearing" | "seat-span" | "shelf-span" | "rafter-eave" | "rafter-ridge" | "eave-block-preview" | "roof-plane" | "shelf-divider-preview";
     label: string;
     labelPoint: V3;
     tone?: "reference";
@@ -1042,6 +1042,23 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
         labelPoint: row.center,
       },
     });
+    const floor = panelFloorBearing(row, woodSupport);
+    if (floor)
+      findings.push({
+        id: `panel-floor-bearing-${row.piece.id}`,
+        severity: floor.interruptedCount ? "warning" : "info",
+        title: `${name} support to floor · ${label}`,
+        detail: panelFloorBearingSummary(p, floor),
+        pieceId: row.piece.id,
+        area: {
+          kind: "panel-floor-bearing",
+          outlines: floor.outlines,
+          boundaries: row.undersides,
+          label: `${label} · ${floor.interruptedCount ? "Contacts to review" : "Contacts traced to floor"}`,
+          labelPoint: row.center,
+          tone: floor.interruptedCount ? undefined : "reference",
+        },
+      });
     if (row.seatSpans)
       findings.push({
         id: `seat-span-${row.piece.id}`,
@@ -1804,9 +1821,9 @@ export function guideMarkdown(p: Project) {
   const ventBacking = reviewGreenhouseVentBacking(p);
   const glazingMounts = reviewSunliteMounts(p);
   const panelReviews = reviewPanelBearing(p);
-  const panelBearing = panelBearingGuideLines(p, panelReviews);
-  const shelfSag = shelfSagGuideLines(p, panelReviews);
   const woodSupportReview = reviewWoodSupport(p);
+  const panelBearing = panelBearingGuideLines(p, panelReviews, woodSupportReview);
+  const shelfSag = shelfSagGuideLines(p, panelReviews);
   const woodSupport = woodSupportGuideLines(p, woodSupportReview);
   const bearingReview = bearingConnections(p, woodSupportReview, connections);
   const bearingJoints = bearingConnectionGuideLines(p, bearingReview, connections);

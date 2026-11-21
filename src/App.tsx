@@ -1394,7 +1394,7 @@ export function App() {
   const ventBacking = useMemo(() => reviewGreenhouseVentBacking(project), [project]);
   const printVentBacking = ventBacking.flatMap((review) => ventBackingGuideLines(project, review));
   const panelReviews = useMemo(() => reviewPanelBearing(project), [project]);
-  const printPanelBearing = useMemo(() => panelBearingGuideLines(project, panelReviews), [project, panelReviews]);
+  const printPanelBearing = useMemo(() => panelBearingGuideLines(project, panelReviews, woodSupport), [project, panelReviews, woodSupport]);
   const printShelfSag = useMemo(() => shelfSagGuideLines(project, panelReviews), [project, panelReviews]);
   const sagPanel = useMemo(() => {
     if (panel !== "part" || !piece) return null;
@@ -3600,6 +3600,8 @@ export function App() {
                       <p>{f.detail}</p>
                       {f.area && <small>{f.area.kind === "panel-bearing"
                         ? shownCheckArea === f.area ? "Hide bearing" : "Show bearing in 3D"
+                        : f.area.kind === "panel-floor-bearing"
+                          ? shownCheckArea === f.area ? "Hide contacts" : "Show contacts in 3D"
                         : f.area.kind === "roof-plane"
                           ? shownCheckArea === f.area ? "Hide roof area" : "Show roof area in 3D"
                         : f.area.kind === "seat-span" || f.area.kind === "shelf-span"

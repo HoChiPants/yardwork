@@ -112,7 +112,7 @@ export function CheckAreaMarkers({
         <span
           className={`site-clearance-marker${reference ? "" : " check-area-marker"}`}
           data-testid={`${area.kind ?? "ceiling-gap"}-marker`}
-          data-contact-patches={bearing ? outlines.length : undefined}
+          data-contact-patches={bearing || area.kind === "panel-floor-bearing" ? outlines.length : undefined}
           data-span-lines={area.kind === "seat-span" || area.kind === "shelf-span" ? area.lines?.length : undefined}
           data-pin-reaches={area.kind === "shelf-span" ? area.referenceLines?.length : undefined}
         >

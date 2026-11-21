@@ -8,6 +8,39 @@ import { reviewPanelBearing } from "../src/panelBearing";
 import { composeRotation, rotate } from "../src/spatial";
 import { formatStockLength } from "../src/measurement";
 
+test("a grounded route cannot hide a broken branch beneath a seat contact", () => {
+  const project = blank("Seat support trace");
+  const makeWood = (name: string, size: V3, position: V3) =>
+    part(name, "stud", size, position, project.steps[0].id, "Supports");
+  const seat = {
+    ...part("Seat", "plytanium-703", [24, 0.703, 12], [0, 6.3515, 0], project.steps[0].id, "Seat"),
+    designRole: "seat-lid",
+  };
+  const rail = makeWood("Rail", [18, 2, 3], [0, 5, 0]);
+  const left = makeWood("Left support", [3, 4, 3], [-7, 2, 0]);
+  const right = makeWood("Right support", [3, 2, 3], [7, 3, 0]);
+  const base = makeWood("Right base", [3, 2, 3], [7, 1, 0]);
+  const savedScrap = { ...base, offcut: true };
+  project.pieces = [seat, rail, left, right, savedScrap];
+
+  const finding = () => validate(project).find(({ id }) => id === `panel-floor-bearing-${seat.id}`)!;
+  assert.equal(finding().severity, "warning");
+  assert.match(finding().detail, /interrupted contact trace.*Right support/);
+  assert.doesNotMatch(finding().detail, /Left support|Right base/);
+  assert.equal(finding().area!.outlines.length, 1);
+
+  // Putting the offcut into the build closes the gap exactly.
+  savedScrap.offcut = false;
+  assert.equal(finding().severity, "info");
+  assert.match(guideMarkdown(project), /Shelf and seat bearing[\s\S]+continuous contact trace to the modeled floor/);
+  savedScrap.position[1] -= 0.03125;
+  assert.equal(finding().severity, "warning");
+
+  // An open seat has no horizontal underside to review.
+  seat.rotation[2] = Math.PI / 2;
+  assert.equal(finding(), undefined);
+});
+
 const pinMeasurements = () => ({
   pinInsertionDepth: 0.2,
   bearingReach: 0.25,

@@ -11,11 +11,12 @@ import {
   shelfSpanSummary,
 } from "./panelSpans";
 import { stockAxes } from "./stockAxes";
+import { woodSupportBreaks, type WoodSupportReview } from "./woodSupport";
 
 const shelfRole = /^(?:tower-)?shelf-\d+$/;
 const epsilon = 1e-7;
 export const panelBearingScope =
-  "Wood patches show where modeled surfaces meet. Use them to locate bearing and check the panel’s span, load and attachment details. Shelf-pin entries describe a plan for hardware and its fit.";
+  "Wood patches show where modeled surfaces meet. The floor check follows wood faces beneath those patches. Verify the actual panel grade, span, hardware, attachment and capacity for the intended load. Shelf-pin entries describe a plan for hardware and its fit.";
 
 function roles(project: Project) {
   const result = new Map<string, "seat" | "shelf">();
@@ -125,6 +126,44 @@ export function reviewPanelBearing(
 
 export type PanelBearingReview = ReturnType<typeof reviewPanelBearing>[number];
 
+export function panelFloorBearing(row: PanelBearingReview, wood: WoodSupportReview) {
+  if (!row.contacts.length || wood.get(row.piece.id)?.onFloor) return null;
+  const supportIds = [...new Set(row.contacts.map(({ pieceId }) => pieceId))];
+  const interrupted = new Map(
+    supportIds.flatMap((id) => {
+      const stops = woodSupportBreaks(wood, id);
+      return stops.length ? [[id, stops] as const] : [];
+    }),
+  );
+  return {
+    supportCount: supportIds.length,
+    interruptedCount: interrupted.size,
+    stops: [...new Set([...interrupted.values()].flat())],
+    outlines: row.contacts
+      .filter(({ pieceId }) => !interrupted.size || interrupted.has(pieceId))
+      .map(({ outline }) => outline),
+  };
+}
+
+export function panelFloorBearingSummary(
+  project: Project,
+  floor: NonNullable<ReturnType<typeof panelFloorBearing>>,
+) {
+  const { interruptedCount, supportCount, stops } = floor;
+  if (!interruptedCount)
+    return supportCount === 1
+      ? "The wood support has a continuous contact trace to the modeled floor."
+      : "All wood supports have continuous contact traces to the modeled floor.";
+  const endpoints = stops.map((id) => {
+    const name = project.pieces.find((piece) => piece.id === id)?.name;
+    return [partLabel(project, id), name].filter(Boolean).join(" · ");
+  });
+  const subject = supportCount === 1
+    ? "The wood support has"
+    : `${interruptedCount} of ${supportCount} wood supports ${interruptedCount === 1 ? "has" : "have"}`;
+  return `${subject} an interrupted contact trace to the modeled floor. Check beneath ${endpoints.join(", ")} for a gap or review the connection that carries the load.`;
+}
+
 export function panelBearingSummary(project: Project, row: PanelBearingReview) {
   const contacts = [
     ...new Set(row.contacts.map(({ pieceId }) => partLabel(project, pieceId))),
@@ -152,13 +191,16 @@ export function panelBearingSummary(project: Project, row: PanelBearingReview) {
 
 export function panelBearingGuideLines(
   project: Project,
-  reviews = reviewPanelBearing(project),
+  reviews: readonly PanelBearingReview[],
+  wood: WoodSupportReview,
 ) {
-  return reviews.map((review) =>
-    [
+  return reviews.map((review) => {
+    const floor = panelFloorBearing(review, wood);
+    return [
       `${partLabel(project, review.piece.id)} · ${review.piece.name} · ${panelBearingSummary(project, review)}`,
+      ...(floor ? [panelFloorBearingSummary(project, floor)] : []),
       ...(review.seatSpans ? [seatSpanSummary(review.seatSpans)] : []),
       ...(review.shelfSpans ? [shelfSpanSummary(review.shelfSpans)] : []),
-    ].join(" "),
-  );
+    ].join(" ");
+  });
 }

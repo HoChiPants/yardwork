@@ -129,6 +129,22 @@ export function woodSupportPath(review: WoodSupportReview, pieceId: string) {
   return path;
 }
 
+/** Inspect every downward branch rather than only the shortest path. */
+export function woodSupportBreaks(review: WoodSupportReview, pieceId: string) {
+  const pending = new Set([pieceId]);
+  const breaks: string[] = [];
+  const ungrounded: string[] = [];
+  for (const id of pending) {
+    const row = review.get(id);
+    if (row?.onFloor) continue;
+    if (!row?.next) ungrounded.push(id);
+    if (!row?.supports.length) breaks.push(id);
+    for (const support of row?.supports ?? []) pending.add(support.pieceId);
+  }
+  // A closed loop can lack a floor route without having an endpoint.
+  return breaks.length ? breaks : ungrounded.slice(0, 1);
+}
+
 export function woodSupportGuideLines(
   project: Project,
   support: WoodSupportReview,

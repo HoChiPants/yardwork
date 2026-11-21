@@ -10,6 +10,30 @@ import { plannerHandler } from "../server/planner";
 import { localIdeaPlan } from "../src/planning";
 import type { Request, Response } from "express";
 
+test("relative follow-ups use current workspace dimensions with Ollama configured", async () => {
+  const originalURL = process.env.OLLAMA_URL, originalFetch = globalThis.fetch;
+  const previousPlan = localIdeaPlan({ prompt: "Build a bench 60 inches wide" });
+  let payload: { provider: string; plan: typeof previousPlan } | undefined;
+  const res = Object.assign(new EventEmitter(), {
+    json(value: typeof payload) {
+      payload = value;
+      return this;
+    },
+  }) as unknown as Response;
+  try {
+    process.env.OLLAMA_URL = "http://127.0.0.1:11434";
+    globalThis.fetch = async () => { throw Error("A measured resize should resolve before calling Ollama."); };
+    await plannerHandler({ body: { prompt: "Make it six inches wider", previousPlan } } as Request, res);
+    assert.equal(payload?.provider, "Workspace dimensions");
+    assert.equal(payload?.plan.modules[0].width, 66);
+    assert.equal(previousPlan.modules[0].width, 60);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalURL === undefined) delete process.env.OLLAMA_URL;
+    else process.env.OLLAMA_URL = originalURL;
+  }
+});
+
 test("closing a planner response cancels model generation and removes disconnect listeners", async () => {
   const oldURL = process.env.OLLAMA_URL,
     oldFormat = process.env.OLLAMA_PLANNER_FORMAT,

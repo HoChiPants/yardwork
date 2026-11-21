@@ -7,6 +7,8 @@ import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { blank, part } from "../../src/model";
 import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
 import { saveWoodJointDecision } from "../../src/woodJointDecisions";
+import { bounds } from "../../src/engine";
+import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
   const backendRequests: string[] = [];
@@ -370,4 +372,53 @@ test("wood glue takeoff shows modeled contact and saves a confirmed bottle estim
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("4,320 sq in confirmed coated area");
   expect(guide).toContain("Dry-fit before using glue.");
+});
+
+test("relative wording revises one applied section and exports the resized build", async ({ page }) => {
+  const original = applyIdeaPlan(blank("Relative revision"), localIdeaPlan({
+    prompt: "Three-section storage banquette 72 inches wide, 24 inches deep, 18 inches seat height, opening lids and no back",
+  }));
+  const binding = original.ideaBindings[0];
+  const unrelated = part("Spare board", "one-four", [0.75, 12, 3.5], [60, 8, 0], original.steps[0].id, "Loose stock");
+  original.pieces.push(unrelated);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "relative-revision.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(original)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("button", { name: `Revise design ${binding.title}`, exact: true }).click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Make section 2 two inches taller");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  for (const [seat, height] of [[1, 18], [2, 20], [3, 18]]) {
+    await expect(dialog.getByRole("spinbutton", {
+      name: `Banquette section ${seat} height`, exact: true,
+    })).toHaveValue(String(height));
+  }
+  await dialog.getByRole("button", { name: "Apply design changes", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  const saved: typeof original = (await readDraft()).project;
+  expect(saved.ideaBindings).toHaveLength(1);
+  expect(saved.ideaBindings[0].entries.map(({ id }) => id)).toEqual(binding.entries.map(({ id }) => id));
+  expect(saved.pieces.find(({ id }) => id === unrelated.id)?.size).toEqual(unrelated.size);
+  for (const [i, entry] of binding.entries.entries()) {
+    const ids = saved.sections.find(({ id }) => id === entry.sections[0].sectionId)!.pieceIds;
+    const top = Math.max(...saved.pieces.filter(({ id }) => ids.includes(id)).map((piece) => bounds(piece).max[1]));
+    expect(top).toBeCloseTo(i === 1 ? 20 : 18, 4);
+  }
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/Seat heights: 18, 20 in/);
+  expect(guide).toContain("Cut");
 });

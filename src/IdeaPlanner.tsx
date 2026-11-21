@@ -550,8 +550,8 @@ export default function IdeaPlanner({
       )}
       {previousPlan.current && (
         <p className="small-note">
-          Try “section 2 width 30 inches” or “move the whole design 3 inches
-          along +Z.” Use +Y to move up. For a turn, name its pivot, such as
+          Try “make section 2 two inches taller” or “move the whole design 3
+          inches along +Z.” Use +Y to move up. For a turn, name its pivot, such as
           “rotate the whole design 90 degrees around the workspace origin.”
         </p>
       )}

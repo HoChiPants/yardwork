@@ -10,6 +10,7 @@ import {
 import { catalog } from "../src/model";
 import { groundUnsupportedPlan } from "../src/unsupportedIntent";
 import { carryPlacementQuestions } from "../src/placementEdits";
+import { localRelativeResizePlan } from "../src/relativeIdeaResize";
 import {
   ideaPlanSchema,
   localIdeaPlan,
@@ -43,6 +44,13 @@ async function plannerResponse(
       provider: "Workspace placement",
       message:
         "Review the requested moves and remaining questions before applying.",
+    });
+  const resize = localRelativeResizePlan(request);
+  if (resize)
+    return res.json({
+      plan: resize,
+      provider: "Workspace dimensions",
+      message: "Review the resize and resulting fit before applying.",
     });
   if (!process.env.OLLAMA_URL)
     return res.json({

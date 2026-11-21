@@ -37,6 +37,7 @@ import {
 import { localStructureIdea } from "./structureIdeas";
 import { groundUnsupportedPlan } from "./unsupportedIntent";
 import { carryPlacementQuestions, refinePlacement } from "./placementEdits";
+import { localRelativeResizePlan } from "./relativeIdeaResize";
 
 function placeLocalPlan(plan: IdeaPlan, request: PlannerRequest): IdeaPlan {
   if (!plan.modules.length || !request.existingSections?.length) return plan;
@@ -85,7 +86,8 @@ function placeLocalPlan(plan: IdeaPlan, request: PlannerRequest): IdeaPlan {
 }
 
 export function localPlacementPlan(request: PlannerRequest): IdeaPlan | null {
-  const proposed = refinePlacement(request, localSupportedIdeaPlan);
+  const proposed = refinePlacement(request, (revision) =>
+    localRelativeResizePlan(revision) ?? localSupportedIdeaPlan(revision));
   if (!proposed) return null;
   return ideaPlanSchema.parse(
     carryPlacementQuestions(
@@ -101,6 +103,8 @@ export function localIdeaPlan(request: PlannerRequest): IdeaPlan {
   if (boundary) return ideaPlanSchema.parse(boundary);
   const placement = localPlacementPlan(request);
   if (placement) return placement;
+  const resize = localRelativeResizePlan(request);
+  if (resize) return resize;
   const proposed = { ...localSupportedIdeaPlan(request) };
   delete proposed.placementChanges;
   return ideaPlanSchema.parse(

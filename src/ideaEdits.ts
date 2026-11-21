@@ -244,6 +244,17 @@ function numberValue(raw: string) {
     return sum + a / b;
   }, 0);
 }
+
+function measuredInches(match: RegExpMatchArray, offset = 1) {
+  const value = numberValue(match[offset]), unit = match[offset + 1];
+  const extra = match[offset + 2] ? numberValue(match[offset + 2]) : 0;
+  const inches = unit
+    ? value * (/^(feet|foot|ft|[′'])$/.test(unit) ? 12 : 1) + extra
+    : null;
+  if (inches !== null && !Number.isFinite(inches))
+    throw Error("Enter a finite measurement with a nonzero fraction denominator.");
+  return inches;
+}
 /** A single shared inch conversion. A bare measurement has no invented unit. */
 export function namedMeasurement(
   input: string,
@@ -277,17 +288,57 @@ export function namedMeasurement(
       .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
   const match = matches[0];
   if (!match) return undefined;
-  const unit = match[2],
-    value = numberValue(match[1]),
-    extra = match[3] ? numberValue(match[3]) : 0,
-    inches = unit
-      ? value * (/^(feet|foot|ft|[′'])$/.test(unit) ? 12 : 1) + extra
-      : null;
-  if (inches !== null && !Number.isFinite(inches))
-    throw Error(
-      "Enter a finite measurement with a nonzero fraction denominator.",
-    );
-  return { inches, raw: match[0], unitExplicit: !!unit };
+  return { inches: measuredInches(match), raw: match[0], unitExplicit: !!match[2] };
+}
+
+const comparisons = {
+  wider: ["width", 1], narrower: ["width", -1],
+  deeper: ["depth", 1], shallower: ["depth", -1],
+  taller: ["height", 1], shorter: ["height", -1],
+} as const;
+const comparison = Object.keys(comparisons).join("|");
+const dimensionWords = "width|depth|height|roof rise";
+const amountPattern = new RegExp(`^${measure}$`);
+const comparisonPattern = new RegExp(`^(?:(.*?)\\s+)?${measure}\\s+(${comparison})$`);
+const comparisonByPattern = new RegExp(`^(?:(.*?)\\s+)?(${comparison})\\s+by\\s+(.+)$`);
+const adjustmentPattern = new RegExp(`^(increase|decrease|reduce)\\s+(.+?)\\s+by\\s+(.+)$`);
+
+type ResizeField = "width" | "depth" | "height" | "roof rise";
+export type RelativeResize = { scope: string; field: ResizeField; delta: number };
+/** Keep relative requests distinct from absolute dimensions and from model guesses. */
+export function requestedRelativeResize(input: string): RelativeResize | { question: string } | null {
+  const text = normalizeIdeaText(input)
+    .trim()
+    .replace(/^please\s+/, "")
+    .replace(/[.!?]+$/, "")
+    .replace(/,?\s+(?:(?:and|but)\s+keep\s+everything\s+else\s+the\s+same|without\s+changing\s+anything\s+else)$/, "");
+  const sizeText = text.replace(/^make\s+/, "");
+  const comparative = sizeText.match(comparisonPattern);
+  const comparativeBy = sizeText.match(comparisonByPattern);
+  const adjustment = text.match(adjustmentPattern);
+  const fieldMatch = adjustment?.[2].match(new RegExp(`\\b(${dimensionWords})\\b`));
+  const match = comparative ?? comparativeBy;
+  if (!match && !fieldMatch) {
+    if (/^make\b/.test(text) &&
+        new RegExp(`(?:${numeric}\\s*(?:${units})?\\s+(?:${comparison})\\b|\\b(?:${comparison})$)`).test(text))
+      return { question: "Give one amount, with inches or feet, and name the dimension or section to resize." };
+    return null;
+  }
+  const scope = match?.[1] ?? adjustment?.[2] ?? "";
+  const adjective = (comparative?.at(-1) ?? comparativeBy?.[2]) as keyof typeof comparisons | undefined;
+  const [field, sign] = adjective ? comparisons[adjective] :
+    [fieldMatch![1] as ResizeField, adjustment![1] === "increase" ? 1 : -1] as const;
+  const amount = comparative ?? (comparativeBy?.[3] ?? adjustment?.[3])?.match(amountPattern);
+  const question = "Give one positive resize amount, with inches or feet, such as “make section 2 two inches taller.”";
+  if (!amount) return { question };
+  // A separate edit needs its own preview. Scope here names the existing design.
+  if (/[,;]|\b(?:and|then|but|or)\b/.test(scope)) return { question };
+  try {
+    const inches = measuredInches(amount, comparative ? 2 : 1);
+    return inches && inches > 0 ? { scope, field, delta: sign * inches } : { question };
+  } catch (error) {
+    return { question: (error as Error).message };
+  }
 }
 /** Scope words must qualify the width measurement, not an unrelated sentence about each seat. */
 export function widthAppliesToEach(input: string) {
@@ -381,7 +432,7 @@ export function straightRun(modules: PlanModule[]): Run | null {
     center = first.position.map((n, i) => n + axis[i] * shift) as V3;
   return { order, center, axis, gaps };
 }
-function reflow(modules: PlanModule[], run: Run): PlanModule[] {
+export function reflow(modules: PlanModule[], run: Run): PlanModule[] {
   const total =
     modules.reduce((n, m) => n + m.width, 0) +
     run.gaps.reduce((a, b) => a + b, 0);

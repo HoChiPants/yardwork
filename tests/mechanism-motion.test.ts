@@ -312,7 +312,7 @@ test("opening order checks both motions with the correct held poses and reverses
   const result = runMotionTest(reopened, selected, selected.testSetup);
   assert.ok(result.review, result.error);
   const review = result.review;
-  assert.deepEqual(review.sequence?.map(({ label }) => label), [door.name, drawer.name]);
+  assert.deepEqual(review.sequence?.map(({ plan }) => plan.label), [door.name, drawer.name]);
   assert.deepEqual(review.hits, []);
   const position = (progress: number, id: string, axis: number) => review.preview(progress).pieces.find((piece) => piece.id === id)!.position[axis];
   near(position(25, drawer.id, 2), -8);
@@ -346,6 +346,65 @@ test("opening order checks both motions with the correct held poses and reverses
   assert.equal(blockedResult.review.preview(open.travel).interferenceIds.length, 0);
   assert.deepEqual(blockedResult.review.preview(open.travel, open.inspectAt, undefined, open.phase).interferenceIds, [drawer.id, stop.id]);
   assert.throws(() => saveMotionTestSetup(reopened, selected.id, { held: [], openingOrder: "companion-first" }));
+});
+
+test("a limited door-first test uses both physical targets and rejects stale travel", () => {
+  const project = blank("Cabinet beside a wall");
+  const door = panel(project, "Cabinet door", [12, 5, 0.75], [6, 10, 0]);
+  const drawer = panel(project, "Pull-out drawer", [1, 2, 1], [5, 10, -8]);
+  const wall = panel(project, "Wall return", [0.6, 5, 0.6], [0, 10, 11.5]);
+  const stop = panel(project, "Counter edge", [1, 2, 0.5], [5, 10, 14]);
+  const slide = saveMotionPlan({ ...project, pieces: [door, drawer, wall, stop] }, {
+    label: drawer.name, memberIds: [drawer.id],
+    mechanism: { kind: "slide", axis: [0, 0, 1], travel: 24 },
+  });
+  const swing = saveMotionPlan(slide.project, {
+    label: door.name, memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: [0, 10, 0], travel: 90 },
+  });
+  const setup = { linkedId: swing.plan.id, held: [], openingOrder: "companion-first" as const };
+  const full = runMotionTest(swing.project, slide.plan, setup).review!;
+  assert.equal(full.playbackLimit(0, 100).phase, 0);
+  assert.ok(full.hits.some(({ obstacleId }) => obstacleId === wall.id));
+  assert.ok(full.hits.some(({ obstacleId }) => obstacleId === stop.id));
+
+  const targets = {
+    selected: { kind: "slide", travel: 12.5 } as const,
+    companion: { kind: "hinge", travel: 75 } as const,
+  };
+  const limited = { ...setup, sequenceTargets: targets };
+  const saved = saveMotionTestScenario(swing.project, slide.plan.id, "Limited opening", limited);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(saved.project)));
+  const plan = reopened.motionPlans!.find(({ id }) => id === slide.plan.id)!;
+  const scenario = plan.testScenarios![0];
+  assert.deepEqual(scenario.setup, limited);
+  const review = runMotionTest(reopened, plan, scenario.setup).review!;
+  const position = (progress: number, id: string) => review.preview(progress).pieces.find((piece) => piece.id === id)!.position;
+  near(position(50, door.id)[0], 6 * Math.cos(75 * Math.PI / 180));
+  near(position(50, drawer.id)[2], -8);
+  near(position(100, door.id)[0], position(50, door.id)[0]);
+  near(position(100, drawer.id)[2], 4.5);
+  assert.deepEqual(review.hits, []);
+  assert.deepEqual(review.playbackLimit(0, 100), { travel: 100 });
+  assert.deepEqual(review.playbackLimit(100, 0), { travel: 0 });
+  assert.match(guideMarkdown(reopened), /Limited opening.*Test targets · Cabinet door 75°, Pull-out drawer 12\.5 in/);
+  assert.equal(reopened.motionPlans!.find(({ id }) => id === swing.plan.id)!.mechanism.travel, 90);
+  assert.equal(plan.mechanism.travel, 24);
+
+  const tooShallow = runMotionTest(reopened, plan, {
+    ...limited, sequenceTargets: { companion: { kind: "hinge", travel: 50 } },
+  }).review!;
+  assert.ok(tooShallow.hits.some(({ phase, obstacleId }) => phase === 1 && obstacleId === door.id));
+  const stale = {
+    ...reopened,
+    motionPlans: reopened.motionPlans!.map((motion) => motion.id === swing.plan.id
+      ? { ...motion, mechanism: { ...motion.mechanism, travel: 70 } }
+      : motion),
+  };
+  assert.match(runMotionTest(stale, plan, limited).error!, /travel target for Cabinet door no longer fits/);
+  assert.match(guideMarkdown(stale), /Limited opening.*Needs review.*travel target for Cabinet door/);
+  assert.throws(() => saveMotionTestSetup(stale, plan.id, limited), /target for Cabinet door/);
+  assert.throws(() => saveMotionTestSetup(reopened, plan.id, { ...limited, openingOrder: undefined }), /Choose two motions and an opening order/);
 });
 
 test("named clearance tests preserve both opening orders and recheck the current geometry", () => {

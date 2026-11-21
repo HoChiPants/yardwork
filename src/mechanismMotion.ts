@@ -16,7 +16,9 @@ import {
   motionTestScenarioSchema,
   motionTestSetupSchema,
   type MotionPlan,
+  type MotionOpeningOrder,
   type MotionPairClearance,
+  type MotionSequenceTargets,
   type MotionTestSetup,
 } from "./motionPlanSchema";
 import { partLabel } from "./partLabels";
@@ -627,6 +629,7 @@ function checkMotionTestReferences(project: Project, active: MotionPlan, setup: 
       throw Error("Choose test motions with their own active moving parts.");
     occupied.push(other);
   }
+  if (linked && setup.openingOrder) motionSequence(active, linked, setup.openingOrder, setup.sequenceTargets);
   if (setup.clearance) {
     members(project, [setup.clearance.movingId, setup.clearance.otherId]);
     if (!hasClearanceMovingPart(active, linked, setup.clearance))
@@ -701,6 +704,7 @@ export function reviewMotion(
   plan: MotionPlan,
   held: readonly HeldMotion[] = [],
   linked?: MotionPlan,
+  testedTravel = plan.mechanism.travel,
 ) {
   const doorReview = boundMotionReview(project, plan);
   if (doorReview?.warning) throw Error(doorReview.warning);
@@ -724,7 +728,7 @@ export function reviewMotion(
   const path = reviewMotionPath(
     project,
     members(project, plan.memberIds),
-    motionSetup(project, plan).mechanism,
+    { ...motionSetup(project, plan).mechanism, travel: testedTravel },
     {
       parkedPieces,
       linked: linked && {
@@ -1099,8 +1103,9 @@ export function reviewMotionPath(
 }
 type SingleMotionReview = ReturnType<typeof reviewMotion>;
 type PhaseRows<T extends ReadonlyArray<object>> = (T[number] & { phase?: MotionPhase })[];
+type MotionSequence = readonly [HeldMotion, HeldMotion];
 export type MotionReview = Omit<SingleMotionReview, "hits" | "zone" | "site" | "siteFindings" | "preview"> & {
-  sequence?: readonly [MotionPlan, MotionPlan];
+  sequence?: MotionSequence;
   clearance?: PairClearanceFinding;
   hits: PhaseRows<SingleMotionReview["hits"]>;
   zone: PhaseRows<SingleMotionReview["zone"]>;
@@ -1114,30 +1119,41 @@ const phaseSize = 50;
 const sequenceEnd = phaseSize * 2;
 const phaseAt = (travel: number): MotionPhase => travel < phaseSize ? 0 : 1;
 const phaseStart = (phase: MotionPhase) => phase * phaseSize;
-const phaseTravel = (phase: MotionPhase, plan: MotionPlan, total: number) =>
-  ((total - phaseStart(phase)) / phaseSize) * plan.mechanism.travel;
-const sequenceTravel = (phase: MotionPhase, plan: MotionPlan, local: number) =>
-  phaseStart(phase) + (local / plan.mechanism.travel) * phaseSize;
+const phaseTravel = (phase: MotionPhase, target: number, total: number) =>
+  ((total - phaseStart(phase)) / phaseSize) * target;
+const sequenceTravel = (phase: MotionPhase, target: number, local: number) =>
+  phaseStart(phase) + (local / target) * phaseSize;
 
-function sequencePosition(sequence: NonNullable<MotionReview["sequence"]>, travel: number, phase = phaseAt(travel)) {
-  const plan = sequence[phase];
-  return `${plan.label} · ${motionDistance(phaseTravel(phase, plan, travel), plan.mechanism.kind)}`;
+function motionSequence(selected: MotionPlan, companion: MotionPlan, order: MotionOpeningOrder, targets?: MotionSequenceTargets): MotionSequence {
+  const leg = (plan: MotionPlan, target?: MotionSequenceTargets["selected"]) => {
+    if (target && (target.kind !== plan.mechanism.kind || target.travel > plan.mechanism.travel))
+      throw Error(`The saved travel target for ${plan.label} no longer fits its motion. Update the test target or restore full travel.`);
+    return { plan, travel: target?.travel ?? plan.mechanism.travel };
+  };
+  const first = leg(selected, targets?.selected);
+  const second = leg(companion, targets?.companion);
+  return order === "selected-first" ? [first, second] : [second, first];
+}
+
+function sequencePosition(sequence: MotionSequence, travel: number, phase = phaseAt(travel)) {
+  const leg = sequence[phase];
+  return `${leg.plan.label} · ${motionDistance(phaseTravel(phase, leg.travel, travel), leg.plan.mechanism.kind)}`;
 }
 
 function reviewMotionSequence(
   project: Project,
   plan: MotionPlan,
-  sequence: NonNullable<MotionReview["sequence"]>,
+  sequence: MotionSequence,
   held: readonly HeldMotion[],
 ): MotionReview {
   const [first, second] = sequence;
   const phases = [
-    reviewMotion(project, first, [...held, { plan: second, travel: 0 }]),
-    reviewMotion(project, second, [...held, { plan: first, travel: first.mechanism.travel }]),
+    reviewMotion(project, first.plan, [...held, { plan: second.plan, travel: 0 }], undefined, first.travel),
+    reviewMotion(project, second.plan, [...held, first], undefined, second.travel),
   ] as const;
   const phaseIndices: MotionPhase[] = [0, 1];
   const asProgress = (phase: MotionPhase, local: number) =>
-    sequenceTravel(phase, sequence[phase], local);
+    sequenceTravel(phase, sequence[phase].travel, local);
   const site = phaseIndices.flatMap((phase) => phases[phase].site.map((row) => ({
     ...row, phase, inspectAt: row.inspectAt === null ? null : asProgress(phase, row.inspectAt),
   })));
@@ -1180,8 +1196,8 @@ function reviewMotionSequence(
         const low = Math.max(Math.min(from, to), legStart);
         const high = Math.min(Math.max(from, to), legStart + phaseSize);
         if (low >= high) continue;
-        const localLow = phaseTravel(phase, sequence[phase], low);
-        const localHigh = phaseTravel(phase, sequence[phase], high);
+        const localLow = phaseTravel(phase, sequence[phase].travel, low);
+        const localHigh = phaseTravel(phase, sequence[phase].travel, high);
         const limit = phases[phase].playbackLimit(forward ? localLow : localHigh, forward ? localHigh : localLow);
         if (limit.inspectAt !== undefined)
           return {
@@ -1196,7 +1212,7 @@ function reviewMotionSequence(
     preview(requested, inspectAt, siteFaceId, phaseHint) {
       const travel = motionPosition(requested, sequenceEnd);
       const phase = phaseHint ?? phaseAt(travel);
-      const local = (value: number) => phaseTravel(phase, sequence[phase], value);
+      const local = (value: number) => phaseTravel(phase, sequence[phase].travel, value);
       return {
         ...phases[phase].preview(local(travel), inspectAt === undefined ? undefined : local(inspectAt), siteFaceId),
         bounds: sweepBounds,
@@ -1257,7 +1273,7 @@ export function runMotionTest(
     const { held, linked } = resolveMotionTestSetup(project, setup);
     let review: MotionReview;
     if (linked && setup?.openingOrder) {
-      const sequence = setup.openingOrder === "selected-first" ? [plan, linked] as const : [linked, plan] as const;
+      const sequence = motionSequence(plan, linked, setup.openingOrder, setup.sequenceTargets);
       review = reviewMotionSequence(project, plan, sequence, held);
     } else {
       review = reviewMotion(project, plan, held, linked);
@@ -1385,12 +1401,16 @@ function motionClearanceLines(project: Project, review: MotionReview) {
 function savedTestLines(project: Project, label: string, setup: MotionTestSetup, result: MotionTestResult, unavailableLabel = label) {
   if (!result.review) return [`${unavailableLabel} · Needs review. ${result.error}`];
   const { held, linked } = resolveMotionTestSetup(project, setup);
+  const { sequence } = result.review;
   return [
     [
       label,
-      ...(result.review.sequence
-        ? [`opens in order: ${result.review.sequence.map(({ label }) => label).join(" → ")}. Closing reverses the order.`]
+      ...(sequence
+        ? [`opens in order: ${sequence.map(({ plan }) => plan.label).join(" → ")}. Closing reverses the order.`]
         : linked ? [`moves with ${linked.label}`] : []),
+      ...(sequence && setup.sequenceTargets
+        ? [`Test targets · ${sequence.map(({ plan, travel }) => `${plan.label} ${motionDistance(travel, plan.mechanism.kind)}`).join(", ")}.`]
+        : []),
       ...held.map(({ plan, travel }) => `${plan.label} held at ${motionDistance(travel, plan.mechanism.kind)}`),
     ].join(" · "),
     ...motionClearanceLines(project, result.review),

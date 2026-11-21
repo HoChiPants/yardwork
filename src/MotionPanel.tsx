@@ -12,6 +12,7 @@ import { greenhouseVentChoices, greenhouseVentReview } from "./greenhouseVents";
 import { useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
+import { MotionSequenceTargetsFields } from "./MotionSequenceTargetsFields";
 import {
   GreenhouseDoorDetails,
   GreenhouseDoorEditor,
@@ -48,6 +49,7 @@ import {
   type MotionPlan,
   type MotionPlanInput,
   type MotionPairClearance,
+  type MotionSequenceTargets,
   type MotionTestSetup,
 } from "./motionPlanSchema";
 import { accuride3732 } from "./drawerSlideReference";
@@ -466,12 +468,13 @@ function heldMotions(
   return held;
 }
 
-function testSetupFrom(linkedId: string, positions: ReadonlyMap<string, number>, openingOrder?: MotionOpeningOrder, clearance?: MotionPairClearance): MotionTestSetup | undefined {
+function testSetupFrom(linkedId: string, positions: ReadonlyMap<string, number>, openingOrder?: MotionOpeningOrder, clearance?: MotionPairClearance, sequenceTargets?: MotionSequenceTargets): MotionTestSetup | undefined {
   if (!linkedId && !positions.size && !clearance) return undefined;
   return {
     ...(linkedId && { linkedId }),
     ...(linkedId && openingOrder && { openingOrder }),
     ...(clearance && { clearance }),
+    ...(linkedId && openingOrder && sequenceTargets && { sequenceTargets }),
     held: [...positions].map(([motionId, percent]) => ({ motionId, percent })),
   };
 }
@@ -514,6 +517,7 @@ export function MotionPanel({
     linkedId: string;
     openingOrder?: MotionOpeningOrder;
     clearance?: MotionPairClearance;
+    sequenceTargets?: MotionSequenceTargets;
     positions: Map<string, number>;
   } | null>(() =>
     initialTest ? {
@@ -521,6 +525,7 @@ export function MotionPanel({
       linkedId: initialTest.setup?.linkedId ?? "",
       openingOrder: initialTest.setup?.openingOrder,
       clearance: initialTest.setup?.clearance,
+      sequenceTargets: initialTest.setup?.sequenceTargets,
       positions: heldPositionsFrom(initialTest.setup),
     } : null,
   );
@@ -547,9 +552,10 @@ export function MotionPanel({
   const linkedId = draft ? draft.linkedId : savedSetup?.linkedId ?? "";
   const openingOrder = draft ? draft.openingOrder : savedSetup?.openingOrder;
   const clearance = draft ? draft.clearance : savedSetup?.clearance;
-  const testSetup = testSetupFrom(linkedId, heldPositions, openingOrder, clearance);
+  const sequenceTargets = draft ? draft.sequenceTargets : savedSetup?.sequenceTargets;
+  const testSetup = testSetupFrom(linkedId, heldPositions, openingOrder, clearance, sequenceTargets);
   const sameSetup = JSON.stringify(testSetup) === JSON.stringify(
-    testSetupFrom(savedSetup?.linkedId ?? "", savedPositions, savedSetup?.openingOrder, savedSetup?.clearance),
+    testSetupFrom(savedSetup?.linkedId ?? "", savedPositions, savedSetup?.openingOrder, savedSetup?.clearance, savedSetup?.sequenceTargets),
   );
   const trimmedName = scenarioName.trim();
   const nameMatch = scenarios.find(({ name }) => name.toLowerCase() === trimmedName.toLowerCase());
@@ -607,7 +613,7 @@ export function MotionPanel({
   function loadTestSetup(plan: MotionPlan, setup?: MotionTestSetup, startClosed = false) {
     const positions = heldPositionsFrom(setup);
     const companion = setup?.linkedId ?? "";
-    setSetupDraft({ motionId: plan.id, linkedId: companion, positions, openingOrder: setup?.openingOrder, clearance: setup?.clearance });
+    setSetupDraft({ motionId: plan.id, linkedId: companion, positions, openingOrder: setup?.openingOrder, clearance: setup?.clearance, sequenceTargets: setup?.sequenceTargets });
     const restart = startClosed || openingOrder !== setup?.openingOrder || (openingOrder && linkedId !== companion);
     test(plan, project, restart ? 0 : preview?.travel ?? 0, setup ?? null);
   }
@@ -663,8 +669,8 @@ export function MotionPanel({
     const next = new Map(heldPositions);
     if (percent === undefined) next.delete(id);
     else next.set(id, percent);
-    setSetupDraft({ motionId: selected.id, linkedId, positions: next, openingOrder, clearance });
-    if (preview) test(selected, project, preview.travel, testSetupFrom(linkedId, next, openingOrder, clearance) ?? null);
+    setSetupDraft({ motionId: selected.id, linkedId, positions: next, openingOrder, clearance, sequenceTargets });
+    if (preview) test(selected, project, preview.travel, testSetupFrom(linkedId, next, openingOrder, clearance, sequenceTargets) ?? null);
     else {
       setActiveReview(null);
       setError("");
@@ -683,9 +689,10 @@ export function MotionPanel({
   function link(id: string, order: MotionOpeningOrder | null | undefined = openingOrder) {
     if (!selected) return;
     const nextOrder = id ? order ?? undefined : undefined;
-    setSetupDraft({ motionId: selected.id, linkedId: id, positions: heldPositions, openingOrder: nextOrder, clearance });
+    const targets = id === linkedId && nextOrder ? sequenceTargets : undefined;
+    setSetupDraft({ motionId: selected.id, linkedId: id, positions: heldPositions, openingOrder: nextOrder, clearance, sequenceTargets: targets });
     if (preview)
-      test(selected, project, openingOrder || nextOrder ? 0 : preview.travel, testSetupFrom(id, heldPositions, nextOrder, clearance) ?? null);
+      test(selected, project, openingOrder || nextOrder ? 0 : preview.travel, testSetupFrom(id, heldPositions, nextOrder, clearance, targets) ?? null);
     else {
       setActiveReview(null);
       setError("");
@@ -881,6 +888,15 @@ export function MotionPanel({
           </span>
         </label>
       )}
+      {selected && linked && openingOrder && editing === null && (
+        <MotionSequenceTargetsFields
+          key={JSON.stringify(["travel targets", selected.id, linked.id, sequenceTargets])}
+          selected={selected}
+          companion={linked}
+          current={sequenceTargets}
+          onTest={(targets) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, clearance, targets), true)}
+        />
+      )}
       {(otherMotions.length > 0 || held.length > 0) && editing === null && (
         <details className="field-section" open={savedSetup?.held.length ? true : undefined}>
           <summary>
@@ -933,12 +949,12 @@ export function MotionPanel({
       )}
       {selected && editing === null && (
         <MotionPairClearanceFields
-          key={JSON.stringify([selected.id, linked?.id, clearance])}
+          key={JSON.stringify(["minimum gap", selected.id, linked?.id, clearance])}
           pieces={project.pieces}
           movingIds={[...selected.memberIds, ...linked?.memberIds ?? []]}
           labels={labels}
           current={clearance}
-          onTest={(next) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, next))}
+          onTest={(next) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, next, sequenceTargets))}
         />
       )}
       {selected && editing === null && (testSetup || savedSetup) && (
@@ -1147,12 +1163,12 @@ export function MotionPanel({
               className="text-button"
               onClick={() => show(motionReviewTravel(review))}
             >
-              Inspect fully open
+              {review.sequence?.some(({ plan, travel }) => travel < plan.mechanism.travel) ? "Inspect test endpoint" : "Inspect fully open"}
             </button>
             {review.sequence && (
               <button type="button" className="text-button"
                 onClick={() => show(motionReviewTravel(review) / 2, undefined, 0)}>
-                Inspect after {review.sequence[0].label} opens
+                Inspect after {review.sequence[0].plan.label} opens
               </button>
             )}
           </div>

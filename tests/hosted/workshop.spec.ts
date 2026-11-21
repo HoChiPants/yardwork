@@ -479,6 +479,79 @@ test("a drawer can pass without touching and still fail a saved minimum gap test
   expect(guide).toContain("Shortfall. Observed 0.0625 in near 6 in.");
 });
 
+test("a door can stop short of a wall while a drawer opens to a saved target", async ({ page }) => {
+  const project = blank("Cabinet beside a wall");
+  const step = project.steps[0].id;
+  const drawer = part("Pull-out drawer", "plywood", [1, 2, 1], [5, 10, -8], step, "Cabinet");
+  const door = part("Cabinet door", "plywood", [12, 5, 0.75], [6, 10, 0], step, "Cabinet");
+  const wall = part("Wall return", "plywood", [0.6, 5, 0.6], [0, 10, 11.5], step, "Cabinet");
+  const slide = saveMotionPlan({ ...project, pieces: [drawer, door, wall] }, {
+    label: drawer.name, memberIds: [drawer.id],
+    mechanism: { kind: "slide", axis: [0, 0, 1], travel: 24 },
+  });
+  const swing = saveMotionPlan(slide.project, {
+    label: door.name, memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: [0, 10, 0], travel: 90 },
+  });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "cabinet-beside-wall.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...swing.project, schemaVersion: 85 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  const openMotion = () => page.getByRole("button", { name: "Test movement", exact: true }).click();
+  await openMotion();
+  const panel = page.getByRole("region", { name: "Motion and clearance", exact: true });
+  await panel.getByRole("combobox", { name: "Second motion", exact: true }).selectOption(swing.plan.id);
+  await panel.getByRole("combobox", { name: /Opening order/ }).selectOption("companion-first");
+  await panel.getByRole("button", { name: "Test motion", exact: true }).click();
+  await expect(panel.getByRole("button", { name: /Collision near Cabinet door/ })).toBeVisible();
+  await panel.getByText("Set travel targets for this test", { exact: true }).click();
+  await panel.getByRole("spinbutton", { name: "Cabinet door target angle (degrees)", exact: true }).fill("75");
+  await panel.getByRole("spinbutton", { name: "Pull-out drawer target extension", exact: true }).fill("12.5");
+  await panel.getByRole("button", { name: "Test these travel targets", exact: true }).click();
+  await expect(panel.getByText("No modeled interference found along this travel.", { exact: true })).toBeVisible();
+  const pose = page.getByTestId("motion-preview-label");
+  await panel.getByRole("button", { name: "Inspect after Cabinet door opens", exact: true }).click();
+  await expect(pose).toContainText("Cabinet door · 75°");
+  await panel.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(pose).toContainText("Pull-out drawer · 12.5 in");
+  await expect(pose).toHaveAttribute("data-pose", "100");
+  await panel.getByRole("button", { name: "Play closing", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "0");
+
+  await panel.getByText("Keep this test under a name", { exact: true }).click();
+  await panel.getByLabel("Clearance test name", { exact: true }).fill("Limited by wall");
+  await panel.getByRole("button", { name: "Save named test", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  const saved = (await readDraft()).project;
+  expect(saved.schemaVersion).toBe(PROJECT_FORMAT_VERSION);
+  expect(saved.motionPlans[0].testScenarios[0].setup.sequenceTargets).toEqual({
+    selected: { kind: "slide", travel: 12.5 }, companion: { kind: "hinge", travel: 75 },
+  });
+  expect(saved.motionPlans.map((motion: { mechanism: { travel: number } }) => motion.mechanism.travel)).toEqual([24, 90]);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await openMotion();
+  await panel.getByRole("combobox", { name: "Clearance test", exact: true }).selectOption({ label: "Limited by wall" });
+  await panel.getByRole("button", { name: "Inspect test endpoint", exact: true }).click();
+  await expect(pose).toContainText("Pull-out drawer · 12.5 in");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Test targets · Cabinet door 75°, Pull-out drawer 12.5 in.");
+  await expect(page.locator(".print-guide")).toContainText("Test targets · Cabinet door 75°, Pull-out drawer 12.5 in.");
+});
+
 test("rip first preserves a long scrap and applies both cuts as one saved plan", async ({ page }) => {
   const project = blank("Shelf and long filler");
   const step = project.steps[0].id;

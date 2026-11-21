@@ -118,6 +118,16 @@ export const motionPlanInputSchema = z.strictObject({
 const motionOpeningOrder = z.enum(["selected-first", "companion-first"]);
 export type MotionOpeningOrder = z.infer<typeof motionOpeningOrder>;
 
+const motionTestTargetSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("hinge"), travel: z.number().finite().positive().max(180) }),
+  z.strictObject({ kind: z.literal("slide"), travel: z.number().finite().positive().max(240) }),
+]);
+const motionSequenceTargetsSchema = z.strictObject({
+  selected: motionTestTargetSchema.optional(),
+  companion: motionTestTargetSchema.optional(),
+}).refine(({ selected, companion }) => !!(selected || companion), "Enter a target for at least one motion.");
+export type MotionSequenceTargets = z.infer<typeof motionSequenceTargetsSchema>;
+
 const motionPairClearanceSchema = z.strictObject({
   movingId: z.uuid(),
   otherId: z.uuid(),
@@ -129,6 +139,7 @@ export const motionTestSetupSchema = z
   .strictObject({
     linkedId: z.uuid().optional(),
     openingOrder: motionOpeningOrder.optional(),
+    sequenceTargets: motionSequenceTargetsSchema.optional(),
     clearance: motionPairClearanceSchema.optional(),
     held: z
       .array(
@@ -144,6 +155,10 @@ export const motionTestSetupSchema = z
       new Set(held.map(({ motionId }) => motionId)).size === held.length &&
       (linkedId ? !held.some(({ motionId }) => motionId === linkedId) : !openingOrder && (held.length > 0 || !!clearance)),
     "Choose distinct motions to move or hold, or enter a clearance between two parts.",
+  )
+  .refine(
+    ({ linkedId, openingOrder, sequenceTargets }) => !sequenceTargets || !!(linkedId && openingOrder),
+    { path: ["sequenceTargets"], message: "Choose two motions and an opening order before setting travel targets." },
   );
 
 export const motionTestScenarioLimit = 8;

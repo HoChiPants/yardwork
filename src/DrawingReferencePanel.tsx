@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { FileUp, Loader2 } from "lucide-react";
 import {
-  drawingAngleToXAxis, drawingCoordinateLimit, drawingPointDistance, drawingReferenceSchema, drawingReferenceSize,
+  drawingAngleToXAxis, drawingCoordinateLimit, drawingLineLimit, drawingPointDistance, drawingReferenceSchema, drawingReferenceSize,
   type DrawingCalibration, type DrawingPoint, type DrawingReference, type DrawingSource,
 } from "./drawingReference";
 import { readDrawing, type DrawingReader } from "./drawingPreview";
@@ -177,7 +177,7 @@ export function DrawingReferencePanel({ initial, onSave, onRemove }: {
       {source && <>
         <p className="drawing-file-title">{source.name}{source.page ? ` · Page ${source.page}` : ""}</p>
         {source.page && <p className="small-note">{source.pdfLines?.length
-          ? `${source.pdfLines.length} visible PDF lines available for snapping and room outlines.`
+          ? `${source.pdfLines.length} visible PDF lines available for snapping and room outlines.${source.pdfLines.length === drawingLineLimit ? " On dense sheets, Yardwork prioritizes longer lines." : ""}`
           : "This sheet is available for manual wall tracing."}</p>}
         {pages && pages > 1 && <div className="drawing-page-row">
           <label className="field">PDF page (1–{pages})

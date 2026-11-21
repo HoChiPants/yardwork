@@ -1323,6 +1323,10 @@ function World(props: SceneProps) {
   const reference = props.project.drawingReference;
   const drawing = !isolated && !props.focusedMotion && !props.readOnly && reference?.calibration.visible ? reference : null;
   const planLines = props.outlineReferenceLines ?? props.project.planLines;
+  const referencePoints = useMemo(() => planLines.flatMap(({ a, b }) => [
+    a.map((value) => value / 12) as V3,
+    b.map((value) => value / 12) as V3,
+  ]), [planLines]);
   const drawingBounds = useMemo(() => {
     if (drawing && props.view.preset !== "plan") return drawingReferenceBounds(drawing, drawing.calibration);
     if (!planLines.length || (props.view.preset !== "plan" && props.view.preset !== "drawing")) return null;
@@ -1615,14 +1619,8 @@ function World(props: SceneProps) {
         .map((p) => (
           <PlacedPart key={p.id} p={p} props={props} texture={texture} />
         ))}
-      {!isolated && planLines.map((l, i) => (
-        <Line
-          key={i}
-          points={[l.a.map((v) => v / 12) as V3, l.b.map((v) => v / 12) as V3]}
-          color="#548d9b"
-          lineWidth={props.outlineReferenceLines ? 1.5 : 2}
-        />
-      ))}
+      {!isolated && referencePoints.length > 0 && <Line segments points={referencePoints}
+        color="#548d9b" lineWidth={props.outlineReferenceLines ? 1.5 : 2} raycast={() => null} />}
       {!props.readOnly && props.mode !== "trace-wall" && props.project.joints.map((j) => {
         const a = visible.find((p) => p.id === j.a),
           b = visible.find((p) => p.id === j.b);

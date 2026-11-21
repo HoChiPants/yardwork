@@ -162,7 +162,7 @@ export function extractPdfPlanLines(
   if (!matrix || !page) return [];
   let state: Graphics = { matrix, clips: [page], dashed: false, strokeAlpha: 1, fillAlpha: 1, lineWidth: 1, masked: false };
   const stack: Graphics[] = [], layers: boolean[] = [];
-  const result = new Map<string, DrawingLine>();
+  const result = new Map<string, { line: DrawingLine; length: number }>();
   const strokeOps = new Set([ops.stroke, ops.closeStroke, ops.fillStroke, ops.eoFillStroke, ops.closeFillStroke, ops.closeEOFillStroke]);
   const fillOps = new Set([ops.fill, ops.eoFill, ops.fillStroke, ops.eoFillStroke, ops.closeFillStroke, ops.closeEOFillStroke]);
   let pendingClip = false, pathUnits = 0, hiddenLayers = 0;
@@ -170,6 +170,11 @@ export function extractPdfPlanLines(
   const restore = () => { state = stack.pop() ?? state; };
   const putClip = (polygon: Polygon | null) => { state.clips = state.clips && polygon ? [...state.clips, polygon] : null; };
   const setDash = (value: unknown) => { state.dashed = numericList(value) && value.length > 0; };
+  const retainLongest = () => {
+    const ordered = [...result].sort(([keyA, a], [keyB, b]) => b.length - a.length || keyA.localeCompare(keyB));
+    result.clear();
+    for (const [key, candidate] of ordered.slice(0, drawingLineLimit)) result.set(key, candidate);
+  };
   const append = (segments: Segment[], widthHint: number) => {
     for (const segment of segments) {
       const clipped = state.clips && clipSegment(segment, state.clips);
@@ -177,8 +182,9 @@ export function extractPdfPlanLines(
       const [a, b] = clipped.map(([x, y]): Point => [normalize(x / image.width), normalize(y / image.height)]);
       const [from, to] = a[0] < b[0] || a[0] === b[0] && a[1] <= b[1] ? [a, b] : [b, a];
       const line: DrawingLine = [...from, ...to];
-      result.set(line.join(","), line);
-      if (result.size > drawingLineLimit) return;
+      const length = Math.hypot((to[0] - from[0]) * image.width, (to[1] - from[1]) * image.height);
+      result.set(line.join(","), { line, length });
+      if (result.size > drawingLineLimit * 2) retainLongest();
     }
   };
   for (const [index, operator] of operators.fnArray.entries()) {
@@ -252,13 +258,13 @@ export function extractPdfPlanLines(
           putClip(path && !path.curved && path.parts.length === 1 ? convexPolygon(path.parts[0]) : null);
           pendingClip = false;
         }
-        if (result.size > drawingLineLimit) return [];
         break;
       }
       case ops.endPath: pendingClip = false; break;
     }
   }
-  return [...result.values()];
+  if (result.size > drawingLineLimit) retainLongest();
+  return [...result.values()].map(({ line }) => line);
 }
 
 const normalize = (fraction: number) => Math.min(1, Math.max(0, Math.round(fraction * 1e8) / 1e8));

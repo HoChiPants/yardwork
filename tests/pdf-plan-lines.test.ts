@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { drawingPlanLines, drawingReferenceSchema, type DrawingReference } from "../src/drawingReference";
+import { drawingLineLimit, drawingPlanLines, drawingReferenceSchema, type DrawingReference } from "../src/drawingReference";
 import { extractPdfPlanLines } from "../src/pdfPlanLines";
 
 const ops = Object.fromEntries("save restore transform constructPath clip eoClip endPath stroke closeStroke fill eoFill fillStroke eoFillStroke closeFillStroke closeEOFillStroke setLineWidth setDash setGState paintFormXObjectBegin paintFormXObjectEnd beginGroup endGroup beginMarkedContent beginMarkedContentProps endMarkedContent"
@@ -76,4 +76,18 @@ test("retained PDF linework applies the same measured scale, center and angle as
   assert.deepEqual(rounded(mapped.b), [54, 0.1, 68]);
   assert.deepEqual(drawingPlanLines({ ...parsed, pdfLines: undefined }), []);
   assert.equal(drawingReferenceSchema.safeParse({ ...parsed, page: undefined }).success, false);
+});
+
+test("short visible marks on a dense sheet leave room for longer wall lines drawn later", () => {
+  const marks: [string, unknown][] = Array.from({ length: drawingLineLimit * 2 + 100 }, (_, index) => {
+    const x = 20 + index * 0.012;
+    return ["constructPath", path("stroke", line(x, 10, x + 4, 10))];
+  });
+  const result = read([...marks,
+    ["constructPath", path("stroke", box(20, 40, 170, 90))],
+  ], painted([[20, 10, 100, 10], [20, 40, 170, 40], [170, 40, 170, 90], [170, 90, 20, 90], [20, 90, 20, 40]]));
+  assert.equal(result.length, drawingLineLimit);
+  for (const edge of [[0.1, 0.33333333, 0.85, 0.33333333], [0.1, 0.75, 0.85, 0.75],
+    [0.1, 0.33333333, 0.1, 0.75], [0.85, 0.33333333, 0.85, 0.75]])
+    assert.ok(result.some((line) => line.every((value, index) => value === edge[index])));
 });

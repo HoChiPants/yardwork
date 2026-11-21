@@ -1,3 +1,5 @@
+import { DrawerBoxPanel } from "./DrawerBoxPanel";
+import { drawerCabinetPanels } from "./drawerBoxes";
 import { clearGreenhouseLatch } from "./greenhouseLatch";
 import { GreenhouseLatchPanel } from "./GreenhouseLatchPanel";
 import { ventBackingSummary, type VentBackingReview } from "./greenhouseVentBacking";
@@ -9,7 +11,7 @@ import {
   saunaDoorReview,
 } from "./saunaDoors";
 import { greenhouseVentChoices, greenhouseVentReview } from "./greenhouseVents";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { formatPreciseInches } from "./measurement";
 import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
@@ -554,6 +556,8 @@ export function MotionPanel({
   selectedIds,
   preview,
   initialTest,
+  drawerRequest,
+  onDrawerRequestHandled,
   onPreview,
   onChange,
 }: {
@@ -561,6 +565,8 @@ export function MotionPanel({
   selectedIds: string[];
   preview: MotionPreview | null;
   initialTest?: MotionTestSelection;
+  drawerRequest?: { panelIds: [string, string] };
+  onDrawerRequestHandled?: () => void;
   onPreview: (preview: MotionPreview | null, source?: Project) => void;
   ventBacking: readonly VentBackingReview[];
   onShowSashGaps: (entryId: string) => void;
@@ -569,6 +575,7 @@ export function MotionPanel({
   onChange: (project: Project) => Project;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
+  const [drawerPanels, setDrawerPanels] = useState<string[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState(initialTest?.plan.id ?? "");
   const [scenarioId, setScenarioId] = useState(initialTest?.scenarioId ?? "");
   const [scenarioName, setScenarioName] = useState(() =>
@@ -791,6 +798,13 @@ export function MotionPanel({
     setError("");
     onPreview(null);
   };
+  useEffect(() => {
+    if (drawerRequest) {
+      setDrawerPanels(drawerRequest.panelIds);
+      edit("drawer-box-new");
+      onDrawerRequestHandled?.();
+    }
+  }, [drawerRequest]);
   const kind = selected?.mechanism.kind ?? "hinge";
   const distance = (value: number, phase?: MotionPhase) =>
     review ? motionReviewDistance(review, value, phase) : motionDistance(value, kind);
@@ -815,6 +829,16 @@ export function MotionPanel({
   const saunaEditor =
     editing === "sauna-door-new" || (existing && saunaDoorPlanEntry(existing));
   const saunaReview = selected ? saunaDoorReview(project, selected) : null;
+
+  function addDrawer(next: Project, plan: MotionPlan) {
+    const saved = onChange(next);
+    setSelectedPlanId(plan.id);
+    setScenarioId("");
+    setScenarioName("");
+    setSetupDraft(null);
+    setEditing(null);
+    test(plan, saved, 0, null);
+  }
 
   function saveDraft(draft: MotionPlanInput) {
     const setup =
@@ -1061,7 +1085,10 @@ export function MotionPanel({
           {atScenarioLimit && <p className="small-note">{motionTestScenarioLimit} named tests saved. Remove one to add another.</p>}
         </details>
       )}
-      {saunaEditor ? (
+      {editing === "drawer-box-new" ? (
+        <DrawerBoxPanel project={project} initialPanels={drawerPanels} onPreview={onPreview}
+          onSave={addDrawer} onCancel={() => edit(null)} />
+      ) : saunaEditor ? (
         <SaunaDoorEditor
           project={project}
           existing={existing}
@@ -1101,6 +1128,12 @@ export function MotionPanel({
           >
             New motion
           </button>
+          {drawerCabinetPanels(project).length >= 2 && (
+            <button type="button" className="button secondary" onClick={() => {
+              setDrawerPanels(selectedIds);
+              edit("drawer-box-new");
+            }}>Fit a drawer box</button>
+          )}
           {greenhouseDoorChoices(project).some(
             ({ entry }) =>
               !plans.some(

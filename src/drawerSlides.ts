@@ -27,7 +27,7 @@ const basis: V3[] = [
 ];
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
-function rectangularBounds(part: Piece, frame: V3[]) {
+export function rectangularDrawerPanelBounds(part: Piece, frame: V3[]) {
   const stock = material(part.material);
   if (!stock.wood || stock.stockKind !== "sheet" || part.cutPlanes?.length || part.roundOpenings?.length || part.rectangularOpenings?.length)
     return null;
@@ -127,7 +127,7 @@ export function reviewDrawerSlide(
     [x, 0, z],
   ];
   const panels = keys.map((key) => {
-    const projected = rectangularBounds(parts.get(setup[key])!, frame);
+    const projected = rectangularDrawerPanelBounds(parts.get(setup[key])!, frame);
     if (
       !projected ||
       projected[0].max - projected[0].min >=

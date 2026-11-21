@@ -1578,6 +1578,10 @@ export function Scene(props: SceneProps) {
     const poses = new Map(motion?.pieces.map((piece) => [piece.id, piece]));
     const pieces = props.project.pieces.filter((piece) => !hidden.has(piece.id))
       .map((piece) => piece.id === preview?.piece.id ? preview.piece : poses.get(piece.id) ?? piece);
+    if (motion?.draftGeometry) {
+      const committedIds = new Set(props.project.pieces.map(({ id }) => id));
+      pieces.push(...motion.pieces.filter(({ id }) => !committedIds.has(id)));
+    }
     const focus = motion?.focusPair ?? preview?.focusPair;
     const pair = focus ? pieces.filter((piece) => !piece.offcut && focus.includes(piece.id)) : [];
     return pair.length === 2

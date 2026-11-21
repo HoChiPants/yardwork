@@ -1337,3 +1337,82 @@ test("a proposal shows board cuts, reuses a named scrap and saves the exact cut 
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/Recorded offcut cut order[\s\S]+O001[\s\S]+O004/);
 });
+
+test("a named cabinet opening produces a drawer cut list and stops the saved slide at an obstruction", async ({ page }) => {
+  const base = blank("Shelf cabinet with a new drawer");
+  const left = part("Cabinet side left", "plywood", [0.75, 10, 18.25], [-8.375, 5, 0], base.steps[0].id, "Cabinet");
+  const right = part("Cabinet side right", "plywood", [0.75, 10, 18.25], [8.375, 5, 0], base.steps[0].id, "Cabinet");
+  const island = part("Island obstruction", "plywood", [30, 8, 0.75], [0, 4, 20], base.steps[0].id, "Island");
+  base.pieces.push(left, right, island);
+  const source = addMeasuredOffcut(base, base.steps[0].id, pureBondCasework.materialId, [35, 19, 0.703], "Drawer test scrap");
+
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "cabinet-opening.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(source)),
+  });
+  await expect(dialog).toHaveCount(0);
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.project.name).toContain(source.name);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Plan a drawer between P001 and P002");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Drawer opening", exact: true });
+  await expect(answer).toContainText("16 in wide opening with 18.25 in of common depth");
+  await answer.getByRole("button", { name: "Open drawer setup" }).click();
+
+  const setup = page.getByRole("region", { name: "Fit a drawer box", exact: true });
+  await expect(setup.getByLabel("First cabinet side")).toHaveValue(left.id);
+  await expect(setup.getByLabel("Opposite cabinet side")).toHaveValue(right.id);
+  await setup.getByText("Front and fit clearances", { exact: true }).click();
+  const face = setup.getByRole("checkbox", { name: "Add an inset finished front", exact: true });
+  await face.check();
+  await expect(setup.getByRole("spinbutton", { name: "Box depth", exact: true })).toHaveValue("16");
+  await face.uncheck();
+  await expect(setup.getByRole("spinbutton", { name: "Box depth", exact: true })).toHaveValue("18");
+  await setup.getByRole("button", { name: "Preview drawer", exact: true }).click();
+
+  const preview = setup.getByRole("region", { name: "Drawer box preview" });
+  await expect(preview).toContainText("14.96875 in wide · 18 in deep · 4 in high");
+  await expect(preview.getByRole("listitem")).toHaveCount(5);
+  await expect(preview.getByRole("link", { name: "T46322G18 slide pair" })).toHaveAttribute("href", "https://www.homedepot.com/p/202214904");
+  await expect(preview.getByRole("status")).toContainText("an obstruction or clearance limit");
+  await preview.getByRole("button", { name: "Show opening limit", exact: true }).click();
+  const pose = page.getByTestId("motion-preview-label");
+  await expect(pose).toContainText("Cabinet drawer preview");
+  await expect(pose).toContainText("Island obstruction");
+  expect(Number(await pose.getAttribute("data-pose"))).toBeGreaterThan(10);
+  expect(Number(await pose.getAttribute("data-pose"))).toBeLessThan(11.5);
+  expect((await draft()).project.pieces).toHaveLength(4);
+
+  await preview.getByRole("checkbox", { name: "Use matching scraps for drawer panels" }).check();
+  await expect(preview.getByRole("list", { name: "Proposed cuts in order" })).toContainText("Drawer test scrap");
+  await preview.getByRole("button", { name: "Add drawer and test movement" }).click();
+  const motion = page.getByRole("region", { name: "Motion and clearance" });
+  await motion.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(pose).toContainText("Contact ahead");
+  await expect(pose).toContainText("Island obstruction");
+  const fit = motion.getByRole("region", { name: "Drawer slide fit", exact: true });
+  await fit.getByRole("button", { name: "Add missing slide pair to list" }).click();
+  await expect(fit).toContainText("1 planned pair · 1 in shopping list");
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = (await draft()).project;
+  expect(saved.motionPlans[0].memberIds).toHaveLength(5);
+  expect(saved.pieces.find(({ id }: { id: string }) => id === left.id).position).toEqual(left.position);
+  expect(saved.supplies).toMatchObject([{ productId: "accuride-t46322g18", quantity: 1 }]);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: base.name }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/Recorded offcut cut order[\s\S]*Cabinet drawer/);
+  expect(guide).toContain("Dry-fit the five panels square");
+  expect(guide).toContain("T46322G18");
+});

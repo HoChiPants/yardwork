@@ -617,6 +617,7 @@ export function App() {
   const [lidTravelInspection, setLidTravelInspection] = useState<(LidTravelInspection & { project: Project }) | null>(null);
   const [sectionMotionPreview, setSectionMotionPreview] = useState<{ project: Project; value: MotionPreview; target: "bench" | "casework" } | null>(null);
   const [motionPreview, setMotionPreview] = useState<{ project: Project; value: MotionPreview } | null>(null);
+  const [drawerBoxRequest, setDrawerBoxRequest] = useState<{ projectId: string; panelIds: [string, string] } | null>(null);
   const [motionTestSelection, setMotionTestSelection] = useState<(MotionTestSelection & { project: Project }) | null>(null);
   const [clearanceRetest, setClearanceRetest] = useState<{
     projectId: string;
@@ -1229,6 +1230,16 @@ export function App() {
         break;
       case "cut-pool":
         setLibrary("cuts");
+        break;
+      case "drawer-box":
+        setDrawerBoxRequest({ projectId: project.id, panelIds: action.panelIds });
+        setRemovalTarget(null);
+        setMotionPreview(null);
+        setMotionTestSelection(null);
+        setStage(null);
+        setExplode(false);
+        setPlaying(false);
+        setPanel("motion");
         break;
       case "motion-setup":
         setRemovalTarget(null);
@@ -3425,6 +3436,8 @@ export function App() {
               )}
               <button type="button" className="text-button" onClick={() => openSiteClearances("motion")}>Measured site clearances</button>
               <MotionPanel key={project.id} project={project}
+              drawerRequest={drawerBoxRequest?.projectId === project.id ? drawerBoxRequest : undefined}
+              onDrawerRequestHandled={() => setDrawerBoxRequest(null)}
               initialTest={motionTestSelection?.project === project ? motionTestSelection : undefined}
               ventBacking={ventBacking}
               shownLatchId={shownLatchId}

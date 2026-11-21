@@ -1,5 +1,7 @@
 import type { BuildPreparationAction } from "./buildPreparation";
 import type { Finding } from "./engine";
+import { drawerBoxOpening } from "./drawerBoxes";
+import { formatPreciseInches } from "./measurement";
 import { inspectLidTravel } from "./lidTravelFindings";
 import {
   motionDistance,
@@ -17,6 +19,7 @@ export type BuildQuestion =
   | { kind: "checks" }
   | { kind: "motion"; subject: string }
   | { kind: "treated-wood" }
+  | { kind: "drawer-box"; labels: [string, string] }
   | { kind: "offcuts"; label?: string };
 
 export type BuildQuestionAction =
@@ -24,6 +27,7 @@ export type BuildQuestionAction =
   | { kind: "checks" }
   | { kind: "cut-pool" }
   | { kind: "motion-setup" }
+  | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
   | Extract<BuildPreparationAction, { kind: "motion" | "lid" | "part" | "offcut" }>;
@@ -67,6 +71,7 @@ const scrapQuestion =
   /^(?:what (?:could|can|should) i (?:use|reuse) ([op]\d{1,6}) for|(?:show|find|suggest) (?:uses|reuse options) for (?:offcut |scrap )?([op]\d{1,6})|(?:can|could) i reuse (?:offcut |scrap )?([op]\d{1,6}))$/i;
 const offcutQuestion =
   /^(?:(?:what|which) (?:offcuts|scraps|leftovers) (?:could|can|should) i (?:use|reuse)|(?:can|could) i reuse (?:any |my |the )?(?:offcuts|scraps|leftovers)|(?:review|show|plan|find) (?:the )?(?:offcut reuse|scrap reuse|uses for (?:my |the )?(?:scraps|offcuts)))$/i;
+const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (p\d{1,6}) and (p\d{1,6})$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -77,6 +82,8 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   );
   if (weaknessQuestion.test(text)) return { kind: "checks" };
   if (treatmentQuestion.test(text)) return { kind: "treated-wood" };
+  const drawer = drawerQuestion.exec(text);
+  if (drawer) return { kind: "drawer-box", labels: [labelKey(drawer[1]), labelKey(drawer[2])] };
   const scrap = scrapQuestion.exec(text);
   if (scrap)
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
@@ -383,6 +390,24 @@ export function answerBuildQuestion(
       return answerChecks(project, findings);
     case "motion":
       return answerMotion(project, question.subject);
+    case "drawer-box": {
+      const title = "Drawer opening";
+      const { partLabels } = ensurePartLabels(project);
+      const [first, second] = question.labels.map((label) => partLabels.find((row) => row.label === label)?.partId);
+      if (!first || !second)
+        return { title, detail: "Use the part labels of the two fixed cabinet sides." };
+      const panelIds: [string, string] = [first, second];
+      try {
+        const opening = drawerBoxOpening(project, panelIds);
+        return {
+          title,
+          detail: `${question.labels.join(" and ")} give a ${formatPreciseInches(opening.width)} wide opening with ${formatPreciseInches(opening.front - opening.back)} of common depth.`,
+          link: { label: "Open drawer setup", action: { kind: "drawer-box", panelIds } },
+        };
+      } catch (issue) {
+        return { title, detail: issue instanceof Error ? issue.message : "Review both cabinet sides." };
+      }
+    }
     case "treated-wood": {
       const cuts = treatedWoodCuts(project);
       const labels = new Map(ensurePartLabels(project).partLabels.map(({ partId, label }) => [partId, label]));

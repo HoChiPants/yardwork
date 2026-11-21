@@ -22,6 +22,10 @@ import { BottomPlateSealPanel } from "./BottomPlateSealPanel";
 import { bottomPlateSealGuide, bottomPlateSealReviews, removeBottomPlateSeal } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { SillGasketPanel } from "./SillGasketPanel";
+import { RimAirSealPanel } from "./RimAirSealPanel";
+import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey, removeRimAirSeal, saveRimAirSeal } from "./rimAirSeals";
+import { rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
+import type { RimSide } from "./rimAirSealSchema";
 import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
 import { WindowWallFields, windowWallExample } from "./WindowWallFields";
 import { DoorOpeningFields, DoorwayPanel, doorwayExample } from "./DoorwayPanel";
@@ -393,6 +397,7 @@ type Modal =
   | "sink-drain"
   | "subfloor-support"
   | "bottom-plate-seal"
+  | "rim-air-seal"
   | "water-support"
   | "export"
   | "assistant"
@@ -630,6 +635,8 @@ export function App() {
   const [shownBottomPlate, setShownBottomPlate] = useState<{ projectId: string; id: string } | null>(null);
   const [bottomPlateTarget, setBottomPlateTarget] = useState<string>();
   const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
+  const [shownRimSeal, setShownRimSeal] = useState<{ projectId: string; key: string }>();
+  const [rimSealTarget, setRimSealTarget] = useState<{ sectionId?: string; side?: RimSide }>();
   const [openingFlashingTarget, setOpeningFlashingTarget] = useState<{ projectId: string; sillId?: string } | null>(null);
   const [openingFlashingPreview, setOpeningFlashingPreview] = useState<{ project: Project; value: OpeningFlashingPreview } | null>(null);
   const [shownSiteClearanceId, setShownSiteClearanceId] = useState<string | null>(null);
@@ -1406,6 +1413,10 @@ export function App() {
         setBottomPlateTarget(action.planId);
         setModal("bottom-plate-seal");
         return;
+      case "rim-air-seal":
+        setRimSealTarget(action);
+        setModal("rim-air-seal");
+        return;
       case "sink-drain":
         setSinkDrainTarget(action.drainId);
         setModal("sink-drain");
@@ -1858,6 +1869,9 @@ export function App() {
     inspectWorkspace();
   }
   const shownSillGasket = sillGasketReview.rows.find(({ plan }) => plan.partId === shownSillGasketId);
+  const rimSealReview = useMemo(() => reviewRimAirSeals(project), [project]);
+  const visibleRimSeal = panel === "sections" && shownRimSeal?.projectId === project.id
+    ? rimSealReview.rows.find(({ plan, issues }) => !issues.length && rimAirSealKey(plan.input) === shownRimSeal.key) : undefined;
   const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
   const needsWoodContacts = panel === "prep" || modal === "export" || printingGuide ||
     (panel === "connections" && !!liveConnectionContext?.scope.modeledContactList);
@@ -2007,6 +2021,7 @@ export function App() {
   const exportWoodJointDetails = useMemo(() => woodJointDecisionEntries(exportGuide), [exportGuide]);
   const printTrimBacking = useMemo(() => trimBackerRodCutPlan(exportGuide, exportWoodJointDetails), [exportGuide, exportWoodJointDetails]);
   const printSillGaskets = useMemo(() => sillGasketGuideLines(reviewSillGaskets(exportGuide)), [exportGuide]);
+  const printRimSeals = useMemo(() => rimAirSealGuideLines(reviewRimAirSeals(exportGuide)), [exportGuide]);
   const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
   const printWindowWalls = useMemo(() => reviewGeneratedWindowWalls(exportGuide), [exportGuide]);
   const printCutSources = useMemo(
@@ -3151,6 +3166,7 @@ export function App() {
               shownSillGasket={panel === "sections" && shownSillGasket?.outline
                 ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
                 : undefined}
+              shownRimSeal={visibleRimSeal?.cuts}
               shownOpeningFlashing={panel === "opening-flashing" && openingFlashingPreview?.project === project
                 ? openingFlashingPreview.value : undefined}
               shownPlumbingVentLayout={shownVentDatums}
@@ -4052,6 +4068,12 @@ export function App() {
                 setBottomPlateTarget(shownBottomPlate?.projectId === project.id ? shownBottomPlate.id : undefined);
                 setModal("bottom-plate-seal");
               }}>Seal a bottom plate</button>
+              {(project.sections.some(({ generator }) => generator?.type === "foundation") || !!project.rimAirSeals?.length) &&
+                <button type="button" className="button secondary full" onClick={() => {
+                  setRimSealTarget(undefined);
+                  setModal("rim-air-seal");
+                }}>Plan rim air sealing</button>}
+              {visibleRimSeal && <button type="button" className="text-button" onClick={() => setShownRimSeal(undefined)}>Hide rim foam cuts</button>}
               <button type="button" className="button secondary full" onClick={() => {
                 setSubfloorTarget(shownSubfloor?.projectId === project.id ? shownSubfloor.panelId : selected ?? undefined);
                 setModal("subfloor-support");
@@ -5477,7 +5499,7 @@ export function App() {
         >
           <section
             key={modal}
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "bottom-plate-seal" || modal === "subfloor-support" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "bottom-plate-seal" || modal === "rim-air-seal" || modal === "subfloor-support" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5606,6 +5628,25 @@ export function App() {
                 change((live) => saveSubfloorJoists(live, id, selection));
                 notify(selection ? "Joist check saved." : "Joist check removed.");
               })} />}
+            {modal === "rim-air-seal" && <RimAirSealPanel key={project.id} project={project}
+              initialSectionId={rimSealTarget?.sectionId ?? selectedSectionId ?? undefined} initialSide={rimSealTarget?.side}
+              onSave={(input) => safe(() => {
+                change((live) => saveRimAirSeal(live, input));
+                notify("Rim air seal saved. The foam cuts are in the build guide.");
+              })}
+              onRemove={(target) => safe(() => change((live) => removeRimAirSeal(live, target)))}
+              onShow={(target) => {
+                setShownRimSeal({ projectId: project.id, key: rimAirSealKey(target) });
+                setPanel("sections");
+                setStage(null);
+                setPlaying(false);
+                setExplode(false);
+                setLidMotionPreview(null);
+                setMotionPreview(null);
+                setSectionMotionPreview(null);
+                setModal(null);
+                inspectWorkspace();
+              }} />}
             {modal === "bottom-plate-seal" && <BottomPlateSealPanel project={project} selectedPart={selected} initialId={bottomPlateTarget}
               onSave={(draft) => safe(() => {
                 if (current.current !== project) throw Error("The workspace changed. Preview the seam again.");
@@ -7031,6 +7072,14 @@ export function App() {
             <h2>Bearing joints</h2>
             <p>{bearingConnectionScope}</p>
             <ul>{printBearingConnections.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printRimSeals.length > 0 && (
+          <section className="rim-air-seal-print">
+            <h2>Floor rim foam and air seals</h2>
+            <p>{rimSealScope}</p>
+            <ul>{printRimSeals.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={rimSealGuide}>PNNL field guide</a>{" · "}<a href={rimFoam.manufacturer}>Owens Corning instructions</a></p>
           </section>
         )}
         {printSillGaskets.length > 0 && (

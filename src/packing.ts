@@ -191,7 +191,11 @@ export function packRectangles(
       }
     }
     if (!placed) {
-      const v = variants[0];
+      const v = variants.find((variant) => fitsCut(width, variant.width) && fitsCut(length, variant.length));
+      if (!v) {
+        rejected.push(cut);
+        continue;
+      }
       rolls.push({
         plan: {
           width,

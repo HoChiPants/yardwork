@@ -3,6 +3,8 @@ import { subfloorAdhesiveTakeoff } from "./subfloorAdhesive";
 import { subfloorAdhesive, subfloorNails } from "./subfloorReference";
 import { subfloorCommonNailTakeoff } from "./subfloorFastening";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
+import { rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
+import { reviewRimAirSeals } from "./rimAirSeals";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { flexWrap } from "./openingFlashingReference";
@@ -185,6 +187,11 @@ export function homeDepotPurchaseNeeds(
     const { required } = bottomPlateSealTakeoff(project, seals);
     include(bottomPlateSealant.id, "Clear bottom plate bead runs by work session", required || null,
       required ? undefined : "Review changed or interrupted seams to establish cartridge use.");
+  }
+  if (project.rimAirSeals?.length) {
+    const { sheets, needsReview } = reviewRimAirSeals(project);
+    include(rimFoam.id, rimFoamPurchasePurpose, needsReview ? null : sheets.length,
+      needsReview ? "Remeasure changed or blocked bays before choosing the sheet quantity." : undefined);
   }
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);

@@ -93,6 +93,7 @@ export type SceneProps = {
   shownSubfloorJoists?: SubfloorJoistReview;
   shownBottomPlate?: { start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
+  shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[] }>;
   shownOpeningFlashing?: OpeningFlashingPreview;
   shownPlumbingVentLayout?: PlumbingVentLayout;
   shownDryerDuctLayout?: DryerDuctLayout;
@@ -1613,6 +1614,16 @@ function World(props: SceneProps) {
           </Html>
         </group>
       )}
+      {!isolated && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview &&
+        props.shownRimSeal?.map(({ id, outline }, index) => (
+          <group key={id}>
+            <Line points={outline.map((point) => point.map((value) => value / 12) as V3)}
+              color="#ad4e75" lineWidth={3} depthTest={false} raycast={() => null} />
+            {index === 0 && <Html position={outline[0].map((value) => value / 12) as V3} style={{ pointerEvents: "none" }}>
+              <span className="site-clearance-marker" data-testid="rim-seal-marker">Rim foam cuts</span>
+            </Html>}
+          </group>
+        ))}
       {!isolated && props.shownSillGasket && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <group>
           <Line points={props.shownSillGasket.points.map((point) => point.map((n) => n / 12) as V3)}

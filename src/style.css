@@ -3790,6 +3790,20 @@ small {
 .stock-size-options { display: flex; flex-wrap: wrap; gap: 8px; border: 0; padding: 0; margin: 18px 0; }
 .stock-size-options legend { margin-bottom: 8px; font-weight: 600; }
 .single-stock-size { margin-block: 14px; font-weight: 600; }
+.rim-seal-form { display: grid; gap: 12px; margin-top: 12px; }
+.rim-seal-form fieldset { margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; }
+.rim-seal-form legend { font-weight: 600; }
+.rim-seal-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr)); gap: 8px; }
+.rim-seal-fields .field { margin: 2px 0 8px; }
+.rim-seal-bay + .rim-seal-bay { border-top: 1px solid var(--line); }
+.rim-seal-bay { padding: 5px 0; }
+.rim-seal-check { display: flex; align-items: flex-start; gap: 8px; min-height: 32px; padding: 6px 0; }
+.rim-seal-check input { width: auto; flex: none; margin: 2px 0 0; }
+.rim-seal-results { display: grid; gap: 7px; padding: 12px; border: 1px solid #dce4d4; border-radius: 8px; }
+.rim-seal-results ul, .rim-seal-results ol { padding-left: 20px; margin-block: 5px; }
+.rim-seal-results summary { cursor: pointer; }
+.rim-seal-results button, .rim-seal-form > button { justify-self: start; }
+.rim-seal-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .stock-size-options label {
   display: inline-flex;
   align-items: center;

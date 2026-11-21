@@ -16,6 +16,7 @@ import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { bottomPlateScope, bottomPlateSealant } from "./bottomPlateSealReference";
+import { rimFoam, rimSealScope } from "./rimAirSealReference";
 import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
 import { trimSealant } from "./trimSealantReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
@@ -400,6 +401,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
       trimSealant.scope,
       "Use a compatible caulk gun. Dry-fit the trim and test the finish on a matching scrap before filling the seam.",
     ],
+  },
+  [rimFoam.id]: {
+    purchaseUnit: "sheet",
+    contents: [{ name: "2 in × 4 ft × 8 ft rigid foam sheet", quantity: 1 }],
+    requirements: [rimSealScope],
   },
   [flexWrap.id]: {
     purchaseUnit: "roll",

@@ -12,6 +12,8 @@ import { hingePurchaseSummary } from "./hingePurchases";
 import { connectorPurchaseSummary } from "./connectorPurchases";
 import { rodSocketPurchases } from "./rodFits";
 import { homeDepotAssemblyPurchaseReview, homeDepotPurchaseNeeds, homeDepotStockMatch, homeDepotToolReview } from "./handoffPurchases";
+import { rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
+import { reviewRimAirSeals } from "./rimAirSeals";
 const clean = (value: string) => value.replace(/[\r\n\t]+/g, " ").trim();
 const ventPurchaseReview = {
   name: "Sauna ventilation",
@@ -328,7 +330,20 @@ export function homeDepotShoppingList(project: Project, rows = bom(project), sup
   }
 
   for (const supply of supplies) {
-    if (!supply.quantity) continue;
+    let quantity = supply.quantity;
+    if (supply.productId === rimFoam.id) {
+      const selectedForRims = supply.selections.filter(({ purpose }) => purpose === rimFoamPurchasePurpose)
+        .reduce((total, row) => total + row.quantity, 0);
+      if (selectedForRims) {
+        const plan = reviewRimAirSeals(project);
+        const withheld = selectedForRims - (plan.needsReview ? 0 : plan.sheets.length);
+        if (withheld > 0) {
+          quantity -= withheld;
+          reviews.push({ name: supply.name, reason: `Review ${withheld} previously selected foam ${withheld === 1 ? "sheet" : "sheets"} against the current rim cuts.` });
+        }
+      }
+    }
+    if (!quantity) continue;
     if (supply.unresolved || !supply.offer || !supply.storeSnapshotEligible) {
       reviews.push({
         name: supply.name,
@@ -341,8 +356,8 @@ export function homeDepotShoppingList(project: Project, rows = bom(project), sup
     candidates.push({
       name: supply.name,
       description: supply.name,
-      quantity: supply.quantity,
-      unit: purchaseUnitLabel(supply.purchaseUnit, supply.quantity),
+      quantity,
+      unit: purchaseUnitLabel(supply.purchaseUnit, quantity),
       productId: supply.offer.productId,
       url: supply.offer.url,
       source: { kind: "supply", id: supply.productId },

@@ -118,6 +118,8 @@ import { rafterBearingGuideLines, rafterBearingScope, rafterJointSummary, review
 import { greenhouseAttachmentScope, greenhouseRoofAttachmentLines, greenhouseRoofAttachments, roofAttachmentSummary } from "./greenhouseRoofAttachments";
 import { greenhouseBaseConnections, greenhouseBaseGuideLines, greenhouseBaseScope, greenhouseBaseSummary } from "./greenhouseBaseConnections";
 import { floorBaseConnections, floorBaseConnectionGuideLines, floorBaseConnectionScope } from "./floorBaseConnections";
+import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey } from "./rimAirSeals";
+import { rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import { floorHangerGuideLines } from "./floorHangerPlans";
 import { floorHangerReport, floorHangerScope } from "./floorHangerReference";
 import { closetRods, reviewRodFit, rodFitMarkdown } from "./rodFits";
@@ -683,6 +685,12 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       severity: "warning",
       detail: row.issues.join(" "),
       pieceId: row.outline ? row.plan.partId : undefined,
+    });
+  }
+  for (const { name, rimId, plan, issues } of reviewRimAirSeals(p).rows) {
+    if (issues.length) findings.push({
+      id: `rim-air-seal-${rimAirSealKey(plan.input)}`, title: `Review rim air seal · ${name}`,
+      severity: "warning", detail: issues.join(" "), pieceId: rimId,
     });
   }
   for (const row of reviewOpeningFlashings(p).rows) {
@@ -2024,6 +2032,7 @@ export function guideMarkdown(p: Project) {
   const windowWalls = reviewGeneratedWindowWalls(p);
   const baseConnections = greenhouseBaseGuideLines(p, greenhouseBaseConnections(p, connections.intents));
   const floorJoints = floorBaseConnectionGuideLines(p, floorBaseConnections(p, connections.intents));
+  const rimAirSeals = rimAirSealGuideLines(reviewRimAirSeals(p));
   const floorHangers = floorHangerGuideLines(p, connections.intents);
   const doorKits = new Set((p.motionPlans ?? []).flatMap((plan) => {
     const kit = plan.mechanism.kind === "hinge" ? plan.mechanism.greenhouseDoor?.kitId : null;
@@ -2193,6 +2202,8 @@ export function guideMarkdown(p: Project) {
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     (floorHangers.length ? `\n\n## Floor base hanger plan\n\n${floorHangerScope}\n\n[ESR-3096 Table 20](${floorHangerReport})\n\n` +
       floorHangers.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
+    (rimAirSeals.length ? `\n\n## Floor rim foam and air seals\n\n${rimSealScope}\n\n[PNNL field guide](${rimSealGuide}) · [Owens Corning instructions](${rimFoam.manufacturer})\n\n` +
+      rimAirSeals.map((line) => "- " + line.replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     (panelBearing.length ? "\n\n## Shelf and seat bearing\n\n" + panelBearingScope + "\n\n" +
       panelBearing.map((line) => "- " +
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +

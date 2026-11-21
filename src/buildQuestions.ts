@@ -30,6 +30,9 @@ import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./tre
 import { groupedMaterials, materialFamilyVariants } from "./materialGroups";
 import { fittingBoardOffcuts } from "./offcutAssignment";
 import { normalizeIdeaText } from "./ideaEdits";
+import { reviewRimAirSeals, rimAirSealKey } from "./rimAirSeals";
+import { rimSealScope } from "./rimAirSealReference";
+import type { RimSide } from "./rimAirSealSchema";
 
 export type BuildQuestion =
   | { kind: "checks" }
@@ -44,6 +47,7 @@ export type BuildQuestion =
   | { kind: "sink-drain" }
   | { kind: "subfloor-support"; panelLabel?: string }
   | { kind: "bottom-plate-seal" }
+  | { kind: "rim-air-seal" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
@@ -65,6 +69,7 @@ export type BuildQuestionAction =
   | { kind: "sink-drain"; drainId?: string }
   | { kind: "subfloor-support"; panelId?: string }
   | { kind: "bottom-plate-seal"; planId?: string }
+  | { kind: "rim-air-seal"; sectionId?: string; side?: RimSide }
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
@@ -131,6 +136,7 @@ const pressureQuestion = /^(?:(?:how (?:do|can|should) i )?pressure[- ]test (?:t
 const namedSubfloorQuestion = /^(?:(?:plan|fit|add|preview|check|show) (?:(?:subfloor )?blocking|subfloor adhesive|subfloor fasteners|(?:floor )?joist (?:bearing|span))|(?:count|how many) (?:subfloor )?nails) (?:under|at|for) (p\d{1,6})$/i;
 const subfloorQuestion = /^(?:(?:check|review|show|plan) (?:the |my )?(?:subfloor(?: support| blocking| joist spacing| adhesive| fasteners)?|(?:floor )?joist (?:spacing|bearing|span))|does (?:the |my )?subfloor need (?:more )?blocking|(?:count|how many) subfloor nails|how far do (?:my |the )?(?:floor )?joists span)$/i;
 const bottomPlateQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[ -]seal|seal|caulk) (?:the |a |my )?(?:wall )?(?:bottom|sole) plates?(?: to (?:the )?(?:wood )?subfloor)?|(?:plan|review|check|show) (?:the |a )?(?:bottom|sole) plate (?:air[ -]seals?|seals?))$/i;
+const rimAirSealQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[- ]seal|seal|insulate) (?:the |my )?(?:rim[- ]joists?|band[- ]joists?|floor rims?)|(?:plan|review|check|show) (?:the )?(?:rim(?:[- ]joist)?|band[- ]joist|floor rim) (?:air[- ]seal(?:ing)?|insulation|foam cuts))$/i;
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
 const waterSupportQuestion = /^(?:(?:how (?:do|can|should) i )support (?:the |my )?(?:pex|water) (?:runs?|lines?|pipes?)|(?:check|review|show|plan) (?:the |my )?(?:pex |water line )(?:supports?|support spacing))$/i;
@@ -175,6 +181,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (namedSubfloor) return { kind: "subfloor-support", panelLabel: labelKey(namedSubfloor[1]) };
   if (subfloorQuestion.test(text)) return { kind: "subfloor-support" };
   if (bottomPlateQuestion.test(text)) return { kind: "bottom-plate-seal" };
+  if (rimAirSealQuestion.test(text)) return { kind: "rim-air-seal" };
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
@@ -600,6 +607,23 @@ export function answerBuildQuestion(
         })),
         link: { label: "Open bottom plate air seal", action: { kind: "bottom-plate-seal" } },
       };
+    case "rim-air-seal": {
+      const review = reviewRimAirSeals(project);
+      const floor = project.sections.find(({ generator }) => generator?.type === "foundation");
+      return {
+        title: "Air-seal the floor rim",
+        detail: floor
+          ? "Select the rim and measure the openings with continuous backing. Check the foam fit, then review the shared sheet cuts and any reusable offcuts."
+          : "Add a Floor & foundation assembly so Yardwork can identify the actual rims and joist bays.",
+        rows: review.rows.map(({ plan, name, issues, cuts }) => ({
+          id: rimAirSealKey(plan.input), title: name,
+          detail: issues.join(" ") || `${cuts.length} measured foam ${cuts.length === 1 ? "insert" : "inserts"}. Seal all four edges after dry fitting.`,
+          link: { label: "Review these rim bays", action: { kind: "rim-air-seal", sectionId: plan.input.sectionId, side: plan.input.side } },
+        })),
+        ...(floor && { link: { label: "Open rim air seal planner", action: { kind: "rim-air-seal", sectionId: floor.id } } }),
+        scope: rimSealScope,
+      };
+    }
     case "sink-drain":
       return {
         title: "Fit a sink drain",

@@ -42,6 +42,7 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { bottomPlateSealant, subfloorPanel } from "./bottomPlateSealReference";
+import { rimFoam } from "./rimAirSealReference";
 import { trimSealant } from "./trimSealantReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
@@ -4418,6 +4419,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [bottomPlateSealant.listing, bottomPlateSealant.specification] },
     discrepancies: ["The retailer title uses ‘solvent’. The manufacturer identifies the base as synthetic latex rubber. Check the delivered label."],
+    capabilities: [],
+  },
+  {
+    id: rimFoam.id,
+    name: rimFoam.name,
+    manufacturer: "Owens Corning",
+    manufacturerPartNumber: rimFoam.model,
+    category: "panel",
+    status: "reviewed-specs",
+    verifiedAt: rimFoam.reviewedAt,
+    profile: profile("sheet", [rimFoam.width, rimFoam.thickness, rimFoam.length], 1, { materialFamily: "XPS rigid foam" }),
+    offers: [hd(rimFoam.internet, rimFoam.model, rimFoam.sku)],
+    sources: [
+      { url: rimFoam.listing, verifiedAt: rimFoam.reviewedAt, note: "One square-edge 2 in × 4 ft × 8 ft F-250 sheet, model 52DDNGX." },
+      { url: rimFoam.manufacturer, verifiedAt: rimFoam.reviewedAt, note: "Product specification and manufacturer technical bulletins for XPS applications and compatible adhesives." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [rimFoam.listing, rimFoam.manufacturer] },
+    discrepancies: [],
     capabilities: [],
   },
   {

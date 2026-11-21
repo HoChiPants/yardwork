@@ -76,8 +76,12 @@ export function stockCutMaterialNotes(id: MaterialId) {
 const blankSize = (width: number, length: number) =>
   [width, length].map(formatStockLength).join(" × ");
 
+type RectangularCutOrder = Pick<StockCutSequence, "steps" | "remnants" | "review"> & {
+  layout: Pick<StockCutLayout, "kept" | "leftovers">;
+};
+
 function leftover(
-  sequence: StockCutSequence,
+  sequence: RectangularCutOrder,
   rectangle: StockRectangle,
   lengthOnly = false,
 ) {
@@ -91,7 +95,7 @@ function leftover(
 }
 
 function splitStock(
-  sequence: StockCutSequence,
+  sequence: RectangularCutOrder,
   available: number,
   keep: number,
   kerf: number,
@@ -116,14 +120,14 @@ function splitStock(
 }
 
 function sheetSequence(
-  sequence: StockCutSequence,
+  sequence: RectangularCutOrder,
   sheet: StockPlan,
   kerf: number,
   describePart: (id: string) => string,
+  kind: "sheet" | "batt" | "glazing" | "foam",
 ) {
-  const batt = isBatt(sequence.layout.materialId);
-  const glazing =
-    material(sequence.layout.materialId).shape === "glazing-envelope";
+  const batt = kind === "batt";
+  const glazing = kind === "glazing";
   const crosscut = batt
     ? "Knife-cut"
     : glazing
@@ -133,7 +137,7 @@ function sheetSequence(
   const trim = batt ? "Knife-trim" : glazing ? "Trim" : "Crosscut";
   const strips = new Map<number, StockPlacement[]>();
   for (const placement of sheet.placements) {
-    if (placement.rotated) {
+    if (placement.rotated && kind !== "foam") {
       sequence.review =
         "Review a turned blank’s grain and face orientation before recording this sheet.";
       return;
@@ -163,7 +167,7 @@ function sheetSequence(
       `Use the remaining ${batt ? "batt" : "sheet"} length for ${strip} (${formatStockLength(length)}).`,
     );
     let remainingWidth = sheet.width;
-    for (const { id, x, width, length: partLength } of placements.sort(
+    for (const { id, x, width, length: partLength, rotated } of placements.sort(
       (a, b) => a.x - b.x,
     )) {
       if (sequence.review) break;
@@ -171,7 +175,7 @@ function sheetSequence(
         sequence.review = `The part positions in ${strip} need review before cutting this sheet.`;
         break;
       }
-      const name = describePart(id);
+      const name = describePart(id) + (rotated ? " (turned on the sheet)" : "");
       sequence.layout.kept.push({
         id,
         x,
@@ -217,6 +221,12 @@ function sheetSequence(
     width: sheet.width,
     length: remainingLength,
   });
+}
+
+export function foamSheetCutOrder(sheet: StockPlan, kerf: number, describe: (id: string) => string) {
+  const order: RectangularCutOrder = { steps: [], remnants: [], layout: { kept: [], leftovers: [] } };
+  sheetSequence(order, sheet, kerf, describe, "foam");
+  return order;
 }
 
 export function stockCutSequences(
@@ -432,7 +442,7 @@ export function stockCutSequences(
       for (const { id } of sheet.placements)
         addFollowUp(sequence, pieces.get(id)!, false);
       if (!sequence.review)
-        sheetSequence(sequence, sheet, defaultKerf, describePart);
+        sheetSequence(sequence, sheet, defaultKerf, describePart, batt ? "batt" : glazing ? "glazing" : "sheet");
     }
     if (sequences.length) groups.set(row.id, sequences);
   }

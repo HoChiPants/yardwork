@@ -1,4 +1,4 @@
-import { inspectCutStock, setCutSourceOnHand } from "./cutStock";
+import { inspectCutStock, pieceCutKerf, setCutSourceOnHand } from "./cutStock";
 import { cutSourceRegion } from "./cutSourceAxes";
 import { bindingHash } from "./ideaBindingState";
 import { formatStockLength } from "./measurement";
@@ -14,6 +14,7 @@ export type PlannedStockCutOrder = {
   anchorLabel?: string;
   title: string;
   size?: string;
+  bladeAllowance?: string;
   steps: string[];
   stepIds: string[];
   issue?: string;
@@ -42,6 +43,9 @@ export function plannedStockCutOrders(
       anchorLabel: label,
       title: [label, first && material(first.material).name].filter(Boolean).join(" · ") || "Saved stock plan",
       size: first && cutSourceRegion(first).sourceSize.slice().reverse().map(formatStockLength).join(" × "),
+      bladeAllowance: usable && first
+        ? `Blade allowance · ${formatStockLength(pieceCutKerf(first))} per cut.`
+        : undefined,
       steps: usable ? instructions.map((match) => match![3]) : [],
       stepIds: cutEntries.map((entry) => entry!.id),
       issue: !valid.has(plan.sourceId)
@@ -66,6 +70,7 @@ export function plannedStockCutOrdersMarkdown(orders: readonly PlannedStockCutOr
       `### ${line(order.title)}`,
       "",
       ...(order.size ? [`Starting stock · ${order.size} (length × width × thickness).`, ""] : []),
+      ...(order.bladeAllowance ? [order.bladeAllowance, ""] : []),
       ...(order.issue ? [`**Review needed.** ${order.issue}`] : [
         ...(order.review ? [order.review, ""] : []),
         ...order.steps.map((step, index) => `${index + 1}. ${line(step)}`),

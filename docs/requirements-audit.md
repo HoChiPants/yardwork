@@ -2,6 +2,14 @@
 
 November 21, 2026. This ledger records the tested versions and workflows at each checkpoint.
 
+## Board cuts during placement, format 118
+
+The finished-length field can reserve a selected new board, place its finished part in 3D and keep the expected offcut in the Cut pool. The cut order uses the selected stock length and the saved blade allowance. Other unassigned parts keep their existing stock planning.
+
+The phone-width browser flow placed a 4 ft board from 8 ft stock, used its expected offcut for a 3 ft board and exported both cuts in order. The shopping list counted one board. Docker reopened the same stock source and the 11.75 in remnant after a restart. Marking the source complete credited the board as on hand and cleared the prerequisite from the dependent cut.
+
+The production builds, 1,639 domain tests and five example validations passed. Targeted browser checks covered board placement, prior offcut and proposal workflows, and pricing in the project estimate.
+
 ## Choosing a compatible offcut, format 118
 
 The idea planner accepts a question about one labeled scrap. A general board-fit question reports compatible sources, and the placement dialog can compare their measured lengths and whether the original stock cut is still pending. A named source stays selected until the user chooses another. A changed length can make the selected scrap unavailable without substituting a different source. A prefilled finished dimension uses whole feet when exact, with inches for other lengths.

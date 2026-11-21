@@ -183,19 +183,11 @@ function prepareStockUnit(
   return { sourceId, remnantPieces, notes, stepId: anchor.stepId };
 }
 
-function saveStockCutLayouts(
+function saveReviewedStockCuts(
   project: Project,
-  requested: readonly StockCutLayout[],
+  current: readonly StockCutSequence[],
   { onHand, planned }: { onHand: boolean; planned: boolean },
 ) {
-  if (!requested.length) throw Error("Choose stock units to record.");
-  const before = bom(project);
-  const reviewsByLoss = new Map<number | null, ReturnType<typeof indexReviewedLayouts>>();
-  const current = requested.map((layout) => {
-    const loss = layout.tubeKerf ?? null;
-    if (!reviewsByLoss.has(loss)) reviewsByLoss.set(loss, indexReviewedLayouts(project, before, loss));
-    return currentStockCutLayout(reviewsByLoss.get(loss)!, layout);
-  });
   const pieces = new Map(project.pieces.map((piece) => [piece.id, piece]));
   const keptPieces = new Map<string, Piece>();
   const labeled = ensurePartLabels(project);
@@ -247,18 +239,51 @@ function saveStockCutLayouts(
         checked.invalid.find((row) => row.sourceId === sourceId)?.detail ??
           "The stock layout could not be recorded.",
       );
-  const after = bom(next);
+  return {
+    project: onHand ? projectSchema.parse(setCutSourcesOnHand(next, sourceIds, true)) : next,
+    sourceIds,
+    offcuts: remnants.length,
+  };
+}
+
+function saveStockCutLayouts(
+  project: Project,
+  requested: readonly StockCutLayout[],
+  options: { onHand: boolean; planned: boolean },
+) {
+  if (!requested.length) throw Error("Choose stock units to record.");
+  const before = bom(project);
+  const reviewsByLoss = new Map<number | null, ReturnType<typeof indexReviewedLayouts>>();
+  const current = requested.map((layout) => {
+    const loss = layout.tubeKerf ?? null;
+    if (!reviewsByLoss.has(loss)) reviewsByLoss.set(loss, indexReviewedLayouts(project, before, loss));
+    return currentStockCutLayout(reviewsByLoss.get(loss)!, layout);
+  });
+  const saved = saveReviewedStockCuts(project, current, options);
+  const after = bom(saved.project);
   for (const materialId of new Set(current.map(({ layout }) => layout.materialId))) {
     const oldCount = before.find((row) => row.id === materialId)?.physicalStockUnits;
     const newCount = after.find((row) => row.id === materialId)?.physicalStockUnits;
     if (oldCount !== newCount)
       throw Error("Recording this layout changed how many stock units the project needs. Review the cut order.");
   }
-  return {
-    project: onHand ? projectSchema.parse(setCutSourcesOnHand(next, sourceIds, true)) : next,
-    sourceIds,
-    offcuts: remnants.length,
-  };
+  return saved;
+}
+
+/** The placement dialog reserves one new board for this part. Other blanks can still be packed together. */
+export function planDedicatedBoardCut(project: Project, pieceId: string): Project {
+  const piece = project.pieces.find(({ id }) => id === pieceId);
+  if (!piece || piece.offcut || piece.cutStock)
+    throw Error("Choose an unassigned board for the cut.");
+  const stock = material(piece.material);
+  if (!stock.wood || !stock.cuttable || stock.stockKind !== "linear")
+    throw Error("Choose wood board stock for the cut.");
+  const labeled = ensurePartLabels(project);
+  const oneBoard = { ...labeled, pieces: [piece] };
+  const [sequence] = stockCutSequences(oneBoard, bom(oneBoard)).get(piece.material) ?? [];
+  if (!sequence || sequence.review || sequence.layout.kept.length !== 1)
+    throw Error(sequence?.review ?? "The finished part does not fit this board.");
+  return saveReviewedStockCuts(labeled, [sequence], { onHand: false, planned: true }).project;
 }
 
 /** Commit an exact set of reviewed cuts as one change, with no intermediate repacking. */

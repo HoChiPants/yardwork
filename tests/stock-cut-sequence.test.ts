@@ -20,7 +20,7 @@ import {
   type V3,
 } from "../src/model";
 import { stockCutSequences } from "../src/stockCutSequence";
-import { planStockCutLayouts, recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
+import { planDedicatedBoardCut, planStockCutLayouts, recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
 import { inspectCutStock, pieceCutKerf, setCutSourceOnHand, setPlannedWoodKerf } from "../src/cutStock";
 import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import { reviewedOfferForMaterial } from "../src/retailerCatalog";
@@ -53,6 +53,27 @@ function cutProject(material: MaterialId, ...sizes: V3[]) {
   );
   return project;
 }
+
+test("a dedicated finished-board cut preserves other blanks and the measured blade allowance", () => {
+  const project = setPlannedWoodKerf(cutProject("stud", [1.5, 24, 3.5], [1.5, 48, 3.5]), "stud", 0.09375);
+  const [other, target] = project.pieces;
+  const planned = planDedicatedBoardCut(project, target.id);
+  const [plan] = planned.plannedCutSources!;
+  const [unchanged, kept, offcut] = planned.pieces;
+
+  assert.deepEqual(unchanged, other);
+  assert.deepEqual(kept.position, target.position);
+  assert.equal(kept.cutStock!.id, plan.sourceId);
+  assert.equal(pieceCutKerf(kept), 0.09375);
+  assert.equal(offcut.cutStock!.id, plan.sourceId);
+  assert.equal(cutSourceRegion(offcut).size[2], 47.90625);
+  assert.equal(bom(project).find(({ id }) => id === "stud")?.quantity, 1);
+  assert.equal(bom(planned).find(({ id }) => id === "stud")?.quantity, 2);
+  const guide = guideMarkdown(planned);
+  assert.match(guide, /^1\. Crosscut 4 ft from the current end for P002/m);
+  assert.match(guide, /## Planned stock cuts[\s\S]+Blade allowance · 0.09375 in per cut\./);
+  assert.throws(() => planDedicatedBoardCut(planned, target.id), /unassigned board/);
+});
 
 test("board placement prefers verified on-hand family stock and preserves its actual grain axis", () => {
   const project = cutProject("stud-12", [1.5, 144, 3.5]);

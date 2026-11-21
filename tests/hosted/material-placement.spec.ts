@@ -35,7 +35,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await placement.getByRole("spinbutton", { name: "Needed finished length", exact: true }).fill("4");
   await expect(placement).toContainText("8 ft stock fits this cut with 4 ft less length to buy.");
   await placement.getByRole("button", { name: "Use 8 ft" }).click();
-  await confirmMaterialPlacement(page);
+  await placement.getByRole("button", { name: "Place full board", exact: true }).click();
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("96");
   await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("48");
   await expect(page.getByRole("spinbutton", { name: "X", exact: true })).not.toHaveValue("0");
@@ -76,6 +76,40 @@ test("front-view drops stay at the workspace depth and ignore controls", async (
   await confirmMaterialPlacement(page, "10 ft");
   await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("60");
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("0");
+});
+
+test("placing a finished board schedules one purchase and makes its expected offcut usable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const add = page.getByRole("button", { name: `Add ${group}`, exact: true });
+  await add.click();
+  const dialog = page.getByRole("dialog");
+  const length = dialog.getByRole("spinbutton", { name: "Needed finished length", exact: true });
+  await length.fill("95.95");
+  await expect(dialog.getByRole("button", { name: "Plan cut and place", exact: true })).toHaveCount(0);
+  await length.fill("48");
+  await expect(dialog).toContainText("Expected offcut · 47.875 in.");
+  await dialog.getByRole("button", { name: "Plan cut and place", exact: true }).click();
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("24");
+  await expect(page.getByRole("button", { name: "Cut pool (1)", exact: true })).toBeVisible();
+
+  await add.click();
+  await length.fill("36");
+  await expect(dialog).toContainText("Complete the source stock cut order first.");
+  await dialog.getByRole("button", { name: "Place from O001", exact: true }).click();
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("36");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator(".inspector-scroll .bom-row")).toContainText("1 board");
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await downloaded).path())!, "utf8");
+  expect(guide).toMatch(/## Planned stock cuts[\s\S]+1\. Crosscut 4 ft from the current end/);
+  expect(guide.indexOf("## Planned stock cuts")).toBeLessThan(guide.indexOf("## Recorded offcut cut order"));
+  expect(guide).toContain("Find P001 under Planned stock cuts.");
+  expect(guide).toContain("Keep O002 · 11.75 in × 3.5 in × 1.5 in");
 });
 
 test("place a finished board from a different stock length in the Cut pool", async ({ page }) => {

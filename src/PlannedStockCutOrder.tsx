@@ -2,6 +2,7 @@ import { plannedStockCutOrderTitle, type PlannedStockCutOrder } from "./plannedC
 
 export function SavedStockCutSteps({ order }: { order: PlannedStockCutOrder }) {
   return order.issue ? <p className="small-note"><strong>Review needed.</strong> {order.issue}</p> : <>
+    {order.bladeAllowance && <p className="small-note">{order.bladeAllowance}</p>}
     {order.review && <p className="small-note">{order.review}</p>}
     <ol>
       {order.steps.map((step, index) => <li key={order.stepIds[index]}>{step}</li>)}

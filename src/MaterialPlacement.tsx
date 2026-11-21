@@ -6,8 +6,11 @@ import { formatStockLength, preferredLengthUnit } from "./measurement";
 import type { MaterialId, Piece, Project } from "./model";
 import { fittingBoardOffcuts } from "./offcutAssignment";
 import { partLabel } from "./partLabels";
+import { stockSplitState } from "./packing";
 
-export type PlacementOffcut = { id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] };
+export type BoardPlacement =
+  | { kind: "offcut"; id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] }
+  | { kind: "stock-cut"; length: number };
 
 export function MaterialPlacement({ group, project, inspection, finishedLength, offcutId, onPlace }: {
   group: MaterialGroup;
@@ -15,7 +18,7 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
   inspection: ReturnType<typeof inspectCutStock>;
   finishedLength?: number;
   offcutId?: string;
-  onPlace: (id: MaterialId, offcut?: PlacementOffcut) => void;
+  onPlace: (id: MaterialId, placement?: BoardPlacement) => void;
 }) {
   const { preferred, label, options } = materialPlacementOptions(group);
   const [selected, select] = useState(preferred.id);
@@ -23,10 +26,15 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
   const [selectedOffcut, selectOffcut] = useState(offcutId);
   const choice = options.find(({ id }) => id === selected)!;
   const compare = preferred.wood && preferred.cuttable && preferred.stockKind === "linear";
-  const fits = (length: number, id: MaterialId) =>
-    Math.abs(length - needed) < 1e-6 || length >= needed + plannedCutKerf(project, id);
+  const kerf = plannedCutKerf(project, choice.id);
+  const fits = (length: number, id: MaterialId) => {
+    const state = stockSplitState(length, needed, plannedCutKerf(project, id));
+    return state === "whole" || state === "cut";
+  };
   const shortest = needed > 0 ? options.find(({ id, value }) => fits(value, id)) : undefined;
   const enough = !(needed > 0) || fits(choice.value, choice.id);
+  const planCut = compare && needed > 0 && stockSplitState(choice.value, needed, kerf) === "cut";
+  const leftover = choice.value - needed - kerf;
   const remnants = compare && needed > 0
     ? fittingBoardOffcuts(project, materialFamilyVariants(preferred.id), needed, inspection)
     : [];
@@ -75,6 +83,7 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
           {!!remnant.operations.length && <p>{remnant.operations.map(({ text }) => text).join(" · ")}</p>}
           <button type="button" className="button primary"
             onClick={() => onPlace(remnant.piece.material, {
+              kind: "offcut",
               id: remnant.piece.id,
               length: needed,
               stockLengthAxis: remnant.stockLengthAxis,
@@ -84,8 +93,18 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
         </div>
       </div>}
     </div>}
-    <button type="button" className={`button ${remnant ? "secondary" : "primary"}`} onClick={() => onPlace(choice.id)}>
-      {remnant ? "Place new stock" : "Place material"}
+    {planCut && <div className="stock-length-check">
+      <p className="small-note">
+        Crosscut to {formatStockLength(needed)} with a {formatStockLength(kerf)} blade allowance.
+        {leftover > 1e-8 ? ` Expected offcut · ${formatStockLength(leftover)}.` : " The blade uses the remaining length."}
+      </p>
+      <button type="button" className={`button ${remnant ? "secondary" : "primary"}`}
+        onClick={() => onPlace(choice.id, { kind: "stock-cut", length: needed })}>
+        {remnant ? "Plan cut from new stock" : "Plan cut and place"}
+      </button>
+    </div>}
+    <button type="button" className={`button ${remnant || planCut ? "secondary" : "primary"}`} onClick={() => onPlace(choice.id)}>
+      {planCut ? "Place full board" : remnant ? "Place new stock" : "Place material"}
     </button>
   </>;
 }

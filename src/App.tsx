@@ -146,7 +146,7 @@ import { assemblyPartForOffcut } from "./sceneVisibility";
 import { rekeyGuidePlacements } from "./guidePlacement";
 import { GuidePlacementEditor } from "./GuidePlacementEditor";
 import { copySavedRevision } from "./recoverSavedRevision";
-import { recordStockCutLayouts, saveTubeCutLoss } from "./recordStockCutLayout";
+import { planDedicatedBoardCut, recordStockCutLayouts, saveTubeCutLoss } from "./recordStockCutLayout";
 import { GuidePartLabels, PrintAssemblyPartLabels } from "./GuidePartLabels";
 import { assemblyPartLabels, type AssemblyPartLabel } from "./assemblyPartLabels";
 import { ConnectionReviewPanel } from "./ConnectionReviewPanel";
@@ -303,7 +303,7 @@ import { snapPlacement, surfacePlacement } from "./editing";
 import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSlideStopLabel } from "./placement";
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
-import { MaterialPlacement, type PlacementOffcut } from "./MaterialPlacement";
+import { MaterialPlacement, type BoardPlacement } from "./MaterialPlacement";
 import { groupedMaterials, materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
@@ -2262,16 +2262,16 @@ export function App() {
     setSelected(id);
     setPanel("part");
   }
-  function add(id: MaterialId, name: string, position: V3 = [0, 0, 0], offcut?: PlacementOffcut) {
+  function add(id: MaterialId, name: string, position: V3 = [0, 0, 0], placement?: BoardPlacement) {
     safe(() => {
       const next = addMaterial(project, id, position, activeStepId);
       const added = next.pieces.at(-1)!;
       added.name = name;
-      if (offcut) {
-        const blank = boardBlankAtLength(id, offcut.length);
+      if (placement) {
+        const blank = boardBlankAtLength(id, placement.length);
         if (!blank) throw Error("Enter a finished board length.");
         added.size = blank.size;
-        added.stockLengthAxis = offcut.stockLengthAxis;
+        added.stockLengthAxis = placement.kind === "offcut" ? placement.stockLengthAxis : blank.stockLengthAxis;
         added.position[1] = position[1] + blank.size[1] / 2;
       }
       if (snap)
@@ -2284,7 +2284,9 @@ export function App() {
       const clear=placeWood(next,added,added.position,added.rotation);
       if(clear.blocked)throw Error("No clear position was found for this stock.");
       added.position=clear.position;
-      change(offcut ? assignOffcutToPart(next, added.id, offcut.id) : next);
+      if (placement?.kind === "offcut") change(assignOffcutToPart(next, added.id, placement.id));
+      else if (placement?.kind === "stock-cut") change(planDedicatedBoardCut(next, added.id));
+      else change(next);
       setSelectionScope("part");
       setSelectedSectionId(null);
       setSelected(added.id);
@@ -2293,7 +2295,8 @@ export function App() {
       setStage(null);
       if (modal === "place-material") setModal(null);
       notify(
-        offcut ? `${name} added from the Cut pool. The cut is in the build guide.`
+        placement?.kind === "offcut" ? `${name} added from the Cut pool. The cut is in the build guide.`
+          : placement?.kind === "stock-cut" ? `${name} placed at its finished length. See Planned stock cuts in the build guide.`
           : `${name} added. Drag to move, or Shift-drag to rotate.`,
       );
     });
@@ -5484,8 +5487,8 @@ export function App() {
             </button>
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
               <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
-                finishedLength={pendingMaterial.finishedLength} offcutId={pendingMaterial.offcutId} onPlace={(id, offcut) => {
-                add(id, pendingMaterial.group.name, pendingMaterial.position, offcut);
+                finishedLength={pendingMaterial.finishedLength} offcutId={pendingMaterial.offcutId} onPlace={(id, placement) => {
+                add(id, pendingMaterial.group.name, pendingMaterial.position, placement);
               }} />
             )}
             {modal === "idea" && (

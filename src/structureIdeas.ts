@@ -1,8 +1,9 @@
 import type { V3 } from "./model";
-import { structureIdeaSchema, type StructureIdea } from "./recipeSchemas";
+import { greenhouseParamsSchema, structureIdeaSchema, type StructureIdea } from "./recipeSchemas";
 export { structureIdeaSchema, type StructureIdea } from "./recipeSchemas";
 import {
   buildGreenhouse,
+  greenhouseStudyDoorHeight,
   buildSaunaCabin,
   buildClosetInsert,
   buildCaseworkShelves,
@@ -92,7 +93,7 @@ export function localStructureIdea(request: {
     request.previousPlan
       ? retainWithQuestion(request.previousPlan, question)
       : {
-          title: "Clarify the casework dimensions",
+          title: "Clarify the design dimensions",
           summary: question,
           assumptions: [],
           questions: [question],
@@ -176,6 +177,17 @@ export function localStructureIdea(request: {
   }
   const rise = dimension("roof rise|rise");
   if (kind === "greenhouse" && rise !== undefined) parameters.roofRise = rise;
+  let doorAssumption: string | undefined;
+  if (kind === "greenhouse" && !prior && dimension("door height") === undefined) {
+    const dimensions = greenhouseParamsSchema.parse(parameters);
+    const doorHeight = greenhouseStudyDoorHeight(dimensions);
+    if (doorHeight < dimensions.doorHeight) {
+      if (!greenhouseParamsSchema.shape.doorHeight.safeParse(doorHeight).success)
+        return clarify("Raise the eave or reduce the roof rise so the front wall can fit a door opening.");
+      parameters.doorHeight = doorHeight;
+      doorAssumption = `Provisional greenhouse door opening: ${doorHeight} in high to fit below the modeled roof, header and top plate. Confirm the headroom you need.`;
+    }
+  }
   const shelves = requestedShelfCount(text);
   if (
     ["closet-insert", "casework-shelves"].includes(kind) &&
@@ -249,6 +261,7 @@ export function localStructureIdea(request: {
         : kind === "greenhouse"
           ? "Height is OUTSIDE EAVE height, with roof rise added above it. Framing and door clearances are derived from the selected stock."
           : "Width, depth and height describe the outside casework envelope.",
+      ...(doorAssumption ? [doorAssumption] : []),
     ],
     questions: [
       kind === "sauna"

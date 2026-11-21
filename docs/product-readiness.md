@@ -12,6 +12,12 @@ The guide compares saved step order against modeled assembly prerequisites and t
 
 The catalog has 62 editable stocks. The registry contains 127 product records and 145 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
 
+## November 20, 2026 · Save proposal cut orders
+
+**Plan an idea → Cuts and stock** can save reviewed wood board and sheet layouts when adding or revising a design. It records the same blank assignments shown in the preview, generates labeled remnants, and retains the saw order in the guide. Units shared with existing parts require explicit selection. The material counts still include the planned purchase. Check actual stock, grain and blade kerf before cutting. [Kreg cut-list and stock layout example](https://learn.kregtool.com/wp-content/themes/kreg-cms/prince.php?action=download&author=Kreg+Tool&plan_id=5495&plan_name=decorative-wall-mirror&template=project_plan)
+
+A short eave in a fresh local greenhouse proposal can use a smaller provisional door opening that fits the modeled base, header, plate and roof. Explicit door dimensions and later revisions retain the saved opening. An oversized requested opening still needs a decision before applying.
+
 ## November 20, 2026 · Drawer rail screws
 
 Cabinet and drawer rails each support reserved included or on-hand screws and a field-checked exact Everbilt 801582 option. The model checks both the entered tip depth and the nominal penetration below the measured rail stack. The guide counts checked locations and highlights shortages. Shopping aggregates selected locations into 100-screw packs and flags competing choices for the same physical drawer. Confirm fit, wood engagement and movement on the delivered assembly. [Home Depot 801582](https://www.homedepot.com/p/204275069) · [Accuride 3732 installation instructions](https://www.accuride.com/media/amasty/amfile/attach/a3bcba75b0b82de060a661de95ce9f44.pdf)

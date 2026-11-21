@@ -87,3 +87,29 @@ test("wood furniture recipes reject metal frames and glazing seats rather than t
   plan.modules[0].panelMaterial = "sunlite-8mm";
   assert.equal(ideaPlanSchema.safeParse(plan).success, false);
 });
+
+
+test("a fresh short greenhouse fits a provisional opening and explicit door measurements are preserved", () => {
+  const prompt = "Gabled greenhouse six feet wide, 7 feet deep and 6 feet eave height";
+  const plan = localIdeaPlan({ prompt });
+  const [greenhouse] = plan.structures;
+  assert.equal(greenhouse.kind, "greenhouse");
+  if (greenhouse.kind !== "greenhouse") throw Error("Expected a greenhouse");
+  assert.equal(greenhouse.parameters.eaveHeight, 72);
+  assert.equal(greenhouse.parameters.doorHeight, 59);
+  assert.match(plan.assumptions.join(" "), /Provisional greenhouse door opening: 59 in high/);
+  assert.ok(previewIdeaPlan(blank(), plan).addedParts > 5);
+
+  const explicit = localIdeaPlan({ prompt: `${prompt}, door height 64 inches` });
+  const [requested] = explicit.structures;
+  assert.equal(requested.kind, "greenhouse");
+  if (requested.kind !== "greenhouse") throw Error("Expected a greenhouse");
+  assert.equal(requested.parameters.doorHeight, 64);
+  assert.throws(() => previewIdeaPlan(blank(), explicit), /requested door does not fit/);
+
+  const taller = localIdeaPlan({ prompt: "Increase the eave height to 84 inches", previousPlan: plan });
+  const [revised] = taller.structures;
+  if (revised.kind !== "greenhouse") throw Error("Expected a greenhouse");
+  assert.equal(revised.parameters.eaveHeight, 84);
+  assert.equal(revised.parameters.doorHeight, 59);
+});

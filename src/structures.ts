@@ -526,6 +526,18 @@ function frontWithDoor(
 }
 
 /** Outside eave/ridge roof-line dimensions; the wall plate is lower by the actual rafter depth/cos(pitch). */
+function greenhouseWallTop(eaveHeight: number, pitch: number, rafterDepth: number, glazingThickness: number) {
+  return eaveHeight - (rafterDepth + glazingThickness) / Math.cos(pitch);
+}
+
+/** Geometric fit for a fresh study using the default unglazed frame and base stock. */
+export function greenhouseStudyDoorHeight(p: Pick<GreenhouseParams, "width" | "eaveHeight" | "roofRise">) {
+  const { a, b } = stockCross("stud");
+  const pitch = Math.atan(p.roofRise / (p.width / 2));
+  const available = greenhouseWallTop(p.eaveHeight, pitch, b, 0);
+  return Math.floor(available - a - b - b);
+}
+
 export function buildGreenhouse(
   project: Project,
   raw: GreenhouseParams,
@@ -597,7 +609,7 @@ export function buildGreenhouse(
     glazingT = glazing ? Math.min(...material(glazing).size) : 0,
     frameW = p.width - 2 * glazingT,
     frameD = p.depth - 2 * glazingT,
-    wallTop = p.eaveHeight - (b + glazingT) / Math.cos(pitch),
+    wallTop = greenhouseWallTop(p.eaveHeight, pitch, b, glazingT),
     build = builder(project, "Greenhouse", p.origin, p.yaw);
   if (!baseStock) throw Error("The selected greenhouse base has no reviewed stock match.");
   const { a: baseWidth, b: baseY } = stockCross(baseStock);

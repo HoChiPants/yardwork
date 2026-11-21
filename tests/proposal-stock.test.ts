@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { guideMarkdown } from "../src/engine";
+import { inspectCutStock } from "../src/cutStock";
+import { bom, guideMarkdown } from "../src/engine";
 import { acceptIdeaRevisionPreview, bindingPlan, bindingToken, previewIdeaRevision } from "../src/ideaBindings";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
 import { blank, part, projectSchema } from "../src/model";
+import { assignOffcutToPart, fittingOffcuts } from "../src/offcutAssignment";
 import { localIdeaPlan, previewIdeaPlan } from "../src/planning";
 import { previewProposalStock, proposalStockRequest } from "../src/proposalStock";
+import { recordStockCutLayouts } from "../src/recordStockCutLayout";
 
 const prompt = "Build a workbench 48 inches wide, 20 inches deep and 36 inches tall";
 
@@ -58,4 +61,52 @@ test("an approved saved-design revision retains its preview IDs and leaves other
   assert.deepEqual(stock.project.pieces.find(({ id }) => id === existing.id), existing);
   for (const { partId } of stock.plan!.assignments)
     assert.ok(revision.project.pieces.some(({ id }) => id === partId));
+});
+
+test("save-cut requests stay on the current proposal and require a cut or leftover action", () => {
+  assert.deepEqual(proposalStockRequest("Please save the cut order with this proposal!"), { kind: "save-cuts" });
+  assert.deepEqual(proposalStockRequest("Keep scraps from this design"), { kind: "save-cuts" });
+  assert.deepEqual(proposalStockRequest("Show cuts for this proposal"), { kind: "cuts" });
+  assert.deepEqual(proposalStockRequest("Use O002 for this proposal"), { kind: "reuse", labels: ["O002"] });
+  assert.equal(proposalStockRequest("Build a cabinet with a board to keep scraps"), null);
+});
+
+test("saving proposal wood orders uses the previewed sources and makes labeled offcuts reusable", () => {
+  const current = blank("More shop storage");
+  const step = current.steps[0].id;
+  const existing = part("Existing cleat", "stud", [3.5, 1.5, 14], [100, 0.75, 0], step, "Existing");
+  current.pieces.push(existing);
+  const additions = [
+    part("Long frame rail", "stud", [3.5, 1.5, 60], [0, 0.75, 0], step, "New"),
+    part("Short frame rail", "stud", [3.5, 1.5, 40], [15, 0.75, 0], step, "New"),
+    part("Shelf", "plywood", [30, 0.75, 36], [0, 12, 0], step, "New"),
+  ];
+  const candidate = { ...current, pieces: [...current.pieces, ...additions] };
+  const preview = previewProposalStock(current, candidate, null);
+  const [shared] = preview.recordable.filter(({ existingPartIds }) => existingPartIds.length);
+  assert.deepEqual(shared.existingPartIds, [existing.id]);
+  const exclusive = preview.recordable.filter(({ existingPartIds }) => !existingPartIds.length);
+  assert.deepEqual(exclusive.map(({ layout }) => layout.kind), ["board", "sheet"]);
+  const recorded = recordStockCutLayouts(preview.project, exclusive.map(({ layout }) => layout));
+  assert.equal(recorded.sourceIds.length, 2);
+  assert.deepEqual(recorded.project.pieces[0], existing);
+  assert.deepEqual(recorded.project.onHandCutSources, current.onHandCutSources);
+  assert.equal(candidate.pieces.every(({ cutStock }) => !cutStock), true);
+
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(recorded.project)));
+  const demand = (project: typeof current) => bom(project).map(({ id, quantity }) => [id, quantity]);
+  assert.deepEqual(demand(reopened), demand(candidate));
+  assert.match(guideMarkdown(reopened), /Stock cut order for P\d+ · 1\. Crosscut/);
+  const [match] = fittingOffcuts(reopened, existing);
+  assert.ok(match);
+  const reused = assignOffcutToPart(reopened, existing.id, match.piece.id);
+  const installed = reused.pieces.find(({ id }) => id === existing.id)!;
+  assert.deepEqual({ ...installed, cutStock: null }, existing);
+  assert.equal(installed.cutStock?.id, match.piece.cutStock?.id);
+  assert.ok(inspectCutStock(reused).valid.has(installed.cutStock!.id));
+  assert.deepEqual(demand(reused), demand(candidate));
+
+  const sharedPlan = recordStockCutLayouts(preview.project, preview.recordable.map(({ layout }) => layout));
+  assert.deepEqual({ ...sharedPlan.project.pieces[0], cutStock: null }, existing);
+  assert.equal(inspectCutStock(sharedPlan.project).valid.size, 3);
 });

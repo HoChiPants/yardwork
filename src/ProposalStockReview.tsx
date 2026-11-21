@@ -1,29 +1,37 @@
 import { formatStockLength } from "./measurement";
 import { material, type Project } from "./model";
 import { OffcutReusePlanDetails } from "./OffcutReuseReview";
-import type { previewProposalStock } from "./proposalStock";
+import type { previewProposalStock, ProposalCutScope } from "./proposalStock";
 import { purchaseUnitLabel } from "./purchaseUnits";
 import { SequenceBody, MaterialCutNote } from "./StockCutSequenceList";
 import { stockCutSequenceContext } from "./stockCutSequence";
 import { partLabel } from "./partLabels";
 
+type StockReview = ReturnType<typeof previewProposalStock>;
+
 export function ProposalStockReview({
-  project, open, setOpen, offcuts, setOffcuts, review, error,
+  project, open, setOpen, offcuts, setOffcuts, review, error, cutScope, setCutScope, selectedCutUnits,
 }: {
   project: Project;
   open: boolean;
   setOpen: (open: boolean) => void;
   offcuts: readonly string[] | null;
   setOffcuts: (labels: string[] | null) => void;
-  review: ReturnType<typeof previewProposalStock> | undefined;
+  review: StockReview | undefined;
   error: string | undefined;
+  cutScope: ProposalCutScope | null;
+  setCutScope: (scope: ProposalCutScope | null) => void;
+  selectedCutUnits: StockReview["recordable"];
 }) {
   const hasOffcuts = project.pieces.some(({ offcut }) => offcut);
+  const shared = review?.recordable.filter(({ existingPartIds }) => existingPartIds.length) ?? [];
+  const exclusive = (review?.recordable.length ?? 0) - shared.length;
+  const expectedOffcuts = selectedCutUnits.reduce((sum, { layout }) => sum + layout.leftovers.length, 0);
   return (
     <details className="field-section proposal-stock" open={open} onToggle={(event) => {
       setOpen(event.currentTarget.open);
     }}>
-      <summary>Cuts and stock</summary>
+      <summary>Cuts and stock{selectedCutUnits.length > 0 && ` · ${selectedCutUnits.length} to save`}</summary>
       {open && (
         <section aria-label="Proposal cuts and stock">
           {hasOffcuts || offcuts !== null ? (
@@ -45,6 +53,43 @@ export function ProposalStockReview({
             </>
           ) : <p className="small-note">Add measured scraps to the Cut pool to check them against a proposal.</p>}
           {error && <p role="alert" className="form-error">{error}</p>}
+          {review && (!!review.recordable.length || cutScope) && (
+            <div className="field-section">
+              <label className="field">
+                Wood cut orders to save
+                <select value={cutScope ?? ""} onChange={(event) => {
+                  const value = event.target.value;
+                  setCutScope(value === "proposal" || value === "shared" ? value : null);
+                }}>
+                  <option value="">Keep layouts flexible</option>
+                  <option value="proposal" disabled={!exclusive}>Boards and sheets only for this design</option>
+                  <option value="shared" disabled={!shared.length}>Include boards and sheets shared with existing parts</option>
+                </select>
+              </label>
+              {!!selectedCutUnits.length && (
+                <p className="small-note" role="status">
+                  Save {selectedCutUnits.length} {selectedCutUnits.length === 1 ? "stock unit" : "stock units"} with this design.
+                  {expectedOffcuts > 0 && ` Add ${expectedOffcuts} planned ${expectedOffcuts === 1 ? "offcut" : "offcuts"} to the Cut pool.`}
+                </p>
+              )}
+              {cutScope && !selectedCutUnits.length && (
+                <p className="small-note" role="status">
+                  {shared.length ? "The available cut orders share stock with existing parts. Choose whether to include them."
+                    : "This proposal has no wood stock units ready to save. Review the cuts or keep the layouts flexible."}
+                </p>
+              )}
+              {cutScope === "shared" && shared.length > 0 && (
+                <ul aria-label="Existing parts that will share stock with the proposal">
+                  {shared.map(({ title, layout, existingPartIds }) => (
+                    <li key={layout.kept[0].id}>
+                      {material(layout.materialId).name} · {title} · {existingPartIds.map((id) =>
+                        `${partLabel(review.project, id)} ${review.project.pieces.find((piece) => piece.id === id)?.name ?? ""}`).join(", ")}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
           {review && (
             <>
               {!review.newPartCount ? (

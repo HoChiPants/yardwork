@@ -4,13 +4,19 @@ import { planOffcutReuse } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
 import { stockCutSequences } from "./stockCutSequence";
 
+export type ProposalCutScope = "proposal" | "shared";
+
 export type ProposalStockRequest =
-  | { kind: "cuts" }
+  | { kind: "cuts" | "save-cuts" }
   | { kind: "reuse"; labels: string[] };
 
 const proposal = "(?:this|the|my) (?:proposal|layout|design)";
 const stockRequest = new RegExp(
   `^(?:show|review|preview) (?:the )?(?:cuts|cut list|cut plan|stock layout)(?: for ${proposal})?$`, "i",
+);
+const saveCutsRequest = new RegExp(
+  `^(?:(?:save|record) (?:the )?(?:wood )?(?:cut orders?|cut list|cut plan)(?: (?:with|for|in) ${proposal})?|keep (?:the )?(?:expected )?(?:leftovers|offcuts|scraps) from ${proposal})$`,
+  "i",
 );
 const availableStock = "(?:(?:my|the|existing|available) )?(?:offcuts|scraps|leftovers)";
 const partLabels = "o[0-9]{1,6}(?:(?: *, *| +and +| *, *and +)o[0-9]{1,6})*";
@@ -20,6 +26,7 @@ const reuseRequest = new RegExp(
 export function proposalStockRequest(prompt: string): ProposalStockRequest | null {
   const text = prompt.trim().replace(/[.!?]+$/, "").replace(/^please\s+/i, "");
   if (stockRequest.test(text)) return { kind: "cuts" };
+  if (saveCutsRequest.test(text)) return { kind: "save-cuts" };
   const reuse = reuseRequest.exec(text);
   if (!reuse) return null;
   const labels = [...reuse[1].matchAll(/o([0-9]{1,6})/gi)]
@@ -57,16 +64,26 @@ export function previewProposalStock(
   const materials = new Set(project.pieces.filter(({ id }) => newPartIds.has(id)).map(({ material }) => material));
   const stockRows = rows.filter(({ id }) => materials.has(id));
   const cutSequences = stockCutSequences(project, stockRows);
+  const cutMaterials = stockRows.map((row) => ({
+    row,
+    oversized: row.oversizedParts.filter(({ id }) => newPartIds.has(id)),
+    sequences: (cutSequences.get(row.id) ?? []).filter((sequence) =>
+      sequence.partIds.some((id) => newPartIds.has(id))),
+  }));
+  const recordable = cutMaterials.flatMap(({ row, sequences }) => {
+    if (!material(row.id).wood) return [];
+    return sequences.flatMap(({ title, layout, review }) => review || !layout.kept.length ? [] : [{
+      title,
+      layout,
+      existingPartIds: layout.kept.filter(({ id }) => sourcePartIds.has(id)).map(({ id }) => id),
+    }]);
+  });
   return {
     project,
     plan,
     newPartCount: newPartIds.size,
-    materials: stockRows.map((row) => ({
-      row,
-      oversized: row.oversizedParts.filter(({ id }) => newPartIds.has(id)),
-      sequences: (cutSequences.get(row.id) ?? []).filter((sequence) =>
-        sequence.partIds.some((id) => newPartIds.has(id))),
-    })),
+    materials: cutMaterials,
+    recordable,
     pricing: project === candidate ? undefined : projectPricingCoverage(project, rows),
     findings: project === candidate ? undefined : validate(project).filter(({ severity }) => severity !== "info"),
   };

@@ -35,7 +35,8 @@ import { answerConnectionQuestion, connectionQuestion, type ConnectionQuestion }
 import { BuildQuestionResult } from "./BuildQuestionResult";
 import { answerBuildQuestion, buildQuestion, type BuildQuestion, type BuildQuestionAction } from "./buildQuestions";
 import { ProposalStockReview } from "./ProposalStockReview";
-import { previewProposalStock, proposalStockRequest } from "./proposalStock";
+import { previewProposalStock, proposalStockRequest, type ProposalCutScope } from "./proposalStock";
+import { recordStockCutLayouts } from "./recordStockCutLayout";
 import { partLabel } from "./partLabels";
 import { updateStructureParameter } from "./structureIdeas";
 import { editFurniturePlan, straightRun } from "./ideaEdits";
@@ -133,6 +134,7 @@ export default function IdeaPlanner({
   const [target, setTarget] = useState(initialTarget);
   const [targetToken, setTargetToken] = useState<string | null>(null);
   const [stockOpen, setStockOpen] = useState(false);
+  const [cutScope, setCutScope] = useState<ProposalCutScope | null>(null);
   const [offcutLabels, setOffcutLabels] = useState<string[] | null>(null);
   const [rebuildReviewed, setRebuildReviewed] = useState(false);
   const [baselineChanges, setBaselineChanges] = useState({
@@ -172,6 +174,7 @@ export default function IdeaPlanner({
     setTarget(next);
     setTargetToken(null);
     setStockOpen(false);
+    setCutScope(null);
     setOffcutLabels(null);
     setRebuildReviewed(false);
     setBaselineChanges({ manualEdits: 0, missingRoles: 0 });
@@ -256,14 +259,21 @@ export default function IdeaPlanner({
       };
     }
   }, [project, result, target, targetToken]);
+  const shouldReviewStock = stockOpen || offcutLabels !== null || cutScope !== null;
   const stock = useMemo(() => {
-    if (!preview?.value || (!stockOpen && offcutLabels === null)) return {};
+    if (!preview?.value || !shouldReviewStock) return {};
     try {
       return { value: previewProposalStock(project, preview.value.project, offcutLabels) };
     } catch (issue) {
       return { error: issue instanceof Error ? issue.message : "Could not check the cuts for this proposal." };
     }
-  }, [project, preview, stockOpen, offcutLabels]);
+  }, [project, preview, shouldReviewStock, offcutLabels]);
+  const selectedCutUnits = cutScope
+    ? stock.value?.recordable.filter(({ existingPartIds }) => cutScope === "shared" || !existingPartIds.length) ?? []
+    : [];
+  useEffect(() => {
+    setCutScope((current) => current === "shared" ? null : current);
+  }, [preview, offcutLabels]);
   const revisionChanged =
     !!result &&
     JSON.stringify(result.plan) !== JSON.stringify(originalPlan.current);
@@ -320,6 +330,7 @@ export default function IdeaPlanner({
       setWorkspaceRequest(null);
       setStockOpen(true);
       if (stockRequest.kind === "reuse") setOffcutLabels(stockRequest.labels);
+      if (stockRequest.kind === "save-cuts") setCutScope("proposal");
       setExploredPrompt(prompt);
       setError("");
       setPlanningStatus("");
@@ -1190,7 +1201,8 @@ export default function IdeaPlanner({
                 </p>
               )}
               <ProposalStockReview project={project} open={stockOpen} setOpen={setStockOpen}
-                offcuts={offcutLabels} setOffcuts={setOffcutLabels} review={stock.value} error={stock.error} />
+                offcuts={offcutLabels} setOffcuts={setOffcutLabels} review={stock.value} error={stock.error}
+                cutScope={cutScope} setCutScope={setCutScope} selectedCutUnits={selectedCutUnits} />
               <PricingSummary coverage={stock.value?.pricing ?? preview.value.pricing} compact />
               {(stock.value?.findings ?? preview.value.findings).slice(0, 4).map((f) => (
                 <p key={f.id}>
@@ -1207,6 +1219,7 @@ export default function IdeaPlanner({
                 !preview?.value ||
                 !preview.value.workZoneFits ||
                 (offcutLabels !== null && !!stock.error) ||
+                (cutScope !== null && (selectedCutUnits.length === 0 || !!stock.error)) ||
                 !!preview.revision?.clearanceConflicts.length ||
                 !!result.plan.pendingPlacement?.length ||
                 (target &&
@@ -1222,7 +1235,11 @@ export default function IdeaPlanner({
                   const approved = preview.revision
                     ? acceptIdeaRevisionPreview(preview.revision, rebuildReviewed)
                     : preview.value.project;
-                  onApply(stock.value?.project ?? approved, project);
+                  const next = stock.value?.project ?? approved;
+                  const withCuts = cutScope
+                    ? recordStockCutLayouts(next, selectedCutUnits.map(({ layout }) => layout)).project
+                    : next;
+                  onApply(withCuts, project);
                 } catch (error) {
                   setError(
                     error instanceof Error

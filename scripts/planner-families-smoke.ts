@@ -1,6 +1,6 @@
 /**
  * Manual real-model qualification. Requires a running, Ollama-configured app.
- * SMOKE_URL selects an isolated server; this script saves six synthetic projects
+ * SMOKE_URL selects an isolated server; this script saves synthetic projects
  * there and retains them for restart/persistence inspection. Output is JSONL.
  */
 import assert from "node:assert/strict";
@@ -13,7 +13,9 @@ import {
   type IdeaPlan,
 } from "../src/planning";
 import { generateBuildGuide } from "../src/guide";
-import { guideMarkdown } from "../src/engine";
+import { bom, guideMarkdown } from "../src/engine";
+import { previewProposalStock } from "../src/proposalStock";
+import { recordStockCutLayouts } from "../src/recordStockCutLayout";
 
 const base = process.env.SMOKE_URL ?? "http://127.0.0.1:4173";
 type Preview = ReturnType<typeof previewIdeaPlan>;
@@ -34,6 +36,8 @@ type CaseRecord = {
     revision: number;
     pieces: number;
     profiles: number;
+    recordedStockUnits: number;
+    plannedOffcuts: number;
     projectSha256: string;
   };
 };
@@ -81,7 +85,8 @@ async function propose(
       "Must exercise the actual configured model, not a preset or fallback",
     );
     const plan = ideaPlanSchema.parse(body.plan);
-    const preview = previewIdeaPlan(blank(`Actual AI ${name}`), plan);
+    const draft = blank(`Actual AI ${name}`);
+    const preview = previewIdeaPlan(draft, plan);
     record.geometry = {
       parts: preview.addedParts,
       min: preview.min,
@@ -90,7 +95,13 @@ async function propose(
     assert.ok(preview.addedParts > 5, "No meaningful real geometry generated");
     validate(plan, preview);
 
-    const project = generateBuildGuide(preview.project);
+    const stock = previewProposalStock(draft, preview.project, null);
+    assert.ok(stock.recordable.length, "No reviewed wood stock units to record");
+    const recorded = recordStockCutLayouts(stock.project, stock.recordable.map(({ layout }) => layout));
+    const purchases = (project: typeof draft) => bom(project).map(({ id, quantity }) => [id, quantity]);
+    assert.deepEqual(purchases(recorded.project), purchases(preview.project));
+    const project = generateBuildGuide(recorded.project);
+    assert.match(guideMarkdown(project), /Stock cut order for P\d+/);
     const save = await fetch(`${base}/api/projects/${project.id}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
@@ -118,6 +129,8 @@ async function propose(
       revision: 1,
       pieces: project.pieces.length,
       profiles,
+      recordedStockUnits: recorded.sourceIds.length,
+      plannedOffcuts: recorded.offcuts,
       projectSha256: createHash("sha256")
         .update(JSON.stringify(saved.project))
         .digest("hex"),
@@ -220,6 +233,22 @@ await propose(
       preview.project.pieces.some((p) => p.cutPlanes.length === 2),
       "Missing clipped rafters",
     );
+  },
+);
+await propose(
+  "short-greenhouse",
+  "Plan a gabled greenhouse six feet wide, seven feet deep, six feet eave height and a two-foot roof rise.",
+  (plan) => {
+    assert.equal(plan.modules.length, 0);
+    assert.equal(plan.structures.length, 1);
+    const structure = plan.structures[0];
+    assert.ok(structure.kind === "greenhouse");
+    near(structure.parameters.width, 72, "width");
+    near(structure.parameters.depth, 84, "depth");
+    near(structure.parameters.eaveHeight, 72, "eave");
+    near(structure.parameters.roofRise, 24, "rise");
+    near(structure.parameters.doorHeight, 59, "modeled provisional opening");
+    assert.ok(plan.assumptions.some((line) => line.startsWith("Provisional greenhouse door opening")));
   },
 );
 await propose(

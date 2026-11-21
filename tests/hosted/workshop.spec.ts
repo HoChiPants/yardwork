@@ -1261,7 +1261,7 @@ test("compare drawer slide lengths, play the fitted travel and reopen the exact 
   expect(guide).toContain("Closed rail length 17.72 in");
 });
 
-test("a proposal shows board cuts, reuses a named scrap and saves the exact cut order", async ({ page }) => {
+test("a proposal reuses a named scrap and saves board and sheet cut orders with its layout", async ({ page }) => {
   const base = blank("Workbench proposal stock");
   const existing = part("Existing blank", "stud", [3.5, 1.5, 10], [90, 0.75, 0], base.steps[0].id, "Existing");
   base.pieces.push(existing);
@@ -1309,6 +1309,16 @@ test("a proposal shows board cuts, reuses a named scrap and saves the exact cut 
   await expect(stock.getByRole("list", { name: "Scraps to keep after these cuts" })).toContainText("O004 · 1.5 in × 3.5 in × 8 in");
   expect((await draft()).project.pieces.some(({ id }: { id: string }) => id === originalScrap.id)).toBe(true);
 
+  await ask("Save the cut order with this proposal");
+  const saveCuts = stock.getByRole("combobox", { name: "Wood cut orders to save", exact: true });
+  await expect(saveCuts).toHaveValue("proposal");
+  await expect(stock.getByRole("status")).toContainText("Save 3 stock units with this design. Add 4 planned offcuts to the Cut pool.");
+  await saveCuts.selectOption("shared");
+  await expect(stock.getByRole("list", { name: "Existing parts that will share stock with the proposal" })).toContainText("P001 Existing blank");
+  await expect(stock.getByRole("status")).toContainText("Save 4 stock units");
+  await saveCuts.selectOption("proposal");
+  expect((await draft()).project.pieces.find(({ id }: { id: string }) => id === existing.id).cutStock).toBeNull();
+
   await apply.click();
   await expect(dialog).toHaveCount(0);
   await expect.poll(async () => (await draft())?.project.ideaBindings.length).toBe(1);
@@ -1319,11 +1329,21 @@ test("a proposal shows board cuts, reuses a named scrap and saves the exact cut 
   expect(acceptedCuts[0].inputId).toBe(originalScrap.id);
   expect(acceptedCuts.every(({ sourceId }: { sourceId: string }) => sourceId === originalScrap.cutStock?.id)).toBe(true);
   expect(accepted.pieces.find(({ id }: { id: string }) => id === existing.id).cutStock).toBeNull();
+  const priorSources = new Set(fixture.pieces.flatMap(({ cutStock }) => cutStock ? [cutStock.id] : []));
+  const newStock = accepted.pieces.filter((piece: { cutStock: { id: string } | null }) =>
+    piece.cutStock && !priorSources.has(piece.cutStock.id));
+  const purchaseSources = new Set<string>(newStock.map((piece: { cutStock: { id: string } }) => piece.cutStock.id));
+  expect(purchaseSources.size).toBe(3);
+  expect(newStock.filter((piece: { offcut: boolean }) => piece.offcut)).toHaveLength(4);
+  expect(accepted.onHandCutSources.every((id: string) => !purchaseSources.has(id))).toBe(true);
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect.poll(async () => (await draft())?.project.ideaBindings.length).toBe(0);
   expect((await draft()).project.pieces.some(({ id }: { id: string }) => id === originalScrap.id)).toBe(true);
+  expect((await draft()).project.pieces.some((piece: { cutStock: { id: string } | null }) =>
+    piece.cutStock && purchaseSources.has(piece.cutStock.id))).toBe(false);
   await page.getByRole("button", { name: "Redo", exact: true }).click();
   await expect.poll(async () => (await draft())?.project.ideaBindings.length).toBe(1);
+  expect((await draft()).project.pieces).toEqual(accepted.pieces);
 
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   await expect.poll(async () => (await draft())?.revision).toBe(1);
@@ -1336,6 +1356,8 @@ test("a proposal shows board cuts, reuses a named scrap and saves the exact cut 
   await dialog.getByRole("button", { name: /^Build guide/ }).click();
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/Recorded offcut cut order[\s\S]+O001[\s\S]+O004/);
+  expect(guide).toMatch(/Stock cut order for P\d+ · 1\. Crosscut/);
+  expect(guide).toMatch(/Recorded one .* sheet for .* Added 2 rectangular offcuts to the Cut pool/);
 });
 
 test("a named cabinet opening produces a drawer cut list and stops the saved slide at an obstruction", async ({ page }) => {

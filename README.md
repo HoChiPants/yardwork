@@ -20,6 +20,8 @@ Use **Sections → Check subfloor support**, or ask **“Does my subfloor need b
 
 Once the sheet has continuous backing, open **Subfloor adhesive** in the same check. Preview the bead routes along the actual bearing strips. Save the plan after checking the delivered material instructions. The assembly guide places adhesive in the sheet installation step, and **List → Prepare Home Depot list** offers the estimated cartridges. Changed contact calls for a new review. [Manufacturer instructions](https://images.thdstatic.com/catalog/pdfImages/a5/a5de5c38-8ef2-478d-b888-8b289022c0f0.pdf) · [Home Depot cartridge](https://www.homedepot.com/p/202203997)
 
+Open **Subfloor fasteners** to check for continuous wood behind each nail and count the nails by framing member. The saved 6d schedule goes into the build guide. If the glue-nailed detail permits the 8C1 common-nail substitution, **Prepare Home Depot list** estimates boxes using the published piece count. [APA fastening schedule](https://royomartin.com/wp-content/uploads/2023/05/APA-%E2%80%93-Floor-Construction.pdf) · [Grip-Rite specifications](https://grip-rite.com/product/common-nail/)
+
 Under **Checks → Project code references**, a through-wall plumbing vent can use measured wall, terminal, lot-line and grade points. These positions appear in 3D and the project guide. Enter the build jurisdiction, code path and date for the Utah review.
 
 For a closet with sourced Everbilt rods, open **Sections → Fit closet rods → End socket backplates** after saving the rod fit. Measure each delivered backplate from the rod center. Yardwork shows where the measured envelope crosses a retained panel edge or cutout, and exports the marks with the build guide.

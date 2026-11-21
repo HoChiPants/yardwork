@@ -19,6 +19,12 @@ export const subfloorNails = {
   listing: "https://www.homedepot.com/p/202308488",
   specification: "https://grip-rite.com/product/common-nail/",
   reviewedAt: "2026-11-21T16:56:00.000Z",
+  estimatedBoxCount: 101,
+} as const;
+
+export const subfloorNailSchedules = {
+  "deformed-6d": { label: "6d ring- or screw-shank", length: 2, shank: 0.120 },
+  "common-8d": { label: "Grip-Rite 8C1 common nail", length: 2.5, shank: 0.131 },
 } as const;
 
 export const subfloorScope =

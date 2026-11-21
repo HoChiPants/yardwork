@@ -1,6 +1,7 @@
 import { subfloorReviews } from "./subfloor";
 import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
-import { subfloorAdhesiveInstallation } from "./subfloorReference";
+import { subfloorAdhesiveInstallation, subfloorNailSchedules } from "./subfloorReference";
+import { subfloorFasteningReviews } from "./subfloorFastening";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import {
   projectSchema,
@@ -79,6 +80,7 @@ function preparationScope(project: Project) {
     ...(project.sinkDrains?.length ? { sinkDrains: project.sinkDrains } : {}),
     ...(project.subfloorChecks?.length ? { subfloorChecks: project.subfloorChecks } : {}),
     ...(project.subfloorAdhesivePlans?.length ? { subfloorAdhesivePlans: project.subfloorAdhesivePlans } : {}),
+    ...(project.subfloorNailPlans?.length ? { subfloorNailPlans: project.subfloorNailPlans } : {}),
     ...(project.bottomPlateSeals?.length ? { bottomPlateSeals: project.bottomPlateSeals } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
@@ -603,6 +605,7 @@ export function generateBuildGuide(input: Project): Project {
     addedHinges.add(review.plan.id);
   };
   const adhesiveByPanel = new Map(subfloorAdhesiveReviews(project).map((review) => [review.panelId, review]));
+  const fasteningByPanel = new Map(subfloorFasteningReviews(project).map((review) => [review.panelId, review]));
   for (const stage of stages) {
     // Typed storage stages place shell/frame before the actual lid. Legacy
     // combined stages retain an explicit dry-fit instruction in the hinge phase.
@@ -612,24 +615,34 @@ export function generateBuildGuide(input: Project): Project {
       const review = adhesiveByPanel.get(id);
       return review ? [review] : [];
     });
+    const fastening = stage.memberIds.flatMap((id) => {
+      const review = fasteningByPanel.get(id);
+      return review ? [review] : [];
+    });
     const adhesiveNotes = adhesive.flatMap(({ panelId, problem }) =>
       problem ? [`${partLabel(project, panelId)} · ${problem}`] : []);
     const activeBeads = adhesive.filter(({ planCurrent }) => planCurrent);
     if (activeBeads.length) adhesiveNotes.push(
       `Subfloor adhesive for ${activeBeads.map(({ panelId }) => partLabel(project, panelId)).join(", ")}. ${subfloorAdhesiveInstallation}`,
     );
+    const fasteningNotes = fastening.map(({ panelId, schedule, marks, problem }) => problem
+      ? `${partLabel(project, panelId)} · ${problem}`
+      : `Fasten ${partLabel(project, panelId)} after checking its installed joists and blocking. Use the ${marks} reviewed ${subfloorNailSchedules[schedule].label} locations.`);
     const scope = stageScope(project, stage, fastenerReviewCache, hingeReviewCache, connectorReviewCache);
     const phase = addPhase(
       stage.title,
-      [stage.notes, ...adhesiveNotes].join(" "),
+      [stage.notes, ...adhesiveNotes, ...fasteningNotes].join(" "),
       {
         kind: "assembly-stage",
         planId: stage.ownerId,
         stageKey: stage.key,
         memberIds: stage.memberIds,
       },
-      adhesive.length ? { stage: scope, adhesive: adhesive.map(({ panelId, planCurrent, layout }) =>
-        ({ panelId, planCurrent, contact: layout?.signature })) } : scope,
+      adhesive.length || fastening.length ? {
+        stage: scope,
+        adhesive: adhesive.map(({ panelId, planCurrent, layout }) => ({ panelId, planCurrent, contact: layout?.signature })),
+        ...(fastening.length ? { fastening: fastening.map(({ panelId, current, signature }) => ({ panelId, current, signature })) } : {}),
+      } : scope,
     );
     for (const id of stage.memberIds) {
       if (pieceSteps.has(id))

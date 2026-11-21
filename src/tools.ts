@@ -1,5 +1,6 @@
 import { subfloorReviews } from "./subfloor";
 import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
+import { subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorAdhesive } from "./subfloorReference";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { bottomPlateSealant, quartCartridgeGun } from "./bottomPlateSealReference";
@@ -463,11 +464,15 @@ export function toolChecklist(
         reason: "The saved drip edge layout includes partial cuts or corner trim allowances.",
       });
   }
+  const subfloorHandNails = new Set(subfloorFasteningReviews(project)
+    .filter(({ current, schedule }) => current && schedule === "common-8d").map(({ panelId }) => panelId));
   for (const { panelId, layout } of subfloorReviews(project)) {
-    if (layout?.nails.length) add("drive-nail", {
+    if (layout?.nails.length && !subfloorHandNails.has(panelId)) add("drive-nail", {
       kind: "piece", id: panelId, reason: "Fasten the checked subfloor sheet after confirming the actual attachment schedule.",
     }, "conditional", "Applies if you select a compatible hand-drive nail. Check the actual fastener, access and adhesive instructions.");
   }
+  for (const id of subfloorHandNails)
+    add("drive-nail", { kind: "piece", id, reason: "Hand-drive the reviewed 8C1 common nails during sheet installation." });
   for (const { record, problem, title } of bottomPlateSealReviews(project)) {
     if (!problem) add("apply-quart-sealant", { kind: "piece", id: record.plateId, reason: title });
   }

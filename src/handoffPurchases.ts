@@ -1,6 +1,7 @@
 import { bottomPlateSealReviews, bottomPlateSealTakeoff } from "./bottomPlateSeal";
 import { subfloorAdhesiveTakeoff } from "./subfloorAdhesive";
-import { subfloorAdhesive } from "./subfloorReference";
+import { subfloorAdhesive, subfloorNails } from "./subfloorReference";
+import { subfloorCommonNailTakeoff } from "./subfloorFastening";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
@@ -171,6 +172,13 @@ export function homeDepotPurchaseNeeds(
     const { required } = subfloorAdhesiveTakeoff(project);
     include(subfloorAdhesive.id, "Measured subfloor framing bead routes", required,
       required === null ? "Review changed or incomplete subfloor sheets to finish the adhesive estimate." : undefined);
+  }
+  const subfloorNailBoxes = subfloorCommonNailTakeoff(project);
+  if (subfloorNailBoxes) {
+    const { marks, required } = subfloorNailBoxes;
+    include(subfloorNails.id,
+      marks === null ? "Subfloor fastening plans" : `${marks} planned subfloor nails · about ${subfloorNails.estimatedBoxCount} per 1-lb box`,
+      required, required === null ? "Review changed or incomplete nail paths to finish the box estimate." : undefined);
   }
   if (project.bottomPlateSeals?.length) {
     const seals = bottomPlateSealReviews(project);

@@ -1,5 +1,6 @@
 import type { SubfloorReview } from "./subfloor";
 import type { SubfloorAdhesiveReview } from "./subfloorAdhesive";
+import type { SubfloorFasteningReview } from "./subfloorFastening";
 import { DrawingReferenceMesh } from "./DrawingReferenceMesh";
 import type { WallTracePoint } from "./wallTrace";
 import { drawingReferenceBounds } from "./drawingReference";
@@ -87,6 +88,7 @@ export type SceneProps = {
   shownTrimSeam?: TrimSeamMarker;
   shownSubfloor?: SubfloorReview["layout"];
   shownSubfloorAdhesive?: SubfloorAdhesiveReview;
+  shownSubfloorFasteners?: SubfloorFasteningReview;
   shownBottomPlate?: { start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownOpeningFlashing?: OpeningFlashingPreview;
@@ -1552,7 +1554,7 @@ function World(props: SceneProps) {
         <GreenhouseFoundationMarker review={props.shownFoundation} />
       )}
       {!isolated && props.shownSubfloor && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
-        <SubfloorMarkers layout={props.shownSubfloor} />
+        <SubfloorMarkers layout={props.shownSubfloor} fastening={props.shownSubfloorFasteners} />
       )}
       {!isolated && props.shownSubfloorAdhesive?.layout && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <SubfloorAdhesiveMarkers layout={props.shownSubfloorAdhesive.layout} />
@@ -1879,9 +1881,18 @@ function SubfloorAdhesiveMarkers({ layout }: { layout: NonNullable<SubfloorAdhes
   </group>;
 }
 
-function SubfloorMarkers({ layout }: { layout: NonNullable<SubfloorReview["layout"]> }) {
+function SubfloorMarkers({ layout, fastening }: {
+  layout: NonNullable<SubfloorReview["layout"]>;
+  fastening?: SubfloorFasteningReview;
+}) {
   const feet = (point: V3) => point.map((value) => value / 12) as V3;
-  const marks = useMemo(() => new Float32Array(layout.nails.flatMap(feet)), [layout]);
+  const { marks, conflicts } = useMemo(() => {
+    const bad = new Set(fastening?.problemMarks);
+    return {
+      marks: new Float32Array(layout.nails.filter((_, i) => !bad.has(i)).flatMap(feet)),
+      conflicts: new Float32Array(layout.nails.filter((_, i) => bad.has(i)).flatMap(feet)),
+    };
+  }, [layout, fastening]);
   return <group>
     {layout.edges.map(({ name, points, problem }, index) => <Line key={`${name}-${index}`} points={points.map(feet)}
       color={problem ? "#bd481d" : "#206575"} lineWidth={problem ? 5 : 2} depthTest={false} raycast={() => null} />)}
@@ -1892,10 +1903,16 @@ function SubfloorMarkers({ layout }: { layout: NonNullable<SubfloorReview["layou
       <bufferGeometry><bufferAttribute attach="attributes-position" args={[marks, 3]} /></bufferGeometry>
       <pointsMaterial color="#206575" size={6} sizeAttenuation={false} depthTest={false} />
     </points>}
+    {!!conflicts.length && <points renderOrder={11} raycast={() => null}>
+      <bufferGeometry><bufferAttribute attach="attributes-position" args={[conflicts, 3]} /></bufferGeometry>
+      <pointsMaterial color="#bd481d" size={11} sizeAttenuation={false} depthTest={false} />
+    </points>}
     <Html center position={feet([layout.center[0], layout.center[1] + 2, layout.center[2]])}
       zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
-      <span className="site-clearance-marker" data-testid="subfloor-support-marker">
-        {layout.issues.length ? "Subfloor · Review marked support" : `Subfloor · ${layout.nails.length} estimated nailing locations`}
+      <span className="site-clearance-marker" data-testid={fastening ? "subfloor-fasteners-marker" : "subfloor-support-marker"}>
+        {fastening ? conflicts.length ? `Fasteners · Review ${conflicts.length / 3} marked ${conflicts.length === 3 ? "path" : "paths"}` :
+          fastening.ready ? `Fasteners · ${fastening.marks} modeled paths` : "Fasteners · Review the sheet"
+          : layout.issues.length ? "Subfloor · Review marked support" : `Subfloor · ${layout.nails.length} estimated nailing locations`}
       </span>
     </Html>
   </group>;

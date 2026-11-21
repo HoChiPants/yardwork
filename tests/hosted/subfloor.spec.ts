@@ -52,6 +52,21 @@ test("subfloor support updates after fitting a recorded blocking offcut and stay
   await dialog.getByRole("checkbox", { name: "The delivered panel allows this adhesive on these framing surfaces." }).check();
   await saveAdhesive.click();
   await expect(dialog.getByText("Adhesive saved", { exact: true })).toBeVisible();
+  await dialog.getByText("Subfloor fasteners", { exact: true }).click();
+  const choices = dialog.getByRole("combobox", { name: "Fastener schedule" });
+  await expect(choices).toHaveValue("deformed-6d");
+  await expect(dialog.getByText("48 nails for this sheet")).toBeVisible();
+  await dialog.getByText("Count by framing member", { exact: true }).click();
+  await expect(dialog.getByText("P001 · 11 locations", { exact: true })).toBeVisible();
+  await choices.selectOption("common-8d");
+  const saveFastening = dialog.getByRole("button", { name: "Save fastener plan", exact: true });
+  await expect(saveFastening).toBeDisabled();
+  await dialog.getByRole("checkbox", { name: /The specified 6d nails are unavailable/ }).check();
+  await saveFastening.click();
+  await expect(dialog.getByText("Fastener plan saved", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Show nail marks in 3D" }).click();
+  await expect(page.getByTestId("subfloor-fasteners-marker")).toHaveText("Fasteners · 48 modeled paths");
+  await page.getByRole("button", { name: "Check subfloor support", exact: true }).click();
   await dialog.getByRole("button", { name: "Show adhesive in 3D" }).click();
   await expect(page.getByTestId("subfloor-adhesive-marker")).toHaveText("Adhesive · 10 framing bead runs");
   await expect(page.getByTestId("subfloor-support-marker")).toHaveCount(0);
@@ -60,6 +75,9 @@ test("subfloor support updates after fitting a recorded blocking offcut and stay
   await dialog.getByRole("button", { name: "Add 1 cartridge of Liquid Nails subfloor adhesive" }).click();
   await expect(dialog.getByRole("list", { name: "Home Depot purchase review" })
     .getByRole("listitem").filter({ hasText: "#202203997" })).toContainText("1 cartridge");
+  await dialog.getByRole("button", { name: /Add 1 1-lb box of Grip-Rite 8C1/ }).click();
+  await expect(dialog.getByRole("list", { name: "Home Depot purchase review" })
+    .getByRole("listitem").filter({ hasText: "#202308488" })).toContainText("1 1-lb box");
   await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const saved = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
@@ -67,6 +85,7 @@ test("subfloor support updates after fitting a recorded blocking offcut and stay
   expect((await saved()).project.subfloorChecks).toEqual([trackedPanel]);
   const stored = (await saved()).project;
   expect(stored.subfloorAdhesivePlans).toEqual([{ panelId: trackedPanel, contactSignature: expect.any(String) }]);
+  expect(stored.subfloorNailPlans).toEqual([{ panelId: trackedPanel, schedule: "common-8d", signature: expect.any(String) }]);
   expect(stored.pieces.some(({ id }: { id: string }) => id === scrap.id)).toBe(false);
   const installed = stored.pieces.find(({ name }: { name: string }) => name.startsWith("Subfloor blocking ·"));
   expect(installed.offcut).toBe(false);
@@ -84,7 +103,9 @@ test("subfloor support updates after fitting a recorded blocking offcut and stay
   expect(guide).toContain("Check 72 × 32 in OSB deck support before covering");
   expect(guide).toContain("202308488");
   expect(guide).toMatch(/Subfloor adhesive[\s\S]*1 × 28 fl oz LNP-902/);
+  expect(guide).toMatch(/Subfloor fasteners[\s\S]*48 nails total · estimated 1 × 1-lb box/);
   expect(guide).toMatch(/O003[^\n]*Subfloor blocking|Subfloor blocking[^\n]*O003/);
   await expect(page.locator(".print-guide .subfloor-support-print")).toContainText("48 estimated panel nailing locations");
   await expect(page.locator(".print-guide .subfloor-adhesive-print")).toContainText("10 framing bead runs");
+  await expect(page.locator(".print-guide .subfloor-fasteners-print")).toContainText("48 × Grip-Rite 8C1");
 });

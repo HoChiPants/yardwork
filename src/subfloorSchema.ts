@@ -12,3 +12,16 @@ export const subfloorAdhesivePlansSchema = z.array(z.strictObject({
   (rows) => new Set(rows.map(({ panelId }) => panelId)).size === rows.length,
   "Keep one adhesive plan per subfloor sheet.",
 );
+
+export const subfloorNailPlanSchema = z.strictObject({
+  panelId: z.uuid(),
+  schedule: z.enum(["deformed-6d", "common-8d"]),
+  signature: z.string().min(1).max(64),
+});
+
+export const subfloorNailPlansSchema = z.array(subfloorNailPlanSchema).max(32).refine(
+  (rows) => new Set(rows.map(({ panelId }) => panelId)).size === rows.length,
+  "Keep one fastening plan per subfloor sheet.",
+);
+
+export type SubfloorNailPlan = z.infer<typeof subfloorNailPlanSchema>;

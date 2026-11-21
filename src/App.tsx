@@ -12,8 +12,9 @@ import { sillGasketScope } from "./sillGasketReference";
 import type { SubfloorBlockingPreview } from "./subfloorBlocking";
 import { SubfloorPanel } from "./SubfloorPanel";
 import { reviewSubfloorAdhesive, saveSubfloorAdhesive, subfloorAdhesiveReport } from "./subfloorAdhesive";
+import { reviewSubfloorFastening, saveSubfloorFastening, subfloorFasteningReport, type SubfloorNailSchedule } from "./subfloorFastening";
 import { subfloorReport, subfloorReviews, trackSubfloorPanel } from "./subfloor";
-import { subfloorAdhesive, subfloorReference } from "./subfloorReference";
+import { subfloorAdhesive, subfloorNails, subfloorReference } from "./subfloorReference";
 import { BottomPlateSealPanel } from "./BottomPlateSealPanel";
 import { bottomPlateSealGuide, bottomPlateSealReviews, removeBottomPlateSeal } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
@@ -620,7 +621,7 @@ export function App() {
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
   const [shownTrimSeam, setShownTrimSeam] = useState<{ project: Project; pair: string; marker: TrimSeamMarker } | null>(null);
   const [subfloorBlockDraft, setSubfloorBlockDraft] = useState<{ project: Project; fit: SubfloorBlockingPreview } | null>(null);
-  const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string; view: "support" | "adhesive" } | null>(null);
+  const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string; view: "support" | "adhesive" | SubfloorNailSchedule } | null>(null);
   const [subfloorTarget, setSubfloorTarget] = useState<string>();
   const [shownBottomPlate, setShownBottomPlate] = useState<{ projectId: string; id: string } | null>(null);
   const [bottomPlateTarget, setBottomPlateTarget] = useState<string>();
@@ -1796,7 +1797,12 @@ export function App() {
   }, [panel, project, shownSubfloor]);
   const visibleAdhesive = useMemo(() => shownSubfloor?.view === "adhesive" && visibleSubfloor
     ? reviewSubfloorAdhesive(project, visibleSubfloor) : undefined, [project, visibleSubfloor, shownSubfloor]);
-  function showSubfloor(panelId: string, view: "support" | "adhesive" = "support") {
+  const visibleNails = useMemo(() => {
+    const schedule = shownSubfloor?.view;
+    if (visibleSubfloor && (schedule === "deformed-6d" || schedule === "common-8d"))
+      return reviewSubfloorFastening(project, visibleSubfloor, schedule);
+  }, [project, visibleSubfloor, shownSubfloor]);
+  function showSubfloor(panelId: string, view: "support" | "adhesive" | SubfloorNailSchedule = "support") {
     setSubfloorBlockDraft(null);
     if (guidePartFocus) exitGuidePartView();
     setShownSubfloor({ projectId: project.id, panelId, view });
@@ -3059,8 +3065,9 @@ export function App() {
               shownTrimSeam={panel === "connections" && shownTrimSeam?.project === project &&
                 shownTrimSeam.pair === liveConnectionContext?.scope.focusPair?.slice().sort().join("/")
                 ? shownTrimSeam.marker : undefined}
-              shownSubfloor={shownSubfloor?.view === "support" ? visibleSubfloor?.layout : undefined}
+              shownSubfloor={shownSubfloor?.view !== "adhesive" ? visibleSubfloor?.layout : undefined}
               shownSubfloorAdhesive={visibleAdhesive}
+              shownSubfloorFasteners={visibleNails}
               shownBottomPlate={visibleBottomPlate?.layout ? {
                 start: visibleBottomPlate.layout.ends[0], outdated: !!visibleBottomPlate.outdated,
                 runs: visibleBottomPlate.layout.runs,
@@ -3970,7 +3977,7 @@ export function App() {
                 setSubfloorTarget(shownSubfloor?.projectId === project.id ? shownSubfloor.panelId : selected ?? undefined);
                 setModal("subfloor-support");
               }}>Check subfloor support</button>
-              {visibleSubfloor && <button type="button" className="text-button" onClick={() => setShownSubfloor(null)}>{visibleAdhesive ? "Hide adhesive routes" : "Hide subfloor support"}</button>}
+              {visibleSubfloor && <button type="button" className="text-button" onClick={() => setShownSubfloor(null)}>{visibleAdhesive ? "Hide adhesive routes" : visibleNails ? "Hide nail marks" : "Hide subfloor support"}</button>}
               {visibleBottomPlate && <button type="button" className="text-button" onClick={() => setShownBottomPlate(null)}>Hide bottom plate seam</button>}
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
                 shownId={shownSillGasketId} onChange={change} onShow={(id) => {
@@ -5517,6 +5524,9 @@ export function App() {
               })} onAdhesive={(id, signature) => safe(() => {
                 change((live) => saveSubfloorAdhesive(live, id, signature));
                 notify(signature ? "Subfloor adhesive plan saved." : "Subfloor adhesive plan removed.");
+              })} onShowFastening={showSubfloor} onFastening={(id, plan) => safe(() => {
+                change((live) => saveSubfloorFastening(live, id, plan));
+                notify(plan ? "Subfloor fastener plan saved." : "Subfloor fastener plan removed.");
               })} />}
             {modal === "bottom-plate-seal" && <BottomPlateSealPanel project={project} selectedPart={selected} initialId={bottomPlateTarget}
               onSave={(draft) => safe(() => {
@@ -6986,6 +6996,14 @@ export function App() {
             <ul>{subfloorAdhesiveReport(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
             <p><a href={subfloorAdhesive.specification}>Adhesive instructions</a>{" · "}
               <a href={subfloorAdhesive.apa}>APA glued floor guide</a></p>
+          </section>
+        )}
+        {!!exportGuide.subfloorNailPlans?.length && (
+          <section className="subfloor-fasteners-print">
+            <h2>Subfloor fasteners</h2>
+            <ul>{subfloorFasteningReport(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={subfloorReference.specification}>APA fastening schedule</a>{" · "}
+              <a href={subfloorNails.specification}>Grip-Rite specifications</a></p>
           </section>
         )}
         {!!exportGuide.bottomPlateSeals?.length && (

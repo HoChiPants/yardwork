@@ -434,6 +434,35 @@ function convexOverlap(
   return true;
 }
 
+/** Check continuous coverage as the segment crosses cells of a retained solid. */
+export function solidContainsSegment(shape: CollisionSolid, start: V3, finish: V3) {
+  const delta = subtract(finish, start);
+  const ranges = (shape.cells ?? [shape]).flatMap((cell): [number, number][] => {
+    let from = 0, to = 1;
+    for (const axis of cell.faceNormals) {
+      const { min, max } = projection(cell, axis, start);
+      const travel = dot(delta, axis);
+      if (Math.abs(travel) < AXIS_EPSILON) {
+        if (min > cellTolerance || max < -cellTolerance) return [];
+        continue;
+      }
+      const a = (min - cellTolerance) / travel;
+      const b = (max + cellTolerance) / travel;
+      from = Math.max(from, Math.min(a, b));
+      to = Math.min(to, Math.max(a, b));
+      if (from > to) return [];
+    }
+    return [[from, to]];
+  }).sort(([a], [b]) => a - b);
+  let reached = 0;
+  for (const [from, to] of ranges) {
+    if (from > reached) return false;
+    reached = Math.max(reached, to);
+    if (reached === 1) return true;
+  }
+  return false;
+}
+
 function surfaceFeatures(shape: ConvexCollisionSolid) {
   if (!shape.faceLoops)
     throw Error("Distance review needs the modeled part surfaces.");

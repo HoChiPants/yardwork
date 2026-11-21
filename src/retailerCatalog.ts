@@ -4720,7 +4720,7 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     offers: [hd(subfloorNails.internet, subfloorNails.model, subfloorNails.sku)],
     sources: [
       { url: subfloorNails.specification, verifiedAt: subfloorNails.reviewedAt,
-        note: "Exact 8C1 listing with 8d, 2½ in, 10¼ gauge, smooth shank, 9/32 in head and bright steel. Confirm delivered dimensions before using a specified fastener schedule." },
+        note: "Exact 8C1 listing with 8d, 2½ in, 10¼ gauge, smooth shank, 9/32 in head and bright steel. The manufacturer lists 101 pieces for the 1-lb unit. Use that as a planning estimate and confirm actual count and dimensions." },
       { url: subfloorNails.listing, verifiedAt: subfloorNails.reviewedAt,
         note: "Exact 8C1, SKU 192996. One advertised 1-lb box of smooth, hand-drive common nails for interior wood applications." },
     ],

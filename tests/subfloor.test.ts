@@ -14,6 +14,7 @@ import { rotate } from "../src/spatial";
 import { subfloorBlockingLines, subfloorReviews, trackSubfloorPanel } from "../src/subfloor";
 import { reviewSubfloorAdhesive, saveSubfloorAdhesive, subfloorAdhesiveTakeoff } from "../src/subfloorAdhesive";
 import { previewSubfloorBlocking } from "../src/subfloorBlocking";
+import { reviewSubfloorFastening, saveSubfloorFastening, subfloorCommonNailTakeoff } from "../src/subfloorFastening";
 import { subfloorAdhesive, subfloorNails } from "../src/subfloorReference";
 import { addSupply } from "../src/supplies";
 import { toolChecklist } from "../src/tools";
@@ -228,4 +229,69 @@ test("neighboring sheets get separate bead paths on their shared joist and share
   assert.ok(layouts[1].runs.find(({ supportId }) => supportId === joists[2].id)!.points.every(([, , z]) => z > 0.0625));
   for (const [index, panel] of sheets.entries()) assembly = saveSubfloorAdhesive(assembly, panel.id, layouts[index].signature);
   assert.deepEqual(subfloorAdhesiveTakeoff(assembly), { required: 1, inches: layouts[0].inches + layouts[1].inches });
+});
+
+test("record nails by receiver, reject a path through a retained opening, and remove stale purchase quantities", () => {
+  const { repaired, panel, scrap } = fixture();
+  const standard = (source: Project) => reviewSubfloorFastening(source, subfloorReviews(source, [panel.id])[0], "deformed-6d");
+  const common = (source: Project) => reviewSubfloorFastening(source, subfloorReviews(source, [panel.id])[0], "common-8d");
+  assert.equal(standard(repaired).marks, 48);
+  const layout = common(repaired);
+  assert.equal(layout.ready, true);
+  assert.equal(layout.groups.length, 10);
+  assert.equal(layout.groups.reduce((sum, { count }) => sum + count, 0), 48);
+  assert.equal(layout.groups.find(({ id }) => id === scrap.id)?.count, 3);
+  const fastened = saveSubfloorFastening(repaired, panel.id, { schedule: "common-8d", signature: layout.signature });
+  assert.equal(common(projectSchema.parse(JSON.parse(JSON.stringify(fastened)))).current, true);
+  assert.deepEqual(subfloorCommonNailTakeoff(fastened), { marks: 48, required: 1 });
+  const shopping = homeDepotShoppingList(addHomeDepotPurchaseNeed(fastened, subfloorNails.id));
+  const supply = shopping.items.find(({ productId }) => productId === subfloorNails.internet);
+  assert.equal(supply?.quantity, 1);
+  assert.equal(supply?.snapshot, null);
+  assert.ok(toolChecklist(fastened).requirements.some(({ capability, necessity }) =>
+    capability === "drive-nail" && necessity === "required"));
+  const guide = generateBuildGuide(fastened);
+  assert.match(guideMarkdown(guide), /Subfloor fasteners[\s\S]+48 nails total · estimated 1 × 1-lb box/);
+  assert.match(guide.steps.find(({ id }) => id === guide.pieces.find(({ id }) => id === panel.id)!.stepId)!.notes,
+    /48 reviewed Grip-Rite 8C1/);
+
+  const cut: Project = { ...fastened, pieces: fastened.pieces.map((piece) => piece.id === scrap.id ? {
+    ...piece, cutStock: null, rectangularOpenings: [{ axis: 0, center: [1.96, 0], spans: [0.2, 3] }],
+  } : piece) };
+  assert.equal(subfloorReviews(cut)[0].layout!.nails.length, 48);
+  assert.equal(standard(cut).ready, true);
+  assert.match(common(cut).problem!, /1 of 48 marks need one unbroken wood path/);
+  assert.equal(common(cut).problemMarks.length, 1);
+  assert.equal(homeDepotPurchaseNeeds(cut).find(({ id }) => id === subfloorNails.id)?.canAdd, false);
+  assert.ok(validate(cut).some(({ id }) => id === `subfloor-fasteners-${panel.id}`));
+  assert.throws(() => saveSubfloorFastening(cut, panel.id, { schedule: "common-8d", signature: layout.signature }), /paths changed/);
+  const revised = saveSubfloorFastening(cut, panel.id, { schedule: "deformed-6d", signature: standard(cut).signature });
+  assert.equal(subfloorCommonNailTakeoff(revised), null);
+  assert.match(guideMarkdown(revised), /48 × 6d ring- or screw-shank/);
+});
+
+test("pool common-nail counts across sheets, pause changed plans, and flag treated wood", () => {
+  const { repaired, panel, scrap } = fixture();
+  const sheets: string[] = [];
+  const pieces = [0, 200, 400].flatMap((offset) => repaired.pieces.filter(({ offcut }) => !offcut)
+    .map((piece) => {
+      const id = crypto.randomUUID();
+      if (piece.id === panel.id) sheets.push(id);
+      return { ...piece, id, cutStock: null, position: [piece.position[0], piece.position[1], piece.position[2] + offset] as V3 };
+    }));
+  let assembly: Project = { ...repaired, pieces, subfloorChecks: sheets };
+  for (const review of subfloorReviews(assembly)) {
+    const preview = reviewSubfloorFastening(assembly, review, "common-8d");
+    assert.ok(preview.ready);
+    assembly = saveSubfloorFastening(assembly, review.panelId, { schedule: "common-8d", signature: preview.signature });
+  }
+  assert.deepEqual(subfloorCommonNailTakeoff(assembly), { marks: 144, required: 2 });
+  const shifted: Project = { ...assembly, pieces: assembly.pieces.map((piece) => piece.position[2] < 100 ? {
+    ...piece, position: [piece.position[0] + 1, piece.position[1], piece.position[2]],
+  } : piece) };
+  assert.deepEqual(subfloorCommonNailTakeoff(shifted), { marks: null, required: null });
+  const treated: Project = { ...repaired, pieces: repaired.pieces.map((piece) => piece.id === scrap.id ?
+    { ...piece, material: "treated", cutStock: null } : piece) };
+  assert.match(reviewSubfloorFastening(treated, subfloorReviews(treated)[0], "common-8d").problem!, /treated framing/);
+  assert.deepEqual(buildQuestion("How many nails for P10?"), { kind: "subfloor-support", panelLabel: "P010" });
 });

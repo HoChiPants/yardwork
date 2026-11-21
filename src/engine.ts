@@ -1,5 +1,6 @@
 import { subfloorReport, subfloorReviews } from "./subfloor";
 import { subfloorAdhesiveReport, subfloorAdhesiveReviews } from "./subfloorAdhesive";
+import { subfloorFasteningReport, subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorAdhesive, subfloorNails, subfloorReference } from "./subfloorReference";
 import { bottomPlateSealGuide, bottomPlateSealReviews } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
@@ -835,6 +836,12 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
   for (const { panelId, problem } of subfloorAdhesiveReviews(p)) {
     if (problem) findings.push({ id: `subfloor-adhesive-${panelId}`, severity: "warning",
       title: "Review subfloor adhesive", detail: problem,
+      ...(p.pieces.some(({ id }) => id === panelId) && { pieceId: panelId }),
+    });
+  }
+  for (const { panelId, problem } of subfloorFasteningReviews(p)) {
+    if (problem) findings.push({ id: `subfloor-fasteners-${panelId}`, severity: "warning",
+      title: "Review subfloor fasteners", detail: problem,
       ...(p.pieces.some(({ id }) => id === panelId) && { pieceId: panelId }),
     });
   }
@@ -2237,6 +2244,10 @@ export function guideMarkdown(p: Project) {
       subfloorAdhesiveReport(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[Adhesive instructions](${subfloorAdhesive.specification}) · [APA glued floor guide](${subfloorAdhesive.apa})\n` : "") +
+    (p.subfloorNailPlans?.length ? "\n\n## Subfloor fasteners\n\n" +
+      subfloorFasteningReport(p).map((line) =>
+        "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[APA fastening schedule](${subfloorReference.specification}) · [Grip-Rite specifications](${subfloorNails.specification})\n` : "") +
     (p.bottomPlateSeals?.length ? "\n\n## Bottom plate air seals\n\n" +
       bottomPlateSealGuide(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

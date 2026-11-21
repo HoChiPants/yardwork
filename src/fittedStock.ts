@@ -11,7 +11,7 @@ import {
   type V3,
 } from "./model";
 import { clipBox } from "./cutProfiles";
-import { KERF } from "./engine";
+import { plannedCutKerf } from "./cutStock";
 import { rotate } from "./spatial";
 import { guidePlacementTargets } from "./guidePlacement";
 import type { GuidePlacement } from "./guidePlacementSchema";
@@ -421,9 +421,11 @@ function candidate(
         `The complete stock cross-section does not fit inside the ${which} retained face at this datum and roll. Choose a smaller actual stock cross-section or another explicit datum.`,
       );
   }
+  const kerf = plannedCutKerf(project, stock.id);
+  const measuredKerf = project.woodKerfs?.[stock.id];
   const leftover = sourceLength - cutLength,
     hasCut = leftover > EPS,
-    hasRemnant = leftover > KERF + EPS,
+    hasRemnant = leftover > kerf + EPS,
     blockId = ids?.blockId ?? uid(),
     sourceId = hasCut ? (ids ? ids.sourceId : uid()) : null,
     offcutIds = hasRemnant ? (ids ? ids.offcutIds : [uid()]) : [];
@@ -463,7 +465,7 @@ function candidate(
     cutPlanes: [],
     stockLengthAxis: axis,
     cutStock: sourceId
-      ? { id: sourceId, size: [...stock.size], offset: [0, 0, 0] }
+      ? { id: sourceId, size: [...stock.size], offset: [0, 0, 0], ...(measuredKerf !== undefined ? { woodKerf: measuredKerf } : {}) }
       : null,
     ...(spec.guidePlacement ? { guidePlacement: structuredClone(spec.guidePlacement) } : {}),
   };
@@ -499,17 +501,17 @@ function candidate(
   const pieces = [...project.pieces, block];
   if (hasRemnant) {
     const remnantSize = [...stock.size] as V3;
-    remnantSize[axis] = leftover - KERF;
+    remnantSize[axis] = leftover - kerf;
     const offset: V3 = [0, 0, 0];
-    offset[axis] = cutLength + KERF;
+    offset[axis] = cutLength + kerf;
     const remnant: Piece = {
       ...structuredClone(block),
       id: offcutIds[0],
       name: `Offcut · ${spec.name}`.slice(0, 120),
       size: remnantSize,
-      position: add(position, scale(normal, (sourceLength + KERF) / 2)),
+      position: add(position, scale(normal, (sourceLength + kerf) / 2)),
       offcut: true,
-      cutStock: { id: sourceId!, size: [...stock.size], offset },
+      cutStock: { id: sourceId!, size: [...stock.size], offset, ...(measuredKerf !== undefined ? { woodKerf: measuredKerf } : {}) },
     };
     delete remnant.guidePlacement;
     pieces.push(remnant);
@@ -534,14 +536,14 @@ function candidate(
     cutLength,
     sourceLength,
     stockLengthAxis: axis,
-    kerfLoss: hasCut ? Math.min(KERF, leftover) : 0,
+    kerfLoss: hasCut ? Math.min(kerf, leftover) : 0,
     firstFace,
     secondFace,
     endFootprintsWorld,
     notes: [
       hasCut
         ? hasRemnant
-          ? `One fresh ${sourceLength} in stock source: ${cutLength} in fitted member, ${KERF} in kerf and ${leftover - KERF} in reusable offcut.`
+          ? `One fresh ${sourceLength} in stock source: ${cutLength} in fitted member, ${kerf} in kerf and ${leftover - kerf} in reusable offcut.`
           : `One fresh ${sourceLength} in stock source: ${cutLength} in fitted member; the remaining ${leftover} in is end-trim waste with no reusable offcut.`
         : `Full ${sourceLength} in stock use; no cut, kerf or remnant was invented.`,
       "Square-ended stock with explicit clearances only. No grain, fastening, load capacity, joint suitability or installation approval is inferred.",

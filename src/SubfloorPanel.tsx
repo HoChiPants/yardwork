@@ -3,6 +3,7 @@ import { formatPreciseInches } from "./measurement";
 import type { Project } from "./model";
 import { partLabel } from "./partLabels";
 import { isSubfloorPanel, subfloorBlockingLines, subfloorReviews } from "./subfloor";
+import { previewSubfloorBlocking, type SubfloorBlockingPreview } from "./subfloorBlocking";
 import { workshopAsset } from "./workshopTransport";
 import { subfloorNailing, subfloorNails, subfloorReference, subfloorScope } from "./subfloorReference";
 
@@ -10,10 +11,11 @@ type Props = {
   project: Project;
   initialId?: string;
   onShow: (id: string) => void;
+  onPreviewBlock: (preview: SubfloorBlockingPreview) => void;
   onTrack: (id: string, enabled: boolean) => void;
 };
 
-export function SubfloorPanel({ project, initialId, onShow, onTrack }: Props) {
+export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTrack }: Props) {
   const saved = project.subfloorChecks ?? [];
   const panels = useMemo(() => project.pieces.filter((piece) =>
     isSubfloorPanel(piece) || project.subfloorChecks?.includes(piece.id)), [project]);
@@ -22,11 +24,25 @@ export function SubfloorPanel({ project, initialId, onShow, onTrack }: Props) {
   const review = useMemo(() => subfloorReviews(project, id ? [id] : [])[0], [project, id]);
   const layout = review?.layout;
   const tracking = saved.includes(id);
+  const [bayId, setBayId] = useState("");
+  const [placement, setPlacement] = useState<"under-sheet" | "centered">("under-sheet");
+  const [source, setSource] = useState<"prefer-offcut" | "new-board">("prefer-offcut");
+  const [error, setError] = useState("");
+  const bays = layout?.blocking ?? [];
+  const bay = bays.find((item) => item.id === bayId) ?? bays[0];
+  function previewBlock() {
+    if (!bay) return;
+    try {
+      onPreviewBlock(previewSubfloorBlocking(project, id, bay.id, placement, source));
+    } catch (issue) {
+      setError(issue instanceof Error ? issue.message : "Review the joists and stock before fitting this block.");
+    }
+  }
   return <>
     <h2 id="modal-title">Check subfloor support</h2>
     <p>{subfloorScope}</p>
     {options.length ? <label className="field">Subfloor sheet
-      <select value={id} onChange={(event) => setId(event.target.value)}>
+      <select value={id} onChange={(event) => { setId(event.target.value); setError(""); }}>
         {options.map((option) => <option value={option} key={option}>
           {partLabel(project, option)} · {panels.find(({ id }) => id === option)?.name ?? "Missing panel"}
           {saved.includes(option) ? " · Saved check" : ""}
@@ -41,8 +57,29 @@ export function SubfloorPanel({ project, initialId, onShow, onTrack }: Props) {
       <p><strong>{layout.joistCount} continuous joist lines</strong>{layout.widest > 0 && <> · Widest spacing {formatPreciseInches(layout.widest)} on center</>}</p>
       {layout.issues.length > 0 ? <ul>{layout.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul> :
         <p>All four edges have modeled backing and the joist spacing is within the panel reference.</p>}
-      {layout.blocking.length > 0 && <details open><summary>Fitted blocking cut estimates</summary>
-        <ul>{subfloorBlockingLines(project, layout.blocking).map((line) => <li key={line}>{line}</li>)}</ul>
+      {bay && <details open><summary>Fitted blocking cut estimates</summary>
+        <ul>{subfloorBlockingLines(project, bays).map((line) => <li key={line}>{line}</li>)}</ul>
+        {bays.length > 1 && <label className="field">Blocking bay
+          <select value={bay.id} onChange={(event) => { setBayId(event.target.value); setError(""); }}>
+            {bays.map((item) => <option key={item.id} value={item.id}>
+              {item.edge} · {partLabel(project, item.first.id)} to {partLabel(project, item.second.id)}
+            </option>)}
+          </select>
+        </label>}
+        <label className="field">Block alignment
+          <select value={placement} onChange={(event) => { setPlacement(event.target.value === "centered" ? "centered" : "under-sheet"); setError(""); }}>
+            <option value="under-sheet">Flush under this sheet</option>
+            <option value="centered">Centered on the sheet edge</option>
+          </select>
+        </label>
+        <label className="field">Blocking stock
+          <select value={source} onChange={(event) => { setSource(event.target.value === "new-board" ? "new-board" : "prefer-offcut"); setError(""); }}>
+            <option value="prefer-offcut">Use a matching Cut pool piece if available</option>
+            <option value="new-board">Use a new board</option>
+          </select>
+        </label>
+        {error && <p role="alert" className="form-error">{error}</p>}
+        <button type="button" className="button secondary" onClick={previewBlock}>Preview blocking in 3D</button>
       </details>}
       {layout.nails.length > 0 && <>
         <p><strong>{layout.nails.length} estimated panel nailing locations</strong></p>

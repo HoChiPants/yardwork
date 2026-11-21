@@ -44,7 +44,7 @@ The current layouts have no listed stock conflicts.
 
 ### Shopping and availability
 
-- 2 × 8 framing lumber · 1.5 × 7.25 in actual · 8 ft · Exact product match needed
+- 2 × 8 framing lumber · 1.5 × 7.25 in actual · 8 ft · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
 - 23/32 in T&G OSB subfloor · 47.875 × 95.875 in · 0.703 in actual thickness · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
 
 ### Tools and accessories

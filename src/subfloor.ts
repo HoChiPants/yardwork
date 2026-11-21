@@ -17,6 +17,15 @@ const span = (from: number, to: number) => to - from;
 type Surface = ReturnType<typeof woodBearingSurfaces>[number];
 type Interval = [number, number];
 type Edge = { name: string; points: [V3, V3]; problem: boolean };
+export type SubfloorBlockingBay = {
+  id: string;
+  edge: string;
+  length: number;
+  first: Piece;
+  second: Piece;
+  points: [V3, V3];
+  inward: V3;
+};
 type Contact = { piece: Piece; length: Interval; width: Interval; across: boolean; center: number };
 
 function stockDirection(piece: Piece, axis: number) {
@@ -97,7 +106,7 @@ function reviewSurface(surface: Surface, pieces: Map<string, Piece>) {
   if (joists.length < 3) issues.push("Need three continuous joist lines across the panel width to check two spans. Set the panel strength axis across the joists.");
   if (widest > ref.maxSpacing + tolerance)
     issues.push(`Widest spacing is ${dim(widest)} on center. The panel reference limit is ${dim(ref.maxSpacing)}.`);
-  const edges: Edge[] = [], blocking: { edge: string; length: number; first: Piece; second: Piece }[] = [];
+  const edges: Edge[] = [], blocking: SubfloorBlockingBay[] = [];
   const details = ([
     { name: "Start end", short: true, high: false }, { name: "Far end", short: true, high: true },
     { name: "Long side A", short: false, high: false }, { name: "Long side B", short: false, high: true },
@@ -119,7 +128,8 @@ function reviewSurface(surface: Surface, pieces: Map<string, Piece>) {
       for (const { left, right } of gaps) {
         const a = left.length[1], b = right.length[0];
         if (b > a + tolerance && a >= from - tolerance && b <= to + tolerance)
-          blocking.push({ edge: name, length: b - a, first: left.piece, second: right.piece });
+          blocking.push({ id: `${name}/${left.piece.id}/${right.piece.id}`, edge: name, length: b - a,
+            first: left.piece, second: right.piece, points: [at(a), at(b)], inward: v.clone().multiplyScalar(high ? -1 : 1).toArray() });
       }
     }
     if (missing.length) issues.push(`${name} lacks ½ in bearing along ${dim(missing.reduce((total, gap) => total + span(...gap), 0))}.`);

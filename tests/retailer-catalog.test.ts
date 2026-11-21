@@ -206,6 +206,7 @@ test("Home Depot regional framing listings match full-length board stock and sta
     ["stud-10", "100077951"],
     ["stud-12", "312528815"],
     ["two-six", "100083274"],
+    ["two-eight", "100049292"],
   ] as const) {
     const stock = material(id);
     const reference = shoppingOfferForMaterial(stock, "home-depot");

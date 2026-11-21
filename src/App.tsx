@@ -9,6 +9,7 @@ import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBacker
 import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
+import type { SubfloorBlockingPreview } from "./subfloorBlocking";
 import { SubfloorPanel } from "./SubfloorPanel";
 import { subfloorReport, subfloorReviews, trackSubfloorPanel } from "./subfloor";
 import { subfloorReference } from "./subfloorReference";
@@ -236,7 +237,7 @@ import { saunaCeilingGuideLines } from "./saunaCeilingCoverage";
 import { saunaLiningGuideLines, saunaLiningScope, saunaLiningSources, saunaLiningTools } from "./saunaLiningBacking";
 import { SaunaLiningPurchasePanel } from "./SaunaLiningPurchasePanel";
 import { saunaWallCoverageScope, saunaWallGuideLines } from "./saunaWallCoverage";
-import { stockAxes } from "./stockAxes";
+import { orientedStockSize, stockAxes } from "./stockAxes";
 import { purchaseUnitLabel } from "./purchaseUnits";
 import { addMissingSaunaHeaters, saunaHeaterGuideLines, saunaHeaterGuideSources, saunaHeaterPurchases, saunaHeaterReview, saunaHeaterScope } from "./saunaHeaters";
 import { harviaKit, steel6 } from "./saunaHeaterReference";
@@ -617,6 +618,7 @@ export function App() {
   const [shownRodSupportId, setShownRodSupportId] = useState<string | null>(null);
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
   const [shownTrimSeam, setShownTrimSeam] = useState<{ project: Project; pair: string; marker: TrimSeamMarker } | null>(null);
+  const [subfloorBlockDraft, setSubfloorBlockDraft] = useState<{ project: Project; fit: SubfloorBlockingPreview } | null>(null);
   const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string } | null>(null);
   const [subfloorTarget, setSubfloorTarget] = useState<string>();
   const [shownBottomPlate, setShownBottomPlate] = useState<{ projectId: string; id: string } | null>(null);
@@ -1735,7 +1737,16 @@ export function App() {
     labelPoint: supportBlock.block.position,
     tone: supportBlock.motionConflicts.length ? undefined : "reference" as const,
   } : undefined, [supportBlock]);
-  const shownCheckArea = shelfDividerArea ?? eaveBlockArea ?? supportBlockArea ?? areaFinding?.area;
+  const subfloorBlock = panel === "sections" && subfloorBlockDraft?.project === project &&
+    shownSubfloor?.panelId === subfloorBlockDraft.fit.panelId ? subfloorBlockDraft.fit : null;
+  const subfloorBlockArea = subfloorBlock ? {
+    kind: "subfloor-block-preview" as const,
+    outlines: subfloorBlock.outlines,
+    label: `Blocking preview · ${subfloorBlock.bay.edge}`,
+    labelPoint: subfloorBlock.block.position,
+    tone: subfloorBlock.motionConflicts.length ? undefined : "reference" as const,
+  } : undefined;
+  const shownCheckArea = subfloorBlockArea ?? shelfDividerArea ?? eaveBlockArea ?? supportBlockArea ?? areaFinding?.area;
   const activeGuidePart = panel === "step" && guidePartFocus?.project === project &&
     stage !== null && project.steps[stage]?.id === guidePartFocus.row.stepId && currentStep.id === guidePartFocus.row.stepId
     ? guidePartFocus : null;
@@ -1781,6 +1792,7 @@ export function App() {
   const visibleSubfloor = useMemo(() => shownSubfloor?.projectId === project.id && panel === "sections"
     ? subfloorReviews(project, [shownSubfloor.panelId])[0]?.layout : undefined, [panel, project, shownSubfloor]);
   function showSubfloor(panelId: string) {
+    setSubfloorBlockDraft(null);
     if (guidePartFocus) exitGuidePartView();
     setShownSubfloor({ projectId: project.id, panelId });
     setShownBottomPlate(null);
@@ -2961,7 +2973,34 @@ export function App() {
               </div>
             </section>
           )}
-          {shownCheckArea && (
+          {subfloorBlock && (
+            <section className="lid-preview-banner motion-pair-banner" aria-label="Blocking preview">
+              <span><strong>{formatPreciseInches(subfloorBlock.cutLength)} fitted block</strong> · {subfloorBlock.source
+                ? `${partLabel(project, subfloorBlock.source.id)} from Cut pool${subfloorBlock.sourceOnHand ? " · on hand" : ""}`
+                : `${formatStockLength(subfloorBlock.sourceLength)} ${material(subfloorBlock.block.material).name} board`}
+                {` · ${subfloorBlock.operations.join(" and ") || "Fits as-is"}`}
+                {subfloorBlock.kerfLoss > 0 ? ` · ${formatPreciseInches(subfloorBlock.kerfLoss)} cutting loss` : ""}
+                {subfloorBlock.offcuts.length ? ` · Keep ${subfloorBlock.offcuts.map((part) => formatStockLength(orientedStockSize(part)[2])).join(", ")} in Cut pool` : ""}.
+                {subfloorBlock.motionConflicts.length > 0 && ` Hits saved movement: ${subfloorBlock.motionConflicts.join(", ")}.`}
+              </span>
+              <button type="button" className="button primary" disabled={!!subfloorBlock.motionConflicts.length} onClick={() => safe(() => {
+                change((live) => {
+                  if (subfloorBlockDraft?.project !== live || subfloorBlockDraft.fit !== subfloorBlock)
+                    throw Error("The project changed. Preview the blocking again.");
+                  const fitted = subfloorBlock.project;
+                  return fitted.subfloorChecks?.includes(subfloorBlock.panelId) ? fitted : trackSubfloorPanel(fitted, subfloorBlock.panelId, true);
+                });
+                showSubfloor(subfloorBlock.panelId);
+                notify("Blocking added. Check the joist connections in the build guide.");
+              })}>Add fitted blocking</button>
+              <button type="button" className="button" onClick={() => {
+                setSubfloorBlockDraft(null);
+                setSubfloorTarget(subfloorBlock.panelId);
+                setModal("subfloor-support");
+              }}>Back to support check</button>
+            </section>
+          )}
+          {shownCheckArea && !subfloorBlock && (
             <div className="lid-preview-banner" role="status">
               <span>{shownCheckArea.label}</span>
               {eaveBlock ? <button className="button" onClick={() => {
@@ -5462,7 +5501,11 @@ export function App() {
                 notify("Fitting removed. The pipe cuts stay in the plan.");
               })} />}
             {modal === "subfloor-support" && <SubfloorPanel project={project} initialId={subfloorTarget}
-              onShow={showSubfloor} onTrack={(id, enabled) => safe(() => {
+              onShow={showSubfloor} onPreviewBlock={(fit) => {
+                showSubfloor(fit.panelId);
+                setSubfloorBlockDraft({ project, fit });
+                setView((previous) => ({ preset: "iso", nonce: previous.nonce + 1 }));
+              }} onTrack={(id, enabled) => safe(() => {
                 change((live) => trackSubfloorPanel(live, id, enabled));
                 notify(enabled ? "Subfloor check saved to the project and guide." : "Subfloor check removed from the guide.");
               })} />}

@@ -2,14 +2,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { reviewAssemblyOrder } from "../src/assemblyOrder";
-import { buildQuestion } from "../src/buildQuestions";
+import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
 import { inspectCutStock } from "../src/cutStock";
 import { guideMarkdown, validate } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import { homeDepotShoppingList } from "../src/handoff";
-import { projectSchema, type Project, type V3 } from "../src/model";
+import { saveMotionPlan } from "../src/mechanismMotion";
+import { part, projectSchema, type Project, type V3 } from "../src/model";
 import { rotate } from "../src/spatial";
 import { subfloorBlockingLines, subfloorReviews, trackSubfloorPanel } from "../src/subfloor";
+import { previewSubfloorBlocking } from "../src/subfloorBlocking";
 import { subfloorNails } from "../src/subfloorReference";
 import { addSupply } from "../src/supplies";
 import { toolChecklist } from "../src/tools";
@@ -95,4 +97,73 @@ test("review rotated panels, over-spaced joists, overlap, and removed panels wit
   const absent = { ...repaired, pieces: repaired.pieces.filter(({ id }) => id !== panel.id) };
   assert.match(subfloorReviews(absent)[0].problem!, /missing/);
   assert.deepEqual(trackSubfloorPanel(absent, panel.id, false).subfloorChecks, []);
+});
+
+
+test("fit and record the blocking from a distant offcut or a new board with its measured kerf", () => {
+  const { project, panel, scrap } = fixture();
+  const bay = subfloorReviews(project)[0].layout!.blocking[0];
+  const question = buildQuestion("Fit blocking under P10");
+  assert.deepEqual(question, { kind: "subfloor-support", panelLabel: "P010" });
+  const answer = answerBuildQuestion({ ...project, subfloorChecks: [] }, question!, []);
+  assert.deepEqual(answer.link?.action, { kind: "subfloor-support", panelId: panel.id });
+  assert.match(answer.rows![0].detail, /22.5 in/);
+  const yaw: V3 = [0, Math.PI / 5, 0];
+  const rotated: Project = { ...project, pieces: project.pieces.map((piece) => ({ ...piece,
+    position: piece.id === scrap.id ? [120, 0, 120] : rotate(piece.position, yaw),
+    rotation: [0, piece.rotation[1] + yaw[1], 0],
+  })) };
+  const reuse = previewSubfloorBlocking(rotated, panel.id, bay.id, "under-sheet", "prefer-offcut");
+  assert.equal(reuse.source?.id, scrap.id);
+  assert.ok(reuse.sourceOnHand);
+  assert.equal(reuse.sourceLength, 22.5);
+  assert.deepEqual(reuse.operations, []);
+  assert.ok(Math.hypot(...reuse.block.position) < 25);
+  assert.equal(reuse.block.cutStock?.id, scrap.cutStock?.id);
+  assert.equal(reuse.project.history.at(-1)?.offcutCut?.inputId, scrap.id);
+  assert.equal(rotated.pieces.length, project.pieces.length);
+  assert.equal(rotated.pieces.find(({ id }) => id === scrap.id)?.offcut, true);
+  assert.equal(subfloorReviews(reuse.project)[0].layout?.nails.length, 48);
+  assert.throws(() => previewSubfloorBlocking(reuse.project, panel.id, bay.id, "under-sheet", "prefer-offcut"), /bay changed/);
+
+  const configured = { ...project, woodKerfs: { "two-eight": 0.0625 } };
+  const fresh = previewSubfloorBlocking(configured, panel.id, bay.id, "centered", "new-board");
+  assert.equal(fresh.source, null);
+  assert.equal(fresh.sourceLength, 96);
+  assert.equal(fresh.kerfLoss, 0.0625);
+  assert.equal(fresh.block.position[0], 16);
+  assert.equal(fresh.block.cutStock?.woodKerf, 0.0625);
+  assert.deepEqual(fresh.operations, ["Crosscut to 22.5 in"]);
+  assert.deepEqual(fresh.offcuts[0].size, [1.5, 73.4375, 7.25]);
+  assert.ok(inspectCutStock(fresh.project).valid.has(fresh.block.cutStock!.id));
+  assert.equal(fresh.project.history.at(-1)?.offcutCut?.cuts[0].kind, "crosscut");
+  assert.equal(fresh.project.pieces.find(({ id }) => id === scrap.id)?.offcut, true);
+  const purchase = homeDepotShoppingList(fresh.project).items.find(({ productId }) => productId === "100049292");
+  assert.equal(purchase?.snapshot, undefined);
+  assert.equal(purchase?.quantity, 4);
+  assert.equal(homeDepotShoppingList(reuse.project).items.find(({ productId }) => productId === "100049292")?.quantity, 3);
+});
+
+test("reject real blocking interference while preserving the original build and cut pool", () => {
+  const { project, panel, scrap } = fixture();
+  const bay = subfloorReviews(project)[0].layout!.blocking[0];
+  const obstruction = { ...scrap, id: crypto.randomUUID(), name: "Existing pipe chase", size: [2, 2, 8] as V3,
+    position: [15.25, 3, 0] as V3, offcut: false, cutStock: null };
+  const blocked = { ...project, pieces: [...project.pieces, obstruction] };
+  assert.throws(() => previewSubfloorBlocking(blocked, panel.id, bay.id, "under-sheet", "prefer-offcut"), /Existing pipe chase obstructs/);
+  assert.ok(blocked.pieces.find(({ id }) => id === scrap.id)?.offcut);
+  assert.equal(blocked.history.length, project.history.length);
+});
+
+
+test("preview flags blocking that stops a recorded slide between its open and closed positions", () => {
+  const { project, panel } = fixture();
+  const slide = part("Service drawer", "plywood", [2, 1, 2], [8, 1, 0], project.steps[0].id, "Access opening");
+  const { project: withMotion } = saveMotionPlan({ ...project, pieces: [...project.pieces, slide] }, {
+    label: "Service drawer", memberIds: [slide.id], mechanism: { kind: "slide", axis: [1, 0, 0], travel: 12 },
+  });
+  const bay = subfloorReviews(withMotion)[0].layout!.blocking[0];
+  const drafted = previewSubfloorBlocking(withMotion, panel.id, bay.id, "under-sheet", "prefer-offcut");
+  assert.deepEqual(drafted.motionConflicts, ["Service drawer"]);
+  assert.ok(!withMotion.pieces.some(({ id }) => id === drafted.block.id));
 });

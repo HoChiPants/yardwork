@@ -4709,6 +4709,25 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     discrepancies: ["Use the advertised box weight for shopping. Verify actual piece count, delivered shank diameter and suitability for the specified detail."],
     capabilities: [],
   },
+  {
+    id: "home-depot-syp-2x8x96-100049292",
+    name: "2 × 8 × 8 ft southern yellow pine dimensional lumber",
+    manufacturer: "Regional mill/OEM identity not established",
+    manufacturerPartNumber: null,
+    identityBasis: "retailer-specification",
+    category: "lumber",
+    status: "reviewed-specs",
+    verifiedAt: "2026-11-21T17:56:00.000Z",
+    profile: profile("linear", [1.5, 96, 7.25], 1, {
+      wood: true, materialFamily: "home-depot-syp-2x8x96-100049292", finish: "Above-ground dimensional lumber as listed",
+    }),
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: ["https://www.homedepot.com/p/100049292"] },
+    offers: [hd("100049292", "689238", "689238")],
+    sources: [{ url: "https://www.homedepot.com/p/100049292", verifiedAt: "2026-11-21T17:56:00.000Z",
+      note: "Single board listed at actual 1.5 × 7.25 × 96 in. Verify the delivered grade, species and treatment. The listing gives a mill item number in the description that differs from the store model." }],
+    discrepancies: [],
+    capabilities: [],
+  },
 ]);
 
 export const findRetailerProduct = (id: string) =>
@@ -4812,6 +4831,7 @@ const homeDepotFramingReferences: Partial<Record<Material["id"], string>> = {
   "stud-10": "hd-spf-2x4x120-100077951",
   "stud-12": "hd-spf-2x4x144-312528815",
   "two-six": "home-depot-spf-2x6x96-100083274",
+  "two-eight": "home-depot-syp-2x8x96-100049292",
 };
 
 /** A regional listing can help shop for generic stock without restricting user-recorded matches. */

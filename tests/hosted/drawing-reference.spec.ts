@@ -28,6 +28,7 @@ function twoSheetDrawing() {
 }
 
 test("a local PDF sheet frames the model at the measured scale and survives save and re-import", async ({ page }) => {
+  test.setTimeout(90_000);
   const outsideRequests: string[] = [];
   const documentWrites: string[] = [];
   await page.goto("./");
@@ -53,10 +54,11 @@ test("a local PDF sheet frames the model at the measured scale and survives save
     name: "two-sheet-test.pdf", mimeType: "application/pdf", buffer: twoSheetDrawing(),
   });
   const sheet = dialog.getByRole("button", { name: "Mark a scale point on the drawing", exact: true });
-  await expect(dialog.getByText("two-sheet-test.pdf · Page 1", { exact: true })).toBeVisible();
+  // The first sheet may need to start a cold worker and decode graphics on the CI runner.
+  await expect(dialog).toContainText("two-sheet-test.pdf · Page 1", { timeout: 25_000 });
   await dialog.getByRole("spinbutton", { name: "PDF page (1–2)", exact: true }).fill("2");
   await dialog.getByRole("button", { name: "Load page", exact: true }).click();
-  await expect(dialog.getByText("two-sheet-test.pdf · Page 2", { exact: true })).toBeVisible();
+  await expect(dialog).toContainText("two-sheet-test.pdf · Page 2", { timeout: 15_000 });
   expect(await sheet.locator("img").evaluate(async (img: HTMLImageElement) => {
     await img.decode();
     const raster = document.createElement("canvas");

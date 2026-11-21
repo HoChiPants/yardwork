@@ -9,6 +9,9 @@ import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBacker
 import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
+import { BottomPlateSealPanel } from "./BottomPlateSealPanel";
+import { bottomPlateSealGuide, bottomPlateSealReviews, removeBottomPlateSeal } from "./bottomPlateSeal";
+import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { SillGasketPanel } from "./SillGasketPanel";
 import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
 import { WindowWallFields, windowWallExample } from "./WindowWallFields";
@@ -375,6 +378,7 @@ type Modal =
   | "water-pressure"
   | "water-stop"
   | "sink-drain"
+  | "bottom-plate-seal"
   | "water-support"
   | "export"
   | "assistant"
@@ -606,6 +610,8 @@ export function App() {
   const [shownRodSupportId, setShownRodSupportId] = useState<string | null>(null);
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
   const [shownTrimSeam, setShownTrimSeam] = useState<{ project: Project; pair: string; marker: TrimSeamMarker } | null>(null);
+  const [shownBottomPlate, setShownBottomPlate] = useState<{ projectId: string; id: string } | null>(null);
+  const [bottomPlateTarget, setBottomPlateTarget] = useState<string>();
   const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
   const [openingFlashingTarget, setOpeningFlashingTarget] = useState<{ projectId: string; sillId?: string } | null>(null);
   const [openingFlashingPreview, setOpeningFlashingPreview] = useState<{ project: Project; value: OpeningFlashingPreview } | null>(null);
@@ -1360,6 +1366,10 @@ export function App() {
         setWaterFittingTee(!!action.tee);
         setModal("water-fitting");
         break;
+      case "bottom-plate-seal":
+        setBottomPlateTarget(action.planId);
+        setModal("bottom-plate-seal");
+        return;
       case "sink-drain":
         setSinkDrainTarget(action.drainId);
         setModal("sink-drain");
@@ -1754,6 +1764,23 @@ export function App() {
   const woodJointDetails = useMemo(() => woodJointDecisionEntries(project), [project]);
   const sillGasketReview = useMemo(() => reviewSillGaskets(project), [project]);
   const openingFlashingReview = useMemo(() => reviewOpeningFlashings(project), [project]);
+  const visibleBottomPlate = useMemo(() => shownBottomPlate?.projectId === project.id && panel === "sections"
+    ? bottomPlateSealReviews(project).find(({ record }) => record.id === shownBottomPlate.id) : undefined,
+    [panel, project, shownBottomPlate]);
+  function showBottomPlate(id: string) {
+    if (guidePartFocus) exitGuidePartView();
+    setShownBottomPlate({ projectId: project.id, id });
+    setShownSillGasketId(null);
+    setPlaying(false);
+    setStage(null);
+    setExplode(false);
+    setMotionPreview(null);
+    setLidMotionPreview(null);
+    setSectionMotionPreview(null);
+    setPanel("sections");
+    setModal(null);
+    inspectWorkspace();
+  }
   const shownSillGasket = sillGasketReview.rows.find(({ plan }) => plan.partId === shownSillGasketId);
   const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
   const needsWoodContacts = panel === "prep" || modal === "export" || printingGuide ||
@@ -2988,6 +3015,10 @@ export function App() {
               shownTrimSeam={panel === "connections" && shownTrimSeam?.project === project &&
                 shownTrimSeam.pair === liveConnectionContext?.scope.focusPair?.slice().sort().join("/")
                 ? shownTrimSeam.marker : undefined}
+              shownBottomPlate={visibleBottomPlate?.layout ? {
+                start: visibleBottomPlate.layout.ends[0], outdated: !!visibleBottomPlate.outdated,
+                runs: visibleBottomPlate.layout.runs,
+              } : undefined}
               shownSillGasket={panel === "sections" && shownSillGasket?.outline
                 ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
                 : undefined}
@@ -3884,6 +3915,11 @@ export function App() {
                 <button type="button" className="button secondary full" onClick={() => setModal("water-support")}>Review PEX support spacing</button>}
               <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
+              <button type="button" className="button secondary full" onClick={() => {
+                setBottomPlateTarget(shownBottomPlate?.projectId === project.id ? shownBottomPlate.id : undefined);
+                setModal("bottom-plate-seal");
+              }}>Seal a bottom plate</button>
+              {visibleBottomPlate && <button type="button" className="text-button" onClick={() => setShownBottomPlate(null)}>Hide bottom plate seam</button>}
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
                 shownId={shownSillGasketId} onChange={change} onShow={(id) => {
                   setShownSillGasketId(id);
@@ -5306,7 +5342,7 @@ export function App() {
         >
           <section
             key={modal}
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "bottom-plate-seal" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5409,6 +5445,20 @@ export function App() {
                 setPanel("sections");
                 setModal(null);
                 notify("Fitting removed. The pipe cuts stay in the plan.");
+              })} />}
+            {modal === "bottom-plate-seal" && <BottomPlateSealPanel project={project} selectedPart={selected} initialId={bottomPlateTarget}
+              onSave={(draft) => safe(() => {
+                if (current.current !== project) throw Error("The workspace changed. Preview the seam again.");
+                change(draft.project);
+                showBottomPlate(draft.record.id);
+                notify("Bottom plate air seal saved.");
+              })}
+              onShow={showBottomPlate}
+              onRemove={(id) => safe(() => {
+                change((live) => removeBottomPlateSeal(live, id));
+                setShownBottomPlate(null);
+                setModal(null);
+                notify("Bottom plate air seal removed.");
               })} />}
             {modal === "sink-drain" && <SinkDrainPanel project={project} measurement={measurement} initialDrain={sinkDrainTarget}
               onApply={(draft) => safe(() => {
@@ -6848,6 +6898,14 @@ export function App() {
             <h2>PEX fittings and insertion marks</h2>
             <ul>{exportGuide.waterFittings.flatMap((fitting) => waterFittingGuide(exportGuide, fitting)).map((line, i) => <li key={i}>{line}</li>)}</ul>
             <p><a href={maxInsertionChart}>Insertion chart</a>{" · "}<a href={maxFittingInstructions}>SharkBite installation</a></p>
+          </section>
+        )}
+        {!!exportGuide.bottomPlateSeals?.length && (
+          <section className="bottom-plate-seal-print">
+            <h2>Bottom plate air seals</h2>
+            <ul>{bottomPlateSealGuide(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={bottomPlateSealant.fieldGuide}>PNNL bottom plate guidance</a>{" · "}
+              <a href={bottomPlateSealant.specification}>OSI instructions</a></p>
           </section>
         )}
         {!!exportGuide.sinkDrains?.length && (

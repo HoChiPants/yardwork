@@ -14,6 +14,7 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
+import { bottomPlateScope, bottomPlateSealant } from "./bottomPlateSealReference";
 import { trimSealant } from "./trimSealantReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
 import { trimBackerRodScope, trimBackerRods } from "./trimBackerRodReference";
@@ -379,6 +380,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "weatherseal pack",
     contents: [{ name: "8 ft 6 in D-profile EPDM strip", quantity: doorSeal.stripCount }],
     requirements: ["Confirm the delivered seal fits the closed gap, then dry-fit the strip and check door and latch operation."],
+  },
+  [bottomPlateSealant.id]: {
+    purchaseUnit: "cartridge",
+    contents: [{ name: "28 fl oz white draft sealant cartridge", quantity: 1 }],
+    requirements: [bottomPlateScope, "Check that the cartridge gun accepts the delivered body and that the bead fits the actual seam."],
   },
   [trimSealant.id]: {
     purchaseUnit: "cartridge",

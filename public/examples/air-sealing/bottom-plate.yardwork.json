@@ -1,0 +1,775 @@
+{
+  "schemaVersion": 114,
+  "id": "fdb20d78-26e4-4e70-90b8-83a038fbf7ac",
+  "name": "Bottom plate and subfloor air-seal study",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "woodKerfs": {
+    "hd-osb-subfloor-486701": 0.125
+  },
+  "bottomPlateSeals": [
+    {
+      "plateId": "7d382c0e-60ca-473c-9082-d9a2dbc4c61c",
+      "side": "a",
+      "gap": 0,
+      "depth": 0.125,
+      "bead": "3/8",
+      "session": "Wall air sealing",
+      "dryExposedWood": true,
+      "id": "7ff211a6-0fa0-4d72-b509-f76a927f4fd7",
+      "signature": "[\"stud\",[[0,43.9375,\"fad301b4-1aab-447f-bf2e-79d1fc8231a3\",\"hd-osb-subfloor-486701\",0,null],[43.9375,44.0625,null,null,null,null],[44.0625,56,\"686bdeef-0ea6-49a7-993b-49958006cbcf\",\"hd-osb-subfloor-486701\",0,null],[56,68,\"686bdeef-0ea6-49a7-993b-49958006cbcf\",\"hd-osb-subfloor-486701\",0,\"84494d83-c99f-4fe6-95f1-d86f3abd3d16\"],[68,88,\"686bdeef-0ea6-49a7-993b-49958006cbcf\",\"hd-osb-subfloor-486701\",0,null]]]"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "7d382c0e-60ca-473c-9082-d9a2dbc4c61c",
+      "label": "P001"
+    },
+    {
+      "partId": "49d5e0c8-5b8c-4482-880e-e95cf26fd5ea",
+      "label": "P002"
+    },
+    {
+      "partId": "91e4e9fd-d7b2-41d8-b652-cadc0c109b97",
+      "label": "P003"
+    },
+    {
+      "partId": "296c1f15-a257-4843-9e86-9ffca0ed3344",
+      "label": "P004"
+    },
+    {
+      "partId": "43728604-d187-4bd2-91d0-8b7500d28e38",
+      "label": "P005"
+    },
+    {
+      "partId": "2330bc79-d040-469e-aa4d-1fce02745452",
+      "label": "P006"
+    },
+    {
+      "partId": "27d5a482-8d17-443a-a0cb-f960274f1196",
+      "label": "P007"
+    },
+    {
+      "partId": "c4f25882-a0fd-4ee3-bfaa-56979e9dd82c",
+      "label": "P008"
+    },
+    {
+      "partId": "c8a8cbb2-ebed-426e-a366-06eccfb979d4",
+      "label": "P009"
+    },
+    {
+      "partId": "fad301b4-1aab-447f-bf2e-79d1fc8231a3",
+      "label": "P010"
+    },
+    {
+      "partId": "686bdeef-0ea6-49a7-993b-49958006cbcf",
+      "label": "P011"
+    },
+    {
+      "partId": "84494d83-c99f-4fe6-95f1-d86f3abd3d16",
+      "label": "P012"
+    },
+    {
+      "partId": "f0aadf6a-5b68-4f6e-a26e-4a2ebbf69c72",
+      "label": "O001"
+    },
+    {
+      "partId": "f77a2028-5812-4a4d-b624-6b725fcaf82f",
+      "label": "O002"
+    },
+    {
+      "partId": "c8059e40-e3ca-45b5-afce-ca829ac7aadc",
+      "label": "O003"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-21T16:04:20.901Z",
+  "pieces": [
+    {
+      "id": "7d382c0e-60ca-473c-9082-d9a2dbc4c61c",
+      "name": "Wall 1 · bottom plate",
+      "material": "stud",
+      "size": [
+        88,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        1.4529999999999998,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "49d5e0c8-5b8c-4482-880e-e95cf26fd5ea",
+      "name": "Wall 1 · top plate",
+      "material": "stud",
+      "size": [
+        88,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        83.953,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "91e4e9fd-d7b2-41d8-b652-cadc0c109b97",
+      "name": "Wall 1 · stud 1",
+      "material": "stud",
+      "size": [
+        1.5,
+        81,
+        3.5
+      ],
+      "position": [
+        -43.25,
+        42.703,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "296c1f15-a257-4843-9e86-9ffca0ed3344",
+      "name": "Wall 1 · stud 2",
+      "material": "stud",
+      "size": [
+        1.5,
+        81,
+        3.5
+      ],
+      "position": [
+        -28,
+        42.703,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "43728604-d187-4bd2-91d0-8b7500d28e38",
+      "name": "Wall 1 · stud 3",
+      "material": "stud",
+      "size": [
+        1.5,
+        81,
+        3.5
+      ],
+      "position": [
+        -12,
+        42.703,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2330bc79-d040-469e-aa4d-1fce02745452",
+      "name": "Wall 1 · stud 4",
+      "material": "stud",
+      "size": [
+        1.5,
+        81,
+        3.5
+      ],
+      "position": [
+        4,
+        42.703,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "27d5a482-8d17-443a-a0cb-f960274f1196",
+      "name": "Wall 1 · stud 5",
+      "material": "stud",
+      "size": [
+        1.5,
+        81,
+        3.5
+      ],
+      "position": [
+        20,
+        42.703,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c4f25882-a0fd-4ee3-bfaa-56979e9dd82c",
+      "name": "Wall 1 · stud 6",
+      "material": "stud",
+      "size": [
+        1.5,
+        81,
+        3.5
+      ],
+      "position": [
+        36,
+        42.703,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c8a8cbb2-ebed-426e-a366-06eccfb979d4",
+      "name": "Wall 1 · stud 7",
+      "material": "stud",
+      "size": [
+        1.5,
+        81,
+        3.5
+      ],
+      "position": [
+        43.25,
+        42.703,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "fad301b4-1aab-447f-bf2e-79d1fc8231a3",
+      "name": "Left subfloor blank",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        44,
+        0.703,
+        40
+      ],
+      "position": [
+        -22.0625,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "28ffceff-d312-4db9-9b88-525ff5feacc3",
+      "assembly": "Subfloor",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "2734cf80-9503-4e98-94be-dad5e525db8e",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "woodKerf": 0.125,
+        "size": [
+          95.875,
+          0.703,
+          47.875
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "686bdeef-0ea6-49a7-993b-49958006cbcf",
+      "name": "Right subfloor blank",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        44,
+        0.703,
+        40
+      ],
+      "position": [
+        22.0625,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "28ffceff-d312-4db9-9b88-525ff5feacc3",
+      "assembly": "Subfloor",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "2734cf80-9503-4e98-94be-dad5e525db8e",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "woodKerf": 0.125,
+        "size": [
+          95.875,
+          0.703,
+          47.875
+        ],
+        "offset": [
+          44.125,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "84494d83-c99f-4fe6-95f1-d86f3abd3d16",
+      "name": "Access mockup block",
+      "material": "one-four",
+      "size": [
+        12,
+        0.75,
+        2
+      ],
+      "position": [
+        18,
+        1.0779999999999998,
+        -2.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "cf803ca1-8fac-40d1-a2ac-2a2908bbd09a",
+      "assembly": "Seam review",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f0aadf6a-5b68-4f6e-a26e-4a2ebbf69c72",
+      "name": "Offcut · 23/32 in T&G OSB subfloor · sheet remnant 1",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        44,
+        0.703,
+        7.75
+      ],
+      "position": [
+        -22.0625,
+        0.3515,
+        24
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "2734cf80-9503-4e98-94be-dad5e525db8e",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "woodKerf": 0.125,
+        "size": [
+          95.875,
+          0.703,
+          47.875
+        ],
+        "offset": [
+          0,
+          0,
+          40.125
+        ]
+      }
+    },
+    {
+      "id": "f77a2028-5812-4a4d-b624-6b725fcaf82f",
+      "name": "Offcut · 23/32 in T&G OSB subfloor · sheet remnant 2",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        44,
+        0.703,
+        7.75
+      ],
+      "position": [
+        22.0625,
+        0.3515,
+        24
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "2734cf80-9503-4e98-94be-dad5e525db8e",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "woodKerf": 0.125,
+        "size": [
+          95.875,
+          0.703,
+          47.875
+        ],
+        "offset": [
+          44.125,
+          0,
+          40.125
+        ]
+      }
+    },
+    {
+      "id": "c8059e40-e3ca-45b5-afce-ca829ac7aadc",
+      "name": "Offcut · 23/32 in T&G OSB subfloor · sheet remnant 3",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        7.625,
+        0.703,
+        47.875
+      ],
+      "position": [
+        48,
+        0.3515,
+        3.9375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "2734cf80-9503-4e98-94be-dad5e525db8e",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "woodKerf": 0.125,
+        "size": [
+          95.875,
+          0.703,
+          47.875
+        ],
+        "offset": [
+          88.25,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "c4a957c7-2bfc-4f04-b48e-b4b89e9f3a64",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, check the cutting loss for each stock unit, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "fdb20d78-26e4-4e70-90b8-83a038fbf7ac",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, check the cutting loss for each stock unit, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-89590dba",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "284cd5b1-a221-4c6a-819e-d7821d9fc7e5",
+      "title": "Frame a 7′ 4″ × 7′ wall",
+      "notes": "Generated concept. Review connections, support, bracing, and stock dimensions.",
+      "complete": false
+    },
+    {
+      "id": "ec7983e1-e39a-4d16-9e0f-22a4c852a19c",
+      "title": "Assemble Wall 1",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "f04b832c-eda3-4e64-aec0-a6722cb85661",
+        "stageKey": "section",
+        "memberIds": [
+          "2330bc79-d040-469e-aa4d-1fce02745452",
+          "27d5a482-8d17-443a-a0cb-f960274f1196",
+          "296c1f15-a257-4843-9e86-9ffca0ed3344",
+          "43728604-d187-4bd2-91d0-8b7500d28e38",
+          "49d5e0c8-5b8c-4482-880e-e95cf26fd5ea",
+          "7d382c0e-60ca-473c-9082-d9a2dbc4c61c",
+          "91e4e9fd-d7b2-41d8-b652-cadc0c109b97",
+          "c4f25882-a0fd-4ee3-bfaa-56979e9dd82c",
+          "c8a8cbb2-ebed-426e-a366-06eccfb979d4"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-eb502882",
+        "title": "Assemble Wall 1"
+      }
+    },
+    {
+      "id": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "title": "Fit two subfloor blanks",
+      "notes": "Confirm the actual panel spacing and provide support at the panel ends per the delivered product instructions.",
+      "complete": false
+    },
+    {
+      "id": "cf803ca1-8fac-40d1-a2ac-2a2908bbd09a",
+      "title": "Assemble Seam review",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "fdb20d78-26e4-4e70-90b8-83a038fbf7ac",
+        "stageKey": "assembly:Seam review",
+        "memberIds": [
+          "84494d83-c99f-4fe6-95f1-d86f3abd3d16"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-3e5bc4a",
+        "title": "Assemble Seam review"
+      }
+    },
+    {
+      "id": "28ffceff-d312-4db9-9b88-525ff5feacc3",
+      "title": "Assemble Subfloor",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "fdb20d78-26e4-4e70-90b8-83a038fbf7ac",
+        "stageKey": "assembly:Subfloor",
+        "memberIds": [
+          "686bdeef-0ea6-49a7-993b-49958006cbcf",
+          "fad301b4-1aab-447f-bf2e-79d1fc8231a3"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-2ca29681",
+        "title": "Assemble Subfloor"
+      }
+    },
+    {
+      "id": "204a8d06-ff8d-43ca-a3d5-7daf803663e3",
+      "title": "Air-seal Wall 1 · bottom plate · Side A",
+      "notes": "Prepare the marked plate and subfloor and run the recorded bead before covering the seam. Review every interruption and adjoining air-barrier transition in the build guide.",
+      "complete": false,
+      "generated": {
+        "kind": "bottom-plate-air-seal",
+        "planId": "7ff211a6-0fa0-4d72-b509-f76a927f4fd7",
+        "notes": "Prepare the marked plate and subfloor and run the recorded bead before covering the seam. Review every interruption and adjoining air-barrier transition in the build guide.",
+        "fingerprint": "phase-v1-221e143",
+        "title": "Air-seal Wall 1 · bottom plate · Side A"
+      }
+    },
+    {
+      "id": "3aa866d0-2432-4495-8090-67c762b783a0",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "fdb20d78-26e4-4e70-90b8-83a038fbf7ac",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-15298701",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [
+    {
+      "id": "f04b832c-eda3-4e64-aec0-a6722cb85661",
+      "name": "Wall 1",
+      "pieceIds": [
+        "7d382c0e-60ca-473c-9082-d9a2dbc4c61c",
+        "49d5e0c8-5b8c-4482-880e-e95cf26fd5ea",
+        "91e4e9fd-d7b2-41d8-b652-cadc0c109b97",
+        "296c1f15-a257-4843-9e86-9ffca0ed3344",
+        "43728604-d187-4bd2-91d0-8b7500d28e38",
+        "2330bc79-d040-469e-aa4d-1fce02745452",
+        "27d5a482-8d17-443a-a0cb-f960274f1196",
+        "c4f25882-a0fd-4ee3-bfaa-56979e9dd82c",
+        "c8a8cbb2-ebed-426e-a366-06eccfb979d4"
+      ],
+      "origin": [
+        0,
+        0.703,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": {
+        "type": "wall",
+        "width": 88,
+        "height": 84,
+        "depth": 48,
+        "spacing": 16
+      },
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-60ba11a1",
+  "history": [
+    {
+      "id": "e896fc0d-c895-45e9-95ff-4c862eb63d9f",
+      "at": "2026-11-21T16:04:20.914Z",
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "message": "Recorded one 23/32 in T&G OSB subfloor sheet for 2 parts starting with P010. Added 3 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "60f4d6ca-891d-4fbc-b280-b50545c02f47",
+      "at": "2026-11-21T16:04:20.914Z",
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "message": "Recorded wood blade kerf for P010 · 0.125 in per cut."
+    },
+    {
+      "id": "c6606161-aead-40fe-99a9-da61897aba6c",
+      "at": "2026-11-21T16:04:20.914Z",
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "message": "Stock cut order for P010 · 1. Crosscut Strip 1 at 44 in from the current end of the sheet."
+    },
+    {
+      "id": "8fa785be-a4d3-4e34-852a-4f482d4c1b0c",
+      "at": "2026-11-21T16:04:20.914Z",
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "message": "Stock cut order for P010 · 2. Rip 40 in from the current edge of Strip 1 for P010 · Left subfloor blank."
+    },
+    {
+      "id": "215535a9-7802-488d-975d-2b411654d89e",
+      "at": "2026-11-21T16:04:20.914Z",
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "message": "Stock cut order for P010 · 3. Crosscut Strip 2 at 44 in from the current end of the sheet."
+    },
+    {
+      "id": "f62d09da-94a9-4ec3-a237-78b6b70ce26a",
+      "at": "2026-11-21T16:04:20.914Z",
+      "stepId": "7515a1bf-ac4e-4888-ae73-3c715bf503fa",
+      "message": "Stock cut order for P010 · 4. Rip 40 in from the current edge of Strip 2 for P011 · Right subfloor blank."
+    }
+  ]
+}

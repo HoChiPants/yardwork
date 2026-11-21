@@ -40,6 +40,7 @@ import { gafRoofShingle, shingleEdgeProducts } from "./shingleRoofReference";
 import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
+import { bottomPlateSealant, subfloorPanel } from "./bottomPlateSealReference";
 import { trimSealant } from "./trimSealantReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
@@ -105,6 +106,8 @@ const sourceHosts = new Set([
   "documents.gaf.com",
   "www.paslode.com",
   "images.dap.com",
+  "datasheets.tdx.henkel.com",
+  "www.apawood.org",
   "titebond.com",
 ]);
 export const catalogSourceSchema = z.strictObject({
@@ -4357,6 +4360,45 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [trimSealant.listing, trimSealant.specification] },
     discrepancies: ["Home Depot lists both 1 in and 2 in maximum widths. Yardwork screens at 1 in. Check the delivered label and gap preparation."],
+    capabilities: [],
+  },
+  {
+    id: subfloorPanel.id,
+    name: subfloorPanel.name,
+    manufacturer: "Unbranded retailer listing",
+    manufacturerPartNumber: null,
+    identityBasis: "retailer-specification",
+    category: "panel",
+    status: "reviewed-specs",
+    verifiedAt: bottomPlateSealant.reviewedAt,
+    profile: profile("sheet", subfloorPanel.size, 1, {
+      wood: true, materialFamily: "OSB", finish: "Exposure 1 as listed",
+    }),
+    offers: [hd(subfloorPanel.internet, subfloorPanel.model, subfloorPanel.sku)],
+    sources: [
+      { url: subfloorPanel.listing, verifiedAt: bottomPlateSealant.reviewedAt, note: "Home Depot lists actual dimensions, one panel, tongue and groove, Exposure 1 and the 24 oc span designation. Verify the delivered stamp, groove engagement and actual layout coverage." },
+      { url: subfloorPanel.floorGuide, verifiedAt: bottomPlateSealant.reviewedAt, note: "APA guidance on joint spacing, panel orientation, support and attachments. It gives general floor guidance independently of this retailer listing." },
+    ],
+    roleQualifications: [],
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: bottomPlateSealant.id,
+    name: bottomPlateSealant.name,
+    manufacturer: "OSI",
+    manufacturerPartNumber: bottomPlateSealant.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: bottomPlateSealant.reviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "synthetic latex sealant", finish: "White" }),
+    offers: [hd(bottomPlateSealant.internet, bottomPlateSealant.model, bottomPlateSealant.sku)],
+    sources: [
+      { url: bottomPlateSealant.listing, verifiedAt: bottomPlateSealant.reviewedAt, note: "Exact one-cartridge Home Depot offer, model 1496542 and 28 fl oz." },
+      { url: bottomPlateSealant.specification, verifiedAt: bottomPlateSealant.reviewedAt, note: "Henkel documents residential base plate use and approximate coverage of 86 ft at a ¼ in bead or 38 ft at ⅜ in." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [bottomPlateSealant.listing, bottomPlateSealant.specification] },
+    discrepancies: ["The retailer title uses ‘solvent’. The manufacturer identifies the base as synthetic latex rubber. Check the delivered label."],
     capabilities: [],
   },
   {

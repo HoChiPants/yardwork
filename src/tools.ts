@@ -1,3 +1,5 @@
+import { bottomPlateSealReviews } from "./bottomPlateSeal";
+import { bottomPlateSealant, quartCartridgeGun } from "./bottomPlateSealReference";
 import { openingSilicone } from "./openingAirSealReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { isPexPipe, pexCutter, pexInstallation } from "./wallWaterReference";
@@ -248,6 +250,11 @@ const definitions: Record<
     review: "Measure and cut strips on a suitable backing. When trimming the flap, protect the flashing below. Press the membrane evenly onto the prepared wall face with firm hand pressure or a smooth roller.",
     referenceUrls: [flexWrap.instructions, flashingKnife.specification],
   },
+  "apply-quart-sealant": {
+    name: "Apply the bottom plate bead with a cartridge gun",
+    review: "Check the 28 fl oz cartridge fit in the actual gun. Use a nozzle cutter and seal punch. Test the bead on matching scrap before sealing the installation.",
+    referenceUrls: [bottomPlateSealant.specification, quartCartridgeGun],
+  },
   "apply-window-sealant": {
     name: "Apply window sealant with a cartridge gun",
     review: "Check that the gun seats the delivered cartridge. Use a blunt tool for the backing rod and check access at the shims and corners.",
@@ -452,6 +459,9 @@ export function toolChecklist(
         kind: "roof-drip-edge", id: gibraltarDripEdge.id,
         reason: "The saved drip edge layout includes partial cuts or corner trim allowances.",
       });
+  }
+  for (const { record, problem, title } of bottomPlateSealReviews(project)) {
+    if (!problem) add("apply-quart-sealant", { kind: "piece", id: record.plateId, reason: title });
   }
   if (project.openingFlashings?.some(({ measurements }) => measurements.jambHead || measurements.airSeal)) {
     for (const { plan, title, result, issues } of reviewOpeningFlashings(project).rows) {

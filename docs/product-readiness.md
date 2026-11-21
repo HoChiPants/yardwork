@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 80 placeable material entries. The registry contains 153 product records and 171 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 81 placeable material entries. The registry contains 155 product records and 173 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 21, 2026 · Wood bottom plate air seal
+
+The planner follows the actual long edge of a bottom plate over retained wood subfloor. It checks the bead strip, flags breaks and fixed obstructions in 3D, and puts the seal step after framing and before finish. Labels identify matching Cut pool scraps for a trial. The exact 28 fl oz OSI SC175 cartridge count uses the clear lengths and the chosen work session. The example records two blanks and three remnants from a reviewed Home Depot OSB panel. Check the delivered sheet stamp, seating, joint spacing, substrate condition and air-barrier continuity at the site. [PNNL bottom plate guidance](https://basc.pnnl.gov/diy-guides/air-seal-bottom-plates) · [OSI instructions](https://datasheets.tdx.henkel.com/OSI-SC175-en_US.pdf) · [OSB at Home Depot](https://www.homedepot.com/p/203169027)
 
 ## November 21, 2026 · Kitchenette drain fit and wall-tube cuts
 

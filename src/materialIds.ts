@@ -1,6 +1,7 @@
 import { waterFittingIds } from "./waterFittingReference";
 import { waterSupportIds } from "./waterSupportReference";
 import { waterStop } from "./waterStopReference";
+import { subfloorPanel } from "./bottomPlateSealReference";
 import { sinkTrap } from "./sinkDrainReference";
 
 export const materialIds = [
@@ -77,4 +78,5 @@ export const materialIds = [
   "hd-treated-2x6-12",
   "hd-treated-2x8-8",
   "hd-treated-2x8-10",
+  subfloorPanel.id,
 ] as const;

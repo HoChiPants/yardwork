@@ -22,6 +22,8 @@ import { waterFittingPorts, waterFittingSchema } from "./waterFittingSchema";
 import { waterStop } from "./waterStopReference";
 import { waterStopsSchema } from "./waterStopSchema";
 import { sinkTrap } from "./sinkDrainReference";
+import { subfloorPanel } from "./bottomPlateSealReference";
+import { bottomPlateSealsSchema } from "./bottomPlateSealSchema";
 import { sinkDrainsSchema } from "./sinkDrainSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
@@ -260,6 +262,7 @@ export const stepSchema = z.object({
           "project-preparation",
           "project-finish",
           "water-pressure-review",
+          "bottom-plate-air-seal",
         ]),
         planId: id,
         notes: z.string().max(4500),
@@ -513,6 +516,7 @@ export const currentProjectSchema = z
     }, "Each PEX endpoint and fitting can belong to one connection.").optional(),
     waterStops: waterStopsSchema.optional(),
     sinkDrains: sinkDrainsSchema.optional(),
+    bottomPlateSeals: bottomPlateSealsSchema.optional(),
     shelfSagPlans: shelfSagPlansSchema.optional(),
     saunaHeaterPlans: z.array(saunaHeaterPlanSchema).max(50).refine(
       (plans) => new Set(plans.map((plan) => plan.roomId)).size === plans.length,
@@ -1665,6 +1669,14 @@ export const catalog: Material[] = [
     unit: "board",
     search: `pressure treated ground contact ${record.family.replace("treated-", "")} ${record.internetNumber} ${record.model} ${record.storeSku}`,
   })),
+  {
+    id: subfloorPanel.id,
+    name: subfloorPanel.name,
+    subtitle: "47.875 × 95.875 in · 0.703 in actual thickness",
+    category: "Panels", wood: true, stockKind: "sheet", cuttable: true, packCount: 1,
+    size: subfloorPanel.size, color: "#ba9160", productReference: subfloorPanel.id,
+    price: 0, priceKind: "unpriced", unit: "sheet", search: "osb subfloor tongue groove t&g sturd-i-floor 486701",
+  },
 ];
 export const material = (id: MaterialId) => catalog.find((m) => m.id === id)!;
 export function canPlanWoodKerf(id: MaterialId) {

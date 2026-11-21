@@ -1,3 +1,4 @@
+import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import {
   projectSchema,
   step,
@@ -73,6 +74,7 @@ function preparationScope(project: Project) {
     ...(project.waterFittings?.length ? { waterFittings: project.waterFittings } : {}),
     ...(project.waterStops?.length ? { waterStops: project.waterStops } : {}),
     ...(project.sinkDrains?.length ? { sinkDrains: project.sinkDrains } : {}),
+    ...(project.bottomPlateSeals?.length ? { bottomPlateSeals: project.bottomPlateSeals } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),
@@ -629,6 +631,11 @@ export function generateBuildGuide(input: Project): Project {
     throw Error(
       "The assembly guide must cover every active part exactly once.",
     );
+  for (const review of bottomPlateSealReviews(project)) {
+    addPhase(`Air-seal ${review.title}`.slice(0, 120),
+      review.problem || "Prepare the marked plate and subfloor and run the recorded bead before covering the seam. Review every interruption and adjoining air-barrier transition in the build guide.",
+      { kind: "bottom-plate-air-seal", planId: review.record.id }, { plan: review.record, layout: review.layout?.signature });
+  }
   const previousFinish = project.steps.find(
     (s) =>
       !s.generated &&

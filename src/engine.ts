@@ -1,3 +1,5 @@
+import { bottomPlateSealGuide, bottomPlateSealReviews } from "./bottomPlateSeal";
+import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { drawingReferenceDescription } from "./drawingReference";
 import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
 import { buildPreparation, buildPreparationMarkdown } from "./buildPreparation";
@@ -818,6 +820,13 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (review.problem) findings.push({
       id: `water-stop-${stop.id}`, severity: "warning", title: `Review fixture shutoff · ${stop.name}`,
       detail: review.problem, ...(p.pieces.some(({ id }) => id === stop.pieceId) && { pieceId: stop.pieceId }),
+    });
+  }
+  for (const { record, title, layout, problem } of bottomPlateSealReviews(p)) {
+    const detail = problem || layout?.runs.find(({ problem }) => problem)?.problem;
+    if (detail) findings.push({ id: `bottom-plate-${record.id}`, severity: "warning",
+      title: `Review bottom plate air seal · ${title}`, detail,
+      ...(layout && { pieceId: record.plateId }),
     });
   }
   for (const drain of p.sinkDrains ?? []) {
@@ -2205,6 +2214,10 @@ export function guideMarkdown(p: Project) {
       waterSupportGuideLines(waterSupportNetwork(p)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[PEX support guidance](${pexInstallation}) · [IRC piping support](${waterSupportReference.code}) · [HoldRite installation](${waterSupportReference.instructions})\n` : "") +
+    (p.bottomPlateSeals?.length ? "\n\n## Bottom plate air seals\n\n" +
+      bottomPlateSealGuide(p).map((line) =>
+        "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[PNNL bottom plate guidance](${bottomPlateSealant.fieldGuide}) · [OSI instructions](${bottomPlateSealant.specification})\n` : "") +
     (p.sinkDrains?.length ? "\n\n## Sink drains and wall-tube cuts\n\n" +
       p.sinkDrains.flatMap((record) => sinkDrainGuide(p, record)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

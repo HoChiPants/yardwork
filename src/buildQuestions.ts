@@ -1,3 +1,4 @@
+import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { openingAirSealSummary } from "./openingAirSeal";
 import type { BuildPreparationAction } from "./buildPreparation";
 import type { Finding } from "./engine";
@@ -37,6 +38,7 @@ export type BuildQuestion =
   | { kind: "water-pressure" }
   | { kind: "water-stop" }
   | { kind: "sink-drain" }
+  | { kind: "bottom-plate-seal" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
@@ -55,6 +57,7 @@ export type BuildQuestionAction =
   | { kind: "water-pressure"; recordId?: string }
   | { kind: "water-stop"; stopId?: string }
   | { kind: "sink-drain"; drainId?: string }
+  | { kind: "bottom-plate-seal"; planId?: string }
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
@@ -109,6 +112,7 @@ const wallWaterQuestion = /^(?:(?:plan|route|add|lay out) (?:a |the )?(?:pex|wat
 const fittingQuestion = /^(?:(?:how (?:do|can|should) i )?(?:connect|join) (?:two |my |these |the )?(?:pex|water) (?:runs|lines|pipes)(?: (?:at|around) (?:a |the )?corner)?|(?:review|check|plan) (?:the |my |a )?pex (?:fittings?|connections?))$/i;
 const teeQuestion = /^(?:(?:how (?:do|can|should) i )?(?:branch|tee off) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)|(?:add|plan) (?:a |the )?tee (?:in|into|on|to) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)(?: for .+)?)$/i;
 const pressureQuestion = /^(?:(?:how (?:do|can|should) i )?pressure[- ]test (?:the |my |a )?(?:pex|water(?: supply)?) (?:main|runs?|lines?|pipes?|system)|(?:log|record|review|check|show) (?:a |the |my )?(?:pex |water )?pressure tests?)$/i;
+const bottomPlateQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[ -]seal|seal|caulk) (?:the |a |my )?(?:wall )?(?:bottom|sole) plates?(?: to (?:the )?(?:wood )?subfloor)?|(?:plan|review|check|show) (?:the |a )?(?:bottom|sole) plate (?:air[ -]seals?|seals?))$/i;
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
 const waterSupportQuestion = /^(?:(?:how (?:do|can|should) i )support (?:the |my )?(?:pex|water) (?:runs?|lines?|pipes?)|(?:check|review|show|plan) (?:the |my )?(?:pex |water line )(?:supports?|support spacing))$/i;
@@ -137,6 +141,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (teeQuestion.test(text)) return { kind: "water-fitting", tee: true };
   if (pressureQuestion.test(text)) return { kind: "water-pressure" };
   if (waterStopQuestion.test(text)) return { kind: "water-stop" };
+  if (bottomPlateQuestion.test(text)) return { kind: "bottom-plate-seal" };
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
@@ -485,6 +490,17 @@ export function answerBuildQuestion(
         link: question.tee
           ? { label: "Branch a PEX main", action: { kind: "water-fitting", tee: true } }
           : { label: "Connect PEX runs", action: { kind: "water-fitting" } },
+      };
+    case "bottom-plate-seal":
+      return {
+        title: "Seal a bottom plate",
+        detail: "Choose a modeled wood plate on subfloor. The planner checks the exposed bead path and estimates cartridge use from the clear sections.",
+        rows: bottomPlateSealReviews(project).map(({ record, title, layout, problem }) => ({
+          id: record.id, title,
+          detail: problem || `${formatStockLength(layout!.clearLength)} of bead path. ${layout!.runs.some(({ problem }) => problem) ? "Review the marked interruptions." : "Backing and bead space are clear in the model."}`,
+          link: { label: "Review this bottom plate seam", action: { kind: "bottom-plate-seal", planId: record.id } },
+        })),
+        link: { label: "Open bottom plate air seal", action: { kind: "bottom-plate-seal" } },
       };
     case "sink-drain":
       return {

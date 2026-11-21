@@ -1,6 +1,10 @@
 # Current evidence and remaining qualification
 
-November 21, 2026. The current evidence covers the measured sink drain release in project format 113. Earlier checkpoints below cover the tested versions and workflows they identify.
+November 21, 2026. The current evidence covers the bottom plate air-seal release in project format 114. Earlier checkpoints below cover the tested versions and workflows they identify.
+
+## Wood bottom plate air seal, format 114
+
+Both production builds, all 1,621 domain tests and the five whole-build example checks passed. A 390-pixel Chrome test imported a modeled wall and subfloor, opened the seam planner from a build question, checked two breaks, saved and reopened the plan, then exported matching print and Markdown guides. The study shows an 88-inch plate with 75.875 inches of eligible bead path. The remaining spans include the modeled sheet joint and a removable access mockup block. One verified OSB sheet supplies two modeled blanks and three source-linked offcuts. The trial instruction names a matching offcut, and the shopping review carries the exact 28 fl oz cartridge and the exact sheet. The viewport result checks modeled backing and local bead space. Verify delivered material, joint spacing, access and air-barrier continuity in the field. [Editable study](../public/examples/air-sealing/bottom-plate.yardwork.json) · [Build guide](../public/examples/air-sealing/bottom-plate-guide.md)
 
 ## Kitchenette sink drain, format 113
 

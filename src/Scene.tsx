@@ -83,6 +83,7 @@ export type SceneProps = {
   shownSiteClearanceId?: string | null;
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
   shownTrimSeam?: TrimSeamMarker;
+  shownBottomPlate?: { start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownOpeningFlashing?: OpeningFlashingPreview;
   shownPlumbingVentLayout?: PlumbingVentLayout;
@@ -1545,6 +1546,17 @@ function World(props: SceneProps) {
       ))}
       {!isolated && props.shownFoundation && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <GreenhouseFoundationMarker review={props.shownFoundation} />
+      )}
+      {!isolated && props.shownBottomPlate && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <group>
+          {props.shownBottomPlate.runs.map(({ points, problem }, index) =>
+            <Line key={index} points={points.map((point) => point.map((n) => n / 12) as V3)}
+              color={problem || props.shownBottomPlate?.outdated ? "#ba4c2b" : "#35748c"} lineWidth={4} depthTest={false} raycast={() => null} />)}
+          <Html center position={props.shownBottomPlate.start.map((n, i) => (n + (i === 1 ? 1 : 0)) / 12) as V3}
+            zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+            <span className="site-clearance-marker" data-testid="bottom-plate-seam-start">Bead start · {props.shownBottomPlate.outdated ? "Review changed seam" : "Bottom plate air seal"}</span>
+          </Html>
+        </group>
       )}
       {!isolated && props.shownSillGasket && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <group>

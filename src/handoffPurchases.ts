@@ -1,3 +1,5 @@
+import { bottomPlateSealReviews, bottomPlateSealTakeoff } from "./bottomPlateSeal";
+import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { flexWrap } from "./openingFlashingReference";
@@ -162,6 +164,12 @@ export function homeDepotPurchaseNeeds(
       hingePurchaseAllocations(project),
     );
     include(row.productId, "Allocated physical lid hinges", row.requiredHinges);
+  }
+  if (project.bottomPlateSeals?.length) {
+    const seals = bottomPlateSealReviews(project);
+    const { required } = bottomPlateSealTakeoff(project, seals);
+    include(bottomPlateSealant.id, "Clear bottom plate bead runs by work session", required || null,
+      required ? undefined : "Review changed or interrupted seams to establish cartridge use.");
   }
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);

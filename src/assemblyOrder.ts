@@ -3,6 +3,7 @@ import type { Project, Step } from "./model";
 import { waterRunStageKey } from "./wallWater";
 import { waterFittingStageKey } from "./waterFittings";
 import { waterStopStageKey } from "./waterStops";
+import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { sinkDrainStageKey } from "./sinkDrain";
 import { waterFittingPorts } from "./waterFittingSchema";
 
@@ -133,6 +134,13 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
   }
   for (const drain of project.sinkDrains ?? [])
     requireBefore(byOwner.get(drain.id)?.get(sinkDrainStageKey), finish);
+  for (const { record, layout } of bottomPlateSealReviews(project)) {
+    const seal = reviewSteps.get(reviewKey("bottom-plate-air-seal", record.id));
+    requireBefore(stageByMember.get(record.plateId), seal);
+    const supportIds = new Set(layout?.runs.flatMap(({ panelId }) => panelId ? [panelId] : []));
+    for (const id of supportIds) requireBefore(stageByMember.get(id), seal);
+    requireBefore(seal, finish);
+  }
   for (const plan of project.restraintPlans) {
     if (plan.receiver && stageByMember.has(plan.receiver.pieceId))
       requireBefore(reviewSteps.get(reviewKey("restraint-preparation", plan.id)), finish);

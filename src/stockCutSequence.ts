@@ -1,4 +1,4 @@
-import { cutKerf } from "./cutStock";
+import { plannedCutKerf } from "./cutStock";
 import type { BomRow } from "./engine";
 import { formatStockLength } from "./measurement";
 import {
@@ -30,6 +30,7 @@ export type StockCutLayout = {
   width: number;
   length: number;
   tubeKerf?: number;
+  woodKerf?: number;
   kept: (StockRectangle & { id: string })[];
   leftovers: StockRectangle[];
 };
@@ -246,7 +247,8 @@ export function stockCutSequences(
     const [thickness, width, length] = [
       ...(stock.stockSize ?? stock.size),
     ].sort((a, b) => a - b);
-    const defaultKerf = cutKerf(row.id);
+    const woodKerf = project.woodKerfs?.[row.id];
+    const defaultKerf = plannedCutKerf(project, row.id);
     const sequences: StockCutSequence[] = [];
     const createSequence = (
       title: string,
@@ -263,7 +265,7 @@ export function stockCutSequences(
         partIds,
         source: batt
           ? `${size} · zero modeled knife loss`
-          : kind === "tube" && tubeKerf !== undefined
+          : woodKerf !== undefined || (kind === "tube" && tubeKerf !== undefined)
             ? `${size} · ${formatStockLength(kerf)} measured loss per cut`
             : `${size} · ${formatStockLength(kerf)} ${kind === "tube" || glazing ? "modeled " : ""}kerf`,
         steps: [],
@@ -276,6 +278,7 @@ export function stockCutSequences(
           width: sourceWidth,
           length: sourceLength,
           ...(kind === "tube" && tubeKerf !== undefined ? { tubeKerf } : {}),
+          ...(woodKerf !== undefined ? { woodKerf } : {}),
           kept: [],
           leftovers: [],
         },

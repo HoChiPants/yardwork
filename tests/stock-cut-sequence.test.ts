@@ -21,7 +21,7 @@ import {
 } from "../src/model";
 import { stockCutSequences } from "../src/stockCutSequence";
 import { recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
-import { inspectCutStock, setCutSourceOnHand } from "../src/cutStock";
+import { inspectCutStock, pieceCutKerf, setCutSourceOnHand, setPlannedWoodKerf } from "../src/cutStock";
 import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import { reviewedOfferForMaterial } from "../src/retailerCatalog";
 import { cutStockLayout } from "../src/cutStockLayout";
@@ -688,3 +688,50 @@ for (const id of buildFixtureIds) {
     }
   });
 }
+
+test("a measured board cut width repacks purchases and freezes the recorded source", () => {
+  const project = cutProject("stud", [1.5, 48, 3.5], [1.5, 47.941, 3.5]);
+  const measured = setPlannedWoodKerf(project, "stud", 0.059);
+  assert.equal(bom(project).find(({ id }) => id === "stud")?.quantity, 2);
+  assert.equal(bom(measured).find(({ id }) => id === "stud")?.quantity, 1);
+  assert.equal(project.woodKerfs, undefined);
+  const [sequence] = stockCutSequences(measured, bom(measured)).get("stud")!;
+  assert.match(sequence.source, /0\.059 in measured loss per cut/);
+  assert.equal(sequence.review, undefined);
+  assert.deepEqual(sequence.layout.leftovers, []);
+  assert.equal(sequence.layout.kept[1].y, 48.059);
+  assert.throws(() => recordStockCutLayout(project, sequence.layout), /layout changed/i);
+
+  const { project: recorded } = recordStockCutLayout(measured, sequence.layout);
+  const firstSource = recorded.pieces[0].cutStock!.id;
+  assert.ok(recorded.pieces.every((piece) => pieceCutKerf(piece) === 0.059));
+  const changed = setPlannedWoodKerf(recorded, "stud", 0.126);
+  assert.deepEqual(changed.pieces, recorded.pieces);
+  assert.ok(inspectCutStock(changed).valid.has(firstSource));
+  assert.equal(projectSchema.parse(JSON.parse(JSON.stringify(changed))).woodKerfs?.stud, 0.126);
+  assert.equal(setPlannedWoodKerf(changed, "stud", undefined).woodKerfs, undefined);
+});
+
+test("a measured plywood cut width controls both sheet axes and usable remnant layout", () => {
+  const project = cutProject("plywood", [24, 0.75, 60], [23.941, 0.75, 60]);
+  const measured = setPlannedWoodKerf(project, "plywood", 0.059);
+  assert.equal(bom(project).find(({ id }) => id === "plywood")?.quantity, 2);
+  const plan = bom(measured);
+  assert.equal(plan.find(({ id }) => id === "plywood")?.quantity, 1);
+  const [sheet] = stockCutSequences(measured, plan).get("plywood")!;
+  assert.equal(sheet.review, undefined);
+  assert.equal(sheet.layout.kept[1].x, 24.059);
+  assert.deepEqual(sheet.remnants, ["4 ft × 35.941 in"]);
+  assert.match(guideMarkdown(measured), /0\.059 in measured loss per cut/);
+  const { project: recorded } = recordStockCutLayout(measured, sheet.layout);
+  const offcut = recorded.pieces.find(({ offcut }) => offcut)!;
+  assert.equal(offcut.cutStock!.woodKerf, 0.059);
+  assert.equal(offcut.size[2], 35.941);
+  assert.equal(inspectCutStock(recorded).invalid.length, 0);
+
+  const awkward = cutProject("plywood", [24, 0.75, 60], [23.92, 0.75, 60]);
+  const adjusted = setPlannedWoodKerf(awkward, "plywood", 0.059);
+  const layouts = stockCutSequences(adjusted, bom(adjusted)).get("plywood")!;
+  assert.ok(layouts.every(({ review }) => !review), "Avoid a joined layout that needs a sub-kerf edge trim");
+  assert.ok(!projectSchema.safeParse({ ...measured, woodKerfs: { [owensCorningWallBatt.materialId]: 0.059 } }).success);
+});

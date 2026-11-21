@@ -106,7 +106,7 @@ export function packRectangles(
   cuts: RectangleCut[],
   width: number,
   length: number,
-  options: { kerf?: number; allowRotation?: boolean } = {},
+  options: { kerf?: number; allowRotation?: boolean; checkEdgeCuts?: boolean } = {},
 ): { plans: StockPlan[]; rejected: RectangleCut[] } {
   const kerf = options.kerf ?? 0;
   if (!Number.isFinite(kerf) || kerf < 0)
@@ -118,6 +118,11 @@ export function packRectangles(
     length <= 0
   )
     throw Error("Stock dimensions must be positive finite numbers.");
+  const fitsCut = (available: number, keep: number) => {
+    if (!options.checkEdgeCuts) return keep <= available + EPS;
+    const state = stockSplitState(available, keep, kerf);
+    return state === "whole" || state === "cut";
+  };
   const rolls: { plan: StockPlan; shelves: Shelf[] }[] = [],
     rejected: RectangleCut[] = [];
   const ordered = [...cuts].sort(
@@ -151,8 +156,8 @@ export function packRectangles(
       for (const shelf of roll.shelves) {
         const variant = variants.find(
           (v) =>
-            v.width + shelf.widthUsed <= width + EPS &&
-            v.length <= shelf.length + EPS,
+            fitsCut(width - shelf.widthUsed, v.width) &&
+            fitsCut(shelf.length, v.length),
         );
         if (variant) {
           roll.plan.placements.push({
@@ -168,7 +173,8 @@ export function packRectangles(
       }
       if (placed) break;
       const variant = variants.find(
-        (v) => roll.plan.usedLength + kerf + v.length <= length + EPS,
+        (v) => fitsCut(length - roll.plan.usedLength - kerf, v.length) &&
+          (!options.checkEdgeCuts || fitsCut(width, v.width)),
       );
       if (variant) {
         const y = roll.plan.usedLength + kerf;

@@ -55,7 +55,7 @@ export function CutStudio({
   const [length, setLength] = useState(source.size[long]),
     [width, setWidth] = useState(source.size[wide]);
   const [order, setOrder] = useState<TrimOrder>("crosscut-first");
-  const [kerfDraft, setKerfDraft] = useState("");
+  const [kerfDraft, setKerfDraft] = useState(() => project.woodKerfs?.[source.material]?.toString() ?? "");
   const canSetKerf = canRecordWoodKerf(project, source);
   const woodKerf = canSetKerf && kerfDraft !== "" ? Number(kerfDraft) : undefined;
   const displayedKerf = formatPreciseInches(woodKerf ?? pieceCutKerf(source));

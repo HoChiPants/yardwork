@@ -432,6 +432,7 @@ export const currentProjectSchema = z
       "Retain one measured fit per rod.",
     ).optional(),
     tubeCutPlans: tubeCutPlansSchema.optional(),
+    woodKerfs: z.partialRecord(z.enum(materialIds), woodKerfSchema).optional(),
     onHandCutSources: z.array(id).max(2000)
       .refine((sources) => new Set(sources).size === sources.length, "Keep one entry per on-hand cut source.")
       .optional(),
@@ -536,6 +537,13 @@ export const currentProjectSchema = z
       .default([]),
   })
   .superRefine((p, ctx) => {
+    for (const stock of catalog)
+      if (p.woodKerfs?.[stock.id] !== undefined && !canPlanWoodKerf(stock.id))
+        ctx.addIssue({
+          code: "custom",
+          path: ["woodKerfs", stock.id],
+          message: "A wood blade kerf requires cuttable wood board or sheet stock.",
+        });
     const pieceIds = new Set(p.pieces.map((x) => x.id)),
       stepIds = new Set(p.steps.map((x) => x.id));
     if (p.siteClearances && new Set(p.siteClearances.map((plane) => plane.id)).size !== p.siteClearances.length)
@@ -1476,6 +1484,12 @@ export const catalog: Material[] = [
   })),
 ];
 export const material = (id: MaterialId) => catalog.find((m) => m.id === id)!;
+export function canPlanWoodKerf(id: MaterialId) {
+  const stock = material(id);
+  return stock.wood && stock.cuttable &&
+    stock.shape !== "insulation-batt" &&
+    (stock.stockKind === "linear" || stock.stockKind === "sheet");
+}
 export const isHardware = (id: MaterialId) =>
   ["fastener", "connector"].includes(material(id).stockKind);
 export const isBatt = (id: MaterialId) =>

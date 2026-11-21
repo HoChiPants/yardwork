@@ -39,7 +39,7 @@ import {
 } from "./model";
 import { retailerSearch } from "./retailers";
 import { reviewedOfferForMaterial, reviewedSupplierForMaterial, shoppingOfferForMaterial } from "./retailerCatalog";
-import { balanceBoardCutEnds, packRectangles, type StockPlan } from "./packing";
+import { balanceBoardCutEnds, packRectangles, stockSplitState, type StockPlan } from "./packing";
 import { everbiltClosetRod } from "./closetRodReference";
 import { foilBlankSize, foilReturnText, saunaFoilLayoutChanges } from "./saunaFoil";
 import { cedarbrookFoil } from "./saunaFoilReference";
@@ -124,7 +124,7 @@ import {
   type PriceSource,
   type UnresolvedPricingQuantity,
 } from "./pricing";
-import { cutKerf, inspectCutStock, KERF, pieceCutKerf } from "./cutStock";
+import { inspectCutStock, KERF, pieceCutKerf, plannedCutKerf } from "./cutStock";
 export { cutKerf, inspectCutStock, KERF, pieceCutKerf } from "./cutStock";
 export { rotate } from "./spatial";
 import { rotate } from "./spatial";
@@ -350,6 +350,8 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
         bins: CutBin[] = [],
         oversizedParts: Piece[] = [],
         seenSources = new Set<string>();
+      const kerf = plannedCutKerf(p, m.id);
+      const measured = p.woodKerfs?.[m.id] !== undefined;
       let rolls: StockPlan[] = [];
       let sheets: StockPlan[] = [];
       let physicalStockUnits = 0,
@@ -387,7 +389,7 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
                   0,
                   length -
                     originalLength -
-                    (originalLength < length - 0.000001 ? KERF : 0),
+                    (originalLength < length - 0.000001 ? piece.cutStock.woodKerf ?? KERF : 0),
                 ),
                 cuts: [
                   {
@@ -401,17 +403,21 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
             }
             continue;
           }
-          let bin = normalBins.find((b) => b.remaining >= s[2] - 0.001);
+          let bin = normalBins.find((bin) => {
+            if (!measured) return bin.remaining >= s[2] - 0.001;
+            const fit = stockSplitState(bin.remaining, s[2], kerf);
+            return fit === "whole" || fit === "cut";
+          });
           if (!bin) {
             bin = { remaining: length, cuts: [] };
             bins.push(bin);
             normalBins.push(bin);
           }
           bin.cuts.push({ id: piece.id, name: piece.name, length: s[2] });
-          bin.remaining = Math.max(0, bin.remaining - s[2] - KERF);
+          bin.remaining = Math.max(0, bin.remaining - s[2] - kerf);
         }
         if ((m.wood || m.id === everbiltClosetRod.materialId) && m.cuttable)
-          balanceBoardCutEnds(normalBins, length, KERF);
+          balanceBoardCutEnds(normalBins, length, kerf);
         physicalStockUnits = bins.length;
       } else if (isHardware(m.id)) {
         const connectionUnits = p.joints
@@ -482,8 +488,9 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
             });
         }
         const packed = packRectangles(rectangles, stock[1], stock[2], {
-          kerf: cutKerf(m.id),
+          kerf,
           allowRotation: false,
+          checkEdgeCuts: measured,
         });
         sheets = packed.plans;
         physicalStockUnits += sheets.length;

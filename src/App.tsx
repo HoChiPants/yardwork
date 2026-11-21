@@ -225,7 +225,7 @@ import { shoppingOfferForMaterial } from "./retailerCatalog";
 import { CatalogReferences } from "./CatalogReferences";
 import BuildStudies from "./BuildStudies";
 import { SheetLayouts, sheetPlansMarkdown } from "./SheetLayouts";
-import { PrintStockCutSequences, StockCutSequenceList } from "./StockCutSequenceList";
+import { PrintStockCutSequences, StockCutSequenceList, WoodStockKerf } from "./StockCutSequenceList";
 import { PrintOffcutCutOrder } from "./PrintOffcutCutOrder";
 import { offcutCutRows } from "./offcutCutGuide";
 import { stockCutSequences, type StockCutLayout } from "./stockCutSequence";
@@ -1698,6 +1698,14 @@ export function App() {
       notify(layout.tubeKerf === undefined
         ? "Stock cut order uses the modeled loss."
         : "Cutting loss saved for the build guide.");
+    });
+  }
+  function applyWoodStockKerf(source: Project, next: Project) {
+    safe(() => {
+      if (current.current !== source)
+        throw Error("The project changed. Preview the stock layout again before applying.");
+      change(next);
+      notify("Stock cut order and shopping quantities updated.");
     });
   }
   function recordStockUnits(layouts: StockCutLayout[], onHand: boolean) {
@@ -4557,6 +4565,7 @@ export function App() {
                   <StockCutSequenceList project={project} row={r} sequences={cutSequences.get(r.id) ?? []}
                     onRecordMany={recordStockUnits}
                     onSaveLoss={saveStockCutLoss} onRecord={recordStockUnit} />
+                  <WoodStockKerf project={project} row={r} onApply={applyWoodStockKerf} />
                 </div>
               ))}
               <button
@@ -4981,6 +4990,7 @@ export function App() {
                 sequences={cutSequences.get(stockPlanPiece.material)}
                 inspection={currentCutSources}
                 onSaveLoss={saveStockCutLoss}
+                onApplyWoodKerf={applyWoodStockKerf}
                 onRecord={recordStockUnit}
                 onStockOnHand={markStockOnHand}
                 onReviewOffcut={openOffcutReleaseReview}

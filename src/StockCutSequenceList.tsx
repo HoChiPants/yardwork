@@ -1,7 +1,9 @@
 import { useId, useState } from "react";
-import type { BomRow } from "./engine";
-import { material, type Project } from "./model";
-import { tubeKerfSchema } from "./cutSourceAxes";
+import { bom, type BomRow } from "./engine";
+import { canPlanWoodKerf, material, type Project } from "./model";
+import { tubeKerfSchema, woodKerfSchema } from "./cutSourceAxes";
+import { KERF, setPlannedWoodKerf } from "./cutStock";
+import { formatPreciseInches } from "./measurement";
 import {
   stockCutSequenceContext,
   stockCutMaterialNotes,
@@ -48,6 +50,98 @@ function SequenceBody({ sequence }: { sequence: StockCutSequence }) {
         </p>
       )}
     </>
+  );
+}
+
+export function WoodStockKerf({
+  project,
+  row,
+  onApply,
+}: {
+  project: Project;
+  row: BomRow;
+  onApply: (source: Project, next: Project) => void;
+}) {
+  const fieldId = useId();
+  const [draft, setDraft] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{
+    source: Project;
+    next: Project;
+    quantity: number;
+    sequences: readonly StockCutSequence[];
+  }>();
+  if (!canPlanWoodKerf(row.id)) return null;
+
+  const saved = project.woodKerfs?.[row.id];
+  const entered = draft ?? saved?.toString() ?? "";
+  const value = entered.trim() ? woodKerfSchema.safeParse(Number(entered)) : undefined;
+  const kerf = value?.data;
+  const invalid = value?.success === false;
+  const changed = !invalid && kerf !== saved;
+  const current = preview?.source === project ? preview : undefined;
+
+  return (
+    <details className="wood-stock-kerf field-section">
+      <summary>Blade kerf for this material · {saved === undefined ? `${formatPreciseInches(KERF)} modeled` : formatPreciseInches(saved)}</summary>
+      <label className="field" htmlFor={fieldId}>
+        Blade kerf (in)
+        <input
+          id={fieldId}
+          type="number"
+          step="any"
+          value={entered}
+          placeholder={String(KERF)}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            setPreview(undefined);
+          }}
+        />
+      </label>
+      <p className="small-note">
+        Enter the width your blade removes to revise the remaining stock for this material.
+        Leave blank for the modeled {formatPreciseInches(KERF)} loss.
+      </p>
+      {invalid && <p className="form-error" role="alert">Enter a positive blade kerf in inches.</p>}
+      <button
+        type="button"
+        className="button secondary small"
+        disabled={!changed || !!current}
+        onClick={() => {
+          const next = setPlannedWoodKerf(project, row.id, kerf);
+          const revised = bom(next).find(({ id }) => id === row.id);
+          setPreview({
+            source: project,
+            next,
+            quantity: revised?.quantity ?? 0,
+            sequences: revised ? stockCutSequences(next, [revised]).get(row.id) ?? [] : [],
+          });
+        }}
+      >
+        Preview blade kerf
+      </button>
+      {current && (
+        <section aria-label="Revised stock layout">
+          <p role="status">Stock units to buy · {row.quantity} → {current.quantity}</p>
+          {current.sequences.map((sequence) => (
+            <details key={sequence.title}>
+              <summary>{sequence.title} · {sequence.source}</summary>
+              <SequenceBody sequence={sequence} />
+            </details>
+          ))}
+          <button
+            type="button"
+            className="button secondary small"
+            onClick={() => {
+              onApply(current.source, current.next);
+              setDraft(null);
+              setPreview(undefined);
+            }}
+          >
+            {kerf === undefined ? "Restore modeled kerf" : "Apply blade kerf"}
+          </button>
+        </section>
+      )}
+    </details>
   );
 }
 

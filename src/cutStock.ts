@@ -1,6 +1,7 @@
 import { clipBox } from "./cutProfiles";
-import { cutSourceRegion } from "./cutSourceAxes";
+import { cutSourceRegion, woodKerfSchema } from "./cutSourceAxes";
 import {
+  canPlanWoodKerf,
   isBatt,
   material,
   type MaterialId,
@@ -13,6 +14,25 @@ import { orientedStockSize } from "./stockAxes";
 export const KERF = 0.125;
 export const cutKerf = (materialId: MaterialId) =>
   isBatt(materialId) ? 0 : KERF;
+export const plannedCutKerf = (project: Project, id: MaterialId) =>
+  project.woodKerfs?.[id] ?? cutKerf(id);
+
+export function setPlannedWoodKerf(project: Project, id: MaterialId, kerf: number | undefined) {
+  if (!canPlanWoodKerf(id)) throw Error("Choose cuttable wood board or sheet stock.");
+  if (kerf !== undefined && !woodKerfSchema.safeParse(kerf).success)
+    throw Error("Enter a positive blade kerf in inches.");
+  if (project.woodKerfs?.[id] === kerf) return project;
+  const { woodKerfs, ...draft } = project;
+  const next = { ...woodKerfs };
+  if (kerf === undefined) delete next[id];
+  else next[id] = kerf;
+  return {
+    ...draft,
+    ...(Object.keys(next).length ? { woodKerfs: next } : {}),
+    guideFingerprint: null,
+  };
+}
+
 export const pieceCutKerf = (piece: Piece) =>
   piece.cutStock?.woodKerf ?? piece.cutStock?.tubeKerf ?? cutKerf(piece.material);
 

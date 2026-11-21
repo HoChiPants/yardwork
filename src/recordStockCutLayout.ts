@@ -77,8 +77,12 @@ function prepareStockUnit(
     kept,
     leftovers,
     tubeKerf,
+    woodKerf,
   } = current.layout;
-  const measuredLoss = tubeKerf === undefined ? {} : { tubeKerf };
+  const measuredLoss = {
+    ...(tubeKerf === undefined ? {} : { tubeKerf }),
+    ...(woodKerf === undefined ? {} : { woodKerf }),
+  };
   const sourceSize: V3 = [thickness, width, length];
   const sourceId = uid();
   for (const region of kept) {
@@ -167,6 +171,9 @@ function prepareStockUnit(
       : [
           `Recorded tube cutting loss for ${label} · ${formatStockLength(tubeKerf)} per cut.`,
         ]),
+    ...(woodKerf === undefined ? [] : [
+      `Recorded wood blade kerf for ${label} · ${formatStockLength(woodKerf)} per cut.`,
+    ]),
     ...current.steps.map(
       (instruction, i) =>
         `Stock cut order for ${label} · ${i + 1}. ${instruction}`,

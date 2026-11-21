@@ -10,6 +10,8 @@ import { saveWoodJointDecision } from "../../src/woodJointDecisions";
 import { bounds, cutPiece } from "../../src/engine";
 import { editRoundOpening } from "../../src/throughOpeningCuts";
 import { homeDepotShoppingList } from "../../src/handoff";
+import { homeDepotFraming } from "../../src/homeDepotFramingReference";
+import { pureBondCasework } from "../../src/homeDepotCaseworkReference";
 import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
 import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
 import { saveMotionPlan, saveMotionTestScenario } from "../../src/mechanismMotion";
@@ -996,4 +998,89 @@ test("treated wood field cuts and scraps follow the model through build question
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/### Pressure-treated wood cuts[\s\S]*P001 · Treated sill · Recorded cut face · local \+Z. 1 round opening\.[\s\S]*O001 · Offcut · Treated sill/);
   await expect(page.locator(".print-guide .build-preparation-print")).toContainText("1 round opening.");
+});
+
+test("measured blade width previews fewer boards and sheets and stays with recorded scraps", async ({ page }) => {
+  const plan = blank("Measured wood stock workshop");
+  const step = plan.steps[0].id;
+  const boardStock = homeDepotFraming.stud.materialId;
+  const sheetStock = pureBondCasework.materialId;
+  const panels = [
+    part("Tall cabinet side", sheetStock, [24, 0.703, 60], [0, 1, 0], step, "Cabinet"),
+    part("Second cabinet side", sheetStock, [23.941, 0.703, 60], [32, 1, 0], step, "Cabinet"),
+  ];
+  plan.pieces = [
+    ...panels,
+    part("Long frame rail", boardStock, [3.5, 1.5, 48], [55, 1, 0], step, "Frame"),
+    part("Second frame rail", boardStock, [3.5, 1.5, 47.941], [62, 1, 0], step, "Frame"),
+  ];
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "measured-wood-layout.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(plan)),
+  });
+  await expect(dialog).toHaveCount(0);
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.project.name).toBe(`${plan.name} · imported`);
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const board = page.locator(`.bom-row[data-stock-material="${boardStock}"]`);
+  const sheet = page.locator(`.bom-row[data-stock-material="${sheetStock}"]`);
+  for (const row of [board, sheet]) {
+    const kerf = row.locator(".wood-stock-kerf");
+    await kerf.locator(":scope > summary").click();
+    await kerf.getByRole("spinbutton", { name: "Blade kerf (in)", exact: true }).fill("0.059");
+    await kerf.getByRole("button", { name: "Preview blade kerf", exact: true }).click();
+    const preview = kerf.getByRole("region", { name: "Revised stock layout", exact: true });
+    await expect(preview).toContainText("Stock units to buy · 2 → 1");
+    await expect(row.locator("details.stock-cut-order > summary")).toContainText("2 units");
+    if (row === sheet) {
+      await preview.getByText(/^Sheet 1 ·/).click();
+      await expect(preview).toContainText("4 ft × 35.941 in");
+      await expect.poll(async () => (await draft()).project.woodKerfs).toEqual({ [boardStock]: 0.059 });
+    }
+    await kerf.getByRole("button", { name: "Apply blade kerf", exact: true }).click();
+    await expect(row.locator("details.stock-cut-order > summary")).toContainText("1 unit");
+  }
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  const handoff = dialog.getByRole("textbox", { name: "Home Depot paste list", exact: true });
+  await expect(handoff).toHaveValue(/1 board[^\n]*#312528776/);
+  await expect(handoff).toHaveValue(/1 sheet[^\n]*#100077837/);
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: plan.name }).click();
+  await expect.poll(async () => (await draft())?.project.woodKerfs?.[sheetStock]).toBe(0.059);
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const order = sheet.locator("details.stock-cut-order");
+  await order.locator(":scope > summary").click();
+  await order.getByText(/^Sheet 1 ·/).click();
+  await expect(order).toContainText("4 ft × 35.941 in");
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("0.059 in measured loss per cut");
+  expect(guide).toContain("4 ft × 35.941 in");
+  if (await dialog.isVisible()) await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+
+  await order.getByRole("button", { name: "Record this stock unit", exact: true }).click();
+  const woodKerfs = sheet.locator(".wood-stock-kerf");
+  await woodKerfs.locator(":scope > summary").click();
+  await woodKerfs.getByRole("spinbutton", { name: "Blade kerf (in)", exact: true }).fill("0.126");
+  await woodKerfs.getByRole("button", { name: "Preview blade kerf", exact: true }).click();
+  await woodKerfs.getByRole("button", { name: "Apply blade kerf", exact: true }).click();
+  await expect.poll(async () => (await draft())?.project.woodKerfs?.[sheetStock]).toBe(0.126);
+  const saved = (await draft()).project as typeof plan;
+  const remnants = saved.pieces.filter(({ material, offcut }) => material === sheetStock && offcut);
+  expect(remnants).toHaveLength(1);
+  expect(remnants[0].size[2]).toBe(35.941);
+  expect(remnants[0].cutStock?.woodKerf).toBe(0.059);
+  expect(saved.pieces.filter(({ material }) => material === sheetStock).every(({ cutStock }) => cutStock?.woodKerf === 0.059)).toBe(true);
 });

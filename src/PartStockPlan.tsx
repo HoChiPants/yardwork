@@ -9,7 +9,7 @@ import { reviewedOfferForMaterial } from "./retailerCatalog";
 import { partLabel } from "./partLabels";
 import { formatStockLength } from "./measurement";
 import { fittingOffcuts } from "./offcutAssignment";
-import { MaterialCutNote, StockCutUnit } from "./StockCutSequenceList";
+import { MaterialCutNote, StockCutUnit, WoodStockKerf } from "./StockCutSequenceList";
 import {
   stockCutSequenceContext,
   type StockCutLayout,
@@ -25,6 +25,7 @@ export function PartStockPlan({
   onRecord,
   onStockOnHand,
   onSaveLoss,
+  onApplyWoodKerf,
   onAssignOffcut,
   onReviewOffcut,
   onReplaceStock,
@@ -37,6 +38,7 @@ export function PartStockPlan({
   onRecord: (layout: StockCutLayout, onHand: boolean) => void;
   onStockOnHand: (sourceId: string, onHand: boolean) => void;
   onSaveLoss: (layout: StockCutLayout) => void;
+  onApplyWoodKerf: (source: Project, next: Project) => void;
   onAssignOffcut: (pieceId: string, offcutId: string) => void;
   onReviewOffcut: (historyId: string) => void;
   onReplaceStock: (pieceId: string, stockId: MaterialId) => void;
@@ -164,6 +166,7 @@ export function PartStockPlan({
           )}
         </details>
       )}
+      {!piece.cutStock && row && <WoodStockKerf project={project} row={row} onApply={onApplyWoodKerf} />}
       {piece.cutStock ? (
         <CutStockLayout
           project={project}

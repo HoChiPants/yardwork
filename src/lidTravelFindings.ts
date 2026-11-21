@@ -52,6 +52,10 @@ export function lidTravelPose(
     ...next,
     ...(shownSiteFaceId && { shownSiteFaceId }),
     ...(stayLinks.length && { stayLinks }),
+    ...(stoppedByStay?.kind === "arm-unresolved" && {
+      stayArmReviewIds: stoppedByStay.hitIds,
+      stayArmReviewFitId: stoppedByStay.id,
+    }),
     ...(armHits.length && {
       stayArmHitIds: armHits,
       stayArmContactAhead:
@@ -134,7 +138,7 @@ export function inspectLidTravel(project: Project, sectionId: string) {
       findings.push({
         id: `stay/${fit.id}`,
         detail:
-          limit.kind === "arm-contact"
+          limit.kind !== "reach"
             ? armContactText(project, limit)
             : `${part} stay reaches its measured limit near ${lidSiteAngle(limit.inspectAt)}.`,
         angle: limit.inspectAt,

@@ -171,17 +171,24 @@ export function LidMotionPanel({
           {stayStop && (
             <>
               <p role="status">
-                {stayStop.kind === "arm-contact"
+                {stayStop.kind !== "reach"
                   ? armContactText(project, stayStop)
                   : "Playback stopped at a folding stay’s measured reach limit."}
               </p>
-              {stayStop.kind === "arm-contact" && (
+              {stayStop.kind !== "reach" && (
                 <button
                   type="button"
                   className="text-button"
-                  onClick={() => showAngle(stayStop.inspectAt)}
+                  onClick={() => {
+                    if (stayStop.kind === "arm-contact") {
+                      showAngle(stayStop.inspectAt);
+                    } else if (review) {
+                      cancel();
+                      showPose(review.preview(stayStop.inspectAt), undefined, stayStop);
+                    }
+                  }}
                 >
-                  Inspect arm contact
+                  {stayStop.kind === "arm-contact" ? "Inspect arm contact" : "Inspect arm clearance"}
                 </button>
               )}
             </>

@@ -21,6 +21,7 @@ import { recordSupplyInventory, supplyRows } from "../src/supplies";
 import { homeDepotShoppingList } from "../src/handoff";
 import { transformSection } from "../src/sections";
 import type { LidStayFitInput } from "../src/lidStayFitSchema";
+import { inspectLidTravel, lidTravelPose } from "../src/lidTravelFindings";
 
 const left = "everbilt-19834-lid-stay";
 const right = "everbilt-19844-lid-stay";
@@ -205,8 +206,57 @@ test("measured stay rectangles detect a mid-swing obstacle on opening and closin
   assert.equal(clear.armClearance?.(), null);
   assert.match(
     guideMarkdown(fitted),
-    /No modeled arm overlap found at 0\.5° intervals/,
+    /Modeled stay arms have clearance throughout the tested swing through 90°/,
   );
+});
+
+test("a folding stay finds a short collision between the old half-degree samples in either direction", () => {
+  const { project, section, fixed, input } = cabinet();
+  const catchPiece = part("Narrow catch", "stud", [0.05, 0.006, 0.006],
+    [0, 13.2525906, -1.6010801], project.steps[0].id, "Test");
+  project.pieces.push(catchPiece);
+  const fitted = saveLidStayFit(project, section.id, {
+    ...input,
+    fixedPin: [-fixed.position[0], 11 - fixed.position[1], -7],
+    lidPin: [0, -1.5, -5],
+    fixedArm: 9,
+    lidArm: 9,
+    armEnvelopes: [
+      { width: 0.004, thickness: 0.125 },
+      { width: 0.004, thickness: 0.125 },
+    ],
+  });
+  const fit = fitted.lidStayFits![0];
+  const review = reviewLidStayFit(fitted, fit);
+  assert.equal(review.state, "current");
+  if (review.state !== "current") return;
+  for (let angle = 0; angle <= 90; angle += 0.5)
+    assert.ok(review.preview(angle).arms?.every(({ hitIds }) => !hitIds.length));
+  const open = review.playbackLimit(0, 90)!;
+  const close = review.playbackLimit(90, 0)!;
+  assert.ok(open.travel > 34 && open.travel < 34.25);
+  assert.ok(close.travel > 34.25 && close.travel < 34.5);
+  for (const contact of [open, close]) {
+    if (contact.kind !== "arm-contact") assert.fail(`Expected a confirmed arm hit, received ${contact.kind}`);
+    const { hitIds, inspectAt, travel } = contact;
+    assert.deepEqual(hitIds, [catchPiece.id]);
+    assert.ok(review.preview(inspectAt).arms?.some((arm) => arm.hitIds.includes(catchPiece.id)));
+    assert.ok(review.preview(travel).arms?.every((arm) => !arm.hitIds.length));
+  }
+
+  const envelope = projectSchema.parse({
+    ...fitted,
+    pieces: fitted.pieces.map((piece) => piece.id === catchPiece.id ? { ...piece, material: "roof" } : piece),
+  });
+  const inspection = inspectLidTravel(envelope, section.id);
+  const finding = inspection.findings.find(({ id }) => id === `stay/${fit.id}`)!;
+  assert.match(finding.detail, /Stay arm clearance needs review/);
+  assert.equal(finding.stayStop?.kind, "arm-unresolved");
+  const preview = lidTravelPose(inspection.review!.preview(finding.angle!),
+    inspection.stays.map(({ status }) => status), undefined, finding.stayStop);
+  assert.deepEqual(preview.stayArmReviewIds, [catchPiece.id]);
+  assert.equal(preview.stayArmReviewFitId, fit.id);
+  assert.equal(preview.stayArmHitIds, undefined);
 });
 
 test("format 49 stays reopen with their pin reach and without inferred arm dimensions", () => {

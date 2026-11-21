@@ -364,6 +364,7 @@ function PartMesh({
   onPickFittedFace,
   readOnly = false,
   interference = false,
+  clearanceReview = false,
   sinkOutletDrop,
 }: {
   piece: Piece;
@@ -383,6 +384,7 @@ function PartMesh({
   onPickFittedFace?: SceneProps["onPickFittedFace"];
   readOnly?: boolean;
   interference?: boolean;
+  clearanceReview?: boolean;
 }) {
   const mesh = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
@@ -464,7 +466,8 @@ function PartMesh({
         invalidate();
     }
   });
-  const color = interference ? "#d64e39" : selected ? "#f2a16b" : piece.offcut ? "#b5ada0" : m.color;
+  const color = interference ? "#d64e39" : clearanceReview ? "#d29528"
+    : selected ? "#f2a16b" : piece.offcut ? "#b5ada0" : m.color;
   const size = piece.size.map((v) => v / 12) as V3;
   const metal = (
     <meshStandardMaterial color={color} metalness={0.65} roughness={0.45} />
@@ -881,6 +884,7 @@ function PlacedPart({
         fittedFacePicking={props.mode === "fit-face"}
         onPickFittedFace={props.onPickFittedFace}
         readOnly={props.readOnly || props.mode === "trace-wall"}
+        clearanceReview={props.lidPreview?.stayArmReviewIds?.includes(p.id)}
         interference={props.lidPreview?.interferenceIds?.includes(p.id) ||
           props.lidPreview?.stayArmHitIds?.includes(p.id) ||
           (props.lidPreview?.piece.id === p.id && !!(props.lidPreview.siteFaceHits?.length || props.lidPreview.interferenceIds?.length)) ||
@@ -1719,7 +1723,8 @@ function World(props: SceneProps) {
             <mesh key={index} position={arm.position.map((value) => value / 12) as V3}
               rotation={arm.rotation} renderOrder={9} raycast={() => null}>
               <boxGeometry args={arm.size.map((value) => value / 12) as V3} />
-              <meshBasicMaterial color={arm.hitIds.length ? "#b2482d" : "#316d64"}
+              <meshBasicMaterial color={arm.hitIds.length ? "#b2482d"
+                : props.lidPreview?.stayArmReviewFitId === link.id ? "#d29528" : "#316d64"}
                 transparent opacity={0.8} depthTest={false} depthWrite={false} />
             </mesh>
           ))}

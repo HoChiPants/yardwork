@@ -175,7 +175,7 @@ A saved wall face and terminal point determine the distance from the wall. For p
 
 ## November 20, 2026 · Folding lid stays
 
-The banquette lid reviews a measured two-arm linkage against the actual cabinet and lid. Opening and closing playback checks pin reach continuously and can inspect the setup through 90°. Optional measured arm widths and thicknesses let you preview both rectangular arms and stop playback at modeled part overlaps found at 0.5° intervals. A change to a mount, lid or hinge axis requires a measurement review. The shopping list offers the exact [left-hand 19834](https://www.homedepot.com/p/204485795) and [right-hand 19844](https://www.homedepot.com/p/204485796) packs through explicit selection. Verify clearance between sampled poses, mounting brackets and pivots, locking action, pinch protection and loads on the actual hardware.
+The banquette lid reviews a measured two-arm linkage against the modeled cabinet and lid. Opening and closing playback checks pin reach continuously and can inspect the setup through 90°. Enter measured widths and thicknesses to check the two rectangular arm bodies across the swing. Playback stops at modeled interference or an interval that needs review. A change to a mount, lid or hinge axis requires a measurement review. The shopping list offers the exact [left-hand 19834](https://www.homedepot.com/p/204485795) and [right-hand 19844](https://www.homedepot.com/p/204485796) packs through explicit selection. Verify the clearances, brackets, pivots, locking action, pinch protection and loads on the actual hardware.
 
 ## November 20, 2026 · Through-cuts
 

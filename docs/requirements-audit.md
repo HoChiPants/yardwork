@@ -2,6 +2,12 @@
 
 November 21, 2026. This ledger records the tested versions and workflows at each checkpoint.
 
+## Folding stay clearance across the swing, format 118
+
+The measured linkage bounds how far each arm can move between angles. Playback checks the full interval in either direction and stops at confirmed geometry overlap or at an interval that needs review. The latter uses an amber highlight for the affected stay and parts. A synthetic obstruction that cleared all the old half-degree samples stopped opening between 34° and 34.25° and closing between 34.25° and 34.5°. A trimmed retained solid cleared the arm, and an approximate envelope at the obstruction produced an amber review. The fixture tests the geometric solver. Inspect physical brackets, pivots, pinch protection, release and loads separately. [Separating-axis reference](https://www.geometrictools.com/Documentation/MethodOfSeparatingAxes.pdf)
+
+The production builds, 1,634 domain tests, five example checks, 15 Chrome motion cases and one browser-only clearance review passed. An isolated Docker volume reopened the measured stay after restart and reproduced the narrow obstruction in both directions.
+
 ## Planner switching and native qualification, format 118
 
 On Apple M2 with native Ollama 0.40.17 and Qwen2.5 3B, the original kitchenette prompt produced three straight storage benches with opening seats and no backs in 9.2 seconds. The separate L-banquette check and seven family and refinement scenarios passed using the same engine. In Chrome, switching from a running model follow-up to the built-in planner preserved a manually edited 90-inch run. The built-in preview showed the requested 22-inch seat height after about 0.6 seconds. The model request canceled, and the resulting 42-part layout saved and reopened at revision 1. Browser tests also passed with a late model result and with extra text typed while the request was running. The published browser workshop uses the built-in planner. These timings came from the test hardware and prompts. [Ollama response fields](https://docs.ollama.com/api/chat)

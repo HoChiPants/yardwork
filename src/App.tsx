@@ -2918,6 +2918,7 @@ export function App() {
                 {activeLidPreview.stayArmHitIds?.length
                   ? activeLidPreview.stayArmContactAhead ? " · Stay arm contact ahead" : " · Stay arm overlap in red"
                   : ""}
+                {!!activeLidPreview.stayArmReviewIds?.length && " · Stay arm clearance needs review · Parts in amber"}
                 {activeLidPreview.outsideZoneFaces?.length ? ` · ${activeLidPreview.atLimit ? "Reached" : "outside"} ${activeLidPreview.outsideZoneFaces.join(", ")}${activeLidPreview.atLimit ? " work-zone limit" : ""}` : ""}
                 {activeLidPreview.focusPair && ` · Focused on ${activeLidPreview.focusPair.map((id) => partLabel(project, id)).join(" and ")}`}
               </span>

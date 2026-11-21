@@ -65,6 +65,8 @@ export type LidPreview = {
   stayLinks?: LidStayLink[];
   stayArmHitIds?: string[];
   stayArmContactAhead?: boolean;
+  stayArmReviewIds?: string[];
+  stayArmReviewFitId?: string;
 };
 /** The measured pivot is physical endpoint A; a provisional pivot is the span center. */
 export function lidAxisSegment(preview: LidPreview): [V3, V3] {

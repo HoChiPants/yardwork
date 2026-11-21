@@ -630,8 +630,8 @@ test("measured stay arms stop lid playback in both directions and survive export
   const obstacle = part(
     "SYNTHETIC stay arm obstacle",
     "stud",
-    [0.125, 0.25, 0.25],
-    [0.11, 12.776, -2.865],
+    [0.05, 0.006, 0.006],
+    [0, 13.2525906, -1.6010801],
     study.steps[0].id,
     "Test",
   );
@@ -663,14 +663,14 @@ test("measured stay arms stop lid playback in both directions and survive export
   });
   await panel
     .getByRole("spinbutton", { name: "Cabinet arm width (in)", exact: true })
-    .fill("0.5");
+    .fill("0.004");
   await save.click();
   await expect(panel.getByRole("alert")).toContainText(
     "Enter the width and thickness of both arms",
   );
   for (const [label, value] of [
     ["Cabinet arm thickness", "0.125"],
-    ["Lid arm width", "0.5"],
+    ["Lid arm width", "0.004"],
     ["Lid arm thickness", "0.125"],
   ]) {
     await panel
@@ -688,6 +688,8 @@ test("measured stay arms stop lid playback in both directions and survive export
   );
   const motion = reviewLidStayFit(saved, saved.lidStayFits![0]);
   if (motion.state !== "current") throw Error(motion.reason);
+  expect(motion.playbackLimit(0, 90)!.travel).toBeGreaterThan(34);
+  expect(motion.playbackLimit(90, 0)!.travel).toBeLessThan(34.5);
   await panel
     .getByRole("button", { name: "Review lid travel", exact: true })
     .click();
@@ -741,7 +743,7 @@ test("measured stay arms stop lid playback in both directions and survive export
   await page.getByRole("button", { name: /^Build guide Markdown/ }).click();
   const guide = await readFile((await (await pending).path())!, "utf8");
   expect(guide).toContain(`Modeled stay arm hits ${label}`);
-  expect(guide).toContain("Cabinet arm 0.5 in wide × 0.125 in thick");
+  expect(guide).toContain("Cabinet arm 0.004 in wide × 0.125 in thick");
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   const checklist = await openClearanceChecklist(page);
   await checklist.getByRole("button", { name: /Lid travel.*Modeled stay arm hits/ }).click();

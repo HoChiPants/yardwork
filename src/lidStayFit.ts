@@ -4,7 +4,6 @@ import { bindingHash } from "./ideaBindingState";
 import { lidWeightPose } from "./lidMotion";
 import {
   reviewStayClearance,
-  stayClearanceStep,
   type StayArmContact,
   type StayArmPreview,
 } from "./lidStayClearance";
@@ -123,6 +122,19 @@ export type LidStayLink = {
   arms?: StayArmPreview[];
 };
 
+function bendExcursion(length: number, opposite: number, middle: number, low: number, high: number) {
+  if (low <= epsilon) return Math.PI;
+  const difference = length ** 2 - opposite ** 2;
+  const bend = (distance: number) => Math.acos(Math.max(-1, Math.min(1,
+    (difference + distance ** 2) / (2 * length * distance),
+  )));
+  const atMiddle = bend(middle);
+  // The cosine has one possible interior extremum as pin spacing changes.
+  const extremum = difference > 0 ? Math.sqrt(difference) : 0;
+  return Math.max(Math.abs(bend(low) - atMiddle), Math.abs(bend(high) - atMiddle),
+    extremum > low && extremum < high ? Math.abs(bend(extremum) - atMiddle) : 0);
+}
+
 function linkReview(
   project: Project,
   frame: ReturnType<typeof mountFrame>,
@@ -137,6 +149,13 @@ function linkReview(
   const radial = lever.clone().sub(axial);
   const tangent = axis.clone().cross(radial).negate();
   const offset = hinge.clone().add(axial).sub(base);
+  const axialOffset = offset.dot(axis);
+  if (Math.abs(axialOffset) > epsilon)
+    return {
+      state: "needs-measurement" as const,
+      reason: "Align the two measured pin centers in one plane perpendicular to the lid hinge axis.",
+    };
+  offset.addScaledVector(axis, -axialOffset);
   const constant = offset.lengthSq() + radial.lengthSq();
   const cosine = 2 * offset.dot(radial);
   const sine = 2 * offset.dot(tangent);
@@ -162,7 +181,7 @@ function linkReview(
     const low = Math.min(from, to),
       high = Math.max(from, to);
     const points = [from, to];
-    if (Math.hypot(cosine, sine) > epsilon) {
+    if (cosine || sine) {
       const first = Math.ceil((low * radians - phase) / Math.PI);
       const last = Math.floor((high * radians - phase) / Math.PI);
       for (let i = first; i <= last; i++) {
@@ -201,9 +220,11 @@ function linkReview(
     return null;
   }
   function preview(angle: number): LidStayLink {
-    const upper = hinge
+    const upper = base
       .clone()
-      .add(lever.clone().applyAxisAngle(axis, -angle * radians));
+      .add(offset)
+      .addScaledVector(radial, Math.cos(angle * radians))
+      .addScaledVector(tangent, Math.sin(angle * radians));
     const delta = upper.clone().sub(base);
     const distance = delta.length();
     const state = stateAt(distance);
@@ -226,13 +247,6 @@ function linkReview(
       distance,
     };
   }
-  const coplanar = Math.abs(offset.dot(axis)) <= epsilon;
-  if (!coplanar)
-    return {
-      state: "needs-measurement" as const,
-      reason:
-        "Align the two measured pin centers in one plane perpendicular to the lid hinge axis.",
-    };
   const distances = pointsBetween(0, fit.testAngle).map(distanceAt);
   const clearance = reviewStayClearance(
     project,
@@ -240,6 +254,20 @@ function linkReview(
     closed,
     base,
     (angle) => preview(angle).points,
+    (from, to, middleDistance) => {
+      const pinTravel = 2 * radial.length() * Math.sin(Math.abs(to - from) * radians / 4);
+      const relative = pinTravel >= middleDistance ? Math.PI : Math.asin(pinTravel / middleDistance);
+      const distances = pointsBetween(from, to).map(distanceAt);
+      const low = Math.max(0, Math.min(...distances) - epsilon);
+      const high = Math.max(...distances) + epsilon;
+      return {
+        pinTravel,
+        angles: [
+          relative + bendExcursion(fit.fixedArm, fit.lidArm, middleDistance, low, high),
+          relative + bendExcursion(fit.lidArm, fit.fixedArm, middleDistance, low, high),
+        ],
+      };
+    },
   );
   const limit = playbackLimit(0, fit.testAngle);
   return {
@@ -255,6 +283,7 @@ function linkReview(
       : null,
     playbackLimit(from: number, to: number) {
       const reach = playbackLimit(from, to);
+      if (reach?.travel === from && preview(from).state !== "reachable") return reach;
       return clearance?.playbackLimit(from, reach?.travel ?? to) ?? reach;
     },
     preview(angle: number) {
@@ -330,7 +359,10 @@ export function addMissingLidStays(
 const range = (values: readonly number[]) =>
   values.map(formatPreciseInches).join(" to ");
 export function armContactText(project: Project, hit: StayArmContact) {
-  return `Modeled stay arm hits ${hit.hitIds.map((id) => partLabel(project, id)).join(", ")} near ${Number(hit.inspectAt.toFixed(2))}°.`;
+  const parts = hit.hitIds.map((id) => partLabel(project, id)).join(", ");
+  const angle = Number(hit.inspectAt.toFixed(2));
+  return hit.kind === "arm-contact" ? `Modeled stay arm hits ${parts} near ${angle}°.`
+    : `Stay arm clearance needs review near ${angle}° around ${parts}.`;
 }
 export function lidStayFitGuideRows(project: Project) {
   return (project.lidStayFits ?? []).map((fit) => {
@@ -348,7 +380,7 @@ export function lidStayFitGuideRows(project: Project) {
             review.armClearance
               ? armHit
                 ? armContactText(project, armHit)
-                : `No modeled arm overlap found at ${stayClearanceStep}° intervals through ${Number((review.limit?.travel ?? fit.testAngle).toFixed(2))}°. Check clearances between those angles.`
+                : `Modeled stay arms have clearance throughout the tested swing through ${Number((review.limit?.travel ?? fit.testAngle).toFixed(2))}°.`
               : "Add measured arm dimensions to review overlap.",
           ].join(" ")
         : review.reason;

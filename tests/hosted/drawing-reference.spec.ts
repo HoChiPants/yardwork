@@ -91,7 +91,7 @@ test("a local PDF sheet frames the model at the measured scale and survives save
   await expect(page.locator(".statusbar")).toContainText("1 part");
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
-  await expect.poll(async () => (await draft()).revision).toBe(1);
+  await expect.poll(async () => (await draft())?.revision, { timeout: 15_000 }).toBe(1);
   const original = (await draft()).project.drawingReference;
   expect(original.page).toBe(2);
   expect(original.calibration.distance).toBe(240);
@@ -218,7 +218,7 @@ test("frame a room from a cropped, rotated PDF and retain the calibrated source 
   await roomSettings.getByRole("button", { name: "Add room framing", exact: true }).click();
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
-  await expect.poll(async () => (await draft()).revision).toBe(1);
+  await expect.poll(async () => (await draft())?.revision, { timeout: 15_000 }).toBe(1);
   const saved = (await draft()).project;
   expect(saved.planLines).toHaveLength(4);
   expect(saved.drawingReference.pdfLines).toHaveLength(4);

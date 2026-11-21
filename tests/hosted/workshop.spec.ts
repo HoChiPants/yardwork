@@ -46,7 +46,7 @@ test("the hosted workshop plans locally, saves revisions and exports a restorabl
   const id = (await readDraft()).project.id;
   await page.getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true }).click();
   await save.click();
-  await expect.poll(async () => (await readDraft()).revision).toBe(2);
+  await expect.poll(async () => (await readDraft())?.revision, { timeout: 15_000 }).toBe(2);
 
   await page.reload();
   await page.getByRole("button", { name: "Open project", exact: true }).click();

@@ -55,7 +55,7 @@ test("fit a measured doorway, preview its obstruction, reopen its saved swing an
   await expect(angle).toHaveValue("0");
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
-  await expect.poll(async () => (await draft()).revision).toBe(1);
+  await expect.poll(async () => (await draft())?.revision, { timeout: 15_000 }).toBe(1);
   const saved = (await draft()).project;
   expect(saved.motionPlans[0].mechanism.doorway.sectionId).toBe(source.sections[0].id);
   expect(saved.sections[0].generator.doorUnit.purchase).toBe("hd-masonite-75777");

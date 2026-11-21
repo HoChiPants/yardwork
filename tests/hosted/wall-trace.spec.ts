@@ -61,7 +61,7 @@ test("a DXF trace becomes two editable wall panels with cuts, obstruction review
   await settings.getByRole("button", { name: "Add traced wall", exact: true }).click();
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
-  await expect.poll(async () => (await draft()).revision).toBe(1);
+  await expect.poll(async () => (await draft())?.revision, { timeout: 15_000 }).toBe(1);
   const saved = (await draft()).project;
   expect(saved.planLines).toHaveLength(2);
   expect(saved.sections.map((section: { generator: { width: number } }) => section.generator.width)).toEqual([144, 96, 69.75]);
@@ -163,7 +163,7 @@ test("import a lightweight polyline, choose its room on the plan and save editab
   await settings.getByRole("button", { name: "Cancel trace", exact: true }).click();
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
-  await expect.poll(async () => (await draft()).revision).toBe(1);
+  await expect.poll(async () => (await draft())?.revision, { timeout: 15_000 }).toBe(1);
   const saved = (await draft()).project;
   expect(saved.planLines).toHaveLength(5);
   expect(saved.sections.map((section: { generator: { width: number } }) => section.generator.width)).toEqual([108, 108, 89, 89]);

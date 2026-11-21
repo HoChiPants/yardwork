@@ -16,6 +16,7 @@ import { windowWallScope } from "./windowWall";
 import { reviewWaterRun } from "./wallWater";
 import { fittingLabel, reviewWaterFitting } from "./waterFittings";
 import { reviewWaterPressure } from "./waterPressure";
+import { reviewWaterStop } from "./waterStops";
 import { longSupportSpan, waterSupportNetwork, waterSupportSpanLine } from "./waterSupportNetwork";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
@@ -33,6 +34,7 @@ export type BuildQuestion =
   | { kind: "wall-water"; subject?: string }
   | { kind: "water-fitting"; tee?: boolean }
   | { kind: "water-pressure" }
+  | { kind: "water-stop" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
@@ -49,6 +51,7 @@ export type BuildQuestionAction =
   | { kind: "wall-water"; runId?: string }
   | { kind: "water-fitting"; fittingId?: string; tee?: boolean }
   | { kind: "water-pressure"; recordId?: string }
+  | { kind: "water-stop"; stopId?: string }
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
@@ -103,6 +106,7 @@ const wallWaterQuestion = /^(?:(?:plan|route|add|lay out) (?:a |the )?(?:pex|wat
 const fittingQuestion = /^(?:(?:how (?:do|can|should) i )?(?:connect|join) (?:two |my |these |the )?(?:pex|water) (?:runs|lines|pipes)(?: (?:at|around) (?:a |the )?corner)?|(?:review|check|plan) (?:the |my |a )?pex (?:fittings?|connections?))$/i;
 const teeQuestion = /^(?:(?:how (?:do|can|should) i )?(?:branch|tee off) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)|(?:add|plan) (?:a |the )?tee (?:in|into|on|to) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)(?: for .+)?)$/i;
 const pressureQuestion = /^(?:(?:how (?:do|can|should) i )?pressure[- ]test (?:the |my |a )?(?:pex|water(?: supply)?) (?:main|runs?|lines?|pipes?|system)|(?:log|record|review|check|show) (?:a |the |my )?(?:pex |water )?pressure tests?)$/i;
+const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
 const waterSupportQuestion = /^(?:(?:how (?:do|can|should) i )support (?:the |my )?(?:pex|water) (?:runs?|lines?|pipes?)|(?:check|review|show|plan) (?:the |my )?(?:pex |water line )(?:supports?|support spacing))$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
@@ -128,6 +132,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (fittingQuestion.test(text)) return { kind: "water-fitting" };
   if (teeQuestion.test(text)) return { kind: "water-fitting", tee: true };
   if (pressureQuestion.test(text)) return { kind: "water-pressure" };
+  if (waterStopQuestion.test(text)) return { kind: "water-stop" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
   const motion = motionQuestion.exec(text);
@@ -475,6 +480,17 @@ export function answerBuildQuestion(
         link: question.tee
           ? { label: "Branch a PEX main", action: { kind: "water-fitting", tee: true } }
           : { label: "Connect PEX runs", action: { kind: "water-fitting" } },
+      };
+    case "water-stop":
+      return {
+        title: "Fit a fixture shutoff",
+        detail: "Choose an open ½ in PEX stub-out. Enter its exposed length, outlet direction and service clearances to preview the angle stop and pipe cut.",
+        rows: (project.waterStops ?? []).map((stop) => ({
+          id: stop.id, title: stop.name,
+          detail: reviewWaterStop(project, stop).problem ?? "The saved valve and its entered access spaces fit the current model.",
+          link: { label: "Review this shutoff", action: { kind: "water-stop", stopId: stop.id } },
+        })),
+        link: { label: "Open fixture shutoffs", action: { kind: "water-stop" } },
       };
     case "water-pressure":
       return {

@@ -68,6 +68,8 @@ import { longSupportSpan, waterSupportGuideLines, waterSupportNetwork, waterSupp
 import { waterSupportReference } from "./waterSupportReference";
 import { reviewWaterRun, waterRunGuide } from "./wallWater";
 import { reviewWaterFitting, waterFittingGuide } from "./waterFittings";
+import { reviewWaterStop, waterStopGuide } from "./waterStops";
+import { waterStop } from "./waterStopReference";
 import { maxFittingInstructions, maxInsertionChart, waterFittingProducts } from "./waterFittingReference";
 import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { reviewShingleRoof, roofAreaText, roofPitchText } from "./shingleRoof";
@@ -794,15 +796,23 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       ...(p.pieces.some(({ id }) => id === run.pipeId) && { pieceId: run.pipeId }),
     });
   }
-  const checkedWaterFittings = new Set<string>();
+  const checkedPipeHardware = new Set<string>();
   const waterFittingsReviewed = new Map<string, ReturnType<typeof reviewWaterFitting>>();
   for (const fitting of p.waterFittings ?? []) {
     const review = reviewWaterFitting(p, fitting);
     waterFittingsReviewed.set(fitting.id, review);
-    if (review.layout) checkedWaterFittings.add(fitting.pieceId);
+    if (review.layout) checkedPipeHardware.add(fitting.pieceId);
     if (review.problem) findings.push({
       id: `water-fitting-${fitting.id}`, severity: "warning", title: `Review PEX connection · ${waterFittingProducts[fitting.materialId].model}`,
       detail: review.problem, ...(p.pieces.some(({ id }) => id === fitting.pieceId) && { pieceId: fitting.pieceId }),
+    });
+  }
+  for (const stop of p.waterStops ?? []) {
+    const review = reviewWaterStop(p, stop);
+    if (review.layout) checkedPipeHardware.add(stop.pieceId);
+    if (review.problem) findings.push({
+      id: `water-stop-${stop.id}`, severity: "warning", title: `Review fixture shutoff · ${stop.name}`,
+      detail: review.problem, ...(p.pieces.some(({ id }) => id === stop.pieceId) && { pieceId: stop.pieceId }),
     });
   }
   if (p.waterRuns?.length) {
@@ -1376,7 +1386,7 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     });
   // Current fittings already checked their leg volumes against the model, with
   // their intentionally seated pipes allowed inside the sockets.
-  const collisionSolids = active.filter(({ id }) => !checkedWaterFittings.has(id)).map((piece) => {
+  const collisionSolids = active.filter(({ id }) => !checkedPipeHardware.has(id)).map((piece) => {
     try {
       return { piece, solid: prepareCollisionSolid(piece) };
     } catch {
@@ -2180,6 +2190,10 @@ export function guideMarkdown(p: Project) {
       waterSupportGuideLines(waterSupportNetwork(p)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[PEX support guidance](${pexInstallation}) · [IRC piping support](${waterSupportReference.code}) · [HoldRite installation](${waterSupportReference.instructions})\n` : "") +
+    (p.waterStops?.length ? "\n\n## Fixture shutoffs\n\n" +
+      p.waterStops.flatMap((stop) => waterStopGuide(p, stop)).map((line) =>
+        "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[SharkBite Max stop specifications](${waterStop.spec}) · [Installation](${waterStop.instructions}) · [IRC fixture access reference](${waterStop.code})\n` : "") +
     (p.waterPressureTests?.length ? "\n\n## Water pressure test records\n\n" + waterPressureGuideStep +
       p.waterPressureTests.map((test) => {
         const clean = (line: string) => line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&");

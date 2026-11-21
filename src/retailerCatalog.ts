@@ -18,6 +18,7 @@ import { interiorDoor } from "./doorWall";
 import { nailShield, pexCutter, pexInstallation, pexPipes, pexSpec, pexStockLength, wallWaterReviewedAt, type PexPipeId } from "./wallWaterReference";
 import { maxFittingInstructions, maxFittingSpec, maxInsertionChart, waterDepthGauge, waterFittingDimensions, waterFittingIds, waterFittingName, waterFittingProduct, waterFittingsReviewedAt, waterTeesReviewedAt } from "./waterFittingReference";
 import { waterSupportIds, waterSupportName, waterSupportProducts, waterSupportReference } from "./waterSupportReference";
+import { waterStop, waterStopDepthNote } from "./waterStopReference";
 import { cedarbrookFoil } from "./saunaFoilReference";
 import { saunaCeilingBatt, saunaCeilingJoists, saunaCeilingJoistSize, saunaCeilingReviewedAt } from "./saunaCeilingReference";
 import { owensCorningWallBatt as wallBatt } from "./saunaWallReference";
@@ -146,6 +147,7 @@ export const roleQualificationSchema = z.strictObject({
     "pipeNailShield",
     "pexConnection",
     "pexStudSupport",
+    "pexFixtureStop",
     "closetRod",
     "closetRodSupport",
     "storageLidHinge",
@@ -3418,6 +3420,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       limitToQualifiedRoles: true, discrepancies: [], capabilities: [], toolCapabilityEvidence: [],
     };
   }),
+  {
+    id: waterStop.id, name: waterStop.name, manufacturer: "SharkBite", manufacturerPartNumber: waterStop.model,
+    identityBasis: "manufacturer-part", category: "equipment", status: "reviewed-specs", verifiedAt: waterStop.reviewedAt,
+    profile: profile("equipment", waterStop.size, 1, { finish: "Chrome-plated brass" }),
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [waterStop.listing] },
+    offers: [hd(waterStop.internet, waterStop.model, waterStop.sku)],
+    sources: [
+      { url: waterStop.listing, verifiedAt: waterStop.reviewedAt, note: waterStopDepthNote },
+      { url: waterStop.retailerManual, verifiedAt: waterStop.reviewedAt, note: "The official Max instructions linked by the listing confirm the 1 in mark." },
+      { url: waterStop.product, verifiedAt: waterStop.reviewedAt, note: "Exact push inlet, compression outlet, compatible pipe and operating limits." },
+      { url: waterStop.spec, verifiedAt: waterStop.reviewedAt, note: "Exact nominal body dimensions, 1 in insertion and 125 psi working pressure." },
+      { url: waterStop.instructions, verifiedAt: waterStop.reviewedAt, note: "Max stop instructions cover stub preparation, depth marks and final leak review." },
+    ],
+    roleQualifications: [{ role: "pexFixtureStop", scope: "One accessible ½ in CTS fixture stub-out with a ⅜ in compression outlet.",
+      sourceRefs: [waterStop.spec, waterStop.instructions],
+      requirements: ["Verify the delivered valve, operating reach, hose engagement and service space."] }],
+    limitToQualifiedRoles: true, discrepancies: [], capabilities: [], toolCapabilityEvidence: [],
+  },
   ...waterSupportIds.map((id): RetailerProduct => {
     const record = waterSupportProducts[id], spec = waterSupportReference;
     const url = `https://www.homedepot.com/p/${record.internet}`;

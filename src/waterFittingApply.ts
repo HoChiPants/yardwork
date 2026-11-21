@@ -86,9 +86,11 @@ export function previewSplitWaterMain(project: Project, input: unknown) {
 
   const reachesEnd = ({ runId, end }: WaterRunEnd) => runId === main.id && end === "end";
   const neighbors = (project.waterFittings ?? []).filter((fitting) => waterFittingPorts(fitting).some(reachesEnd));
-  const neighboringPieces = project.pieces.filter(({ id }) => neighbors.some(({ pieceId }) => pieceId === id));
-  if (neighbors.length) candidate = { ...candidate,
-    pieces: candidate.pieces.filter(({ id }) => !neighbors.some(({ pieceId }) => pieceId === id)) };
+  const stops = (project.waterStops ?? []).filter(({ port }) => reachesEnd(port));
+  const attachedIds = new Set([...neighbors, ...stops].map(({ pieceId }) => pieceId));
+  const neighboringPieces = project.pieces.filter(({ id }) => attachedIds.has(id));
+  if (attachedIds.size) candidate = { ...candidate,
+    pieces: candidate.pieces.filter(({ id }) => !attachedIds.has(id)) };
 
   const left = previewWaterRun(candidate, { ...waterRunDraft(main), end: endA }, main.id);
   const right = previewWaterRun(left.project, {
@@ -96,12 +98,13 @@ export function previewSplitWaterMain(project: Project, input: unknown) {
     reuse: rightOffcut ? true : main.reuse,
   }, undefined, rightOffcut);
   const reattach = (port: WaterRunEnd) => reachesEnd(port) ? { ...port, runId: right.run.id } : port;
-  candidate = neighbors.length ? {
+  candidate = attachedIds.size ? {
     ...right.project, pieces: [...right.project.pieces, ...neighboringPieces],
     waterFittings: right.project.waterFittings?.map((fitting) => ({
       ...fitting, a: reattach(fitting.a), b: reattach(fitting.b),
       ...(fitting.branch && { branch: { ...fitting.branch, port: reattach(fitting.branch.port) } }),
     })),
+    waterStops: right.project.waterStops?.map((stop) => ({ ...stop, port: reattach(stop.port) })),
   } : right.project;
   const result = previewWaterFitting(candidate, {
     a: { runId: left.run.id, end: "end" }, b: { runId: right.run.id, end: "start" },

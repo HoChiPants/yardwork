@@ -71,6 +71,7 @@ function preparationScope(project: Project) {
     ...(project.projectCode ? { projectCode: project.projectCode } : {}),
     ...(project.waterRuns?.length ? { waterRuns: project.waterRuns } : {}),
     ...(project.waterFittings?.length ? { waterFittings: project.waterFittings } : {}),
+    ...(project.waterStops?.length ? { waterStops: project.waterStops } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),

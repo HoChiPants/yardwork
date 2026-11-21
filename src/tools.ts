@@ -2,6 +2,8 @@ import { openingSilicone } from "./openingAirSealReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { isPexPipe, pexCutter, pexInstallation } from "./wallWaterReference";
 import { reviewWaterFitting } from "./waterFittings";
+import { reviewWaterStop } from "./waterStops";
+import { waterStop } from "./waterStopReference";
 import { waterTestManufacturer } from "./waterPressure";
 import { maxFittingInstructions, waterDepthGauge } from "./waterFittingReference";
 import { reviewWaterRun } from "./wallWater";
@@ -207,6 +209,11 @@ const definitions: Record<
     name: "Water test gauge and isolation equipment",
     review: "Record the gauge’s working limit separately from its scale. Confirm increments, the actual gauge condition and the ratings of equipment included in the isolated section with the installer.",
     referenceUrls: [waterTestManufacturer.url],
+  },
+  "fixture-hose-wrench": {
+    name: "Check wrench access at the fixture hose",
+    review: "Use the connector maker’s wrench and tightening instructions for the delivered supply hose. Verify access without straining the push joint.",
+    referenceUrls: [waterStop.instructions],
   },
   "metal-cut": {
     name: "Shorten the selected metal rod",
@@ -803,6 +810,14 @@ export function toolChecklist(
       kind: "piece", id: fitting.pieceId,
       reason: `${layout.product.model} · ${layout.positions.length} pipe ends to seat and check.`,
     });
+  }
+  for (const stop of project.waterStops ?? []) {
+    if (!reviewWaterStop(project, stop).layout) continue;
+    add("pex-insertion-mark", {
+      kind: "piece", id: stop.pieceId, reason: `${stop.name} · Mark the valve insertion depth.`,
+    });
+    add("fixture-hose-wrench", { kind: "piece", id: stop.pieceId, reason: stop.name },
+      "conditional", "When the selected supply-hose instructions call for wrench tightening.");
   }
   for (const piece of project.pieces) {
     const m = material(piece.material);

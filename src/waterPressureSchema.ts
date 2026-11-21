@@ -15,6 +15,7 @@ export const waterPressureInput = z.strictObject({
   waterSource: z.enum(["unknown", "potable", "other"]),
   boundaryConfirmed: fact,
   boundaryNotes: text(600),
+  stopExposure: z.enum(["unknown", "included", "excluded"]).optional(),
   workingPsi: positivePressure,
   setupLimitPsi: positivePressure,
   temperatureF: z.number().finite().min(-80).max(250).nullable(),
@@ -43,6 +44,7 @@ export const waterPressureTestSchema = waterPressureInput.extend({
     runs: z.array(z.strictObject({ id, pipeId: id, name: text(60).min(1), model: text(30).min(1) })).min(1).max(32),
     fittings: z.array(z.strictObject({ id, model: text(40).min(1) })).max(64),
     openEnds: z.array(z.strictObject({ runId: id, end: z.enum(["start", "end"]) })).max(64),
+    stops: z.array(z.strictObject({ id, name: text(60).min(1), runId: id, end: z.enum(["start", "end"]) })).max(64).optional(),
   }),
 });
 export type WaterPressureTest = z.infer<typeof waterPressureTestSchema>;

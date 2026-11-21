@@ -7,6 +7,8 @@ import { waterFittingProducts } from "./waterFittingReference";
 import { waterPressureInput, type WaterPressureInput, type WaterPressureTest } from "./waterPressureSchema";
 import { utahAdoptionVersions } from "./utahCodeSources";
 import type { CodeReviewRow } from "./projectCode";
+import { reviewWaterStop } from "./waterStops";
+import { waterStop } from "./waterStopReference";
 
 export const waterTestManufacturer = { title: "RWC Piping Systems Installation Guide · Testing", url: pexInstallation };
 const pexTemperature = {
@@ -52,6 +54,12 @@ export function waterPressureScope(project: Project, rootRunId: string) {
     if (!checked.layout) return { problem: `${fittingLabel(fitting.materialId)} · ${checked.problem}` };
   }
   const occupied = new Set(fittings.flatMap(({ ports }) => ports.map(waterPortKey)));
+  const stops = (project.waterStops ?? []).filter(({ port }) => connected.has(port.runId))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  for (const stop of stops) {
+    const checked = reviewWaterStop(project, stop);
+    if (!checked.layout) return { problem: `${stop.name} · ${checked.problem}` };
+  }
   for (const run of group) {
     if (occupied.has(waterPortKey({ runId: run.id, end: "start" })) ||
         occupied.has(waterPortKey({ runId: run.id, end: "end" }))) continue;
@@ -70,11 +78,13 @@ export function waterPressureScope(project: Project, rootRunId: string) {
       ]),
       fittings.map(({ fitting, ports }) => [fitting.id, fitting.pieceId, fitting.materialId, ports.map(waterPortKey),
         fitting.reach, fitting.branch?.reach ?? null, pose(fitting.pieceId)]),
+      ...(stops.length ? [stops.map(({ id, pieceId, port, face }) => [id, pieceId, waterPortKey(port), face, pose(pieceId)])] : []),
     ]),
     runs: group.map(({ id, pipeId, name, materialId }) => ({ id, pipeId, name, model: pexPipes[materialId].model })),
     fittings: fittings.map(({ fitting }) => ({ id: fitting.id, model: waterFittingProducts[fitting.materialId].model })),
     openEnds: group.flatMap(({ id }) => (["start", "end"] as const).map((end) => ({ runId: id, end })))
-      .filter((port) => !occupied.has(waterPortKey(port))),
+      .filter((port) => !occupied.has(waterPortKey(port)) && !stops.some((stop) => waterPortKey(stop.port) === waterPortKey(port))),
+    ...(stops.length ? { stops: stops.map(({ id, name, port }) => ({ id, name, ...port })) } : {}),
   };
   return { scope };
 }
@@ -105,6 +115,7 @@ function sameWaterScope(current: WaterPressureTest["scope"] | undefined, saved: 
     scope.runs.map(({ id, pipeId, model }) => [id, pipeId, model]),
     scope.fittings.map(({ id, model }) => [id, model]),
     scope.openEnds.map(waterPortKey),
+    (scope.stops ?? []).map(({ id, runId, end }) => [id, runId, end]),
   ];
   return JSON.stringify(ids(current)) === JSON.stringify(ids(saved));
 }
@@ -129,15 +140,21 @@ function pressureRows(project: Project, data: WaterPressureInput, scope: WaterPr
   const gauge = data.gaugeLimitPsi;
   const temperature = data.temperatureF;
   const inRatedBand = temperature !== null && temperature >= 33 && temperature <= 70;
+  const hasStops = !!scope.stops?.length;
+  const stopsExposed = hasStops && data.stopExposure === "included";
+  const stopsAccountedFor = !hasStops || stopsExposed ||
+    (data.stopExposure === "excluded" && data.boundaryConfirmed === "yes" && !!data.boundaryNotes);
   const limits = [
     { label: "weakest component", value: cap }, { label: "gauge working limit", value: gauge },
     { label: "gauge scale limit", value: data.gaugeScalePsi }, { label: "ambient PEX-B rating", value: inRatedBand ? 160 : null },
+    ...(stopsExposed ? [{ label: "modeled fixture shutoff", value: waterStop.maximumPsi }] : []),
   ];
-  const exceeded = limits.filter(({ value }) => peak !== null && value !== null && peak > value);
+  const observedMaximum = peak === null ? Math.max(0, ...readings) : Math.max(peak, ...readings);
+  const exceeded = limits.filter(({ value }) => value !== null && observedMaximum > value);
   const inconsistent = (lowestPsi !== null && [startPsi, endPsi].some((value) => value !== null && lowestPsi > value)) ||
     (peak !== null && readings.some((value) => value > peak));
   const setupReady = peak !== null && cap !== null && gauge !== null && data.gaugeScalePsi !== null && data.gaugeIncrementPsi !== null &&
-    !!data.gaugeReference && inRatedBand && !exceeded.length && !inconsistent;
+    !!data.gaugeReference && inRatedBand && stopsAccountedFor && !exceeded.length && !inconsistent;
   const fieldReady = !!data.testedOn && data.waterSource === "potable" &&
     data.boundaryConfirmed === "yes" && !!data.boundaryNotes && data.addedWater === "no" && data.leakage === "no";
   const fieldIssues = [
@@ -154,12 +171,18 @@ function pressureRows(project: Project, data: WaterPressureInput, scope: WaterPr
   add("limits", "Pressure and equipment limits",
     exceeded.length || inconsistent ? "discrepancy" : setupReady ? "measured-match" :
       temperature !== null && !inRatedBand ? "authority-review" : "needs-input",
-    exceeded.length ? `Peak ${psi(peak)} exceeds ${exceeded.map(({ label, value }) => `${label} (${psi(value)})`).join(", ")}.`
+    exceeded.length ? `Observed ${psi(observedMaximum)} exceeds ${exceeded.map(({ label, value }) => `${label} (${psi(value)})`).join(", ")}.`
       : inconsistent ? "Check the reading order. The overall peak must cover every reading and the final low cannot exceed either endpoint."
         : setupReady ? `Peak ${psi(peak)} is within the entered assembly and gauge limits and the documented 33–70 °F PEX-B rating.`
           : temperature !== null && !inRatedBand ? `The recorded ${temperature} °F is outside the reviewed 33–70 °F band. Confirm component ratings at the actual temperature.`
             : "Record the temperature, highest pressure, weakest component limit and the gauge’s range, working limit, increment and reference. The published 160 psi comparison covers 33–70 °F.",
-    [pexTemperature]);
+    [pexTemperature, ...(hasStops ? [{ title: "SharkBite Max fixture shutoff rating", url: waterStop.spec }] : [])]);
+  if (hasStops) add("fixture-stops", "Fixture shutoffs in test section",
+    !stopsAccountedFor ? "needs-input" : stopsExposed && observedMaximum > waterStop.maximumPsi ? "discrepancy" : "recorded-condition",
+    !stopsAccountedFor ? "Record whether the modeled stops saw the test pressure. Identify the actual isolation or preinstallation boundary in the field notes."
+      : stopsExposed ? `The modeled UR23036 has a ${waterStop.maximumPsi} psi rating. Its inlet sees supply pressure even with the handle closed.`
+        : "The installer recorded that these installed or planned stops were outside the pressurized section.",
+    [{ title: "SharkBite Max stop specifications", url: waterStop.spec }]);
   const context = project.projectCode;
   const dated = context?.region === "utah" && !!context.projectDate && context.projectDate >= utahAdoptionVersions[0].effectiveFrom &&
     context.projectDate <= utahWaterTestReviewedThrough && context.codePath !== "unknown" && context.work !== "unknown" &&
@@ -196,6 +219,9 @@ function pressureRows(project: Project, data: WaterPressureInput, scope: WaterPr
   const belowWorking = lowestPsi !== null && data.workingPsi !== null && lowestPsi < data.workingPsi;
   if (!listedFittings) add("manufacturer", "RWC push-to-connect sequence", "authority-review",
     "The modeled section has no connected fitting to identify the applicable fitting procedure.", [waterTestManufacturer]);
+  else if (stopsExposed) add("manufacturer", "RWC push-to-connect sequence", "discrepancy",
+    `The published 150 psi phases exceed the exposed UR23036 rating of ${waterStop.maximumPsi} psi. Review field isolation and the applicable procedure with the installer.`,
+    [waterTestManufacturer, { title: "SharkBite Max stop specifications", url: waterStop.spec }]);
   else if (wrongPhase || (hold !== null && hold < 60) || drop || disconnectedReadings || belowWorking || exceeded.length || fieldConflict)
     add("manufacturer", "RWC push-to-connect sequence", "discrepancy",
       drop ? "A decrease was recorded in the final hold. Keep the original readings and record the manufacturer's follow-up with the installer."
@@ -242,6 +268,8 @@ export function waterPressureObservations({ scope, ...test }: WaterPressureTest)
     `Test date · ${test.testedOn ?? "Unrecorded"} · Water source · ${test.waterSource === "unknown" ? "Unrecorded" : test.waterSource}`,
     `Saved section · ${scope.runs.map(({ name, model }) => `${name} (${model})`).join(", ")}${scope.fittings.length ? ` · Fittings · ${scope.fittings.map(({ model }) => model).join(", ")}` : ""}`,
     `Field isolation confirmed · ${status[test.boundaryConfirmed]}${test.boundaryNotes ? ` · ${test.boundaryNotes}` : ""}`,
+    ...(scope.stops?.length ? [`Fixture shutoffs · ${scope.stops.map(({ name }) => name).join(", ")} · ${test.stopExposure === "included"
+      ? "Exposed to test pressure" : test.stopExposure === "excluded" ? "Recorded outside pressure boundary" : "Exposure unrecorded"}`] : []),
     `Working pressure · ${psi(test.workingPsi)} · Peak · ${psi(test.peakPsi)} · Weakest setup rating · ${psi(test.setupLimitPsi)} · Water temperature · ${test.temperatureF === null ? "—" : `${test.temperatureF} °F`}`,
     `Gauge · ${test.gaugeReference || "Unrecorded"} · Scale limit ${psi(test.gaugeScalePsi)} · Working limit ${psi(test.gaugeLimitPsi)} · Increment ${psi(test.gaugeIncrementPsi)}`,
     ...waterTestPhaseFields.map(({ id, label }) => `${label} · ${psi(test[id].psi)} · ${minutes(test[id].minutes)}`),

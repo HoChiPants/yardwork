@@ -15,10 +15,13 @@ import { WindowWallFields, windowWallExample } from "./WindowWallFields";
 import { DoorOpeningFields, DoorwayPanel, doorwayExample } from "./DoorwayPanel";
 import { WallWaterPanel } from "./WallWaterPanel";
 import { WaterFittingPanel } from "./WaterFittingPanel";
+import { WaterStopPanel } from "./WaterStopPanel";
 import { WaterPressurePanel } from "./WaterPressurePanel";
 import { WaterSupportPanel } from "./WaterSupportPanel";
 import { removeWaterRun, waterRunGuide } from "./wallWater";
 import { removeWaterFitting, waterFittingGuide } from "./waterFittings";
+import { removeWaterStop, waterStopGuide } from "./waterStops";
+import { waterStop } from "./waterStopReference";
 import { reviewWaterPressure, waterPressureGuideStep, waterPressureObservations } from "./waterPressure";
 import { waterSupportGuideLines, waterSupportNetwork } from "./waterSupportNetwork";
 import { waterSupportReference } from "./waterSupportReference";
@@ -367,6 +370,7 @@ type Modal =
   | "wall-water"
   | "water-fitting"
   | "water-pressure"
+  | "water-stop"
   | "water-support"
   | "export"
   | "assistant"
@@ -709,6 +713,7 @@ export function App() {
   const [waterRunTarget, setWaterRunTarget] = useState<string>();
   const [waterFittingTarget, setWaterFittingTarget] = useState<string>();
   const [waterPressureTarget, setWaterPressureTarget] = useState<string>();
+  const [waterStopTarget, setWaterStopTarget] = useState<string>();
   const [waterFittingTee, setWaterFittingTee] = useState(false);
   const [snap, setSnap] = useState(true),
     [explode, setExplode] = useState(false),
@@ -1350,6 +1355,10 @@ export function App() {
         setWaterFittingTee(!!action.tee);
         setModal("water-fitting");
         break;
+      case "water-stop":
+        setWaterStopTarget(action.stopId);
+        setModal("water-stop");
+        return;
       case "water-pressure":
         setWaterPressureTarget(action.recordId);
         setModal("water-pressure");
@@ -3857,6 +3866,8 @@ export function App() {
               <button type="button" className="button secondary full" onClick={() => { setWaterRunTarget(undefined); setModal("wall-water"); }}>Plan a wall water line</button>
               {((project.waterRuns?.length ?? 0) >= 2 || !!project.waterFittings?.length) &&
                 <button type="button" className="button secondary full" onClick={() => { setWaterFittingTarget(undefined); setWaterFittingTee(false); setModal("water-fitting"); }}>Connect PEX runs</button>}
+              {!!(project.waterRuns?.some(({ materialId }) => materialId === waterStop.pipe) || project.waterStops?.length) &&
+                <button type="button" className="button secondary full" onClick={() => { setWaterStopTarget(undefined); setModal("water-stop"); }}>Fit a fixture shutoff</button>}
               {!!(project.waterRuns?.length || project.waterPressureTests?.length) &&
                 <button type="button" className="button secondary full" onClick={() => { setWaterPressureTarget(undefined); setModal("water-pressure"); }}>Water pressure test</button>}
               {!!project.waterRuns?.length &&
@@ -4127,6 +4138,11 @@ export function App() {
                   <h2>{piece.name}</h2>
                   <span className="tag">{material(piece.material).name}</span>
                 </div>
+                {project.waterStops?.some(({ pieceId }) => pieceId === piece.id) &&
+                  <button type="button" className="button secondary full" onClick={() => {
+                    setWaterStopTarget(project.waterStops?.find(({ pieceId }) => pieceId === piece.id)?.id);
+                    setModal("water-stop");
+                  }}>Review fixture shutoff</button>}
                 <label className="field">
                   Part name
                   <input
@@ -5274,7 +5290,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5377,6 +5393,26 @@ export function App() {
                 setPanel("sections");
                 setModal(null);
                 notify("Fitting removed. The pipe cuts stay in the plan.");
+              })} />}
+            {modal === "water-stop" && <WaterStopPanel project={project} initialStop={waterStopTarget}
+              onApply={(draft) => safe(() => {
+                if (current.current !== project) throw Error("The workspace changed. Preview the shutoff again.");
+                change(draft.project);
+                setStage(null);
+                setPlaying(false);
+                setExplode(false);
+                setMode("select");
+                inspectStock(draft.stop.pieceId);
+                setModal(null);
+                notify("Fixture shutoff and pipe cut added.");
+              })}
+              onRemove={(stop) => safe(() => {
+                change((live) => removeWaterStop(live, stop));
+                setSelected(null);
+                setStage(null);
+                setPanel("sections");
+                setModal(null);
+                notify("Shutoff removed. The pipe cut stays in the plan.");
               })} />}
             {modal === "water-pressure" && <WaterPressurePanel project={project} initialRecord={waterPressureTarget}
               onChange={(next) => { change(next); notify("Water test record added to the guide."); }} />}
@@ -6776,6 +6812,14 @@ export function App() {
             <h2>PEX fittings and insertion marks</h2>
             <ul>{exportGuide.waterFittings.flatMap((fitting) => waterFittingGuide(exportGuide, fitting)).map((line, i) => <li key={i}>{line}</li>)}</ul>
             <p><a href={maxInsertionChart}>Insertion chart</a>{" · "}<a href={maxFittingInstructions}>SharkBite installation</a></p>
+          </section>
+        )}
+        {!!exportGuide.waterStops?.length && (
+          <section className="water-stop-print">
+            <h2>Fixture shutoffs</h2>
+            <ul>{exportGuide.waterStops.flatMap((stop) => waterStopGuide(exportGuide, stop)).map((line, i) => <li key={i}>{line}</li>)}</ul>
+            <p><a href={waterStop.spec}>SharkBite Max stop specifications</a>{" · "}
+              <a href={waterStop.instructions}>Installation</a>{" · "}<a href={waterStop.code}>IRC fixture access reference</a></p>
           </section>
         )}
         {!!exportGuide.waterPressureTests?.length && (

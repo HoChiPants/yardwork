@@ -93,7 +93,7 @@ function PressureForm({ project, saved, onSave }: {
       <label className="field">Connected section from
         <select value={draft.rootRunId} disabled={!!saved} onChange={(event) => {
           const rootRunId = event.target.value;
-          setDraft((prev) => ({ ...prev, rootRunId, boundaryConfirmed: "unknown", boundaryNotes: "" }));
+          setDraft((prev) => ({ ...prev, rootRunId, boundaryConfirmed: "unknown", boundaryNotes: "", stopExposure: "unknown" }));
           setError("");
         }}>
           {runs.map((run) => <option key={run.id} value={run.id}>{run.name}</option>)}
@@ -123,6 +123,17 @@ function PressureForm({ project, saved, onSave }: {
           </label>
         </div>
         {yesNo("Field isolation verified", "boundaryConfirmed")}
+        {!!scope.stops?.length && <>
+          <label className="field">Fixture shutoffs during test
+            <select aria-describedby="fixture-test-boundary" value={draft.stopExposure ?? "unknown"}
+              onChange={(event) => update("stopExposure", event.target.value as WaterPressureInput["stopExposure"])}>
+              <option value="unknown">Unrecorded</option>
+              <option value="included">One or more exposed to test pressure</option>
+              <option value="excluded">All outside test boundary or installed later</option>
+            </select>
+          </label>
+          <p className="small-note" id="fixture-test-boundary">{scope.stops.map(({ name }) => name).join(", ")} · UR23036 rated 125 psi</p>
+        </>}
         <label className="field">Isolation and equipment notes
           <textarea rows={2} maxLength={600} value={draft.boundaryNotes} onChange={(event) => update("boundaryNotes", event.target.value)} />
         </label>

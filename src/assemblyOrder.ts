@@ -2,6 +2,7 @@ import { assemblyOrderRules } from "./assemblyStages";
 import type { Project, Step } from "./model";
 import { waterRunStageKey } from "./wallWater";
 import { waterFittingStageKey } from "./waterFittings";
+import { waterStopStageKey } from "./waterStops";
 import { waterFittingPorts } from "./waterFittingSchema";
 
 type NumberedStep = { step: Step; number: number };
@@ -123,6 +124,11 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
     for (const fitting of project.waterFittings ?? [])
       requireBefore(byOwner.get(fitting.id)?.get(waterFittingStageKey), waterReview);
     requireBefore(waterReview, finish);
+    for (const stop of project.waterStops ?? []) {
+      const fixture = byOwner.get(stop.id)?.get(waterStopStageKey);
+      requireBefore(waterReview, fixture);
+      requireBefore(fixture, finish);
+    }
   }
   for (const plan of project.restraintPlans) {
     if (plan.receiver && stageByMember.has(plan.receiver.pieceId))

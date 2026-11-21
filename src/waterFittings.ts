@@ -19,7 +19,7 @@ export const fittingLabel = (id: WaterFittingId) =>
 
 type FittingPose = Pick<Piece, "material" | "position" | "rotation" | "size">;
 
-function readPort(project: Project, port: WaterRunEnd) {
+export function readWaterRunPort(project: Project, port: WaterRunEnd) {
   const run = project.waterRuns?.find(({ id }) => id === port.runId);
   if (!run) throw Error("One of the straight pipe runs is missing.");
   const checked = reviewWaterRun(project, run);
@@ -32,7 +32,7 @@ function readPort(project: Project, port: WaterRunEnd) {
   return { run, port, direction, selected, opposite };
 }
 
-type Port = ReturnType<typeof readPort>;
+type Port = ReturnType<typeof readWaterRunPort>;
 
 function checkPortsAvailable(project: Project, ports: WaterRunEnd[], editing?: string) {
   if (new Set(ports.map(({ runId }) => runId)).size !== ports.length)
@@ -40,6 +40,8 @@ function checkPortsAvailable(project: Project, ports: WaterRunEnd[], editing?: s
   const keys = new Set(ports.map(waterPortKey));
   if (project.waterFittings?.some((row) => row.id !== editing && waterFittingPorts(row).some((port) => keys.has(waterPortKey(port)))))
     throw Error("A selected pipe end already belongs to another fitting. Choose a free endpoint.");
+  if (project.waterStops?.some(({ port }) => keys.has(waterPortKey(port))))
+    throw Error("A selected pipe end already has a fixture shutoff. Choose a free endpoint.");
 }
 
 function centerlineOffset(first: Port, second: Port) {
@@ -76,8 +78,8 @@ function teeChoice(main: Port, branch: Port) {
 export function splitWaterMainChoice(project: Project, mainId: string, branchEnd: WaterRunEnd) {
   if (mainId === branchEnd.runId) throw Error("Choose a separate branch run.");
   checkPortsAvailable(project, [branchEnd]);
-  const main = readPort(project, { runId: mainId, end: "end" });
-  const branch = readPort(project, branchEnd);
+  const main = readWaterRunPort(project, { runId: mainId, end: "end" });
+  const branch = readWaterRunPort(project, branchEnd);
   const choice = teeChoice(main, branch);
   const centerDistance = main.run.end + main.selected.clone().sub(choice.center).dot(main.direction);
   if (centerDistance <= main.run.start + tolerance || centerDistance >= main.run.end - tolerance)
@@ -88,7 +90,7 @@ export function splitWaterMainChoice(project: Project, mainId: string, branchEnd
 /** Select the fitting from retained pipe centerlines, without moving geometry. */
 export function waterFittingChoice(project: Project, endpoints: WaterRunEnd[], editing?: string) {
   checkPortsAvailable(project, endpoints, editing);
-  const ports = endpoints.map((port) => readPort(project, port));
+  const ports = endpoints.map((port) => readWaterRunPort(project, port));
   const [first, second, branch] = ports;
   const dot = first.direction.dot(second.direction);
   const between = centerlineOffset(first, second);

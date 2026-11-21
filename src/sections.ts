@@ -43,8 +43,10 @@ export function reconcileSections(p: Project): Project {
   });
 }
 export function movingSectionIds(project: Project, section: Section) {
-  return new Set([...section.pieceIds, ...(project.waterRuns ?? [])
-    .filter((run) => run.sectionId === section.id).flatMap(waterRunMembers)]);
+  const runs = (project.waterRuns ?? []).filter((run) => run.sectionId === section.id);
+  const runIds = new Set(runs.map(({ id }) => id));
+  return new Set([...section.pieceIds, ...runs.flatMap(waterRunMembers),
+    ...(project.waterStops ?? []).filter(({ port }) => runIds.has(port.runId)).map(({ pieceId }) => pieceId)]);
 }
 
 export function transformSection(

@@ -13,6 +13,7 @@ export const toolCapabilities = [
   "pex-cut",
   "pex-insertion-mark",
   "water-pressure-gauge",
+  "fixture-hose-wrench",
   "metal-cut",
   "metal-deburr",
   "profile-cut",

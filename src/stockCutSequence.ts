@@ -17,6 +17,7 @@ import { ensurePartLabels } from "./partLabels";
 import { orientedStockSize } from "./stockAxes";
 import { everbiltClosetRod } from "./closetRodReference";
 import { reviewRodFit } from "./rodFits";
+import { isPexPipe, pexInstallation } from "./wallWaterReference";
 import { tubeGroupKey, tubeKerfSchema } from "./cutSourceAxes";
 import { fieldTreatmentReference, fieldTreatmentScope, isPressureTreated } from "./treatedWood";
 
@@ -59,6 +60,10 @@ export function stockCutMaterialNotes(id: MaterialId) {
         url: "https://www.palram.com/product/sunlite-diy-polycarbonate-multi-wall/",
       },
     };
+  if (isPexPipe(id)) return {
+    text: "Use a PEX cutter. Measure from the square end of the same-size stick. Keep serviceable remnants labeled by pipe size and verify the actual cut and insertion before installing.",
+    link: { label: "SharkBite PEX pipe installation", url: pexInstallation },
+  };
   if (isPressureTreated(id))
     return { text: fieldTreatmentScope, link: fieldTreatmentReference };
   if (isBatt(id))
@@ -235,7 +240,8 @@ export function stockCutSequences(
   const groups = new Map<MaterialId, StockCutSequence[]>();
   for (const row of rows) {
     const stock = material(row.id);
-    const tube = row.id === everbiltClosetRod.materialId;
+    const rod = row.id === everbiltClosetRod.materialId;
+    const tube = rod || isPexPipe(row.id);
     const batt = isBatt(row.id);
     const glazing = stock.shape === "glazing-envelope";
     if (
@@ -343,7 +349,7 @@ export function stockCutSequences(
           key: tubeKey,
           fitsMeasured: false,
         };
-        for (const { id } of bin.cuts) {
+        for (const { id } of rod ? bin.cuts : []) {
           const fit = reviewRodFit(project, id);
           if (!fit.matchesModel) {
             sequence.review = `${describePart(id)}: ${fit.note} Apply the measured fit before using this stock cut order.`;
@@ -376,7 +382,7 @@ export function stockCutSequences(
           remaining,
           cut.length,
           kerf,
-          `Crosscut ${formatStockLength(cut.length)} from the current end for ${name}.`,
+          `${isPexPipe(row.id) ? "Square-cut" : "Crosscut"} ${formatStockLength(cut.length)} from the current end for ${name}.`,
           `Use the remaining ${formatStockLength(cut.length)} for ${name}.`,
         );
         if (sequence.review) break;

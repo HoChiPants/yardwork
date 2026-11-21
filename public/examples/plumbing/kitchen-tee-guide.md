@@ -347,6 +347,15 @@ Modeled remnants; review dimensions, profiles and source lineage before reuse.
 
 Use the cut list with the stock layout. Confirm actual stock dimensions and cutting loss before marking. Predicted leftovers become reusable stock when you record the cuts.
 
+Use a PEX cutter. Measure from the square end of the same-size stick. Keep serviceable remnants labeled by pipe size and verify the actual cut and insertion before installing. [SharkBite PEX pipe installation](https://www.sharkbite.com/sites/default/files/resources/RWC-Piping-Systems-Installation-Guide-PSIG.pdf)
+
+### SharkBite 1/2 in PEX-B · Tube 1
+
+0.625 in outside diameter × 10 ft · 0 in modeled kerf
+
+1. Square-cut 48.35 in from the current end for P019 · Island feed.
+- Expected leftovers · 71.65 in
+
 ### #2 KD-HT 2 × 4 · Home Depot · 8 ft · Board 1
 
 1.5 in × 3.5 in × 8 ft · 0.125 in kerf

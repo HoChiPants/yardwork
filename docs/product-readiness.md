@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 77 placeable material entries. The registry contains 151 product records and 169 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 78 placeable material entries. The registry contains 152 product records and 170 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 21, 2026 · Fixture shutoffs and cabinet travel
+
+The fixture planner fits the SharkBite Max UR23036 to a measured, free ½ in PEX end and checks a rectangular valve envelope, push-on travel, and the entered hose and handle access. It previews whole-pipe length and optional end trim, keeps a valid full-stick source, and warns if a saved pullout or door passes into the valve’s envelope. Markdown and print carry the insertion mark. The pressure record separates exposed valve inlets from stops outside the test boundary and applies the 125 psi rating when there is exposure. Confirm the delivered valve, hose shape, pipe anchorage, operating sweep and inspection in the field. [SharkBite dimensions and ratings](https://www.sharkbite.com/sites/default/files/resources/SharkBite-Max-Stop-Valves-Spec-Sheet.pdf) · [Home Depot UR23036](https://www.homedepot.com/p/325997124)
 
 ## November 21, 2026 · Through-stud PEX support
 

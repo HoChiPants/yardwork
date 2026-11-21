@@ -1,5 +1,6 @@
 import { waterFittingIds } from "./waterFittingReference";
 import { waterSupportIds } from "./waterSupportReference";
+import { waterStop } from "./waterStopReference";
 
 export const materialIds = [
   "stud",
@@ -49,6 +50,7 @@ export const materialIds = [
   "hd-nail-shield-ns1",
   ...waterFittingIds,
   ...waterSupportIds,
+  waterStop.id,
   "hd-masonite-75777",
   "cedarbrook-pedestal-48",
   "cedarbrook-pedestal-60",

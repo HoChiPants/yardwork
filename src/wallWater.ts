@@ -84,6 +84,7 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
   const members = new Set(wall.pieceIds), owned = new Set(run ? waterRunMembers(run) : []);
   const attached = new Set((project.waterFittings ?? []).filter((fitting) =>
     run && waterFittingPorts(fitting).some(({ runId }) => runId === run.id)).map(({ pieceId }) => pieceId));
+  for (const stop of project.waterStops ?? []) if (stop.port.runId === run?.id) attached.add(stop.pieceId);
   if (project.workZone) {
     const { width, height, depth } = project.workZone;
     const extents = [[-width / 2, width / 2], [0, height], [-depth / 2, depth / 2]];
@@ -277,7 +278,9 @@ export function removeWaterRun(project: Project, run: WaterRun, keepPipe = false
   const ids = new Set(waterRunMembers(run));
   const attached = new Set(keepFittings ? [] : (project.waterFittings ?? [])
     .filter((fitting) => waterFittingPorts(fitting).some(({ runId }) => runId === run.id)).map(({ pieceId }) => pieceId));
-  for (const id of attached) ids.add(id);
+  const stops = new Set(keepFittings ? [] : (project.waterStops ?? [])
+    .filter(({ port }) => port.runId === run.id).map(({ pieceId }) => pieceId));
+  for (const id of [...attached, ...stops]) ids.add(id);
   const runs = project.waterRuns?.filter(({ id }) => id !== run.id);
   const pieces = project.pieces.flatMap((piece) => {
     if (!ids.has(piece.id)) return clearWaterBores(piece, run.id);
@@ -289,6 +292,7 @@ export function removeWaterRun(project: Project, run: WaterRun, keepPipe = false
   return {
     ...project, waterRuns: runs, pieces,
     ...(attached.size && { waterFittings: project.waterFittings?.filter(({ pieceId }) => !attached.has(pieceId)) }),
+    ...(stops.size && { waterStops: project.waterStops?.filter(({ pieceId }) => !stops.has(pieceId)) }),
     joints: project.joints.filter(({ a, b }) => !ids.has(a) && !ids.has(b)),
     guideFingerprint: null,
   };

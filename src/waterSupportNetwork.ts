@@ -29,6 +29,7 @@ export function waterSupportNetwork(
 ) {
   const stations = new Map<string, Station>();
   const unresolved: string[] = [];
+  const fixtureEnds = new Map((project.waterStops ?? []).map(({ port, name }) => [waterPortKey(port), name]));
   const add = (key: string, label: string, kind: Station["kind"], runId?: string, pieceId?: string) => {
     const station: Station = { key, label, kind, runId, pieceId, edges: [] };
     stations.set(key, station);
@@ -44,8 +45,12 @@ export function waterSupportNetwork(
       unresolved.push(run.name);
       continue;
     }
-    const first = add(waterPortKey({ runId: run.id, end: "start" }), `${run.name} start`, "endpoint", run.id, run.pipeId);
-    const last = add(waterPortKey({ runId: run.id, end: "end" }), `${run.name} end`, "endpoint", run.id, run.pipeId);
+    const endpoint = (end: "start" | "end") => {
+      const key = waterPortKey({ runId: run.id, end });
+      const label = fixtureEnds.get(key);
+      return add(key, label ? `${run.name} ${end} · ${label}` : `${run.name} ${end}`, "endpoint", run.id, run.pipeId);
+    };
+    const first = endpoint("start"), last = endpoint("end");
     let previous = first;
     let distance = 0;
     for (const support of measured.supports) {

@@ -2,20 +2,20 @@ import { z } from "zod";
 import { waterFittingIds, type WaterFittingId } from "./waterFittingReference";
 
 const id = z.uuid();
-const runEnd = z.strictObject({ runId: id, end: z.enum(["start", "end"]) });
+export const waterRunEnd = z.strictObject({ runId: id, end: z.enum(["start", "end"]) });
 const measuredReach = z.number().finite().positive().max(6);
 
 export const waterFittingInput = z.strictObject({
-  a: runEnd,
-  b: runEnd,
+  a: waterRunEnd,
+  b: waterRunEnd,
   reach: z.tuple([measuredReach, measuredReach]),
-  branch: z.strictObject({ port: runEnd, reach: measuredReach }).optional(),
+  branch: z.strictObject({ port: waterRunEnd, reach: measuredReach }).optional(),
 });
-export type WaterRunEnd = z.infer<typeof runEnd>;
+export type WaterRunEnd = z.infer<typeof waterRunEnd>;
 export type WaterFittingInput = z.infer<typeof waterFittingInput>;
 export const splitWaterMainInput = z.strictObject({
   mainId: id,
-  branch: runEnd,
+  branch: waterRunEnd,
   inlineLength: z.number().finite().positive().max(12),
   branchReach: measuredReach,
 });

@@ -21,6 +21,7 @@ import { bounds, type Finding } from "./engine";
 import { fitPerspectiveBounds, workshopViewOffset, WORKSHOP_MAX_POLAR_ANGLE, type PerspectiveBounds } from "./cameraFit";
 import { motionViewport, unionBounds } from "./motionCamera";
 import { isWaterFitting, waterFittingProducts } from "./waterFittingReference";
+import { waterStop } from "./waterStopReference";
 import { isWaterSupport, waterSupportProducts, waterSupportReference, type WaterSupportId } from "./waterSupportReference";
 import { pexPipes } from "./wallWaterReference";
 import { isPexPipe } from "./wallWaterReference";
@@ -218,6 +219,26 @@ function WaterSupportMesh({ size, color, id, fitted }: { size: V3; color: string
       <cylinderGeometry args={[waterSupportReference.bore / 24, waterSupportReference.bore / 24, sleeve, 24, 1, true]} />
       <meshStandardMaterial color={color} roughness={0.62} side={THREE.DoubleSide} />
     </mesh>}
+  </>;
+}
+
+function WaterStopMesh({ size, color }: { size: V3; color: string }) {
+  const [length, height, width] = size;
+  const center = (width - height) / 2;
+  const radius = width / 2;
+  return <>
+    <mesh position={[-length * 0.08, center, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <cylinderGeometry args={[radius, radius * 0.9, length * 0.84, 12]} />
+      <meshStandardMaterial color={color} metalness={0.5} roughness={0.38} />
+    </mesh>
+    <mesh position={[length * 0.21, center + height * 0.28, 0]} castShadow>
+      <cylinderGeometry args={[radius * 0.62, radius * 0.73, height * 0.75, 8]} />
+      <meshStandardMaterial color={color} metalness={0.45} roughness={0.4} />
+    </mesh>
+    <mesh position={[length * 0.42, center, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <cylinderGeometry args={[radius * 0.9, radius, length * 0.16, 16]} />
+      <meshStandardMaterial color="#7f8d92" metalness={0.32} roughness={0.44} />
+    </mesh>
   </>;
 }
 
@@ -455,6 +476,8 @@ function PartMesh({
           <PedestalBenchMesh size={size} color={color} texture={texture} />
         ) : isWaterFitting(m.id) && !measuring && !fastenerPicking && !fittedFacePicking ? (
           <WaterFittingMesh size={size} color={color} kind={waterFittingProducts[m.id].kind} />
+        ) : m.id === waterStop.id && !measuring && !fastenerPicking && !fittedFacePicking ? (
+          <WaterStopMesh size={size} color={color} />
         ) : isWaterSupport(m.id) && !measuring && !fastenerPicking && !fittedFacePicking ? (
           <WaterSupportMesh size={size} color={color} id={m.id} fitted={piece.designRole === "water-stud-isolator"} />
         ) : m.shape === "tube-envelope" ? (

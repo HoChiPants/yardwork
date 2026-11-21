@@ -19,6 +19,8 @@ import { waterPressureTestsSchema } from "./waterPressureSchema";
 import { waterSupportIds, waterSupportName, waterSupportProducts, waterSupportReference } from "./waterSupportReference";
 import { waterFittingDimensions, waterFittingIds, waterFittingName, waterFittingProducts } from "./waterFittingReference";
 import { waterFittingPorts, waterFittingSchema } from "./waterFittingSchema";
+import { waterStop } from "./waterStopReference";
+import { waterStopsSchema } from "./waterStopSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -507,6 +509,7 @@ export const currentProjectSchema = z
       return new Set(ports).size === ports.length && new Set(rows.map(({ id }) => id)).size === rows.length &&
         new Set(rows.map(({ pieceId }) => pieceId)).size === rows.length;
     }, "Each PEX endpoint and fitting can belong to one connection.").optional(),
+    waterStops: waterStopsSchema.optional(),
     shelfSagPlans: shelfSagPlansSchema.optional(),
     saunaHeaterPlans: z.array(saunaHeaterPlanSchema).max(50).refine(
       (plans) => new Set(plans.map((plan) => plan.roomId)).size === plans.length,
@@ -619,6 +622,11 @@ export const currentProjectSchema = z
       .default([]),
   })
   .superRefine((p, ctx) => {
+    if (p.waterStops?.length) {
+      const occupied = new Set((p.waterFittings ?? []).flatMap(waterFittingPorts).map(({ runId, end }) => `${runId}/${end}`));
+      if (p.waterStops.some(({ port }) => occupied.has(`${port.runId}/${port.end}`)))
+        ctx.addIssue({ code: "custom", path: ["waterStops"], message: "A pipe end can have a fitting or a fixture shutoff." });
+    }
     for (const stock of catalog)
       if (p.woodKerfs?.[stock.id] !== undefined && !canPlanWoodKerf(stock.id))
         ctx.addIssue({
@@ -1417,6 +1425,12 @@ export const catalog: Material[] = [
       unit: "fitting", search: `pex line water plumbing brass fitting ${record.model}`,
     };
   }),
+  {
+    id: waterStop.id, name: waterStop.name, subtitle: waterStop.model, category: "Plumbing",
+    stockKind: "equipment", wood: false, cuttable: false, measuredEquipment: true, packCount: 1,
+    size: waterStop.size, color: "#9ca9ae", productReference: waterStop.id, priceKind: "unpriced",
+    price: 0, unit: "valve", search: "sharkbite pex stop shutoff angle valve kitchenette water fixture ur23036",
+  },
   ...waterSupportIds.map((id): Material => ({
     id, name: waterSupportName(id), subtitle: `${waterSupportProducts[id].model} · 15 per jar`,
     category: "Plumbing", stockKind: "equipment", wood: false, cuttable: false,

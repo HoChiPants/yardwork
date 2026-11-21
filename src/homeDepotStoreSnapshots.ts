@@ -3,6 +3,7 @@ import { homeDepotShoppingList } from "./handoff";
 import { inventorySchema, type Project } from "./model";
 import { recordMaterialObservation } from "./storeSnapshotFiles";
 import { recordSupplyInventory } from "./supplies";
+import { storeProductLocationSchema } from "./storeProductLocation";
 
 const observationSchema = z.strictObject({
   productId: z.string(),
@@ -16,6 +17,7 @@ const observationSchema = z.strictObject({
     .int("Enter whole purchase units.")
     .nonnegative()
     .max(1000000),
+  location: storeProductLocationSchema.optional(),
 });
 const snapshotBatchSchema = z.strictObject({
   store: z.string().trim().min(1, "Enter the Home Depot store.").max(80),
@@ -48,7 +50,7 @@ export function recordHomeDepotStoreSnapshots(
     homeDepotShoppingList(project).items.map((item) => [item.productId, item]),
   );
   let next = { ...project, store, zip };
-  for (const { productId, price, available } of observations) {
+  for (const { productId, price, available, location } of observations) {
     const item = items.get(productId);
     if (!item)
       throw Error(
@@ -62,6 +64,7 @@ export function recordHomeDepotStoreSnapshots(
       price,
       available,
       url: item.url,
+      ...(location && { location }),
     };
     const { source } = item;
     if (source.kind === "supply") {

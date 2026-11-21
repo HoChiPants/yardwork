@@ -2786,6 +2786,31 @@ small {
 .handoff-review .handoff-items {
   padding-left: 0;
 }
+.shop-aisle {
+  margin: 16px 0;
+}
+.shop-aisle h3 {
+  font-size: 14px;
+  margin: 0;
+}
+.shop-aisle .handoff-items {
+  max-height: none;
+  overflow: visible;
+  margin: 6px 0;
+}
+.shop-pick {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.shop-pick label, .shop-remaining {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.shop-pick input {
+  width: 4.75rem;
+  padding: 6px;
+}
 .stock-incomplete {
   background: #faf0df;
   border-color: #ebd7b7;

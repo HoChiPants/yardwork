@@ -8,11 +8,13 @@ import { applyCommand, blank, part } from "../../src/model";
 import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
 import { saveWoodJointDecision } from "../../src/woodJointDecisions";
 import { bounds } from "../../src/engine";
+import { homeDepotShoppingList } from "../../src/handoff";
 import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
 import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
 import { saveMotionPlan, saveMotionTestScenario } from "../../src/mechanismMotion";
 import { addMeasuredOffcut } from "../../src/measuredOffcuts";
 import { partLabel } from "../../src/partLabels";
+import { addSupply } from "../../src/supplies";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
   const backendRequests: string[] = [];
@@ -802,4 +804,90 @@ test("a banquette seat highlights an interrupted support and the live guide foll
   expect(guide).toContain("## Shelf and seat bearing");
   expect(guide).toContain("All wood supports have continuous contact traces to the modeled floor");
   await expect(page.locator(".print-guide")).toContainText("All wood supports have continuous contact traces to the modeled floor");
+});
+
+test("the store checklist sorts recorded aisles and keeps partial pickups with the selected store", async ({ page }) => {
+  const initial = blank("Hardware for the bench");
+  initial.pieces.push(part("Bench rail", "stud", [3.5, 1.5, 32], [0, 0.75, 0], initial.steps[0].id, "Bench"));
+  const project = addSupply(addSupply(initial, "everbilt-29256-continuous-hinge", 3), "paslode-515500", 1);
+  const board = homeDepotShoppingList(project).items.find(({ source }) => source.kind === "stock")!.productId;
+  const hinge = "314150989";
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "hardware-bench.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 86 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  const openHandoff = async () => {
+    await page.getByRole("button", { name: "List", exact: true }).click();
+    await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  };
+  await openHandoff();
+  const paste = dialog.getByRole("textbox", { name: "Home Depot paste list", exact: true });
+  const before = await paste.inputValue();
+  const openShop = () => dialog.getByRole("button", { name: "Shop in store", exact: true }).click();
+  const record = () => dialog.getByRole("button", { name: "Record store snapshots", exact: true }).click();
+  async function observe(id: string, price: string, available: string, aisle: string, bay: string) {
+    await dialog.getByRole("spinbutton", { name: `Price per purchase unit for product ${id}`, exact: true }).fill(price);
+    await dialog.getByRole("spinbutton", { name: `Available purchase units for product ${id}`, exact: true }).fill(available);
+    await dialog.getByRole("listitem").filter({ has: page.getByRole("link", { name: new RegExp(`#${id}$`) }) })
+      .getByText("Aisle and bay · optional", { exact: true }).click();
+    await dialog.getByRole("textbox", { name: `Aisle or area for product ${id}`, exact: true }).fill(aisle);
+    await dialog.getByRole("textbox", { name: `Bay for product ${id}`, exact: true }).fill(bay);
+  }
+  const saveSnapshot = () => dialog.getByRole("button", { name: "Save store snapshots", exact: true }).click();
+  await openShop();
+  await expect(dialog.getByText(/choose a store in Project settings/)).toBeVisible();
+  await record();
+  await dialog.getByRole("textbox", { name: "Home Depot store", exact: true }).fill("4409");
+  await observe(board, "4", "15", "10", "3");
+  await observe(hinge, "17", "2", "2", "8");
+  await saveSnapshot();
+  await expect(dialog.getByRole("heading", { name: "Shop in store", exact: true })).toBeVisible();
+  await expect(dialog.locator(".shop-aisle h3")).toHaveText(["Aisle 2", "Aisle 10", "Find in store"]);
+  await expect(dialog.getByRole("region", { name: "Aisle 2", exact: true })).toContainText("Bay 8");
+
+  const hingeCount = dialog.getByRole("spinbutton", { name: `Picked purchase units for product ${hinge}`, exact: true });
+  await hingeCount.fill("1");
+  await hingeCount.press("Tab");
+  await expect(dialog.getByRole("region", { name: "Aisle 2", exact: true })).toContainText("2 remaining");
+  await dialog.getByRole("button", { name: `Mark picked for product ${board}`, exact: true }).click();
+  await expect(dialog.getByRole("status")).toContainText("1 of 3 product lines picked");
+  await dialog.getByRole("checkbox", { name: "Show remaining only", exact: true }).check();
+  await expect(dialog.getByRole("region", { name: "Aisle 10", exact: true })).toHaveCount(0);
+  const file = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: "Download store checklist", exact: true }).click();
+  const checklist = await file;
+  expect(checklist.suggestedFilename()).toMatch(/-home-depot-store\.txt$/);
+  const text = await readFile((await checklist.path())!, "utf8");
+  expect(text).toContain("1 picked · 2 remaining · Aisle 2 · Bay 8");
+  expect(text).toContain(`Internet #${board}`);
+  expect(text).toMatch(/\[x\] 1 board/);
+
+  await dialog.getByRole("button", { name: "Back to purchase list", exact: true }).click();
+  const lineQuantities = (value: string) => value.split("\n").map((line) => line.split(" — ")[0]);
+  expect(lineQuantities(await paste.inputValue())).toEqual(lineQuantities(before));
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  expect((await draft()).project.schemaVersion).toBe(PROJECT_FORMAT_VERSION);
+  expect((await draft()).project.homeDepotPickup).toContainEqual({ store: "4409", zip: "84121", productId: hinge, picked: 1 });
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: initial.name }).click();
+  await openHandoff();
+  await openShop();
+  await expect(hingeCount).toHaveValue("1");
+  await record();
+  await dialog.getByRole("textbox", { name: "Home Depot store", exact: true }).fill("4408");
+  await observe(hinge, "18", "4", "7", "1");
+  await saveSnapshot();
+  await expect(dialog.getByRole("region", { name: "Aisle 7", exact: true })).toContainText("Bay 1");
+  await expect(dialog.getByRole("region", { name: "Aisle 2", exact: true })).toHaveCount(0);
+  await expect(hingeCount).toHaveValue("0");
 });

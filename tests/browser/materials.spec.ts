@@ -169,11 +169,13 @@ test("oversized mesh is flagged and remains excluded from quote and handoff purc
   await expect(
     page.getByRole("textbox", { name: "Home Depot paste list" }),
   ).toHaveCount(0);
-  await page.getByText("2 items need separate review", { exact: true }).click();
-  await expect(page.locator(".handoff-review")).toContainText(
+  const summary = page.getByText("2 items need separate review", { exact: true });
+  await summary.click();
+  const review = page.locator("details.handoff-review").filter({ has: summary });
+  await expect(review).toContainText(
     "Mesh 1 · Exceeds stock dimensions",
   );
-  await expect(page.locator(".handoff-review")).toContainText(
+  await expect(review).toContainText(
     "Exact product match needed",
   );
 });

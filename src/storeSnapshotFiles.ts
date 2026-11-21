@@ -6,11 +6,10 @@ import { supplyInventorySchema, supplyObservationKey, type SupplyInventory } fro
 
 const maxRows = 100;
 const bundleKind = "yardwork-store-snapshots";
-const bundleVersion = 1;
 const materialRows = inventorySchema.array().max(maxRows);
 const bundleSchema = z.strictObject({
   kind: z.literal(bundleKind),
-  version: z.literal(bundleVersion),
+  version: z.literal([1, 2]),
   materials: materialRows,
   supplies: supplyInventorySchema.array().max(maxRows),
 });
@@ -164,12 +163,13 @@ export function storeSnapshotFile(project: Project, now = Date.now()) {
     }
   });
   const count = materials.length + supplies.length;
+  const version = [...materials, ...supplies].some(({ location }) => location) ? 2 : 1;
   return count
     ? {
         count,
         excluded: stock.length + hardware.length - count,
         text: JSON.stringify(
-          { kind: bundleKind, version: bundleVersion, materials, supplies },
+          { kind: bundleKind, version, materials, supplies },
           null,
           2,
         ),

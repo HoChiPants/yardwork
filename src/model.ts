@@ -42,6 +42,8 @@ import { sunliteMountsSchema } from "./sunliteMountSchema";
 import { sunliteThermalSchema } from "./sunliteThermalSchema";
 import { motionPlanSchema } from "./motionPlanSchema";
 import { supplyInventorySchema, supplySelectionSchema } from "./supplySchema";
+import { homeDepotPickupSchema } from "./homeDepotPickupSchema";
+import { storeProductLocationSchema } from "./storeProductLocation";
 import { attachmentPlanSchema } from "./attachmentSchema";
 import { restraintPlanSchema } from "./restraintSchema";
 import { fastenerPlanSchema } from "./fasteningSchema";
@@ -281,6 +283,7 @@ export const storedInventorySchema = z
     store: z.string().min(1).max(80),
     zip: z.string().regex(/^\d{5}$/),
     checkedAt: z.iso.datetime(),
+    location: storeProductLocationSchema.optional(),
     url: z
       .url()
       .refine(
@@ -488,6 +491,7 @@ export const currentProjectSchema = z
       .max(10000)
       .default([]),
     supplyInventory: z.array(supplyInventorySchema).max(100).default([]),
+    homeDepotPickup: homeDepotPickupSchema.optional(),
     zip: z.string().regex(/^\d{5}$/),
     store: z.string().max(80),
     updatedAt: z.iso.datetime(),

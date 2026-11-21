@@ -19,11 +19,16 @@ import type { Project } from "./model";
 import { supplyRows } from "./supplies";
 import type { HomeDepotSnapshotBatch } from "./homeDepotStoreSnapshots";
 import { HomeDepotSnapshotPanel } from "./HomeDepotSnapshotPanel";
+import { HomeDepotInStorePanel } from "./HomeDepotInStorePanel";
+import type { PickupTarget } from "./homeDepotInStore";
+import { storeProductLocationText } from "./storeProductLocation";
 
 type HandoffProps = {
   project: Project;
   inventoryTick: number;
   onDownload: (text: string) => void;
+  onDownloadStoreChecklist: (text: string) => void;
+  onPick: (target: PickupTarget, quantity: number) => void;
   onAddPurchase: (productId: string) => void;
   onRecordSnapshots: (batch: HomeDepotSnapshotBatch) => void;
   onReview: (area: "list" | "tools" | "assembly") => void;
@@ -41,6 +46,8 @@ function HomeDepotShoppingHandoff({
   project,
   inventoryTick,
   onDownload,
+  onDownloadStoreChecklist,
+  onPick,
   onAddPurchase,
   onRecordSnapshots,
   onReview,
@@ -54,15 +61,28 @@ function HomeDepotShoppingHandoff({
   const textarea = useRef<HTMLTextAreaElement>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
-  const [recording, setRecording] = useState(false);
+  const [view, setView] = useState<"purchase" | "snapshots" | "in-store">("purchase");
+  const [snapshotFrom, setSnapshotFrom] = useState<"purchase" | "in-store">("purchase");
   const [recorded, setRecorded] = useState(0);
-  if (recording)
-    return <HomeDepotSnapshotPanel project={project} items={items} onBack={() => setRecording(false)}
+  function record(from: "purchase" | "in-store") {
+    setRecorded(0);
+    setCopied(false);
+    setError("");
+    setSnapshotFrom(from);
+    setView("snapshots");
+  }
+  if (view === "snapshots")
+    return <HomeDepotSnapshotPanel project={project} items={items} onBack={() => setView(snapshotFrom)}
+      backLabel={snapshotFrom === "in-store" ? "Back to store checklist" : undefined}
       onRecord={(batch) => {
         onRecordSnapshots(batch);
         setRecorded(batch.observations.length);
-        setRecording(false);
+        setView(snapshotFrom);
       }} />;
+  if (view === "in-store")
+    return <HomeDepotInStorePanel project={project} items={items} recorded={recorded}
+      onPick={onPick} onDownload={onDownloadStoreChecklist}
+      onRecord={() => record("in-store")} onBack={() => setView("purchase")} />;
   return (
     <>
       <h2 id="modal-title">Take your list to Home Depot.</h2>
@@ -95,14 +115,14 @@ function HomeDepotShoppingHandoff({
         </details>
       )}
       {items.length > 0 && (
-        <button type="button" className="button secondary small" onClick={() => {
-          setRecorded(0);
-          setCopied(false);
-          setError("");
-          setRecording(true);
-        }}>
-          Record store snapshots
-        </button>
+        <div className="inline">
+          <button type="button" className="button secondary small" onClick={() => setView("in-store")}>
+            Shop in store
+          </button>
+          <button type="button" className="button secondary small" onClick={() => record("purchase")}>
+            Record store snapshots
+          </button>
+        </div>
       )}
       {plannedNeeds.length > 0 && (
         <details className="handoff-review" open>
@@ -238,6 +258,7 @@ function HomeDepotShoppingHandoff({
                       </>
                     )}
                   </span>
+                  {!!snapshot?.location && <span>{storeProductLocationText(snapshot.location)}</span>}
                 </li>
               ),
             )}

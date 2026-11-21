@@ -1,6 +1,7 @@
 import { bom, hardwareForJoint, inspectCutStock, projectPricingCoverage, stockOnHand } from "./engine";
 import { retailerName } from "./retailers";
 import { purchaseUnitLabel } from "./purchaseUnits";
+import type { StoreProductLocation } from "./storeProductLocation";
 import { shoppingOfferForMaterial } from "./retailerCatalog";
 import { format, material, type MaterialId, type Project } from "./model";
 import { suppliesMarkdown, supplyRows } from "./supplies";
@@ -25,7 +26,7 @@ export type HomeDepotPurchaseItem = {
   productId: string;
   url: string;
   source: { kind: "stock"; id: MaterialId } | { kind: "supply"; id: string };
-  snapshot?: { available: number; checkedAt: string; price: number } | null;
+  snapshot?: { available: number; checkedAt: string; price: number; location?: StoreProductLocation } | null;
   isTool?: boolean;
   suggested?: boolean;
 };

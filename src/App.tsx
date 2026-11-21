@@ -263,6 +263,7 @@ import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { ObjectMovement } from "./ObjectMovement";
 import { InventoryForm } from "./InventoryForm";
 import { HomeDepotHandoff } from "./HomeDepotHandoff";
+import { recordHomeDepotPickup } from "./homeDepotInStore";
 import { recordHomeDepotStoreSnapshots } from "./homeDepotStoreSnapshots";
 import { mergeStoreSnapshots, readStoreSnapshotFile, recordMaterialObservation, storeSnapshotFile } from "./storeSnapshotFiles";
 import { nextStoreCheckChange } from "./storeSnapshotTime";
@@ -5656,6 +5657,12 @@ export function App() {
                 project={project}
                 inventoryTick={inventoryTick}
                 onRecordSnapshots={(batch) => change((p) => recordHomeDepotStoreSnapshots(p, batch))}
+                onPick={(target, quantity) => {
+                  const prior = current.current;
+                  const next = recordHomeDepotPickup(prior, target, quantity);
+                  if (next !== prior) change(next);
+                }}
+                onDownloadStoreChecklist={(text) => download(`${baseName}-home-depot-store.txt`, text, "text/plain")}
                 onAddPurchase={(id) => safe(() => {
                   const next = addHomeDepotPurchaseNeed(current.current, id);
                   if (next === current.current) return;

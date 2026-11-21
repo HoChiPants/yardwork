@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { retailerFromUrl, retailerSchema } from "./retailers";
+import { storeProductLocationSchema } from "./storeProductLocation";
 
 export const maxSupplyQuantity = 100000;
 
@@ -22,6 +23,7 @@ export const supplyInventorySchema = z
     store: z.string().trim().min(1).max(80),
     zip: z.string().regex(/^\d{5}$/),
     checkedAt: z.iso.datetime(),
+    location: storeProductLocationSchema.optional(),
     url: z.url(),
   })
   .superRefine((observation, ctx) => {

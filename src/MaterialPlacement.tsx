@@ -2,31 +2,39 @@ import { useState } from "react";
 import { LengthInput } from "./LengthInput";
 import { materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { plannedCutKerf, type inspectCutStock } from "./cutStock";
-import { formatStockLength } from "./measurement";
+import { formatStockLength, preferredLengthUnit } from "./measurement";
 import type { MaterialId, Piece, Project } from "./model";
-import { fittingBoardOffcut } from "./offcutAssignment";
+import { fittingBoardOffcuts } from "./offcutAssignment";
 import { partLabel } from "./partLabels";
 
 export type PlacementOffcut = { id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] };
 
-export function MaterialPlacement({ group, project, inspection, finishedLength, onPlace }: {
+export function MaterialPlacement({ group, project, inspection, finishedLength, offcutId, onPlace }: {
   group: MaterialGroup;
   project: Project;
   inspection: ReturnType<typeof inspectCutStock>;
   finishedLength?: number;
+  offcutId?: string;
   onPlace: (id: MaterialId, offcut?: PlacementOffcut) => void;
 }) {
   const { preferred, label, options } = materialPlacementOptions(group);
   const [selected, select] = useState(preferred.id);
   const [needed, setNeeded] = useState(finishedLength ?? NaN);
+  const [selectedOffcut, selectOffcut] = useState(offcutId);
   const choice = options.find(({ id }) => id === selected)!;
   const compare = preferred.wood && preferred.cuttable && preferred.stockKind === "linear";
   const fits = (length: number, id: MaterialId) =>
     Math.abs(length - needed) < 1e-6 || length >= needed + plannedCutKerf(project, id);
   const shortest = needed > 0 ? options.find(({ id, value }) => fits(value, id)) : undefined;
   const enough = !(needed > 0) || fits(choice.value, choice.id);
-  const remnant = compare && needed > 0
-    ? fittingBoardOffcut(project, materialFamilyVariants(preferred.id), needed, inspection)
+  const remnants = compare && needed > 0
+    ? fittingBoardOffcuts(project, materialFamilyVariants(preferred.id), needed, inspection)
+    : [];
+  const remnant = selectedOffcut
+    ? remnants.find(({ piece }) => piece.id === selectedOffcut)
+    : remnants[0];
+  const changedOffcut = selectedOffcut && !remnant && needed > 0
+    ? partLabel(project, selectedOffcut)
     : undefined;
   return <>
     <h2 id="modal-title">{group.name}</h2>
@@ -38,11 +46,25 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
       </label>)}
     </fieldset>
     {compare && <div className="stock-length-check">
-      <LengthInput label="Finished length (optional)" ariaLabel="Needed finished length" value={needed} onChange={setNeeded} />
+      <LengthInput label="Finished length (optional)" ariaLabel="Needed finished length" value={needed}
+        defaultUnit={preferredLengthUnit(finishedLength ?? NaN)} onChange={setNeeded} />
       {needed > 0 && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p role="status">
         {enough ? `${shortest.label} stock fits this cut with ${formatStockLength(choice.value - shortest.value)} less length to buy.` : `${shortest.label} stock fits this cut.`}{" "}
         <button type="button" className="text-button" onClick={() => select(shortest.id)}>Use {shortest.label}</button>
       </p> : <p role="status">{choice.label} stock fits this cut.</p>)}
+      {changedOffcut && <p role="status">{changedOffcut} no longer fits this length.</p>}
+      {(remnants.length > 1 || (changedOffcut && !!remnants.length)) && <details className="stock-offcut-options" open={changedOffcut ? true : undefined}>
+        <summary>{remnants.length === 1 ? "Show matching offcut" : `Compare ${remnants.length} matching offcuts`}</summary>
+        <fieldset>
+          <legend>Choose an offcut</legend>
+          {remnants.map((match) => <label key={match.piece.id}>
+            <input type="radio" name="placement-offcut" checked={remnant?.piece.id === match.piece.id}
+              onChange={() => selectOffcut(match.piece.id)} />
+            <span>{partLabel(project, match.piece.id)} · {formatStockLength(match.available[2])}
+              {match.sourceCutPending ? " · Expected offcut" : match.onHand ? " · On hand" : ""}</span>
+          </label>)}
+        </fieldset>
+      </details>}
       {remnant && <div className="notice stock-remnant">
         <div>
           <p>

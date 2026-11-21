@@ -40,6 +40,26 @@ test("an offcut question checks one finished board and links to prefilled placem
   assert.equal(buildQuestion("Add two 4 ft 2x4s to the workbench using scraps"), null);
 });
 
+test("a named scrap is checked directly, and a general question lists each matching scrap once", () => {
+  let project = blank("Choose labeled scrap");
+  const step = project.steps[0].id;
+  project = addMeasuredOffcut(project, step, "stud-10", [55, 3.5, 1.5]);
+  project = addMeasuredOffcut(project, step, "stud-12", [63, 3.5, 1.5]);
+  project = addMeasuredOffcut(project, step, "stud", [48.05, 3.5, 1.5]);
+  const general = answerBuildQuestion(project, buildQuestion("Do I have scrap for a 4 ft 2x4?")!, []);
+  assert.deepEqual(general.rows?.map(({ title }) => title.split(" · ")[0]), ["O001", "O002"]);
+  const named = answerBuildQuestion(project, buildQuestion("Can I make a four-foot two by four from offcut o2?")!, []);
+  assert.match(named.detail, /^O002 fits 4 ft/);
+  assert.equal(named.rows?.length, 1);
+  assert.deepEqual(named.link?.action, {
+    kind: "board-placement", groupId: "framing-2x4", length: 48, offcutId: project.pieces[1].id,
+  });
+  const tooShort = answerBuildQuestion(project, buildQuestion("Can I get a 4 ft 2x4 from O003?")!, []);
+  assert.match(tooShort.detail, /^O003 cannot supply 4 ft/);
+  assert.equal(tooShort.link?.action.kind, "cut-pool");
+  assert.doesNotMatch(tooShort.detail, /O001|O002/);
+});
+
 test("the support answer surfaces the current model check and ignores shopping warnings", () => {
   const project = blank("Unsupported frame");
   project.pieces.push(

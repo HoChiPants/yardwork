@@ -28,7 +28,7 @@ import { openingDrainageNote, reviewOpeningFlashings } from "./openingFlashing";
 import { openingFlashingScope } from "./openingFlashingReference";
 import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./treatedWood";
 import { groupedMaterials, materialFamilyVariants } from "./materialGroups";
-import { fittingBoardOffcut } from "./offcutAssignment";
+import { fittingBoardOffcuts } from "./offcutAssignment";
 import { normalizeIdeaText } from "./ideaEdits";
 
 export type BuildQuestion =
@@ -47,7 +47,7 @@ export type BuildQuestion =
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
-  | { kind: "board-offcut"; length: number; nominal: string; treated: boolean }
+  | { kind: "board-offcut"; length: number; nominal: string; treated: boolean; offcutLabel?: string }
   | { kind: "offcuts"; label?: string };
 
 export type BuildQuestionAction =
@@ -69,7 +69,7 @@ export type BuildQuestionAction =
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
-  | { kind: "board-placement"; groupId: string; length: number }
+  | { kind: "board-placement"; groupId: string; length: number; offcutId?: string }
   | Extract<BuildPreparationAction, { kind: "motion" | "lid" | "part" | "offcut" }>;
 
 type ReviewLink = { label: string; action: BuildQuestionAction };
@@ -111,6 +111,8 @@ const scrapQuestion =
   /^(?:what (?:could|can|should) i (?:use|reuse) ([op]\d{1,6}) for|(?:show|find|suggest) (?:uses|reuse options) for (?:offcut |scrap )?([op]\d{1,6})|(?:can|could) i reuse (?:offcut |scrap )?([op]\d{1,6}))$/i;
 const offcutQuestion =
   /^(?:(?:what|which) (?:offcuts|scraps|leftovers) (?:could|can|should) i (?:use|reuse)|(?:can|could) i reuse (?:any |my |the )?(?:offcuts|scraps|leftovers)|(?:review|show|plan|find) (?:the )?(?:offcut reuse|scrap reuse|uses for (?:my |the )?(?:scraps|offcuts)))$/i;
+const namedBoardOffcutQuestion =
+  /^(?:can|could) i (?:make|cut|get) (?:a |one )?(.+) from (?:offcut |scrap |leftover )?(o\d{1,6})$/i;
 const boardOffcutQuestion =
   /^(?:(?:can|could) i (?:make|cut|get) (?:a |one )?(.+) from (?:an? |my |the |any )?(?:offcuts?|scraps?|leftovers?|cut pool)|do i have (?:any |an? )?(?:offcuts?|scraps?|leftovers?) for (?:a |one )?(.+))$/i;
 const boardOffcutSize =
@@ -147,13 +149,17 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   const scrap = scrapQuestion.exec(text);
   if (scrap)
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
-  const stock = boardOffcutQuestion.exec(text);
+  const namedStock = namedBoardOffcutQuestion.exec(text);
+  const stock = namedStock ?? boardOffcutQuestion.exec(text);
   const size = stock && boardOffcutSize.exec(normalizeIdeaText(stock[1] ?? stock[2]));
   if (size) {
     const feet = boardFeet.exec(size[1]), inches = boardInches.exec(size[1]);
     const length = feet ? Number(feet[1]) * 12 + Number(feet[2] ?? 0) : Number(inches?.[1]);
     if (Number.isFinite(length) && length > 0)
-      return { kind: "board-offcut", length, nominal: `${Number(size[3])} × ${Number(size[4])}`, treated: !!size[2] };
+      return {
+        kind: "board-offcut", length, nominal: `${Number(size[3])} × ${Number(size[4])}`, treated: !!size[2],
+        ...(namedStock ? { offcutLabel: labelKey(namedStock[2]) } : {}),
+      };
   }
   if (offcutQuestion.test(text)) return { kind: "offcuts" };
   if (doorSealQuestion.test(text)) return { kind: "greenhouse-weatherseal" };
@@ -286,7 +292,7 @@ function answerBoardOffcut(
   project: Project,
   question: Extract<BuildQuestion, { kind: "board-offcut" }>,
 ): BuildQuestionAnswer {
-  const { nominal, treated, length } = question;
+  const { nominal, treated, length, offcutLabel } = question;
   const title = "Offcut for a finished board";
   const group = groupedMaterials("Lumber").find(({ name, id }) =>
     treated ? name.includes(nominal) && id.startsWith("treated-") :
@@ -296,20 +302,34 @@ function answerBoardOffcut(
     detail: `No ${treated ? "treated " : ""}${nominal} board matches the material shelf. Check the nominal size and treatment.`,
     link: { label: "Open Cut pool", action: { kind: "cut-pool" } },
   };
-  const remnant = fittingBoardOffcut(project, materialFamilyVariants(group.preferred), length, inspectCutStock(project));
+  const labeled = ensurePartLabels(project);
+  const matches = fittingBoardOffcuts(labeled, materialFamilyVariants(group.preferred), length, inspectCutStock(labeled));
   const needed = `${formatStockLength(length)} of ${group.name}`;
+  const namedId = offcutLabel && labeled.partLabels.find(({ label }) => label === offcutLabel)?.partId;
+  const available = offcutLabel ? matches.filter(({ piece }) => piece.id === namedId) : matches;
+  if (offcutLabel && !available.length) return {
+    title,
+    detail: labeled.pieces.some(({ id, offcut }) => offcut && id === namedId)
+      ? `${offcutLabel} cannot supply ${needed}. Check the material, grain and room for the saw cut.`
+      : `${offcutLabel} is no longer available in the Cut pool.`,
+    link: { label: "Open Cut pool", action: { kind: "cut-pool" } },
+  };
+  const [first] = available;
   return {
     title,
-    detail: remnant
-      ? `${partLabel(project, remnant.piece.id)} fits ${needed}.`
-      : `No recorded offcut fits ${needed}. Review new stock lengths for this board.`,
-    rows: remnant ? [{
+    detail: !first ? `No recorded offcut fits ${needed}. Review new stock lengths for this board.`
+      : available.length === 1 ? `${partLabel(labeled, first.piece.id)} fits ${needed}.`
+      : `${available.length} offcuts fit ${needed}. Review the choices before placing the board.`,
+    rows: available.slice(0, 3).map((remnant) => ({
       id: remnant.piece.id,
-      title: `${partLabel(project, remnant.piece.id)} · ${formatStockLength(remnant.available[2])}`,
+      title: `${partLabel(labeled, remnant.piece.id)} · ${formatStockLength(remnant.available[2])}`,
       detail: [remnant.sourceCutPending && "Complete the source stock cut order first.",
         remnant.operations.length ? remnant.operations.map(({ text }) => text).join(" · ") : "Fits as measured."].filter(Boolean).join(" "),
-    }] : undefined,
-    link: { label: "Review board placement", action: { kind: "board-placement", groupId: group.id, length } },
+    })),
+    link: { label: "Review board placement", action: {
+      kind: "board-placement", groupId: group.id, length,
+      ...(namedId ? { offcutId: namedId } : {}),
+    } },
   };
 }
 

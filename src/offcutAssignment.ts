@@ -127,7 +127,7 @@ export function fittingOffcuts(
     );
 }
 
-export function fittingBoardOffcut(
+export function fittingBoardOffcuts(
   project: Project,
   family: readonly MaterialId[],
   length: number,
@@ -137,6 +137,7 @@ export function fittingBoardOffcut(
   const available = new Set(project.pieces
     .filter((piece) => piece.offcut && family.includes(piece.material))
     .map((piece) => piece.material));
+  const seen = new Set<string>();
   return [...available].flatMap((id) => {
     const blank = boardBlankAtLength(id, length);
     if (!blank) return [];
@@ -146,14 +147,18 @@ export function fittingBoardOffcut(
     // its finished dimensions still give the same grain axis.
     const targets = stockAxes(inferred).length === blank.stockLengthAxis ? [explicit, inferred] : [explicit];
     return targets.flatMap((target) => fittingOffcuts(project, target, inspection)
-      .map((match) => ({
-        ...match,
-        stockLengthAxis: target.stockLengthAxis,
-        sourceCutPending: plannedSources.has(match.piece.cutStock!.id),
-      })));
+      .flatMap((match) => {
+        if (seen.has(match.piece.id)) return [];
+        seen.add(match.piece.id);
+        return [{
+          ...match,
+          stockLengthAxis: target.stockLengthAxis,
+          sourceCutPending: plannedSources.has(match.piece.cutStock!.id),
+        }];
+      }));
   }).sort((a, b) => Number(a.sourceCutPending) - Number(b.sourceCutPending) ||
     Number(b.onHand) - Number(a.onHand) ||
-    a.available[1] * a.available[2] - b.available[1] * b.available[2])[0];
+    a.available[1] * a.available[2] - b.available[1] * b.available[2]);
 }
 
 export function assignOffcutToPart(

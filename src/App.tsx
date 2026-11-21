@@ -923,6 +923,7 @@ export function App() {
     group: MaterialGroup;
     position?: V3;
     finishedLength?: number;
+    offcutId?: string;
   }>();
   const viewport = useRef<HTMLDivElement>(null),
     camera = useRef<THREE.Camera | null>(null),
@@ -1358,7 +1359,7 @@ export function App() {
       case "board-placement": {
         const group = groupedMaterials("Lumber").find(({ id }) => id === action.groupId);
         if (!group) throw Error("This material changed. Explore the question again.");
-        setPendingMaterial({ projectId: project.id, group, finishedLength: action.length });
+        setPendingMaterial({ projectId: project.id, group, finishedLength: action.length, offcutId: action.offcutId });
         setModal("place-material");
         break;
       }
@@ -5483,7 +5484,7 @@ export function App() {
             </button>
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
               <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
-                finishedLength={pendingMaterial.finishedLength} onPlace={(id, offcut) => {
+                finishedLength={pendingMaterial.finishedLength} offcutId={pendingMaterial.offcutId} onPlace={(id, offcut) => {
                 add(id, pendingMaterial.group.name, pendingMaterial.position, offcut);
               }} />
             )}

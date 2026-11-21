@@ -30,7 +30,7 @@ import { saunaWallCoverage } from "../src/saunaWallCoverage";
 import { stockAxes } from "../src/stockAxes";
 import { toolChecklist } from "../src/tools";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
-import { assignOffcutToPart, boardBlankAtLength, fittingBoardOffcut, fittingOffcuts } from "../src/offcutAssignment";
+import { assignOffcutToPart, boardBlankAtLength, fittingBoardOffcuts, fittingOffcuts } from "../src/offcutAssignment";
 import { materialFamilyVariants } from "../src/materialGroups";
 import { cutSourceRegion } from "../src/cutSourceAxes";
 import { partLabel } from "../src/partLabels";
@@ -61,12 +61,12 @@ test("board placement prefers verified on-hand family stock and preserves its ac
   const withScrap = addMeasuredOffcut(cut, stepId, "stud-10", [80, 3.5, 1.5], "Stored remnant");
   const withTreated = addMeasuredOffcut(withScrap, stepId, "hd-treated-2x4-8", [50, 3.5, 1.5]);
   const family = materialFamilyVariants("stud");
-  const chosen = fittingBoardOffcut(withTreated, family, 48, inspectCutStock(withTreated))!;
+  const [chosen] = fittingBoardOffcuts(withTreated, family, 48, inspectCutStock(withTreated));
   assert.equal(chosen.piece.id, withScrap.pieces.at(-1)?.id);
   assert.equal(chosen.piece.material, "stud-10");
   assert.equal(chosen.onHand, true);
-  assert.equal(fittingBoardOffcut(cut, family, 48, inspectCutStock(cut))?.stockLengthAxis, null);
-  assert.equal(fittingBoardOffcut(cut, family, 71.8, inspectCutStock(cut)), undefined);
+  assert.equal(fittingBoardOffcuts(cut, family, 48, inspectCutStock(cut))[0]?.stockLengthAxis, null);
+  assert.deepEqual(fittingBoardOffcuts(cut, family, 71.8, inspectCutStock(cut)), []);
 
   const blank = boardBlankAtLength(chosen.piece.material, 2)!;
   assert.deepEqual(blank, { size: [1.5, 2, 3.5], stockLengthAxis: 1 });
@@ -85,14 +85,16 @@ test("a saved cut plan is pending even when its parent stock is owned, and a mea
   const { project: planned, sourceIds: [sourceId] } = planStockCutLayouts(project, [board.layout]);
   const owned = setCutSourceOnHand(planned, sourceId, true);
   const family = materialFamilyVariants("stud");
-  const expected = fittingBoardOffcut(owned, family, 48, inspectCutStock(owned))!;
+  const [expected] = fittingBoardOffcuts(owned, family, 48, inspectCutStock(owned));
   assert.equal(expected.onHand, true);
   assert.equal(expected.sourceCutPending, true);
 
   const stocked = addMeasuredOffcut(owned, project.steps[0].id, "stud", [64, 3.5, 1.5]);
-  const available = fittingBoardOffcut(stocked, family, 48, inspectCutStock(stocked))!;
+  const [available, waiting] = fittingBoardOffcuts(stocked, family, 48, inspectCutStock(stocked));
   assert.equal(available.piece.id, stocked.pieces.at(-1)?.id);
   assert.equal(available.sourceCutPending, false);
+  assert.equal(waiting.piece.id, expected.piece.id);
+  assert.equal(waiting.sourceCutPending, true);
 });
 
 test("a shared board uses the factory end for an exact final length and rounds only whole feet", () => {

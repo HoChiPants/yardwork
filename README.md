@@ -34,7 +34,7 @@ For a closet with sourced Everbilt rods, open **Sections → Fit closet rods →
 
 For wood boards, entering a finished length also checks the Cut pool for matching stock and room for the saw cut. **Place from O001** uses the named offcut, places the finished part, and adds any required trims and remaining scrap to the build guide. Expand a planned cut source in **List** to see its saved cutting order. The guide puts those source cuts before the offcuts they supply.
 
-In **Plan an idea**, ask **“Can I make a 4 ft 2x4 from scrap?”** to check one board against the current Cut pool. **Review board placement** opens the finished dimension and matching stock for review.
+In **Plan an idea**, ask **“Can I make a 4 ft 2x4 from scrap?”** to check one board against the current Cut pool. Ask **“Can I cut a 4 ft 2x4 from O002?”** to check that specific offcut. **Review board placement** opens the finished dimension and lets you compare compatible offcuts before choosing which to use.
 
 **Checks → Fit stock between faces** previews a real board between selected retained faces, with independent end-clearance units, cross-section roll and an explicit datum. Review its cut and genuine remnant, then Add through ordinary Undo or Cancel without changing the project. The new part opens two end-connection actions and shares one physical stock source with its remnant. [Fitted-stock workflow](docs/fitted-stock.md).
 

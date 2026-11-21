@@ -3840,6 +3840,11 @@ small {
 .stock-size-options input[type="radio"] { flex: none; width: auto; margin: 0; }
 .stock-size-options label:has(:checked) { background: #eef3e8; border-color: #a6b89a; }
 .stock-length-check { margin: 0 0 16px; }
+.stock-offcut-options { margin: 12px 0; }
+.stock-offcut-options summary { cursor: pointer; }
+.stock-offcut-options fieldset { display: grid; gap: 8px; margin: 8px 0 0; }
+.stock-offcut-options label { display: flex; align-items: center; gap: 8px; }
+.stock-offcut-options input[type="radio"] { width: auto; margin: 0; }
 .stock-remnant { color: #3c4d32; }
 .stock-remnant p + p { margin-top: 4px; }
 .stock-remnant .button { margin-top: 10px; }

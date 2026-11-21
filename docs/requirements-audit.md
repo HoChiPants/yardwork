@@ -2,6 +2,12 @@
 
 November 21, 2026. This ledger records the tested versions and workflows at each checkpoint.
 
+## Choosing a compatible offcut, format 118
+
+The idea planner accepts a question about one labeled scrap. A general board-fit question reports compatible sources, and the placement dialog can compare their measured lengths and whether the original stock cut is still pending. A named source stays selected until the user chooses another. A changed length can make the selected scrap unavailable without substituting a different source. A prefilled finished dimension uses whole feet when exact, with inches for other lengths.
+
+The new Chrome scenario switched between two measured remnants, placed a 4 ft board from the explicitly selected O002, and exported its cut from O002 in the build guide. The production builds, 1,638 domain tests, five example validations and seven targeted material-placement browser cases passed.
+
 ## Saved stock cut order and scrap questions, format 118
 
 List shows the saved cut order for a scheduled source board or sheet. The printed and Markdown guides place that order before its dependent offcut cuts. Each dependent cut identifies the original stock order by part label. Missing or incomplete instructions call for a review of the cut layout. Layout changes, including later trims, are called out alongside the saved steps.

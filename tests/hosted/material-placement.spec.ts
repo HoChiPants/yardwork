@@ -195,13 +195,51 @@ test("a question about one board previews the matching scrap before placing it",
   const result = dialog.getByRole("region", { name: "Offcut for a finished board", exact: true });
   await expect(result).toContainText("O001 fits 4 ft of 2 × 4 framing lumber");
   await result.getByRole("button", { name: "Review board placement", exact: true }).click();
-  await expect(dialog.getByRole("spinbutton", { name: "Needed finished length", exact: true })).toHaveValue("48");
+  await expect(dialog.getByRole("spinbutton", { name: "Needed finished length", exact: true })).toHaveValue("4");
+  await expect(dialog.getByRole("combobox", { name: "Finished length (optional) units", exact: true })).toHaveValue("ft");
   const useScrap = dialog.getByRole("button", { name: "Place from O001", exact: true });
   await expect(useScrap).toBeVisible();
   await useScrap.click();
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
   await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(page.locator(".inspector-scroll .bom-row")).toContainText("0 boards");
+});
+
+test("a named scrap stays selected when comparing other compatible offcuts", async ({ page }, info) => {
+  const base = blank("Pick a labeled remnant");
+  const withFirst = addMeasuredOffcut(base, base.steps[0].id, "stud-10", [55, 3.5, 1.5]);
+  const project = addMeasuredOffcut(withFirst, base.steps[0].id, "stud-12", [63, 3.5, 1.5]);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "choose-scrap.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Can I make a four-foot two by four from O002?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const result = dialog.getByRole("region", { name: "Offcut for a finished board", exact: true });
+  await expect(result).toContainText("O002 fits 4 ft of 2 × 4 framing lumber");
+  await result.getByRole("button", { name: "Review board placement", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Place from O002", exact: true })).toBeVisible();
+  await dialog.getByText("Compare 2 matching offcuts", { exact: true }).click();
+  const named = dialog.getByRole("radio", { name: /^O002 · 63 in/ });
+  await expect(named).toBeChecked();
+  await dialog.screenshot({ path: info.outputPath("compare-offcuts.png") });
+  await dialog.getByRole("radio", { name: /^O001 · 55 in/ }).check();
+  await expect(dialog.getByRole("button", { name: "Place from O001", exact: true })).toBeVisible();
+  await named.check();
+  await dialog.getByRole("button", { name: "Place from O002", exact: true }).click();
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await downloaded).path())!, "utf8");
+  expect(guide).toMatch(/^1\. O002 → P\d+ · 2 × 4 framing lumber$/m);
+  expect(guide).toContain("Crosscut to 4 ft.");
 });
 
 test.describe("phone material placement", () => {

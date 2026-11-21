@@ -55,6 +55,7 @@ The current layouts have no listed stock conflicts.
 - Cut stock to length · The modeled part is smaller than its stock length; verify its cutting orientation and schedule.
 - Square-cut PEX tubing · Review a tool and accessory for this required operation.
 - Mark SharkBite Max insertion depths · Review a tool and accessory for this required operation.
+- Water test gauge and isolation equipment · Confirm the tested section, installer procedure and local inspection requirements.
 - Eye protection appropriate to the operation · Review a tool and accessory for this required operation.
 - Hearing protection for powered operations · When using powered cutting tools, according to their instructions and exposure conditions.
 - Dust control and appropriate respiratory protection · When cutting creates dust; check the material, extraction setup, and exposure conditions.
@@ -94,9 +95,10 @@ The purchase list credits each marked source once.
 
 Check the delivered stock and confirm availability for the selected store.
 
-## 1. Lay out your project
+## 1. Prepare the space and cut list
 
-Establish the site, dimensions, and constraints before placing parts.
+Measure the available space and check clearances before cutting.
+Review the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.
 
 
 
@@ -105,6 +107,14 @@ Establish the site, dimensions, and constraints before placing parts.
 ## 2. Frame a 9′ × 8′ wall
 
 Interior nonbearing framing. Verify wall function, floor and ceiling attachment, backing and fireblocking before building.
+
+
+
+
+
+## 3. Assemble Wall 1
+
+Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.
 
 - P001 · Wall 1 · bottom plate: 108 in × 1.5 in × 3.5 in (SPF 2 × 4 · Home Depot · 10 ft)
   - Blank before profiles: X 108 in × Y 1.5 in × Z 3.5 in; local length X, width Z, thickness Y (axes inferred from bounding blank dimensions). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
@@ -149,9 +159,17 @@ No connection, support or restraint intent is recorded for these actual members.
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
 
-## 3. Frame a 4′ × 8′ wall
+## 4. Frame a 4′ × 8′ wall
 
 Interior nonbearing framing. Verify wall function, floor and ceiling attachment, backing and fireblocking before building.
+
+
+
+
+
+## 5. Assemble Wall 2
+
+Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.
 
 - P011 · Wall 2 · bottom plate: 48 in × 1.5 in × 3.5 in (#2 KD-HT 2 × 4 · Home Depot · 8 ft)
   - Blank before profiles: X 48 in × Y 1.5 in × Z 3.5 in; local length X, width Z, thickness Y (axes inferred from bounding blank dimensions). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
@@ -184,9 +202,9 @@ No connection, support or restraint intent is recorded for these actual members.
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
 
-## 4. Rough in Kitchen main
+## 6. Rough in Kitchen main
 
-
+Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.
 
 - P017 · Kitchen main: 0.875 in × 50.5 in × 0.875 in (SharkBite 3/4 in PEX-B)
   - Blank before profiles: X 0.875 in × Y 50.5 in × Z 0.875 in; local length Y, width X, thickness Z (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
@@ -211,9 +229,9 @@ No connection, support or restraint intent is recorded for these actual members.
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
 
-## 5. Rough in Island feed
+## 7. Rough in Island feed
 
-
+Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.
 
 - P031 · Island feed: 0.625 in × 48.35 in × 0.625 in (SharkBite 1/2 in PEX-B)
   - Blank before profiles: X 0.625 in × Y 48.35 in × Z 0.625 in; local length Y, width X, thickness Z (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
@@ -237,9 +255,9 @@ No connection, support or restraint intent is recorded for these actual members.
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
 
-## 6. Rough in Kitchen main · B
+## 8. Rough in Kitchen main · B
 
-
+Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.
 
 - P018 · Kitchen main · B: 0.875 in × 50.5 in × 0.875 in (SharkBite 3/4 in PEX-B)
   - Blank before profiles: X 0.875 in × Y 50.5 in × Z 0.875 in; local length Y, width X, thickness Z (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
@@ -264,9 +282,9 @@ No connection, support or restraint intent is recorded for these actual members.
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
 
-## 7. Connect Kitchen main and Kitchen main · B and Island feed
+## 9. Connect Kitchen main and Kitchen main · B and Island feed
 
-
+Review the current fitting schedule and dry-fit the cut lengths before joining. Confirm insertion access and test the installation before closing the wall.
 
 - P038 · SharkBite Max UR412A reducing tee: 3.5 in × 2.3 in × 1.3 in (SharkBite Max 3/4 × 3/4 × 1/2 in reducing tee)
 
@@ -281,6 +299,22 @@ No connection, support or restraint intent is recorded for these actual members.
 
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
+
+## 10. Review water test before concealment
+
+Record the field water test for the installed section and review the dated results before concealing the lines. Confirm inspection and release with the authority responsible for the work.
+
+
+
+
+
+## 11. Review connections and finish
+
+Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.
+
+
+
+
 
 
 ## Recorded offcuts

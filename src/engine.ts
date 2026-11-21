@@ -62,7 +62,8 @@ import { bearingConnectionGuideLines, bearingConnections, bearingConnectionScope
 import { purchaseCount } from "./purchaseUnits";
 import { freshStoreCheck } from "./storeSnapshotTime";
 import { suppliesMarkdown, supplyRows, formatSupplyContent } from "./supplies";
-import { projectCodeMarkdown, reviewProjectCode } from "./projectCode";
+import { codeRowLabels, projectCodeMarkdown, reviewProjectCode } from "./projectCode";
+import { reviewWaterPressure, waterPressureGuideStep, waterPressureObservations } from "./waterPressure";
 import { reviewWaterRun, waterRunGuide } from "./wallWater";
 import { reviewWaterFitting, waterFittingGuide } from "./waterFittings";
 import { maxFittingInstructions, maxInsertionChart, waterFittingProducts } from "./waterFittingReference";
@@ -796,6 +797,15 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (review.problem) findings.push({
       id: `water-fitting-${fitting.id}`, severity: "warning", title: `Review PEX connection · ${waterFittingProducts[fitting.materialId].model}`,
       detail: review.problem, ...(p.pieces.some(({ id }) => id === fitting.pieceId) && { pieceId: fitting.pieceId }),
+    });
+  }
+  for (const test of p.waterPressureTests ?? []) {
+    const { rows } = reviewWaterPressure(p, test);
+    const issues = rows.filter(({ state }) => state === "discrepancy");
+    if (issues.length) findings.push({
+      id: `water-pressure-${test.id}`, severity: "warning", title: `Review water test · ${test.name}`,
+      detail: issues.map(({ detail }) => detail).join(" "),
+      pieceId: test.scope.runs.find(({ id }) => id === test.rootRunId)?.pipeId,
     });
   }
   if (p.projectCode) {
@@ -2149,6 +2159,16 @@ export function guideMarkdown(p: Project) {
     (p.waterFittings?.length ? "\n\n## PEX fittings and insertion marks\n\n" +
       p.waterFittings.flatMap((fitting) => waterFittingGuide(p, fitting)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[SharkBite Max insertion depth](${maxInsertionChart}) · [SharkBite installation guide](${maxFittingInstructions})\n` : "") +
+    (p.waterPressureTests?.length ? "\n\n## Water pressure test records\n\n" + waterPressureGuideStep +
+      p.waterPressureTests.map((test) => {
+        const clean = (line: string) => line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&");
+        const rows = reviewWaterPressure(p, test).rows;
+        const sources = [...new Map(rows.flatMap((row) => row.sources ?? []).map((source) => [source.url, source])).values()];
+        return `\n\n### ${clean(test.name)}\n\n` +
+          [...waterPressureObservations(test), ...rows.map((row) => `${row.label} · ${codeRowLabels[row.state]} · ${row.detail}`)]
+            .map((line) => "- " + clean(line)).join("\n") +
+          sources.map(({ title, url }) => `\n- [${title}](${url})`).join("");
+      }).join("") + "\n" : "") +
     (motions.length ? "\n\n## Motion and clearance\n\n" +
       motions.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") : "") +
     (latch.length ? "\n\n## Greenhouse door latch layout\n\n" +

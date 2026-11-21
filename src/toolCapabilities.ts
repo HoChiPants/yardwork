@@ -12,6 +12,7 @@ export const toolCapabilities = [
   "plastic-cut",
   "pex-cut",
   "pex-insertion-mark",
+  "water-pressure-gauge",
   "metal-cut",
   "metal-deburr",
   "profile-cut",

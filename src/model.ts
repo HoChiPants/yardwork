@@ -15,6 +15,7 @@ import { wallFramingStockIds, windowOpeningSchema, windowWallPrompt, windowWallS
 import { doorJambMaterial, doorOpeningSchema, doorUnitSchema, doorwayGuideNote, doorwayHinge, doorwayLeafRole, doorwayTemplate, interiorDoor, measuredDoorMaterial, wallStudPositions, doorWallPrompt } from "./doorWall";
 import { nailShield, pexPipes, pexStockLength, type PexPipeId } from "./wallWaterReference";
 import { waterRunSchema } from "./wallWaterSchema";
+import { waterPressureTestsSchema } from "./waterPressureSchema";
 import { waterFittingDimensions, waterFittingIds, waterFittingName, waterFittingProducts } from "./waterFittingReference";
 import { waterFittingPorts, waterFittingSchema } from "./waterFittingSchema";
 import { materialIds } from "./materialIds";
@@ -253,6 +254,7 @@ export const stepSchema = z.object({
           "connector-preparation",
           "project-preparation",
           "project-finish",
+          "water-pressure-review",
         ]),
         planId: id,
         notes: z.string().max(4500),
@@ -492,6 +494,7 @@ export const currentProjectSchema = z
         "Keep one cut plan per stock source.")
       .optional(),
     projectCode: projectCodeSchema.optional(),
+    waterPressureTests: waterPressureTestsSchema.optional(),
     waterRuns: z.array(waterRunSchema).max(32)
       .refine((runs) => {
         const members = runs.flatMap((run) => [run.pipeId, ...run.shields.map(({ id }) => id)]);

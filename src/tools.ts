@@ -2,6 +2,7 @@ import { openingSilicone } from "./openingAirSealReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { isPexPipe, pexCutter, pexInstallation } from "./wallWaterReference";
 import { reviewWaterFitting } from "./waterFittings";
+import { waterTestManufacturer } from "./waterPressure";
 import { maxFittingInstructions, waterDepthGauge } from "./waterFittingReference";
 import { reviewWaterRun } from "./wallWater";
 import { flashingKnife, flexWrap } from "./openingFlashingReference";
@@ -201,6 +202,11 @@ const definitions: Record<
     name: "Mark SharkBite Max insertion depths",
     review: "Match the depth gauge to the Max side and the size of each socket. Use a permanent marker and check the seating mark against the fitting instructions.",
     referenceUrls: [waterDepthGauge.listing, maxFittingInstructions],
+  },
+  "water-pressure-gauge": {
+    name: "Water test gauge and isolation equipment",
+    review: "Record the gauge’s working limit separately from its scale. Confirm increments, the actual gauge condition and the ratings of equipment included in the isolated section with the installer.",
+    referenceUrls: [waterTestManufacturer.url],
   },
   "metal-cut": {
     name: "Shorten the selected metal rod",
@@ -785,6 +791,12 @@ export function toolChecklist(
     ]),
   );
   const currentWaterRuns = new Set((project.waterRuns ?? []).filter((run) => reviewWaterRun(project, run).measured).map(({ id }) => id));
+  for (const run of project.waterRuns ?? []) {
+    if (currentWaterRuns.has(run.id)) add("water-pressure-gauge", {
+      kind: "piece", id: run.pipeId,
+      reason: `Record the installed section containing ${run.name} before concealing this line.`,
+    }, "conditional", "Confirm the tested section, installer procedure and local inspection requirements.");
+  }
   for (const fitting of project.waterFittings ?? []) {
     const { layout } = reviewWaterFitting(project, fitting);
     if (layout) add("pex-insertion-mark", {

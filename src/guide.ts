@@ -22,6 +22,9 @@ import type { LidHingePlan } from "./hingeSchema";
 import { connectorReviews, type ConnectorReview } from "./connectors";
 import { connectorPreparationNotes } from "./connectorGuide";
 import { connectorPhysicalIntent } from "./connectorIntent";
+import { waterPressureGuideStep } from "./waterPressure";
+import { waterRunStageKey } from "./wallWater";
+import { waterFittingStageKey } from "./waterFittings";
 
 /** Only active physical hinge inputs. Labels, counters, provenance dates and old receipts are metadata. */
 function hingeDesign(plan: LidHingePlan) {
@@ -68,6 +71,7 @@ function preparationScope(project: Project) {
     ...(project.projectCode ? { projectCode: project.projectCode } : {}),
     ...(project.waterRuns?.length ? { waterRuns: project.waterRuns } : {}),
     ...(project.waterFittings?.length ? { waterFittings: project.waterFittings } : {}),
+    ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),
     ...(project.saunaBenchTravelPlans?.length ? { saunaBenchTravelPlans: project.saunaBenchTravelPlans } : {}),
@@ -184,6 +188,7 @@ function designInputs(project: Project) {
     ...(project.greenhouseDoorSeals?.length ? { greenhouseDoorSeals: project.greenhouseDoorSeals } : {}),
     ...(project.openingFlashings?.length ? { openingFlashings: project.openingFlashings } : {}),
     ...(project.projectCode ? { projectCode: project.projectCode } : {}),
+    ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),
     ...(project.saunaBenchTravelPlans?.length ? { saunaBenchTravelPlans: project.saunaBenchTravelPlans } : {}),
@@ -225,6 +230,8 @@ export function designFingerprint(project: Project) {
 }
 export function guideIsCurrent(project: Project) {
   if (project.guideFingerprint !== designFingerprint(project)) return false;
+  if (project.waterRuns?.length && !project.steps.some((step) => step.generated?.kind === "water-pressure-review"))
+    return false;
   // Source facts and time-based measurement eligibility can change without editing project bytes.
   // Compare the same derived preparation scope used by generation, preserving older physical hashes.
   if (project.fastenerPlans.length) {
@@ -574,6 +581,12 @@ export function generateBuildGuide(input: Project): Project {
       { kind: "connector-preparation", planId: review.plan.id }, connectorReviewInputs(project, review));
   const assemblyStart = steps.length;
   const addedHinges = new Set<string>();
+  const lastWaterStage = stages.filter(({ key }) => key === waterRunStageKey || key === waterFittingStageKey).at(-1);
+  function addWaterPhase() {
+    addPhase("Review water test before concealment", waterPressureGuideStep,
+      { kind: "water-pressure-review", planId: project.id },
+      { lines: project.waterRuns?.map(({ id }) => id), fittings: project.waterFittings?.map(({ id }) => id) });
+  }
   const addHingePhase = (review: HingeReview) => {
     addPhase(`Review lid hinge ${review.plan.label}: ${review.plan.name.replace(/[\r\n\t]+/g, " ")}`.slice(0, 120),
       hingePreparationNotes(project, review.plan.id, review),
@@ -601,9 +614,11 @@ export function generateBuildGuide(input: Project): Project {
         throw Error("The assembly guide assigned a part more than once.");
       pieceSteps.set(id, phase.id);
     }
+    if (stage === lastWaterStage) addWaterPhase();
   }
   for (const review of hingeReviewCache)
     if (!addedHinges.has(review.plan.id)) addHingePhase(review);
+  if (!lastWaterStage && project.waterRuns?.length) addWaterPhase();
   const active = project.pieces.filter((p) => !p.offcut);
   if (
     pieceSteps.size !== active.length ||

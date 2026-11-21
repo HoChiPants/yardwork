@@ -15,6 +15,7 @@ import { parsePrompt, type Command, type Project } from "./model";
 import { windowWallScope } from "./windowWall";
 import { reviewWaterRun } from "./wallWater";
 import { fittingLabel, reviewWaterFitting } from "./waterFittings";
+import { reviewWaterPressure } from "./waterPressure";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
@@ -30,6 +31,7 @@ export type BuildQuestion =
   | { kind: "window-wall"; prompt: string }
   | { kind: "wall-water"; subject?: string }
   | { kind: "water-fitting"; tee?: boolean }
+  | { kind: "water-pressure" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
   | { kind: "offcuts"; label?: string };
@@ -44,6 +46,7 @@ export type BuildQuestionAction =
   | { kind: "window-wall"; command?: Command }
   | { kind: "wall-water"; runId?: string }
   | { kind: "water-fitting"; fittingId?: string; tee?: boolean }
+  | { kind: "water-pressure"; recordId?: string }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
@@ -96,6 +99,7 @@ const windowWallQuestion = /^(?:(?:(?:build|frame|design|plan|make|create|add)\s
 const wallWaterQuestion = /^(?:(?:plan|route|add|lay out) (?:a |the )?(?:pex|water(?: supply)?) (?:line|pipe)(?: through (?:the |a )?(?:wall|studs))?|(?:review|check) (?:the |my )?water line(?: (.+))?|how (?:do|can|should) i run (?:a )?(?:pex|water) (?:line|pipe) through (?:the |a )?(?:wall|studs))$/i;
 const fittingQuestion = /^(?:(?:how (?:do|can|should) i )?(?:connect|join) (?:two |my |these |the )?(?:pex|water) (?:runs|lines|pipes)(?: (?:at|around) (?:a |the )?corner)?|(?:review|check|plan) (?:the |my |a )?pex (?:fittings?|connections?))$/i;
 const teeQuestion = /^(?:(?:how (?:do|can|should) i )?(?:branch|tee off) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)|(?:add|plan) (?:a |the )?tee (?:in|into|on|to) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)(?: for .+)?)$/i;
+const pressureQuestion = /^(?:(?:how (?:do|can|should) i )?pressure[- ]test (?:the |my |a )?(?:pex|water(?: supply)?) (?:main|runs?|lines?|pipes?|system)|(?:log|record|review|check|show) (?:a |the |my )?(?:pex |water )?pressure tests?)$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -119,6 +123,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (water) return { kind: "wall-water", ...(water[1] && { subject: water[1] }) };
   if (fittingQuestion.test(text)) return { kind: "water-fitting" };
   if (teeQuestion.test(text)) return { kind: "water-fitting", tee: true };
+  if (pressureQuestion.test(text)) return { kind: "water-pressure" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
   const motion = motionQuestion.exec(text);
   return motion
@@ -465,6 +470,20 @@ export function answerBuildQuestion(
         link: question.tee
           ? { label: "Branch a PEX main", action: { kind: "water-fitting", tee: true } }
           : { label: "Connect PEX runs", action: { kind: "water-fitting" } },
+      };
+    case "water-pressure":
+      return {
+        title: "Record a water pressure test",
+        detail: "Choose a connected section and enter the installer’s water test observations. Yardwork compares the saved readings with the supported code and fitting references.",
+        rows: (project.waterPressureTests ?? []).map((test) => {
+          const review = reviewWaterPressure(project, test);
+          return {
+            id: test.id, title: test.name,
+            detail: review.rows.map(({ detail }) => detail).join(" "),
+            link: { label: "Open test record", action: { kind: "water-pressure", recordId: test.id } },
+          };
+        }),
+        link: { label: "Open water pressure tests", action: { kind: "water-pressure" } },
       };
     case "wall-water": {
       const runs = (project.waterRuns ?? []).filter(({ name }) => !question.subject || searchName(name) === searchName(question.subject));

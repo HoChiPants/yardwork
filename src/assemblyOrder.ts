@@ -116,6 +116,14 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
     requireBefore(review, moving);
   }
   const finish = reviewSteps.get(reviewKey("project-finish", project.id));
+  const waterReview = reviewSteps.get(reviewKey("water-pressure-review", project.id));
+  if (waterReview) {
+    for (const run of project.waterRuns ?? [])
+      requireBefore(byOwner.get(run.id)?.get(waterRunStageKey), waterReview);
+    for (const fitting of project.waterFittings ?? [])
+      requireBefore(byOwner.get(fitting.id)?.get(waterFittingStageKey), waterReview);
+    requireBefore(waterReview, finish);
+  }
   for (const plan of project.restraintPlans) {
     if (plan.receiver && stageByMember.has(plan.receiver.pieceId))
       requireBefore(reviewSteps.get(reviewKey("restraint-preparation", plan.id)), finish);

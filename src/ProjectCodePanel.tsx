@@ -345,6 +345,7 @@ export function ProjectCodePanel({
   onShowVentDatums,
   shownDryerDuct,
   onShowDryerDuct,
+  onWaterPressure,
 }: {
   project: Project;
   measurement: { a: V3 | null; b: V3 | null };
@@ -354,6 +355,7 @@ export function ProjectCodePanel({
   onShowVentDatums: (show: boolean) => void;
   shownDryerDuct: boolean;
   onShowDryerDuct: (show: boolean) => void;
+  onWaterPressure: () => void;
 }) {
   const review = project.projectCode
     ? reviewProjectCode(project.projectCode, project)
@@ -365,6 +367,8 @@ export function ProjectCodePanel({
         Use the build jurisdiction and date to find adopted editions and compare
         recorded project facts with the available checks.
       </p>
+      {!!(project.waterRuns?.length || project.waterPressureTests?.length) &&
+        <button type="button" className="button secondary" onClick={onWaterPressure}>Water pressure test</button>}
       <PlumbingVentLayoutPanel
         project={project}
         onChange={onChange}

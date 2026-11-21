@@ -15,8 +15,10 @@ import { WindowWallFields, windowWallExample } from "./WindowWallFields";
 import { DoorOpeningFields, DoorwayPanel, doorwayExample } from "./DoorwayPanel";
 import { WallWaterPanel } from "./WallWaterPanel";
 import { WaterFittingPanel } from "./WaterFittingPanel";
+import { WaterPressurePanel } from "./WaterPressurePanel";
 import { removeWaterRun, waterRunGuide } from "./wallWater";
 import { removeWaterFitting, waterFittingGuide } from "./waterFittings";
+import { reviewWaterPressure, waterPressureGuideStep, waterPressureObservations } from "./waterPressure";
 import { maxInsertionChart, maxFittingInstructions } from "./waterFittingReference";
 import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { previewDoorway } from "./doorwayPreview";
@@ -361,6 +363,7 @@ type Modal =
   | "doorway"
   | "wall-water"
   | "water-fitting"
+  | "water-pressure"
   | "export"
   | "assistant"
   | "base"
@@ -701,6 +704,7 @@ export function App() {
   const [assistantTarget, setAssistantTarget] = useState("");
   const [waterRunTarget, setWaterRunTarget] = useState<string>();
   const [waterFittingTarget, setWaterFittingTarget] = useState<string>();
+  const [waterPressureTarget, setWaterPressureTarget] = useState<string>();
   const [waterFittingTee, setWaterFittingTee] = useState(false);
   const [snap, setSnap] = useState(true),
     [explode, setExplode] = useState(false),
@@ -1341,6 +1345,10 @@ export function App() {
         setWaterFittingTarget(action.fittingId);
         setWaterFittingTee(!!action.tee);
         setModal("water-fitting");
+        break;
+      case "water-pressure":
+        setWaterPressureTarget(action.recordId);
+        setModal("water-pressure");
         break;
       case "greenhouse-weatherseal": {
         const plan = project.motionPlans?.find(({ id }) => id === action.motionId);
@@ -3839,6 +3847,8 @@ export function App() {
               <button type="button" className="button secondary full" onClick={() => { setWaterRunTarget(undefined); setModal("wall-water"); }}>Plan a wall water line</button>
               {((project.waterRuns?.length ?? 0) >= 2 || !!project.waterFittings?.length) &&
                 <button type="button" className="button secondary full" onClick={() => { setWaterFittingTarget(undefined); setWaterFittingTee(false); setModal("water-fitting"); }}>Connect PEX runs</button>}
+              {!!(project.waterRuns?.length || project.waterPressureTests?.length) &&
+                <button type="button" className="button secondary full" onClick={() => { setWaterPressureTarget(undefined); setModal("water-pressure"); }}>Water pressure test</button>}
               <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
@@ -3943,6 +3953,7 @@ export function App() {
                 measurement={measurement}
                 measuredDistance={measured?.distance ?? null}
                 onChange={change}
+                onWaterPressure={() => { setWaterPressureTarget(undefined); setModal("water-pressure"); }}
                 shownDryerDuct={!!shownDryerDuct}
                 onShowDryerDuct={(show) => {
                   setDryerDuctProjectId(show ? project.id : null);
@@ -5249,7 +5260,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-pressure" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5353,6 +5364,8 @@ export function App() {
                 setModal(null);
                 notify("Fitting removed. The pipe cuts stay in the plan.");
               })} />}
+            {modal === "water-pressure" && <WaterPressurePanel project={project} initialRecord={waterPressureTarget}
+              onChange={(next) => { change(next); notify("Water test record added to the guide."); }} />}
             {modal === "catalog" && <CatalogReferences />}
             {modal === "studies" && (
               <BuildStudies
@@ -6743,6 +6756,17 @@ export function App() {
             <h2>PEX fittings and insertion marks</h2>
             <ul>{exportGuide.waterFittings.flatMap((fitting) => waterFittingGuide(exportGuide, fitting)).map((line, i) => <li key={i}>{line}</li>)}</ul>
             <p><a href={maxInsertionChart}>Insertion chart</a>{" · "}<a href={maxFittingInstructions}>SharkBite installation</a></p>
+          </section>
+        )}
+        {!!exportGuide.waterPressureTests?.length && (
+          <section className="water-pressure-print">
+            <h2>Water pressure test records</h2>
+            <p>{waterPressureGuideStep}</p>
+            {exportGuide.waterPressureTests.map((record) => <div key={record.id}>
+              <h3>{record.name}</h3>
+              <ul>{waterPressureObservations(record).map((line, index) => <li key={index}>{line}</li>)}</ul>
+              <ProjectCodeRows rows={reviewWaterPressure(exportGuide, record).rows} />
+            </div>)}
           </section>
         )}
         {printOpeningFlashing.length > 0 && (

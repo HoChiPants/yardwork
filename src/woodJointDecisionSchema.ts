@@ -1,4 +1,19 @@
 import { z } from "zod";
+import { trimSealant } from "./trimSealantReference";
+
+export const trimSeamInputSchema = z.strictObject({
+  edgeIds: z.array(z.string().min(1).max(160)).min(1).max(64).refine(
+    (ids) => new Set(ids).size === ids.length,
+    "Choose each seam edge once.",
+  ),
+  gapWidth: z.number().positive().max(trimSealant.screenWidth),
+  gapDepth: z.number().positive().max(trimSealant.screenDepth),
+  fieldCoverageFeet: z.number().positive().optional(),
+});
+export type TrimSeamInput = z.infer<typeof trimSeamInputSchema>;
+const trimSeamSchema = trimSeamInputSchema.extend({
+  contactSignature: z.string().min(1).max(600),
+});
 
 export const woodJointMethod = z.enum(["glue", "fitted", "sealant", "intentional-contact"]);
 export type WoodJointMethod = z.infer<typeof woodJointMethod>;
@@ -9,7 +24,9 @@ export const woodJointDecisionSchema = z.strictObject({
   method: woodJointMethod,
   note: z.string().trim().min(1, "Record the detail you want to carry into the guide.").max(400),
   contactSignature: z.string().min(1).max(600),
-}).refine(({ firstId, secondId }) => firstId < secondId, "Choose two distinct members in canonical order.");
+  trimSeam: trimSeamSchema.optional(),
+}).refine(({ firstId, secondId }) => firstId < secondId, "Choose two distinct members in canonical order.").refine(({ trimSeam, method }) => !trimSeam || method === "sealant",
+  "Only a sealant joint can carry a trim seam plan.");
 
 export type WoodJointDecision = z.infer<typeof woodJointDecisionSchema>;
 

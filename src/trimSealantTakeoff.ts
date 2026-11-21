@@ -19,7 +19,8 @@ export function estimateTrimSealant(input: {
   const coverage = fieldCoverageFeet ?? trimSealant.coverageFeet;
   if (!Number.isFinite(coverage) || coverage <= 0)
     throw Error("Enter positive coverage measured with one cartridge.");
-  const cartridges = Math.ceil((lengthInches / 12) / coverage);
+  const cartridgeUse = lengthInches / (12 * coverage);
+  const cartridges = Math.ceil(cartridgeUse);
   if (!Number.isSafeInteger(cartridges) || cartridges < 1 || cartridges > maxSupplyQuantity)
     throw Error("Check the measured length and coverage before estimating cartridges.");
 
@@ -31,5 +32,5 @@ export function estimateTrimSealant(input: {
     `maximum measured gap ${formatPreciseInches(gapWidth)} wide and ${formatPreciseInches(gapDepth)} deep`,
     basis,
   ].join(" · ") + ". Check color and finish on matching scrap before application.";
-  return { cartridges, note };
+  return { cartridges, cartridgeUse, note };
 }

@@ -291,6 +291,8 @@ Metal cutting, deburring and a separately reviewed 1/16 in pilot bit now have [s
 
 **List → Pricing coverage** shows a priced subtotal, separate observed/example contributions, unpriced product lines and their purchase quantities, and excluded/unresolved quantities. Unknown prices are excluded rather than treated as free; an explicitly recorded $0 snapshot stays observed. The same coverage appears in proposals, Markdown, print and retailer handoff. This covers calculated stock and selected supplies, not a complete project quote.
 
+For dry interior trim, record a **Seal exposed seam** joint detail, then open **Plan trim sealant**. Select accessible full edges, preview their positions in 3D and enter measured bead width and depth. The build guide retains the selected runs, and List combines them into a Home Depot cartridge estimate. Ask **Review trim seam between P001 and P002** with your model’s part labels to reopen a pair or check its saved measurements. [Sealing details](docs/sealing-and-air-barrier.md)
+
 **List → Estimate trim sealant** uses measured gaps and a chosen coverage basis to estimate cartridges for dry interior wood trim. Confirm the estimate to retain the measured takeoff in the shopping list and generated guide. [Sealing and air-barrier references](docs/sealing-and-air-barrier.md)
 
 **List → Estimate wood glue** lists the largest modeled overlap for each current glue joint. Confirm the total area you will coat across your nonstructural joints and preview the quantity of 16 oz bottles. Save or replace the estimate in the shopping list and build guide after checking the fit. [Titebond product and application instructions](https://titebond.com/print/product/e8d40b45-0ab3-49f7-8a9c-b53970f736af)

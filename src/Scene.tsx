@@ -69,6 +69,7 @@ export type SceneProps = {
   showOffcuts?: boolean;
   shownSiteClearanceId?: string | null;
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
+  shownTrimSeam?: { points: [V3, V3]; label: string };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownPlumbingVentLayout?: PlumbingVentLayout;
   shownDryerDuctLayout?: DryerDuctLayout;
@@ -1283,7 +1284,7 @@ function World(props: SceneProps) {
     (s) => s.id === props.selectedSectionId,
   );
   const grouped = new Set(section?.pieceIds ?? []);
-  const markedRun = props.shownBandingEdge ?? props.shownProfileRun;
+  const markedRun = props.shownTrimSeam ?? props.shownBandingEdge ?? props.shownProfileRun;
   return (
     <>
       <color attach="background" args={["#eeeee5"]} />
@@ -1432,7 +1433,7 @@ function World(props: SceneProps) {
           <Html center position={markedRun.points[0].map((v, i) =>
             (v + markedRun.points[1][i]) / 24) as V3}
             zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
-            <span className="site-clearance-marker" data-testid={props.shownBandingEdge ? "edge-banding-marker" : "sunlite-profile-marker"}>{markedRun.label}</span>
+            <span className="site-clearance-marker" data-testid={props.shownTrimSeam ? "trim-seam-marker" : props.shownBandingEdge ? "edge-banding-marker" : "sunlite-profile-marker"}>{markedRun.label}</span>
           </Html>
         </group>
       )}

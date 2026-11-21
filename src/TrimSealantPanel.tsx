@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { Project } from "./model";
+import { addHomeDepotPurchaseNeed } from "./handoffPurchases";
+import { trimSeamPurchaseSummary } from "./woodJointDecisions";
 import { addSupply } from "./supplies";
 import { trimSealant } from "./trimSealantReference";
 import { estimateTrimSealant } from "./trimSealantTakeoff";
@@ -11,6 +13,9 @@ export function TrimSealantPanel({
   project: Project;
   onChange: (project: Project) => void;
 }) {
+  const planned = project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)
+    ? trimSeamPurchaseSummary(project) : null;
+  const missing = Math.max(0, (planned?.required ?? 0) - (planned?.selected ?? 0));
   const [basis, setBasis] = useState("");
   const [result, setResult] = useState<ReturnType<typeof estimateTrimSealant>>();
   const [message, setMessage] = useState("");
@@ -49,6 +54,26 @@ export function TrimSealantPanel({
     <details className="field-section">
       <summary>Estimate trim sealant</summary>
       <p className="small-note">{trimSealant.scope}</p>
+      {planned && (
+        <section className="field-section" aria-label="Measured trim seams">
+          <h3>Measured trim seams</h3>
+          {planned.required !== null && <p className="small-note">
+            {planned.length} across {planned.ready} {planned.ready === 1 ? "joint" : "joints"} · {planned.required} planned {planned.required === 1 ? "cartridge" : "cartridges"} · {planned.selected} in List
+          </p>}
+          {planned.review > 0 && <p className="small-note">
+            {planned.review} {planned.review === 1 ? "joint needs" : "joints need"} a fresh seam review.
+          </p>}
+          {missing > 0 && project.retailer === "home-depot" && <button type="button"
+            className="button secondary" onClick={() => {
+              try {
+                onChange(addHomeDepotPurchaseNeed(project, trimSealant.id));
+                setError("");
+              } catch (issue) {
+                setError(issue instanceof Error ? issue.message : "Review the trim sealant purchase.");
+              }
+            }}>Add missing seam {missing === 1 ? "cartridge" : "cartridges"}</button>}
+        </section>
+      )}
       <form onSubmit={estimate} onChange={() => {
         setResult(undefined);
         setError("");

@@ -32,6 +32,8 @@ export type ConnectionContactReview = {
   normal: V3 | null;
   /** Center of the modeled face overlap, for inspection only; never a proposed hole. */
   center: V3 | null;
+  /** Projected boundary of the selected retained-face patch. */
+  outline?: V3[];
   reason: string;
 };
 type Point2 = [number, number];
@@ -302,7 +304,7 @@ function review(
       reason:
         "Retained solids overlap. Review placement and intended joinery cuts before detailing this connection.",
     };
-  let best: { gap: number; area: number; normal: V3; center: V3 } | null = null;
+  let best: { gap: number; area: number; normal: V3; center: V3; outline: V3[] } | null = null;
   for (const fa of a.faces) {
     if (
       outward &&
@@ -331,6 +333,7 @@ function review(
           area: overlap.area,
           normal: fa.normal,
           center: overlap.center,
+          outline: overlap.outline.map((point) => add(point, scale(fa.normal, gap / 2))),
         };
     }
   }

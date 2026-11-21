@@ -44,7 +44,7 @@ export function ConnectionQuestionResult({
               </button>
             </>
           )}
-          {answer.pairs.map(({ first, second, contact, plans }) => {
+          {answer.pairs.map(({ first, second, contact, plans, trimSeam }) => {
             const memberIds = { firstId: first.id, secondId: second.id };
             return (
               <article key={second.id}>
@@ -53,14 +53,15 @@ export function ConnectionQuestionResult({
                   {contactStatus[contact.state]}
                   {contact.gap !== null && <> · {formatPreciseInches(contact.gap)} gap</>}.
                 </p>
+                {trimSeam && <p>{trimSeam}</p>}
                 <div className="button-row">
-                  {plans.map(({ id, label }) => (
+                  {!trimSeam && plans.map(({ id, label }) => (
                     <button key={id} type="button" className="button secondary" onClick={() =>
                       onAction({ kind: "open-plan", ...memberIds, planId: id })}>
                       Open screw plan {label}
                     </button>
                   ))}
-                  {!plans.length && contact.state === "face-contact" && (
+                  {!trimSeam && !plans.length && contact.state === "face-contact" && (
                     <button type="button" className="button secondary" onClick={() =>
                       onAction({ kind: "compare", ...memberIds })}>
                       Compare screw entry sides

@@ -1,6 +1,6 @@
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
-import { clearWoodJointDecision, saveWoodJointDecision, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
 import { SillGasketPanel } from "./SillGasketPanel";
@@ -166,6 +166,7 @@ import {
   browserDraftRecoveries,
 } from "./drafts";
 import { SuppliesPanel } from "./SuppliesPanel";
+import type { TrimSeamMarker } from "./TrimSeamPanel";
 import { TrimSealantPanel } from "./TrimSealantPanel";
 import { WoodGluePanel } from "./WoodGluePanel";
 import { PrintSunliteProfiles, SunliteProfilePanel } from "./SunliteProfilePanel";
@@ -559,6 +560,7 @@ export function App() {
   const [shownLatchId, setShownLatchId] = useState<string | null>(null);
   const [shownRodSupportId, setShownRodSupportId] = useState<string | null>(null);
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
+  const [shownTrimSeam, setShownTrimSeam] = useState<{ project: Project; pair: string; marker: TrimSeamMarker } | null>(null);
   const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
   const [shownSiteClearanceId, setShownSiteClearanceId] = useState<string | null>(null);
   const [ventDatumProjectId, setVentDatumProjectId] = useState<string | null>(null);
@@ -2722,6 +2724,9 @@ export function App() {
               shownRodSupportId={panel === "sections" ? shownRodSupportId : null}
               shownSiteClearanceId={panel === "site-clearances" ? shownSiteClearanceId : null}
               shownFoundation={panel === "site-clearances" ? shownFoundation : undefined}
+              shownTrimSeam={panel === "connections" && shownTrimSeam?.project === project &&
+                shownTrimSeam.pair === liveConnectionContext?.scope.focusPair?.slice().sort().join("/")
+                ? shownTrimSeam.marker : undefined}
               shownSillGasket={panel === "sections" && shownSillGasket?.outline
                 ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
                 : undefined}
@@ -3225,6 +3230,15 @@ export function App() {
                 woodJointDetails={woodJointDetails}
                 onSaveWoodJointDetail={(firstId, secondId, method, note) => safe(() =>
                   change((p) => saveWoodJointDecision(p, firstId, secondId, method, note)))}
+                onSaveTrimSeam={(firstId, secondId, input) =>
+                  change((p) => saveTrimSeam(p, firstId, secondId, input))}
+                onShowTrimSeam={(marker) => {
+                  const pair = liveConnectionContext.scope.focusPair;
+                  if (!marker || !pair) { setShownTrimSeam(null); return; }
+                  setStage(null); setPlaying(false); setExplode(false); setMode("select");
+                  setShownTrimSeam({ project, pair: [...pair].sort().join("/"), marker });
+                  inspectWorkspace();
+                }}
                 onClearWoodJointDetail={(firstId, secondId) => safe(() =>
                   change((p) => clearWoodJointDecision(p, firstId, secondId)))}
                 onFocusModeledContact={({ title, memberIds }) => openConnectionReview(

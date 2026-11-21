@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 91**. Yardwork reads valid formats 1–90 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 92**. Yardwork reads valid formats 1–91 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 92 can save `woodJointDecisions[].trimSeam` on a sealant joint. It records selected modeled edges, field bead measurements, any trial coverage and the measured fit signature. Earlier sealant joint notes still open and can take a measured plan later.
 
 Format 91 accepts all six cataloged Accuride 3732 drawer slide pairs in `mechanism.drawerSlide.productId`. The selected product determines the maximum saved travel and matching shopping-list reference. Existing 22 in setups and custom slide motions retain their saved IDs and travel.
 

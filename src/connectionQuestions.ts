@@ -5,16 +5,20 @@ import {
 } from "./connectionContacts";
 import { material, type Piece, type Project } from "./model";
 import { ensurePartLabels } from "./partLabels";
+import { modeledTrimSeamEdges } from "./trimSeamGeometry";
+import { trimSeamLine, woodJointDecisionEntries, woodPairKey } from "./woodJointDecisions";
 
 export type ConnectionQuestion = {
   first: string;
   second?: string;
+  kind?: "trim-seam";
 };
 
 const findNearby =
   /^(?:what can i (?:screw|attach) (.+?) to|(?:find|review|show|suggest) (?:nearby )?(?:wood[- ]screw |screw )?(?:joints|connections) (?:for|near|around) (.+))$/i;
 const pairRequest =
   /^(?:(?:screw|attach|fasten|join|connect)(?: from)?|(?:plan|review|check|compare) (?:a |the )?(?:wood[- ]screw |screw )?(?:joint|connection)(?: from| between)?)\s+(.+)$/i;
+const trimRequest = /^(?:plan|review|check) (?:the )?(?:trim seam|trim sealant|sealant joint) between\s+(.+)$/i;
 const pairMembers =
   /^(?:"([^"]+)"|([^"]+?))\s+(?:to|into|onto|and)\s+(?:"([^"]+)"|([^"]+))$/i;
 const partNumber = /^([po])(\d{1,6})$/i;
@@ -25,7 +29,8 @@ export function connectionQuestion(project: Project, prompt: string): Connection
     .replace(/^(?:please\s+)?(?:(?:can|could|would) you\s+|how (?:can|do|should) i\s+)?(?:please\s+)?/i, "");
   const nearby = findNearby.exec(text);
   if (nearby) return { first: nearby[1] ?? nearby[2] };
-  const request = pairRequest.exec(text);
+  const trim = trimRequest.exec(text);
+  const request = trim ?? pairRequest.exec(text);
   if (!request) return null;
   const pair = pairMembers.exec(request[1]);
   if (!pair) return null;
@@ -38,7 +43,7 @@ export function connectionQuestion(project: Project, prompt: string): Connection
           (ref) => ref === asName(name) || ref.replace(/^the\s+/, "") === asName(name),
         ))) return null;
   }
-  return { first, second };
+  return { first, second, ...(trim && { kind: "trim-seam" }) };
 }
 
 type Member = { id: string; label: string; name: string };
@@ -47,6 +52,7 @@ export type ConnectionAnswerPair = {
   second: Member;
   contact: ConnectionContactReview;
   plans: { id: string; label: string }[];
+  trimSeam?: string;
 };
 type ConnectionAnswer =
   | { message: string; choices: string[] }
@@ -114,11 +120,16 @@ export function answerConnectionQuestion(project: Project, question: ConnectionQ
     if (!("piece" in second)) return second;
     if (anchor.id === second.piece.id)
       return { message: "Choose two different active wood parts.", choices: [] };
-    return {
-      anchor,
-      pairs: [pair(second.piece.id, reviewConnectionContact(first.piece, second.piece))],
-      more: false,
-    };
+    const answer = pair(second.piece.id, reviewConnectionContact(first.piece, second.piece));
+    if (question.kind === "trim-seam") {
+      const id = woodPairKey(first.piece.id, second.piece.id);
+      const saved = woodJointDecisionEntries(project).find((entry) => entry.id === id);
+      const measured = saved && trimSeamLine(saved);
+      answer.trimSeam = measured || (modeledTrimSeamEdges(first.piece, second.piece)?.edges.length
+        ? "Inspect the joint to choose an exposed edge and record the measured bead."
+        : "Review the fit and measure exposed seams in the field.");
+    }
+    return { anchor, pairs: [answer], more: false };
   }
   const nearby = nearbyConnectionPairs(labeled, [anchor.id], { limit: 6, maxChecks: 5000 });
   return {

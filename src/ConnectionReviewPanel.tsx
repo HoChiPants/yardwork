@@ -11,6 +11,8 @@ import { FloorBaseConnectionsPanel } from "./FloorBaseConnectionsPanel";
 import type { FloorHangerPlan } from "./floorHangerSchema";
 import type { BearingConnectionReview } from "./bearingConnections";
 import { modeledWoodContactDetail, modeledWoodContactScope, type ModeledWoodContact, type ModeledWoodContactReview } from "./modeledWoodContacts";
+import { TrimSeamPanel, type TrimSeamMarker } from "./TrimSeamPanel";
+import type { TrimSeamInput } from "./woodJointDecisionSchema";
 import { WoodJointDecisionPanel } from "./WoodJointDecisionPanel";
 import { woodPairKey, type WoodJointDecisionEntry } from "./woodJointDecisions";
 import type { WoodJointMethod } from "./woodJointDecisionSchema";
@@ -46,6 +48,8 @@ export type ConnectionReviewPanelProps = {
   onFocusModeledContact?: (pair: Pick<ModeledWoodContact, "title" | "memberIds">) => void;
   woodJointDetails: readonly WoodJointDecisionEntry[];
   onSaveWoodJointDetail: (firstId: string, secondId: string, method: WoodJointMethod, note: string) => void;
+  onSaveTrimSeam: (firstId: string, secondId: string, input: TrimSeamInput | null) => void;
+  onShowTrimSeam: (marker: TrimSeamMarker | null) => void;
   onClearWoodJointDetail: (firstId: string, secondId: string) => void;
   onPlanConnectorPair?: (baseId: string, postId: string) => void;
   onFitStockBetween?: (firstId: string, secondId: string) => void;
@@ -89,6 +93,8 @@ export function ConnectionReviewPanel({
   woodJointDetails,
   onSaveWoodJointDetail,
   onClearWoodJointDetail,
+  onSaveTrimSeam,
+  onShowTrimSeam,
   onPlanConnectorPair,
   onFitStockBetween,
   fittedBlock,
@@ -305,6 +311,11 @@ export function ConnectionReviewPanel({
             onSave={(method, note) => onSaveWoodJointDetail(focusedPair[0], focusedPair[1], method, note)}
             onClear={() => onClearWoodJointDetail(focusedPair[0], focusedPair[1])}
           />
+          {focusedDetail?.decision.method === "sealant" && (
+            <TrimSeamPanel key={focusedKey} project={project} entry={focusedDetail}
+              onSave={(input) => onSaveTrimSeam(focusedPair[0], focusedPair[1], input)}
+              onShow={onShowTrimSeam} />
+          )}
         </section>
       )}
       {scope.modeledContactList && modeledContacts && onFocusModeledContact && (

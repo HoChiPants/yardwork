@@ -1,3 +1,5 @@
+import { trimSealant } from "./trimSealantReference";
+import { trimSeamPurchaseSummary } from "./woodJointDecisions";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { assemblyStages } from "./assemblyStages";
 import { connectionPreparationItems } from "./buildPreparation";
@@ -154,6 +156,11 @@ export function homeDepotPurchaseNeeds(
       hingePurchaseAllocations(project),
     );
     include(row.productId, "Allocated physical lid hinges", row.requiredHinges);
+  }
+  if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
+    const trim = trimSeamPurchaseSummary(project);
+    if (trim) include(trimSealant.id, "Measured wood trim seams", trim.required,
+      trim.required === null ? "Review measured seams and cartridge coverage." : undefined);
   }
   if (project.motionPlans?.length) {
     const slideReview = drawerSlidePurchaseReview(project);

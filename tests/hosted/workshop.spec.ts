@@ -278,26 +278,27 @@ test("build preparation opens the other touching pair when the first screw path 
   expect(section).not.toContain("Left rail");
 });
 
-test("glue and seam details follow actual parts into the saved project and both guides", async ({ page }) => {
+test("glue and measured trim seams follow actual parts into the saved project, cartridge order and both guides", async ({ page }) => {
   const project = blank("Casework joint details");
   const step = project.steps[0].id;
-  const panel = part("Front panel", "plytanium-703", [10, 10, 0.703], [0, 6, 0], step, "Casework");
+  const panel = part("Front panel", "plytanium-703", [14, 10, 0.703], [2, 6, 0], step, "Casework");
   const rail = part("Glue rail", "stud", [1.5, 4, 2], [-3, 4, -1.3515], step, "Casework");
   const trim = part("Seam rail", "stud", [1.5, 4, 2], [3, 4, -1.414], step, "Casework");
   project.pieces.push(panel, rail, trim);
+  const cut = cutPiece(project, panel.id, 10, 0);
   await page.goto("./");
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Import a plan", exact: true }).click();
   await page.locator("input[type=file]").setInputFiles({
     name: "older-casework.yardwork.json",
     mimeType: "application/json",
-    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 81 })),
+    buffer: Buffer.from(JSON.stringify({ ...cut, schemaVersion: 81 })),
   });
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
-  async function openPair(label: string) {
+  async function openPair(label: string, kind = "screw joint") {
     await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
-    await page.getByRole("textbox", { name: "Describe your idea" }).fill(`Review screw joint between P001 and ${label}`);
+    await page.getByRole("textbox", { name: "Describe your idea" }).fill(`Review ${kind} between P001 and ${label}`);
     await page.getByRole("button", { name: "Explore idea", exact: true }).click();
     await page.getByRole("region", { name: "Workspace joint review" }).getByRole("button", { name: "Inspect joint", exact: true }).click();
     return page.getByRole("region", { name: "Selected wood contact" });
@@ -310,7 +311,7 @@ test("glue and seam details follow actual parts into the saved project and both 
   await glue.getByRole("button", { name: "Save joint detail", exact: true }).click();
   await expect(glue.getByRole("status")).toContainText("Glue joint · Saved");
 
-  const seam = await openPair("P003");
+  const seam = await openPair("P003", "trim seam");
   await expect(seam).toContainText("0.0625 in gap");
   await seam.getByText("Record joint detail", { exact: true }).click();
   await expect(seam.getByLabel("Joint method").locator("option")).toHaveText([
@@ -321,6 +322,24 @@ test("glue and seam details follow actual parts into the saved project and both 
   await seam.getByRole("button", { name: "Save joint detail", exact: true }).click();
   await expect(seam.getByRole("status")).toContainText("Seal exposed seam · Saved");
 
+  await seam.getByText("Plan trim sealant", { exact: true }).click();
+  const edge = seam.getByRole("listitem").filter({ hasText: /Edge \d · 4 in/ }).first();
+  await edge.getByRole("button", { name: /Show edge.*in 3D/ }).click();
+  await expect(page.getByTestId("trim-seam-marker")).toContainText("4 in");
+  await edge.getByRole("checkbox").check();
+  await seam.getByLabel("Measured bead width (in)").fill("0.125");
+  await seam.getByLabel("Measured bead depth (in)").fill("0.125");
+  await seam.getByRole("button", { name: "Save measured seam" }).click();
+  await expect(seam.getByText(/Trim sealant · Edge \d \(4 in\)/)).toBeVisible();
+
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByText("Estimate trim sealant", { exact: true }).click();
+  const measured = page.getByRole("region", { name: "Measured trim seams" });
+  await expect(measured).toContainText("4 in across 1 joint · 1 planned cartridge");
+  await measured.getByRole("button", { name: "Add missing seam cartridge" }).click();
+  await expect(measured).toContainText("1 in List");
+  await expect(measured.getByRole("button", { name: "Add missing seam cartridge" })).toHaveCount(0);
+
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   await expect.poll(async () => (await draft())?.revision).toBe(1);
@@ -328,12 +347,14 @@ test("glue and seam details follow actual parts into the saved project and both 
   expect(saved.schemaVersion).toBe(PROJECT_FORMAT_VERSION);
   expect(saved.woodJointDecisions.map(({ method }: { method: string }) => method)).toEqual(["glue", "sealant"]);
   expect(saved.fastenerPlans).toEqual([]);
-  expect(saved.supplies).toEqual([]);
+  expect(saved.woodJointDecisions[1].trimSeam).toMatchObject({ gapWidth: 0.125, gapDepth: 0.125 });
+  expect(saved.supplies).toMatchObject([{ productId: "dap-dynaflex-230-white-101", quantity: 1 }]);
 
   await page.reload();
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   await page.getByRole("dialog").locator(".project-list > button").filter({ hasText: "Casework joint details" }).click();
   await expect(await openPair("P002")).toContainText("Dry-fit with the selected clamps.");
+  await expect(await openPair("P003", "trim seam")).toContainText("4 in of dry interior trim seams");
   expect((await draft()).project.woodJointDecisions).toEqual(saved.woodJointDecisions);
 
   await page.getByRole("button", { name: "Export", exact: true }).click();
@@ -342,7 +363,10 @@ test("glue and seam details follow actual parts into the saved project and both 
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("## Recorded wood joint details");
   expect(guide).toContain("Seal the exposed front edge only.");
+  expect(guide).toContain("4 in of dry interior trim seams");
+  expect(guide).toContain("Test the finish on offcut O001 from the same stock in Cut pool.");
   await expect(page.locator(".print-guide .wood-joint-details-print")).toContainText("Dry-fit with the selected clamps.");
+  await expect(page.locator(".print-guide .wood-joint-details-print")).toContainText("4 in of dry interior trim seams");
 });
 
 test("a crosscut practice plan reuses the first scrap on two blanks", async ({ page }) => {

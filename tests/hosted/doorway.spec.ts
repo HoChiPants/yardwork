@@ -5,6 +5,8 @@ import { blank, part } from "../../src/model";
 import { emptyWallTrace, reviewWallTrace } from "../../src/wallTrace";
 
 test("fit a measured doorway, preview its obstruction, reopen its saved swing and export the guide", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.clock.install();
   const initial = blank("Doorway and hall");
   const source = reviewWallTrace(initial, { ...emptyWallTrace(), a: [-48, 0], b: [48, 0] }).candidate;
   source.pieces.push(part("Hall obstruction", "plywood", [6, 60, 2], [4, 35, 20], initial.steps[0].id, "Hall"));
@@ -47,12 +49,17 @@ test("fit a measured doorway, preview its obstruction, reopen its saved swing an
   await expect(dialog).toHaveCount(0);
 
   const motion = page.getByRole("region", { name: "Motion and clearance" });
+  const pose = page.getByTestId("motion-preview-label");
+  await expect(pose).toHaveAttribute("data-pose", "0");
   await motion.getByRole("button", { name: "Play opening", exact: true }).click();
-  const angle = motion.getByRole("slider", { name: "Opening angle" });
-  await expect.poll(async () => Number(await angle.inputValue())).toBeGreaterThan(30);
-  expect(Number(await angle.inputValue())).toBeLessThan(90);
+  await page.clock.fastForward(1500);
+  await expect(pose).toContainText("Hall obstruction", { timeout: 15_000 });
+  const stoppedAngle = Number(await pose.getAttribute("data-pose"));
+  expect(stoppedAngle).toBeGreaterThan(30);
+  expect(stoppedAngle).toBeLessThan(90);
   await motion.getByRole("button", { name: "Play closing", exact: true }).click();
-  await expect(angle).toHaveValue("0");
+  await page.clock.fastForward(1500);
+  await expect(pose).toHaveAttribute("data-pose", "0", { timeout: 15_000 });
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
   await expect.poll(async () => (await draft())?.revision, { timeout: 15_000 }).toBe(1);

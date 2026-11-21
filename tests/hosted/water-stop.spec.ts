@@ -16,6 +16,7 @@ test("check and trim an island shutoff, reopen its purchase and compare its pres
   draft.pieces.push(shelf);
   const branch = draft.waterRuns!.find(({ id }) => id === old.port.runId)!;
   const stock = draft.pieces.find(({ id }) => id === branch.pipeId)!.cutStock!.id;
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("./");
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -28,7 +29,13 @@ test("check and trim an island shutoff, reopen its purchase and compare its pres
   await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("Add a shutoff under the sink");
   await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
   await dialog.getByRole("button", { name: "Open fixture shutoffs", exact: true }).click();
-  await dialog.getByRole("textbox", { name: "Fixture name", exact: true }).fill("Island sink cold");
+  const fixture = dialog.getByRole("textbox", { name: "Fixture name", exact: true });
+  const firstField = await fixture.boundingBox();
+  const projection = await dialog.getByRole("spinbutton", { name: "Exposed pipe before trimming", exact: true }).boundingBox();
+  expect(firstField!.width).toBeGreaterThan(120);
+  expect(projection!.width).toBeGreaterThan(60);
+  expect(projection!.y).toBeGreaterThan(firstField!.y);
+  await fixture.fill("Island sink cold");
   await dialog.getByRole("combobox", { name: "Pipe end", exact: true }).selectOption({ label: "Island feed · end" });
   const setLength = async (name: string, value: string) =>
     dialog.getByRole("spinbutton", { name, exact: true }).fill(value);
@@ -46,6 +53,7 @@ test("check and trim an island shutoff, reopen its purchase and compare its pres
   await expect(proposal).toContainText("Cut pool remnant · 0.25 in");
   await proposal.getByRole("button", { name: "Add shutoff", exact: true }).click();
   await expect(dialog).toHaveCount(0);
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const saved = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
   await expect.poll(async () => (await saved())?.revision).toBe(1);

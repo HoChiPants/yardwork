@@ -113,7 +113,7 @@ function FittingFields({ project, current, startWithTee, onApply }: {
         {runs.length >= 3 && <option value="tee">Tee between three pipe ends</option>}
       </select>
     </label>}
-    {mode === "split" ? <div className="two-col">
+    {mode === "split" ? <div className="water-measurement-fields">
       <label className="field">Main to split
         <select value={a.runId} onChange={(event) => {
           setA({ runId: event.target.value, end: "end" }); reset();
@@ -123,7 +123,7 @@ function FittingFields({ project, current, startWithTee, onApply }: {
       </label>
       {endpoint("Branch pipe end", branch, setBranch)}
     </div> : <>
-      <div className="two-col">
+      <div className="water-measurement-fields">
         {endpoint(tee ? "Inline pipe end A" : "Pipe end A", a, setA)}
         {endpoint(tee ? "Inline pipe end B" : "Pipe end B", b, setB)}
       </div>
@@ -138,14 +138,14 @@ function FittingFields({ project, current, startWithTee, onApply }: {
         : straight
         ? `Measure between the two socket faces on the delivered coupling. Published overall length is ${dim(choice.product.body)}.`
         : `Measure along each leg from the intersection of the pipe centerlines to its socket face. The published envelope suggests about ${dim(choice.nominalReach)} per leg.`}</p>
-      {tee ? <div className="two-col">
+      {tee ? <div className="water-measurement-fields">
         <LengthInput label="Measured inline face-to-face length" min={0.125} max={12}
           value={2 * reach[0]} onChange={(value) => setDimensions([value / 2, value / 2])} />
         <LengthInput label="Main centerline to branch socket" min={0.125} max={6}
           value={branchReach} onChange={(value) => { setBranchReach(value); setReview(null); setError(""); }} />
       </div> : straight ? <LengthInput label="Measured face-to-face length" min={0.125} max={12}
         value={2 * reach[0]} onChange={(value) => setDimensions([value / 2, value / 2])} />
-        : <div className="two-col">
+        : <div className="water-measurement-fields">
           <LengthInput label="Center to socket A" min={0.125} max={6} value={reach[0]} onChange={(value) => setDimensions([value, reach[1]])} />
           <LengthInput label="Center to socket B" min={0.125} max={6} value={reach[1]} onChange={(value) => setDimensions([reach[0], value])} />
         </div>}

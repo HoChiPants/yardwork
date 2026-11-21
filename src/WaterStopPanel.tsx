@@ -80,7 +80,7 @@ function StopForm({ project, saved, onApply, onRemove }: {
     {problem && <p className="form-error" role="alert">{problem}</p>}
     {!entry && <p className="small-note">This layout needs a clear ½ in PEX endpoint. Add a wall water line or free the endpoint first.</p>}
     <form onSubmit={preview}>
-      <div className="two-col">
+      <div className="water-measurement-fields">
         <label className="field">Fixture name
           <input required value={name} maxLength={60} placeholder="Kitchen sink cold" onChange={(event) => set(setName, event.target.value)} />
         </label>

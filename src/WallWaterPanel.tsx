@@ -89,7 +89,7 @@ function WaterRunFields({ project, wall, run, onApply }: {
   return <>
     <p>Lay out one straight PEX-B run in {wall.name}. Measure endpoints from the left of the wall elevation. Use a negative distance for a stub beyond the left end. Positive depth moves toward the front face.</p>
     {savedProblem && <p className="form-error" role="alert">{savedProblem}</p>}
-    <div className="two-col">
+    <div className="water-measurement-fields">
       <label className="field">Line name<input maxLength={60} value={draft.name} onChange={(event) => change("name", event.target.value)} /></label>
       <label className="field">Pipe stock
         <select value={draft.materialId} onChange={(event) => change("materialId", event.target.value as PexPipeId)}>
@@ -110,7 +110,7 @@ function WaterRunFields({ project, wall, run, onApply }: {
     </label>
     {draft.isolator && <div className="field-section">
       <p className="small-note">The matching isolator uses a 1⅜ in bore. The flange seats against the stud with its nail ears vertical. <a href={`https://www.homedepot.com/p/${isolator.internet}`} target="_blank" rel="noreferrer">{isolator.model} at Home Depot</a></p>
-      <div className="two-col">
+      <div className="water-measurement-fields">
         <label className="field">Flange faces toward
           <select value={draft.isolator.face} onChange={(event) => change("isolator", {
             ...draft.isolator!, face: event.target.value as "start" | "end",

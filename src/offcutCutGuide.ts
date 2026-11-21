@@ -88,6 +88,7 @@ export function offcutCutRows(
         `Review cut ${prior.index + 1}, which supplies this remnant.`,
       );
     if (issues.length) invalid.add(index);
+    const woodKerf = part?.cutStock?.woodKerf;
     const input = partLabel(project, record.inputId);
     const target = partLabel(project, record.targetId);
     return {
@@ -101,6 +102,9 @@ export function offcutCutRows(
           ? prior.index + 1
           : undefined,
       inputSize: formatCutDimensions(record.inputSize),
+      cuttingLoss: record.cuts.length && woodKerf !== undefined
+        ? `Recorded blade kerf ${formatStockLength(woodKerf)} per cut.`
+        : undefined,
       cuts: record.cuts.map(
         ({ kind, size }) =>
           `${kind === "crosscut" ? "Crosscut" : "Rip"} to ${formatStockLength(size)}`,
@@ -132,6 +136,7 @@ export function offcutCutOrderMarkdown(rows: readonly OffcutCutRow[]) {
         : [
             `   Starting size ${row.inputSize}${row.prior ? ` · remnant from cut ${row.prior}` : row.preparedBy ? ` · blank from cut ${row.preparedBy}` : ""}.`,
             `   ${row.cuts.length ? row.cuts.join(" · ") + "." : "Fits as measured."}`,
+            ...(row.cuttingLoss ? [`   ${row.cuttingLoss}`] : []),
             ...(row.remnants.length
               ? [`   Keep ${row.remnants.join(" and ")}.`]
               : []),

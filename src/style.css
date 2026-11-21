@@ -3209,6 +3209,12 @@ small {
   color: #7f8d72;
   margin: 12px 0;
 }
+.cut-kerf > summary {
+  cursor: pointer;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
 .connection-settings {
   border-top: 1px solid #e0e6d7;
   margin: 20px 0;

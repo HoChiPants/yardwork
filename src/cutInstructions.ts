@@ -69,6 +69,7 @@ export type CutInstructionPlan = {
     status: "validated" | "unverified";
     kerf: number | null;
     measuredTubeKerf?: number;
+    measuredWoodKerf?: number;
   } | null;
 };
 const names = ["X", "Y", "Z"] as const;
@@ -317,6 +318,9 @@ export function cutInstructions(
             offcut: piece.offcut,
             status: options.lineageStatus ?? "unverified",
             kerf: options.kerf ?? null,
+            ...(piece.cutStock.woodKerf === undefined
+              ? {}
+              : { measuredWoodKerf: piece.cutStock.woodKerf }),
             ...(piece.cutStock.tubeKerf === undefined
               ? {}
               : { measuredTubeKerf: piece.cutStock.tubeKerf }),
@@ -394,11 +398,13 @@ export function cutInstructionsText(plan: CutInstructionPlan): string {
   if (plan.source) {
     const source = plan.source;
     const loss =
-      source.measuredTubeKerf !== undefined
-        ? ` Recorded tube cutting loss: ${formatPreciseInches(source.measuredTubeKerf)} per cut.`
-        : source.kerf === null
-          ? " No kerf value supplied."
-          : ` Modeled straight-trim kerf: ${number(source.kerf)} in; profile-face saw kerf is not reconstructed.`;
+      source.measuredWoodKerf !== undefined
+        ? ` Recorded blade kerf: ${formatPreciseInches(source.measuredWoodKerf)} per cut.`
+        : source.measuredTubeKerf !== undefined
+          ? ` Recorded tube cutting loss: ${formatPreciseInches(source.measuredTubeKerf)} per cut.`
+          : source.kerf === null
+            ? " No kerf value supplied."
+            : ` Modeled straight-trim kerf: ${number(source.kerf)} in; profile-face saw kerf is not reconstructed.`;
     lines.push(
       `Cut source ${source.id}: original blank ${dimensions(source.size)}. ${source.offcut ? "Reusable offcut" : "Retained part"} source-local region ${names.map((axis, i) => `${axis} ${number(source.offset[i])} to ${number(source.regionEnd[i])} in`).join(", ")}. ${source.status === "validated" ? "Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence." : "Source lineage is unverified; validate it before relying on reuse or purchase quantities."}${loss}`,
     );

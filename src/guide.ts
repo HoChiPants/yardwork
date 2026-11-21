@@ -524,7 +524,7 @@ export function generateBuildGuide(input: Project): Project {
       ...(project.greenhouseFoundations?.some(({ anchors }) => anchors?.locations.length) ? ["Review the specified anchor detail, drill marks and tool access before assembling the greenhouse walls."] : []),
       ...(project.sunliteMounts?.some(({ holes }) => holes.length) ? ["Check the SUNLITE drill schedule against the final cut panels, backing and site mounting detail."] : []),
       ...(project.edgeBanding?.length ? ["Dry-fit the labeled panels and review the panel edge-banding cut order before fastening."] : []),
-      project.tubeCutPlans?.length || project.pieces.some((part) => part.cutStock?.tubeKerf !== undefined)
+      project.tubeCutPlans?.length || project.pieces.some((part) => part.cutStock?.tubeKerf !== undefined || part.cutStock?.woodKerf !== undefined)
         ? preparationInstruction.replace("allow for the ⅛ in saw kerf", "check the cutting loss for each stock unit")
         : preparationInstruction,
       ...(project.hingeStockSources.length ? ["For metal hinge cuts, use the entered physical source length and metal-specific kerf; the wood saw-kerf allowance does not apply."] : []),

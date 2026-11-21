@@ -33,6 +33,7 @@ export function PrintOffcutCutOrder({
                     ? row.cuts.join(" · ") + "."
                     : "Fits as measured."}
                 </p>
+                {row.cuttingLoss && <p>{row.cuttingLoss}</p>}
                 {row.remnants.length > 0 && (
                   <p>Keep {row.remnants.join(" and ")}.</p>
                 )}

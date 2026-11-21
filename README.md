@@ -40,6 +40,8 @@ In **List → Stock cut order**, use **Record multiple stock units** after check
 
 **List → Recorded cut source** shows actual kept/offcut blank regions, dimensions and starts on the original board or sheet. Inspect its P/O parts and export the same layout in Markdown/print. Unretained regions stay separate from a proven saw kerf or cut sequence. [Recorded source layouts](docs/recorded-cut-sources.md).
 
+Before the first cut on a wood board, sheet or measured offcut, open **Cut part → Blade kerf** and enter the width your blade removes in inches. The preview, resulting offcuts and source layout use this width. It stays with the source when you reuse a remnant. The recorded cut order includes it for straight cuts. Blade specifications give the nominal kerf for the actual blade, such as 0.059 in for Diablo’s framing blade or 0.126 in for Freud’s P410. [Diablo D0724A specs](https://diablotools.com/products/D0724A) · [Freud P410 specs](https://www.freudtools.com/products/P410)
+
 **Cut part → Round opening** previews a through-hole or rounded edge notch in rectangular stock. Click the preview to place its center, or enter exact edge marks and diameter. The cut appears in the 3D clearance checks and the build guide. Review the cutter and accessory for the actual material and opening. Sauna ventilation openings stay linked to their layout.
 
 **Cut part → Rectangular cut** models a rectangular opening or an edge notch. Set the two starting marks and cut dimensions on the labeled face. Motion and contact checks follow the retained shape, and the guide gives the marks on the actual blank.

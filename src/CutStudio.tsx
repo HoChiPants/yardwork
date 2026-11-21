@@ -3,6 +3,7 @@ import { Scissors } from "lucide-react";
 import { LengthInput } from "./LengthInput";
 import {
   canCutAngled,
+  canRecordWoodKerf,
   cutAngledEnd,
   cuttingAxes,
   resizeByCuts,
@@ -31,8 +32,9 @@ export function makeLabeledCutPreview(
   length: number,
   width: number,
   order: TrimOrder = "crosscut-first",
+  woodKerf?: number,
 ) {
-  const candidate = resizeByCuts(project, pieceId, length, width, order);
+  const candidate = resizeByCuts(project, pieceId, length, width, order, woodKerf);
   const source = project.pieces.find(({ id }) => id === pieceId)!;
   const recorded = recordStraightTrim(project, ensurePartLabels(candidate), source, order);
   return { ...recorded, changed: candidate !== project };
@@ -53,6 +55,10 @@ export function CutStudio({
   const [length, setLength] = useState(source.size[long]),
     [width, setWidth] = useState(source.size[wide]);
   const [order, setOrder] = useState<TrimOrder>("crosscut-first");
+  const [kerfDraft, setKerfDraft] = useState("");
+  const canSetKerf = canRecordWoodKerf(project, source);
+  const woodKerf = canSetKerf && kerfDraft !== "" ? Number(kerfDraft) : undefined;
+  const displayedKerf = formatPreciseInches(woodKerf ?? pieceCutKerf(source));
   const [reuseReview, setReuseReview] = useState<{
     source: Project;
     plan?: OffcutReusePlan;
@@ -98,11 +104,12 @@ export function CutStudio({
           face,
           compound ? [leftMark, rightMark, topLeft] : [leftMark, rightMark],
           keepEnd,
+          woodKerf,
         );
         return { project: ensurePartLabels(cut), changed: true, error: null, offcutIds: [] };
       }
       return {
-        ...makeLabeledCutPreview(project, pieceId, length, width, order),
+        ...makeLabeledCutPreview(project, pieceId, length, width, order, woodKerf),
         error: null,
       };
     } catch (e) {
@@ -122,6 +129,7 @@ export function CutStudio({
     rightMark,
     topLeft,
     keepEnd,
+    woodKerf,
   ]);
   const changed = preview.changed;
   const review = reuseReview?.source === preview.project ? reuseReview : undefined;
@@ -253,14 +261,42 @@ export function CutStudio({
           <p>
             {angled
               ? compound
-                ? "Measure three corners from the starting end shown in the preview. Yardwork calculates the fourth corner and centers a modeled ⅛ in kerf on the cut plane."
-                : "Measure both marks from the same starting end, shown at the top of the preview. Yardwork leaves a ⅛ in gap centered on the cut line."
+                ? "Measure three corners from the starting end. Yardwork calculates the fourth corner and centers the cutting loss on the cut plane."
+                : "Measure both marks from the starting end shown at the top. Yardwork centers the cutting loss on the cut line."
               : isBatt(source.material)
                 ? "Set the width and length of the retained batt. The model uses a zero-kerf knife cut and keeps the offcuts."
                 : source.cutStock?.tubeKerf !== undefined
-                  ? `Set the retained tube length. This layout uses the source's recorded ${formatPreciseInches(source.cutStock.tubeKerf)} loss per cut.`
-                  : `Set the size you want to keep. The preview allows ${formatPreciseInches(pieceCutKerf(source))} for cutting loss and shows usable offcuts.`}
+                  ? `Set the retained tube length. This layout uses the source's recorded ${displayedKerf} loss per cut.`
+                  : material(source.material).wood
+                    ? "Set the size you want to keep. The preview shows the usable offcuts."
+                    : `Set the size you want to keep. The preview allows ${displayedKerf} for cutting loss and shows usable offcuts.`}
           </p>
+          {canSetKerf ? (
+            <details className="cut-kerf">
+              <summary>Blade kerf · {displayedKerf} per cut</summary>
+              <label className="field">
+                Measured blade kerf (in)
+                <input
+                  type="number"
+                  aria-label="Measured blade kerf (in)"
+                  aria-describedby={`${clipId}-kerf-hint`}
+                  step="any"
+                  value={kerfDraft}
+                  placeholder={String(pieceCutKerf(source))}
+                  onChange={(event) => setKerfDraft(event.target.value)}
+                />
+                <span className="small-note" id={`${clipId}-kerf-hint`}>
+                  Kerf is the width of material the blade removes. Leave blank
+                  to use {formatPreciseInches(pieceCutKerf(source))}. The value
+                  you enter follows this stock and its offcuts.
+                </span>
+              </label>
+            </details>
+          ) : source.cutStock?.woodKerf !== undefined ? (
+            <p className="small-note">Recorded blade kerf · {displayedKerf} per cut</p>
+          ) : material(source.material).wood ? (
+            <p className="small-note">Modeled blade kerf · {displayedKerf} per cut</p>
+          ) : null}
           <svg
             className="cut-diagram"
             viewBox="-38 -24 342 246"

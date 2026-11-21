@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Piece, V3 } from "./model";
 
 const axis = z.union([z.literal(0), z.literal(1), z.literal(2)]);
+export const woodKerfSchema = z.number().finite().positive().max(240);
 export const tubeKerfSchema = z.number().finite().min(0).max(240);
 export const tubeCutPlansSchema = z
   .array(

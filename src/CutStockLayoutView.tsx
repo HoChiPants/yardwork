@@ -98,6 +98,9 @@ export function CutStockLayout({
         are measured from the original blank's low edges, independent of
         assembly pose.
       </p>
+      {layout.measuredWoodKerf !== undefined && (
+        <p className="small-note">Recorded blade kerf · {inches(layout.measuredWoodKerf)} per cut</p>
+      )}
       {layout.issues.map((issue) => (
         <p className="small-note" key={issue}>
           {issue}
@@ -319,13 +322,15 @@ export function CutStockLayout({
           ) : (
             <p>No unclaimed rectangular blank region remains.</p>
           )}
-          <p className="small-note">
-            {layout.measuredTubeKerf !== undefined
-              ? `Recorded tube cutting loss: ${inches(layout.measuredTubeKerf)} per cut, entered by the user.`
-              : layout.modeledKerf === 0
-              ? "The layout uses a zero-kerf knife cut. Verify the actual trim and site fit."
-              : `The model uses a ${inches(layout.modeledKerf)} saw allowance. A saved gap does not prove a saw kerf, cut order or manufacturing allowance.`}
-          </p>
+          {layout.measuredWoodKerf === undefined && (
+            <p className="small-note">
+              {layout.measuredTubeKerf !== undefined
+                ? `Recorded tube cutting loss: ${inches(layout.measuredTubeKerf)} per cut, entered by the user.`
+                : layout.modeledKerf === 0
+                  ? "The layout uses a zero-kerf knife cut. Verify the actual trim and site fit."
+                  : `The model uses a ${inches(layout.modeledKerf)} saw allowance. A saved gap does not prove a saw kerf, cut order or manufacturing allowance.`}
+            </p>
+          )}
         </div>
       )}
     </section>

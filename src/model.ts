@@ -6,7 +6,7 @@ import { floorHangerPlanSchema } from "./floorHangerSchema";
 import { greenhouseFoundationSchema } from "./greenhouseFoundationSchema";
 import { siteClearanceSchema } from "./siteClearanceSchema";
 import { z } from "zod";
-import { cutSourceAxesSchema, tubeCutPlansSchema, tubeKerfSchema } from "./cutSourceAxes";
+import { cutSourceAxesSchema, tubeCutPlansSchema, tubeKerfSchema, woodKerfSchema } from "./cutSourceAxes";
 import { offcutCutSchema } from "./offcutCutSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
@@ -106,6 +106,7 @@ export const pieceSchema = z
         id,
         sourceAxes: cutSourceAxesSchema.optional(),
         tubeKerf: tubeKerfSchema.optional(),
+        woodKerf: woodKerfSchema.optional(),
         size: z.tuple([
           z.number().finite().positive().max(240),
           z.number().finite().positive().max(240),
@@ -127,6 +128,13 @@ export const pieceSchema = z
         code: "custom",
         path: ["cutStock", "tubeKerf"],
         message: "Measured tube cutting loss requires tube stock.",
+      });
+    if (piece.cutStock?.woodKerf !== undefined &&
+        (!stock?.wood || !stock.cuttable || !["linear", "sheet"].includes(stock.stockKind)))
+      ctx.addIssue({
+        code: "custom",
+        path: ["cutStock", "woodKerf"],
+        message: "Measured wood cutting loss requires a cuttable wood board or panel.",
       });
     if (stock?.orderRollWidth && (
       piece.size[2] !== cedarbrookFoil.modelThickness ||

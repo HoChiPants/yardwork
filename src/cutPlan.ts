@@ -1,5 +1,6 @@
 import { clipBox, solidBounds, type CutPlane } from "./cutProfiles";
-import { cutPiece, cutKerf, inspectCutStock, pieceCutKerf } from "./engine";
+import { cutPiece, inspectCutStock, pieceCutKerf } from "./engine";
+import { cutSourceRegion, woodKerfSchema } from "./cutSourceAxes";
 import { formatStockLength } from "./measurement";
 import {
   isBatt,
@@ -39,12 +40,39 @@ export function canCutAngled(piece: Piece) {
   );
 }
 
+export function canRecordWoodKerf(project: Project, piece: Piece) {
+  if (!canCutAngled(piece)) return false;
+  const stock = piece.cutStock;
+  if (!stock) return !piece.cutPlanes.length;
+  if (stock.woodKerf !== undefined || piece.cutPlanes.length) return false;
+  const { size, sourceSize, offset } = cutSourceRegion(piece);
+  return size.every((span, axis) => span === sourceSize[axis] && offset[axis] === 0) &&
+    !project.pieces.some((other) => other.id !== piece.id && other.cutStock?.id === stock.id);
+}
+
+function measuredWoodCutSource(project: Project, source: Piece, kerf: number) {
+  const measured = woodKerfSchema.safeParse(kerf);
+  if (!measured.success)
+    throw Error("Enter a positive blade kerf in inches.");
+  if (!canRecordWoodKerf(project, source))
+    throw Error("Set the blade kerf on a board, sheet or measured offcut before its first cut in Yardwork.");
+  return {
+    ...(source.cutStock ?? {
+      id: uid(),
+      size: [...source.size] as V3,
+      offset: [0, 0, 0] as V3,
+    }),
+    woodKerf: measured.data,
+  };
+}
+
 export function cutAngledEnd(
   project: Project,
   id: string,
   cross: "width" | "thickness" | "compound",
   marks: [firstMark: number, secondMark: number, topLeft?: number],
   keepEnd: "start" | "end",
+  woodKerf?: number,
 ) {
   const source = project.pieces.find((piece) => piece.id === id);
   if (source?.roundOpenings?.length || source?.rectangularOpenings?.length)
@@ -69,7 +97,8 @@ export function cutAngledEnd(
     cross === "compound"
       ? [firstMark, secondMark, topLeft, topLeft + widthRise]
       : [firstMark, secondMark];
-  const kerf = cutKerf(source.material);
+  const measuredSource = woodKerf === undefined ? undefined : measuredWoodCutSource(project, source, woodKerf);
+  const kerf = measuredSource?.woodKerf ?? pieceCutKerf(source);
   const widthSlope = widthRise / source.size[width];
   const thicknessSlope = thicknessRise / source.size[thickness];
   const scale = Math.hypot(1, widthSlope, thicknessSlope);
@@ -94,7 +123,7 @@ export function cutAngledEnd(
   normal[width] = widthSlope ? -widthSlope / scale : 0;
   normal[thickness] = thicknessSlope ? -thicknessSlope / scale : 0;
   const center = (firstMark + (widthRise + thicknessRise - span) / 2) / scale;
-  const lineage = source.cutStock ?? {
+  const lineage = measuredSource ?? source.cutStock ?? {
     id: uid(),
     size: [...source.size] as V3,
     offset: [0, 0, 0] as V3,
@@ -177,11 +206,13 @@ export function resizeByCuts(
   length: number,
   width: number,
   order: TrimOrder = "crosscut-first",
+  woodKerf?: number,
 ) {
   const source = project.pieces.find((p) => p.id === id);
   if (!source || !material(source.material).cuttable)
     throw Error("Choose cuttable lumber or a sheet panel.");
-  const kerf = pieceCutKerf(source);
+  const measuredSource = woodKerf === undefined ? undefined : measuredWoodCutSource(project, source, woodKerf);
+  const kerf = measuredSource?.woodKerf ?? pieceCutKerf(source);
   let next = project;
   for (const { axis, size: target } of straightTrimTargets(source, length, width, order)) {
     const original = source.size[axis];
@@ -198,6 +229,11 @@ export function resizeByCuts(
           ? `Leave more than ${formatStockLength(kerf)} for cutting loss and an offcut, or keep this dimension unchanged.`
           : "Leave enough material for an offcut, or keep this dimension unchanged.",
       );
+    if (next === project && measuredSource)
+      next = {
+        ...project,
+        pieces: project.pieces.map((piece) => piece.id === id ? { ...piece, cutStock: measuredSource } : piece),
+      };
     next = cutPiece(next, id, target, axis);
   }
   return next;

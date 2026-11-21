@@ -14,7 +14,7 @@ export const KERF = 0.125;
 export const cutKerf = (materialId: MaterialId) =>
   isBatt(materialId) ? 0 : KERF;
 export const pieceCutKerf = (piece: Piece) =>
-  piece.cutStock?.tubeKerf ?? cutKerf(piece.material);
+  piece.cutStock?.woodKerf ?? piece.cutStock?.tubeKerf ?? cutKerf(piece.material);
 
 export function cutSourceVertices(piece: Piece) {
   const region = cutSourceRegion(piece);
@@ -91,6 +91,8 @@ export function inspectCutStock(project: Project) {
       detail = "Only cuttable linear or sheet stock can share a cut source.";
     else if (pieces.some((piece) => piece.cutStock!.tubeKerf !== source.tubeKerf))
       detail = "Parts from this tube disagree on the recorded cutting loss.";
+    else if (pieces.some((piece) => piece.cutStock!.woodKerf !== source.woodKerf))
+      detail = "Parts from this wood source disagree on the recorded cutting loss.";
     else if (
       m.shape === "tube-envelope" &&
       pieces.some((piece, index) => {
@@ -162,9 +164,11 @@ export function inspectCutStock(project: Project) {
             ) {
               detail = gaps.every((gap) => gap < -0.000001)
                 ? "Two retained parts or offcuts claim overlapping regions of the same cut source."
-                : source.tubeKerf === undefined
-                  ? "Retained parts or offcuts do not leave the modeled ⅛ in saw kerf between their source-local regions."
-                  : "Retained parts or offcuts do not leave the recorded tube cutting loss between their source-local regions.";
+                : source.woodKerf !== undefined
+                  ? "Retained parts or offcuts do not leave the recorded wood cutting loss between their source-local regions."
+                  : source.tubeKerf !== undefined
+                    ? "Retained parts or offcuts do not leave the recorded tube cutting loss between their source-local regions."
+                    : "Retained parts or offcuts do not leave the modeled ⅛ in saw kerf between their source-local regions.";
               break;
             }
           }

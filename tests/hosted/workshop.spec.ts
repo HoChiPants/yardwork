@@ -657,6 +657,11 @@ test("rip first preserves a long scrap and applies both cuts as one saved plan",
   await page.getByRole("button", { name: "Guide", exact: true }).click();
   await page.locator(`button.step-part[data-part-id="${panel.id}"]`).click();
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
+  await dialog.getByText(/^Blade kerf ·/).click();
+  const kerf = dialog.getByRole("spinbutton", { name: "Measured blade kerf (in)" });
+  await kerf.fill("0");
+  await expect(dialog.getByText("Enter a positive blade kerf in inches.")).toBeVisible();
+  await kerf.fill("0.059");
   await dialog.getByRole("spinbutton", { name: "Retained length", exact: true }).fill("40");
   await dialog.getByRole("spinbutton", { name: "Retained width", exact: true }).fill("24");
   const review = dialog.getByRole("button", { name: "Find uses for these offcuts", exact: true });
@@ -673,6 +678,10 @@ test("rip first preserves a long scrap and applies both cuts as one saved plan",
   const pieces = async () => (await readDraft())?.project?.pieces as typeof project.pieces;
   await expect.poll(async () => (await pieces())?.find(({ id }) => id === filler.id)?.cutStock?.id).toBeTruthy();
   const assigned = (await pieces()).find(({ id }) => id === filler.id)!;
+  expect(assigned.cutStock?.woodKerf).toBe(0.059);
+  const sourcePieces = (await pieces()).filter(({ cutStock }) => cutStock?.id === assigned.cutStock?.id);
+  expect(sourcePieces.every(({ cutStock }) => cutStock?.woodKerf === 0.059)).toBe(true);
+  expect(sourcePieces.some(({ offcut, size }) => offcut && Math.abs(size[2] - 9.941) < 1e-6)).toBe(true);
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect.poll(async () => (await pieces())?.find(({ id }) => id === panel.id)?.size[2]).toBe(80);
   expect((await pieces()).find(({ id }) => id === filler.id)?.cutStock).toBe(null);
@@ -690,7 +699,10 @@ test("rip first preserves a long scrap and applies both cuts as one saved plan",
   const guide = await readFile((await (await download).path())!, "utf8");
   const ordered = /Trim P001 · Shelf blank[\s\S]*Rip to 2 ft · Crosscut to 40 in[\s\S]*Long filler[\s\S]*remnant from cut 1/;
   expect(guide).toMatch(ordered);
-  await expect(page.locator(".print-guide .offcut-cut-order-print")).toContainText(ordered);
+  expect(guide).toMatch(/Rip to 2 ft · Crosscut to 40 in[\s\S]*Recorded blade kerf 0\.059 in per cut/);
+  const printOrder = page.locator(".print-guide .offcut-cut-order-print");
+  await expect(printOrder).toContainText(ordered);
+  await expect(printOrder).toContainText("Recorded blade kerf 0.059 in per cut");
 });
 
 test("a measured sill gasket checks support, shows its footprint and exports exact rolls", async ({ page }) => {

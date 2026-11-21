@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 78**. Yardwork reads valid formats 1–77 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 88**. Yardwork reads valid formats 1–87 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 88 records measured saw loss in inches in `cutStock.woodKerf` on each fragment of a wood source. The value applies to straight and angled cuts and to later offcut assignments. Older files retain their recorded coordinates and modeled loss. Yardwork validates that the members of a shared source agree on the saved kerf.
 
 Format 78 can record separate rim and joist material IDs on a generated floor-base section. Revising the dimensions preserves those selections until the user changes them. Earlier floor bases retain their generic stock and the absence of an explicit selection.
 

@@ -53,6 +53,7 @@ export type CutStockLayoutModel = {
   }[];
   modeledKerf: number;
   measuredTubeKerf?: number;
+  measuredWoodKerf?: number;
   issues: string[];
 };
 
@@ -168,6 +169,9 @@ export function cutStockLayoutMarkdown(
   lines.push(
     `Source blank: ${inch(layout.length!)} long × ${inch(layout.width!)} wide × ${inch(layout.thickness!)} thick.`,
     ...(onHand ? ["Marked on hand."] : []),
+    ...(layout.measuredWoodKerf === undefined ? [] : [
+      `Recorded blade kerf · ${inch(layout.measuredWoodKerf)} per cut.`,
+    ]),
     `Source-local length ${axis(axes.length)}, width ${axis(axes.width)}, thickness ${axis(axes.thickness)}. Starts are from the original blank's low edges, independent of assembly pose.`,
     "",
     ...layout.issues.map(text),
@@ -201,12 +205,14 @@ export function cutStockLayoutMarkdown(
             ),
           ]
         : ["No unclaimed rectangular blank region remains."]),
-      "",
-      layout.measuredTubeKerf !== undefined
-        ? `Recorded tube cutting loss: ${inch(layout.measuredTubeKerf)} per cut, entered by the user.`
-        : layout.modeledKerf === 0
-        ? "The layout uses a zero-kerf knife cut. Verify the actual trim and site fit."
-        : `The model uses a ${inch(layout.modeledKerf)} saw allowance. A saved gap does not prove a saw kerf, cut order or manufacturing allowance.`,
+      ...(layout.measuredWoodKerf === undefined ? [
+        "",
+        layout.measuredTubeKerf !== undefined
+          ? `Recorded tube cutting loss: ${inch(layout.measuredTubeKerf)} per cut, entered by the user.`
+          : layout.modeledKerf === 0
+            ? "The layout uses a zero-kerf knife cut. Verify the actual trim and site fit."
+            : `The model uses a ${inch(layout.modeledKerf)} saw allowance. A saved gap does not prove a saw kerf, cut order or manufacturing allowance.`,
+      ] : []),
     );
   }
   return lines.join("\n");
@@ -282,6 +288,8 @@ export function cutStockLayout(
       : stockAxes(first, size);
     result.materialId = first.material;
     result.modeledKerf = pieceCutKerf(first);
+    if (first.cutStock!.woodKerf !== undefined)
+      result.measuredWoodKerf = first.cutStock!.woodKerf;
     if (first.cutStock!.tubeKerf !== undefined)
       result.measuredTubeKerf = first.cutStock!.tubeKerf;
     result.sourceSize = [...size];

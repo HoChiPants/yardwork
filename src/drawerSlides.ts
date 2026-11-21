@@ -27,9 +27,10 @@ const basis: V3[] = [
 ];
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
-export function rectangularDrawerPanelBounds(part: Piece, frame: V3[]) {
+export function rectangularDrawerPanelBounds(part: Piece, frame: V3[], useCutEnvelope = false) {
   const stock = material(part.material);
-  if (!stock.wood || stock.stockKind !== "sheet" || part.cutPlanes?.length || part.roundOpenings?.length || part.rectangularOpenings?.length)
+  if (!stock.wood || stock.stockKind !== "sheet" || (!useCutEnvelope &&
+    (part.cutPlanes?.length || part.roundOpenings?.length || part.rectangularOpenings?.length)))
     return null;
   const directions = basis.map((axis) => rotate(axis, part.rotation));
   if (
@@ -51,6 +52,10 @@ export function rectangularDrawerPanelBounds(part: Piece, frame: V3[]) {
   });
 }
 
+export function drawerSlideFrame([x, , z]: V3): [V3, V3, V3] {
+  return [[z, 0, -x], [0, 1, 0], [x, 0, z]];
+}
+
 type FitRow = { label: string; detail: string; matches: boolean };
 type DrawerSlideReview = {
   setup: DrawerSlideSetup;
@@ -63,6 +68,7 @@ type DrawerSlideReview = {
 export function reviewDrawerSlide(
   project: Project,
   plan: Pick<MotionPlan, "memberIds" | "mechanism">,
+  useCutEnvelope = false,
 ): DrawerSlideReview | null {
   const mechanism = plan.mechanism;
   if (mechanism.kind !== "slide" || !mechanism.drawerSlide) return null;
@@ -120,14 +126,9 @@ export function reviewDrawerSlide(
     );
     return finish();
   }
-  const [x, , z] = axis;
-  const frame: V3[] = [
-    [z, 0, -x],
-    [0, 1, 0],
-    [x, 0, z],
-  ];
+  const frame = drawerSlideFrame(axis);
   const panels = keys.map((key) => {
-    const projected = rectangularDrawerPanelBounds(parts.get(setup[key])!, frame);
+    const projected = rectangularDrawerPanelBounds(parts.get(setup[key])!, frame, useCutEnvelope);
     if (
       !projected ||
       projected[0].max - projected[0].min >=

@@ -1,4 +1,5 @@
 import { Quaternion, Vector3 } from "three";
+import { drawerSlideMountGuideLines } from "./drawerSlideMounts";
 import { drawerSlideKey, drawerSlidePurchaseReview, reviewDrawerSlide } from "./drawerSlides";
 import { greenhouseDoorReview } from "./greenhouseDoors";
 import { greenhouseVentReview } from "./greenhouseVents";
@@ -1480,6 +1481,7 @@ export function motionReviewLines(project: Project, reviews = projectMotionRevie
     const door = boundMotionReview(project, plan);
     const doorLines = door?.warning ? [door.warning] : (door?.lines ?? []);
     const slideFit = reviewDrawerSlide(project, plan);
+    const slideConflict = !!slideFit && slideConflicts.has(drawerSlideKey(slideFit.setup));
     const slideLines = slideFit
       ? [
           `${slideFit.reference.orderModel} · One left/right side-mount pair · ${slideFit.ready ? "Modeled dimensions match the slide reference." : "Resolve slide dimensions before fitting."}`,
@@ -1487,7 +1489,7 @@ export function motionReviewLines(project: Project, reviews = projectMotionRevie
             (row) =>
               `${row.label}${row.matches ? "" : " · Review"} · ${row.detail}`,
           ),
-          ...(slideConflicts.has(drawerSlideKey(slideFit.setup))
+          ...(slideConflict
             ? ["This drawer has different fitted slide choices. Choose one before purchasing its hardware."] : []),
           "Confirm the delivered slides and fasteners. Use the 3732 instructions to align both rails on the actual mounting faces before locating holes.",
         ]
@@ -1512,6 +1514,10 @@ export function motionReviewLines(project: Project, reviews = projectMotionRevie
       ...(saved && plan.testSetup ? savedTestLines(project, `Saved clearance test · ${plan.label}`, plan.testSetup, saved, "Saved clearance test") : []),
       ...scenarios.flatMap(({ name, setup, result }) => savedTestLines(project, `Named clearance test · ${name}`, setup, result)),
       ...slideLines,
+      ...(slideConflict
+        ? (project.drawerSlideMounts?.some(({ motionId }) => motionId === plan.id)
+          ? ["Resolve the competing slide choices before transferring the mounting marks."] : [])
+        : drawerSlideMountGuideLines(project, plan.id)),
       ...doorLines,
     ];
   });

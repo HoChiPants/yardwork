@@ -23,6 +23,7 @@ import { composeRotation, rotate } from "./spatial";
 import { projectCodeSchema } from "./projectCodeSchema";
 import { shelfSagPlansSchema } from "./shelfSagSchema";
 import { saunaHeaterPlanSchema } from "./saunaHeaterSchema";
+import { drawerSlideMountsSchema } from "./drawerSlideMountSchema";
 import { greenhouseLatchSchema } from "./greenhouseLatchSchema";
 import { saunaBenchTravelSchema } from "./saunaBenchTravelSchema";
 import { saunaVentilationPlanSchema } from "./saunaVentilationSchema";
@@ -442,6 +443,7 @@ export const currentProjectSchema = z
       (plans) => new Set(plans.map((plan) => plan.roomId)).size === plans.length,
       "Retain one heater review per sauna.",
     ).optional(),
+    drawerSlideMounts: drawerSlideMountsSchema.optional(),
     greenhouseLatchPlans: z.array(greenhouseLatchSchema).max(50).refine(
       (plans) => new Set(plans.map(({ motionId }) => motionId)).size === plans.length,
       "Keep one latch layout per door swing.",

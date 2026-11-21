@@ -32,6 +32,7 @@ import { SaunaVentilationMarkers } from "./SaunaVentilationMarkers";
 import type { SaunaVentilationReview } from "./saunaVentilation";
 import { cedarbrookLining } from "./saunaLiningReference";
 import type { SunliteProfileRun } from "./sunliteTakeoff";
+import { DrawerSlideMountMarkers } from "./DrawerSlideMountMarkers";
 import { GreenhouseLatchMarkers } from "./GreenhouseLatchMarkers";
 import { RodSupportMarkers } from "./RodSupportMarkers";
 import { GreenhouseFoundationMarker } from "./GreenhouseFoundationMarker";
@@ -75,6 +76,7 @@ export type SceneProps = {
   shownDryerDuctLayout?: DryerDuctLayout;
   shownCheckArea?: Finding["area"];
   shownLatchId?: string | null;
+  shownDrawerMountId?: string | null;
   shownRodSupportId?: string | null;
   shownProfileRun?: SunliteProfileRun;
   shownBandingEdge?: { points: [V3, V3]; label: string } | null;
@@ -1436,6 +1438,9 @@ function World(props: SceneProps) {
             <span className="site-clearance-marker" data-testid={props.shownTrimSeam ? "trim-seam-marker" : props.shownBandingEdge ? "edge-banding-marker" : "sunlite-profile-marker"}>{markedRun.label}</span>
           </Html>
         </group>
+      )}
+      {props.shownDrawerMountId && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <DrawerSlideMountMarkers project={props.project} motionId={props.shownDrawerMountId} />
       )}
       {props.shownLatchId && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <GreenhouseLatchMarkers project={props.project} motionId={props.shownLatchId} />

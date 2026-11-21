@@ -557,6 +557,7 @@ export function App() {
   const [offcutReleasePreview, setOffcutReleasePreview] = useState<OffcutReleasePreview | null>(null);
   const [returnToPreparation, setReturnToPreparation] = useState(false);
   const [sunliteMountPanelId, setSunliteMountPanelId] = useState("");
+  const [shownDrawerMountId, setShownDrawerMountId] = useState<string | null>(null);
   const [shownLatchId, setShownLatchId] = useState<string | null>(null);
   const [shownRodSupportId, setShownRodSupportId] = useState<string | null>(null);
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
@@ -2731,6 +2732,7 @@ export function App() {
               shownBandingEdge={shownBandingEdge}
               shownSaunaHeater={shownSaunaHeater}
               shownSaunaVentilation={shownSaunaVentilation}
+              shownDrawerMountId={panel === "motion" && !activeMotionPreview ? shownDrawerMountId : null}
               shownLatchId={panel === "motion" && !activeMotionPreview ? shownLatchId : null}
               shownRodSupportId={panel === "sections" ? shownRodSupportId : null}
               shownSiteClearanceId={panel === "site-clearances" ? shownSiteClearanceId : null}
@@ -3440,6 +3442,16 @@ export function App() {
               onDrawerRequestHandled={() => setDrawerBoxRequest(null)}
               initialTest={motionTestSelection?.project === project ? motionTestSelection : undefined}
               ventBacking={ventBacking}
+              shownDrawerMountId={shownDrawerMountId}
+              onShowDrawerMount={(id) => {
+                setShownDrawerMountId(id);
+                if (id) {
+                  setStage(null);
+                  setPlaying(false);
+                  setExplode(false);
+                  inspectWorkspace();
+                }
+              }}
               shownLatchId={shownLatchId}
               onShowLatch={(id) => {
                 setShownLatchId(id);
@@ -3457,7 +3469,7 @@ export function App() {
               selectedIds={selectedSectionId ? project.sections.find((row) => row.id === selectedSectionId)?.pieceIds ?? [] : selected ? [selected] : []}
               preview={activeMotionPreview}
               onPreview={(value, source = project) => {
-                if (value) setShownLatchId(null);
+                if (value) { setShownLatchId(null); setShownDrawerMountId(null); }
                 setMotionPreview(value ? { project: source, value } : null);
                 if (value && (!activeMotionPreview || value.focusPair)) inspectWorkspace();
               }}

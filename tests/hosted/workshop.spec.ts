@@ -1416,3 +1416,83 @@ test("a named cabinet opening produces a drawer cut list and stops the saved sli
   expect(guide).toContain("Dry-fit the five panels square");
   expect(guide).toContain("T46322G18");
 });
+
+test("drawer rail marks catch screw breakthrough and reopen with checked drilling coordinates", async ({ page }) => {
+  const base = blank("Drawer rail mounting example");
+  const cabinetLeft = part("Left cabinet panel", "plywood", [0.75, 24, 18.25], [-8.385, 12, 0], base.steps[0].id, "Drawer");
+  const cabinetRight = part("Right cabinet panel", "plywood", [0.75, 24, 18.25], [8.385, 12, 0], base.steps[0].id, "Drawer");
+  const drawerLeft = part("Left drawer panel", "plywood", [0.5, 4, 18.25], [-7.25, 12, 0], base.steps[0].id, "Drawer");
+  const drawerRight = part("Right drawer panel", "plywood", [0.5, 4, 18.25], [7.25, 12, 0], base.steps[0].id, "Drawer");
+  const { project } = saveMotionPlan(
+    { ...base, pieces: [cabinetLeft, cabinetRight, drawerLeft, drawerRight] },
+    {
+      label: "Shop drawer", memberIds: [drawerLeft.id, drawerRight.id],
+      mechanism: {
+        kind: "slide", axis: [0, 0, 1], travel: 18,
+        drawerSlide: {
+          productId: "accuride-t46322g18", cabinetLeft: cabinetLeft.id, cabinetRight: cabinetRight.id,
+          drawerLeft: drawerLeft.id, drawerRight: drawerRight.id,
+        },
+      },
+    },
+  );
+
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "drawer-rail-layout.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 92 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  const openMotion = () => page.getByRole("button", { name: "Test movement", exact: true }).click();
+  await openMotion();
+  const mounting = page.getByRole("region", { name: "Drawer rail mounting", exact: true });
+  await mounting.getByText("Measure mounting marks", { exact: true }).click();
+  await mounting.getByLabel("Rail centerline above shared bottom (in)", { exact: true }).fill("1.5");
+  const fill = (name: string, value: string) => mounting.getByLabel(name, { exact: true }).fill(value);
+  for (const name of ["Cabinet rail", "Drawer rail"]) {
+    await fill(`${name} pilot diameter (in)`, "0.09375");
+    await fill(`${name} pilot tip depth into wood (in)`, "0.35");
+    await fill(`${name} seated screw diameter (in)`, "0.164");
+    await fill(`${name} seated screw penetration into wood (in)`, "0.625");
+    await fill(`${name} hole centers (in)`, "1.5, 0\n8, 0\n16, 0");
+  }
+  await fill("Drawer rail footprint length (in)", "17.25");
+  await fill("Drawer rail footprint height (in)", "0.85");
+  await fill("Drawer rail front inset from shared front edge (in)", "0.125");
+  await mounting.getByRole("checkbox", { name: "Drawer rail has a different right-side pattern" }).check();
+  await fill("Drawer rail right hole centers (in)", "2, 0\n8, 0\n16, 0");
+
+  const check = mounting.getByRole("button", { name: "Save and check mounting marks" });
+  await check.click();
+  await expect(mounting.getByRole("status")).toContainText("Resolve flagged rail footprints");
+  await expect(mounting.getByText(/Seated screw envelope reaches or passes the back/).first()).toBeVisible();
+  await mounting.getByRole("button", { name: "Show rail mounting marks in 3D" }).click();
+  const rightMark = page.getByTestId("drawer-rail-drawerRight");
+  await expect(rightMark).toHaveAttribute("data-state", "conflict");
+
+  await fill("Drawer rail seated screw penetration into wood (in)", "0.4");
+  await check.click();
+  await expect(mounting.getByRole("status")).toContainText("All four rails and the measured mounting paths fit");
+  await expect(rightMark).toHaveAttribute("data-state", "checked");
+  await expect(page.getByTestId("drawer-rail-cabinetLeft")).toHaveAttribute("data-state", "checked");
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  expect((await draft()).project.drawerSlideMounts[0].drawer).toMatchObject({ screwDepth: 0.4, rightCenters: [[2, 0], [8, 0], [16, 0]] });
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await openMotion();
+  await expect(mounting.getByRole("status")).toContainText("All four rails");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/Right drawer side · P\d+ hole 1 · 2\.125 in back/);
+  expect(guide).toContain("0.4 in into wood");
+  await expect(page.locator(".print-guide")).toContainText("2.125 in back from the panel blank's front");
+});

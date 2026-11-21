@@ -1,3 +1,5 @@
+import { DrawerSlideMountPanel } from "./DrawerSlideMountPanel";
+import { clearDrawerSlideMount } from "./drawerSlideMounts";
 import { DrawerBoxPanel } from "./DrawerBoxPanel";
 import { drawerCabinetPanels } from "./drawerBoxes";
 import { clearGreenhouseLatch } from "./greenhouseLatch";
@@ -553,6 +555,8 @@ export function MotionPanel({
   onShowSashGaps,
   shownLatchId,
   onShowLatch,
+  shownDrawerMountId,
+  onShowDrawerMount,
   selectedIds,
   preview,
   initialTest,
@@ -572,6 +576,8 @@ export function MotionPanel({
   onShowSashGaps: (entryId: string) => void;
   shownLatchId: string | null;
   onShowLatch: (id: string | null) => void;
+  shownDrawerMountId: string | null;
+  onShowDrawerMount: (id: string | null) => void;
   onChange: (project: Project) => Project;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
@@ -795,6 +801,7 @@ export function MotionPanel({
   const edit = (id: string | null) => {
     cancel();
     setEditing(id);
+    onShowDrawerMount(null);
     setError("");
     onPreview(null);
   };
@@ -918,6 +925,7 @@ export function MotionPanel({
               setScenarioId("");
               setScenarioName("");
               onShowLatch(null);
+              onShowDrawerMount(null);
               setSetupDraft(null);
               setActiveReview(null);
               edit(null);
@@ -1478,15 +1486,29 @@ export function MotionPanel({
           }}
         />
       )}
+      {selected && editing === null && (
+        <DrawerSlideMountPanel project={project} motion={selected} shown={shownDrawerMountId === selected.id}
+          onShow={(id) => {
+            cancel();
+            onPreview(null);
+            onShowLatch(null);
+            onShowDrawerMount(id);
+          }}
+          onChange={(next) => {
+            cancel();
+            onPreview(null);
+            onChange(next);
+          }} />
+      )}
       {selected && editing === selected.id && (
         <button
           type="button"
           className="text-button"
           onClick={() => {
-            onChange(clearGreenhouseLatch({
+            onChange(clearDrawerSlideMount(clearGreenhouseLatch({
               ...project,
               motionPlans: plans.filter((row) => row.id !== selected.id),
-            }, selected.id));
+            }, selected.id), selected.id));
             onShowLatch(null);
             setScenarioId("");
             setScenarioName("");

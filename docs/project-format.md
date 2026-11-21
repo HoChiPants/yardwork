@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 92**. Yardwork reads valid formats 1–91 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 93**. Yardwork reads valid formats 1–92 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 93 saves measured drawer rail layouts in `drawerSlideMounts` by motion ID. Each layout stores cabinet and drawer rail measurements, optional separate right-side hole patterns, drill and screw depths, and a signature of the closed mounting panels. Earlier drawer motions open with their existing part IDs, slide selection and travel.
 
 Format 92 can save `woodJointDecisions[].trimSeam` on a sealant joint. It records selected modeled edges, field bead measurements, any trial coverage and the measured fit signature. Earlier sealant joint notes still open and can take a measured plan later.
 

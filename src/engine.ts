@@ -65,6 +65,7 @@ import { liningBackingText, saunaLiningBacking, saunaLiningGuideLines, saunaLini
 import { motionReviewLines, projectMotionReviews } from "./mechanismMotion";
 import { projectLidTravelChecks } from "./lidTravelFindings";
 import { accuride3732 } from "./drawerSlideReference";
+import { reviewDrawerSlideMount } from "./drawerSlideMounts";
 import { reviewDrawerSlide } from "./drawerSlides";
 import { everbiltLatch, greenhouseLatchGuideLines, reviewGreenhouseLatch } from "./greenhouseLatch";
 import { greenhouseDoorReview } from "./greenhouseDoors";
@@ -808,6 +809,16 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       severity: "warning",
       title: `Review drawer slide fit · ${plan.label}`,
       detail: fit.rows.filter((row) => !row.matches).map((row) => `${row.label}. ${row.detail}`).join(" "),
+    });
+  }
+  for (const mount of p.drawerSlideMounts ?? []) {
+    const review = reviewDrawerSlideMount(p, mount);
+    if (review.state === "checked") continue;
+    findings.push({
+      id: `drawer-slide-mount-${mount.motionId}`,
+      severity: "warning",
+      title: "Review drawer rail mounting",
+      detail: review.detail,
     });
   }
   for (const layout of saunaFoilLayoutChanges(p))

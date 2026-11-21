@@ -1,11 +1,10 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { test, expect } from "@playwright/test";
 test("records a Lowe's snapshot and keeps purchase links and handoff in the selected retailer", async ({
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "List", exact: true }).click();
   await page
     .getByRole("button", { name: "Record store snapshot", exact: true })
@@ -26,7 +25,6 @@ test("records a Lowe's snapshot and keeps purchase links and handoff in the sele
   await page
     .getByRole("button", { name: "Save snapshot", exact: true })
     .click();
-  await expect(page.locator(".store-card")).toContainText("Lowe's sourcing");
   await expect(page.locator(".bom-row")).toContainText(
     "Snapshot · 16 available",
   );

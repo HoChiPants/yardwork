@@ -296,6 +296,8 @@ import { snapPlacement, surfacePlacement } from "./editing";
 import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSlideStopLabel } from "./placement";
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
+import { MaterialPlacement } from "./MaterialPlacement";
+import { materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
 import { addMeasuredOffcut } from "./measuredOffcuts";
@@ -364,6 +366,7 @@ type Modal =
   | "zone"
   | "cut"
   | "part-stock"
+  | "place-material"
   | "measured-offcut"
   | "offcut-reuse"
   | "offcut-release"
@@ -907,6 +910,7 @@ export function App() {
     [connectionTarget, setConnectionTarget] = useState(""),
     [screws, setScrews] = useState(2),
     [screwLength, setScrewLength] = useState(3);
+  const [pendingMaterial, setPendingMaterial] = useState<{ projectId: string; group: MaterialGroup; position?: V3 }>();
   const viewport = useRef<HTMLDivElement>(null),
     camera = useRef<THREE.Camera | null>(null),
     file = useRef<HTMLInputElement>(null);
@@ -2207,19 +2211,11 @@ export function App() {
     setSelected(id);
     setPanel("part");
   }
-  function add(id: MaterialId, position: V3 = [0, 0, 0]) {
+  function add(id: MaterialId, name: string, position: V3 = [0, 0, 0]) {
     safe(() => {
       const next = addMaterial(project, id, position, activeStepId);
       const added = next.pieces.at(-1)!;
-      // Repeated + additions form an adjacent row rather than occupying the same volume.
-      if (arguments.length < 2 && project.pieces.some((p) => !p.offcut)) {
-        const right = Math.max(
-          ...project.pieces
-            .filter((p) => !p.offcut)
-            .map((p) => bounds(p).max[0]),
-        );
-        added.position[0] = right + added.size[0] / 2;
-      }
+      added.name = name;
       if (snap)
         added.position = snapPlacement(
           next,
@@ -2238,7 +2234,7 @@ export function App() {
       setMode("select");
       setStage(null);
       notify(
-        `${material(id).name} added. Drag to move, or Shift-drag to rotate.`,
+        `${name} added. Drag to move, or Shift-drag to rotate.`,
       );
     });
   }
@@ -2510,33 +2506,39 @@ export function App() {
       setBusy(false);
     }
   }
-  function drop(e: React.DragEvent) {
-    e.preventDefault();
-    const id = e.dataTransfer.getData(
-      "application/yardwork-material",
-    ) as MaterialId;
-    if (
-      !catalog.some((m) => m.id === id) ||
-      !camera.current ||
-      !viewport.current
-    )
-      return;
-    const rect = viewport.current.getBoundingClientRect();
-    const pointer = new THREE.Vector2(
-      ((e.clientX - rect.left) / rect.width) * 2 - 1,
-      (-(e.clientY - rect.top) / rect.height) * 2 + 1,
-    );
+  function pointOnWorkspace(pointer: { x: number; y: number }): V3 | undefined {
+    const activeCamera = camera.current;
+    const canvas = viewport.current?.querySelector("canvas");
+    if (!canvas || !activeCamera || workspaceReviewActive) return;
+    const rect = canvas.getBoundingClientRect();
+    if (pointer.x < rect.left || pointer.x >= rect.right || pointer.y < rect.top || pointer.y >= rect.bottom) return;
     const ray = new THREE.Raycaster();
-    ray.setFromCamera(pointer, camera.current);
-    const point = surfacePlacement(
-      project,
-      ray.ray.origin.toArray().map((v) => v * 12) as V3,
-      ray.ray.direction.toArray() as V3,
-    );
-    if (point) {
-      const round = (v: number) => (snap ? Math.round(v) : v);
-      add(id, [round(point[0]), point[1], round(point[2])]);
+    activeCamera.updateMatrixWorld();
+    ray.setFromCamera(new THREE.Vector2(
+      (pointer.x - rect.left) / rect.width * 2 - 1,
+      1 - (pointer.y - rect.top) / rect.height * 2,
+    ), activeCamera);
+    const origin = ray.ray.origin.toArray().map((value) => value * 12) as V3;
+    const point = surfacePlacement(project, origin, ray.ray.direction.toArray());
+    if (point) return [snap ? Math.round(point[0]) : point[0], point[1], snap ? Math.round(point[2]) : point[2]];
+    // A level view may not intersect the floor. Project the cursor onto a vertical plane through the workspace center.
+    const normal = activeCamera.getWorldDirection(new THREE.Vector3()).setY(0);
+    if (normal.lengthSq() < 1e-8) return;
+    const hit = ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal.normalize(), new THREE.Vector3()), new THREE.Vector3());
+    if (!hit) return;
+    return [snap ? Math.round(hit.x * 12) : hit.x * 12, 0, snap ? Math.round(hit.z * 12) : hit.z * 12];
+  }
+  function requestMaterial(group: MaterialGroup, pointer?: { x: number; y: number }) {
+    if (!canLeaveWorkingDraft()) return;
+    const position = pointer ? pointOnWorkspace(pointer) : undefined;
+    if (pointer && !position) return;
+    const { options } = materialPlacementOptions(group);
+    if (options.length === 1) {
+      add(options[0].id, group.name, position);
+      return;
     }
+    setPendingMaterial({ projectId: project.id, group, position });
+    setModal("place-material");
   }
   function copySelection() {
     objectClipboard.current=copyObjects(current.current,selected,selectedSectionId);
@@ -2720,15 +2722,10 @@ export function App() {
                 </button>
               ))}
             </div>
-            <MaterialLibrary category={filter} search={search} onAdd={add} />
+            <MaterialLibrary category={filter} search={search} onPlace={requestMaterial} />
             <div className="drag-hint">
               <MousePointer2 size={15} />
-              <span>
-                Drag a material onto the ground.
-                <br />
-                Add as many design parts as you need; stock is checked
-                separately.
-              </span>
+              <span>Drag into the workspace or use +.</span>
             </div>
           </>
         ) : (
@@ -2783,28 +2780,6 @@ export function App() {
             </button>
           </div>
         )}
-        <div className="store-card">
-          <div className="store-logo">
-            {project.retailer === "lowes" ? "L" : "HD"}
-          </div>
-          <div>
-            <strong>{retailerName(project.retailer)} sourcing</strong>
-            <span>
-              ZIP {project.zip} ·{" "}
-              {project.store ? `Store ${project.store}` : "choose a store"}
-            </span>
-          </div>
-          <button
-            aria-label="Configure store"
-            onClick={() => setModal("settings")}
-          >
-            <ChevronRight size={16} />
-          </button>
-          <p>
-            Example catalog · live stock{" "}
-            {health?.catalog ? "provider configured" : "not connected"}
-          </p>
-        </div>
       </aside>
       <main className="workbench">
         <div className="project-heading">
@@ -2817,6 +2792,7 @@ export function App() {
               {project.name}
               <button
                 aria-label="Rename project"
+                title="Project settings"
                 onClick={() => setModal("settings")}
               >
                 <ChevronDown size={18} />
@@ -3003,11 +2979,7 @@ export function App() {
         <div
           className={`canvas-wrap${workspaceReviewActive ? " motion-preview" : ""}${activeFastenerLayoutPreview || activeConnectorPreview || panel === "fit-stock" ? " layout-preview" : ""}`}
           ref={viewport}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(event) => {
-            if (workspaceReviewActive) event.preventDefault();
-            else drop(event);
-          }}
+
         >
           <SceneBoundary>
             <Scene
@@ -3332,34 +3304,6 @@ export function App() {
               {inspectorFocus.compact && <button type="button" className="text-button" onClick={inspectorFocus.expand}>Wall settings</button>}
             </div>
           )}
-          {!workspaceReviewActive && piece && mode !== "measure" && mode !== "fastener" && (
-            <div className="part-quick-tools">
-              <strong>{piece.name}</strong>
-              <button onClick={()=>setMode("move")}><Move3D size={15}/>Move XYZ</button>
-              <button aria-pressed={mode==="lift"} onClick={()=>setMode("lift")}>↕ Lift</button>
-              <button onClick={copySelection}><Copy size={15}/>Copy</button>
-              <button
-                title="Turn around Y by 90 degrees"
-                onClick={() => rotatePart([0, Math.PI / 2, 0])}
-              >
-                <RotateCw size={15} />
-                Turn 90°
-              </button>
-              <button
-                title="Lay down or tip up around Z"
-                onClick={() => rotatePart([0, 0, Math.PI / 2])}
-              >
-                <RotateCcw size={15} />
-                Tip 90°
-              </button>
-              {(material(piece.material).cuttable || canEditThroughOpenings(piece)) && (
-                <button data-cut-part onClick={() => setModal("cut")}>
-                  <Scissors size={15} />
-                  Cut part
-                </button>
-              )}
-            </div>
-          )}
           {!workspaceReviewActive && mode === "measure" && (
             <div className="measurement-panel" aria-label="Measurement">
               <strong>
@@ -3449,6 +3393,35 @@ export function App() {
             </div>
           )}
         </div>
+        {!workspaceReviewActive && !activeFastenerLayoutPreview && !activeConnectorPreview && panel !== "fit-stock" &&
+          piece && mode !== "measure" && mode !== "fastener" && (
+            <div className="part-quick-tools" role="toolbar" aria-label="Selected part tools">
+              <strong>{piece.name}</strong>
+              <button onClick={()=>setMode("move")}><Move3D size={15}/>Move XYZ</button>
+              <button aria-pressed={mode==="lift"} onClick={()=>setMode("lift")}>↕ Lift</button>
+              <button onClick={copySelection}><Copy size={15}/>Copy</button>
+              <button
+                title="Turn around Y by 90 degrees"
+                onClick={() => rotatePart([0, Math.PI / 2, 0])}
+              >
+                <RotateCw size={15} />
+                Turn 90°
+              </button>
+              <button
+                title="Lay down or tip up around Z"
+                onClick={() => rotatePart([0, 0, Math.PI / 2])}
+              >
+                <RotateCcw size={15} />
+                Tip 90°
+              </button>
+              {(material(piece.material).cuttable || canEditThroughOpenings(piece)) && (
+                <button data-cut-part onClick={() => setModal("cut")}>
+                  <Scissors size={15} />
+                  Cut part
+                </button>
+              )}
+            </div>
+          )}
         <section className="build-timeline">
           <div className="timeline-heading">
             <div>
@@ -4623,7 +4596,10 @@ export function App() {
               >
                 Review product references
               </button>
-              <PricingSummary coverage={pricing} />
+              <details className="field-section">
+                <summary>Project cost estimate</summary>
+                <PricingSummary coverage={pricing} />
+              </details>
               {project.fastenerPlans.length > 0 && (
                 <details className="field-section">
                   <summary>Planned wood-fastener purchases</summary>
@@ -4870,7 +4846,6 @@ export function App() {
                       · {r.pieces} {r.pieces === 1 ? "part" : "parts"}
                     </span>
                   </div>
-                  <b>{r.unpriced && r.quantity > 0 ? "Unpriced" : money(r.total)}</b>
                   {r.onHandStockUnits > 0 && (
                     <small>{r.onHandStockUnits} stock {r.onHandStockUnits === 1 ? "source" : "sources"} on hand</small>
                   )}
@@ -5388,6 +5363,12 @@ export function App() {
             >
               <X size={20} />
             </button>
+            {modal === "place-material" && pendingMaterial?.projectId === project.id && (
+              <MaterialPlacement group={pendingMaterial.group} onPlace={(id) => {
+                add(id, pendingMaterial.group.name, pendingMaterial.position);
+                setModal(null);
+              }} />
+            )}
             {modal === "idea" && (
               <IdeaPlanner
                 project={project}

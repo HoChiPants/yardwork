@@ -24,7 +24,7 @@ For a closet with sourced Everbilt rods, open **Sections → Fit closet rods →
 
 **Plan it. Piece by piece.** An independent, self-hosted 3D workshop for planning DIY projects with editable materials, cuts, connections, shopping lists, and build guides.
 
-**Lift (L)** or **Alt-drag** moves selected wood vertically; Raise/Lower offers exact increments. Copy/paste and duplicate work for parts and whole sections. Material families now share a card with length/source options, and **Cut pool** collects used cuts and reusable offcuts. Solid wood separates onto clear faces instead of retaining intersections. [Movement, copying and cut-pool guide](docs/move-copy-and-cut-pool.md).
+**Lift (L)** or **Alt-drag** moves selected wood vertically; Raise/Lower offers exact increments. Copy/paste and duplicate work for parts and whole sections. Each material family has one tile. Drag it onto a surface or use + to place it in the center. Choose the stock size during placement, and compare shorter stock against a finished dimension when needed. **Cut pool** collects used cuts and reusable offcuts. Solid wood separates onto clear faces instead of retaining intersections. [Movement, copying and cut-pool guide](docs/move-copy-and-cut-pool.md).
 
 **Checks → Fit stock between faces** previews a real board between selected retained faces, with independent end-clearance units, cross-section roll and an explicit datum. Review its cut and genuine remnant, then Add through ordinary Undo or Cancel without changing the project. The new part opens two end-connection actions and shares one physical stock source with its remnant. [Fitted-stock workflow](docs/fitted-stock.md).
 

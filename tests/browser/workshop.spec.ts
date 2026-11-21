@@ -1,3 +1,4 @@
+import { addFramingLumber, confirmMaterialPlacement } from "../helpers/materialPlacement";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
 import { test, expect } from "@playwright/test";
@@ -77,9 +78,7 @@ test("generates a guide at the end and explicitly reopens a saved project", asyn
 test("adds and cuts lumber, retains offcuts, supports undo, and exports round-trip JSON", async ({
   page,
 }) => {
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await expect(
     page.getByRole("textbox", { name: "Part name", exact: true }),
   ).toHaveValue("2 × 4 framing lumber");
@@ -226,9 +225,7 @@ test("mobile interface fits without horizontal overflow", async ({ page }) => {
 test("records a matched inventory snapshot and makes ZIP settings editable", async ({
   page,
 }) => {
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "List", exact: true }).click();
   await page.getByRole("button", { name: "Record store snapshot" }).click();
   await page
@@ -258,7 +255,9 @@ test("records a matched inventory snapshot and makes ZIP settings editable", asy
   await expect(page.locator(".bom-row").first()).toContainText(
     "Availability unverified",
   );
-  await expect(page.locator(".store-card")).toContainText("84101");
+  await page.getByRole("button", { name: "Project settings", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Store ZIP", exact: true })).toHaveValue("84101");
+  await page.getByRole("button", { name: "Done", exact: true }).click();
 });
 test("dragging a catalog card places a new part in the scene", async ({
   page,
@@ -273,6 +272,7 @@ test("dragging a catalog card places a new part in the scene", async ({
       }),
     })
     .dragTo(page.locator("canvas"), { targetPosition: { x: 200, y: 320 } });
+  await confirmMaterialPlacement(page);
   await expect(
     page.getByRole("textbox", { name: "Part name", exact: true }),
   ).toHaveValue("2 × 4 framing lumber");
@@ -474,9 +474,7 @@ test("undo preserves printed part-label reservations before another board is add
       const raw = localStorage.getItem(draftKey);
       return raw ? JSON.parse(raw).project : null;
     }, CURRENT_DRAFT_KEY);
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await expect.poll(async () => (await draft())?.pieces.length).toBe(1);
   const first = await draft(),
     a = first.pieces[0].id;
@@ -485,9 +483,7 @@ test("undo preserves printed part-label reservations before another board is add
   ).toBe("P001");
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect.poll(async () => (await draft())?.pieces.length).toBe(0);
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await expect
     .poll(async () => {
       const p = await draft();

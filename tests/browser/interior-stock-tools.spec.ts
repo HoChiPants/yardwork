@@ -1,3 +1,4 @@
+import { confirmMaterialPlacement } from "../helpers/materialPlacement";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   blank,
@@ -202,15 +203,12 @@ test("manual .188/.453 sheets keep exact dimensions, cut remnants and one-sheet 
   );
   await page.getByRole("button", { name: "Panels", exact: true }).click();
   for (const row of sheets) {
-    const m = material(row.id),
-      add = page.getByRole("button", { name: `Add ${m.name}`, exact: true }),
-      card = page.locator(".material-card").filter({ has: add });
-    await expect(card).toContainText(`${row.thickness} in actual`);
-    await expect(card).toContainText("48 × 96 in");
-    await expect(card).toContainText("manual placement only");
-    await expect(card).toContainText("Price not recorded");
-    await expect(card).not.toContainText("$0.00");
+    const add = page.getByRole("button", { name: "Add Birch plywood", exact: true });
+    const card = page.locator(".material-card").filter({ has: add });
+    await expect(card).toHaveText("Birch plywood");
+    await expect(card.getByRole("combobox")).toHaveCount(0);
     await add.click();
+    await confirmMaterialPlacement(page, `${row.thickness} in`);
     await expect(
       page.getByRole("spinbutton", { name: "Width X", exact: true }),
     ).toHaveValue("48");
@@ -229,6 +227,8 @@ test("manual .188/.453 sheets keep exact dimensions, cut remnants and one-sheet 
       kept = before.pieces.find((x) => x.material === row.id)!;
     await page.getByRole("button", { name: "Cut part", exact: true }).click();
     const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Retained length units", { exact: true }).selectOption("in");
+    await dialog.getByLabel("Retained width units", { exact: true }).selectOption("in");
     await dialog
       .getByRole("spinbutton", { name: "Retained length", exact: true })
       .fill("60");
@@ -273,7 +273,7 @@ test("manual .188/.453 sheets keep exact dimensions, cut remnants and one-sheet 
       .locator(".bom-row")
       .filter({ has: page.getByText(material(row.id).name, { exact: true }) });
     await expect(purchase).toContainText("1 sheet");
-    await expect(purchase).toContainText("Unpriced");
+    await expect(purchase).not.toContainText(/Unpriced|\$/);
     await expect(purchase).toContainText("Availability unverified");
     await expect(
       purchase.getByRole("link", { name: "Find at Home Depot", exact: true }),
@@ -345,12 +345,14 @@ test("manual .188/.453 sheets keep exact dimensions, cut remnants and one-sheet 
     page.locator(".bom-row").filter({
       has: page.getByText(material(sheets[0].id).name, { exact: true }),
     }),
-  ).toContainText("$17.00");
+  ).not.toContainText("$17.00");
+  await page.getByText("Project cost estimate", { exact: true }).click();
+  await expect(page.getByRole("region", { name: "Pricing coverage" })).toContainText("$17.00");
   await expect(
     page.locator(".bom-row").filter({
       has: page.getByText(material(sheets[1].id).name, { exact: true }),
     }),
-  ).toContainText("Unpriced");
+  ).not.toContainText(/Unpriced|\$/);
   await page.screenshot({
     path: testInfo.outputPath("interior-sheets-source-once-desktop.png"),
     fullPage: false,
@@ -372,7 +374,7 @@ test("manual .188/.453 sheets keep exact dimensions, cut remnants and one-sheet 
       page.locator(".bom-row").filter({
         has: page.getByText(material(row.id).name, { exact: true }),
       }),
-    ).toContainText("Unpriced");
+    ).not.toContainText(/Unpriced|\$/);
   await page
     .getByRole("button", { name: "Record store snapshot", exact: true })
     .click();

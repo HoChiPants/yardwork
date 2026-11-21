@@ -1,3 +1,4 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { blank, part } from "../../src/model";
@@ -283,9 +284,7 @@ test("a suggested Home Depot board is copyable and a matching store observation 
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "List", exact: true }).click();
   const prepare = page.getByRole("button", {
     name: "Prepare Home Depot list",

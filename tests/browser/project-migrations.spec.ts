@@ -1,3 +1,4 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile, writeFile, unlink, mkdir, rm } from "node:fs/promises";
@@ -92,9 +93,7 @@ test("an unreadable future browser draft remains downloadable after creating a n
     { key: currentKey, raw },
   );
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await stableDraft(page);
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   await page.getByText(/Preserved browser drafts/).click();
@@ -203,7 +202,7 @@ test("an earlier saved revision opens and saves as a copy while both original an
     expect((await revision.json()).project.pieces).toEqual(cut.pieces);
     expect((await request.get(`${url}/revisions/1e0`)).status()).toBe(400);
     await page.goto("/");
-    await page.getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true }).click();
+    await addFramingLumber(page);
     const unsaved = await stableDraft(page);
     const openLibrary = page.getByRole("button", { name: "Open project", exact: true });
     await openLibrary.click();

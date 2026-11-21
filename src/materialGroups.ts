@@ -1,4 +1,5 @@
 import { catalog, type Material, type MaterialId } from "./model";
+import { formatPreciseInches, formatStockLength } from "./measurement";
 import { materialIds } from "./materialIds";
 import { homeDepotTreatedLumber } from "./homeDepotTreatedLumber";
 const families: {
@@ -115,7 +116,7 @@ export function groupedMaterials(
     if (variants.length)
       result.push({
         id,
-        name: family?.name ?? item.name,
+        name: family?.name ?? paletteStockName(item.name),
         variants,
         preferred: variants.some((m) => m.id === family?.preferred)
           ? family!.preferred
@@ -124,4 +125,27 @@ export function groupedMaterials(
   }
   const order=(group:MaterialGroup)=>Math.min(...group.variants.map((m)=>materialIds.indexOf(m.id)));
   return result.sort((a,b)=>order(a)-order(b));
+}
+
+
+export function paletteStockName(name: string) {
+  return name.replace(/^(?:The )?(?:Home Depot|Lowe[’']s)\s+/i, "")
+    .replace(/\s*·\s*(?:The )?(?:Home Depot|Lowe[’']s)(?: reference)?(?:\s*·\s*\d+ ft)?/gi, "").trim();
+}
+
+export function materialPlacementOptions(group: MaterialGroup) {
+  const ids = materialFamilyVariants(group.preferred);
+  const all = catalog.filter((stock) => ids.includes(stock.id));
+  const preferred = all.find(({ id }) => id === families.find((family) => family.id === group.id)?.preferred) ?? all[0];
+  const dimension = (stock: Material) => group.id === "birch-plywood" ? Math.min(...stock.size) :
+    group.id === "pex-b" ? stock.id === "hd-pex-u860w10" ? 0.5 : 0.75 : Math.max(...(stock.stockSize ?? stock.size));
+  const label = (value: number) => group.id === "birch-plywood" || group.id === "pex-b"
+    ? formatPreciseInches(value) : formatStockLength(value);
+  const representatives = new Map([preferred, ...all.filter((stock) => stock.id !== preferred.id)]
+    .reverse().map((stock) => [dimension(stock), stock]));
+  return {
+    preferred,
+    label: group.id === "birch-plywood" ? "Panel thickness" : group.id === "pex-b" ? "Pipe size" : "Stock length",
+    options: [...representatives].sort(([a], [b]) => a - b).map(([value, stock]) => ({ value, id: stock.id, label: label(value) })),
+  };
 }

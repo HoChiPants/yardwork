@@ -1,11 +1,10 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { test, expect } from "@playwright/test";
 test("eye and hearing protection can be added directly from the operation checklist", async ({
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
   await page
     .getByRole("spinbutton", { name: "Retained length", exact: true })
@@ -62,9 +61,7 @@ test("Home Depot tool purchases have a separate subtotal and follow the selected
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "Tools", exact: true }).click();
   const reviewed = page.getByRole("checkbox", {
     name: "Reviewed DCD771C2",
@@ -124,9 +121,7 @@ test("cut operations produce a tool checklist and reviewed models persist into t
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
   await expect(
     page.getByLabel("Retained length units", { exact: true }),
@@ -189,7 +184,7 @@ test("real sourced fasteners show exact pack sizes without inventing a zero pric
     .click();
   await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(page.locator(".bom-row")).toContainText("120 pack");
-  await expect(page.locator(".bom-row")).toContainText("Unpriced");
+  await expect(page.locator(".bom-row")).not.toContainText(/Unpriced|\$/);
   await page
     .getByRole("button", { name: "Review product references", exact: true })
     .click();
@@ -205,9 +200,7 @@ test("reviewed hand tools cover narrow functions with real sources and retired o
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
   await expect(
     page.getByLabel("Retained length units", { exact: true }),

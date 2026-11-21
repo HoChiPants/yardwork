@@ -1,3 +1,4 @@
+import { confirmMaterialPlacement } from "../helpers/materialPlacement";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { projectSchema } from "../../src/model";
@@ -5,11 +6,10 @@ import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 
 test("ground-contact stock keeps its exact Home Depot listing through a cut, store snapshot and save", async ({ page }) => {
   await page.goto("/");
-  const palette = page.getByRole("combobox", { name: "Ground-contact 2 × 6 option" });
-  await expect(palette.getByRole("option")).toHaveCount(4);
-  await expect(page.getByRole("combobox", { name: "Ground-contact 2 × 4 option" }).getByRole("option")).toHaveCount(3);
-  await palette.selectOption("hd-treated-2x6-12");
-  await page.getByRole("button", { name: "Add Brown-stain Western Wood 2 × 6 · Home Depot · 12 ft", exact: true }).click();
+  await page.getByRole("button", { name: "Add Ground-contact 2 × 6", exact: true }).click();
+  const size = page.getByRole("dialog");
+  await expect(size.getByRole("radio")).toHaveCount(3);
+  await confirmMaterialPlacement(page, "12 ft");
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
   await page.getByLabel("Retained length units", { exact: true }).selectOption("ft");
   await page.getByRole("spinbutton", { name: "Retained length", exact: true }).fill("9");

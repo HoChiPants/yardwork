@@ -1,3 +1,4 @@
+import { confirmMaterialPlacement } from "../helpers/materialPlacement";
 import { test, expect, type Page } from "@playwright/test";
 import { PerspectiveCamera, Vector3 } from "three";
 import { blank, part, type Project, type V3 } from "../../src/model";
@@ -210,6 +211,7 @@ test("a catalog drop onto a base uses the top surface instead of the floor", asy
     .dragTo(page.locator("canvas"), {
       targetPosition: { x: point.x - box.x, y: point.y - box.y },
     });
+  await confirmMaterialPlacement(page);
   await expect(
     page.getByRole("spinbutton", { name: "Y", exact: true }),
   ).toHaveValue("60");

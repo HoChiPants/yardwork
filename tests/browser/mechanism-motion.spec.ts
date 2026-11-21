@@ -1,3 +1,4 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { reviewMotion, saveMotionPlan } from "../../src/mechanismMotion";
@@ -238,9 +239,7 @@ test("a blank project can save a site face before adding stock and testing movem
   await expect(page.getByTestId("site-clearance-marker")).toHaveText(
     "Front alcove wall",
   );
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page
     .getByRole("button", { name: "Test movement", exact: true })
     .click();

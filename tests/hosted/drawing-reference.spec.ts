@@ -1,3 +1,4 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
@@ -87,7 +88,7 @@ test("a local PDF sheet frames the model at the measured scale and survives save
   const workspace = page.locator("canvas").first();
   await expect(workspace).toHaveAttribute("data-drawing-reference", /"width":300,"depth":150/);
   await expect(page.locator(".empty-workspace")).toHaveCount(0);
-  await page.getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true }).click();
+  await addFramingLumber(page);
   await expect(page.locator(".statusbar")).toContainText("1 part");
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
@@ -138,7 +139,7 @@ test("an image reference can be placed precisely, hidden or removed without chan
     ctx.strokeRect(20, 20, 600, 280);
     return canvas.toDataURL("image/png").split(",")[1];
   });
-  await page.getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true }).click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();

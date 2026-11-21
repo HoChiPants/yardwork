@@ -260,6 +260,7 @@ test("partial pricing distinguishes four unpriced sheets, examples, exact counte
   expect(coverage.exampleSubtotal).toBeGreaterThan(0);
   expect(coverage.materials.unpricedLineCount).toBe(1);
   expect(coverage.materials.unpricedPurchaseUnitQuantity).toBe(4);
+  await page.getByText("Project cost estimate", { exact: true }).click();
   const summary = page.locator(".pricing-summary:visible").first();
   await expect(summary).toHaveAttribute("data-pricing-status", "partial");
   await expect(summary.locator(":scope > details")).toHaveJSProperty(
@@ -341,6 +342,7 @@ test("phone all-unpriced purchase stays unknown until a genuine zero per-box sna
     "data-observed-supply-subtotal",
     "unknown",
   );
+  await page.getByText("Project cost estimate", { exact: true }).click();
   await expect(page.locator(".pricing-summary:visible").first()).toContainText(
     "No priced subtotal",
   );

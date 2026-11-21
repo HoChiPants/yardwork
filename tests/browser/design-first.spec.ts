@@ -1,6 +1,8 @@
+import { groupedMaterials } from "../../src/materialGroups";
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { test, expect } from "@playwright/test";
-import { blank, part, catalog } from "../../src/model";
+import { blank, part } from "../../src/model";
 test("starts empty, preserves the old draft explicitly, and offers no coop template", async ({
   page,
 }) => {
@@ -70,14 +72,13 @@ test("work zone, stock sizes, quick turns and local-axis cuts round trip through
   await expect(page.locator(".zone-button")).toContainText(
     "8′ W × 4′ D × 8′ H",
   );
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await page.getByRole("button", { name: "Tip 90°", exact: true }).click();
   await expect(
     page.getByRole("spinbutton", { name: "Roll", exact: true }),
   ).toHaveValue("90");
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
+  await page.getByLabel("Retained length units", { exact: true }).selectOption("in");
   await page
     .getByRole("spinbutton", { name: "Retained length", exact: true })
     .fill("36");
@@ -94,14 +95,13 @@ test("work zone, stock sizes, quick turns and local-axis cuts round trip through
     .click();
   await expect(page.locator(".step-track")).toContainText("Prepare the space");
   await page.getByRole("button", { name: "Materials", exact: true }).click();
-  await expect(page.locator(".material-card")).toHaveCount(catalog.length);
-  await page
-    .getByRole("button", { name: /Add 2 × 4 framing lumber.*10 ft/ })
-    .click();
+  await expect(page.locator(".material-card")).toHaveCount(groupedMaterials().length);
+  await addFramingLumber(page, "10 ft");
   await expect(
     page.getByRole("spinbutton", { name: "Height Y", exact: true }),
   ).toHaveValue("120");
-  await expect(page.locator(".build-timeline")).toContainText("layout changed");
+  await expect(page.locator(".step-track")).toHaveCount(0);
+  await expect(page.locator(".build-timeline").getByRole("button", { name: "Generate build guide", exact: true })).toBeEnabled();
   await page.getByRole("button", { name: "Brackets", exact: true }).click();
   await expect(page.locator(".material-card")).toHaveCount(1);
 });

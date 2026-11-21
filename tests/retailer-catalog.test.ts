@@ -203,6 +203,8 @@ test("regional lumber and retired counterpart offers remain explicit candidates"
 test("Home Depot regional framing listings match full-length board stock and stay separate from pinned products", () => {
   for (const [id, productId] of [
     ["stud", "338861827"],
+    ["stud-10", "100077951"],
+    ["stud-12", "312528815"],
     ["two-six", "100083274"],
   ] as const) {
     const stock = material(id);
@@ -218,10 +220,6 @@ test("Home Depot regional framing listings match full-length board stock and sta
       null,
     );
   }
-  assert.equal(
-    shoppingOfferForMaterial(material("stud-10"), "home-depot"),
-    null,
-  );
   assert.equal(
     shoppingOfferForMaterial(material("treated"), "home-depot"),
     null,

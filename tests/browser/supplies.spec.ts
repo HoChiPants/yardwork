@@ -1,3 +1,4 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -69,7 +70,7 @@ async function downloadText(page: Page, button: RegExp) {
 
 test("record a mixed Home Depot store check from the purchase handoff", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true }).click();
+  await addFramingLumber(page);
   await add(page, hingeId, 2);
   const before = await draft(page);
   await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
@@ -224,9 +225,7 @@ test("hinge purchases edit, snapshot, save/reopen and export without becoming ge
     .click();
   await page.getByLabel("Project name", { exact: true }).fill(projectName);
   await page.getByRole("button", { name: "Done", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   const before = await draft(page),
     row = await add(page, hingeId, 2);
   await row.getByText(/Edit purchase quantities and usage/).click();

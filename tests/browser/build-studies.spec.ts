@@ -1,3 +1,4 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { CURRENT_DRAFT_KEY, PREVIOUS_DRAFT_KEY } from "../../src/drafts";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -1515,9 +1516,7 @@ test("saved examples open as editable copies with current guides and downloadabl
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await expect.poll(async () => (await draft(page))?.pieces.length).toBe(1);
 
   for (const study of studies) {
@@ -1580,9 +1579,7 @@ test("whole-build replacement is acknowledged and the unsaved project remains re
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true })
-    .click();
+  await addFramingLumber(page);
   await expect.poll(async () => (await draft(page))?.pieces.length).toBe(1);
   const original = projectSchema.parse(await draft(page));
   await openStudies(page);

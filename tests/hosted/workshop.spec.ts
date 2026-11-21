@@ -1,3 +1,4 @@
+import { addFramingLumber } from "../helpers/materialPlacement";
 import { test, expect } from "@playwright/test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -44,7 +45,7 @@ test("the hosted workshop plans locally, saves revisions and exports a restorabl
   await save.click();
   await expect.poll(async () => (await readDraft())?.revision).toBe(1);
   const id = (await readDraft()).project.id;
-  await page.getByRole("button", { name: "Add 2 × 4 framing lumber", exact: true }).click();
+  await addFramingLumber(page);
   await save.click();
   await expect.poll(async () => (await readDraft())?.revision, { timeout: 15_000 }).toBe(2);
 

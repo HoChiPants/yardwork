@@ -4809,6 +4809,8 @@ export function reviewedOfferForMaterial(
 
 const homeDepotFramingReferences: Partial<Record<Material["id"], string>> = {
   stud: "home-depot-kd-ht-2x4x96-338861827",
+  "stud-10": "hd-spf-2x4x120-100077951",
+  "stud-12": "hd-spf-2x4x144-312528815",
   "two-six": "home-depot-spf-2x6x96-100083274",
 };
 

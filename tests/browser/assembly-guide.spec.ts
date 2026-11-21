@@ -538,11 +538,10 @@ test("three storage modules keep nine semantic stages and one active ownership a
   expect(stage(again, "shell", owner).notes.split(note)).toHaveLength(2);
 });
 
-test("phone manually places and cuts exact 1x6 and 2x6 boards with matching one-board store snapshots", async ({
+test("phone cuts imported exact 1x6 and 2x6 boards with matching one-board store snapshots", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
   const definitions = [
     {
       id: "lowes-whitewood-1x6",
@@ -559,19 +558,16 @@ test("phone manually places and cuts exact 1x6 and 2x6 boards with matching one-
   ] as const;
   for (const definition of definitions) {
     const stock = material(definition.id);
-    await page
-      .getByRole("button", { name: `Add ${stock.name}`, exact: true })
-      .click();
-    const placed = await draft(page, (actual) =>
-      actual.pieces.some(
-        (piece) => piece.material === definition.id && !piece.offcut,
-      ),
+    const project = blank(`Exact board ${uid().slice(0, 8)}`);
+    const source = part(
+      stock.name, stock.id, [...stock.size], [0, stock.size[1] / 2, 0], project.steps[0].id, "Loose parts",
     );
-    const source = placed.pieces.find(
-      (piece) => piece.material === definition.id && !piece.offcut,
-    )!;
-    expect(source.size).toEqual(stock.size);
+    project.pieces = [source];
+    const placed = await importProject(page, project);
+    expect(placed.pieces[0].size).toEqual(stock.size);
     expect(stock.placementOnly).toBe(true);
+    await page.getByRole("button", { name: "Guide", exact: true }).click();
+    await page.getByRole("button", { name: `${partLabel(placed, source.id)} · ${source.name}`, exact: true }).click();
     await page.getByRole("button", { name: "Cut part", exact: true }).click();
     await page
       .getByRole("combobox", { name: "Retained length units", exact: true })

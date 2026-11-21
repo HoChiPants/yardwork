@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { projectSchema, material, uid, type Project } from "../../src/model";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { bom } from "../../src/engine";
+import { addFramingLumber } from "../helpers/materialPlacement";
 
 async function draft(page: Page, predicate: (project: Project) => boolean) {
   let actual: Project | null = null;
@@ -53,7 +54,7 @@ test("angle a board, reuse the shaped offcut, and reopen one recorded source", a
   await page.getByLabel("Project name", { exact: true }).fill(`Miter test ${uid().slice(0, 8)}`);
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   const name = material("stud").name;
-  await page.getByRole("button", { name: `Add ${name}`, exact: true }).click();
+  await addFramingLumber(page);
   const initial = await draft(page, (project) => project.pieces.length === 1);
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -110,8 +111,7 @@ test("angle a board, reuse the shaped offcut, and reopen one recorded source", a
 test("compound cut calculates the fourth corner and exports the retained face marks", async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  const name = material("stud").name;
-  await page.getByRole("button", { name: `Add ${name}`, exact: true }).click();
+  await addFramingLumber(page);
   const original = await draft(page, (project) => project.pieces.length === 1);
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -147,7 +147,7 @@ test("compound cut calculates the fourth corner and exports the retained face ma
 test("phone bevel keeps the far end, rejects equal marks and keeps canceled stock intact", async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await page.getByRole("button", { name: `Add ${material("plytanium-703").name}`, exact: true }).click();
+  await page.getByRole("button", { name: "Add 23/32 in Plytanium BC pine plywood", exact: true }).click();
   const original = await draft(page, (project) => project.pieces.length === 1);
   const cutButton = page.getByRole("button", { name: "Cut part", exact: true });
   const dialog = page.getByRole("dialog");
@@ -251,7 +251,7 @@ test("phone plywood length-and-width cuts show three exact regions from one shee
   await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
   await page.goto("/");
-  await page.getByRole("button", { name: `Add ${material("plytanium-703").name}`, exact: true }).click();
+  await page.getByRole("button", { name: "Add 23/32 in Plytanium BC pine plywood", exact: true }).click();
   const added = await draft(page, project => project.pieces.length === 1), id = added.pieces[0].id;
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
   const dialog = page.getByRole("dialog");

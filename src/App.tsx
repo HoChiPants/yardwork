@@ -1652,6 +1652,7 @@ export function App() {
     () => projectPricingCoverage(project, rows, supplyPurchases),
     [project, rows, supplyPurchases],
   );
+  const pricedTools = supplyPurchases.filter((row) => row.isTool && row.total !== null);
   const glazingEstimate = useMemo(() => sunliteTakeoff(project), [project]);
   const glazingTape = useMemo(() => reviewSunliteTape(project, glazingEstimate), [project, glazingEstimate]);
   const bandingGuide = useMemo(() => reviewEdgeBanding(project), [project]);
@@ -2261,6 +2262,7 @@ export function App() {
       setPanel("part");
       setMode("select");
       setStage(null);
+      if (modal === "place-material") setModal(null);
       notify(
         `${name} added. Drag to move, or Shift-drag to rotate.`,
       );
@@ -2534,12 +2536,17 @@ export function App() {
       setBusy(false);
     }
   }
+  function materialDropCanvas({ x, y }: { x: number; y: number }) {
+    const canvas = viewport.current?.querySelector("canvas");
+    return canvas && document.elementFromPoint(x, y) === canvas ? canvas : null;
+  }
+  const canDropMaterial = !workspaceReviewActive && !activeFastenerLayoutPreview && !activeConnectorPreview &&
+    !baseRailPreview && panel !== "fit-stock" && stage === null && !explode;
   function pointOnWorkspace(pointer: { x: number; y: number }): V3 | undefined {
     const activeCamera = camera.current;
-    const canvas = viewport.current?.querySelector("canvas");
-    if (!canvas || !activeCamera || workspaceReviewActive) return;
+    const canvas = materialDropCanvas(pointer);
+    if (!canvas || !activeCamera || !canDropMaterial) return;
     const rect = canvas.getBoundingClientRect();
-    if (pointer.x < rect.left || pointer.x >= rect.right || pointer.y < rect.top || pointer.y >= rect.bottom) return;
     const ray = new THREE.Raycaster();
     activeCamera.updateMatrixWorld();
     ray.setFromCamera(new THREE.Vector2(
@@ -2548,9 +2555,16 @@ export function App() {
     ), activeCamera);
     const origin = ray.ray.origin.toArray().map((value) => value * 12) as V3;
     const point = surfacePlacement(project, origin, ray.ray.direction.toArray());
-    if (point) return [snap ? Math.round(point[0]) : point[0], point[1], snap ? Math.round(point[2]) : point[2]];
-    // A level view may not intersect the floor. Project the cursor onto a vertical plane through the workspace center.
-    const normal = activeCamera.getWorldDirection(new THREE.Vector3()).setY(0);
+    const forward = activeCamera.getWorldDirection(new THREE.Vector3());
+    if (point && (point[1] > 0 || Math.abs(forward.y) > 0.08)) {
+      if (!snap) return point;
+      const x = Math.round(point[0]), z = Math.round(point[2]);
+      const snapped = surfacePlacement(project, [x, Math.max(origin[1], point[1] + 1), z], [0, -1, 0]);
+      // A thin or sloped support can disappear under a one-inch grid snap.
+      return snapped && Math.abs(snapped[1] - point[1]) <= 0.8 ? snapped : point;
+    }
+    // Near the floor horizon, use the workspace center plane for ground depth.
+    const normal = forward.setY(0);
     if (normal.lengthSq() < 1e-8) return;
     const hit = ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal.normalize(), new THREE.Vector3()), new THREE.Vector3());
     if (!hit) return;
@@ -2559,7 +2573,12 @@ export function App() {
   function requestMaterial(group: MaterialGroup, pointer?: { x: number; y: number }) {
     if (!canLeaveWorkingDraft()) return;
     const position = pointer ? pointOnWorkspace(pointer) : undefined;
-    if (pointer && !position) return;
+    if (pointer && !position) {
+      if (materialDropCanvas(pointer)) {
+        notify(canDropMaterial ? "Drop onto a visible surface, or use + to add at the center." : "Return to the normal workspace to drop a material.", true);
+      }
+      return;
+    }
     const { options } = materialPlacementOptions(group);
     if (options.length === 1) {
       add(options[0].id, group.name, position);
@@ -2750,7 +2769,8 @@ export function App() {
                 </button>
               ))}
             </div>
-            <MaterialLibrary category={filter} search={search} onPlace={requestMaterial} />
+            <MaterialLibrary category={filter} search={search}
+              canDrop={(point) => canDropMaterial && !!materialDropCanvas(point)} onPlace={requestMaterial} />
             <div className="drag-hint">
               <MousePointer2 size={15} />
               <span>Drag into the workspace or use +.</span>
@@ -3034,7 +3054,6 @@ export function App() {
         <div
           className={`canvas-wrap${workspaceReviewActive ? " motion-preview" : ""}${activeFastenerLayoutPreview || activeConnectorPreview || panel === "fit-stock" ? " layout-preview" : ""}`}
           ref={viewport}
-
         >
           <SceneBoundary>
             <Scene
@@ -3455,6 +3474,9 @@ export function App() {
           piece && mode !== "measure" && mode !== "fastener" && (
             <div className="part-quick-tools" role="toolbar" aria-label="Selected part tools">
               <strong>{piece.name}</strong>
+              <button onClick={() => { setPanel("part"); inspectorFocus.expand(); }}>
+                <Settings2 size={15} /> Part details
+              </button>
               <button onClick={()=>setMode("move")}><Move3D size={15}/>Move XYZ</button>
               <button aria-pressed={mode==="lift"} onClick={()=>setMode("lift")}>↕ Lift</button>
               <button onClick={copySelection}><Copy size={15}/>Copy</button>
@@ -4657,6 +4679,9 @@ export function App() {
               <details className="field-section">
                 <summary>Project cost estimate</summary>
                 <PricingSummary coverage={pricing} />
+                {pricedTools.length > 0 && <p className="small-note">
+                  {money(pricedTools.reduce((total, row) => total + (row.total ?? 0), 0))} in observed tool purchases, displayed separately.
+                </p>}
               </details>
               {project.fastenerPlans.length > 0 && (
                 <details className="field-section">
@@ -4918,7 +4943,7 @@ export function App() {
                   {(r.quantity > 0 || !r.onHandStockUnits) && <small>
                     {r.verified
                       ? `Snapshot · ${r.inventory!.available} available`
-                      : r.supplier ? "Direct supplier · price and availability to confirm" : "Availability unverified"}
+                      : r.supplier ? "Confirm availability with supplier" : "Availability unverified"}
                   </small>}
                   {r.oversize > 0 && (
                     <em>{r.oversize} oversized · excluded from estimate</em>
@@ -5424,7 +5449,6 @@ export function App() {
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
               <MaterialPlacement group={pendingMaterial.group} onPlace={(id) => {
                 add(id, pendingMaterial.group.name, pendingMaterial.position);
-                setModal(null);
               }} />
             )}
             {modal === "idea" && (

@@ -2461,6 +2461,7 @@ small {
     align-content: center;
     flex-wrap: nowrap;
   }
+  .material-card .material-info { touch-action: pan-x; }
   .material-art {
     width: 36px;
     height: 48px;
@@ -2964,10 +2965,11 @@ small {
 .part-quick-tools {
   display: flex;
   flex: none;
-  flex-wrap: wrap;
   align-items: center;
   gap: 5px;
   padding: 7px clamp(12px, 2.5vw, 28px);
+  overflow-x: auto;
+  scrollbar-width: thin;
   border-bottom: 1px solid #dfe2d5;
   background: #fffefa;
 }
@@ -2981,6 +2983,7 @@ small {
 }
 .part-quick-tools button {
   display: flex;
+  flex: none;
   align-items: center;
   gap: 5px;
   border: 0;
@@ -3589,7 +3592,6 @@ small {
 @media print { .guide-connections { overflow: visible; } .guide-connection-table tr { break-inside: avoid; } }
 
 /* Direct building controls and a single card per stock family. */
-.material-info select { display: block; width: 100%; max-width: 100%; min-width: 0; font-size: 10px; padding: 6px 4px; margin: 6px 0; border: 1px solid var(--line); border-radius: 5px; background: #fffefa; color: var(--ink); }
 .library > .segmented { flex-wrap: wrap; }
 .library > .segmented button { flex: 1 1 65px; padding: 8px 4px; }
 .object-movement { padding: 14px 0; border-bottom: 1px solid var(--line); }
@@ -3793,7 +3795,11 @@ small {
   position: fixed;
   z-index: 1000;
   pointer-events: none;
-  padding: 8px 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translate(12px, 12px);
+  padding: 5px 10px 5px 5px;
   border: 1px solid #c8d3bf;
   border-radius: 7px;
   background: #fffefa;
@@ -3802,6 +3808,22 @@ small {
   font-size: 12px;
   font-weight: 600;
 }
+.material-drag-preview.can-drop {
+  border-color: #779861;
+  background: #f2f7ec;
+}
+.material-drag-preview.can-drop::before {
+  content: "";
+  position: absolute;
+  top: -19px;
+  left: -19px;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #426731;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #fffefa;
+}
+.material-drag-preview .material-art { width: 41px; height: 43px; }
 .stock-size-options { display: flex; flex-wrap: wrap; gap: 8px; border: 0; padding: 0; margin: 18px 0; }
 .stock-size-options legend { margin-bottom: 8px; font-weight: 600; }
 .stock-size-options label {
@@ -3817,4 +3839,4 @@ small {
 }
 .stock-size-options input[type="radio"] { flex: none; width: auto; margin: 0; }
 .stock-size-options label:has(:checked) { background: #eef3e8; border-color: #a6b89a; }
-.stock-size-options + details { margin: 0 0 16px; }
+.stock-length-check { margin: 0 0 16px; }

@@ -280,10 +280,8 @@ test("partial pricing distinguishes four unpriced sheets, examples, exact counte
   await expect(summary).toContainText("$30.00 from 2 observed lines");
   await expect(summary).toContainText("example line");
   await expect(summary).toContainText("not a complete-project quote");
-  await expect(counted).toContainText("$0.00 observed subtotal");
-  await expect(page.getByTestId("supply-pricing-coverage")).toContainText(
-    "$30.00 observed supply subtotal",
-  );
+  await expect(counted).not.toContainText(/\$|Unpriced/i);
+  await expect(mass).not.toContainText(/\$|Unpriced/i);
   expect(observed.pieces).toEqual(before.pieces);
   expect(observed.fastenerPlans).toEqual(before.fastenerPlans);
   expect(observed.fastenerPlanLabels).toEqual(before.fastenerPlanLabels);
@@ -312,7 +310,7 @@ test("partial pricing distinguishes four unpriced sheets, examples, exact counte
   const switched = await draft(page, (actual) => actual.retailer === "lowes"),
     keptMass = page.locator(`[data-supply-product-id='${nails}']`);
   await expect(keptMass).toContainText("No current reviewed Lowe's offer");
-  await expect(keptMass).toContainText("Unpriced");
+  await expect(keptMass).not.toContainText(/\$|Unpriced/i);
   await expect(
     keptMass.getByRole("button", { name: /Record supply snapshot/ }),
   ).toHaveCount(0);
@@ -338,10 +336,7 @@ test("phone all-unpriced purchase stays unknown until a genuine zero per-box sna
   await add(page, sd, 1);
   const unpriced = await draft(page, (actual) => actual.supplies.length === 1);
   expect(projectPricingCoverage(unpriced).pricedSubtotal).toBeNull();
-  await expect(page.getByTestId("supply-pricing-coverage")).toHaveAttribute(
-    "data-observed-supply-subtotal",
-    "unknown",
-  );
+  await expect(page.locator(".supply-row")).not.toContainText(/\$|Unpriced/i);
   await page.getByText("Project cost estimate", { exact: true }).click();
   await expect(page.locator(".pricing-summary:visible").first()).toContainText(
     "No priced subtotal",
@@ -350,13 +345,7 @@ test("phone all-unpriced purchase stays unknown until a genuine zero per-box sna
   expect(projectPricingCoverage(zero).pricedSubtotal).toBe(0);
   expect(projectPricingCoverage(zero).observedLineCount).toBe(1);
   expect(projectPricingCoverage(zero).unpricedLineCount).toBe(0);
-  await expect(page.getByTestId("supply-pricing-coverage")).toHaveAttribute(
-    "data-observed-supply-subtotal",
-    "0",
-  );
-  await expect(page.getByTestId("supply-pricing-coverage")).toContainText(
-    "$0.00 observed supply subtotal",
-  );
+  await expect(page.locator(".supply-row")).not.toContainText(/\$|Unpriced/i);
   const summary = page.locator(".pricing-summary:visible").first();
   await expect(summary).toHaveAttribute("data-pricing-status", "observed");
   await expect(summary).toContainText("$0.00 priced subtotal");

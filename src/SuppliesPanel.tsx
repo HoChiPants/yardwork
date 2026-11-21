@@ -12,15 +12,12 @@ import {
   supplyRows,
   formatSupplyContent,
 } from "./supplies";
-import { pricingCoverage } from "./pricing";
 import { mergeStoreSnapshots } from "./storeSnapshotFiles";
 
 type SupplyRow = ReturnType<typeof supplyRows>[number];
 type SelectionPatch = Partial<
   Pick<SupplySelection, "quantity" | "purpose" | "note">
 >;
-const money = (value: number) =>
-  value.toLocaleString("en-US", { style: "currency", currency: "USD" });
 const localTime = (value = new Date().toISOString()) => {
   const date = new Date(value);
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -163,17 +160,6 @@ export function SuppliesPanel({
     rows.find((row) => row.productId === snapshotProductId) ?? null;
   const packs = wholePacks(quantity);
   const selectedDefinition = purchaseDefinition(productId);
-  const supplyPricing = pricingCoverage({
-    materials: [],
-    supplies: rows.map((row) => ({
-      id: row.productId,
-      name: row.name,
-      quantity: row.quantity,
-      purchaseUnit: row.purchaseUnit,
-      priceSource: row.total === null ? "unknown" : "snapshot",
-      total: row.total,
-    })),
-  }).supplies;
 
   function updateSelection(id: string, patch: SelectionPatch) {
     onChange({
@@ -335,28 +321,6 @@ export function SuppliesPanel({
         )}
       </form>
 
-      {rows.length > 0 && (
-        <p
-          className="small-note"
-          data-testid={
-            tools ? "tool-pricing-coverage" : "supply-pricing-coverage"
-          }
-          data-observed-supply-subtotal={
-            supplyPricing.pricedSubtotal ?? "unknown"
-          }
-        >
-          {supplyPricing.pricedSubtotal === null
-            ? `No observed ${tools ? "tool" : "supply"} subtotal`
-            : `${money(supplyPricing.pricedSubtotal)} observed ${tools ? "tool" : "supply"} subtotal`}
-          {` · ${supplyPricing.observedLineCount} observed ${supplyPricing.observedLineCount === 1 ? "product line" : "product lines"}`}
-          {supplyPricing.unpricedLineCount
-            ? ` · ${supplyPricing.unpricedLineCount} unpriced ${supplyPricing.unpricedLineCount === 1 ? "product line" : "product lines"} (${supplyPricing.unpricedPurchaseUnits.map(({ unit, quantity }) => `${quantity} × ${unit}`).join("; ")} purchase units)`
-            : ""}
-          . Unknown prices are excluded, not free. Prices and stock use matching
-          store observations checked within 24 hours; this is not a complete
-          quote.
-        </p>
-      )}
       {rows.map((row) => (
         <div
           key={row.productId}
@@ -366,9 +330,6 @@ export function SuppliesPanel({
           <strong>{row.name}</strong>
           <p className="small-note">
             {row.quantity.toLocaleString()} × {row.purchaseUnit}
-            {row.total === null
-              ? " · Unpriced"
-              : ` · ${money(row.total)} observed subtotal`}
             {row.unresolved ? " · Unresolved saved selection" : ""}
           </p>
           <p className="small-note">
@@ -408,7 +369,7 @@ export function SuppliesPanel({
           {row.inventory && (
             <p className="small-note">
               {row.inventory.available.toLocaleString()} purchase packs reported
-              available · {money(row.inventory.price)} per purchase pack.
+              available.
               <br />
               Checked {new Date(row.inventory.checkedAt).toLocaleString()} ·
               store {row.inventory.store} · ZIP {row.inventory.zip}.

@@ -23,14 +23,13 @@ export function MaterialPlacement({ group, onPlace }: { group: MaterialGroup; on
           onChange={() => select(option.id)} /><span>{option.label}</span>
       </label>)}
     </fieldset>
-    {compare && <details>
-      <summary>Compare a finished length</summary>
-      <LengthInput label="Needed finished length" value={needed} onChange={setNeeded} />
-      {needed > 0 && (!shortest ? <p>No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p>
+    {compare && <div className="stock-length-check">
+      <LengthInput label="Finished length (optional)" ariaLabel="Needed finished length" value={needed} onChange={setNeeded} />
+      {needed > 0 && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p role="status">
         {enough ? `${shortest.label} stock fits this cut with ${formatStockLength(choice.value - shortest.value)} less length to buy.` : `${shortest.label} stock fits this cut.`}{" "}
         <button type="button" className="text-button" onClick={() => select(shortest.id)}>Use {shortest.label}</button>
-      </p> : <p>{choice.label} stock fits this cut.</p>)}
-    </details>}
+      </p> : <p role="status">{choice.label} stock fits this cut.</p>)}
+    </div>}
     <button type="button" className="button primary" onClick={() => onPlace(choice.id)}>Place material</button>
   </>;
 }

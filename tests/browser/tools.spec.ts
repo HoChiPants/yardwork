@@ -94,10 +94,10 @@ test("Home Depot tool purchases have a separate subtotal and follow the selected
   await tools
     .getByRole("button", { name: "Record tool snapshot", exact: true })
     .click();
-  await expect(tools.getByTestId("tool-pricing-coverage")).toContainText(
-    "$123.45 observed tool subtotal",
-  );
+  await expect(tools).not.toContainText(/\$|Unpriced/i);
   await expect(tools).toContainText("Snapshot quantity short");
+  await page.getByText("Project cost estimate", { exact: true }).click();
+  await expect(page.getByText("$123.45 in observed tool purchases, displayed separately.")).toBeVisible();
   await page
     .getByRole("button", { name: "Prepare Home Depot list", exact: true })
     .click();

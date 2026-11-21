@@ -504,10 +504,11 @@ test("the section gizmo commits every member transform and survives returning to
   await page
     .getByRole("combobox", { name: "Current section", exact: true })
     .selectOption(s.id);
+  await page.getByRole("button", { name: "Front", exact: true }).click();
   await page
     .getByRole("button", { name: "Move section in 3D", exact: true })
     .click();
-  const handle = await sectionLiftHandle(page, s.origin);
+  const handle = await sectionLiftHandle(page, s.origin, true);
   const { x, y } = handle(0);
   await page.mouse.move(x, y);
   await page.mouse.down();

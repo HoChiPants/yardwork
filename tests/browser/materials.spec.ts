@@ -160,7 +160,9 @@ test("oversized mesh is flagged and remains excluded from quote and handoff purc
   await expect(page.locator(".bom-row")).toContainText(
     "1 oversized · excluded from estimate",
   );
-  await expect(page.locator(".bom-row")).toContainText("$39.90");
+  await expect(page.locator(".bom-row")).not.toContainText(/Unpriced|\$/);
+  await page.getByText("Project cost estimate", { exact: true }).click();
+  await expect(page.getByRole("region", { name: "Pricing coverage" })).toContainText("$39.90");
   await page
     .getByRole("button", { name: "Prepare Home Depot list", exact: true })
     .click();

@@ -12,9 +12,10 @@ import {
 } from "./openingFlashingSchema";
 import { ensurePartLabels } from "./partLabels";
 import { sillPlateFootprint } from "./sillGaskets";
-import { rotate } from "./spatial";
+import { inverseRotation, rotate } from "./spatial";
 import { packRuns } from "./stockRunPacking";
 import { pieceThroughOpenings } from "./throughOpenings";
+import { generatedWindowMembers } from "./windowWall";
 
 const epsilon = 0.001;
 const axes = [0, 1, 2] as const;
@@ -208,4 +209,24 @@ export function openingFlashingGuideLines(review: ReturnType<typeof reviewOpenin
     ...review.groups.flatMap(({ width, rolls }) => rolls.map(({ runs, left }, i) =>
       `${width} in FlexWrap · Roll ${i + 1} · ${runs.map(({ title, length }) => `Cut ${formatStockLength(length)} for ${title}`).join(" / ")} · ${left ? `Keep ${formatStockLength(left)} for matching cuts.` : "Full roll used."}`)),
   ];
+}
+
+export function reviewGeneratedWindowWalls(project: Project) {
+  return project.sections.filter(({ generator }) => generator?.windowOpening).map((section) => {
+    const planned = section.generator!.windowOpening!;
+    const members = generatedWindowMembers(project, section);
+    if (!members) return { section, members, detail: "Restore the actual sill, head and both jack studs before checking the rough dimensions.", ready: false };
+    try {
+      const frame = roughOpeningFrame(project, members);
+      const middle = frame.at((frame.x0 + frame.x1) / 2, frame.y0, 0);
+      const [offset, sill] = rotate(plus(middle, scale(section.origin, -1)), inverseRotation(section.rotation)).map(clean);
+      const ready = Math.abs(frame.width - planned.width) <= epsilon &&
+        Math.abs(frame.height - planned.height) <= epsilon && Math.abs(sill - planned.sill) <= epsilon &&
+        Math.abs(offset - (planned.offset ?? 0)) <= epsilon;
+      const detail = `Modeled opening ${formatPreciseInches(frame.width)} wide × ${formatPreciseInches(frame.height)} high, sill ${formatPreciseInches(sill)} above wall base.`;
+      return { section, members, detail: ready ? detail : `${detail} Recheck the edited framing against the saved rough dimensions.`, ready };
+    } catch (issue) {
+      return { section, members, detail: (issue as Error).message, ready: false };
+    }
+  });
 }

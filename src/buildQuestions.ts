@@ -10,7 +10,8 @@ import {
   resolveMotionTestSetup,
   reviewMotionTests,
 } from "./mechanismMotion";
-import type { Project } from "./model";
+import { parsePrompt, type Command, type Project } from "./model";
+import { windowWallScope } from "./windowWall";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
@@ -23,6 +24,7 @@ export type BuildQuestion =
   | { kind: "motion"; subject: string }
   | { kind: "greenhouse-weatherseal" }
   | { kind: "opening-flashing"; sillLabel?: string }
+  | { kind: "window-wall"; prompt: string }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
   | { kind: "offcuts"; label?: string };
@@ -34,6 +36,7 @@ export type BuildQuestionAction =
   | { kind: "motion-setup" }
   | { kind: "greenhouse-weatherseal"; motionId: string }
   | { kind: "opening-flashing"; sillId?: string }
+  | { kind: "window-wall"; command?: Command }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
@@ -82,6 +85,7 @@ const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?d
 const doorSealQuestion =
   /^(?:how (?:can|do|should) i (?:weatherstrip|weatherseal|seal) (?:the |my )?greenhouse door|(?:check|review|plan|show) (?:the )?(?:weatherstrip|weatherseal|weatherstripping) (?:for|on) (?:the |my )?greenhouse door)$/i;
 const openingFlashingQuestion = /^(?:how (?:can|do|should) i (?:flash|air[ -]seal) (?:the |my )?(?:window|door) opening|(?:plan|review|check|show) (?:(?:sill|opening|window|door) )?flashing)(?: (?:at|on|for) (p\d{1,6}))?$/i;
+const windowWallQuestion = /^(?:(?:(?:build|frame|design|plan|make|create|add)\s+(?:(?:a|an|the)\s+)?)?(?:window wall|(?:(?:nonbearing|framed)\s+)?wall\b.*\bwindows?\b))/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -101,6 +105,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (doorSealQuestion.test(text)) return { kind: "greenhouse-weatherseal" };
   const flashing = openingFlashingQuestion.exec(text);
   if (flashing) return { kind: "opening-flashing", ...(flashing[1] && { sillLabel: labelKey(flashing[1]) }) };
+  if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
   const motion = motionQuestion.exec(text);
   return motion
     ? { kind: "motion", subject: motion.slice(1).find(Boolean)! }
@@ -455,6 +460,30 @@ export function answerBuildQuestion(
           link: { label: "Open flashing plan", action: { kind: "opening-flashing", sillId: plan.members.sill } },
         })),
         link: { label: "Plan opening flashing", action: { kind: "opening-flashing", sillId } },
+      };
+    }
+    case "window-wall": {
+      const title = "Window wall layout";
+      let command: Command | undefined;
+      try {
+        const parsed = parsePrompt(question.prompt);
+        if (parsed.type === "wall" && parsed.windowOpening) command = parsed;
+      } catch (issue) {
+        return {
+          title, detail: issue instanceof Error ? issue.message : "Enter the wall and rough opening dimensions.",
+          scope: windowWallScope, link: { label: "Choose dimensions", action: { kind: "window-wall" } },
+        };
+      }
+      return {
+        title,
+        detail: command?.windowOpening
+          ? `${formatStockLength(command.width)} wide by ${formatStockLength(command.height)} high with a ${formatPreciseInches(command.windowOpening.width)} by ${formatPreciseInches(command.windowOpening.height)} rough window opening.`
+          : "Set the wall size, rough opening and sill elevation.",
+        scope: windowWallScope,
+        link: {
+          label: command ? "Preview the window wall" : "Choose dimensions",
+          action: { kind: "window-wall", command },
+        },
       };
     }
     case "drawer-box": {

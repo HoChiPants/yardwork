@@ -6,6 +6,7 @@ import { blank, part, uid } from "../../src/model";
 import { cutPiece } from "../../src/engine";
 import { PREVIOUS_DRAFT_KEY } from "../../src/drafts";
 const currentKey = `yardwork-draft-v${PROJECT_FORMAT_VERSION}`;
+const futureVersion = PROJECT_FORMAT_VERSION + 1;
 async function stableDraft(page: Page) {
   await expect
     .poll(() =>
@@ -83,7 +84,7 @@ test("an unreadable future browser draft remains downloadable after creating a n
   page,
 }) => {
   const raw =
-    '{"project":{"schemaVersion":99,"futureData":{"preserve":"every byte"}},"revision":8}\n';
+    `{"project":{"schemaVersion":${futureVersion},"futureData":{"preserve":"every byte"}},"revision":8}\n`;
   await page.addInitScript(
     ({ key, raw }) => {
       if (!localStorage.getItem(key)) localStorage.setItem(key, raw);
@@ -97,7 +98,7 @@ test("an unreadable future browser draft remains downloadable after creating a n
   await stableDraft(page);
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   await page.getByText(/Preserved browser drafts/).click();
-  await expect(page.getByRole("dialog")).toContainText("format 99");
+  await expect(page.getByRole("dialog")).toContainText(`format ${futureVersion}`);
   const pending = page.waitForEvent("download");
   await page
     .getByRole("button", {
@@ -122,7 +123,7 @@ test("unsupported saved projects stay visible, offer original downloads and reje
       {
         project: {
           ...project,
-          schemaVersion: 99,
+          schemaVersion: futureVersion,
           futureConnections: { preserve: [1, 2, 3] },
         },
         revision: 4,
@@ -162,7 +163,7 @@ test("unsupported saved projects stay visible, offer original downloads and reje
       name: `Recover ${project.name}`,
       exact: true,
     });
-    await expect(recovery).toContainText("format 99");
+    await expect(recovery).toContainText(`format ${futureVersion}`);
     const pending = page.waitForEvent("download");
     await recovery
       .getByRole("link", { name: "Download original saved file", exact: true })

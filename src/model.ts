@@ -10,6 +10,7 @@ import { cutSourceAxesSchema, tubeCutPlansSchema, tubeKerfSchema, woodKerfSchema
 import { offcutCutSchema } from "./offcutCutSchema";
 import { greenhouseDoorSealsSchema } from "./greenhouseDoorSealSchema";
 import { openingFlashingPlansSchema } from "./openingFlashingSchema";
+import { windowOpeningSchema, windowWallPrompt, windowWallScope, windowWallTemplate } from "./windowWall";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -372,12 +373,23 @@ export const commandSchema = z.object({
   spacing: z
     .union([z.literal(12), z.literal(16), z.literal(24)])
     .describe("Stud/joist spacing in inches; default 16."),
+  windowOpening: windowOpeningSchema.nullable().optional()
+    .describe("One nonbearing rough window opening in a wall. All dimensions are inches. Sill is measured above the bottom of the wall. Offset is signed from the wall center. Use null only to explicitly remove a saved opening."),
 });
 export type Command = z.infer<typeof commandSchema>;
 const baseBoardSchema = z.enum(baseBoardIds);
 const sectionCommandSchema = commandSchema.extend({
   baseStock: z.strictObject({ rim: baseBoardSchema, joist: baseBoardSchema }).optional(),
 }).superRefine((command, ctx) => {
+  if (command.windowOpening && command.type !== "wall") {
+    ctx.addIssue({ code: "custom", message: "A window opening needs a wall section.", path: ["windowOpening"] });
+  } else if (command.windowOpening) {
+    try {
+      windowWallTemplate(command, command.windowOpening, 3.5);
+    } catch (issue) {
+      ctx.addIssue({ code: "custom", message: (issue as Error).message, path: ["windowOpening"] });
+    }
+  }
   if (!command.baseStock) return;
   if (command.type !== "foundation") {
     ctx.addIssue({ code: "custom", message: "Base stock can only be assigned to a floor base.", path: ["baseStock"] });
@@ -1886,7 +1898,14 @@ export function sectionParts(
   rotation: V3,
 ): Piece[] {
   let pieces: Piece[] = [];
-  if (command.type === "wall")
+  if (command.type === "wall" && command.windowOpening) {
+    const stock = command.windowOpening.stock ?? "stud";
+    const depth = [...(material(stock).stockSize ?? material(stock).size)].sort((a, b) => a - b)[1];
+    pieces = windowWallTemplate(command, command.windowOpening, depth).map((member) => ({
+      ...part(`${name} · ${member.name}`, stock, member.size, member.position, stepId, name),
+      designRole: member.role,
+    }));
+  } else if (command.type === "wall")
     pieces = wallParts(
       command.width,
       command.height,
@@ -1932,7 +1951,7 @@ export function sectionParts(
 }
 export function commandStepTitle(command: Command) {
   return command.type === "wall"
-    ? `Frame a ${format(command.width)} × ${format(command.height)} wall`
+    ? `Frame a ${format(command.width)} × ${format(command.height)} wall${command.windowOpening ? " with a window opening" : ""}`
     : `Lay a ${format(command.width)} × ${format(command.depth)} base`;
 }
 export function applyCommand(
@@ -1952,20 +1971,35 @@ export function applyCommand(
     if (command.type === "foundation" && !command.baseStock && section.generator.baseStock) {
       command = sectionCommandSchema.parse({ ...command, baseStock: section.generator.baseStock });
     }
-    const oldIds = new Set(section.pieceIds),
-      stepId = project.pieces.find((a) => oldIds.has(a.id))!.stepId;
-    const pieces = sectionParts(
+    if (command.type === "wall" && command.windowOpening === undefined && section.generator.windowOpening)
+      command = sectionCommandSchema.parse({ ...command, windowOpening: section.generator.windowOpening });
+    const oldIds = new Set(section.pieceIds);
+    const existing = project.pieces.filter(({ id }) => oldIds.has(id));
+    if (!existing.length) throw Error("The section has no active parts. Choose a wall or base with framing.");
+    const stepId = existing[0].stepId;
+    const generated = sectionParts(
       command,
       stepId,
       section.name,
       section.origin,
       section.rotation,
     );
+    const pieces = command.windowOpening && section.generator.windowOpening ? generated.map((candidate) => {
+      const prior = existing.find((piece) =>
+        piece.designRole === candidate.designRole && piece.material === candidate.material &&
+        !piece.offcut && !piece.cutPlanes.length && !pieceThroughOpenings(piece).length &&
+        piece.size.every((n, i) => Math.abs(n - candidate.size[i]) < 1e-7) &&
+        piece.position.every((n, i) => Math.abs(n - candidate.position[i]) < 1e-7) &&
+        piece.rotation.every((n, i) => Math.abs(n - candidate.rotation[i]) < 1e-7));
+      return prior ?? candidate;
+    }) : generated;
+    const removed = new Set(oldIds);
+    for (const { id } of pieces) removed.delete(id);
     return {
       ...project,
       pieces: [...project.pieces.filter((a) => !oldIds.has(a.id)), ...pieces],
       joints: project.joints.filter(
-        (j) => !oldIds.has(j.a) && !oldIds.has(j.b),
+        (j) => !removed.has(j.a) && !removed.has(j.b),
       ),
       steps: project.steps.map((step) =>
         step.id === stepId &&
@@ -1995,7 +2029,8 @@ export function applyCommand(
   const p = structuredClone(project),
     s = step(
       commandStepTitle(command),
-      "Generated concept. Review connections, support, bracing, and stock dimensions.",
+      command.windowOpening ? windowWallScope
+        : "Generated concept. Review connections, support, bracing, and stock dimensions.",
     );
   p.steps.push(s);
   // Rotated parts need their world bounds when finding free ground beside the project.
@@ -2052,8 +2087,11 @@ export function format(inches: number) {
 }
 export function parsePrompt(prompt: string, context?: Command): Command {
   const text = prompt.toLowerCase();
+  const window = windowWallPrompt(text, context?.windowOpening);
+  const wallText = window.wallText;
   let type: Command["type"];
   if (/\b(coop|chicken)\b/.test(text)) type = "coop";
+  else if (window.opening !== undefined) type = "wall";
   else if (/\b(wall|frame|framed)\b/.test(text)) type = "wall";
   else if (/\b(base|floor|foundation)\b/.test(text)) type = "foundation";
   else if (context) type = context.type;
@@ -2064,11 +2102,11 @@ export function parsePrompt(prompt: string, context?: Command): Command {
   const measurement =
     "(\\d+(?:\\.\\d+)?)\\s*(feet|foot|ft|inches|inch|in|['′\"″])?";
   const named = (label: string) => {
-    const m = text.match(new RegExp(measurement + "\\s*(?:" + label + ")"));
+    const m = wallText.match(new RegExp(measurement + "\\s*(?:" + label + ")"));
     if (!m) return;
     return Number(m[1]) * (/^(?:in|["″])/.test(m[2] || "") ? 1 : 12);
   };
-  const pair = text.match(
+  const pair = wallText.match(
     /(\d+(?:\.\d+)?)\s*(ft|feet|in|inches)?\s*(?:x|×|by)\s*(\d+(?:\.\d+)?)\s*(ft|feet|in|inches)?/,
   );
   const pairUnit = pair?.[4] || pair?.[2] || "ft";
@@ -2100,6 +2138,7 @@ export function parsePrompt(prompt: string, context?: Command): Command {
     w === undefined &&
     h === undefined &&
     d === undefined &&
+    window.opening === undefined &&
     !/\b(12|16|24)\s*(?:inches|inch|in|["″])?\s*(?:on[ -]cent(?:er|re)|o\.?c\.?|spacing)/.test(
       text,
     )
@@ -2120,5 +2159,7 @@ export function parsePrompt(prompt: string, context?: Command): Command {
     height: h ?? context?.height ?? 48,
     depth: d ?? context?.depth ?? 48,
     spacing,
+    ...(window.opening !== undefined && { windowOpening: window.opening }),
+    ...(window.opening === undefined && context?.windowOpening && { windowOpening: context.windowOpening }),
   });
 }

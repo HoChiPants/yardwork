@@ -6,7 +6,10 @@ import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
 import { SillGasketPanel } from "./SillGasketPanel";
 import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
-import { openingFlashingGuideLines, reviewOpeningFlashings, type OpeningFlashingPreview } from "./openingFlashing";
+import { WindowWallFields, windowWallExample } from "./WindowWallFields";
+import { generatedWindowMembers, windowFramingSource, windowWallScope } from "./windowWall";
+import { homeDepotFraming } from "./homeDepotFramingReference";
+import { openingFlashingGuideLines, reviewGeneratedWindowWalls, reviewOpeningFlashings, type OpeningFlashingPreview } from "./openingFlashing";
 import { flexWrap, openingAirSealGuide, openingFlashingScope } from "./openingFlashingReference";
 import { browserWorkshop, workshopAsset, workshopRequest } from "./workshopTransport";
 import { ZodError } from "zod";
@@ -252,6 +255,7 @@ import {
   measureBetween,
   formatMeasurement,
   formatPreciseInches,
+  formatStockLength,
 } from "./measurement";
 import { generateBuildGuide, guideIsCurrent } from "./guide";
 import {
@@ -319,6 +323,7 @@ import {
   step,
   uid,
   type SectionCommand,
+  type Command,
   type MaterialId,
   type Piece,
   type Project,
@@ -812,6 +817,7 @@ export function App() {
       provider: string;
       message: string;
       targetSectionId?: string;
+      reuseWindowOffcuts?: boolean;
     } | null>(null);
   const [importKind, setImportKind] = useState("project"),
     [dxfScale, setDxfScale] = useState(1),
@@ -1272,6 +1278,9 @@ export function App() {
         break;
       case "opening-flashing":
         openOpeningFlashing(action.sillId);
+        break;
+      case "window-wall":
+        configureWindowWall(action.command);
         break;
       case "greenhouse-weatherseal": {
         const plan = project.motionPlans?.find(({ id }) => id === action.motionId);
@@ -1800,6 +1809,7 @@ export function App() {
   const printTrimBacking = useMemo(() => trimBackerRodCutPlan(exportGuide, exportWoodJointDetails), [exportGuide, exportWoodJointDetails]);
   const printSillGaskets = useMemo(() => sillGasketGuideLines(reviewSillGaskets(exportGuide)), [exportGuide]);
   const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
+  const printWindowWalls = useMemo(() => reviewGeneratedWindowWalls(exportGuide), [exportGuide]);
   const printCutSources = useMemo(
     () => inspectCutStock(exportGuide),
     [exportGuide],
@@ -1858,6 +1868,7 @@ export function App() {
           project,
           proposal.command,
           proposal.targetSectionId,
+          proposal.reuseWindowOffcuts,
         ),
         error: null,
       };
@@ -1973,6 +1984,27 @@ export function App() {
     );
     setProposal(null);
     setModal("assistant");
+  }
+  function configureWindowWall(command?: Command) {
+    setAssistantTarget("");
+    setPrompt(windowWallExample);
+    const dimensions: Command = command ?? {
+      type: "wall", width: 96, height: 96, depth: 48, spacing: 16,
+      windowOpening: { width: 36, height: 48, sill: 32 },
+    };
+    setProposal({
+      command: suggestWindowWallStock(dimensions),
+      provider: "Window wall template",
+      message: "Review the rough opening and cuts before adding the wall.",
+    });
+    setModal("assistant");
+  }
+  function suggestWindowWallStock(command: Command): Command {
+    if (!command.windowOpening || command.windowOpening.stock || project.retailer !== "home-depot") return command;
+    const length = Math.max(command.width, command.height - 3);
+    const { stud, stud10, stud12 } = homeDepotFraming;
+    const stock = [stud, stud10, stud12].find(({ stockSize }) => stockSize[1] >= length) ?? stud12;
+    return { ...command, windowOpening: { ...command.windowOpening, stock: stock.materialId } };
   }
   function select(id: string) {
     if (!id) {
@@ -2190,7 +2222,7 @@ export function App() {
         ? target?.generator?.baseStock ??
           (!target && project.retailer === "home-depot" ? fittingBaseBoards(command) : undefined)
         : undefined;
-      setProposal({ ...p, command: baseStock ? { ...command, baseStock } : command });
+      setProposal({ ...p, command: baseStock ? { ...command, baseStock } : suggestWindowWallStock(command) });
     } catch (e) {
       notify((e as Error).message, true);
     } finally {
@@ -2496,7 +2528,7 @@ export function App() {
               <div className="assembly-art wall-art">▥</div>
               <strong>Framed wall</strong>
               <small>
-                Width, height, and stud spacing.
+                Width, height, spacing, and optional window opening.
                 <br />
                 Every board stays editable.
               </small>
@@ -3624,6 +3656,7 @@ export function App() {
                 }
               />
               <button type="button" className="button secondary full" onClick={() => openSiteClearances("sections")}>Measured site clearances</button>
+              <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
                 shownId={shownSillGasketId} onChange={change} onShow={(id) => {
@@ -3693,6 +3726,11 @@ export function App() {
                 onLidPreview={showLidMotion}
                 lidPreviewSectionId={activeLidPreview?.sectionId ?? null}
                 onGenerate={reviseSection}
+                onReviewWindowOpening={(section) => {
+                  const members = generatedWindowMembers(project, section);
+                  if (!members) { notify("Restore the modeled sill, two jack studs and flat head before planning flashing.", true); return; }
+                  openOpeningFlashing(members.sill);
+                }}
                 onReviewFloorBase={(section) => openConnectionReview({
                   title: `${section.name} connections`, ownerId: section.id, memberIds: section.pieceIds,
                 })}
@@ -5241,6 +5279,10 @@ export function App() {
                       {s}
                     </button>
                   ))}
+                  <button type="button" onClick={() => {
+                    setPrompt(windowWallExample);
+                    setProposal(null);
+                  }}>Wall with a window</button>
                 </div>
                 <button
                   className="button primary full"
@@ -5281,6 +5323,39 @@ export function App() {
                         ? "Fixed 6 × 4 ft footprint · elevated coop concept. This replaces the current canvas; undo is available."
                         : `${format(proposal.command.width)} wide × ${format(proposal.command.height)} tall · ${proposal.command.spacing} in spacing. ${proposal.targetSectionId ? "Replaces the selected section at its current placement." : "Added beside existing parts."}`}
                     </p>}
+                    {proposal.command.type === "wall" && <WindowWallFields
+                      command={proposal.command} onChange={(command) => setProposal({ ...proposal, command })} />}
+                    {proposal.command.windowOpening && (
+                      <details className="field-section">
+                        <summary>Window wall cuts and scraps</summary>
+                        <label className="checkbox-field">
+                          <input type="checkbox" checked={proposal.reuseWindowOffcuts ?? false}
+                            onChange={({ currentTarget }) => setProposal({ ...proposal, reuseWindowOffcuts: currentTarget.checked })} />
+                          Use matching Cut pool scraps for new members
+                        </label>
+                        {preview?.impact?.offcuts && (
+                          <ul aria-label="Matching window wall scraps">
+                            {preview.impact.offcuts.assignments.length ? preview.impact.offcuts.assignments.map(({ partId, target, from }) =>
+                              <li key={partId}>{target} from {from}</li>) : <li>There are no matching scraps for these cuts.</li>}
+                          </ul>
+                        )}
+                        {preview?.impact?.wallCuts.map(({ id, quantity, bins, oversizedParts }) => (
+                          <div key={id}>
+                            <p>{quantity} {quantity === 1 ? "board" : "boards"} of {material(id).name} for unassigned members</p>
+                            <ol aria-label="Window wall board cuts">
+                              {bins.map(({ cuts, remaining }, index) => (
+                                <li key={index}>{cuts.map(({ name, length }) =>
+                                  `${name.replace(/^.*? · /, "")}, ${formatStockLength(length)}`).join(" / ")}
+                                {" · "}{remaining ? `Keep ${formatStockLength(remaining)}` : "Full board used"}</li>
+                              ))}
+                            </ol>
+                            {oversizedParts.length > 0 && <p className="small-note">
+                              {oversizedParts.length} {oversizedParts.length === 1 ? "member exceeds" : "members exceed"} this stock length.
+                            </p>}
+                          </div>
+                        ))}
+                      </details>
+                    )}
                     {preview?.impact && (
                       <div className="proposal-impact">
                         <p>
@@ -5329,7 +5404,8 @@ export function App() {
                       disabled={!!preview?.error}
                       onClick={() =>
                         safe(() => {
-                          const next = applyCommand(
+                          const next = proposal.command.windowOpening && preview?.impact
+                            ? preview.impact.candidate : applyCommand(
                             project,
                             proposal.command,
                             proposal.targetSectionId,
@@ -5361,7 +5437,9 @@ export function App() {
                           }
                           notify(
                             proposal.targetSectionId
-                              ? "Section regenerated. The rest of your project is preserved."
+                              ? proposal.command.windowOpening
+                                ? "Window wall updated. Review any changed cuts or flashing."
+                                : "Section regenerated. The rest of your project is preserved."
                               : "Assembly created. Each part and step is editable.",
                           );
                         })
@@ -6375,6 +6453,13 @@ export function App() {
             <h2>Sill gasket cut plan</h2>
             <p>{sillGasketScope}</p>
             <ul>{printSillGaskets.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printWindowWalls.length > 0 && (
+          <section className="window-wall-print">
+            <h2>Window rough framing</h2>
+            <p>{windowWallScope} <a href={windowFramingSource}>PNNL window framing</a></p>
+            <ul>{printWindowWalls.map(({ section, detail }) => <li key={section.id}>{section.name} · {detail}</li>)}</ul>
           </section>
         )}
         {printOpeningFlashing.length > 0 && (

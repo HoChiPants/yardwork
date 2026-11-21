@@ -60,7 +60,7 @@ test("version 1 migrates without mutating geometry, source provenance, bindings 
 
 test("unknown project versions and unknown top-level current fields are rejected rather than stripped", () => {
   const p = blank();
-  for (const version of [0, PROJECT_FORMAT_VERSION + 1, 99, "7", null])
+  for (const version of [0, PROJECT_FORMAT_VERSION + 1, PROJECT_FORMAT_VERSION + 2, "7", null])
     assert.equal(
       projectSchema.safeParse({ ...p, schemaVersion: version }).success,
       false,
@@ -106,10 +106,11 @@ test("future or damaged stored files remain listed and downloadable, and cannot 
     const p = blank("Future design"),
       damaged = blank("Damaged design"),
       store = new ProjectStore(dir);
+    const futureVersion = PROJECT_FORMAT_VERSION + 1;
     const future = JSON.stringify({
       project: {
         ...p,
-        schemaVersion: 99,
+        schemaVersion: futureVersion,
         futureConnectionSystem: { keep: true },
       },
       revision: 4,
@@ -117,8 +118,9 @@ test("future or damaged stored files remain listed and downloadable, and cannot 
     const corrupt = '{"project":';
     await writeFile(path.join(dir, `${p.id}.json`), future);
     await writeFile(path.join(dir, `${damaged.id}.json`), corrupt);
-    await assert.rejects(store.get(p.id), /format 99|version 99/i);
-    await assert.rejects(store.save(p, 4), /format 99|version 99/i);
+    const versionError = new RegExp(`format ${futureVersion}|version ${futureVersion}`, "i");
+    await assert.rejects(store.get(p.id), versionError);
+    await assert.rejects(store.save(p, 4), versionError);
     const rows = await store.list();
     assert.equal(rows.length, 2);
     assert.match(

@@ -4,7 +4,8 @@ import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
 import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
-import { openingFlashingGuideLines, reviewOpeningFlashings } from "./openingFlashing";
+import { openingFlashingGuideLines, reviewGeneratedWindowWalls, reviewOpeningFlashings } from "./openingFlashing";
+import { nonbearingHeaderSource, windowFramingSource, windowWallScope } from "./windowWall";
 import { flexWrap, openingAirSealGuide, openingFlashingScope } from "./openingFlashingReference";
 import { sillGasketBuildingGuide, sillGasketInstructions, sillGasketScope } from "./sillGasketReference";
 import { offcutCutOrderMarkdown, offcutCutRows } from "./offcutCutGuide";
@@ -644,6 +645,12 @@ export type Finding = {
 };
 export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Finding[] {
   const findings: Finding[] = [];
+  for (const row of reviewGeneratedWindowWalls(p)) {
+    if (!row.ready) findings.push({
+      id: `window-wall-${row.section.id}`, title: `Window framing needs review · ${row.section.name}`,
+      severity: "warning", detail: row.detail, pieceId: row.members?.sill,
+    });
+  }
   for (const row of reviewSillGaskets(p).rows) {
     if (row.issues.length) findings.push({
       id: `sill-gasket-${row.plan.partId}`,
@@ -1476,6 +1483,7 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
           "This section is an open frame with no recorded panel or diagonal brace. Consider an appropriate plywood back or diagonal bracing to resist racking; fastening and loads still need design review.",
         pieceId: section.pieceIds[0],
       });
+    if (command.windowOpening) continue;
     const count = section.pieceIds.filter((id) =>
       active.some((p) => p.id === id && p.material === "stud"),
     ).length;
@@ -1877,6 +1885,7 @@ export function guideMarkdown(p: Project) {
   const foundations = greenhouseFoundationGuide(p);
   const sillGasketLines = sillGasketGuideLines(reviewSillGaskets(p));
   const flashingLines = openingFlashingGuideLines(reviewOpeningFlashings(p));
+  const windowWalls = reviewGeneratedWindowWalls(p);
   const baseConnections = greenhouseBaseGuideLines(p, greenhouseBaseConnections(p, connections.intents));
   const floorJoints = floorBaseConnectionGuideLines(p, floorBaseConnections(p, connections.intents));
   const floorHangers = floorHangerGuideLines(p, connections.intents);
@@ -1946,6 +1955,11 @@ export function guideMarkdown(p: Project) {
             ] : []),
           ].join("\n")
         ).join("\n") + "\n\n"
+      : "") +
+    (windowWalls.length
+      ? "## Window rough framing\n\n" + windowWallScope + "\n\n" +
+        windowWalls.map(({ section, detail }) => `- ${`${section.name} · ${detail}`.replace(/\r?\n/g, " ")}`).join("\n") +
+        `\n\n[PNNL window framing](${windowFramingSource}) · [IRC nonbearing headers](${nonbearingHeaderSource})\n\n`
       : "") +
     (flashingLines.length
       ? "## Opening flashing and drainage\n\n" + openingFlashingScope + "\n\n" +

@@ -12,6 +12,10 @@ The guide compares saved step order against modeled assembly prerequisites and t
 
 The catalog has 62 editable stocks. The registry contains 131 product records and 149 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
 
+## November 21, 2026 · Window wall layout and cuts
+
+The nonbearing wall tool generates an editable single rough opening with a flat head, jack and king studs, sill and lower short studs. Use the supplied rough dimensions and verify the actual wall function and fastening. The preview shows the cuts on chosen boards and can allocate matching measured stock from the Cut pool. The guide checks the actual opening, and a section action fills in the four framing members for sill flashing. [PNNL window framing](https://basc.pnnl.gov/resource-guides/advanced-framing-minimal-framing-doors-and-windows) · [IRC R602.7.4](https://codes.iccsafe.org/content/IRC2024P2/chapter-6-wall-construction)
+
 ## November 21, 2026 · Rough opening flashing
 
 Plan a one-piece sill pan from four actual framing members and the measured depth of an integral-flanged window or door. The check uses the DuPont after-Tyvek sill dimensions and verifies the chosen exterior outlet pattern. The 3D preview marks the apron and the continuous interior seal around the unit. The guide exports the cut, the order of work and the roll leftovers. Changed framing returns the plan to Checks. Verify the unit instructions, installed flashing laps, slope and drainage on site. [DuPont installation guide](https://www.dupont.com/content/dam/dupont/amer/us/en/performance-building-solutions/public/documents/en/install-guide-single-family-wrb-and-flashing-after-wrb-43-d101048-enus.pdf)

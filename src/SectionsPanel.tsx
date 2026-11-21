@@ -284,6 +284,7 @@ export function SectionsPanel({
   onChange,
   onGenerate,
   onReviewFloorBase,
+  onReviewWindowOpening,
   onMoveTool,
   onPartTool,
   onLidPreview,
@@ -295,6 +296,7 @@ export function SectionsPanel({
   onChange: (p: Project) => void;
   onGenerate: (id: string) => void;
   onReviewFloorBase: (section: Section) => void;
+  onReviewWindowOpening: (section: Section) => void;
   onMoveTool: () => void;
   onPartTool: () => void;
   onLidPreview?: (preview: LidPreview | null) => void;
@@ -472,6 +474,11 @@ export function SectionsPanel({
                 <Sparkles size={14} />
                 Revise this section
               </button>
+              {section.generator.windowOpening && (
+                <button type="button" className="button secondary full" onClick={() => onReviewWindowOpening(section)}>
+                  Plan flashing for this opening
+                </button>
+              )}
               {section.generator.type === "foundation" && (
                 <button type="button" className="button secondary full" onClick={() => onReviewFloorBase(section)}>
                   Review floor-base joist ends

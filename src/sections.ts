@@ -15,6 +15,7 @@ import {
   type V3,
 } from "./model";
 import { composeRotation, inverseRotation, rotate } from "./spatial";
+import { planOffcutReuse } from "./offcutReusePlan";
 import { persistLidPose, transformRecordedLidMotion } from "./lidMotion";
 import {
   copyBoundFurniture,
@@ -268,7 +269,8 @@ export function sectionContext(s: Section) {
 }
 export function sectionSummary(command: Command) {
   return command.type === "wall"
-    ? `${command.width} × ${command.height} in wall · ${command.spacing} in spacing`
+    ? `${command.width} × ${command.height} in wall · ${command.spacing} in spacing${command.windowOpening
+      ? ` · ${command.windowOpening.width} × ${command.windowOpening.height} in rough window` : ""}`
     : `${command.width} × ${command.depth} in base · ${command.spacing} in spacing`;
 }
 
@@ -276,15 +278,25 @@ export function previewSectionCommand(
   project: Project,
   command: SectionCommand,
   targetId?: string,
+  reuseWindowOffcuts = false,
 ) {
-  const candidate = projectSchema.parse(
+  const planned = projectSchema.parse(
     applyCommand(project, command, targetId),
   );
   const oldIds = new Set(project.pieces.map((a) => a.id)),
-    newIds = new Set(candidate.pieces.map((a) => a.id));
+    generatedIds = new Set(planned.pieces.filter(({ id }) => !oldIds.has(id)).map(({ id }) => id));
+  const wall = command.windowOpening &&
+    (targetId ? planned.sections.find(({ id }) => id === targetId) : planned.sections.at(-1));
+  const offcuts = wall && reuseWindowOffcuts
+    ? planOffcutReuse(planned, undefined, generatedIds) : null;
+  const candidate = offcuts?.project ?? planned;
+  const newIds = new Set(candidate.pieces.map((a) => a.id));
   const rows = bom(candidate);
   const beforeRows = bom(project);
-  const added = candidate.pieces.filter((a) => !oldIds.has(a.id));
+  const added = candidate.pieces.filter(({ id, offcut }) => !oldIds.has(id) && !offcut);
+  const wallCuts = wall ? bom({
+    ...candidate, pieces: candidate.pieces.filter(({ id, cutStock }) => wall.pieceIds.includes(id) && !cutStock), joints: [],
+  }) : [];
   return {
     added: added.length,
     removed: project.pieces.filter((a) => !newIds.has(a.id)).length,
@@ -295,6 +307,7 @@ export function previewSectionCommand(
     basePurchase: command.type === "foundation"
       ? bom({ ...candidate, pieces: added, joints: [] }).map(({ id, quantity, oversize }) => ({ id, quantity, oversize }))
       : [],
+    wallCuts, offcuts, candidate,
     findings: validate(candidate).filter((f) => f.severity !== "info"),
   };
 }

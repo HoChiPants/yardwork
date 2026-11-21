@@ -533,6 +533,71 @@ test("rough opening flashing checks drainage and exports the continuous cut with
   await expect(page.locator(".print-guide .opening-flashing-print")).toContainText("Keep 71 ft");
 });
 
+test("a window wall from the planner reuses a shop offcut and starts with the correct flashing members", async ({ page }) => {
+  const blankProject = blank("Window wall with shop stock");
+  const project = addMeasuredOffcut(blankProject, blankProject.steps[0].id,
+    "hd-kdht-2x4-8", [36, 3.5, 1.5], "Shop stock");
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "shop-stock.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 98 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(
+    "Build a wall 8 ft wide and 8 ft tall with a 36 by 48 in rough window opening, sill 32 in above floor",
+  );
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Window wall layout", exact: true });
+  await expect(answer).toContainText("36 in by 48 in");
+  await answer.getByRole("button", { name: "Preview the window wall", exact: true }).click();
+  await expect(dialog.getByRole("img", { name: "Framed wall front view", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("spinbutton", { name: "Rough window width", exact: true })).toHaveValue("36");
+  await dialog.getByText("Window wall cuts and scraps", { exact: true }).click();
+  await expect(dialog.getByRole("list", { name: "Window wall board cuts", exact: true })).toContainText("rough window sill, 3 ft");
+  await dialog.getByRole("checkbox", { name: "Use matching Cut pool scraps for new members", exact: true }).check();
+  await expect(dialog.getByRole("list", { name: "Matching window wall scraps", exact: true })).toContainText(/rough window sill.*Shop stock/);
+  await dialog.getByRole("button", { name: "Add to workspace", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const flashedButton = page.getByRole("button", { name: "Plan flashing for this opening", exact: true });
+  await flashedButton.click();
+  const panel = page.getByRole("region", { name: "Opening flashing plan" });
+  for (const [name, selected] of [["Rough sill", "rough window sill"], ["First rough jamb", "left jack stud"],
+    ["Second rough jamb", "right jack stud"], ["Rough head", "flat window head"]]) {
+    await expect(panel.getByRole("combobox", { name, exact: true }).locator("option:checked")).toContainText(selected);
+  }
+  await panel.getByRole("spinbutton", { name: "Sheathing past the framing face", exact: true }).fill("0.5");
+  await panel.getByRole("spinbutton", { name: "Wall face to inside edge of unit", exact: true }).fill("2.75");
+  await panel.getByRole("combobox", { name: "FlexWrap width", exact: true }).selectOption("6");
+  await panel.getByRole("button", { name: "Check flashing fit", exact: true }).click();
+  await expect(panel.getByRole("status")).toContainText("One continuous 4 ft cut");
+  await panel.getByRole("button", { name: "Save flashing plan", exact: true }).click();
+  await page.getByRole("button", { name: "Back to sections" }).click();
+  await page.getByRole("button", { name: "Revise this section", exact: true }).click();
+  await dialog.getByRole("textbox", { name: "Describe your build", exact: true }).fill("Make the wall 90 in wide");
+  await dialog.getByRole("button", { name: "Preview proposal", exact: true }).click();
+  await expect(dialog.getByRole("spinbutton", { name: "Rough window width", exact: true })).toHaveValue("36");
+  await dialog.getByRole("button", { name: "Replace selected section", exact: true }).click();
+
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = (await draft()).project as Project;
+  const sill = saved.pieces.find(({ designRole }) => designRole === "window-rough-sill")!;
+  expect(saved.sections[0].generator?.width).toBe(90);
+  expect(sill.cutStock?.id).toBe(project.pieces[0].cutStock?.id);
+  expect(saved.openingFlashings?.[0].members.sill).toBe(sill.id);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/## Window rough framing[\s\S]+36 in wide × 48 in high[\s\S]+## Opening flashing and drainage[\s\S]+Cut 4 ft/);
+  await expect(page.locator(".print-guide .window-wall-print")).toContainText("sill 32 in above wall base");
+});
+
 test("a crosscut practice plan reuses the first scrap on two blanks", async ({ page }) => {
   await page.goto("./");
   await page.getByRole("button", { name: "Cut pool (0)", exact: true }).click();

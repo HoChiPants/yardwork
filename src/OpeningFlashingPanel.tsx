@@ -15,6 +15,7 @@ import {
   type OpeningFlashingPlan, type OpeningFlashingMeasurements, type OpeningMembers,
 } from "./openingFlashingSchema";
 import { sillPlateFootprint } from "./sillGaskets";
+import { generatedWindowMembers } from "./windowWall";
 
 const initial: OpeningFlashingMeasurements = {
   unit: "window", exterior: "positive", sheathing: 0, frameDepth: NaN, faceLap: 2,
@@ -28,7 +29,9 @@ function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
   onChange: (project: Project) => void;
   onShow: (preview: OpeningFlashingPreview | null) => void;
 }) {
-  const [members, setMembers] = useState<OpeningMembers>(saved?.members ?? { sill, jambA: "", jambB: "", head: "" });
+  const [members, setMembers] = useState<OpeningMembers>(() => saved?.members ??
+    generatedWindowMembers(project, project.sections.find(({ pieceIds }) => pieceIds.includes(sill))) ??
+    { sill, jambA: "", jambB: "", head: "" });
   const [measured, setMeasured] = useState(saved?.measurements ?? initial);
   const [centers, setCenters] = useState(saved?.measurements.drainage.kind === "gaps" ? saved.measurements.drainage.centers.join(", ") : "");
   const [review, setReview] = useState<{

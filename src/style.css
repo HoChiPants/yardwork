@@ -1629,6 +1629,25 @@ small {
   flex: 1;
   min-width: 0;
 }
+.window-wall-preview {
+  position: relative;
+  margin: 0 auto 16px;
+  background: #f8f6ee;
+  outline: 1px solid #dedbcd;
+}
+.window-wall-board,
+.window-wall-opening {
+  position: absolute;
+  box-sizing: border-box;
+}
+.window-wall-board {
+  background: #ce9a60;
+  box-shadow: inset 0 0 0 1px #a76d3d;
+}
+.window-wall-opening {
+  background: #e0eee9;
+  box-shadow: inset 0 0 0 1px #9ebdb3;
+}
 .notice {
   display: flex;
   align-items: flex-start;

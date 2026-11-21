@@ -202,7 +202,7 @@ test("fresh synthetic future versions and damaged UTF8/JSON records remain recov
   const directory = await mkdtemp(path.join(tmpdir(), "yardwork-v7-recovery-"));
   try {
     const store = new ProjectStore(directory);
-    const cases = [PROJECT_FORMAT_VERSION + 1, 99].map((version) => {
+    const cases = [PROJECT_FORMAT_VERSION + 1, PROJECT_FORMAT_VERSION + 2].map((version) => {
       const project = blank(`SYNTHETIC future ${version}`);
       return {
         project,

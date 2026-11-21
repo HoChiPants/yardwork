@@ -3769,6 +3769,7 @@ small {
 .wall-trace-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .wall-trace-panel details .wall-trace-fields + .wall-trace-fields { margin-top: 8px; }
 .wall-trace-panel .check-row { display: flex; align-items: start; gap: 6px; font-size: 12px; }
+.wall-trace-panel .check-row input { width: auto; flex: none; margin: 2px 0 0; }
 .wall-trace-review { border-top: 1px solid #dbe3d0; padding-top: 9px; }
 .wall-trace-review > * + * { margin-top: 6px !important; }
 .wall-trace-review output { font-size: 14px; font-weight: 650; }

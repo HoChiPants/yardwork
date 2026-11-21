@@ -158,6 +158,7 @@ export function duplicateSection(
         }
       : null,
   };
+  delete clone.roomFraming;
   if (clone.floorHangerPlan) {
     const ends = clone.floorHangerPlan.ends.flatMap(({ rimId, joistId }) => {
       const rim = ids.get(rimId), joist = ids.get(joistId);

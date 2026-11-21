@@ -428,6 +428,14 @@ export const sectionSchema = z.object({
   floorHangerPlan: floorHangerPlanSchema.optional(),
   recipe: moduleRecipeSchema.nullable().default(null),
   recordedLidMotion: recordedLidMotionSchema.optional(),
+  roomFraming: z.strictObject({
+    id,
+    wall: z.number().int().min(1).max(300),
+    walls: z.number().int().min(4).max(300),
+    panel: z.number().int().min(1).max(300),
+    panels: z.number().int().min(1).max(300),
+  }).refine(({ wall, walls, panel, panels }) => wall <= walls && panel <= panels && walls % 2 === 0,
+    "Room framing must identify a panel on a valid outline wall.").optional(),
 });
 export type Section = z.infer<typeof sectionSchema>;
 export const currentProjectSchema = z
@@ -696,7 +704,10 @@ export const currentProjectSchema = z
       p.pieces.filter((p) => !p.offcut).map((p) => p.id),
     );
     const members = new Set<string>(),
-      sectionIds = new Set<string>();
+      sectionIds = new Set<string>(),
+      roomPanels = new Set<string>(),
+      roomSizes = new Map<string, number>(),
+      wallSizes = new Map<string, number>();
     for (const section of p.sections) {
       if (section.recordedLidMotion && !section.recipe?.lidOpen)
         ctx.addIssue({ code: "custom", message: "A recorded open-lid transform requires a saved open lid." });
@@ -723,6 +734,17 @@ export const currentProjectSchema = z
           code: "custom",
           message: "Coop generation cannot replace an individual section",
         });
+      if (section.roomFraming) {
+        const { id, wall, walls, panel, panels } = section.roomFraming;
+        const wallKey = `${id}/${wall}`, panelKey = `${wallKey}/${panel}`;
+        if (section.generator?.type !== "wall" || roomPanels.has(panelKey) ||
+          (roomSizes.has(id) && roomSizes.get(id) !== walls) ||
+          (wallSizes.has(wallKey) && wallSizes.get(wallKey) !== panels))
+          ctx.addIssue({ code: "custom", message: "Room framing must use unique, consistently numbered generated wall panels." });
+        roomPanels.add(panelKey);
+        roomSizes.set(id, walls);
+        wallSizes.set(wallKey, panels);
+      }
     }
     for (const x of p.pieces)
       if (!stepIds.has(x.stepId))
@@ -1981,7 +2003,7 @@ export function applyCommand(
   project: Project,
   raw: SectionCommand,
   targetSectionId?: string,
-  placement?: { origin: V3; rotation: V3; stepNotes: string },
+  placement?: { origin: V3; rotation: V3; stepNotes: string; roomFraming?: Section["roomFraming"] },
 ): Project {
   let command = sectionCommandSchema.parse(raw);
   if (targetSectionId) {
@@ -2105,6 +2127,7 @@ export function applyCommand(
     recipe: null,
     origin,
     rotation,
+    ...(placement?.roomFraming ? { roomFraming: placement.roomFraming } : {}),
   });
   return p;
 }

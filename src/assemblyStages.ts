@@ -446,15 +446,23 @@ export function baseAssemblyStages(project: Project): AssemblyStage[] {
       }
     }
 
-  for (const section of [...project.sections].sort((a, b) =>
-    a.id.localeCompare(b.id),
-  ))
+  const orderedSections = [...project.sections].sort((a, b) => {
+    const first = a.roomFraming, second = b.roomFraming;
+    const firstGroup = first ? `room:${first.id}` : `section:${a.id}`;
+    const secondGroup = second ? `room:${second.id}` : `section:${b.id}`;
+    if (firstGroup !== secondGroup) return firstGroup.localeCompare(secondGroup);
+    if (!first || !second) return 0;
+    return second.wall % 2 - first.wall % 2 || first.wall - second.wall || first.panel - second.panel;
+  });
+  for (const section of orderedSections)
     append(
       section.id,
       "section",
-      `Assemble ${section.name}`,
+      section.roomFraming ? `Frame ${section.name} · room wall ${section.roomFraming.wall}` : `Assemble ${section.name}`,
       section.pieceIds.flatMap((id) => activeById.get(id) ?? []),
-      `Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. ${connectionReview}`,
+      section.roomFraming
+        ? `Dry-fit panel ${section.roomFraming.panel} of ${section.roomFraming.panels} at the actual measured corner or panel joint. Verify both corner contacts, finish backing and fastening. ${connectionReview}`
+        : `Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. ${connectionReview}`,
     );
   const looseGroups = new Map<string, Piece[]>();
   for (const piece of active) {

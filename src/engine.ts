@@ -2199,27 +2199,50 @@ export function parseDxf(
   for (let i = 0; i + 1 < lines.length; i += 2)
     pairs.push({ code: Number(lines[i].trim()), value: lines[i + 1].trim() });
   const result: Project["planLines"] = [];
-  for (let i = 0; i < pairs.length; i++) {
-    if (pairs[i].code !== 0 || pairs[i].value !== "LINE") continue;
-    const values = new Map<number, string>();
-    for (let j = i + 1; j < pairs.length && pairs[j].code !== 0; j++)
-      values.set(pairs[j].code, pairs[j].value);
-    const vals = [10, 20, 11, 21].map((k) => Number(values.get(k)));
-    if (vals.some((v) => !Number.isFinite(v)))
-      throw Error("A DXF LINE has missing or invalid coordinates.");
-    const [x, z, xx, zz] = vals.map((v) => v * inchesPerUnit);
-    if ([x, z, xx, zz].some((v) => Math.abs(v) > 12000))
-      throw Error(
-        "DXF coordinates exceed the workspace. Check scale or move the drawing near its origin.",
-      );
+  const hasSections = pairs.some(({ code, value }) => code === 0 && value === "SECTION");
+  let section = "";
+  const coordinate = (input: string | undefined) => input?.trim() ? Number(input) : NaN;
+  const addLine = (coordinates: number[], entity: string) => {
+    if (coordinates.some((value) => !Number.isFinite(value)))
+      throw Error(`A DXF ${entity} has missing or invalid coordinates.`);
+    const [x, z, xx, zz] = coordinates.map((value) => value * inchesPerUnit);
+    if ([x, z, xx, zz].some((value) => Math.abs(value) > 12000))
+      throw Error("DXF coordinates exceed the workspace. Check scale or move the drawing near its origin.");
+    if (result.length >= 3000) throw Error("Limit drawings to 3,000 reference segments.");
     result.push({ a: [x, 0.1, z], b: [xx, 0.1, zz] });
-    if (result.length > 3000)
-      throw Error("Limit drawings to 3,000 LINE entities.");
+  };
+  for (let i = 0; i < pairs.length; i++) {
+    const { code, value: entity } = pairs[i];
+    if (code !== 0) continue;
+    if (entity === "SECTION") section = pairs[i + 1]?.code === 2 ? pairs[i + 1].value : "";
+    if (entity === "ENDSEC") section = "";
+    if ((hasSections && section !== "ENTITIES") || (entity !== "LINE" && entity !== "LWPOLYLINE")) continue;
+    const values = new Map<number, string>();
+    const vertices: [number, number][] = [];
+    let curved = false;
+    for (let j = i + 1; j < pairs.length && pairs[j].code !== 0; j++) {
+      const { code, value } = pairs[j];
+      values.set(code, value);
+      if (entity !== "LWPOLYLINE") continue;
+      if (code === 10) vertices.push([coordinate(value), NaN]);
+      if (code === 20 && vertices.length) vertices[vertices.length - 1][1] = coordinate(value);
+      if (code === 42 && Number(value) !== 0) curved = true;
+    }
+    const layout = values.get(410);
+    if (Number(values.get(67)) === 1 || (layout && layout.toLowerCase() !== "model")) continue;
+    if (entity === "LINE") {
+      addLine([10, 20, 11, 21].map((code) => coordinate(values.get(code))), entity);
+      continue;
+    }
+    if (curved || Number(values.get(210) ?? 0) !== 0 || Number(values.get(220) ?? 0) !== 0 || Number(values.get(230) ?? 1) !== 1) continue;
+    if (vertices.length < 2 || vertices.length !== Number(values.get(90) ?? vertices.length))
+      throw Error("A DXF LWPOLYLINE has missing or invalid vertices.");
+    const closed = (Number(values.get(70) ?? 0) & 1) !== 0;
+    for (let index = 0; index < vertices.length - (closed ? 0 : 1); index++)
+      addLine([...vertices[index], ...vertices[(index + 1) % vertices.length]], entity);
   }
   if (!result.length)
-    throw Error(
-      "No supported LINE entities found. Export an ASCII DXF using exploded LINE segments.",
-    );
+    throw Error("No supported model-space linework found. Export an ASCII DXF with LINE entities or straight 2D polylines.");
   return result;
 }
 

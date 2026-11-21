@@ -109,7 +109,7 @@ export type SceneProps = {
   guidePartFocus?: { pieceId: string; label: string; isolated: boolean };
   measurement?: { a: V3 | null; b: V3 | null };
   onMeasurePoint?: (point: V3) => void;
-  wallTrace?: { a: WallTracePoint | null; b: WallTracePoint | null; footprints: V3[][]; blocked: boolean };
+  wallTrace?: { a: WallTracePoint | null; b: WallTracePoint | null; outline?: WallTracePoint[]; footprints: V3[][]; blocked: boolean };
   onWallTracePoint?: (point: V3) => void;
   snap: boolean;
   explode: boolean;
@@ -1048,7 +1048,8 @@ function CameraRig({
       min = [0, 1, 2].map((i) => Math.min(...bs.map((b) => b.min[i])));
       max = [0, 1, 2].map((i) => Math.max(...bs.map((b) => b.max[i])));
     }
-    const referenceFrame = drawingBounds && (view.preset === "drawing" || !active.length && !zone);
+    const referenceView = view.preset === "drawing" || view.preset === "plan";
+    const referenceFrame = drawingBounds && (referenceView || !active.length && !zone);
     if (referenceFrame && !motionBounds && !siteBounds) {
       min = drawingBounds.min;
       max = drawingBounds.max;
@@ -1071,7 +1072,7 @@ function CameraRig({
     );
     const radius = Math.max(6, ...max.map((v, i) => (v - min[i]) / 12));
     target.current = center;
-    const offset = new THREE.Vector3(...workshopViewOffset(view.preset === "drawing" ? "top" : view.preset, radius));
+    const offset = new THREE.Vector3(...workshopViewOffset(referenceView ? "top" : view.preset, radius));
     destination.current = center.clone().add(offset);
     if (camera instanceof THREE.PerspectiveCamera) {
       camera.far = 500;
@@ -1287,11 +1288,13 @@ function Measurement({
     </group>
   );
 }
-function WallTraceOverlay({ a, b, footprints, blocked }: NonNullable<SceneProps["wallTrace"]>) {
+function WallTraceOverlay({ a, b, outline, footprints, blocked }: NonNullable<SceneProps["wallTrace"]>) {
   const points = [a, b].flatMap((point) => point ? [[point[0] / 12, 0.02, point[1] / 12] as V3] : []);
   const color = blocked ? "#b6402b" : "#1c6b63";
   return <group>
     {points.length === 2 && <Line points={points} lineWidth={1.5} color={color} transparent opacity={0.6} depthTest={false} renderOrder={1001} raycast={() => null} />}
+    {outline && <Line points={[...outline, outline[0]].map(([x, z]): V3 => [x / 12, 0.025, z / 12])}
+      lineWidth={2} color="#246e88" dashed dashSize={0.2} gapSize={0.1} depthTest={false} renderOrder={1001} raycast={() => null} />}
     {footprints.map((outline, index) => <Line key={index}
       points={outline.map(([x, y, z]): V3 => [x / 12, y / 12 + 0.02, z / 12])}
       lineWidth={2.5} color={color} depthTest={false} renderOrder={1001} raycast={() => null} />)}
@@ -1320,8 +1323,8 @@ function World(props: SceneProps) {
   const drawing = !isolated && !props.focusedMotion && !props.readOnly && reference?.calibration.visible ? reference : null;
   const planLines = props.project.planLines;
   const drawingBounds = useMemo(() => {
-    if (drawing) return drawingReferenceBounds(drawing, drawing.calibration);
-    if (props.view.preset !== "drawing" || !planLines.length) return null;
+    if (drawing && props.view.preset !== "plan") return drawingReferenceBounds(drawing, drawing.calibration);
+    if (!planLines.length || (props.view.preset !== "plan" && props.view.preset !== "drawing")) return null;
     const points = planLines.flatMap(({ a, b }) => [a, b]);
     return {
       min: [0, 1, 2].map((axis) => Math.min(...points.map((point) => point[axis]))) as V3,

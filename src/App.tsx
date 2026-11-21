@@ -1,7 +1,8 @@
 import { DrawingReferencePanel } from "./DrawingReferencePanel";
 import { drawingReferenceDescription, type DrawingReference } from "./drawingReference";
 import { WallTracePanel } from "./WallTracePanel";
-import { emptyWallTrace, reviewWallTrace, snapWallTracePoint, type WallTracePoint } from "./wallTrace";
+import { detectPlanOutlines, outlineAtPoint } from "./planOutlines";
+import { emptyWallTrace, reviewWallOutline, reviewWallTrace, snapWallTracePoint, type OutlineFace, type WallTracePoint } from "./wallTrace";
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
@@ -653,18 +654,30 @@ export function App() {
     b: V3 | null;
   }>({ a: null, b: null });
   const [wallTrace, setWallTrace] = useState(emptyWallTrace);
+  const [outlineTrace, setOutlineTrace] = useState<{ index: number; face: OutlineFace } | null>(null);
   useEffect(() => {
     setWallTrace(emptyWallTrace());
+    setOutlineTrace(null);
     setMode((previous) => previous === "trace-wall" ? "select" : previous);
   }, [project.id]);
+  const readingOutline = mode === "trace-wall" && outlineTrace !== null;
+  const planOutlines = useMemo(() => {
+    if (!readingOutline) return { entries: [] };
+    try { return { entries: detectPlanOutlines(project.planLines) }; }
+    catch (error) { return { entries: [], error: error instanceof Error ? error.message : "Could not read this plan." }; }
+  }, [readingOutline, project.planLines]);
+  const outlineIndex = outlineTrace?.index === -1 && planOutlines.entries.length === 1 ? 0 : outlineTrace?.index ?? -1;
+  const selectedOutline = planOutlines.entries[outlineIndex];
   const wallTraceReview = useMemo(() => {
-    if (mode !== "trace-wall" || !wallTrace.a || !wallTrace.b) return {};
+    if (mode !== "trace-wall" || (outlineTrace ? !selectedOutline : !wallTrace.a || !wallTrace.b)) return {};
     try {
-      return { value: reviewWallTrace(project, wallTrace) };
+      return { value: outlineTrace && selectedOutline
+        ? reviewWallOutline(project, wallTrace, selectedOutline, outlineTrace.face)
+        : reviewWallTrace(project, wallTrace) };
     } catch (error) {
       return { error: error instanceof Error ? error.message : "Could not preview this wall." };
     }
-  }, [mode, project, wallTrace]);
+  }, [mode, project, wallTrace, outlineTrace, selectedOutline]);
   const measured =
     measurement.a && measurement.b
       ? measureBetween(measurement.a, measurement.b)
@@ -2265,7 +2278,7 @@ export function App() {
     if (view.preset === "drawing") setView((previous) => ({ preset: "top", nonce: previous.nonce + 1 }));
     notify("Drawing reference removed. Undo is available.");
   }
-  function startWallTrace() {
+  function startWallTrace(kind: "wall" | "outline" = "wall") {
     if (!canLeaveWorkingDraft()) return;
     setPanel("sections");
     setStage(null);
@@ -2276,10 +2289,17 @@ export function App() {
     setSelectionScope("part");
     setMode("trace-wall");
     setWallTrace(emptyWallTrace());
-    setView(({ nonce }) => ({ preset: project.drawingReference?.calibration.visible || project.planLines.length ? "drawing" : "top", nonce: nonce + 1 }));
+    setOutlineTrace(kind === "outline" ? { index: -1, face: "center" } : null);
+    setView(({ nonce }) => ({ preset: kind === "outline" ? "plan"
+      : project.drawingReference?.calibration.visible ? "drawing" : project.planLines.length ? "plan" : "top", nonce: nonce + 1 }));
     inspectWorkspace();
   }
   function pickWallTracePoint([x, , z]: V3) {
+    if (outlineTrace) {
+      const index = outlineAtPoint(planOutlines.entries, [x, z]);
+      if (index >= 0) setOutlineTrace({ ...outlineTrace, index });
+      return;
+    }
     const point = snapWallTracePoint([x, z], project.planLines, snap);
     const completePoint = (value: WallTracePoint | null) => value?.every(Number.isFinite);
     setWallTrace((previous) => !completePoint(previous.a) || completePoint(previous.b)
@@ -2289,7 +2309,7 @@ export function App() {
   function addTracedWall() {
     safe(() => {
       const preview = wallTraceReview.value;
-      if (!preview || preview.obstructions.length || preview.row?.oversize) return;
+      if (!preview || preview.obstructions.length || preview.hasInternalOverlap || preview.row?.oversize) return;
       if (current.current !== project) throw Error("The project changed. Review the wall preview again.");
       const next = change(preview.candidate);
       const first = next.sections[project.sections.length];
@@ -2297,7 +2317,8 @@ export function App() {
       setSelectionScope("section");
       setStepId(preview.added[0].stepId);
       setMode("select");
-      notify(`Added ${preview.lengths.length === 1 ? "one wall panel" : `${preview.lengths.length} wall panels`}. The guide and cut list are ready to review.`);
+      const description = outlineTrace ? `${preview.runLengths.length} room walls` : preview.lengths.length === 1 ? "one wall panel" : `${preview.lengths.length} wall panels`;
+      notify(`Added ${description}. The guide and cut list are ready to review.`);
     });
   }
 
@@ -2328,9 +2349,9 @@ export function App() {
         const lines = parseDxf(text, dxfScale);
         change((p) => ({ ...p, planLines: lines }));
         setModal(null);
-        setView((v) => ({ preset: "top", nonce: v.nonce + 1 }));
+        setView((v) => ({ preset: "plan", nonce: v.nonce + 1 }));
         notify(
-          `${lines.length} DXF reference lines imported. These are not construction parts.`,
+          `${lines.length} DXF reference lines imported.`,
         );
       }
     } catch (e) {
@@ -2949,8 +2970,9 @@ export function App() {
               wallTrace={mode === "trace-wall" ? {
                 a: wallTrace.a?.every(Number.isFinite) ? wallTrace.a : null,
                 b: wallTrace.b?.every(Number.isFinite) ? wallTrace.b : null,
+                outline: selectedOutline?.points,
                 footprints: wallTraceReview.value?.footprints ?? [],
-                blocked: !!wallTraceReview.value?.obstructions.length || !!wallTraceReview.value?.row?.oversize,
+                blocked: !!wallTraceReview.value?.obstructions.length || !!wallTraceReview.value?.hasInternalOverlap || !!wallTraceReview.value?.row?.oversize,
               } : undefined}
               onWallTracePoint={pickWallTracePoint}
               measurement={measurement}
@@ -3067,9 +3089,12 @@ export function App() {
           </div>
           <div className="view-tools">
             <button type="button" aria-label="Trace a wall" title="Frame a wall along two points"
-              className={mode === "trace-wall" ? "active" : ""}
-              aria-pressed={mode === "trace-wall"}
-              onClick={() => mode === "trace-wall" ? setMode("select") : startWallTrace()}><Ruler size={16} /></button>
+              className={mode === "trace-wall" && !readingOutline ? "active" : ""}
+              aria-pressed={mode === "trace-wall" && !readingOutline}
+              onClick={() => mode === "trace-wall" && !readingOutline ? setMode("select") : startWallTrace()}><Ruler size={16} /></button>
+            {!!project.planLines.length && <button type="button" aria-label="Frame a DXF outline" title="Frame a closed room outline"
+              className={readingOutline ? "active" : ""} aria-pressed={readingOutline}
+              onClick={() => readingOutline ? setMode("select") : startWallTrace("outline")}><Square size={16} /></button>}
             {project.drawingReference && (
               <button type="button" aria-label="Edit drawing reference" title="Scale, move or hide the drawing"
                 onClick={() => setModal("drawing")}>Drawing</button>
@@ -3112,9 +3137,11 @@ export function App() {
               {["iso", "front", "top"].map((v) => (
                 <button
                   key={v}
-                  className={view.preset === v || (view.preset === "drawing" && v === "top") ? "active" : ""}
+                  className={view.preset === v || ((view.preset === "drawing" || view.preset === "plan") && v === "top") ? "active" : ""}
                   onClick={() =>
-                    setView((s) => ({ preset: v === "top" && (project.drawingReference?.calibration.visible || mode === "trace-wall" && project.planLines.length) ? "drawing" : v, nonce: s.nonce + 1 }))
+                    setView((s) => ({ preset: v === "top" && readingOutline ? "plan"
+                      : v === "top" && project.drawingReference?.calibration.visible ? "drawing"
+                        : v === "top" && project.planLines.length ? "plan" : v, nonce: s.nonce + 1 }))
                   }
                 >
                   {v === "iso"
@@ -3126,7 +3153,7 @@ export function App() {
               ))}
             </div>
             <span className="orbit-hint">
-              {fittedFacePick ? `Click a retained face of ${partLabel(project, fittedFacePick.pieceId)}. Escape cancels.` : workspaceReviewActive || activeFastenerLayoutPreview || activeConnectorPreview || panel === "fit-stock" ? "Drag to orbit · Scroll to zoom" : entrancePick ? `Click a retained face of ${partLabel(project, entrancePick.headPieceId)}. Escape cancels.` : mode === "lift" ? "Drag a part up/down to lift · Alt + ↑/↓ to nudge" : "Drag to move · Alt-drag to lift · Shift-drag to rotate · Right-drag to orbit"}
+              {fittedFacePick ? `Click a retained face of ${partLabel(project, fittedFacePick.pieceId)}. Escape cancels.` : workspaceReviewActive || activeFastenerLayoutPreview || activeConnectorPreview || panel === "fit-stock" ? "Drag to orbit · Scroll to zoom" : entrancePick ? `Click a retained face of ${partLabel(project, entrancePick.headPieceId)}. Escape cancels.` : mode === "lift" ? "Drag a part up/down to lift · Alt + ↑/↓ to nudge" : mode === "trace-wall" ? "Right-drag to orbit · Scroll to zoom" : "Drag to move · Alt-drag to lift · Shift-drag to rotate · Right-drag to orbit"}
             </span>
             {entrancePick && (
               <button className="button secondary" style={{padding:"5px 8px",fontSize:11}} aria-label="Cancel entrance pick" onClick={() => { setEntrancePick(null); setMode("select"); }}>
@@ -3164,7 +3191,9 @@ export function App() {
           )}
           {mode === "trace-wall" && (
             <div className="wall-trace-hint">
-              <span role="status">{!wallTrace.a?.every(Number.isFinite)
+              <span role="status">{readingOutline ? selectedOutline ? "Outline selected. Review the wall settings or click inside another room."
+                : planOutlines.entries.length ? "Click inside a closed outline to select it." : "Review the plan in Wall settings."
+                : !wallTrace.a?.every(Number.isFinite)
                 ? "Click point A on the floor or drawing."
                 : !wallTrace.b?.every(Number.isFinite) ? "Click point B to finish the run."
                   : "Wall run marked. Click again to start a different run."}</span>
@@ -3717,8 +3746,16 @@ export function App() {
             <>
               {mode === "trace-wall" ? (
                 <WallTracePanel trace={wallTrace} onChange={setWallTrace} review={wallTraceReview.value} error={wallTraceReview.error}
-                  onAdd={addTracedWall} onClose={() => setMode("select")} onPick={inspectWorkspace} />
-              ) : <button className="button secondary full attachment-entry" onClick={startWallTrace}>Trace an interior wall</button>}
+                  onAdd={addTracedWall} onClose={() => setMode("select")} onPick={inspectWorkspace}
+                  outline={outlineTrace ? { ...planOutlines, index: outlineIndex, face: outlineTrace.face,
+                    onSelect: (index) => setOutlineTrace({ ...outlineTrace, index }),
+                    onFace: (face) => setOutlineTrace({ ...outlineTrace, face }),
+                    onManual: () => startWallTrace(),
+                  } : undefined} />
+              ) : <>
+                <button className="button secondary full attachment-entry" onClick={() => startWallTrace()}>Trace an interior wall</button>
+                {!!project.planLines.length && <button className="button secondary full attachment-entry" onClick={() => startWallTrace("outline")}>Frame a room from DXF</button>}
+              </>}
               <button className="button secondary full attachment-entry" onClick={() => setPanel("motion")}>Test door or drawer movement</button>
               <button className="button secondary full attachment-entry" onClick={() => openConnectors()}>Plan A21Z connector</button>
               <button className="button secondary full attachment-entry" onClick={() => openFasteners()}>
@@ -5949,7 +5986,7 @@ export function App() {
                   >
                     <option value="project">Yardwork project · JSON</option>
                     <option value="dxf">
-                      2D plan reference · ASCII DXF LINE entities
+                      2D plan reference · ASCII DXF linework
                     </option>
                     <option value="drawing">Drawing reference · PDF or image</option>
                     <option value="inventory">
@@ -5975,8 +6012,7 @@ export function App() {
                       </select>
                     </label>
                     <p className="small-note">
-                      Import exploded LINE entities near the origin. These
-                      appear in blue on the ground for you to build against.
+                      Import model-space lines or straight 2D polylines near the origin. Closed right-angle outlines can be framed together.
                     </p>
                     <a
                       className="download-example"

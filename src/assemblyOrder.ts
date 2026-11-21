@@ -50,6 +50,26 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
       }
     }
   }
+  const roomWalls = new Map<string, { walls: number; panelsByWall: Map<number, { panel: number; step: NumberedStep }[]> }>();
+  for (const section of project.sections) {
+    const frame = section.roomFraming;
+    const step = byOwner.get(section.id)?.get("section");
+    if (!frame || !step) continue;
+    const room = roomWalls.get(frame.id) ?? { walls: frame.walls, panelsByWall: new Map() };
+    const panels = room.panelsByWall.get(frame.wall) ?? [];
+    panels.push({ panel: frame.panel, step });
+    room.panelsByWall.set(frame.wall, panels);
+    roomWalls.set(frame.id, room);
+  }
+  for (const { walls, panelsByWall } of roomWalls.values()) {
+    for (const panels of panelsByWall.values()) panels.sort((a, b) => a.panel - b.panel);
+    for (const [wall, panels] of panelsByWall) {
+      for (let index = 1; index < panels.length; index++) requireBefore(panels[index - 1].step, panels[index].step);
+      if (wall % 2 !== 0) continue;
+      requireBefore(panelsByWall.get(wall - 1)?.at(-1)?.step, panels[0]?.step);
+      requireBefore(panelsByWall.get(wall % walls + 1)?.at(-1)?.step, panels[0]?.step);
+    }
+  }
 
   function reviewBeforeJoining(kind: ReviewKind, planId: string, a: string, b: string) {
     const first = stageByMember.get(a), second = stageByMember.get(b);

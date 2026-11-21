@@ -122,3 +122,59 @@ test("a calibrated drawing supports a wall trace and exact mixed units on a phon
   await expect.poll(async () => (await section())?.generator.height).toBe(84);
   expect((await section()).origin).toEqual([0, 6, 0]);
 });
+
+test("import a lightweight polyline, choose its room on the plan and save editable corner framing", async ({ page }) => {
+  test.setTimeout(90_000);
+  page.setDefaultTimeout(15_000);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.getByRole("combobox", { name: "Import format", exact: true }).selectOption("dxf");
+  await dialog.locator("input[type=file]").setInputFiles({ name: "two-rooms.dxf", mimeType: "application/dxf", buffer: Buffer.from([
+    0, "SECTION", 2, "ENTITIES", 0, "LWPOLYLINE", 90, 4, 70, 1,
+    10, -120, 20, -48, 10, 120, 20, -48, 10, 120, 20, 48, 10, -120, 20, 48,
+    0, "LINE", 10, -12, 20, -48, 11, -12, 21, 48,
+    0, "ENDSEC", 0, "EOF", "",
+  ].join("\n")) });
+  const openOutline = page.getByRole("button", { name: "Frame a DXF outline", exact: true });
+  await openOutline.click();
+  const settings = page.getByRole("region", { name: "Frame room settings" });
+  const selected = settings.getByRole("combobox", { name: "Plan outline", exact: true });
+  await expect(selected.locator("option")).toHaveCount(3);
+  const add = settings.getByRole("button", { name: "Add room framing", exact: true });
+  await expect(add).toBeDisabled();
+  const canvas = page.locator("canvas").first();
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
+  await clickFloor(canvas, [-60, 0, 0]);
+  await expect(selected).toHaveValue("1");
+  await settings.getByRole("combobox", { name: "Framing lumber", exact: true }).selectOption("hd-spf-2x4-10");
+  await settings.getByRole("combobox", { name: "Drawing line marks", exact: true }).selectOption("outside");
+  await expect(settings.getByLabel("Room framing preview")).toContainText("4 walls · 4 panels");
+  await settings.getByText(/new boards for this outline/).click();
+  await expect(settings.getByText(/Wall 1 · bottom plate 9 ft/)).toBeVisible();
+  await add.click();
+  await expect(settings).toHaveCount(0);
+
+  await openOutline.click();
+  await selected.selectOption("1");
+  await expect(settings.getByRole("alert")).toContainText("Framing overlaps");
+  await expect(add).toBeDisabled();
+  await settings.getByRole("button", { name: "Cancel trace", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft()).revision).toBe(1);
+  const saved = (await draft()).project;
+  expect(saved.planLines).toHaveLength(5);
+  expect(saved.sections.map((section: { generator: { width: number } }) => section.generator.width)).toEqual([108, 108, 89, 89]);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").first().click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Walls 4 and 2 butt into this wall’s side faces.");
+  expect(guide.indexOf("Room wall 3 of 4")).toBeLessThan(guide.indexOf("Room wall 2 of 4"));
+});

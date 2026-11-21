@@ -121,6 +121,41 @@ test("the exact three-section storage request supports refinement, opening lids 
   ).toBeTruthy();
   expect(errors).toEqual([]);
 });
+test("a model timeout offers a built-in plan and keeps the requested storage modules through refinement", async ({ page }) => {
+  let attempts = 0;
+  await page.route("**/api/planner", async (route) => {
+    attempts++;
+    await route.fulfill({
+      status: 504,
+      json: { error: "The local model reached the planning deadline." },
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  const prompt = page.getByRole("textbox", { name: "Describe your idea", exact: true });
+  const explore = page.getByRole("button", { name: "Explore idea", exact: true });
+  const fallback = page.getByRole("button", { name: "Use built-in layout", exact: true });
+  await prompt.fill(request);
+  await explore.click();
+  await expect(page.getByRole("alert")).toContainText("The local model reached the planning deadline.");
+  await fallback.click();
+  await expect(page.locator(".planner-provider")).toContainText("Local planning presets");
+  await expect(page.locator(".planner-module")).toHaveCount(3);
+  expect(attempts).toBe(1);
+
+  await prompt.fill("Make all seats 20 inches high");
+  await explore.click();
+  await expect(fallback).toBeVisible();
+  await fallback.click();
+  await expect(page.locator(".planner-module")).toHaveCount(3);
+  await page.getByRole("button", { name: "Add proposed layout", exact: true }).click();
+  const result = await exported(page);
+  expect(result.sections).toHaveLength(3);
+  for (const { recipe } of result.sections)
+    expect(recipe).toMatchObject({ storage: true, openingLid: true, backHeight: 0, height: 20 });
+  expect(attempts).toBe(2);
+});
+
 test("plywood can be cut to a length and width with separate offcuts and no connection workflow", async ({
   page,
 }) => {
@@ -138,6 +173,7 @@ test("plywood can be cut to a length and width with separate offcuts and no conn
   await page
     .getByRole("spinbutton", { name: "Retained length", exact: true })
     .fill("5");
+  await page.getByLabel("Retained width units", { exact: true }).selectOption("in");
   await page
     .getByRole("spinbutton", { name: "Retained width", exact: true })
     .fill("24");
@@ -146,10 +182,10 @@ test("plywood can be cut to a length and width with separate offcuts and no conn
   ).toBeVisible();
   await page.getByRole("button", { name: "Apply cuts", exact: true }).click();
   await expect(page.locator(".statusbar")).toContainText("2 offcuts");
-  await expect(page.locator(".connection-settings")).not.toHaveAttribute(
-    "open",
-    "",
-  );
+  const connections = page.locator("details.connection-settings").filter({
+    has: page.locator("summary").filter({ hasText: /^Connect parts$/ }),
+  });
+  await expect(connections).not.toHaveAttribute("open", "");
   const project = await exported(page);
   expect(project.pieces[0].size).toEqual([24, 0.75, 60]);
   expect(project.pieces.filter((p) => p.offcut)).toHaveLength(2);

@@ -12,6 +12,10 @@ The guide compares saved step order against modeled assembly prerequisites and t
 
 The catalog has 78 placeable material entries. The registry contains 152 product records and 170 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
 
+## November 21, 2026 · Recover a planning request
+
+When a connected model times out or returns an error, **Use built-in layout** requests a local proposal with the same prompt, dimensions and previous design. The review shows which planner generated the result. The builder still approves any changes. A connected-planner timeout test checks the three opening storage seats, no back and a follow-up that changes seat height.
+
 ## November 21, 2026 · Fixture shutoffs and cabinet travel
 
 The fixture planner fits the SharkBite Max UR23036 to a measured, free ½ in PEX end and checks a rectangular valve envelope, push-on travel, and the entered hose and handle access. It previews whole-pipe length and optional end trim, keeps a valid full-stick source, and warns if a saved pullout or door passes into the valve’s envelope. Markdown and print carry the insertion mark. The pressure record separates exposed valve inlets from stops outside the test boundary and applies the 125 psi rating when there is exposure. Confirm the delivered valve, hose shape, pipe anchorage, operating sweep and inspection in the field. [SharkBite dimensions and ratings](https://www.sharkbite.com/sites/default/files/resources/SharkBite-Max-Stop-Valves-Spec-Sheet.pdf) · [Home Depot UR23036](https://www.homedepot.com/p/325997124)

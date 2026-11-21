@@ -1,5 +1,6 @@
 import { RoofVentFields } from "./RoofVentFields";
-import { workshopRequest } from "./workshopTransport";
+import { browserWorkshop, workshopRequest } from "./workshopTransport";
+import { browserWorkshopRequest } from "./browserWorkshop";
 import { formatPreciseInches } from "./measurement";
 import {
   Component,
@@ -148,6 +149,7 @@ export default function IdeaPlanner({
   } | null>(null);
   const [planningStatus, setPlanningStatus] = useState("");
   const [exploredPrompt, setExploredPrompt] = useState("");
+  const [unavailablePrompt, setUnavailablePrompt] = useState<string>();
   const [workspaceRequest, setWorkspaceRequest] = useState<{
     prompt: string;
   } & ({ kind: "joint"; question: ConnectionQuestion } | { kind: "build"; question: BuildQuestion }) | null>(null);
@@ -184,6 +186,7 @@ export default function IdeaPlanner({
     setWorkspaceRequest(null);
     setPrompt("");
     setExploredPrompt("");
+    setUnavailablePrompt(undefined);
     setBusy(false);
     setError("");
     setPlanningStatus("");
@@ -319,7 +322,7 @@ export default function IdeaPlanner({
     request.cancelled = true;
     request.controller.abort();
   }
-  async function generate() {
+  async function generate(useBuiltIn = false) {
     if (activeRequest.current || !prompt.trim()) return;
     const stockRequest = proposalStockRequest(prompt);
     if (stockRequest) {
@@ -358,6 +361,7 @@ export default function IdeaPlanner({
     previousPlan.current = previous;
     setBusy(true);
     setError("");
+    setUnavailablePrompt(undefined);
     setPlanningStatus("");
     setResult(null);
     try {
@@ -390,7 +394,8 @@ export default function IdeaPlanner({
         .filter(
           (s) => s.min.every(Number.isFinite) && s.max.every(Number.isFinite),
         );
-      const response = await workshopRequest("/api/planner", {
+      const requestPlan = useBuiltIn ? browserWorkshopRequest : workshopRequest;
+      const response = await requestPlan("/api/planner", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -417,6 +422,7 @@ export default function IdeaPlanner({
     } catch (error) {
       if (activeRequest.current !== request) return;
       setResult(previousResult);
+      if (!request.cancelled && !useBuiltIn && !browserWorkshop) setUnavailablePrompt(prompt);
       if (request.cancelled)
         setPlanningStatus(
           previous
@@ -584,7 +590,7 @@ export default function IdeaPlanner({
       <button
         className="button primary full"
         disabled={busy || !prompt.trim()}
-        onClick={generate}
+        onClick={() => void generate()}
       >
         {busy ? (
           <Loader2 size={16} className="spin" />
@@ -632,10 +638,14 @@ export default function IdeaPlanner({
         </p>
       )}
       {error && (
-        <div className="notice warning" role="alert">
-          <AlertTriangle size={16} />
-          <p>{error}</p>
-        </div>
+        <>
+          <div className="notice warning" role="alert">
+            <AlertTriangle size={16} />
+            <p>{error}</p>
+          </div>
+          {unavailablePrompt === prompt && <button type="button" className="button secondary full" disabled={busy}
+            onClick={() => void generate(true)}>Use built-in layout</button>}
+        </>
       )}
       {jointAnswer && <ConnectionQuestionResult answer={jointAnswer} onAction={onConnectionAction} />}
       {buildAnswer && <BuildQuestionResult answer={buildAnswer} onAction={onBuildQuestionAction} />}

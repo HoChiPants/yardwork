@@ -142,7 +142,8 @@ test("phone fits between real .703 inch shelf sides with independent end units a
   await panel.getByRole("textbox", { name: "Second end clearance", exact: true }).fill(String(0.125 / 12));
   await panel.getByRole("button", { name: "Preview fitted stock", exact: true }).click();
   await expect(page.getByTestId("fitted-stock-ghost")).toHaveCount(1);
-  expect(Number(await page.getByTestId("fitted-stock-ghost").getAttribute("data-cut-length"))).toBeCloseTo(46.219, 8);
+  // Both 1/8 in end gaps subtract from the 46.344 in opening.
+  expect(Number(await page.getByTestId("fitted-stock-ghost").getAttribute("data-cut-length"))).toBeCloseTo(46.094, 8);
   await panel.locator(".fitted-stock-summary").scrollIntoViewIfNeeded();
   await page.screenshot({ path: test.info().outputPath("phone-shelves-fit-cut-and-remnant.png"), fullPage: false, animations: "disabled" });
   const first = panel.getByRole("textbox", { name: "First end clearance", exact: true });

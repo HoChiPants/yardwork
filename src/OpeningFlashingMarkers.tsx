@@ -17,7 +17,7 @@ export function OpeningFlashingMarkers({ preview }: { preview: OpeningFlashingPr
       <Html center position={mid(apron[1], apron[2])} style={{ pointerEvents: "none" }} zIndexRange={[35, 0]}>
         <span className="site-clearance-marker" data-testid="opening-flashing-apron">Exterior apron and drainage</span>
       </Html>
-      <Html center position={mid(interiorSeal[1], interiorSeal[2])} style={{ pointerEvents: "none" }} zIndexRange={[35, 0]}>
+      <Html center position={mid(interiorSeal[0], interiorSeal[2])} style={{ pointerEvents: "none" }} zIndexRange={[35, 0]}>
         <span className="site-clearance-marker" data-testid="opening-flashing-air-seal">Interior air seal after setting the unit</span>
       </Html>
     </group>

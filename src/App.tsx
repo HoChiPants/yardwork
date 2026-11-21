@@ -1,3 +1,5 @@
+import { DrawingReferencePanel } from "./DrawingReferencePanel";
+import { drawingReferenceDescription, type DrawingReference } from "./drawingReference";
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
@@ -344,6 +346,7 @@ type Modal =
   | "projects"
   | "settings"
   | "import"
+  | "drawing"
   | "export"
   | "assistant"
   | "base"
@@ -2229,6 +2232,22 @@ export function App() {
       setBusy(false);
     }
   }
+  function saveDrawingReference(drawing: DrawingReference) {
+    change((current) => ({ ...current, drawingReference: drawing }));
+    setModal(null);
+    if (drawing.calibration.visible) {
+      setMode("select");
+      setView((previous) => ({ preset: "drawing", nonce: previous.nonce + 1 }));
+    }
+    notify("Drawing reference saved in this project.");
+  }
+  function removeDrawingReference() {
+    change((current) => ({ ...current, drawingReference: undefined }));
+    setModal(null);
+    if (view.preset === "drawing") setView((previous) => ({ preset: "top", nonce: previous.nonce + 1 }));
+    notify("Drawing reference removed. Undo is available.");
+  }
+
   async function importFile(f: File) {
     const targetId = current.current.id;
     try {
@@ -2987,6 +3006,10 @@ export function App() {
             </button>
           </div>
           <div className="view-tools">
+            {project.drawingReference && (
+              <button type="button" aria-label="Edit drawing reference" title="Scale, move or hide the drawing"
+                onClick={() => setModal("drawing")}>Drawing</button>
+            )}
             {offcutCount > 0 && <button type="button"
               className={showOffcuts ? "active" : ""} aria-pressed={showOffcuts}
               aria-label={showOffcuts ? "Hide offcut stock" : "Show offcut stock"}
@@ -3025,9 +3048,9 @@ export function App() {
               {["iso", "front", "top"].map((v) => (
                 <button
                   key={v}
-                  className={view.preset === v ? "active" : ""}
+                  className={view.preset === v || (view.preset === "drawing" && v === "top") ? "active" : ""}
                   onClick={() =>
-                    setView((s) => ({ preset: v, nonce: s.nonce + 1 }))
+                    setView((s) => ({ preset: v === "top" && project.drawingReference?.calibration.visible ? "drawing" : v, nonce: s.nonce + 1 }))
                   }
                 >
                   {v === "iso"
@@ -3054,7 +3077,7 @@ export function App() {
               <CircleHelp size={17} />
             </button>
           </div>
-          {!project.pieces.length && !project.workZone && !shownVentDatums && !shownDryerDuct && (
+          {!project.pieces.length && !project.workZone && !project.drawingReference?.calibration.visible && !shownVentDatums && !shownDryerDuct && (
             <div className="empty-workspace">
               <Box size={30} />
               <h2>A space for your next idea.</h2>
@@ -5066,7 +5089,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5828,12 +5851,18 @@ export function App() {
                 </button>
               </>
             )}
+            {modal === "drawing" && (
+              <>
+                <h2 id="modal-title">Drawing reference</h2>
+                <DrawingReferencePanel key={project.id} initial={project.drawingReference}
+                  onSave={saveDrawingReference} onRemove={removeDrawingReference} />
+              </>
+            )}
             {modal === "import" && (
               <>
                 <h2 id="modal-title">Bring a plan along.</h2>
                 <p>
-                  Start with a saved Yardwork project or use CAD linework as a
-                  layout reference.
+                  Open a saved Yardwork project or add a scaled drawing to the workspace.
                 </p>
                 <label className="field">
                   Import format
@@ -5845,12 +5874,16 @@ export function App() {
                     <option value="dxf">
                       2D plan reference · ASCII DXF LINE entities
                     </option>
+                    <option value="drawing">Drawing reference · PDF or image</option>
                     <option value="inventory">
                       Store inventory snapshot · JSON
                     </option>
                   </select>
                 </label>
-                {importKind === "dxf" ? (
+                {importKind === "drawing" ? (
+                  <DrawingReferencePanel key={project.id} initial={project.drawingReference}
+                    onSave={saveDrawingReference} onRemove={removeDrawingReference} />
+                ) : importKind === "dxf" ? (
                   <>
                     <label className="field">
                       DXF drawing units
@@ -5866,9 +5899,7 @@ export function App() {
                     </label>
                     <p className="small-note">
                       Import exploded LINE entities near the origin. These
-                      appear in blue on the ground; the app does not infer
-                      framing from drawings. PDF/image tracing is a future
-                      addition.
+                      appear in blue on the ground for you to build against.
                     </p>
                     <a
                       className="download-example"
@@ -5905,6 +5936,7 @@ export function App() {
                     older apps reject unsupported versions to preserve saved data.
                   </p>
                 )}
+                {importKind !== "drawing" && <>
                 <input
                   ref={file}
                   type="file"
@@ -5921,6 +5953,7 @@ export function App() {
                   <ArrowDownToLine size={16} />
                   Choose file to import
                 </button>
+                </>}
               </>
             )}
             {modal === "handoff" && (
@@ -6186,6 +6219,11 @@ export function App() {
           Planning only. Verify site, code, engineering, and connections before
           construction.
         </strong>
+        {exportGuide.drawingReference?.calibration.visible && <section className="drawing-reference-print">
+          <h2>Drawing reference</h2>
+          <p>{drawingReferenceDescription(exportGuide.drawingReference)}. Use the stated dimensions when measuring the printed sheet.</p>
+          <img src={exportGuide.drawingReference.image} alt="Imported drawing sheet" />
+        </section>}
         <PrintBuildPreparation groups={printPreparation} />
         <PrintOffcutCutOrder rows={printOffcutCuts} />
         {exportGuide.ideaBindings.map((binding) => (

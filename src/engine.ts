@@ -1,3 +1,4 @@
+import { drawingReferenceDescription } from "./drawingReference";
 import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
 import { buildPreparation, buildPreparationMarkdown } from "./buildPreparation";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
@@ -1934,6 +1935,9 @@ export function guideMarkdown(p: Project) {
   return (
     `# ${p.name}\n\nConcept plan · ${p.zip}${p.store ? ` · Store ${p.store}` : ""}\n\n` +
     projectNotesMarkdown(p.notes) +
+    (p.drawingReference?.calibration.visible
+      ? `## Drawing reference\n\n${drawingReferenceDescription(p.drawingReference)}. Use the calibrated workspace for layout.\n\n`
+      : "") +
     "Geometric planning only. Verify engineering, code, connections, and site conditions before construction.\n\n" +
     buildPreparationMarkdown(preparation) +
     offcutCutOrderMarkdown(offcutCutRows(p, lineage)) +

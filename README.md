@@ -68,7 +68,7 @@ For board crosscuts, Yardwork can move or swap pieces between planned boards to 
 
 ## Run locally
 
-Requires **Node 22.12+** and a WebGL-capable browser.
+Requires **Node 22.13+** and a WebGL-capable browser.
 
 ```sh
 npm ci
@@ -370,6 +370,7 @@ The selected section summary (name, dimensions, spacing, part count and section 
 ## Plan import and export
 
 - **Yardwork JSON:** versioned, validated editable project files containing materials, transforms, offcuts, joints, ordered steps, history, inventory snapshots, and reference linework. Imports create a new project ID so they cannot overwrite saved originals.
+- **PDF, PNG, JPEG and WebP drawing references:** choose a file under 20 MB, select the sheet if needed, mark two endpoints of a known dimension and enter the actual distance. Yardwork places the calibrated sheet on the ground while you build. Use **Drawing** near the viewport to adjust its center, angle, visibility or opacity. The selected raster sheet and calibration stay in the editable project and workshop backup. Exported guides show the calibration when the sheet is visible. Files are read and rendered in the browser using a bundled [PDF.js renderer](https://mozilla.github.io/pdf.js/examples/index.html).
 - **ASCII DXF:** exploded `LINE` entities import as ground-plane references with explicit inches/feet/mm/meters selection. Use drawings near the origin. [Example 6 × 4 ft outline](public/examples/base-plan.dxf).
 - **Shopping CSV:** quantities, sample/snapshot prices, availability evidence, product/search links, and excluded oversized-part counts. This is not a native Home Depot project file.
 - **Build guide:** Markdown or browser print/PDF, including part dimensions, manual instructions, specified screw quantities, recorded operations, and roll cutting coordinates.

@@ -1,3 +1,4 @@
+import { drawingReferenceSchema } from "./drawingReference";
 import { caseworkTipUpSchema } from "./caseworkTipUpSchema";
 import { pureBondCasework } from "./homeDepotCaseworkReference";
 import { homeDepotFraming } from "./homeDepotFramingReference";
@@ -535,6 +536,7 @@ export const currentProjectSchema = z
     joints: z.array(jointSchema).max(5000),
     inventory: z.array(storedInventorySchema).max(100),
     planLines: z.array(planLineSchema).max(3000),
+    drawingReference: drawingReferenceSchema.optional(),
     notes: z.string().max(10000),
     sections: z.array(sectionSchema).max(300).default([]),
     ideaBindings: z.array(ideaBindingSchema).max(200).default([]),

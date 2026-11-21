@@ -3672,3 +3672,65 @@ small {
 .preparation-rows button svg { flex: none; }
 .preparation-rows small { display: block; margin-top: 3px; line-height: 1.4; }
 .preparation-more { padding-top: 5px; }
+
+.drawing-calibration {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.drawing-calibration input[type="file"] { display: none; }
+.drawing-calibration p, .drawing-calibration .field { margin: 0; }
+.drawing-calibration details > .two-col { margin-top: 10px; }
+.drawing-calibration details > .field, .drawing-calibration details > .checkbox-field { margin-top: 10px; }
+.drawing-file-title { font-weight: 600; overflow-wrap: anywhere; }
+.drawing-page-row { display: flex; gap: 12px; align-items: end; }
+.drawing-page-row .field { width: 130px; }
+.drawing-sheet-scroll {
+  max-height: min(390px, 45vh);
+  overflow: auto;
+  background: #edece2;
+  border: 1px solid #dbd9ca;
+  border-radius: 8px;
+}
+.drawing-sheet {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: none;
+  cursor: crosshair;
+  background: white;
+  touch-action: pan-x pan-y;
+}
+.drawing-sheet img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.drawing-sheet-line {
+  position: absolute;
+  height: 2px;
+  transform-origin: left center;
+  pointer-events: none;
+  background: #bb5526;
+}
+.drawing-sheet-point {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  background: #bb5526;
+  border: 1px solid white;
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  pointer-events: none;
+}
+.drawing-point-tools [aria-pressed="true"] { background: #e9eadb; border-color: #a7ae96; }
+.drawing-zoom { max-width: 130px; }
+.view-tools button[aria-label="Edit drawing reference"] {
+  width: auto;
+  min-width: 36px;
+  padding: 0 5px;
+  font-size: 10px;
+}
+
+.drawing-reference-print { break-inside: avoid; }
+.drawing-reference-print img { display: block; max-width: 100%; max-height: 120mm; object-fit: contain; }

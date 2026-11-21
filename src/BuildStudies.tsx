@@ -91,6 +91,7 @@ export default function BuildStudies({
   const hasDraft =
     project.pieces.length > 0 ||
     project.planLines.length > 0 ||
+    Boolean(project.drawingReference) ||
     project.notes.trim().length > 0;
   const canOpen = !openingExample && (!hasDraft || replaceAcknowledged);
   useEffect(() => () => exampleRequest.current?.abort(), []);

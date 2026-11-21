@@ -4,13 +4,17 @@ Yardwork is a usable local planning prototype. It is not a construction-ready de
 
 ## Working foundation
 
-The editor starts blank and supports configurable work zones, independent measurement units, direct movement/rotation, snapping, exact positioning, measurement, straight and angled cuts in wood, and retained offcuts. Projects save to a local library, reopen and export/import editable JSON. Scaled DXF linework is a reference import, not automatic extraction of a dependable framed structure.
+The editor starts blank and supports configurable work zones, independent measurement units, direct movement/rotation, snapping, exact positioning, measurement, straight and angled cuts in wood, and retained offcuts. Projects save to a local library, reopen and export/import editable JSON. Scaled DXF linework and calibrated PDF or image sheets can be used as layout references. Their geometry serves as a guide while the user places editable parts.
 
 Guides generate from actual parts, cuts and recorded connections. Explicit part-stage choices, saved task order and custom notes survive regeneration. Current software checks cover source accounting, geometry conflicts, stale references and entered fastener centerlines. These checks are not strength calculations or installation approval.
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
 The catalog has 62 editable stocks. The registry contains 136 product records and 154 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 21, 2026 · Scaled drawing references
+
+Open a PDF or image as a reference, choose the PDF sheet and enter a real distance between two marked points. Yardwork places the sheet on the ground and supports measured center, rotation, opacity and visibility edits. The selected raster, scale and placement persist with the project and into the guide. PDF decoding stays in the browser. Use a known dimension from the delivered drawing and check another span before relying on it for layout. [PDF.js renderer](https://mozilla.github.io/pdf.js/examples/index.html)
 
 ## November 21, 2026 · Interior air seal materials
 

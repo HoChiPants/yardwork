@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 101**. Yardwork reads valid formats 1–100 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 102**. Yardwork reads valid formats 1–101 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 102 can embed one calibrated drawing reference. It stores the selected PDF page or image as a bounded JPEG preview, its original filename and page number when available, two normalized scale points, the measured span in inches, the center in X and Z, rotation, opacity, and visibility. DXF line references remain independent. The embedded sheet round-trips through editable exports, project revisions and backups.
 
 Format 101 can retain an interior air seal on each opening flashing plan. It records the four field gap widths, smallest available depth, planned seal depth, chosen material method, and optional work session. Stock and rod lengths are derived from current geometry. Earlier plans keep their original sill, flashing, and drainage measurements.
 

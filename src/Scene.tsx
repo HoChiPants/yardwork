@@ -1,3 +1,5 @@
+import { DrawingReferenceMesh } from "./DrawingReferenceMesh";
+import { drawingReferenceBounds } from "./drawingReference";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import {
   Canvas,
@@ -1005,6 +1007,7 @@ function CameraRig({
   animateView = !fitToView,
   motionBounds = null,
   siteBounds = null,
+  drawingBounds = null,
   framePieces,
   stockFrameKey,
 }: {
@@ -1015,6 +1018,7 @@ function CameraRig({
   animateView?: boolean;
   motionBounds?: PerspectiveBounds | null;
   siteBounds?: PerspectiveBounds | null;
+  drawingBounds?: PerspectiveBounds | null;
   framePieces: readonly Piece[];
   stockFrameKey: string;
 }) {
@@ -1041,6 +1045,11 @@ function CameraRig({
       min = [0, 1, 2].map((i) => Math.min(...bs.map((b) => b.min[i])));
       max = [0, 1, 2].map((i) => Math.max(...bs.map((b) => b.max[i])));
     }
+    const referenceFrame = drawingBounds && (view.preset === "drawing" || !active.length && !zone);
+    if (referenceFrame && !motionBounds && !siteBounds) {
+      min = drawingBounds.min;
+      max = drawingBounds.max;
+    }
     const overlayBounds = motionBounds ?? siteBounds;
     if (overlayBounds) {
       const combined = siteBounds && !active.length && !zone
@@ -1059,22 +1068,30 @@ function CameraRig({
     );
     const radius = Math.max(6, ...max.map((v, i) => (v - min[i]) / 12));
     target.current = center;
-    const offset = new THREE.Vector3(...workshopViewOffset(view.preset, radius));
+    const offset = new THREE.Vector3(...workshopViewOffset(view.preset === "drawing" ? "top" : view.preset, radius));
     destination.current = center.clone().add(offset);
-    if (fitToView && camera instanceof THREE.PerspectiveCamera) {
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.far = 500;
+      camera.updateProjectionMatrix();
+    }
+    if ((fitToView || referenceFrame) && camera instanceof THREE.PerspectiveCamera) {
       const fitted = fitPerspectiveBounds(
         worldBounds,
         {
           verticalFovDegrees: camera.fov,
           aspect: Math.max(1, size.width) / Math.max(1, size.height),
           direction: offset.toArray() as V3,
-          padding: 1.1,
+          padding: referenceFrame ? 1.24 : 1.1,
           minDistance: 2,
           nearClip: camera.near,
           viewportInsets: overlayBounds ? motionViewport(size.width, size.height).insets : undefined,
         },
       );
       destination.current.set(...fitted.position);
+      if (referenceFrame && fitted.farDistance * 1.2 > camera.far) {
+        camera.far = fitted.farDistance * 1.2;
+        camera.updateProjectionMatrix();
+      }
       if (animateView) moving.current = true;
       else {
         camera.position.copy(destination.current);
@@ -1089,13 +1106,14 @@ function CameraRig({
     view.preset,
     fitToView,
     animateView,
-    fitToView ? size.width : 0,
-    fitToView ? size.height : 0,
+    fitToView || drawingBounds ? size.width : 0,
+    fitToView || drawingBounds ? size.height : 0,
     project.workZone?.width,
     project.workZone?.depth,
     project.workZone?.height,
     motionBounds,
     siteBounds,
+    drawingBounds,
     stockFrameKey,
   ]);
   useFrame((_, dt) => {
@@ -1148,7 +1166,7 @@ function CameraRig({
         RIGHT: THREE.MOUSE.ROTATE,
       }}
       minDistance={2}
-      maxDistance={400}
+      maxDistance={drawingBounds ? 6000 : 400}
       maxPolarAngle={WORKSHOP_MAX_POLAR_ANGLE}
       target={[0, 3, 0]}
       onStart={() => (moving.current = false)}
@@ -1281,6 +1299,9 @@ function World(props: SceneProps) {
   const guidePiece = stagePieces.find((piece) => piece.id === props.guidePartFocus?.pieceId);
   const isolated = guidePiece && props.guidePartFocus?.isolated;
   const visible = isolated ? [guidePiece] : stagePieces;
+  const reference = props.project.drawingReference;
+  const drawing = !isolated && !props.focusedMotion && !props.readOnly && reference?.calibration.visible ? reference : null;
+  const drawingBounds = useMemo(() => drawing ? drawingReferenceBounds(drawing, drawing.calibration) : null, [drawing]);
   const framePieces = guidePiece ? visible : visibleStockPieces(props.project, visibility);
   const stockFrameKey = guidePiece ? `guide:${guidePiece.id}:${props.guidePartFocus?.isolated}`
     : assemblyOnly ? "assembly" : props.showOffcuts ? "all-offcuts" : selectedOffcut ?? "assembly";
@@ -1316,6 +1337,7 @@ function World(props: SceneProps) {
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial color="#eeeee5" roughness={1} />
       </mesh>
+      {drawing && <DrawingReferenceMesh drawing={drawing} />}
       <Grid
         position={[0, -0.01, 0]}
         args={[200, 200]}
@@ -1581,6 +1603,7 @@ function World(props: SceneProps) {
         animateView={props.animateView}
         motionBounds={props.motionBounds}
         siteBounds={siteBounds}
+        drawingBounds={drawingBounds}
         framePieces={framePieces}
         stockFrameKey={stockFrameKey}
       />

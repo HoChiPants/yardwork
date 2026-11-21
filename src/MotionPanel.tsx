@@ -1,6 +1,8 @@
 import { DrawerSlideMountPanel } from "./DrawerSlideMountPanel";
 import { clearDrawerSlideMount } from "./drawerSlideMounts";
 import { DrawerBoxPanel } from "./DrawerBoxPanel";
+import { DrawerOpeningPanel } from "./DrawerOpeningPanel";
+import { doorAndDrawer } from "./drawerOpening";
 import { drawerCabinetPanels } from "./drawerBoxes";
 import { clearGreenhouseLatch } from "./greenhouseLatch";
 import { GreenhouseLatchPanel } from "./GreenhouseLatchPanel";
@@ -14,7 +16,7 @@ import {
   saunaDoorReview,
 } from "./saunaDoors";
 import { greenhouseVentChoices, greenhouseVentReview } from "./greenhouseVents";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { formatPreciseInches } from "./measurement";
 import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
@@ -651,6 +653,9 @@ export function MotionPanel({
     );
   }, [project, selected, held]);
   const linked = availableMotions.find((plan) => plan.id === linkedId);
+  const drawerOpeningPair = selected && linked && doorAndDrawer(selected, linked);
+  const drawerOpeningExtension = drawerOpeningPair &&
+    (selected.id === drawerOpeningPair.drawer.id ? sequenceTargets?.selected : sequenceTargets?.companion)?.travel;
   const otherMotions = availableMotions.filter(
     (plan) =>
       plan.id !== linked?.id &&
@@ -808,6 +813,16 @@ export function MotionPanel({
     setError("");
     onPreview(null);
   };
+  const openingRequest = useRef(initialTest);
+  useEffect(() => {
+    if (!initialTest?.focusDrawerOpening || openingRequest.current === initialTest) return;
+    openingRequest.current = initialTest;
+    edit(null);
+    setSelectedPlanId(initialTest.plan.id);
+    setScenarioId("");
+    setScenarioName("");
+    loadTestSetup(initialTest.plan, initialTest.setup, true);
+  }, [initialTest]);
   useEffect(() => {
     if (drawerRequest) {
       setDrawerPanels(drawerRequest.panelIds);
@@ -992,6 +1007,22 @@ export function MotionPanel({
           companion={linked}
           current={sequenceTargets}
           onTest={(targets) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, clearance, targets), true)}
+        />
+      )}
+      {selected && linked && testSetup && drawerOpeningPair && editing === null && (
+        <DrawerOpeningPanel
+          key={JSON.stringify([selected.id, linked.id, testSetup.held, clearance, drawerOpeningExtension])}
+          project={project}
+          selected={selected}
+          linked={linked}
+          test={testSetup}
+          initialExtension={drawerOpeningExtension || drawerOpeningPair.drawer.mechanism.travel}
+          expanded={initialTest?.focusDrawerOpening}
+          onChoose={(setup) => {
+            setScenarioId("");
+            setScenarioName("");
+            loadTestSetup(selected, setup, true);
+          }}
         />
       )}
       {(otherMotions.length > 0 || held.length > 0) && editing === null && (

@@ -1339,6 +1339,7 @@ export type MotionTestSelection = {
   plan: MotionPlan;
   setup?: MotionTestSetup;
   scenarioId?: string;
+  focusDrawerOpening?: boolean;
   result: MotionTestResult;
 };
 

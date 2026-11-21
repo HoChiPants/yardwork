@@ -8,6 +8,7 @@ import { checkGreenhouseDoorSeal, reviewGreenhouseDoorSeal } from "./greenhouseD
 import { formatPreciseInches, formatStockLength } from "./measurement";
 import { inspectLidTravel } from "./lidTravelFindings";
 import {
+  canParkMotion,
   motionDistance,
   motionTestFindings,
   resolveMotionTestSetup,
@@ -37,6 +38,7 @@ import type { RimSide } from "./rimAirSealSchema";
 export type BuildQuestion =
   | { kind: "checks" }
   | { kind: "motion"; subject: string }
+  | { kind: "drawer-opening" }
   | { kind: "greenhouse-weatherseal" }
   | { kind: "opening-flashing"; sillLabel?: string }
   | { kind: "window-wall"; prompt: string }
@@ -59,6 +61,7 @@ export type BuildQuestionAction =
   | { kind: "checks" }
   | { kind: "cut-pool" }
   | { kind: "motion-setup" }
+  | { kind: "drawer-opening"; drawerId: string; doorId: string }
   | { kind: "greenhouse-weatherseal"; motionId: string }
   | { kind: "opening-flashing"; sillId?: string }
   | { kind: "window-wall"; command?: Command }
@@ -125,6 +128,7 @@ const boardOffcutSize =
 const boardFeet = /^(\d+(?:\.\d+)?)\s*(?:feet|foot|ft|['′])(?:\s*(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″]))?$/i;
 const boardInches = /^(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″])$/i;
 const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (p\d{1,6}) and (p\d{1,6})$/i;
+const drawerOpeningQuestion = /^(?:how (?:far|wide) (?:do|should|can|must) i open (?:the |my )?(?:cabinet )?door (?:before (?:opening|pulling out|extending) (?:the |my )?drawer|(?:for|to clear) (?:the |my )?drawer)|(?:find|check|test) (?:a |the )?door opening (?:for|to clear) (?:the |my )?drawer)$/i;
 const doorSealQuestion =
   /^(?:how (?:can|do|should) i (?:weatherstrip|weatherseal|seal) (?:the |my )?greenhouse door|(?:check|review|plan|show) (?:the )?(?:weatherstrip|weatherseal|weatherstripping) (?:for|on) (?:the |my )?greenhouse door)$/i;
 const openingFlashingQuestion = /^(?:how (?:can|do|should) i (?:flash|air[ -]seal) (?:the |my )?(?:window|door) opening|(?:plan|review|check|show) (?:(?:(?:sill|opening|window|door|jamb and head) )?flashing|(?:the )?interior air[ -]seal))(?: (?:at|on|for) (p\d{1,6}))?$/i;
@@ -150,6 +154,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   );
   if (weaknessQuestion.test(text)) return { kind: "checks" };
   if (treatmentQuestion.test(text)) return { kind: "treated-wood" };
+  if (drawerOpeningQuestion.test(text)) return { kind: "drawer-opening" };
   const drawer = drawerQuestion.exec(text);
   if (drawer) return { kind: "drawer-box", labels: [labelKey(drawer[1]), labelKey(drawer[2])] };
   const scrap = scrapQuestion.exec(text);
@@ -530,6 +535,25 @@ export function answerBuildQuestion(
   switch (question.kind) {
     case "checks":
       return answerChecks(project, findings);
+    case "drawer-opening": {
+      const plans = project.motionPlans ?? [];
+      const hinges = plans.filter(({ mechanism }) => mechanism.kind === "hinge");
+      const pairs = plans.filter(({ mechanism }) => mechanism.kind === "slide").flatMap((drawer) =>
+        hinges.filter((door) => canParkMotion(project, drawer, door) && canParkMotion(project, door, drawer))
+          .map((door) => ({
+            id: drawer.id + "/" + door.id,
+            title: drawer.label + " behind " + door.label,
+            detail: "Check the door swing and find an opening for the requested drawer extension.",
+            link: { label: "Find a door opening", action: { kind: "drawer-opening" as const, drawerId: drawer.id, doorId: door.id } },
+          })));
+      return {
+        title: "Find a door opening for the drawer",
+        detail: pairs.length ? "Choose the door and drawer to test. Other parts and recorded site clearances stay in the check."
+          : "Use Test movement to save the door's hinge motion and the drawer's sliding motion. Then link them to check clearance.",
+        ...(pairs.length === 1 ? { link: pairs[0].link } : pairs.length ? { rows: pairs.slice(0, 12) } :
+          { link: { label: "Open movement tests", action: { kind: "motion-setup" } } }),
+      };
+    }
     case "board-offcut":
       return answerBoardOffcut(project, question);
     case "motion":

@@ -1387,6 +1387,25 @@ export function App() {
         setMotionTestSelection(null);
         setPanel("motion");
         break;
+      case "drawer-opening": {
+        const drawer = project.motionPlans?.find(({ id }) => id === action.drawerId);
+        const door = project.motionPlans?.find(({ id }) => id === action.doorId);
+        if (drawer?.mechanism.kind !== "slide" || door?.mechanism.kind !== "hinge")
+          throw Error("The door or drawer changed. Choose its current motion.");
+        const setup = { linkedId: door.id, held: [] };
+        setMotionTestSelection({
+          project, plan: drawer, setup, focusDrawerOpening: true,
+          result: runMotionTest(project, drawer, setup),
+        });
+        setRemovalTarget(null);
+        setMotionPreview(null);
+        setStage(null);
+        setPlaying(false);
+        setExplode(false);
+        setPanel("motion");
+        inspectorFocus.scrollRef.current?.scrollTo(0, 0);
+        break;
+      }
       case "treated-wood":
         setPanel("prep");
         break;

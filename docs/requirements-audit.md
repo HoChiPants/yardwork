@@ -2,6 +2,12 @@
 
 November 21, 2026. This ledger records the tested versions and workflows at each checkpoint.
 
+## Direct placement from the Cut pool, format 118
+
+The finished-length field checks family stock, retained dimensions, grain direction and blade kerf. Compatible measured offcuts take priority over expected scraps. A saved stock plan still shows its prerequisite even when the original stock has been marked on hand. Placing a finished part reserves its region in the original source and records any new trim and remnant in the build guide.
+
+The mobile-width Chrome test started with one 12 ft board. It cut a 6 ft piece, placed a 4 ft piece from the offcut and retained 23.75 in after both cuts. The shopping quantity stayed at one board after guide export and project reimport. A separate scheduled-cut case carried the prerequisite into the guide. Both production builds, 1,636 domain tests, five example validations, five placement browser cases and seven study and cut-source regressions passed. The Docker save and restart check also reopened the same source, cut history and quantities.
+
 ## Folding stay clearance across the swing, format 118
 
 The measured linkage bounds how far each arm can move between angles. Playback checks the full interval in either direction and stops at confirmed geometry overlap or at an interval that needs review. The latter uses an amber highlight for the affected stay and parts. A synthetic obstruction that cleared all the old half-degree samples stopped opening between 34° and 34.25° and closing between 34.25° and 34.5°. A trimmed retained solid cleared the arm, and an approximate envelope at the obstruction produced an amber review. The fixture tests the geometric solver. Inspect physical brackets, pivots, pinch protection, release and loads separately. [Separating-axis reference](https://www.geometrictools.com/Documentation/MethodOfSeparatingAxes.pdf)

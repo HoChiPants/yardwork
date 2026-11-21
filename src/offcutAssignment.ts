@@ -8,8 +8,10 @@ import { cutPiece } from "./engine";
 import { formatStockLength } from "./measurement";
 import {
   material,
+  maxPartDimension,
   projectSchema,
   uid,
+  type MaterialId,
   type Piece,
   type Project,
   type V3,
@@ -18,7 +20,21 @@ import { ensurePartLabels, partLabel } from "./partLabels";
 import { stockAxes } from "./stockAxes";
 
 const epsilon = 1e-7;
-const sizeAlong = (piece: Piece, axes: CutSourceAxes): V3 =>
+type OffcutTarget = Pick<Piece, "material" | "size" | "stockLengthAxis"> &
+  Partial<Pick<Piece, "offcut" | "cutStock">>;
+
+export function boardBlankAtLength(id: MaterialId, length: number) {
+  const stock = material(id);
+  if (!stock.wood || !stock.cuttable || stock.stockKind !== "linear" ||
+      !Number.isFinite(length) || length <= 0 || length > maxPartDimension)
+    return null;
+  const size = [...stock.size] as V3;
+  const stockLengthAxis = stockAxes({ material: id, size, stockLengthAxis: null }).length;
+  size[stockLengthAxis] = length;
+  return { size, stockLengthAxis };
+}
+
+const sizeAlong = (piece: Pick<Piece, "size">, axes: CutSourceAxes): V3 =>
   axes.map((axis) => piece.size[axis]) as V3;
 function axesOf({
   thickness,
@@ -30,7 +46,7 @@ function axesOf({
 
 export function fittingOffcuts(
   project: Project,
-  target: Piece,
+  target: OffcutTarget,
   inspection = inspectCutStock(project),
   allowedOffcutIds?: ReadonlySet<string>,
 ) {
@@ -109,6 +125,35 @@ export function fittingOffcuts(
         a.available[1] * a.available[2] - b.available[1] * b.available[2] ||
         a.piece.name.localeCompare(b.piece.name),
     );
+}
+
+export function fittingBoardOffcut(
+  project: Project,
+  family: readonly MaterialId[],
+  length: number,
+  inspection: ReturnType<typeof inspectCutStock>,
+) {
+  const plannedSources = new Set(project.plannedCutSources?.map(({ sourceId }) => sourceId));
+  const available = new Set(project.pieces
+    .filter((piece) => piece.offcut && family.includes(piece.material))
+    .map((piece) => piece.material));
+  return [...available].flatMap((id) => {
+    const blank = boardBlankAtLength(id, length);
+    if (!blank) return [];
+    const explicit = { material: id, ...blank };
+    const inferred = { ...explicit, stockLengthAxis: null };
+    // Older cuts share an untagged blank. Offer an inferred target only if
+    // its finished dimensions still give the same grain axis.
+    const targets = stockAxes(inferred).length === blank.stockLengthAxis ? [explicit, inferred] : [explicit];
+    return targets.flatMap((target) => fittingOffcuts(project, target, inspection)
+      .map((match) => ({
+        ...match,
+        stockLengthAxis: target.stockLengthAxis,
+        sourceCutPending: plannedSources.has(match.piece.cutStock!.id),
+      })));
+  }).sort((a, b) => Number(a.sourceCutPending) - Number(b.sourceCutPending) ||
+    Number(b.onHand) - Number(a.onHand) ||
+    a.available[1] * a.available[2] - b.available[1] * b.available[2])[0];
 }
 
 export function assignOffcutToPart(

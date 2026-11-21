@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { confirmMaterialPlacement } from "../helpers/materialPlacement";
+import { readFile } from "node:fs/promises";
+import { addFramingLumber, confirmMaterialPlacement } from "../helpers/materialPlacement";
+import { blank, part, projectSchema } from "../../src/model";
+import { bom } from "../../src/engine";
+import { planStockCutLayouts } from "../../src/recordStockCutLayout";
+import { stockCutSequences } from "../../src/stockCutSequence";
 
 const group = "2 × 4 framing lumber";
 
@@ -70,6 +75,89 @@ test("front-view drops stay at the workspace depth and ignore controls", async (
   await confirmMaterialPlacement(page, "10 ft");
   await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("60");
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("0");
+});
+
+test("place a finished board from a different stock length in the Cut pool", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  await addFramingLumber(page, "12 ft");
+  await page.getByRole("button", { name: "Cut part", exact: true }).click();
+  await page.getByRole("spinbutton", { name: "Retained length", exact: true }).fill("6");
+  await page.getByRole("button", { name: "Apply cuts", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cut pool (1)", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: `Add ${group}`, exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  const finished = dialog.getByRole("spinbutton", { name: "Needed finished length", exact: true });
+  await finished.fill("71.8");
+  await expect(dialog.getByRole("button", { name: /Place from/ })).toHaveCount(0);
+  await finished.fill("48");
+  await expect(dialog).toContainText("Crosscut to 4 ft");
+  await dialog.getByRole("button", { name: "Place from O001", exact: true }).click();
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const materials = page.locator(".inspector-scroll .bom-row");
+  await expect(materials).toHaveCount(1);
+  await expect(materials.first()).toContainText("1 board");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: /^Editable project/ }).click();
+  const exported = projectSchema.parse(JSON.parse(await readFile((await (await download).path())!, "utf8")));
+  const pieces = exported.pieces.filter(({ offcut }) => !offcut);
+  expect(pieces.map(({ material, size }) => [material, size[1]])).toEqual([["stud-12", 72], ["stud-12", 48]]);
+  expect(new Set(exported.pieces.map(({ cutStock }) => cutStock?.id)).size).toBe(1);
+  expect(exported.pieces.find(({ offcut }) => offcut)?.size[1]).toBeCloseTo(23.75);
+  expect(exported.history.find(({ offcutCut }) => offcutCut?.targetId === pieces[1].id)?.offcutCut?.cuts)
+    .toEqual([{ kind: "crosscut", size: 48 }]);
+  const guideDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await guideDownload).path())!, "utf8");
+  expect(guide).toContain("Recorded offcut cut order");
+  expect(guide).toContain("Crosscut to 4 ft");
+  expect(guide).toContain("23.75 in");
+
+  await page.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "reused-board.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(exported)),
+  });
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(materials).toHaveCount(1);
+  await expect(materials.first()).toContainText("1 board");
+  await materials.locator(".recorded-source-layout > summary").click();
+  await expect(materials.getByRole("button", { name: "Inspect P001", exact: true })).toBeVisible();
+  await expect(materials.getByRole("button", { name: "Inspect P002", exact: true })).toBeVisible();
+  await expect(materials.getByRole("button", { name: "Inspect O002", exact: true })).toBeVisible();
+});
+
+test("a scheduled offcut warns about the prerequisite and adds it to the build guide", async ({ page }) => {
+  const project = blank("Offcut from a scheduled board");
+  project.pieces = [part("Initial rail", "stud", [1.5, 36, 3.5], [0, 18, 0], project.steps[0].id, "Bench")];
+  const [sequence] = stockCutSequences(project, bom(project)).get("stud")!;
+  const planned = planStockCutLayouts(project, [sequence.layout]).project;
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "pending-board.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(planned)),
+  });
+  await page.getByRole("button", { name: `Add ${group}`, exact: true }).click();
+  await dialog.getByRole("spinbutton", { name: "Needed finished length", exact: true }).fill("48");
+  await expect(dialog).toContainText("Expected offcut");
+  await expect(dialog).toContainText("Complete the source stock cut order first.");
+  await dialog.getByRole("button", { name: /^Place from O/ }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await downloaded).path())!, "utf8");
+  expect(guide).toContain("Complete the source stock cut order before using this blank.");
+  expect(guide).toContain("Crosscut to 4 ft");
 });
 
 test.describe("phone material placement", () => {

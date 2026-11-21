@@ -3840,3 +3840,6 @@ small {
 .stock-size-options input[type="radio"] { flex: none; width: auto; margin: 0; }
 .stock-size-options label:has(:checked) { background: #eef3e8; border-color: #a6b89a; }
 .stock-length-check { margin: 0 0 16px; }
+.stock-remnant { color: #3c4d32; }
+.stock-remnant p + p { margin-top: 4px; }
+.stock-remnant .button { margin-top: 10px; }

@@ -302,12 +302,12 @@ import { snapPlacement, surfacePlacement } from "./editing";
 import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSlideStopLabel } from "./placement";
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
-import { MaterialPlacement } from "./MaterialPlacement";
-import { materialPlacementOptions, type MaterialGroup } from "./materialGroups";
+import { MaterialPlacement, type PlacementOffcut } from "./MaterialPlacement";
+import { materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
 import { addMeasuredOffcut } from "./measuredOffcuts";
-import { assignOffcutToPart } from "./offcutAssignment";
+import { assignOffcutToPart, boardBlankAtLength } from "./offcutAssignment";
 import { OffcutReleaseReview, type OffcutReleasePreview } from "./OffcutReleaseReview";
 import { planOffcutRelease } from "./offcutReleasePlan";
 import { OffcutReuseReview } from "./OffcutReuseReview";
@@ -2240,11 +2240,18 @@ export function App() {
     setSelected(id);
     setPanel("part");
   }
-  function add(id: MaterialId, name: string, position: V3 = [0, 0, 0]) {
+  function add(id: MaterialId, name: string, position: V3 = [0, 0, 0], offcut?: PlacementOffcut) {
     safe(() => {
       const next = addMaterial(project, id, position, activeStepId);
       const added = next.pieces.at(-1)!;
       added.name = name;
+      if (offcut) {
+        const blank = boardBlankAtLength(id, offcut.length);
+        if (!blank) throw Error("Enter a finished board length.");
+        added.size = blank.size;
+        added.stockLengthAxis = offcut.stockLengthAxis;
+        added.position[1] = position[1] + blank.size[1] / 2;
+      }
       if (snap)
         added.position = snapPlacement(
           next,
@@ -2255,16 +2262,17 @@ export function App() {
       const clear=placeWood(next,added,added.position,added.rotation);
       if(clear.blocked)throw Error("No clear position was found for this stock.");
       added.position=clear.position;
-      change(next);
+      change(offcut ? assignOffcutToPart(next, added.id, offcut.id) : next);
       setSelectionScope("part");
       setSelectedSectionId(null);
-      setSelected(next.pieces.at(-1)!.id);
+      setSelected(added.id);
       setPanel("part");
       setMode("select");
       setStage(null);
       if (modal === "place-material") setModal(null);
       notify(
-        `${name} added. Drag to move, or Shift-drag to rotate.`,
+        offcut ? `${name} added from the Cut pool. The cut is in the build guide.`
+          : `${name} added. Drag to move, or Shift-drag to rotate.`,
       );
     });
   }
@@ -2579,8 +2587,12 @@ export function App() {
       }
       return;
     }
-    const { options } = materialPlacementOptions(group);
-    if (options.length === 1) {
+    const { options, preferred } = materialPlacementOptions(group);
+    const family = materialFamilyVariants(preferred.id);
+    const canCompareOffcut = preferred.wood && preferred.cuttable && preferred.stockKind === "linear" &&
+      project.pieces.some((part) => part.offcut && part.cutStock &&
+        family.includes(part.material) && currentCutSources.valid.has(part.cutStock.id));
+    if (options.length === 1 && !canCompareOffcut) {
       add(options[0].id, group.name, position);
       return;
     }
@@ -5448,8 +5460,8 @@ export function App() {
               <X size={20} />
             </button>
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
-              <MaterialPlacement group={pendingMaterial.group} onPlace={(id) => {
-                add(id, pendingMaterial.group.name, pendingMaterial.position);
+              <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources} onPlace={(id, offcut) => {
+                add(id, pendingMaterial.group.name, pendingMaterial.position, offcut);
               }} />
             )}
             {modal === "idea" && (

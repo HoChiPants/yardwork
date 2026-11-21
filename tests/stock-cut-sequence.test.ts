@@ -20,7 +20,7 @@ import {
   type V3,
 } from "../src/model";
 import { stockCutSequences } from "../src/stockCutSequence";
-import { recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
+import { planStockCutLayouts, recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
 import { inspectCutStock, pieceCutKerf, setCutSourceOnHand, setPlannedWoodKerf } from "../src/cutStock";
 import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import { reviewedOfferForMaterial } from "../src/retailerCatalog";
@@ -30,7 +30,8 @@ import { saunaWallCoverage } from "../src/saunaWallCoverage";
 import { stockAxes } from "../src/stockAxes";
 import { toolChecklist } from "../src/tools";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
-import { assignOffcutToPart, fittingOffcuts } from "../src/offcutAssignment";
+import { assignOffcutToPart, boardBlankAtLength, fittingBoardOffcut, fittingOffcuts } from "../src/offcutAssignment";
+import { materialFamilyVariants } from "../src/materialGroups";
 import { cutSourceRegion } from "../src/cutSourceAxes";
 import { partLabel } from "../src/partLabels";
 import { planOffcutReuse } from "../src/offcutReusePlan";
@@ -52,6 +53,47 @@ function cutProject(material: MaterialId, ...sizes: V3[]) {
   );
   return project;
 }
+
+test("board placement prefers verified on-hand family stock and preserves its actual grain axis", () => {
+  const project = cutProject("stud-12", [1.5, 144, 3.5]);
+  const cut = cutPiece(project, project.pieces[0].id, 72, 1);
+  const stepId = project.steps[0].id;
+  const withScrap = addMeasuredOffcut(cut, stepId, "stud-10", [80, 3.5, 1.5], "Stored remnant");
+  const withTreated = addMeasuredOffcut(withScrap, stepId, "hd-treated-2x4-8", [50, 3.5, 1.5]);
+  const family = materialFamilyVariants("stud");
+  const chosen = fittingBoardOffcut(withTreated, family, 48, inspectCutStock(withTreated))!;
+  assert.equal(chosen.piece.id, withScrap.pieces.at(-1)?.id);
+  assert.equal(chosen.piece.material, "stud-10");
+  assert.equal(chosen.onHand, true);
+  assert.equal(fittingBoardOffcut(cut, family, 48, inspectCutStock(cut))?.stockLengthAxis, null);
+  assert.equal(fittingBoardOffcut(cut, family, 71.8, inspectCutStock(cut)), undefined);
+
+  const blank = boardBlankAtLength(chosen.piece.material, 2)!;
+  assert.deepEqual(blank, { size: [1.5, 2, 3.5], stockLengthAxis: 1 });
+  const target = { ...part("Short block", chosen.piece.material, blank.size, [18, 1, 0], stepId, "Test"),
+    stockLengthAxis: blank.stockLengthAxis };
+  const next = assignOffcutToPart({ ...withTreated, pieces: [...withTreated.pieces, target] }, target.id, chosen.piece.id);
+  const placed = next.pieces.find(({ id }) => id === target.id)!;
+  assert.equal(placed.cutStock?.id, chosen.piece.cutStock?.id);
+  assert.equal(stockAxes(placed).length, 1);
+  assert.equal(bom(next).find(({ id }) => id === "stud-10")?.quantity, 0);
+});
+
+test("a saved cut plan is pending even when its parent stock is owned, and a measured remnant takes priority", () => {
+  const project = cutProject("stud", [1.5, 36, 3.5]);
+  const [board] = stockCutSequences(project, bom(project)).get("stud")!;
+  const { project: planned, sourceIds: [sourceId] } = planStockCutLayouts(project, [board.layout]);
+  const owned = setCutSourceOnHand(planned, sourceId, true);
+  const family = materialFamilyVariants("stud");
+  const expected = fittingBoardOffcut(owned, family, 48, inspectCutStock(owned))!;
+  assert.equal(expected.onHand, true);
+  assert.equal(expected.sourceCutPending, true);
+
+  const stocked = addMeasuredOffcut(owned, project.steps[0].id, "stud", [64, 3.5, 1.5]);
+  const available = fittingBoardOffcut(stocked, family, 48, inspectCutStock(stocked))!;
+  assert.equal(available.piece.id, stocked.pieces.at(-1)?.id);
+  assert.equal(available.sourceCutPending, false);
+});
 
 test("a shared board uses the factory end for an exact final length and rounds only whole feet", () => {
   const project = cutProject("stud", [1.5, 60, 3.5], [1.5, 35.875, 3.5]);

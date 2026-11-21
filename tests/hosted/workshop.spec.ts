@@ -109,7 +109,7 @@ test("a joint question finds actual parts, previews a direction and reopens its 
   const result = await ask("How can I attach the Front panel to the Front rail?");
   await expect(result).toContainText("P001 · Front panel → P002 · Front rail");
   await expect(result).toContainText("Wood faces meet · 0 in gap.");
-  expect((await draft()).project.fastenerPlans).toEqual([]);
+  await expect.poll(async () => (await draft())?.project.fastenerPlans).toEqual([]);
   await result.getByRole("button", { name: "Compare screw entry sides", exact: true }).click();
   const editor = page.getByRole("region", { name: "Wood fastener plans" });
   const comparison = editor.getByRole("region", { name: "Screw entry comparison" });
@@ -133,7 +133,7 @@ test("a joint question finds actual parts, previews a direction and reopens its 
   await expect(neighbors).toContainText("P002 · Front rail → P001 · Front panel");
   await neighbors.getByRole("button", { name: `Open screw plan ${plan.label}`, exact: true }).click();
   await expect(editor.locator(`[data-fastener-plan-id="${plan.id}"]`)).toBeVisible();
-  expect((await draft()).project.fastenerPlans).toEqual([plan]);
+  await expect.poll(async () => (await draft())?.project.fastenerPlans).toEqual([plan]);
 
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download");

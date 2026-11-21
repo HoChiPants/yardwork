@@ -806,6 +806,54 @@ test("a banquette seat highlights an interrupted support and the live guide foll
   await expect(page.locator(".print-guide")).toContainText("All wood supports have continuous contact traces to the modeled floor");
 });
 
+test("a seat support warning fits a scrap block and records the cut in its guide", async ({ page }) => {
+  const start = blank("Bench support repair");
+  const step = start.steps[0].id;
+  const seat = {
+    ...part("Seat lid", "plytanium-703", [24, 0.703, 12], [0, 3.8515, 0], step, "Bench"),
+    designRole: "seat-lid",
+  };
+  const rail = part("Right rail", "stud", [3.5, 1.5, 12], [6, 2.75, 0], step, "Bench");
+  const left = part("Left leg", "stud", [3.5, 1.5, 3.5], [-6, 1.75, 0], step, "Bench");
+  left.rotation = [Math.PI / 2, 0, 0];
+  const project = addMeasuredOffcut({ ...start, pieces: [seat, rail, left] }, step, "stud", [20, 3.5, 1.5], "Support scrap");
+
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "bench-support.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.project.name).toBe(`${start.name} · imported`);
+  await page.getByRole("button", { name: /^Checks/ }).first().click();
+  const finding = page.getByRole("button", { name: new RegExp(`^Seat support to floor · ${partLabel(project, seat.id)}`) });
+  await expect(finding).toHaveClass(/warning/);
+  await finding.click();
+  const options = page.getByRole("region", { name: "Fit a support block", exact: true });
+  await expect(options.getByRole("combobox", { name: "Part to support", exact: true })).toHaveValue(rail.id);
+  await options.getByRole("button", { name: "Preview support block", exact: true }).click();
+  const preview = options.getByRole("region", { name: "Support block fit", exact: true });
+  await expect(preview).toContainText("2 in support block from the modeled floor");
+  await expect(preview).toContainText("Use O001 from the Cut pool. Crosscut to 2 in.");
+  await expect(page.getByTestId("support-block-preview-marker")).toContainText("Support block preview");
+  expect((await draft()).project.pieces.some((piece: { name: string }) => piece.name === "Support block · Right rail")).toBe(false);
+  await preview.getByRole("button", { name: "Add support block", exact: true }).click();
+  await expect(finding).toHaveClass(/info/);
+  await expect(finding).toContainText("All wood supports have continuous contact traces to the modeled floor");
+  await expect.poll(async () => (await draft()).project.history.find(
+    ({ offcutCut }: { offcutCut?: { cuts: { size: number }[] } }) => offcutCut?.cuts.some(({ size }) => size === 2),
+  )).toBeTruthy();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const waiting = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await waiting).path())!, "utf8");
+  expect(guide).toMatch(/Recorded offcut cut order[\s\S]*Support block · Right rail/);
+});
+
 test("the store checklist sorts recorded aisles and keeps partial pickups with the selected store", async ({ page }) => {
   const initial = blank("Hardware for the bench");
   initial.pieces.push(part("Bench rail", "stud", [3.5, 1.5, 32], [0, 0.75, 0], initial.steps[0].id, "Bench"));

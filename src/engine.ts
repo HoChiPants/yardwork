@@ -621,7 +621,7 @@ export type Finding = {
     boundaries?: V3[][];
     lines?: [V3, V3][];
     referenceLines?: [V3, V3][];
-    kind?: "glazing-hole-layout" | "vent-sash-gap" | "roof-seam-gap" | "wall-batt-gap" | "panel-bearing" | "panel-floor-bearing" | "seat-span" | "shelf-span" | "rafter-eave" | "rafter-ridge" | "eave-block-preview" | "roof-plane" | "shelf-divider-preview";
+    kind?: "glazing-hole-layout" | "vent-sash-gap" | "roof-seam-gap" | "wall-batt-gap" | "panel-bearing" | "panel-floor-bearing" | "seat-span" | "shelf-span" | "rafter-eave" | "rafter-ridge" | "eave-block-preview" | "roof-plane" | "shelf-divider-preview" | "support-block-preview";
     label: string;
     labelPoint: V3;
     tone?: "reference";

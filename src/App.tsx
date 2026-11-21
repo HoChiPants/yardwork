@@ -204,7 +204,9 @@ import { RodFitsPanel } from "./RodFitsPanel";
 import { addMissingEverbiltRodBrackets, addMissingRodBrackets, addMissingRodFlanges, addMissingRodSockets, everbiltRodBracketPurchases, rodBracketPurchases, rodFitGuideLines, rodFlangePurchases, rodSocketPurchases } from "./rodFits";
 import { addEstimatedSunlitePurchases, sunliteTakeoff } from "./sunliteTakeoff";
 import { reviewSunliteRoofBacking, roofBackingGuideLines, roofBackingScope, roofBackingSummary, sunliteRoofDetail } from "./sunliteRoofBacking";
-import { isHorizontalPanel, panelBearingGuideLines, panelBearingScope, reviewPanelBearing } from "./panelBearing";
+import { isHorizontalPanel, panelBearingGuideLines, panelBearingScope, panelFloorBearing, reviewPanelBearing } from "./panelBearing";
+import { PanelSupportBlockFields } from "./PanelSupportBlockFields";
+import { stationarySupportStops, type PanelSupportBlockPreview } from "./panelSupportBlock";
 import { beamSource, shelfSagGuideLines, shelfSagScope, stiffnessSource } from "./shelfSag";
 import { ShelfSagPanel } from "./ShelfSagPanel";
 import type { ShelfDividerPreview } from "./shelfDivider";
@@ -563,6 +565,7 @@ export function App() {
   const [dryerDuctProjectId, setDryerDuctProjectId] = useState<string | null>(null);
   const [siteReturnPanel, setSiteReturnPanel] = useState<"checks" | "sections" | "motion" | "connections">("checks");
   const [shownAreaFinding, setShownAreaFinding] = useState<{ project: Project; id: string } | null>(null);
+  const [supportBlockDraft, setSupportBlockDraft] = useState<{ project: Project; fit: PanelSupportBlockPreview } | null>(null);
   const [eaveBlockDraft, setEaveBlockDraft] = useState<{ project: Project; fit: EaveFitPreview } | null>(null);
   const [shelfDividerDraft, setShelfDividerDraft] = useState<{ project: Project; fit: ShelfDividerPreview } | null>(null);
   const [baseRailDraft, setBaseRailDraft] = useState<{
@@ -869,6 +872,7 @@ export function App() {
   function showFindingArea(finding: Finding) {
     if (!finding.area) return;
     setPanel("checks");
+    setSupportBlockDraft(null);
     setEaveBlockDraft(null);
     setShownAreaFinding({ project, id: finding.id });
     setStage(null);
@@ -1530,9 +1534,24 @@ export function App() {
     label: "Center divider preview",
     labelPoint: shelfDivider.divider.position,
   } : undefined, [shelfDivider]);
-  const shownCheckArea = shelfDividerArea ?? eaveBlockArea ?? (panel === "checks" && shownAreaFinding?.project === project
-    ? findings.find((finding) => finding.id === shownAreaFinding.id)?.area
-    : undefined);
+  const areaFinding = panel === "checks" && shownAreaFinding?.project === project
+    ? findings.find((finding) => finding.id === shownAreaFinding.id) : undefined;
+  const supportTargets = useMemo(() => {
+    if (areaFinding?.area?.kind !== "panel-floor-bearing" || areaFinding.severity !== "warning") return [];
+    const row = panelReviews.find(({ piece }) => piece.id === areaFinding.pieceId);
+    const floor = row && panelFloorBearing(row, woodSupport);
+    return stationarySupportStops(project, floor?.stops ?? [], woodSupport);
+  }, [areaFinding, panelReviews, project, woodSupport]);
+  const supportBlock = supportTargets.length && supportBlockDraft?.project === project &&
+    supportBlockDraft.fit.panelId === areaFinding?.pieceId ? supportBlockDraft.fit : null;
+  const supportBlockArea = useMemo(() => supportBlock ? {
+    kind: "support-block-preview" as const,
+    outlines: supportBlock.outlines,
+    label: supportBlock.motionConflicts.length ? "Support block · motion conflict" : "Support block preview",
+    labelPoint: supportBlock.block.position,
+    tone: supportBlock.motionConflicts.length ? undefined : "reference" as const,
+  } : undefined, [supportBlock]);
+  const shownCheckArea = shelfDividerArea ?? eaveBlockArea ?? supportBlockArea ?? areaFinding?.area;
   const activeGuidePart = panel === "step" && guidePartFocus?.project === project &&
     stage !== null && project.steps[stage]?.id === guidePartFocus.row.stepId && currentStep.id === guidePartFocus.row.stepId
     ? guidePartFocus : null;
@@ -2639,6 +2658,7 @@ export function App() {
               }}>Return to eave block</button> : (
                 <button className="button" onClick={() => {
                   setShelfDividerDraft(null);
+                  setSupportBlockDraft(null);
                   setShownAreaFinding(null);
                 }}>Hide highlighted area</button>
               )}
@@ -3634,10 +3654,10 @@ export function App() {
               />
               <div className="findings">
                 {findings.map((f) => (
+                  <Fragment key={f.id}>
                   <button
-                    key={f.id}
                     className={`finding ${f.severity}`}
-                    aria-pressed={f.area ? shownCheckArea === f.area : undefined}
+                    aria-pressed={f.area ? areaFinding === f : undefined}
                     onClick={() => openWorkspaceFinding(f)}
                   >
                     {f.severity === "info" ? (
@@ -3662,6 +3682,31 @@ export function App() {
                     </div>
                     {(f.pieceId || f.area) && <ChevronRight size={13} />}
                   </button>
+                  {f === areaFinding && f.pieceId && supportTargets.length > 0 && (
+                    <PanelSupportBlockFields
+                      project={project}
+                      panelId={f.pieceId}
+                      stops={supportTargets}
+                      preview={supportBlock}
+                      onPreview={(fit) => {
+                        setSupportBlockDraft(fit ? { project, fit } : null);
+                        if (!fit) return;
+                        setStage(null);
+                        setPlaying(false);
+                        setExplode(false);
+                        setView((previous) => ({ preset: "iso", nonce: previous.nonce + 1 }));
+                      }}
+                      onAdd={(fit) => safe(() => {
+                        if (supportBlockDraft?.project !== current.current || supportBlockDraft.fit !== fit)
+                          throw Error("The build changed. Preview the support block again.");
+                        if (fit.motionConflicts.length) throw Error("Resolve the modeled movement conflict before adding this block.");
+                        change(fit.project);
+                        setSupportBlockDraft(null);
+                        notify("Support block added. Review its connections in the build guide.");
+                      })}
+                    />
+                  )}
+                  </Fragment>
                 ))}
               </div>
             </>

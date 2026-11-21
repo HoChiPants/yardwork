@@ -1,7 +1,8 @@
 import { Euler, Matrix4, Vector3 } from "three";
+import { clearFittedPart } from "./clearFittedPart";
 import { faceContactPatch, retainedWoodFaces } from "./connectionContacts";
 import { cutKerf, inspectCutStock, pieceCutKerf } from "./cutStock";
-import { bounds, cutPiece } from "./engine";
+import { cutPiece } from "./engine";
 import {
   catalog,
   part,
@@ -13,7 +14,6 @@ import {
 } from "./model";
 import { reviewPanelBearing } from "./panelBearing";
 import { reviewShelfSag } from "./shelfSag";
-import { prepareCollisionSolid, solidOverlap } from "./solidCollision";
 import { rotate } from "./spatial";
 import { stockAxes } from "./stockAxes";
 import { reviewWoodSupport } from "./woodSupport";
@@ -28,37 +28,6 @@ export const shelfDividerStocks = catalog.filter(
   ({ wood, cuttable, stockKind, shape }) =>
     wood && cuttable && stockKind === "sheet" && !shape,
 );
-
-function clearOfParts(project: Project, candidate: Piece) {
-  const solid = prepareCollisionSolid(candidate)!;
-  const zone = project.workZone;
-  if (
-    zone &&
-    solid.vertices.some(
-      ([x, y, z]) =>
-        Math.abs(x) > zone.width / 2 + tolerance ||
-        Math.abs(z) > zone.depth / 2 + tolerance ||
-        y < -tolerance ||
-        y > zone.height + tolerance,
-    )
-  )
-    return false;
-  return project.pieces.every((other) => {
-    if (other.offcut) return true;
-    const box = bounds(other);
-    if (
-      solid.bounds.min.some(
-        (low, i) =>
-          Math.min(solid.bounds.max[i], box.max[i]) -
-            Math.max(low, box.min[i]) <=
-          tolerance,
-      )
-    )
-      return true;
-    const obstruction = prepareCollisionSolid(other);
-    return obstruction !== null && !solidOverlap(solid, obstruction, tolerance);
-  });
-}
 
 function dividerRotation(
   line: [V3, V3],
@@ -173,7 +142,7 @@ export function previewShelfDivider(
         if ((contact?.area ?? 0) < thickness * geometry.depth - tolerance)
           return false;
       }
-      return clearOfParts(project, divider);
+      return clearFittedPart(project, divider);
     },
   );
   if (!fit)

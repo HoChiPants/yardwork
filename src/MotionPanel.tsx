@@ -12,6 +12,7 @@ import { greenhouseVentChoices, greenhouseVentReview } from "./greenhouseVents";
 import { useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
+import { MeasuredHingePathFields } from "./MeasuredHingePathFields";
 import { MotionSequenceTargetsFields } from "./MotionSequenceTargetsFields";
 import {
   GreenhouseDoorDetails,
@@ -45,6 +46,7 @@ import {
   motionTestNameLength,
   motionTestScenarioLimit,
   type DrawerSlideSetup,
+  type HingePath,
   type MotionOpeningOrder,
   type MotionPlan,
   type MotionPlanInput,
@@ -140,6 +142,9 @@ function MotionEditor({
   });
   const [name, setName] = useState(existing?.label ?? "");
   const [travel, setTravel] = useState(existing?.mechanism.travel ?? 90);
+  const [hingePath, setHingePath] = useState<HingePath | undefined>(
+    initial?.mechanism.kind === "hinge" ? initial.mechanism.hingePath : undefined,
+  );
   const [pivot, setPivot] = useState<V3>(() =>
     initial?.mechanism.kind === "hinge" ? initial.mechanism.pivot : [0, 0, 0],
   );
@@ -188,6 +193,7 @@ function MotionEditor({
                 kind,
                 axis: worldAxis,
                 travel,
+                ...(hingePath && { hingePath }),
                 pivot:
                   edge === "exact"
                     ? pivot
@@ -410,6 +416,9 @@ function MotionEditor({
           onChange={setTravel}
           max={useDrawerSlide ? accuride3732.travel : 240}
         />
+      )}
+      {kind === "hinge" && (
+        <MeasuredHingePathFields travel={travel} hingePath={hingePath} setHingePath={setHingePath} />
       )}
       {error && (
         <p role="alert" className="form-error">

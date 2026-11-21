@@ -950,3 +950,144 @@ test("playback stops when crossing the room limit from either side of a swing", 
   );
   near(review.playbackLimit(opening.travel, 0).travel, 0);
 });
+
+test("measured hinge shift finds a middle obstruction while the closed and open poses stay clear", () => {
+  const project = blank("Concealed hinge samples");
+  const door = panel(project, "Door", [1, 2, 1], [0, 10, 0]);
+  const trim = panel(project, "Trim", [4, 4, 0.4], [0, 10, 3.1]);
+  project.pieces = [door, trim];
+  const hinge = {
+    kind: "hinge" as const, axis: [0, 1, 0] as V3, pivot: [0, 10, 0] as V3, travel: 90,
+  };
+  const baseline = saveMotionPlan(project, { label: door.name, memberIds: [door.id], mechanism: hinge });
+  assert.equal(reviewMotion(project, baseline.plan).hits.length, 0);
+  const saved = saveMotionPlan(project, {
+    label: door.name, memberIds: [door.id],
+    mechanism: { ...hinge, hingePath: [{ angle: 45, offset: [0, 0, 2.5] }, { angle: 90, offset: [0, 0, 0] }] },
+  });
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(saved.project)));
+  const restored = reopened.motionPlans![0];
+  const review = reviewMotion(reopened, restored);
+  near(review.preview(22.5).pieces[0].position[2], 1.25);
+  near(review.preview(67.5).pieces[0].position[2], 1.25);
+  near(review.preview(45).guideLine[0][2], 2.5);
+  assert.deepEqual(review.preview(0).interferenceIds, []);
+  assert.deepEqual(review.preview(90).interferenceIds, []);
+  assert.deepEqual(review.preview(45).interferenceIds, [door.id, trim.id]);
+  assert.equal(review.hits[0].kind, "solid");
+  const opening = review.playbackLimit(0, 90);
+  const closing = review.playbackLimit(90, 0);
+  assert.ok(opening.travel < 45 && opening.travel > 30);
+  assert.ok(closing.travel > 45 && closing.travel < 60);
+  near(reviewMotion(reopened, restored, [], undefined, 30).preview(30).pieces[0].position[2], 2.5 * 30 / 45);
+  assert.match(guideMarkdown(reopened), /Measured hinge path[\s\S]*At 45°, datum offset · X 0 in, Y 0 in, Z 2\.5 in/);
+  assert.deepEqual(reopened.pieces, project.pieces);
+});
+
+test("measured hinge translation is checked against the work zone and measured site bands", () => {
+  const project = blank("Door against room and sill");
+  const door = panel(project, "Shifting door", [1, 2, 1], [0, 10, 0]);
+  project.pieces = [door];
+  const saved = saveMotionPlan(project, {
+    label: door.name, memberIds: [door.id],
+    mechanism: {
+      kind: "hinge", axis: [0, 1, 0], pivot: door.position, travel: 90,
+      hingePath: [{ angle: 45, offset: [0, 0, 2.5] }, { angle: 90, offset: [0, 0, 0] }],
+    },
+  });
+  const zone = reviewMotion({
+    ...saved.project,
+    workZone: { width: 12, depth: 6, height: 14 },
+  }, saved.plan);
+  assert.equal(zone.zone[0].label, "front");
+  near(zone.zone[0].inspectAt, 45);
+  assert.ok(zone.playbackLimit(0, 90).travel < 45);
+  assert.ok(zone.playbackLimit(90, 0).travel > 45);
+
+  const site = {
+    id: uid(), bindingId: null, label: "Return wall",
+    side: "+Z" as const, coordinate: 3.2, top: null, minimum: 0.2,
+  };
+  const withSite = reviewMotion({
+    ...saved.project,
+    siteClearances: [site, { ...site, id: uid(), top: 9.5 }],
+  }, saved.plan);
+  assert.equal(withSite.siteFindings.length, 2);
+  assert.ok(withSite.siteFindings.every(({ status }) => status === "short"));
+  assert.ok(withSite.playbackLimit(0, 90).siteFaceId);
+  assert.ok(withSite.playbackLimit(90, 0).siteFaceId);
+  const highBand = reviewMotion({
+    ...saved.project,
+    siteClearances: [{ ...site, top: 8 }],
+  }, saved.plan);
+  assert.equal(highBand.site[0].status, "outside-height");
+  assert.equal(highBand.playbackLimit(0, 90).travel, 90);
+});
+
+test("measurements rotate with the moving part and must extend through the full opening", () => {
+  const project = blank();
+  const door = panel(project, "Door", [1, 2, 1], [0, 10, 0]);
+  project.pieces = [door];
+  const draft = {
+    label: door.name, memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: door.position, travel: 90, hingePath: [{ angle: 90, offset: [0, 0, 2] }] },
+  };
+  assert.throws(() => saveMotionPlan(project, {
+    ...draft,
+    mechanism: { ...draft.mechanism, hingePath: [{ angle: 45, offset: [0, 0, 1] }] },
+  }), /maximum opening angle/);
+  const saved = saveMotionPlan(project, draft);
+  const moved = { ...saved.project, pieces: [{ ...door, position: [20, 10, 0] as V3, rotation: [0, Math.PI / 2, 0] as V3 }] };
+  const pose = reviewMotion(moved, saved.plan).preview(90).pieces[0];
+  near(pose.position[0], 22);
+  near(pose.position[2], 0);
+});
+
+test("a drawer can be blocked by a partly open shifting door and clear a fully open door", () => {
+  const project = blank("Inner drawer and measured hinge");
+  const door = panel(project, "Concealed hinge door", [1, 2, 1], [0, 10, 0]);
+  const drawer = panel(project, "Inner drawer", [1, 2, 1], [0, 10, 4]);
+  project.pieces = [door, drawer];
+  const swing = saveMotionPlan(project, {
+    label: door.name, memberIds: [door.id],
+    mechanism: {
+      kind: "hinge", axis: [0, 1, 0], pivot: door.position, travel: 90,
+      hingePath: [{ angle: 45, offset: [0, 0, 2.5] }, { angle: 90, offset: [0, 0, 0] }],
+    },
+  });
+  const slide = saveMotionPlan(swing.project, {
+    label: drawer.name, memberIds: [drawer.id], mechanism: { kind: "slide", axis: [0, 0, -1], travel: 2.6 },
+  });
+  const setup = { linkedId: slide.plan.id, openingOrder: "selected-first" as const, held: [] };
+  const partly = runMotionTest(slide.project, swing.plan, {
+    ...setup, sequenceTargets: { selected: { kind: "hinge", travel: 45 } },
+  });
+  const limit = partly.review!.playbackLimit(0, 100);
+  assert.equal(limit.phase, 1);
+  assert.ok(limit.travel > 50 && limit.travel < 100);
+  assert.deepEqual(partly.review!.preview(limit.travel, limit.inspectAt, undefined, 1).interferenceIds, [drawer.id, door.id]);
+  const fully = runMotionTest(slide.project, swing.plan, setup);
+  assert.equal(fully.review!.hits.length, 0);
+  assert.equal(fully.review!.playbackLimit(0, 100).travel, 100);
+});
+
+test("work-zone extrema include an interior angle between measured hinge readings", () => {
+  const project = blank();
+  const door = panel(project, "Door", [2, 2, 1], [0, 8, 0]);
+  const { project: saved, plan } = saveMotionPlan({
+    ...project, workZone: { width: 2.25, depth: 10, height: 12 }, pieces: [door],
+  }, {
+    label: door.name, memberIds: [door.id],
+    mechanism: {
+      kind: "hinge", axis: [0, 1, 0], pivot: door.position, travel: 90,
+      hingePath: [{ angle: 90, offset: [0.2, 0, 0] }],
+    },
+  });
+  const review = reviewMotion(saved, plan);
+  assert.deepEqual(review.preview(0).outsideZoneFaces, []);
+  assert.deepEqual(review.preview(90).outsideZoneFaces, []);
+  const side = review.zone.find(({ label }) => label === "right")!;
+  const angle = Math.atan2(0.5, 1) + Math.asin((0.2 / (Math.PI / 2)) / Math.hypot(1, 0.5));
+  near(side.inspectAt, angle * 180 / Math.PI);
+  assert.ok(review.playbackLimit(0, 90).travel < side.inspectAt);
+});

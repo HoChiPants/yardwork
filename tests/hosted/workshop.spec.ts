@@ -1084,3 +1084,81 @@ test("measured blade width previews fewer boards and sheets and stays with recor
   expect(remnants[0].cutStock?.woodKerf).toBe(0.059);
   expect(saved.pieces.filter(({ material }) => material === sheetStock).every(({ cutStock }) => cutStock?.woodKerf === 0.059)).toBe(true);
 });
+
+test("a measured hinge path stops opening and closing at trim between clear ends", async ({ page }) => {
+  const project = blank("Concealed hinge clearance");
+  const step = project.steps[0].id;
+  const door = part("Cabinet door", "plywood", [1, 2, 1], [0, 10, 0], step, "Cabinet");
+  const trim = part("Side trim", "plywood", [4, 4, 0.4], [0, 10, 3.1], step, "Cabinet");
+  const setup = saveMotionPlan({ ...project, pieces: [door, trim] }, {
+    label: door.name, memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: door.position, travel: 90 },
+  });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "concealed-hinge.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...setup.project, schemaVersion: 89 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  const openMotion = () => page.getByRole("button", { name: "Test movement", exact: true }).click();
+  await openMotion();
+  const panel = page.getByRole("region", { name: "Motion and clearance", exact: true });
+  await panel.getByRole("button", { name: "Test motion", exact: true }).click();
+  await expect(panel.getByText("No modeled interference found along this travel.", { exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: "Edit setup", exact: true }).click();
+  await panel.getByText("Measured hinge path", { exact: true }).click();
+  await panel.getByRole("checkbox", { name: "Use measured hinge movement", exact: true }).check();
+  await panel.getByRole("button", { name: "Add angle reading", exact: true }).click();
+  await expect(panel.getByRole("spinbutton", { name: "Reading 1 angle (degrees)", exact: true })).toHaveValue("45");
+  await panel.getByRole("spinbutton", { name: "Reading 1 Z offset (in)", exact: true }).fill("2.5");
+  const openingAngle = panel.getByRole("spinbutton", { name: "Maximum opening (degrees)", exact: true });
+  await openingAngle.fill("80");
+  await expect(panel.getByRole("spinbutton", { name: "Full opening angle (degrees)", exact: true })).toHaveValue("90");
+  await panel.getByRole("button", { name: "Save and test motion", exact: true }).click();
+  await expect(panel.getByRole("alert")).toContainText("Measure the hinge path at the maximum opening angle.");
+  await openingAngle.fill("90");
+  await panel.getByRole("button", { name: "Save and test motion", exact: true }).click();
+
+  const pose = page.getByTestId("motion-preview-label");
+  await panel.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(pose).toContainText("Contact ahead");
+  expect(Number(await pose.getAttribute("data-pose"))).toBeGreaterThan(30);
+  expect(Number(await pose.getAttribute("data-pose"))).toBeLessThan(45);
+  await panel.getByRole("button", { name: "Inspect fully open", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "90");
+  await expect(pose).not.toContainText("Interfering parts");
+  await panel.getByRole("button", { name: "Play closing", exact: true }).click();
+  await expect(pose).toContainText("Contact ahead");
+  expect(Number(await pose.getAttribute("data-pose"))).toBeGreaterThan(45);
+  expect(Number(await pose.getAttribute("data-pose"))).toBeLessThan(60);
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = (await draft()).project;
+  expect(saved.schemaVersion).toBe(PROJECT_FORMAT_VERSION);
+  expect(saved.motionPlans[0].mechanism.hingePath).toEqual([
+    { angle: 45, offset: [0, 0, 2.5] },
+    { angle: 90, offset: [0, 0, 0] },
+  ]);
+  expect(saved.pieces.map(({ position }: { position: number[] }) => position)).toEqual([door.position, trim.position]);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await openMotion();
+  await panel.getByRole("button", { name: "Edit setup", exact: true }).click();
+  await expect(panel.getByRole("spinbutton", { name: "Reading 1 Z offset (in)", exact: true })).toHaveValue("2.5");
+  await panel.getByRole("button", { name: "Cancel setup", exact: true }).click();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Cabinet door · Measured hinge path");
+  expect(guide).toContain("At 45°, datum offset · X 0 in, Y 0 in, Z 2.5 in.");
+  await expect(page.locator(".print-guide")).toContainText("At 45°, datum offset · X 0 in, Y 0 in, Z 2.5 in.");
+});

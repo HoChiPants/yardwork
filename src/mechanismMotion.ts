@@ -5,8 +5,9 @@ import { greenhouseDoorReview } from "./greenhouseDoors";
 import { greenhouseVentReview } from "./greenhouseVents";
 import { saunaDoorReview } from "./saunaDoors";
 import { hingePoseAroundAxis } from "./hinges";
-import { sweepLidSiteFaces } from "./lidSiteClearance";
+import { reviewSiteSweepBand, sweepLidSiteFaces } from "./lidSiteClearance";
 import { formatPreciseInches } from "./measurement";
+import { hingeComponentExtrema, hingeOffsetAt, hingeOffsetSegments, hingeOffsetSpeed } from "./measuredHingePath";
 import { uid, type Piece, type Project, type V3 } from "./model";
 import { sweepPairClearance, type PairClearanceResult } from "./motionPairClearance";
 import {
@@ -23,6 +24,7 @@ import {
 } from "./motionPlanSchema";
 import { partLabel } from "./partLabels";
 import {
+  clearanceAxis,
   gapToSiteFace,
   siteClearanceFacesByPart,
   siteClearanceTolerance,
@@ -118,6 +120,9 @@ export function motionSetup(project: Project, plan: MotionPlan) {
               anchor.position,
               rotate(plan.mechanism.pivot, anchor.rotation),
             ),
+            ...(plan.mechanism.hingePath && {
+              hingePath: plan.mechanism.hingePath.map(({ angle, offset }) => ({ angle, offset: rotate(offset, anchor.rotation) })),
+            }),
           }
         : { ...plan.mechanism, axis },
   };
@@ -147,6 +152,9 @@ export function saveMotionPlan(
             subtract(draft.mechanism.pivot, anchor.position),
             inverse,
           ),
+          ...(draft.mechanism.hingePath && {
+            hingePath: draft.mechanism.hingePath.map(({ angle, offset }) => ({ angle, offset: rotate(offset, inverse) })),
+          }),
         }
       : { ...draft.mechanism, axis };
   const plan = motionPlanSchema.parse({
@@ -237,6 +245,27 @@ function sweepSiteFace(
       results[0]
     );
   }
+  if (row.motion.hingePath) {
+    const start = from * row.rate;
+    const signedTravel = (to - from) * row.rate;
+    const end = start + signedTravel;
+    if (plane.top === null) {
+      const extrema = sweptExtrema(row.solid, row.motion, Math.min(start, end), Math.max(start, end));
+      const index = clearanceAxis(plane.side);
+      const positive = plane.side.startsWith("+");
+      const point = positive ? extrema.max[index] : extrema.min[index];
+      const gap = (positive ? 1 : -1) * (plane.coordinate - point.value);
+      return { status: gap < plane.minimum - siteClearanceTolerance ? "short" as const : "met" as const, at: Math.abs(point.at - start) };
+    }
+    const speed = row.extrema.radius * radians + hingeOffsetSpeed(row.motion.hingePath);
+    return reviewSiteSweepBand(
+      plane,
+      distance,
+      (at) => worldClearanceShape(posedPiece(row.piece, row.motion, start + Math.sign(signedTravel) * at)),
+      (span) => speed * span / 2,
+      1 / 64,
+    );
+  }
   const [{ status, angle }] = sweepLidSiteFaces(
     piece,
     row.motion.pivot,
@@ -261,15 +290,23 @@ function poseSolid(
     -travel * radians,
   );
   const turn = (p: V3) => vector(p).applyQuaternion(q).toArray();
+  const center = mechanism.hingePath
+    ? add(mechanism.pivot, hingeOffsetAt(mechanism.hingePath, travel))
+    : mechanism.pivot;
   return transformCollisionSolid(
     solid,
-    (p) => add(turn(subtract(p, mechanism.pivot)), mechanism.pivot),
+    (p) => add(turn(subtract(p, mechanism.pivot)), center),
     turn,
   );
 }
 
 /** Include interior extrema of each rotating vertex, not just the two end poses. */
-function sweptExtrema(shape: CollisionSolid, motion: WorldMechanism) {
+function sweptExtrema(
+  shape: CollisionSolid,
+  motion: WorldMechanism,
+  start = 0,
+  end = motion.travel,
+) {
   const min = axes.map(() => ({ value: Infinity, at: 0 }));
   const max = axes.map(() => ({ value: -Infinity, at: 0 }));
   let radius = 0;
@@ -277,11 +314,15 @@ function sweptExtrema(shape: CollisionSolid, motion: WorldMechanism) {
     if (value < min[i].value) min[i] = { value, at };
     if (value > max[i].value) max[i] = { value, at };
   };
+  const segments = motion.kind === "hinge" && motion.hingePath
+    ? hingeOffsetSegments(motion.hingePath, start, end) : undefined;
+  const startAngle = start * radians;
+  const endAngle = end * radians;
   for (const vertex of shape.vertices) {
     if (motion.kind === "slide") {
       for (const i of axes) {
-        record(i, vertex[i], 0);
-        record(i, vertex[i] + motion.axis[i] * motion.travel, motion.travel);
+        record(i, vertex[i] + motion.axis[i] * start, start);
+        record(i, vertex[i] + motion.axis[i] * end, end);
       }
       continue;
     }
@@ -293,18 +334,21 @@ function sweptExtrema(shape: CollisionSolid, motion: WorldMechanism) {
     const sin = relative.clone().cross(axis).toArray();
     const radial = cos.toArray();
     radius = Math.max(radius, cos.length());
-    const end = motion.travel * radians;
     for (const i of axes) {
+      if (segments) {
+        hingeComponentExtrema(segments, i, center[i], radial[i], sin[i], (value, at) => record(i, value, at));
+        continue;
+      }
       const turning = Math.atan2(sin[i], radial[i]);
       for (const theta of [
-        0,
-        end,
+        startAngle,
+        endAngle,
         turning,
         turning + Math.PI,
         turning - Math.PI,
         turning + 2 * Math.PI,
       ]) {
-        if (theta >= 0 && theta <= end)
+        if (theta >= startAngle && theta <= endAngle)
           record(
             i,
             center[i] + radial[i] * Math.cos(theta) + sin[i] * Math.sin(theta),
@@ -436,16 +480,26 @@ function motionSolid(row: ContactShape, travel: number) {
     : row.solid;
 }
 
+function projectedMotionSpeed(row: ContactShape, direction?: V3) {
+  const motion = row.motion;
+  if (!motion) return 0;
+  const axis = vector(motion.axis);
+  if (motion.kind === "slide")
+    return row.rate * (direction ? Math.abs(axis.dot(vector(direction))) : 1);
+  const radial = row.extrema.radius * radians *
+    (direction ? axis.cross(vector(direction)).length() : 1);
+  const drift = motion.hingePath ? hingeOffsetSpeed(motion.hingePath, direction) : 0;
+  return row.rate * (radial + drift);
+}
+
 function separationSpeed(first: ContactShape, second: ContactShape, axis?: V3) {
   if (first.motion === second.motion) return 0;
   const velocity = (row: ContactShape) =>
     row.motion && row.motion.kind === "slide" ? scale(row.motion.axis, row.rate) : [0, 0, 0] as V3;
   const relative = vector(subtract(velocity(first), velocity(second)));
   return (axis ? Math.abs(relative.dot(vector(axis))) : relative.length()) +
-    [first, second].reduce((sum, row) => row.motion && row.motion.kind === "hinge"
-      ? sum + row.rate * row.extrema.radius * radians *
-        (axis ? vector(row.motion.axis).cross(vector(axis)).length() : 1)
-      : sum, 0);
+    [first, second].reduce((sum, row) => row.motion?.kind === "hinge"
+      ? sum + projectedMotionSpeed(row, axis) : sum, 0);
 }
 
 function pairOverlap(a: ContactShape, b: ContactShape, travel: number) {
@@ -471,7 +525,7 @@ function contactAlong(
   const span = Math.abs(to - from);
   const first = motionSolid(a, from);
   const second = motionSolid(b, from);
-  if (!b.motion) {
+  if (!b.motion && (a.motion.kind !== "hinge" || !a.motion.hingePath)) {
     const hit = overlapAlong(
       first,
       second,
@@ -496,7 +550,7 @@ function contactAlong(
   }
   if (solidOverlap(first, second, contactTolerance))
     return { first: 0, inspectAt: 0, uncertain: false };
-  if (a.motion.kind === "slide" && b.motion.kind === "slide") {
+  if (a.motion.kind === "slide" && b.motion && b.motion.kind === "slide") {
     const relative = scale(
       subtract(scale(a.motion.axis, a.rate), scale(b.motion.axis, b.rate)),
       direction,
@@ -517,17 +571,6 @@ function contactAlong(
       }
     );
   }
-  const projectedSpeed = (row: MovingShape, axis: V3) => {
-    const travelAxis = vector(row.motion.axis);
-    const testAxis = vector(axis);
-    return (
-      row.rate *
-      (row.motion.kind === "slide"
-        ? Math.abs(travelAxis.dot(testAxis))
-        : row.extrema.radius * radians * travelAxis.cross(testAxis).length())
-    );
-  };
-  const other = b;
   const poseAt = (travel: number) => from + direction * travel;
   const possible: {
     hit?: { first: number; inspectAt: number; uncertain: boolean };
@@ -547,7 +590,7 @@ function contactAlong(
         motionSolid(a, poseAt(center)),
         motionSolid(b, poseAt(center)),
         (axis) =>
-          ((projectedSpeed(a, axis) + projectedSpeed(other, axis)) *
+          ((projectedMotionSpeed(a, axis) + projectedMotionSpeed(b, axis)) *
             (end - start)) /
           2,
         contactTolerance,
@@ -570,8 +613,12 @@ function contactAlong(
 
 function posedPiece(piece: Piece, mechanism: WorldMechanism, travel: number) {
   if (travel === 0) return piece;
-  if (mechanism.kind === "hinge")
-    return hingePoseAroundAxis(piece, mechanism.pivot, mechanism.axis, travel);
+  if (mechanism.kind === "hinge") {
+    const pose = hingePoseAroundAxis(piece, mechanism.pivot, mechanism.axis, travel);
+    return mechanism.hingePath
+      ? { ...pose, position: add(pose.position, hingeOffsetAt(mechanism.hingePath, travel)) }
+      : pose;
+  }
   return {
     ...piece,
     position: add(piece.position, scale(mechanism.axis, travel)),
@@ -992,12 +1039,12 @@ export function reviewMotionPath(
         }
       };
       for (const [index, row] of moving.entries()) {
-        const start = motionSolid(row, from);
         for (const other of candidates[index]) {
           const hit = contactAlong(row, other, from, to);
           if (!hit) continue;
           if (hit.uncertain) {
-            if (other.motion || row.solid.cells || other.solid.cells)
+            if (other.motion || row.solid.cells || other.solid.cells ||
+                (row.motion.kind === "hinge" && row.motion.hingePath))
               recordContact(
                 Math.max(0, hit.first - precision),
                 hit.inspectAt,
@@ -1021,25 +1068,26 @@ export function reviewMotionPath(
           recordContact(low, high);
         }
         if (!project.workZone) continue;
-        const path = { ...row.motion, axis: scale(row.motion.axis, direction) };
-        const outside = (travel: number) =>
-          workZoneHits(
+        const start = from * row.rate;
+        const zoneDuring = (distance: number) => {
+          const end = (from + direction * distance) * row.rate;
+          return workZoneHits(
             project,
-            sweptExtrema(start, { ...path, travel: travel * row.rate }),
-          ).length > 0;
-        if (!outside(target)) continue;
+            sweptExtrema(row.solid, row.motion, Math.min(start, end), Math.max(start, end)),
+          );
+        };
+        if (!zoneDuring(target).length) continue;
         let low = 0;
         let high = target;
         while (high - low > precision) {
           const mid = (low + high) / 2;
-          if (outside(mid)) high = mid;
+          if (zoneDuring(mid).length) high = mid;
           else low = mid;
         }
-        const last = sweptExtrema(start, { ...path, travel: high * row.rate });
-        const hit = workZoneHits(project, last).sort(
-          (a, b) => a.inspectAt - b.inspectAt,
+        const hit = zoneDuring(high).sort(
+          (a, b) => Math.abs(a.inspectAt - start) - Math.abs(b.inspectAt - start),
         )[0];
-        recordContact(low, hit.inspectAt / row.rate);
+        recordContact(low, Math.abs(hit.inspectAt - start) / row.rate);
       }
       for (const siteRow of siteRows) {
         if (target <= 0) break;
@@ -1092,7 +1140,12 @@ export function reviewMotionPath(
         ],
         travel,
         kind: mechanism.kind,
-        guideLine,
+        guideLine: mechanism.kind === "hinge" && mechanism.hingePath
+          ? [
+              add(guideLine[0], hingeOffsetAt(mechanism.hingePath, travel)),
+              add(guideLine[1], hingeOffsetAt(mechanism.hingePath, travel)),
+            ] as [V3, V3]
+          : guideLine,
         bounds: sweepBounds,
         ...status,
         shownSiteFaceId: siteFaceId ?? status.siteFaceHits[0],
@@ -1438,10 +1491,17 @@ export function motionReviewLines(project: Project, reviews = projectMotionRevie
       : [];
     const kind = plan.mechanism.kind;
     const distance = motionDistance(plan.mechanism.travel, kind);
+    const measured = baseline.review && plan.mechanism.kind === "hinge" && plan.mechanism.hingePath
+      ? motionSetup(project, plan).mechanism : undefined;
+    const measuredPath = measured?.kind === "hinge" ? measured.hingePath : undefined;
     return [
       ...(baseline.review
         ? [
-            `${plan.label} · ${kind === "hinge" ? "Hinged swing" : "Straight slide"} · ${distance} · ${plan.memberIds.map((id) => partLabel(project, id)).join(", ")}.`,
+            `${plan.label} · ${measuredPath ? "Measured hinge path" : kind === "hinge" ? "Hinged swing" : "Straight slide"} · ${distance} · ${plan.memberIds.map((id) => partLabel(project, id)).join(", ")}.`,
+            ...(measuredPath ? [
+              "Measured movement of the closed hinge datum. X, Y, and Z offsets are in workspace inches. The preview interpolates between readings.",
+              ...measuredPath.map(({ angle, offset }) => `At ${motionDistance(angle, "hinge")}, datum offset · X ${formatPreciseInches(offset[0])}, Y ${formatPreciseInches(offset[1])}, Z ${formatPreciseInches(offset[2])}.`),
+            ] : []),
             ...(saved || scenarios.length ? ["Test with other motions at their saved positions"] : []),
             ...motionClearanceLines(project, baseline.review),
           ]

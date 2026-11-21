@@ -74,12 +74,23 @@ export const saunaDoorSetupSchema = z.strictObject({
 });
 export type SaunaDoorSetup = z.infer<typeof saunaDoorSetupSchema>;
 
+export const hingePathLimit = 12;
+const hingePathSchema = z.array(z.strictObject({
+  angle: z.number().finite().min(0.01).max(180),
+  offset: datum,
+})).min(1).max(hingePathLimit).refine(
+  (stations) => stations.every((station, i) => !i || station.angle - stations[i - 1].angle >= 0.01 - 1e-9),
+  "Enter hinge measurements in angle order, at least 0.01° apart.",
+);
+export type HingePath = z.infer<typeof hingePathSchema>;
+
 const motionMechanism = z.discriminatedUnion("kind", [
   z
     .strictObject({
       kind: z.literal("hinge"),
       axis,
       pivot: datum,
+      hingePath: hingePathSchema.optional(),
       travel: z.number().positive().max(180),
       greenhouseDoor: greenhouseDoorSetupSchema.optional(),
       greenhouseVent: greenhouseVentMotionSchema.optional(),
@@ -87,10 +98,14 @@ const motionMechanism = z.discriminatedUnion("kind", [
     })
     .refine(
       (setup) =>
-        [setup.greenhouseDoor, setup.greenhouseVent, setup.saunaDoor].filter(
+        [setup.greenhouseDoor, setup.greenhouseVent, setup.saunaDoor, setup.hingePath].filter(
           Boolean,
         ).length <= 1,
-      "Choose one moving assembly.",
+      "Choose one moving assembly path.",
+    )
+    .refine(
+      ({ hingePath, travel }) => !hingePath || hingePath[hingePath.length - 1].angle === travel,
+      { path: ["hingePath"], message: "Measure the hinge path at the maximum opening angle." },
     ),
   z
     .strictObject({

@@ -100,48 +100,64 @@ export function sweepLidSiteFaces(
         angle: closestTheta / radiansPerDegree,
       };
     }
-    visit(gapToSiteFace(at(0), plane), 0);
-    visit(gapToSiteFace(at(end), plane), end);
-    const intervals: [number, number][] = [[0, end]];
-    let uncertain = false,
-      leavesWithBand = false;
-    for (let checks = 0; intervals.length && checks < 512; checks++) {
-      const [start, finish] = intervals.pop()!;
-      const mid = (start + finish) / 2,
-        midShape = at(mid);
-      visit(gapToSiteFace(midShape, plane), mid);
-      // This bounds displacement in every axis anywhere in the interval.
-      // Enlarge the height band by that amount before using the midpoint as
-      // a lower bound on gap. If certification runs out, keep it unresolved.
-      const movement = 2 * radius * Math.sin((finish - start) / 4);
-      const lowerGap = gapToSiteFace(midShape, plane, movement + tolerance);
-      if (lowerGap === null) continue;
-      if (lowerGap - movement >= plane.minimum + tolerance) {
-        leavesWithBand = true;
-        continue;
-      }
-      if (closest < plane.minimum - tolerance) break;
-      if (finish - start <= radiansPerDegree / 64) {
-        uncertain = true;
-        continue;
-      }
-      intervals.push([mid, finish], [start, mid]);
-    }
-    const status =
-      closest < plane.minimum - tolerance
-        ? "short"
-        : uncertain || intervals.length
-          ? "needs-review"
-          : !Number.isFinite(closest) && !leavesWithBand
-            ? "outside-height"
-            : "met";
-    return {
-      plane,
-      status,
-      gap: Number.isFinite(closest) ? closest : null,
-      angle: Number.isFinite(closest) ? closestTheta / radiansPerDegree : null,
-    };
+    const bounded = reviewSiteSweepBand(plane, end, at, (span) => 2 * radius * Math.sin(span / 4), radiansPerDegree / 64);
+    return { plane, status: bounded.status, gap: bounded.gap, angle: bounded.at === null ? null : bounded.at / radiansPerDegree };
   });
+}
+
+/** Certify a finite height band by bounding displacement from each midpoint. */
+export function reviewSiteSweepBand(
+  plane: SiteClearance,
+  extent: number,
+  at: (travel: number) => ReturnType<typeof worldClearanceShape>,
+  displacementFromMidpoint: (span: number) => number,
+  resolution: number,
+): { status: SiteMotion["status"]; gap: number | null; at: number | null } {
+  let closest = Infinity;
+  let atClosest = 0;
+  const visit = (gap: number | null, travel: number) => {
+    if (gap !== null && gap < closest) {
+      closest = gap;
+      atClosest = travel;
+    }
+  };
+  visit(gapToSiteFace(at(0), plane), 0);
+  visit(gapToSiteFace(at(extent), plane), extent);
+  const intervals: [number, number][] = [[0, extent]];
+  let uncertain = false;
+  let leavesWithBand = false;
+  for (let checks = 0; intervals.length && checks < 512; checks++) {
+    const [start, finish] = intervals.pop()!;
+    const mid = (start + finish) / 2;
+    const midShape = at(mid);
+    visit(gapToSiteFace(midShape, plane), mid);
+    const movement = displacementFromMidpoint(finish - start);
+    const lowerGap = gapToSiteFace(midShape, plane, movement + tolerance);
+    if (lowerGap === null) continue;
+    if (lowerGap - movement >= plane.minimum + tolerance) {
+      leavesWithBand = true;
+      continue;
+    }
+    if (closest < plane.minimum - tolerance) break;
+    if (finish - start <= resolution) {
+      uncertain = true;
+      continue;
+    }
+    intervals.push([mid, finish], [start, mid]);
+  }
+  const status =
+    closest < plane.minimum - tolerance
+      ? "short"
+      : uncertain || intervals.length
+        ? "needs-review"
+        : !Number.isFinite(closest) && !leavesWithBand
+          ? "outside-height"
+          : "met";
+  return {
+    status,
+    gap: Number.isFinite(closest) ? closest : null,
+    at: Number.isFinite(closest) ? atClosest : null,
+  };
 }
 
 export const lidSiteAngle = (angle: number) => `${Number(angle.toFixed(2))}°`;

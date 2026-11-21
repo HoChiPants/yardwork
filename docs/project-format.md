@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 89**. Yardwork reads valid formats 1–88 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 90**. Yardwork reads valid formats 1–89 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 90 can save ordered `hingePath` readings on an editable hinge motion. Each reading records its opening angle and the three inch offsets of the closed hinge datum in the moving part’s local coordinate system. The final reading defines the offset at maximum opening. Older swings continue to use their stored fixed pivot.
 
 Format 89 can save `woodKerfs`, a map of material IDs to measured blade widths in inches. These values drive layouts and purchases for unrecorded wood stock. Each recorded source retains its own cutting loss. Earlier project files open with the modeled planning allowance and their existing source geometry.
 

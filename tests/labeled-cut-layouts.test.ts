@@ -216,6 +216,7 @@ test("cut preview labels are private until applying and survive exact JSON round
   assert.deepEqual(reopened.pieces, preview.project.pieces);
   assert.deepEqual(makeLabeledCutPreview(project, source.id, 95.938, 47.938), {
     project,
+    offcutIds: [],
     changed: false,
   });
 });

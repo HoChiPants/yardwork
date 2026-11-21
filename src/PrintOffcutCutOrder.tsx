@@ -26,7 +26,7 @@ export function PrintOffcutCutOrder({
               <>
                 <p>
                   Starting size {row.inputSize}
-                  {row.prior ? ` · remnant from cut ${row.prior}` : ""}.
+                  {row.prior ? ` · remnant from cut ${row.prior}` : row.preparedBy ? ` · blank from cut ${row.preparedBy}` : ""}.
                 </p>
                 <p>
                   {row.cuts.length

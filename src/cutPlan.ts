@@ -16,7 +16,7 @@ export function cuttingAxes(piece: Piece) {
     isBatt(piece.material) ||
     piece.stockLengthAxis != null ||
     piece.cutStock?.sourceAxes ||
-    (piece.cutStock && piece.cutPlanes.length)
+    (piece.cutStock && (piece.cutPlanes.length || material(piece.material).wood))
   ) {
     const axes = stockAxes(piece, piece.cutStock?.size ?? piece.size);
     return [axes.length, axes.width];
@@ -160,22 +160,31 @@ export function cutAngledEnd(
   if (invalid) throw Error(invalid.detail);
   return next;
 }
+export type TrimOrder = "crosscut-first" | "rip-first";
+
+export function straightTrimTargets(piece: Piece, length: number, width: number, order: TrimOrder) {
+  const [long, wide] = cuttingAxes(piece);
+  const cuts = [
+    { axis: long, kind: "crosscut" as const, size: length },
+    { axis: wide, kind: "rip" as const, size: width },
+  ];
+  return order === "rip-first" ? cuts.reverse() : cuts;
+}
+
 export function resizeByCuts(
   project: Project,
   id: string,
   length: number,
   width: number,
+  order: TrimOrder = "crosscut-first",
 ) {
   const source = project.pieces.find((p) => p.id === id);
   if (!source || !material(source.material).cuttable)
     throw Error("Choose cuttable lumber or a sheet panel.");
-  const axes = cuttingAxes(source),
-    targets = [length, width];
   const kerf = pieceCutKerf(source);
   let next = project;
-  for (let i = 0; i < 2; i++) {
-    const target = targets[i],
-      original = source.size[axes[i]];
+  for (const { axis, size: target } of straightTrimTargets(source, length, width, order)) {
+    const original = source.size[axis];
     if (!Number.isFinite(target) || target <= 0)
       throw Error("Enter a positive measurement for the retained piece.");
     if (target > original + 0.001)
@@ -189,7 +198,7 @@ export function resizeByCuts(
           ? `Leave more than ${formatStockLength(kerf)} for cutting loss and an offcut, or keep this dimension unchanged.`
           : "Leave enough material for an offcut, or keep this dimension unchanged.",
       );
-    next = cutPiece(next, id, target, axes[i]);
+    next = cutPiece(next, id, target, axis);
   }
   return next;
 }

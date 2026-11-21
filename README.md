@@ -48,6 +48,8 @@ After following a board or sheet’s **Stock cut order**, choose **Record this s
 
 Import the [crosscut practice plan](public/examples/cut-pool/crosscut-practice.yardwork.json), then choose **Cut pool → Review offcut reuse**. The 18 in jig blank and 12 in finish test blank come from the remnant of the first 36 in cut. The stock estimate drops from two boards to one and leaves a 29⅝ in remnant. [Completed cut guide](public/examples/cut-pool/crosscut-practice-guide.md)
 
+When trimming both dimensions of a rectangular wood part, compare **Crosscut first** and **Rip first**. Choose **Find uses for these offcuts** to preview fitted parts and the change in stock to buy. **Apply cuts and reuse** saves the trim and assignments together. The build guide lists the original trim before the parts cut from its remnants. The preview follows the modeled grain direction. Confirm the actual sheet markings where panel orientation matters. [APA plywood reference](https://www.apawood.org/engineered-wood-products/plywood-osb/plywood/)
+
 For board crosscuts, Yardwork can move or swap pieces between planned boards to leave room for the blade while keeping the board count. A unit with an unresolved edge trim stays marked for review.
 
 ![Blank Yardwork workspace](docs/blank-workspace.png)

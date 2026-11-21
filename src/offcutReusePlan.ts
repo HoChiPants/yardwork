@@ -4,14 +4,15 @@ import { material, type Project } from "./model";
 import { assignOffcutToPart, fittingOffcuts } from "./offcutAssignment";
 import { ensurePartLabels, partLabel } from "./partLabels";
 
-export function planOffcutReuse(input: Project) {
+export function planOffcutReuse(input: Project, offcutIds?: readonly string[]) {
   let project = ensurePartLabels(input);
   let inspection = inspectCutStock(project);
+  const allowed = offcutIds ? new Set(offcutIds) : undefined;
   const originalIds = new Set(project.pieces.map(({ id }) => id));
   const candidates = project.pieces
     .filter((piece) => !piece.offcut && !piece.cutStock)
     .map((target) => {
-      const fits = fittingOffcuts(project, target, inspection);
+      const fits = fittingOffcuts(project, target, inspection, allowed);
       return {
         target,
         choices: fits.length || Number.MAX_SAFE_INTEGER,
@@ -21,7 +22,7 @@ export function planOffcutReuse(input: Project) {
     .sort((a, b) => a.choices - b.choices || b.area - a.area);
   const assignments = [];
   for (const { target } of candidates) {
-    const [match] = fittingOffcuts(project, target, inspection);
+    const [match] = fittingOffcuts(project, target, inspection, allowed);
     if (!match) continue;
     assignments.push({
       partId: target.id,
@@ -30,7 +31,12 @@ export function planOffcutReuse(input: Project) {
       fromEarlierCut: !originalIds.has(match.piece.id),
       operations: match.operations.map(({ text }) => text),
     });
-    project = assignOffcutToPart(project, target.id, match.piece.id);
+    const next = assignOffcutToPart(project, target.id, match.piece.id);
+    if (allowed) {
+      const assignment = next.history.at(-1)?.offcutCut;
+      for (const { id } of assignment?.remnants ?? []) allowed.add(id);
+    }
+    project = next;
     inspection = inspectCutStock(project);
   }
   const purchases = [];

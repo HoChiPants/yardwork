@@ -13,6 +13,8 @@ export function planOffcutRelease(project: Project, historyId: string) {
   const index = entries.findIndex(({ id }) => id === historyId);
   if (index < 0) throw Error("This offcut assignment is no longer active.");
   const root = entries[index].record;
+  if (root.retainedTrim)
+    throw Error("This is the trim that produced the offcut. Review its downstream assignments to return uncut remnants.");
   const released = new Set<string>();
   const targetIds = new Set<string>();
   const remnants = new Map<string, V3>();

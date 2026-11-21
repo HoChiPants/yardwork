@@ -4824,7 +4824,9 @@ export function App() {
                         ? "Round opening updated."
                         : kind === "rectangle"
                           ? "Rectangular cut updated."
-                          : "Cuts applied. The retained part stays selected; offcuts are available for reuse.",
+                          : kind === "trim-reuse"
+                            ? "Cuts and offcut assignments saved to the build guide."
+                            : "Cuts applied. The retained part stays selected; offcuts are available for reuse.",
                     );
                   })
                 }

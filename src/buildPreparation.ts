@@ -224,7 +224,9 @@ export function buildPreparation(
       id: `offcut-${row.id}`,
       title: row.title,
       detail: row.issues.join(" "),
-      action: { kind: "offcut-cut", id: row.id },
+      action: row.retainedPartId && pieces.has(row.retainedPartId)
+        ? { kind: "part", id: row.retainedPartId }
+        : row.retainedPartId ? { kind: "list" } : { kind: "offcut-cut", id: row.id },
     });
   }
   for (const source of invalidSources) {

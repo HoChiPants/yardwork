@@ -6,7 +6,9 @@ import {
   cutAngledEnd,
   cuttingAxes,
   resizeByCuts,
+  type TrimOrder,
 } from "./cutPlan";
+import { pieceCutKerf } from "./cutStock";
 import { cutDiagram, type Point2 } from "./cutDiagram";
 import { isBatt, material, type Project } from "./model";
 import { ensurePartLabels, partLabel } from "./partLabels";
@@ -18,6 +20,9 @@ import { fitLayoutLabel } from "./layoutLabels";
 import { stockAxes } from "./stockAxes";
 import { canEditThroughOpenings } from "./throughOpeningCuts";
 import { ThroughOpeningEditor } from "./ThroughOpeningEditor";
+import { recordStraightTrim, isRecordableStraightTrim } from "./recordedStraightTrim";
+import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
+import { OffcutReusePlanDetails } from "./OffcutReuseReview";
 
 /** A private candidate: canceled offcuts never consume labels in the actual project. */
 export function makeLabeledCutPreview(
@@ -25,12 +30,12 @@ export function makeLabeledCutPreview(
   pieceId: string,
   length: number,
   width: number,
+  order: TrimOrder = "crosscut-first",
 ) {
-  const candidate = resizeByCuts(project, pieceId, length, width);
-  return {
-    project: ensurePartLabels(candidate),
-    changed: candidate !== project,
-  };
+  const candidate = resizeByCuts(project, pieceId, length, width, order);
+  const source = project.pieces.find(({ id }) => id === pieceId)!;
+  const recorded = recordStraightTrim(project, ensurePartLabels(candidate), source, order);
+  return { ...recorded, changed: candidate !== project };
 }
 export function CutStudio({
   project,
@@ -40,13 +45,19 @@ export function CutStudio({
 }: {
   project: Project;
   pieceId: string;
-  onApply: (next: Project, kind: "trim" | "round" | "rectangle") => void;
+  onApply: (next: Project, kind: "trim" | "trim-reuse" | "round" | "rectangle") => void;
   onClose: () => void;
 }) {
   const source = project.pieces.find((p) => p.id === pieceId)!;
   const [long, wide] = cuttingAxes(source);
   const [length, setLength] = useState(source.size[long]),
     [width, setWidth] = useState(source.size[wide]);
+  const [order, setOrder] = useState<TrimOrder>("crosscut-first");
+  const [reuseReview, setReuseReview] = useState<{
+    source: Project;
+    plan?: OffcutReusePlan;
+    error?: string;
+  }>();
   const axes = stockAxes(source, source.cutStock?.size ?? source.size);
   const span = source.size[axes.length];
   const canTrim = material(source.material).cuttable;
@@ -77,7 +88,8 @@ export function CutStudio({
   );
   const topRight = topLeft + (rightMark - leftMark);
   const preview = useMemo(() => {
-    if (mode === "round") return { project, changed: false, error: null };
+    if (mode === "round" || mode === "rectangle")
+      return { project, changed: false, error: null, offcutIds: [] };
     try {
       if (angled) {
         const cut = cutAngledEnd(
@@ -87,20 +99,21 @@ export function CutStudio({
           compound ? [leftMark, rightMark, topLeft] : [leftMark, rightMark],
           keepEnd,
         );
-        return { project: ensurePartLabels(cut), changed: true, error: null };
+        return { project: ensurePartLabels(cut), changed: true, error: null, offcutIds: [] };
       }
       return {
-        ...makeLabeledCutPreview(project, pieceId, length, width),
+        ...makeLabeledCutPreview(project, pieceId, length, width, order),
         error: null,
       };
     } catch (e) {
-      return { project: null, changed: false, error: (e as Error).message };
+      return { project: null, changed: false, error: (e as Error).message, offcutIds: [] };
     }
   }, [
     project,
     pieceId,
     length,
     width,
+    order,
     mode,
     angled,
     face,
@@ -111,6 +124,25 @@ export function CutStudio({
     keepEnd,
   ]);
   const changed = preview.changed;
+  const review = reuseReview?.source === preview.project ? reuseReview : undefined;
+  const withReuse = review?.plan && review.plan.assignments.length > 0 ? review.plan : undefined;
+  const bothTrims = Number.isFinite(length) && Number.isFinite(width) &&
+    source.size[long] - length >= 0.001 && source.size[wide] - width >= 0.001;
+  const canReviewReuse = preview.offcutIds.length > 0 && project.pieces.some(
+    (part) => part.id !== pieceId && !part.offcut && !part.cutStock && part.material === source.material,
+  );
+
+  function reviewOffcuts() {
+    if (!preview.project || !preview.offcutIds.length) return;
+    try {
+      setReuseReview({ source: preview.project, plan: planOffcutReuse(preview.project, preview.offcutIds) });
+    } catch (error) {
+      setReuseReview({
+        source: preview.project,
+        error: error instanceof Error ? error.message : "Review the current offcut dimensions.",
+      });
+    }
+  }
   const clipId = `cut-stock-${useId().replaceAll(":", "")}`;
   const diagram = useMemo(
     () =>
@@ -227,7 +259,7 @@ export function CutStudio({
                 ? "Set the width and length of the retained batt. The model uses a zero-kerf knife cut and keeps the offcuts."
                 : source.cutStock?.tubeKerf !== undefined
                   ? `Set the retained tube length. This layout uses the source's recorded ${formatPreciseInches(source.cutStock.tubeKerf)} loss per cut.`
-                  : "Set the size you want to keep. We make straight cuts, allow for the ⅛ in saw kerf, and retain the remaining pieces as reusable offcuts."}
+                  : `Set the size you want to keep. The preview allows ${formatPreciseInches(pieceCutKerf(source))} for cutting loss and shows usable offcuts.`}
           </p>
           <svg
             className="cut-diagram"
@@ -344,7 +376,7 @@ export function CutStudio({
                   <line
                     x1="0"
                     y1={y}
-                    x2="260"
+                    x2={order === "rip-first" ? x : 260}
                     y2={y}
                     stroke="#e76b37"
                     strokeWidth="2"
@@ -356,7 +388,7 @@ export function CutStudio({
                     x1={x}
                     y1="0"
                     x2={x}
-                    y2={y}
+                    y2={order === "crosscut-first" ? y : 180}
                     stroke="#e76b37"
                     strokeWidth="2"
                     strokeDasharray="4 3"
@@ -495,6 +527,16 @@ export function CutStudio({
                   />
                 )}
               </div>
+              {bothTrims && isRecordableStraightTrim(source) && (
+                <label className="field">
+                  Cut order
+                  <select value={order} onChange={(event) => setOrder(event.target.value as TrimOrder)}>
+                    <option value="crosscut-first">Crosscut first</option>
+                    <option value="rip-first">Rip first</option>
+                  </select>
+                  <span className="small-note">The retained size stays the same. The order changes the usable offcuts.</span>
+                </label>
+              )}
               <p className="small-note">
                 {material(source.material).shape === "tube-envelope"
                   ? "The hollow tube's outside envelope is modeled; wall thickness is unverified."
@@ -529,8 +571,20 @@ export function CutStudio({
               trimmed parts no longer touch.
             </p>
           )}
+          {canReviewReuse && (
+            <section className="field-section" aria-label="Reuse offcuts from this cut">
+              {!review && <button className="button secondary" type="button" onClick={reviewOffcuts}>Find uses for these offcuts</button>}
+              {review?.plan && <OffcutReusePlanDetails plan={review.plan} fromCut />}
+              {review?.error && <p className="form-error" role="alert">{review.error}</p>}
+              {withReuse && (
+                <button className="button primary full" type="button" onClick={() => onApply(withReuse.project, "trim-reuse")}>
+                  Apply cuts and reuse
+                </button>
+              )}
+            </section>
+          )}
           <button
-            className="button primary full"
+            className={`button ${withReuse ? "secondary" : "primary"} full`}
             disabled={!changed}
             onClick={() => {
               if (preview.project) onApply(preview.project, "trim");

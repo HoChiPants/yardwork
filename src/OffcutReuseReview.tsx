@@ -11,12 +11,28 @@ export function OffcutReuseReview({
   return (
     <>
       <h2 id="modal-title">Review offcut reuse</h2>
+      <OffcutReusePlanDetails plan={plan} />
+      {plan.assignments.length > 0 && (
+        <button className="button primary full" type="button" onClick={onApply}>
+          Apply offcut plan
+        </button>
+      )}
+    </>
+  );
+}
+
+export function OffcutReusePlanDetails({ plan, fromCut = false }: {
+  plan: OffcutReusePlan;
+  fromCut?: boolean;
+}) {
+  return (
+    <>
       {plan.assignments.length ? (
         <>
           <p>
             {plan.assignments.length} planned{" "}
-            {plan.assignments.length === 1 ? "part fits" : "parts fit"} stock in
-            the Cut pool.
+            {plan.assignments.length === 1 ? "part fits" : "parts fit"}{" "}
+            {fromCut ? "an offcut from this trim." : "stock in the Cut pool."}
           </p>
           <ol
             aria-label="Proposed cuts in order"
@@ -37,7 +53,7 @@ export function OffcutReuseReview({
               </li>
             ))}
           </ol>
-          <h3>Stock to buy</h3>
+          <h3>{fromCut ? "Stock to buy after reuse" : "Stock to buy"}</h3>
           {plan.purchases.length ? (
             <ul aria-label="Purchase changes">
               {plan.purchases.map(({ id, name, unit, before, after }) => (
@@ -51,18 +67,12 @@ export function OffcutReuseReview({
               The same purchase quantities cover the rest of the project.
             </p>
           )}
-          <button
-            className="button primary full"
-            type="button"
-            onClick={onApply}
-          >
-            Apply offcut plan
-          </button>
         </>
       ) : (
         <p>
-          No rectangular offcuts fit the unassigned wood parts. Check stock
-          type, thickness, grain direction and room for the saw cut.
+          {fromCut
+            ? "These offcuts can stay in the Cut pool for another part."
+            : "No rectangular offcuts fit the unassigned wood parts. Check stock type, thickness, grain direction and room for the saw cut."}
         </p>
       )}
     </>

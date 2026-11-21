@@ -36,25 +36,46 @@ export function offcutCutRows(
       ),
     ),
   );
+  const lastTrim = new Map<string, number>();
+  const verified = new Set<number>();
+  // A later recorded trim can explain a changed finished size on the same
+  // part. Work back from the current retained stock to verify the chain.
+  for (let index = records.length - 1; index >= 0; index--) {
+    const { record } = records[index];
+    const part = pieces.get(record.targetId);
+    const nextIndex = lastTrim.get(record.targetId);
+    const next = nextIndex === undefined ? undefined : records[nextIndex].record;
+    const current =
+      part && !part.offcut && part.cutStock?.id === record.sourceId &&
+      checked.valid.has(record.sourceId) ? cutSourceRegion(part) : null;
+    if (next && nextIndex !== undefined && verified.has(nextIndex) &&
+        next.sourceId === record.sourceId &&
+        sameCutDimensions(next.retainedTrim!.inputRegionSize, record.result.size) &&
+        sameCutDimensions(next.result.sourceSize, record.result.sourceSize) &&
+        sameCutDimensions(next.result.offset, record.result.offset))
+      verified.add(index);
+    else if (current &&
+        sameCutDimensions(current.size, record.result.size) &&
+        sameCutDimensions(current.sourceSize, record.result.sourceSize) &&
+        sameCutDimensions(current.offset, record.result.offset))
+      verified.add(index);
+    if (record.retainedTrim) lastTrim.set(record.targetId, index);
+  }
   const invalid = new Set<number>();
+  const priorResult = new Map<string, number>();
   return records.map(({ id, record }, index) => {
     const part = pieces.get(record.targetId);
     const prior = producers.get(record.inputId);
-    const current =
-      part &&
-      !part.offcut &&
-      part.cutStock?.id === record.sourceId &&
-      checked.valid.has(record.sourceId)
-        ? cutSourceRegion(part)
-        : null;
+    const earlierPartIndex = record.retainedTrim ? priorResult.get(record.targetId) : undefined;
+    priorResult.set(record.targetId, index);
+    const earlierPart = earlierPartIndex === undefined ? undefined : records[earlierPartIndex].record;
     const issues = [];
-    if (
-      !current ||
-      !sameCutDimensions(current.size, record.result.size) ||
-      !sameCutDimensions(current.sourceSize, record.result.sourceSize) ||
-      !sameCutDimensions(current.offset, record.result.offset)
-    )
+    if (!verified.has(index))
       issues.push("Review the current part and cut source.");
+    if (earlierPart && earlierPartIndex !== undefined &&
+        (invalid.has(earlierPartIndex) || earlierPart.sourceId !== record.sourceId ||
+          !sameCutDimensions(earlierPart.result.size, record.retainedTrim!.inputRegionSize)))
+      issues.push(`Review cut ${earlierPartIndex + 1}, which prepared this blank.`);
     if (
       prior &&
       (prior.index >= index ||
@@ -71,8 +92,10 @@ export function offcutCutRows(
     const target = partLabel(project, record.targetId);
     return {
       id,
-      title: `${input} → ${target}${part ? ` · ${part.name}` : ""}`,
+      title: `${record.retainedTrim ? `Trim ${target}` : `${input} → ${target}`}${part ? ` · ${part.name}` : ""}`,
+      retainedPartId: record.retainedTrim ? record.targetId : undefined,
       issues,
+      preparedBy: earlierPartIndex === undefined ? undefined : earlierPartIndex + 1,
       prior:
         prior && prior.index < index && prior.sourceId === record.sourceId
           ? prior.index + 1
@@ -107,7 +130,7 @@ export function offcutCutOrderMarkdown(rows: readonly OffcutCutRow[]) {
       ...(row.issues.length
         ? [`   **Review needed.** ${row.issues.join(" ")}`]
         : [
-            `   Starting size ${row.inputSize}${row.prior ? ` · remnant from cut ${row.prior}` : ""}.`,
+            `   Starting size ${row.inputSize}${row.prior ? ` · remnant from cut ${row.prior}` : row.preparedBy ? ` · blank from cut ${row.preparedBy}` : ""}.`,
             `   ${row.cuts.length ? row.cuts.join(" · ") + "." : "Fits as measured."}`,
             ...(row.remnants.length
               ? [`   Keep ${row.remnants.join(" and ")}.`]

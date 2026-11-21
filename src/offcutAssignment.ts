@@ -32,6 +32,7 @@ export function fittingOffcuts(
   project: Project,
   target: Piece,
   inspection = inspectCutStock(project),
+  allowedOffcutIds?: ReadonlySet<string>,
 ) {
   const stock = material(target.material);
   if (target.offcut || target.cutStock || !stock.wood || !stock.cuttable)
@@ -43,6 +44,7 @@ export function fittingOffcuts(
       const source = piece.cutStock;
       if (
         !piece.offcut ||
+        (allowedOffcutIds && !allowedOffcutIds.has(piece.id)) ||
         piece.material !== target.material ||
         !source ||
         !inspection.valid.has(source.id) ||

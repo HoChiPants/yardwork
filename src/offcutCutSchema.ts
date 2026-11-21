@@ -8,6 +8,7 @@ export const offcutCutSchema = z.strictObject({
   sourceId: z.uuid(),
   inputId: z.uuid(),
   targetId: z.uuid(),
+  retainedTrim: z.strictObject({ inputRegionSize: size }).optional(),
   inputSize: size,
   result: z.strictObject({
     size,
@@ -20,4 +21,6 @@ export const offcutCutSchema = z.strictObject({
     .array(z.strictObject({ kind: z.enum(["crosscut", "rip"]), size: length }))
     .max(2),
   remnants: z.array(z.strictObject({ id: z.uuid(), size })).max(2),
-});
+}).refine(({ retainedTrim, inputId, targetId, cuts, releasedAt }) =>
+  !retainedTrim || (inputId === targetId && cuts.length > 0 && !releasedAt),
+  "A retained trim keeps the original part and records at least one cut.");

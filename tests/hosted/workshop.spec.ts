@@ -477,3 +477,59 @@ test("a drawer can pass without touching and still fail a saved minimum gap test
   expect(guide).toContain("Named clearance test · Drawer lip check");
   expect(guide).toContain("Shortfall. Observed 0.0625 in near 6 in.");
 });
+
+test("rip first preserves a long scrap and applies both cuts as one saved plan", async ({ page }) => {
+  const project = blank("Shelf and long filler");
+  const step = project.steps[0].id;
+  const material = "plytanium-703";
+  const panel = part("Shelf blank", material, [40, 0.703, 80], [0, 8, 0], step, "Casework");
+  const filler = part("Long filler", material, [12, 0.703, 70], [56, 8, 0], step, "Casework");
+  project.pieces = [panel, filler];
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "shelf-and-filler.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 83 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Guide", exact: true }).click();
+  await page.locator(`button.step-part[data-part-id="${panel.id}"]`).click();
+  await page.getByRole("button", { name: "Cut part", exact: true }).click();
+  await dialog.getByRole("spinbutton", { name: "Retained length", exact: true }).fill("40");
+  await dialog.getByRole("spinbutton", { name: "Retained width", exact: true }).fill("24");
+  const review = dialog.getByRole("button", { name: "Find uses for these offcuts", exact: true });
+  await review.click();
+  await expect(dialog).toContainText("These offcuts can stay in the Cut pool for another part.");
+  await dialog.getByRole("combobox", { name: /Cut order/ }).selectOption("rip-first");
+  await review.click();
+  await expect(dialog.getByRole("list", { name: "Proposed cuts in order" })).toContainText("Long filler");
+  await expect(dialog.getByRole("list", { name: "Purchase changes" })).toContainText("2 → 1 sheet");
+  await dialog.getByRole("button", { name: "Apply cuts and reuse", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  const pieces = async () => (await readDraft())?.project?.pieces as typeof project.pieces;
+  await expect.poll(async () => (await pieces())?.find(({ id }) => id === filler.id)?.cutStock?.id).toBeTruthy();
+  const assigned = (await pieces()).find(({ id }) => id === filler.id)!;
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect.poll(async () => (await pieces())?.find(({ id }) => id === panel.id)?.size[2]).toBe(80);
+  expect((await pieces()).find(({ id }) => id === filler.id)?.cutStock).toBe(null);
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect.poll(async () => (await pieces())?.find(({ id }) => id === filler.id)?.cutStock?.id).toBe(assigned.cutStock?.id);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: "Shelf and long filler" }).click();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  const ordered = /Trim P001 · Shelf blank[\s\S]*Rip to 2 ft · Crosscut to 40 in[\s\S]*Long filler[\s\S]*remnant from cut 1/;
+  expect(guide).toMatch(ordered);
+  await expect(page.locator(".print-guide .offcut-cut-order-print")).toContainText(ordered);
+});

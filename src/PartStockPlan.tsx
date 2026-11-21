@@ -48,7 +48,7 @@ export function PartStockPlan({
   const offcuts = fittingOffcuts(project, piece, inspection);
   const assignment = project.history.find(
     ({ offcutCut }) =>
-      offcutCut?.targetId === piece.id && !offcutCut.releasedAt,
+      offcutCut?.targetId === piece.id && !offcutCut.releasedAt && !offcutCut.retainedTrim,
   );
   const chosen =
     offcuts.find(({ piece }) => piece.id === offcutId) ??

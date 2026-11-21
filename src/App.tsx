@@ -1,5 +1,5 @@
 import { DrawingReferencePanel } from "./DrawingReferencePanel";
-import { drawingReferenceDescription, type DrawingReference } from "./drawingReference";
+import { drawingPlanLines, drawingReferenceDescription, type DrawingReference } from "./drawingReference";
 import { WallTracePanel } from "./WallTracePanel";
 import { detectPlanOutlines, outlineAtPoint } from "./planOutlines";
 import { emptyWallTrace, reviewWallOutline, reviewWallTrace, snapWallTracePoint, type OutlineFace, type WallTracePoint } from "./wallTrace";
@@ -654,18 +654,23 @@ export function App() {
     b: V3 | null;
   }>({ a: null, b: null });
   const [wallTrace, setWallTrace] = useState(emptyWallTrace);
-  const [outlineTrace, setOutlineTrace] = useState<{ index: number; face: OutlineFace } | null>(null);
+  const [outlineTrace, setOutlineTrace] = useState<{ index: number; face: OutlineFace; source: "pdf" | "dxf" } | null>(null);
   useEffect(() => {
     setWallTrace(emptyWallTrace());
     setOutlineTrace(null);
     setMode((previous) => previous === "trace-wall" ? "select" : previous);
   }, [project.id]);
   const readingOutline = mode === "trace-wall" && outlineTrace !== null;
+  const pdfPlanLines = useMemo(() => drawingPlanLines(project.drawingReference), [project.drawingReference]);
+  const hasDxfLines = project.planLines.length > 0, hasPdfLines = pdfPlanLines.length > 0;
+  const canFrameOutline = hasDxfLines || hasPdfLines;
+  const outlineSourceName = hasDxfLines && hasPdfLines ? "plan" : hasPdfLines ? "PDF" : "DXF";
+  const selectedPlanLines = outlineTrace?.source === "pdf" ? pdfPlanLines : project.planLines;
   const planOutlines = useMemo(() => {
     if (!readingOutline) return { entries: [] };
-    try { return { entries: detectPlanOutlines(project.planLines) }; }
+    try { return { entries: detectPlanOutlines(selectedPlanLines) }; }
     catch (error) { return { entries: [], error: error instanceof Error ? error.message : "Could not read this plan." }; }
-  }, [readingOutline, project.planLines]);
+  }, [readingOutline, selectedPlanLines]);
   const outlineIndex = outlineTrace?.index === -1 && planOutlines.entries.length === 1 ? 0 : outlineTrace?.index ?? -1;
   const selectedOutline = planOutlines.entries[outlineIndex];
   const wallTraceReview = useMemo(() => {
@@ -2275,6 +2280,7 @@ export function App() {
   function removeDrawingReference() {
     change((current) => ({ ...current, drawingReference: undefined }));
     setModal(null);
+    if (readingOutline && outlineTrace?.source === "pdf") setMode("select");
     if (view.preset === "drawing") setView((previous) => ({ preset: "top", nonce: previous.nonce + 1 }));
     notify("Drawing reference removed. Undo is available.");
   }
@@ -2289,8 +2295,9 @@ export function App() {
     setSelectionScope("part");
     setMode("trace-wall");
     setWallTrace(emptyWallTrace());
-    setOutlineTrace(kind === "outline" ? { index: -1, face: "center" } : null);
-    setView(({ nonce }) => ({ preset: kind === "outline" ? "plan"
+    const source = hasPdfLines && (project.drawingReference?.calibration.visible || !hasDxfLines) ? "pdf" : "dxf";
+    setOutlineTrace(kind === "outline" ? { index: -1, face: "center", source } : null);
+    setView(({ nonce }) => ({ preset: kind === "outline" ? source === "pdf" ? "drawing" : "plan"
       : project.drawingReference?.calibration.visible ? "drawing" : project.planLines.length ? "plan" : "top", nonce: nonce + 1 }));
     inspectWorkspace();
   }
@@ -2300,7 +2307,7 @@ export function App() {
       if (index >= 0) setOutlineTrace({ ...outlineTrace, index });
       return;
     }
-    const point = snapWallTracePoint([x, z], project.planLines, snap);
+    const point = snapWallTracePoint([x, z], project.drawingReference?.calibration.visible && hasPdfLines ? pdfPlanLines : project.planLines, snap);
     const completePoint = (value: WallTracePoint | null) => value?.every(Number.isFinite);
     setWallTrace((previous) => !completePoint(previous.a) || completePoint(previous.b)
       ? { ...previous, a: point, b: null }
@@ -2974,6 +2981,7 @@ export function App() {
                 footprints: wallTraceReview.value?.footprints ?? [],
                 blocked: !!wallTraceReview.value?.obstructions.length || !!wallTraceReview.value?.hasInternalOverlap || !!wallTraceReview.value?.row?.oversize,
               } : undefined}
+              outlineReferenceLines={readingOutline && outlineTrace.source === "pdf" ? pdfPlanLines : undefined}
               onWallTracePoint={pickWallTracePoint}
               measurement={measurement}
               onMeasurePoint={(point) =>
@@ -3092,7 +3100,7 @@ export function App() {
               className={mode === "trace-wall" && !readingOutline ? "active" : ""}
               aria-pressed={mode === "trace-wall" && !readingOutline}
               onClick={() => mode === "trace-wall" && !readingOutline ? setMode("select") : startWallTrace()}><Ruler size={16} /></button>
-            {!!project.planLines.length && <button type="button" aria-label="Frame a DXF outline" title="Frame a closed room outline"
+            {canFrameOutline && <button type="button" aria-label={`Frame a ${outlineSourceName} outline`} title="Frame a closed room outline"
               className={readingOutline ? "active" : ""} aria-pressed={readingOutline}
               onClick={() => readingOutline ? setMode("select") : startWallTrace("outline")}><Square size={16} /></button>}
             {project.drawingReference && (
@@ -3139,7 +3147,7 @@ export function App() {
                   key={v}
                   className={view.preset === v || ((view.preset === "drawing" || view.preset === "plan") && v === "top") ? "active" : ""}
                   onClick={() =>
-                    setView((s) => ({ preset: v === "top" && readingOutline ? "plan"
+                    setView((s) => ({ preset: v === "top" && readingOutline ? outlineTrace.source === "pdf" ? "drawing" : "plan"
                       : v === "top" && project.drawingReference?.calibration.visible ? "drawing"
                         : v === "top" && project.planLines.length ? "plan" : v, nonce: s.nonce + 1 }))
                   }
@@ -3748,13 +3756,18 @@ export function App() {
                 <WallTracePanel trace={wallTrace} onChange={setWallTrace} review={wallTraceReview.value} error={wallTraceReview.error}
                   onAdd={addTracedWall} onClose={() => setMode("select")} onPick={inspectWorkspace}
                   outline={outlineTrace ? { ...planOutlines, index: outlineIndex, face: outlineTrace.face,
+                    source: outlineTrace.source, hasDxfLines, hasPdfLines,
+                    onSource: (source) => {
+                      setOutlineTrace({ ...outlineTrace, source, index: -1 });
+                      setView(({ nonce }) => ({ preset: source === "pdf" ? "drawing" : "plan", nonce: nonce + 1 }));
+                    },
                     onSelect: (index) => setOutlineTrace({ ...outlineTrace, index }),
                     onFace: (face) => setOutlineTrace({ ...outlineTrace, face }),
                     onManual: () => startWallTrace(),
                   } : undefined} />
               ) : <>
                 <button className="button secondary full attachment-entry" onClick={() => startWallTrace()}>Trace an interior wall</button>
-                {!!project.planLines.length && <button className="button secondary full attachment-entry" onClick={() => startWallTrace("outline")}>Frame a room from DXF</button>}
+                {canFrameOutline && <button className="button secondary full attachment-entry" onClick={() => startWallTrace("outline")}>Frame a room from {outlineSourceName === "plan" ? "a plan" : outlineSourceName}</button>}
               </>}
               <button className="button secondary full attachment-entry" onClick={() => setPanel("motion")}>Test door or drawer movement</button>
               <button className="button secondary full attachment-entry" onClick={() => openConnectors()}>Plan A21Z connector</button>

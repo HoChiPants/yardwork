@@ -19,14 +19,26 @@ function DrawingPreview({ source, points, onMark }: {
   onMark: (point: DrawingPoint) => void;
 }) {
   const [zoom, setZoom] = useState(100);
+  const [snap, setSnap] = useState(true);
   const [a, b] = points;
   const mark = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail === 0 || event.button !== 0) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    onMark([
+    const clicked: DrawingPoint = [
       Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
       Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
-    ]);
+    ];
+    let nearest = clicked, distance = 8;
+    if (snap) for (const [x, y, u, v] of source.pdfLines ?? []) {
+      for (const point of [[x, y], [u, v]] as DrawingPoint[]) {
+        const delta = Math.hypot((point[0] - clicked[0]) * rect.width, (point[1] - clicked[1]) * rect.height);
+        if (delta < distance) {
+          nearest = point;
+          distance = delta;
+        }
+      }
+    }
+    onMark(nearest);
   };
   const turn = a && b ? -drawingAngleToXAxis(source, [a, b]) : 0;
   return (
@@ -51,6 +63,9 @@ function DrawingPreview({ source, points, onMark }: {
           <option value={300}>300%</option>
         </select>
       </label>
+      {!!source.pdfLines?.length && <label className="checkbox-field">
+        <input type="checkbox" checked={snap} onChange={(event) => setSnap(event.target.checked)} /> Snap scale marks to nearby PDF line ends
+      </label>}
     </>
   );
 }
@@ -82,10 +97,13 @@ export function DrawingReferencePanel({ initial, onSave, onRemove }: {
   }
 
   function applySource(drawing: DrawingSource) {
+    const sameSheet = initial?.page === drawing.page && initial?.image === drawing.image &&
+      initial?.width === drawing.width && initial?.height === drawing.height;
     setSource(drawing);
     setPage(drawing.page ?? 1);
-    setPoints([null, null]);
-    updateSettings({ distance: NaN });
+    setPoints(sameSheet ? initial.calibration.points : [null, null]);
+    if (sameSheet) setSettings(initial.calibration);
+    else updateSettings({ distance: NaN });
     setActive(0);
   }
 
@@ -140,7 +158,7 @@ export function DrawingReferencePanel({ initial, onSave, onRemove }: {
   const [a, b] = points;
   const reference = source && a && b && Number.isFinite(settings.distance)
     ? drawingReferenceSchema.safeParse({ name: source.name, page: source.page, image: source.image,
-      width: source.width, height: source.height, calibration: { ...settings, points: [a, b] } })
+      width: source.width, height: source.height, pdfLines: source.pdfLines, calibration: { ...settings, points: [a, b] } })
     : null;
   const fitted = reference?.success ? drawingReferenceSize(reference.data, reference.data.calibration) : null;
   return (
@@ -158,6 +176,9 @@ export function DrawingReferencePanel({ initial, onSave, onRemove }: {
       {!source && <p className="small-note">PDF, PNG, JPEG or WebP up to 20 MB. The selected sheet stays in the project.</p>}
       {source && <>
         <p className="drawing-file-title">{source.name}{source.page ? ` · Page ${source.page}` : ""}</p>
+        {source.page && <p className="small-note">{source.pdfLines?.length
+          ? `${source.pdfLines.length} visible PDF lines available for snapping and room outlines.`
+          : "This sheet is available for manual wall tracing."}</p>}
         {pages && pages > 1 && <div className="drawing-page-row">
           <label className="field">PDF page (1–{pages})
             <input type="number" min={1} max={pages} value={Number.isFinite(page) ? page : ""} onChange={({ currentTarget }) => setPage(currentTarget.valueAsNumber)} />

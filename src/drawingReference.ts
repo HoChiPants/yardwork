@@ -1,14 +1,19 @@
 import { z } from "zod";
 import { formatStockLength } from "./measurement";
+import type { Project, V3 } from "./model";
 
 export const drawingPixelLimit = 2048;
 export const drawingImageLimit = 480_000;
 export const drawingCoordinateLimit = 12_000;
+export const drawingLineLimit = 3000;
 
 const coordinate = z.number().min(-drawingCoordinateLimit).max(drawingCoordinateLimit);
 const fraction = z.number().min(0).max(1);
 const point = z.tuple([fraction, fraction]);
 export type DrawingPoint = z.infer<typeof point>;
+const drawingLineSchema = z.tuple([fraction, fraction, fraction, fraction]).refine(([x, y, u, v]) => x !== u || y !== v,
+  "Drawing lines need two distinct points.");
+export type DrawingLine = z.infer<typeof drawingLineSchema>;
 
 export const drawingCalibrationSchema = z.strictObject({
   points: z.tuple([point, point]),
@@ -26,6 +31,7 @@ export const drawingSourceSchema = z.strictObject({
   width: z.number().int().min(2).max(drawingPixelLimit),
   height: z.number().int().min(2).max(drawingPixelLimit),
   image: z.string().max(drawingImageLimit).regex(/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]*={0,2}$/),
+  pdfLines: z.array(drawingLineSchema).min(1).max(drawingLineLimit).optional(),
 });
 export type DrawingSource = z.infer<typeof drawingSourceSchema>;
 
@@ -58,6 +64,8 @@ export function drawingReferenceBounds(drawing: Dimensions, calibration: Drawing
 
 export const drawingReferenceSchema = drawingSourceSchema.extend({ calibration: drawingCalibrationSchema })
   .superRefine((drawing, ctx) => {
+    if (drawing.pdfLines && !drawing.page)
+      ctx.addIssue({ code: "custom", path: ["pdfLines"], message: "PDF linework must identify its source page." });
     try {
       const { min, max } = drawingReferenceBounds(drawing, drawing.calibration);
       if ([...min, ...max].some((value) => Math.abs(value) > drawingCoordinateLimit + 1e-7))
@@ -68,6 +76,19 @@ export const drawingReferenceSchema = drawingSourceSchema.extend({ calibration: 
   });
 
 export type DrawingReference = z.infer<typeof drawingReferenceSchema>;
+
+export function drawingPlanLines(drawing?: DrawingReference): Project["planLines"] {
+  if (!drawing?.pdfLines) return [];
+  const { calibration } = drawing;
+  const { width, depth } = drawingReferenceSize(drawing, calibration);
+  const angle = radians(calibration.angle), cosine = Math.cos(angle), sine = Math.sin(angle);
+  const [cx, cz] = calibration.center;
+  const place = (u: number, v: number): V3 => {
+    const x = (u - 0.5) * width, z = (v - 0.5) * depth;
+    return [cx + x * cosine - z * sine, 0.1, cz + x * sine + z * cosine];
+  };
+  return drawing.pdfLines.map(([x, y, u, v]) => ({ a: place(x, y), b: place(u, v) }));
+}
 
 
 export function drawingReferenceDescription(drawing: DrawingReference) {

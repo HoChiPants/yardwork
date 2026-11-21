@@ -110,6 +110,7 @@ export type SceneProps = {
   measurement?: { a: V3 | null; b: V3 | null };
   onMeasurePoint?: (point: V3) => void;
   wallTrace?: { a: WallTracePoint | null; b: WallTracePoint | null; outline?: WallTracePoint[]; footprints: V3[][]; blocked: boolean };
+  outlineReferenceLines?: Project["planLines"];
   onWallTracePoint?: (point: V3) => void;
   snap: boolean;
   explode: boolean;
@@ -1321,7 +1322,7 @@ function World(props: SceneProps) {
   const visible = isolated ? [guidePiece] : stagePieces;
   const reference = props.project.drawingReference;
   const drawing = !isolated && !props.focusedMotion && !props.readOnly && reference?.calibration.visible ? reference : null;
-  const planLines = props.project.planLines;
+  const planLines = props.outlineReferenceLines ?? props.project.planLines;
   const drawingBounds = useMemo(() => {
     if (drawing && props.view.preset !== "plan") return drawingReferenceBounds(drawing, drawing.calibration);
     if (!planLines.length || (props.view.preset !== "plan" && props.view.preset !== "drawing")) return null;
@@ -1614,12 +1615,12 @@ function World(props: SceneProps) {
         .map((p) => (
           <PlacedPart key={p.id} p={p} props={props} texture={texture} />
         ))}
-      {!isolated && props.project.planLines.map((l, i) => (
+      {!isolated && planLines.map((l, i) => (
         <Line
           key={i}
           points={[l.a.map((v) => v / 12) as V3, l.b.map((v) => v / 12) as V3]}
           color="#548d9b"
-          lineWidth={2}
+          lineWidth={props.outlineReferenceLines ? 1.5 : 2}
         />
       ))}
       {!props.readOnly && props.mode !== "trace-wall" && props.project.joints.map((j) => {

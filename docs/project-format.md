@@ -1,6 +1,12 @@
 # Project format and recovery
 
-New exports use **format 102**. Yardwork reads valid formats 1–101 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 105**. Yardwork reads valid formats 1–104 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 105 optionally keeps visible straight PDF lines in coordinates relative to the saved sheet. Yardwork derives their workspace coordinates from the sheet’s current scale, rotation and center. Reimporting the source PDF reads its vectors and retains calibration when the rendered sheet matches the saved one exactly. Older saved sheets remain available for manual tracing.
+
+Format 104 records the outline, wall and panel identities for framed rooms. These identities carry corner and panel order through guide regeneration.
+
+Format 103 optionally saves the exact lumber stock of a generated solid wall. Individual traced panels retain their world placement and generated steps.
 
 Format 102 can embed one calibrated drawing reference. It stores the selected PDF page or image as a bounded JPEG preview, its original filename and page number when available, two normalized scale points, the measured span in inches, the center in X and Z, rotation, opacity, and visibility. DXF line references remain independent. The embedded sheet round-trips through editable exports, project revisions and backups.
 

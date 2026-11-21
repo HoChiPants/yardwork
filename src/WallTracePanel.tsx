@@ -19,6 +19,10 @@ export function WallTracePanel({ trace, onChange, review, error, onAdd, onClose,
     error?: string;
     index: number;
     face: OutlineFace;
+    source: "pdf" | "dxf";
+    hasPdfLines: boolean;
+    hasDxfLines: boolean;
+    onSource: (source: "pdf" | "dxf") => void;
     onSelect: (index: number) => void;
     onFace: (face: OutlineFace) => void;
     onManual: () => void;
@@ -26,9 +30,16 @@ export function WallTracePanel({ trace, onChange, review, error, onAdd, onClose,
 }) {
   const row = review?.row;
   const assignments = review?.reuse?.assignments ?? [];
+  const outlineTitle = `Frame a room from ${outline?.source.toUpperCase()}`;
+  const sourcePicker = outline?.hasPdfLines && outline.hasDxfLines && <label className="field"><span>Plan source</span>
+    <select value={outline.source} onChange={(event) => outline.onSource(event.target.value === "pdf" ? "pdf" : "dxf")}>
+      <option value="pdf">Calibrated PDF sheet</option><option value="dxf">Imported DXF linework</option>
+    </select>
+  </label>;
   if (outline && !outline.entries.length) return <section className="wall-trace-panel" aria-label="Frame room settings">
-    <h3>Frame a room from DXF</h3>
-    <p role="status">{outline.error ?? "No closed right-angle outline was found. Close any gaps in the source drawing, or trace the individual walls."}</p>
+    <h3>{outlineTitle}</h3>
+    {sourcePicker}
+    <p role="status">{outline.error ?? "No closed right-angle outline was found. Try a different sheet or trace the individual walls."}</p>
     <div className="inline">
       <button type="button" className="button secondary" onClick={outline.onManual}>Trace individual walls</button>
       <button type="button" className="text-button" onClick={onClose}>Cancel trace</button>
@@ -36,8 +47,9 @@ export function WallTracePanel({ trace, onChange, review, error, onAdd, onClose,
   </section>;
   return (
     <section className="wall-trace-panel" aria-label={outline ? "Frame room settings" : "Trace wall settings"}>
-      <h3>{outline ? "Frame a room from DXF" : "Trace an interior wall"}</h3>
+      <h3>{outline ? outlineTitle : "Trace an interior wall"}</h3>
       <p>{outline ? "Choose a closed outline and confirm which face the drawing represents. Yardwork previews editable nonbearing walls along its edges." : "Pick a run on the plan or enter the two ends. The preview places editable nonbearing framing along that line."}</p>
+      {sourcePicker}
       <div className="inline">
         <button type="button" className="button secondary" onClick={onPick}>Pick on plan</button>
         {!outline && <button type="button" className="text-button" onClick={() => onChange({ ...trace, a: null, b: null })}>Clear points</button>}

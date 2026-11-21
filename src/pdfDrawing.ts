@@ -1,7 +1,8 @@
-import { AnnotationMode, GlobalWorkerOptions, getDocument } from "pdfjs-dist";
+import { AnnotationMode, GlobalWorkerOptions, OPS, getDocument } from "pdfjs-dist";
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { drawingCanvas, encodeDrawing, type DrawingReader } from "./drawingPreview";
-import { drawingPixelLimit, drawingSourceSchema } from "./drawingReference";
+import { drawingPixelLimit, drawingSourceSchema, type DrawingLine } from "./drawingReference";
+import { extractPdfPlanLines } from "./pdfPlanLines";
 
 GlobalWorkerOptions.workerSrc = workerUrl;
 
@@ -29,14 +30,32 @@ export async function openPdfDrawing(data: Uint8Array, name: string, signal: Abo
         const full = page.getViewport({ scale: 1 });
         const scale = Math.min(3, drawingPixelLimit / Math.max(full.width, full.height));
         const viewport = page.getViewport({ scale });
-        const { canvas } = drawingCanvas(viewport.width, viewport.height);
-        const draw = page.render({ canvas, viewport, annotationMode: AnnotationMode.DISABLE, background: "#fff" });
+        const { canvas, context } = drawingCanvas(viewport.width, viewport.height);
+        const optionalContentConfigPromise = doc.getOptionalContentConfig({ intent: "display" });
+        const draw = page.render({ canvas, viewport, annotationMode: AnnotationMode.DISABLE, background: "#fff", optionalContentConfigPromise });
         const cancel = () => draw.cancel();
         pageSignal.addEventListener("abort", cancel, { once: true });
         try {
           await draw.promise;
           pageSignal.throwIfAborted();
-          return drawingSourceSchema.parse({ ...encodeDrawing(canvas), name, page: number });
+          let pdfLines: DrawingLine[] = [];
+          try {
+            const [operators, layers] = await Promise.all([
+              page.getOperatorList({ intent: "display", annotationMode: AnnotationMode.DISABLE }),
+              optionalContentConfigPromise,
+            ]);
+            pageSignal.throwIfAborted();
+            if (operators.fnArray.includes(OPS.constructPath)) {
+              pdfLines = extractPdfPlanLines(operators, OPS, viewport.transform,
+                context.getImageData(0, 0, canvas.width, canvas.height), (layer) => layers.isVisible(layer));
+            }
+          } catch {
+            pageSignal.throwIfAborted();
+            // The rendered sheet still supports manual tracing if its path data cannot be read.
+          }
+          return drawingSourceSchema.parse({ ...encodeDrawing(canvas), name, page: number,
+            ...(pdfLines.length ? { pdfLines } : {}),
+          });
         } finally {
           pageSignal.removeEventListener("abort", cancel);
           page.cleanup();

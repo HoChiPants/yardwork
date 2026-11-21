@@ -8,6 +8,8 @@ The idea planner accepts a question about one labeled scrap. A general board-fit
 
 The new Chrome scenario switched between two measured remnants, placed a 4 ft board from the explicitly selected O002, and exported its cut from O002 in the build guide. The production builds, 1,638 domain tests, five example validations and seven targeted material-placement browser cases passed.
 
+The [real-model GitHub run](https://github.com/HoChiPants/yardwork/actions/runs/44952046994) passed the targeted section and L-banquette checks. The build-family check still expected the retired inline stock history. Its revised assertion verifies a labeled source and numbered instructions for each saved stock unit in the new guide section. The revised check passed all seven cases with native Ollama and Qwen2.5 3B, including the five build families, a shorter greenhouse and a scoped banquette revision. Each case saved and reopened the same geometry and cut sources.
+
 ## Saved stock cut order and scrap questions, format 118
 
 List shows the saved cut order for a scheduled source board or sheet. The printed and Markdown guides place that order before its dependent offcut cuts. Each dependent cut identifies the original stock order by part label. Missing or incomplete instructions call for a review of the cut layout. Layout changes, including later trims, are called out alongside the saved steps.

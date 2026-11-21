@@ -102,7 +102,15 @@ async function propose(
     assert.deepEqual(purchases(recorded.project), purchases(preview.project));
     assert.equal(recorded.project.plannedCutSources?.length, recorded.sourceIds.length);
     const project = generateBuildGuide(recorded.project);
-    assert.match(guideMarkdown(project), /Stock cut order for P\d+/);
+    const guide = guideMarkdown(project);
+    const order = guide.split(/^## /m).find((section) => section.startsWith("Planned stock cuts\n"));
+    assert.ok(order, "The guide needs its saved stock cut order");
+    const sources = order.split(/^### /m).slice(1);
+    assert.equal(sources.length, recorded.sourceIds.length);
+    for (const source of sources) {
+      assert.match(source, /^P\d+ · /);
+      assert.match(source, /^1\. \S/m);
+    }
     const save = await fetch(`${base}/api/projects/${project.id}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
@@ -123,7 +131,7 @@ async function propose(
     assert.deepEqual(reopened.project, saved.project);
     const profiles = project.pieces.filter((p) => p.cutPlanes.length).length;
     if (name === "greenhouse")
-      assert.match(guideMarkdown(project), /Angled end face/);
+      assert.match(guide, /Angled end face/);
     record.persistence = {
       id: project.id,
       name: project.name,

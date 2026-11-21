@@ -4,6 +4,8 @@ import { isPexPipe, pexCutter, pexInstallation } from "./wallWaterReference";
 import { reviewWaterFitting } from "./waterFittings";
 import { reviewWaterStop } from "./waterStops";
 import { waterStop } from "./waterStopReference";
+import { sinkTrap } from "./sinkDrainReference";
+import { reviewSinkDrain } from "./sinkDrain";
 import { waterTestManufacturer } from "./waterPressure";
 import { maxFittingInstructions, waterDepthGauge } from "./waterFittingReference";
 import { reviewWaterRun } from "./wallWater";
@@ -214,6 +216,16 @@ const definitions: Record<
     name: "Check wrench access at the fixture hose",
     review: "Use the connector maker’s wrench and tightening instructions for the delivered supply hose. Verify access without straining the push joint.",
     referenceUrls: [waterStop.instructions],
+  },
+  "sink-tube-cut": {
+    name: "Square-cut the sink wall tube",
+    review: "Use a suitable plastic pipe cutter or hacksaw and support the wall tube. Verify the mark from the actual dry fit and clean the cut.",
+    referenceUrls: [sinkTrap.installation],
+  },
+  "sink-slip-nut": {
+    name: "Check slip-joint access and wrench fit",
+    review: "Confirm the delivered nuts and washers, and room for the selected pliers or wrench if needed. Follow the manufacturer’s tightening and leak-check guidance.",
+    referenceUrls: [sinkTrap.installation],
   },
   "metal-cut": {
     name: "Shorten the selected metal rod",
@@ -804,6 +816,11 @@ export function toolChecklist(
       reason: `Record the installed section containing ${run.name} before concealing this line.`,
     }, "conditional", "Confirm the tested section, installer procedure and local inspection requirements.");
   }
+  for (const drain of project.sinkDrains ?? []) {
+    if (!reviewSinkDrain(project, drain).layout) continue;
+    add("sink-slip-nut", { kind: "piece", id: drain.bodyId, reason: drain.name },
+      "conditional", "When the installed slip nuts need a tool to seat them.");
+  }
   for (const fitting of project.waterFittings ?? []) {
     const { layout } = reviewWaterFitting(project, fitting);
     if (layout) add("pex-insertion-mark", {
@@ -895,6 +912,15 @@ export function toolChecklist(
           reason: `${source.reason} Profile face ${face.planeIndex + 1} · ${face.axis} ${face.side} · ${Math.round(face.angleFromSquare * 100) / 100}° from square.`,
         });
       }
+    }
+    if (m.id === sinkTrap.id) continue;
+    if (m.id === sinkTrap.tube) {
+      if (piece.size[1] < (piece.cutStock?.size[1] ?? m.size[1]) - 0.001) {
+        add("sink-tube-cut", source, piece.cutStock ? "required" : "conditional");
+        add("measure", source);
+        add("ppe-eye", source);
+      }
+      continue;
     }
     if (!m.wood) {
       const size = [...piece.size].sort((a, b) => a - b),

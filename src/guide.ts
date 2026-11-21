@@ -72,6 +72,7 @@ function preparationScope(project: Project) {
     ...(project.waterRuns?.length ? { waterRuns: project.waterRuns } : {}),
     ...(project.waterFittings?.length ? { waterFittings: project.waterFittings } : {}),
     ...(project.waterStops?.length ? { waterStops: project.waterStops } : {}),
+    ...(project.sinkDrains?.length ? { sinkDrains: project.sinkDrains } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),

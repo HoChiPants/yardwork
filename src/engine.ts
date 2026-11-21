@@ -70,6 +70,8 @@ import { reviewWaterRun, waterRunGuide } from "./wallWater";
 import { reviewWaterFitting, waterFittingGuide } from "./waterFittings";
 import { reviewWaterStop, waterStopGuide } from "./waterStops";
 import { waterStop } from "./waterStopReference";
+import { reviewSinkDrain, sinkDrainCodeRows, sinkDrainGuide } from "./sinkDrain";
+import { sinkTrap, sinkDrainReferences } from "./sinkDrainReference";
 import { maxFittingInstructions, maxInsertionChart, waterFittingProducts } from "./waterFittingReference";
 import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { reviewShingleRoof, roofAreaText, roofPitchText } from "./shingleRoof";
@@ -361,6 +363,7 @@ export function usableInventory(p: Project, id: MaterialId, now = Date.now()) {
 export function bom(p: Project, now = Date.now()): BomRow[] {
   const cutStock = inspectCutStock(p);
   const onHand = new Set(p.onHandCutSources);
+  const fittedSinkTraps = new Set((p.sinkDrains ?? []).map(({ bodyId }) => bodyId));
   return catalog
     .filter((material) => !material.includedComponent)
     .map((m) => {
@@ -519,7 +522,9 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
         const stock = [...(m.stockSize ?? m.size)].sort((a, b) => a - b);
         for (const x of parts) {
           const s = [...x.size].sort((a, b) => a - b);
-          if (s.some((v, i) => v > stock[i] + 0.001)) {
+          // The catalog width is the tube OD. A fitted assembly includes its measured collar.
+          const fittedTrap = m.id === sinkTrap.id && fittedSinkTraps.has(x.id);
+          if (!fittedTrap && s.some((v, i) => v > stock[i] + 0.001)) {
             oversize++;
             oversizedParts.push(x);
           } else if (
@@ -813,6 +818,16 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (review.problem) findings.push({
       id: `water-stop-${stop.id}`, severity: "warning", title: `Review fixture shutoff · ${stop.name}`,
       detail: review.problem, ...(p.pieces.some(({ id }) => id === stop.pieceId) && { pieceId: stop.pieceId }),
+    });
+  }
+  for (const drain of p.sinkDrains ?? []) {
+    const review = reviewSinkDrain(p, drain);
+    const detail = review.layout
+      ? sinkDrainCodeRows(p, drain, review.layout).filter(({ state }) => state === "discrepancy").map(({ detail }) => detail).join(" ")
+      : review.problem;
+    if (detail) findings.push({
+      id: `sink-drain-${drain.id}`, severity: "warning", title: `Review sink drain · ${drain.name}`, detail,
+      ...(p.pieces.some(({ id }) => id === drain.bodyId) && { pieceId: drain.bodyId }),
     });
   }
   if (p.waterRuns?.length) {
@@ -2190,6 +2205,10 @@ export function guideMarkdown(p: Project) {
       waterSupportGuideLines(waterSupportNetwork(p)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[PEX support guidance](${pexInstallation}) · [IRC piping support](${waterSupportReference.code}) · [HoldRite installation](${waterSupportReference.instructions})\n` : "") +
+    (p.sinkDrains?.length ? "\n\n## Sink drains and wall-tube cuts\n\n" +
+      p.sinkDrains.flatMap((record) => sinkDrainGuide(p, record)).map((line) =>
+        "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[Oatey kit drawing](${sinkTrap.drawing}) · [Installation](${sinkTrap.installation}) · [IRC fixture vents](${sinkDrainReferences.ircVent.url}) · [IPC fixture vents](${sinkDrainReferences.ipcVent.url})\n` : "") +
     (p.waterStops?.length ? "\n\n## Fixture shutoffs\n\n" +
       p.waterStops.flatMap((stop) => waterStopGuide(p, stop)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

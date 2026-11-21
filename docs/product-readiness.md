@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 78 placeable material entries. The registry contains 152 product records and 170 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 80 placeable material entries. The registry contains 153 product records and 171 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 21, 2026 · Kitchenette drain fit and wall-tube cuts
+
+The drain planner models the Oatey HDC9704B trap and its included wall tube from dry-fit measurements. It compares visible slope, removal space and saved cabinet travel. The guide shows the square cut, socket engagement and leftover stock. Separate field measurements support a reference comparison for trap-to-vent distance, total fall and takeoff elevation. Verify joint alignment, concealed drainage and the installed result in the field. [Oatey kit drawing](https://images.thdstatic.com/catalog/pdfImages/48/48334fc0-d89f-42bb-a50f-68353e8740b8.pdf) · [IRC fixture vents](https://codes.iccsafe.org/content/VARC2021P1/chapter-31-vents) · [IPC fixture vents](https://codes.iccsafe.org/content/IPC2024V2.0/chapter-9-vents)
 
 ## November 21, 2026 · Recover a planning request
 

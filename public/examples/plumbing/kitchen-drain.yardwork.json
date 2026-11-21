@@ -1,0 +1,2825 @@
+{
+  "schemaVersion": 113,
+  "id": "85e19b84-ed9b-4b4c-93ae-c14c577571b9",
+  "name": "Kitchenette sink drain and cabinet fit study",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "9c29fcdd-2e3a-449d-a3d3-4db0de86de50"
+  ],
+  "waterRuns": [
+    {
+      "name": "Kitchen main",
+      "sectionId": "8fec6ff9-e365-4bbc-986b-8c66bada1e43",
+      "materialId": "hd-pex-u870w10",
+      "start": 3,
+      "end": 53.49999999999994,
+      "height": 24,
+      "depth": 0,
+      "bore": 1.125,
+      "reuse": true,
+      "isolator": {
+        "face": "start",
+        "flange": 0.0625
+      },
+      "id": "1863c0f3-ff00-40b2-9301-a3453648ab2d",
+      "pipeId": "4f6c73e4-fbc0-47df-b040-521791fd6eeb",
+      "stepId": "9c125184-c2bf-4b38-ae9f-8bc5e5979c7f",
+      "studs": [
+        "af6ac41b-d8b7-427a-8e40-10da4e1568dc",
+        "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d",
+        "a7a06ee9-ab72-410a-87f3-4e3e43f75cae"
+      ],
+      "shields": [
+        {
+          "id": "4410a299-6489-4c68-8b17-5bad49e286af",
+          "studId": "af6ac41b-d8b7-427a-8e40-10da4e1568dc",
+          "face": "front"
+        },
+        {
+          "id": "e2171b71-da35-4c57-b086-0b574f2acef5",
+          "studId": "af6ac41b-d8b7-427a-8e40-10da4e1568dc",
+          "face": "back"
+        },
+        {
+          "id": "1bec1b38-bf65-4821-8cdd-960cd78bb555",
+          "studId": "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d",
+          "face": "front"
+        },
+        {
+          "id": "2b7ee914-3c59-417a-9480-ab58fd099504",
+          "studId": "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d",
+          "face": "back"
+        },
+        {
+          "id": "3dce7f65-9ae2-4fa1-9f2d-96a199166be7",
+          "studId": "a7a06ee9-ab72-410a-87f3-4e3e43f75cae",
+          "face": "front"
+        },
+        {
+          "id": "53d87fc3-a018-4777-b783-eb2dd2e5bd23",
+          "studId": "a7a06ee9-ab72-410a-87f3-4e3e43f75cae",
+          "face": "back"
+        }
+      ],
+      "isolators": [
+        {
+          "id": "a9298e41-0f9f-454b-8c76-fc31a465623b",
+          "studId": "af6ac41b-d8b7-427a-8e40-10da4e1568dc"
+        },
+        {
+          "id": "67a15941-571f-4ac3-b0ad-08f8795813ba",
+          "studId": "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d"
+        },
+        {
+          "id": "901b852f-b1a4-4b4b-a474-4f988c1dcec3",
+          "studId": "a7a06ee9-ab72-410a-87f3-4e3e43f75cae"
+        }
+      ]
+    },
+    {
+      "name": "Island feed",
+      "sectionId": "d36d2174-73b0-4304-860f-f915f3163bba",
+      "materialId": "hd-pex-u860w10",
+      "start": -3.35,
+      "end": 55,
+      "height": 24,
+      "depth": 0,
+      "bore": 0.875,
+      "isolator": {
+        "face": "start",
+        "flange": 0.0625
+      },
+      "id": "4fe517b5-f501-4bcf-ab68-e93d8f562811",
+      "pipeId": "94826c6f-5e43-4994-bbe4-611478794b51",
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "studs": [
+        "41c45c66-bdf4-4366-8195-cbda818dbbc1",
+        "2da016b7-e74d-43fc-a6aa-932e49c477d0",
+        "32a14fd6-8aa1-4e27-a492-8a9be669ef4e",
+        "bf635dc8-26c3-41a9-bfa3-7512a64dbcf7"
+      ],
+      "shields": [
+        {
+          "id": "70a206f7-5d9d-43d2-8325-78fd4e1710e5",
+          "studId": "41c45c66-bdf4-4366-8195-cbda818dbbc1",
+          "face": "front"
+        },
+        {
+          "id": "4d90b912-1cd6-4e07-8ed0-26fb7bdb66c0",
+          "studId": "41c45c66-bdf4-4366-8195-cbda818dbbc1",
+          "face": "back"
+        },
+        {
+          "id": "1230c277-9a0d-4315-9245-67bf1d188eda",
+          "studId": "2da016b7-e74d-43fc-a6aa-932e49c477d0",
+          "face": "front"
+        },
+        {
+          "id": "0873d610-a29d-4d4b-bc91-283154cbf1dc",
+          "studId": "2da016b7-e74d-43fc-a6aa-932e49c477d0",
+          "face": "back"
+        },
+        {
+          "id": "f3409fb8-1b09-4496-9295-42fa98ca91b9",
+          "studId": "32a14fd6-8aa1-4e27-a492-8a9be669ef4e",
+          "face": "front"
+        },
+        {
+          "id": "ee6952fc-d608-414a-8e54-40a3d2933855",
+          "studId": "32a14fd6-8aa1-4e27-a492-8a9be669ef4e",
+          "face": "back"
+        },
+        {
+          "id": "69493ec0-d2ba-4e1b-b680-4946c9414d22",
+          "studId": "bf635dc8-26c3-41a9-bfa3-7512a64dbcf7",
+          "face": "front"
+        },
+        {
+          "id": "c5f0d48a-cde1-4f22-8149-42b2ce375797",
+          "studId": "bf635dc8-26c3-41a9-bfa3-7512a64dbcf7",
+          "face": "back"
+        }
+      ],
+      "isolators": [
+        {
+          "id": "cd9d51c4-1688-434b-8e8b-bf337c1a2d05",
+          "studId": "41c45c66-bdf4-4366-8195-cbda818dbbc1"
+        },
+        {
+          "id": "a71cfd4c-30fd-4b99-8cd4-6a8f56c3ab70",
+          "studId": "2da016b7-e74d-43fc-a6aa-932e49c477d0"
+        },
+        {
+          "id": "9f873408-b360-4900-be4a-0f150090d82e",
+          "studId": "32a14fd6-8aa1-4e27-a492-8a9be669ef4e"
+        },
+        {
+          "id": "92f5b825-7066-4bfe-b91e-312ca3841405",
+          "studId": "bf635dc8-26c3-41a9-bfa3-7512a64dbcf7"
+        }
+      ]
+    },
+    {
+      "name": "Kitchen main · B",
+      "sectionId": "8fec6ff9-e365-4bbc-986b-8c66bada1e43",
+      "materialId": "hd-pex-u870w10",
+      "start": 54.49999999999994,
+      "end": 105,
+      "height": 24,
+      "depth": 0,
+      "bore": 1.125,
+      "reuse": true,
+      "isolator": {
+        "face": "start",
+        "flange": 0.0625
+      },
+      "id": "627b8683-7a9e-471e-8d56-5891ed35b42e",
+      "pipeId": "018ee748-5797-41aa-b4da-a91a9bdd8208",
+      "stepId": "d7f274dc-69af-47f1-86cd-6118b415f0ca",
+      "studs": [
+        "09d66d0a-3ad2-4471-a16c-e3dadea1a21e",
+        "213de53b-dfea-4e84-bd18-44d5d4ef7057",
+        "f352a85d-6c46-4c3e-8528-8cf07883b356"
+      ],
+      "shields": [
+        {
+          "id": "0f56050a-671b-4a9e-8b5a-5683ee9c2dc4",
+          "studId": "09d66d0a-3ad2-4471-a16c-e3dadea1a21e",
+          "face": "front"
+        },
+        {
+          "id": "c5cac585-0402-4d6f-83d8-887f54fb172b",
+          "studId": "09d66d0a-3ad2-4471-a16c-e3dadea1a21e",
+          "face": "back"
+        },
+        {
+          "id": "c7a4fc5a-4fa3-4fba-980d-d460f50d0055",
+          "studId": "213de53b-dfea-4e84-bd18-44d5d4ef7057",
+          "face": "front"
+        },
+        {
+          "id": "d48fe5c2-52c2-4687-98cc-950f802ec602",
+          "studId": "213de53b-dfea-4e84-bd18-44d5d4ef7057",
+          "face": "back"
+        },
+        {
+          "id": "44de4a63-8d6a-4c89-8892-d6161da3e511",
+          "studId": "f352a85d-6c46-4c3e-8528-8cf07883b356",
+          "face": "front"
+        },
+        {
+          "id": "c2a3f4a1-ffee-4587-a689-ddfe8c7d2768",
+          "studId": "f352a85d-6c46-4c3e-8528-8cf07883b356",
+          "face": "back"
+        }
+      ],
+      "isolators": [
+        {
+          "id": "3396b3c1-1197-4132-8102-8dbebb638d40",
+          "studId": "09d66d0a-3ad2-4471-a16c-e3dadea1a21e"
+        },
+        {
+          "id": "c30f848e-8371-48a1-8fbd-f2fdff22694d",
+          "studId": "213de53b-dfea-4e84-bd18-44d5d4ef7057"
+        },
+        {
+          "id": "cdd3df67-e09e-4e5f-a719-11d2b6281dc8",
+          "studId": "f352a85d-6c46-4c3e-8528-8cf07883b356"
+        }
+      ]
+    }
+  ],
+  "waterFittings": [
+    {
+      "a": {
+        "runId": "1863c0f3-ff00-40b2-9301-a3453648ab2d",
+        "end": "end"
+      },
+      "b": {
+        "runId": "627b8683-7a9e-471e-8d56-5891ed35b42e",
+        "end": "start"
+      },
+      "reach": [
+        1.75,
+        1.75
+      ],
+      "branch": {
+        "port": {
+          "runId": "4fe517b5-f501-4bcf-ab68-e93d8f562811",
+          "end": "start"
+        },
+        "reach": 1.65
+      },
+      "id": "109ce132-d1d6-4cfd-901f-81d7844d7fdd",
+      "pieceId": "13b486f4-c165-423c-a78c-0147a8362553",
+      "materialId": "hd-sharkbite-ur412a"
+    }
+  ],
+  "waterStops": [
+    {
+      "name": "Island sink cold",
+      "port": {
+        "runId": "4fe517b5-f501-4bcf-ab68-e93d8f562811",
+        "end": "end"
+      },
+      "face": 52,
+      "outlet": "up",
+      "access": 2,
+      "hose": 3,
+      "id": "c38bedd2-d21d-498c-b815-52c8903901ca",
+      "pieceId": "f2badb9c-ff8f-405a-8573-e41b80d8cf76"
+    }
+  ],
+  "sinkDrains": [
+    {
+      "name": "Island sink drain",
+      "tail": [
+        4,
+        22,
+        55
+      ],
+      "wall": [
+        4,
+        22.15625,
+        64
+      ],
+      "tailDiameter": 1.5,
+      "tailSeat": 1,
+      "wallSeat": 1.25,
+      "bendReach": 4.5,
+      "outletDrop": 0.75,
+      "bodyDrop": 4.95,
+      "bodyWidth": 2.25,
+      "blank": 7.25,
+      "kerf": 0.125,
+      "service": 3,
+      "vent": {
+        "length": 24,
+        "fall": 0.5,
+        "takeoff": 0.25,
+        "uniform": true
+      },
+      "id": "c6fa6090-73db-4361-8c88-bca35874ccbb",
+      "bodyId": "4b192cf2-379e-46c8-b50c-ba15bb731feb",
+      "tubeId": "3bd8220e-a785-4d7a-a900-8cb994f07cea"
+    }
+  ],
+  "motionPlans": [
+    {
+      "label": "Island pullout",
+      "memberIds": [
+        "824043ba-bbb5-41bf-a397-59a47a1d6de8"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "travel": 12
+      },
+      "id": "9f3730c0-428d-429c-82d5-95c12a4a312b"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "62829781-62cd-4867-9146-0f4f5ce594ea",
+      "label": "P001"
+    },
+    {
+      "partId": "8c2f3b91-9e47-4e9f-acd6-ec6f66fb4e1c",
+      "label": "P002"
+    },
+    {
+      "partId": "6367b215-7053-4a28-92d3-69ff751d930d",
+      "label": "P003"
+    },
+    {
+      "partId": "af6ac41b-d8b7-427a-8e40-10da4e1568dc",
+      "label": "P004"
+    },
+    {
+      "partId": "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d",
+      "label": "P005"
+    },
+    {
+      "partId": "a7a06ee9-ab72-410a-87f3-4e3e43f75cae",
+      "label": "P006"
+    },
+    {
+      "partId": "09d66d0a-3ad2-4471-a16c-e3dadea1a21e",
+      "label": "P007"
+    },
+    {
+      "partId": "213de53b-dfea-4e84-bd18-44d5d4ef7057",
+      "label": "P008"
+    },
+    {
+      "partId": "f352a85d-6c46-4c3e-8528-8cf07883b356",
+      "label": "P009"
+    },
+    {
+      "partId": "a29e1ba8-b7ca-43bd-abdc-6fd3704de831",
+      "label": "P010"
+    },
+    {
+      "partId": "4f2a5185-1b54-4b07-b531-6177a8b9c96a",
+      "label": "P011"
+    },
+    {
+      "partId": "8cee6b0c-5210-443a-b349-cbe870a116bf",
+      "label": "P012"
+    },
+    {
+      "partId": "41c45c66-bdf4-4366-8195-cbda818dbbc1",
+      "label": "P013"
+    },
+    {
+      "partId": "2da016b7-e74d-43fc-a6aa-932e49c477d0",
+      "label": "P014"
+    },
+    {
+      "partId": "32a14fd6-8aa1-4e27-a492-8a9be669ef4e",
+      "label": "P015"
+    },
+    {
+      "partId": "bf635dc8-26c3-41a9-bfa3-7512a64dbcf7",
+      "label": "P016"
+    },
+    {
+      "partId": "4f6c73e4-fbc0-47df-b040-521791fd6eeb",
+      "label": "P017"
+    },
+    {
+      "partId": "839bbcd2-60b6-4a9b-bac9-8f78f54f8fb2",
+      "label": "O001"
+    },
+    {
+      "partId": "1b1b0a3b-756d-4275-bf1f-34c3cc8e324d",
+      "label": "O002"
+    },
+    {
+      "partId": "018ee748-5797-41aa-b4da-a91a9bdd8208",
+      "label": "P018"
+    },
+    {
+      "partId": "13b486f4-c165-423c-a78c-0147a8362553",
+      "label": "P019"
+    },
+    {
+      "partId": "4410a299-6489-4c68-8b17-5bad49e286af",
+      "label": "P020"
+    },
+    {
+      "partId": "e2171b71-da35-4c57-b086-0b574f2acef5",
+      "label": "P021"
+    },
+    {
+      "partId": "1bec1b38-bf65-4821-8cdd-960cd78bb555",
+      "label": "P022"
+    },
+    {
+      "partId": "2b7ee914-3c59-417a-9480-ab58fd099504",
+      "label": "P023"
+    },
+    {
+      "partId": "3dce7f65-9ae2-4fa1-9f2d-96a199166be7",
+      "label": "P024"
+    },
+    {
+      "partId": "53d87fc3-a018-4777-b783-eb2dd2e5bd23",
+      "label": "P025"
+    },
+    {
+      "partId": "a9298e41-0f9f-454b-8c76-fc31a465623b",
+      "label": "P026"
+    },
+    {
+      "partId": "67a15941-571f-4ac3-b0ad-08f8795813ba",
+      "label": "P027"
+    },
+    {
+      "partId": "901b852f-b1a4-4b4b-a474-4f988c1dcec3",
+      "label": "P028"
+    },
+    {
+      "partId": "0f56050a-671b-4a9e-8b5a-5683ee9c2dc4",
+      "label": "P029"
+    },
+    {
+      "partId": "c5cac585-0402-4d6f-83d8-887f54fb172b",
+      "label": "P030"
+    },
+    {
+      "partId": "c7a4fc5a-4fa3-4fba-980d-d460f50d0055",
+      "label": "P031"
+    },
+    {
+      "partId": "d48fe5c2-52c2-4687-98cc-950f802ec602",
+      "label": "P032"
+    },
+    {
+      "partId": "44de4a63-8d6a-4c89-8892-d6161da3e511",
+      "label": "P033"
+    },
+    {
+      "partId": "c2a3f4a1-ffee-4587-a689-ddfe8c7d2768",
+      "label": "P034"
+    },
+    {
+      "partId": "3396b3c1-1197-4132-8102-8dbebb638d40",
+      "label": "P035"
+    },
+    {
+      "partId": "c30f848e-8371-48a1-8fbd-f2fdff22694d",
+      "label": "P036"
+    },
+    {
+      "partId": "cdd3df67-e09e-4e5f-a719-11d2b6281dc8",
+      "label": "P037"
+    },
+    {
+      "partId": "94826c6f-5e43-4994-bbe4-611478794b51",
+      "label": "P038"
+    },
+    {
+      "partId": "70a206f7-5d9d-43d2-8325-78fd4e1710e5",
+      "label": "P039"
+    },
+    {
+      "partId": "4d90b912-1cd6-4e07-8ed0-26fb7bdb66c0",
+      "label": "P040"
+    },
+    {
+      "partId": "1230c277-9a0d-4315-9245-67bf1d188eda",
+      "label": "P041"
+    },
+    {
+      "partId": "0873d610-a29d-4d4b-bc91-283154cbf1dc",
+      "label": "P042"
+    },
+    {
+      "partId": "f3409fb8-1b09-4496-9295-42fa98ca91b9",
+      "label": "P043"
+    },
+    {
+      "partId": "ee6952fc-d608-414a-8e54-40a3d2933855",
+      "label": "P044"
+    },
+    {
+      "partId": "69493ec0-d2ba-4e1b-b680-4946c9414d22",
+      "label": "P045"
+    },
+    {
+      "partId": "c5f0d48a-cde1-4f22-8149-42b2ce375797",
+      "label": "P046"
+    },
+    {
+      "partId": "cd9d51c4-1688-434b-8e8b-bf337c1a2d05",
+      "label": "P047"
+    },
+    {
+      "partId": "a71cfd4c-30fd-4b99-8cd4-6a8f56c3ab70",
+      "label": "P048"
+    },
+    {
+      "partId": "9f873408-b360-4900-be4a-0f150090d82e",
+      "label": "P049"
+    },
+    {
+      "partId": "92f5b825-7066-4bfe-b91e-312ca3841405",
+      "label": "P050"
+    },
+    {
+      "partId": "59ba1d84-91fc-4e83-bf8f-9930c6a43c02",
+      "label": "O003"
+    },
+    {
+      "partId": "824043ba-bbb5-41bf-a397-59a47a1d6de8",
+      "label": "P051"
+    },
+    {
+      "partId": "c204f485-cedf-448f-b6e1-5429b447c53c",
+      "label": "P052"
+    },
+    {
+      "partId": "b5d5c40f-bf6b-4a65-ba6b-cbbb993445cb",
+      "label": "P053"
+    },
+    {
+      "partId": "38f6737a-725d-4028-aaf5-61132540020f",
+      "label": "O004"
+    },
+    {
+      "partId": "f2badb9c-ff8f-405a-8573-e41b80d8cf76",
+      "label": "P054"
+    },
+    {
+      "partId": "4b192cf2-379e-46c8-b50c-ba15bb731feb",
+      "label": "P055"
+    },
+    {
+      "partId": "3bd8220e-a785-4d7a-a900-8cb994f07cea",
+      "label": "P056"
+    },
+    {
+      "partId": "adedf737-1f30-4c27-94fa-965b3951d1d1",
+      "label": "O005"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-21T12:30:55.589Z",
+  "pieces": [
+    {
+      "id": "62829781-62cd-4867-9146-0f4f5ce594ea",
+      "name": "Wall 1 · bottom plate",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        108,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-bottom-plate",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8c2f3b91-9e47-4e9f-acd6-ec6f66fb4e1c",
+      "name": "Wall 1 · top plate",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        108,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        95.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-top-plate",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6367b215-7053-4a28-92d3-69ff751d930d",
+      "name": "Wall 1 · stud 1",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -53.25,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-stud-1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "af6ac41b-d8b7-427a-8e40-10da4e1568dc",
+      "name": "Wall 1 · stud 2",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -38,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-stud-2",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "1863c0f3-ff00-40b2-9301-a3453648ab2d"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d",
+      "name": "Wall 1 · stud 3",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -22,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-stud-3",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "1863c0f3-ff00-40b2-9301-a3453648ab2d"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a7a06ee9-ab72-410a-87f3-4e3e43f75cae",
+      "name": "Wall 1 · stud 4",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -6,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-stud-4",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "1863c0f3-ff00-40b2-9301-a3453648ab2d"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "09d66d0a-3ad2-4471-a16c-e3dadea1a21e",
+      "name": "Wall 1 · stud 5",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        10,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-stud-5",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "627b8683-7a9e-471e-8d56-5891ed35b42e"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "213de53b-dfea-4e84-bd18-44d5d4ef7057",
+      "name": "Wall 1 · stud 6",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        26,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-stud-6",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "627b8683-7a9e-471e-8d56-5891ed35b42e"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f352a85d-6c46-4c3e-8528-8cf07883b356",
+      "name": "Wall 1 · stud 7",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        42,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-stud-7",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "627b8683-7a9e-471e-8d56-5891ed35b42e"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a29e1ba8-b7ca-43bd-abdc-6fd3704de831",
+      "name": "Wall 1 · stud 8",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        53.25,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "assembly": "Wall 1",
+      "designRole": "wall-stud-8",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4f2a5185-1b54-4b07-b531-6177a8b9c96a",
+      "name": "Wall 2 · bottom plate",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        48,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        28
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "d99040e2-87ed-4d1b-a1d3-bf996b68993c",
+      "assembly": "Wall 2",
+      "designRole": "wall-bottom-plate",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8cee6b0c-5210-443a-b349-cbe870a116bf",
+      "name": "Wall 2 · top plate",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        48,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        95.25,
+        28
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "d99040e2-87ed-4d1b-a1d3-bf996b68993c",
+      "assembly": "Wall 2",
+      "designRole": "wall-top-plate",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "41c45c66-bdf4-4366-8195-cbda818dbbc1",
+      "name": "Wall 2 · stud 1",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        0,
+        48,
+        4.75
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "d99040e2-87ed-4d1b-a1d3-bf996b68993c",
+      "assembly": "Wall 2",
+      "designRole": "wall-stud-1",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "4fe517b5-f501-4bcf-ab68-e93d8f562811"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2da016b7-e74d-43fc-a6aa-932e49c477d0",
+      "name": "Wall 2 · stud 2",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        0,
+        48,
+        20
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "d99040e2-87ed-4d1b-a1d3-bf996b68993c",
+      "assembly": "Wall 2",
+      "designRole": "wall-stud-2",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "4fe517b5-f501-4bcf-ab68-e93d8f562811"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "32a14fd6-8aa1-4e27-a492-8a9be669ef4e",
+      "name": "Wall 2 · stud 3",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        0,
+        48,
+        36
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "d99040e2-87ed-4d1b-a1d3-bf996b68993c",
+      "assembly": "Wall 2",
+      "designRole": "wall-stud-3",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "4fe517b5-f501-4bcf-ab68-e93d8f562811"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "bf635dc8-26c3-41a9-bfa3-7512a64dbcf7",
+      "name": "Wall 2 · stud 4",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        0,
+        48,
+        51.25
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "d99040e2-87ed-4d1b-a1d3-bf996b68993c",
+      "assembly": "Wall 2",
+      "designRole": "wall-stud-4",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 0,
+          "center": [
+            -24,
+            0
+          ],
+          "diameter": 1.375,
+          "source": {
+            "waterRunId": "4fe517b5-f501-4bcf-ab68-e93d8f562811"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4f6c73e4-fbc0-47df-b040-521791fd6eeb",
+      "name": "Kitchen main",
+      "material": "hd-pex-u870w10",
+      "size": [
+        0.875,
+        50.49999999999994,
+        0.875
+      ],
+      "position": [
+        -25.75000000000003,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-pipe",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "9c29fcdd-2e3a-449d-a3d3-4db0de86de50",
+        "size": [
+          0.875,
+          110,
+          0.875
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "839bbcd2-60b6-4a9b-bac9-8f78f54f8fb2",
+      "name": "Offcut · On-hand ¾ in PEX sample stick",
+      "material": "hd-pex-u870w10",
+      "size": [
+        0.875,
+        8,
+        0.875
+      ],
+      "position": [
+        0,
+        106,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f14c477e-5c4e-4719-9b24-659b1c67bcc0",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "9c29fcdd-2e3a-449d-a3d3-4db0de86de50",
+        "size": [
+          0.875,
+          110,
+          0.875
+        ],
+        "offset": [
+          0,
+          102,
+          0
+        ]
+      }
+    },
+    {
+      "id": "1b1b0a3b-756d-4275-bf1f-34c3cc8e324d",
+      "name": "Offcut · Tee center trim",
+      "material": "hd-pex-u870w10",
+      "size": [
+        0.875,
+        1,
+        0.875
+      ],
+      "position": [
+        -5.684341886080802e-14,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "f14c477e-5c4e-4719-9b24-659b1c67bcc0",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-pipe",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "9c29fcdd-2e3a-449d-a3d3-4db0de86de50",
+        "size": [
+          0.875,
+          110,
+          0.875
+        ],
+        "offset": [
+          0,
+          50.49999999999994,
+          0
+        ]
+      }
+    },
+    {
+      "id": "018ee748-5797-41aa-b4da-a91a9bdd8208",
+      "name": "Kitchen main · B",
+      "material": "hd-pex-u870w10",
+      "size": [
+        0.875,
+        50.50000000000006,
+        0.875
+      ],
+      "position": [
+        25.74999999999997,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-pipe",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "9c29fcdd-2e3a-449d-a3d3-4db0de86de50",
+        "size": [
+          0.875,
+          110,
+          0.875
+        ],
+        "offset": [
+          0,
+          51.49999999999994,
+          0
+        ]
+      }
+    },
+    {
+      "id": "13b486f4-c165-423c-a78c-0147a8362553",
+      "name": "SharkBite Max UR412A reducing tee",
+      "material": "hd-sharkbite-ur412a",
+      "size": [
+        3.5,
+        2.3,
+        1.3
+      ],
+      "position": [
+        2.220446049250313e-16,
+        24,
+        0.49999999999999994
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0,
+        -3.141592653589793
+      ],
+      "stepId": "7b39d63b-be8c-4eea-8de4-34f91d9e83f4",
+      "assembly": "PEX connections",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4410a299-6489-4c68-8b17-5bad49e286af",
+      "name": "Kitchen main · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -38,
+        24,
+        1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e2171b71-da35-4c57-b086-0b574f2acef5",
+      "name": "Kitchen main · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -38,
+        24,
+        -1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1bec1b38-bf65-4821-8cdd-960cd78bb555",
+      "name": "Kitchen main · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -22,
+        24,
+        1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2b7ee914-3c59-417a-9480-ab58fd099504",
+      "name": "Kitchen main · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -22,
+        24,
+        -1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3dce7f65-9ae2-4fa1-9f2d-96a199166be7",
+      "name": "Kitchen main · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -6,
+        24,
+        1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "53d87fc3-a018-4777-b783-eb2dd2e5bd23",
+      "name": "Kitchen main · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -6,
+        24,
+        -1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a9298e41-0f9f-454b-8c76-fc31a465623b",
+      "name": "Kitchen main · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        -38.78125,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "67a15941-571f-4ac3-b0ad-08f8795813ba",
+      "name": "Kitchen main · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        -22.78125,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "901b852f-b1a4-4b4b-a474-4f988c1dcec3",
+      "name": "Kitchen main · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        -6.78125,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0f56050a-671b-4a9e-8b5a-5683ee9c2dc4",
+      "name": "Kitchen main · B · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        10,
+        24,
+        1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c5cac585-0402-4d6f-83d8-887f54fb172b",
+      "name": "Kitchen main · B · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        10,
+        24,
+        -1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c7a4fc5a-4fa3-4fba-980d-d460f50d0055",
+      "name": "Kitchen main · B · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        26,
+        24,
+        1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d48fe5c2-52c2-4687-98cc-950f802ec602",
+      "name": "Kitchen main · B · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        26,
+        24,
+        -1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "44de4a63-8d6a-4c89-8892-d6161da3e511",
+      "name": "Kitchen main · B · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        42,
+        24,
+        1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c2a3f4a1-ffee-4587-a689-ddfe8c7d2768",
+      "name": "Kitchen main · B · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        42,
+        24,
+        -1.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3396b3c1-1197-4132-8102-8dbebb638d40",
+      "name": "Kitchen main · B · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        9.21875,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c30f848e-8371-48a1-8fbd-f2fdff22694d",
+      "name": "Kitchen main · B · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        25.21875,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "cdd3df67-e09e-4e5f-a719-11d2b6281dc8",
+      "name": "Kitchen main · B · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        41.21875,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "94826c6f-5e43-4994-bbe4-611478794b51",
+      "name": "Island feed",
+      "material": "hd-pex-u860w10",
+      "size": [
+        0.625,
+        58.35,
+        0.625
+      ],
+      "position": [
+        0,
+        24,
+        29.825
+      ],
+      "rotation": [
+        1.5707963267948963,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-pipe",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "4159c6cb-7f7d-4905-907c-2214e0c4dcd6",
+        "sourceAxes": [
+          2,
+          0,
+          1
+        ],
+        "size": [
+          0.625,
+          120,
+          0.625
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "59ba1d84-91fc-4e83-bf8f-9930c6a43c02",
+      "name": "Offcut · SharkBite 1/2 in PEX-B · tube remnant 1",
+      "material": "hd-pex-u860w10",
+      "size": [
+        0.625,
+        60.65,
+        0.625
+      ],
+      "position": [
+        0,
+        24,
+        90.325
+      ],
+      "rotation": [
+        1.5707963267948963,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "f14c477e-5c4e-4719-9b24-659b1c67bcc0",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "4159c6cb-7f7d-4905-907c-2214e0c4dcd6",
+        "sourceAxes": [
+          2,
+          0,
+          1
+        ],
+        "size": [
+          0.625,
+          120,
+          0.625
+        ],
+        "offset": [
+          0,
+          59.35,
+          0
+        ]
+      }
+    },
+    {
+      "id": "824043ba-bbb5-41bf-a397-59a47a1d6de8",
+      "name": "Island pullout front",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        5,
+        3
+      ],
+      "position": [
+        -7,
+        24.3,
+        61.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "b9cf958d-0af9-4033-8359-fde1715e5c50",
+      "assembly": "Island cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c204f485-cedf-448f-b6e1-5429b447c53c",
+      "name": "Cabinet left side",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        28,
+        14
+      ],
+      "position": [
+        -10,
+        14,
+        61
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "b9cf958d-0af9-4033-8359-fde1715e5c50",
+      "assembly": "Island cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b5d5c40f-bf6b-4a65-ba6b-cbbb993445cb",
+      "name": "Cabinet right side",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        28,
+        14
+      ],
+      "position": [
+        10,
+        14,
+        61
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "b9cf958d-0af9-4033-8359-fde1715e5c50",
+      "assembly": "Island cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "38f6737a-725d-4028-aaf5-61132540020f",
+      "name": "Offcut · Fixture stub-out trim",
+      "material": "hd-pex-u860w10",
+      "size": [
+        0.625,
+        1,
+        0.625
+      ],
+      "position": [
+        0,
+        24,
+        59.5
+      ],
+      "rotation": [
+        1.5707963267948963,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "f14c477e-5c4e-4719-9b24-659b1c67bcc0",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "4159c6cb-7f7d-4905-907c-2214e0c4dcd6",
+        "sourceAxes": [
+          2,
+          0,
+          1
+        ],
+        "size": [
+          0.625,
+          120,
+          0.625
+        ],
+        "offset": [
+          0,
+          58.35,
+          0
+        ]
+      }
+    },
+    {
+      "id": "70a206f7-5d9d-43d2-8325-78fd4e1710e5",
+      "name": "Island feed · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -1.7812500000000036,
+        24,
+        4.75
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4d90b912-1cd6-4e07-8ed0-26fb7bdb66c0",
+      "name": "Island feed · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        1.7812499999999964,
+        24,
+        4.75
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1230c277-9a0d-4315-9245-67bf1d188eda",
+      "name": "Island feed · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -1.7812500000000018,
+        24,
+        20
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0873d610-a29d-4d4b-bc91-283154cbf1dc",
+      "name": "Island feed · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        1.7812499999999982,
+        24,
+        20
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f3409fb8-1b09-4496-9295-42fa98ca91b9",
+      "name": "Island feed · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -1.7812499999999982,
+        24,
+        36
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ee6952fc-d608-414a-8e54-40a3d2933855",
+      "name": "Island feed · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        1.7812500000000018,
+        24,
+        36
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "69493ec0-d2ba-4e1b-b680-4946c9414d22",
+      "name": "Island feed · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -1.7812499999999964,
+        24,
+        51.25
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c5f0d48a-cde1-4f22-8149-42b2ce375797",
+      "name": "Island feed · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        1.7812500000000036,
+        24,
+        51.25
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "cd9d51c4-1688-434b-8e8b-bf337c1a2d05",
+      "name": "Island feed · stud isolator",
+      "material": "hd-holdrite-161j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        0,
+        24,
+        3.96875
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a71cfd4c-30fd-4b99-8cd4-6a8f56c3ab70",
+      "name": "Island feed · stud isolator",
+      "material": "hd-holdrite-161j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        0,
+        24,
+        19.21875
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9f873408-b360-4900-be4a-0f150090d82e",
+      "name": "Island feed · stud isolator",
+      "material": "hd-holdrite-161j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        0,
+        24,
+        35.21875
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "92f5b825-7066-4bfe-b91e-312ca3841405",
+      "name": "Island feed · stud isolator",
+      "material": "hd-holdrite-161j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        0,
+        24,
+        50.46875
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f2badb9c-ff8f-405a-8573-e41b80d8cf76",
+      "name": "Island sink cold",
+      "material": "hd-sharkbite-ur23036",
+      "size": [
+        2.6,
+        1.7,
+        1.1
+      ],
+      "position": [
+        0,
+        24.3,
+        59.3
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "fa72b35d-31ab-40b6-9d32-1211b23ec453",
+      "assembly": "Fixture shutoffs",
+      "designRole": "water-fixture-stop",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4b192cf2-379e-46c8-b50c-ba15bb731feb",
+      "name": "Island sink drain",
+      "material": "hd-oatey-hdc9704b",
+      "size": [
+        5.625,
+        4.949999999999999,
+        2.25
+      ],
+      "position": [
+        4,
+        20.525,
+        56.6875
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "edfa8928-d861-4b88-b4b6-ee5a15f4c30a",
+      "assembly": "Sink drain · Island sink drain",
+      "designRole": "sink-trap",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3bd8220e-a785-4d7a-a900-8cb994f07cea",
+      "name": "Island sink drain · wall tube",
+      "material": "oatey-trap-straight-tube",
+      "size": [
+        1.5,
+        5.750976456559177,
+        1.5
+      ],
+      "position": [
+        4,
+        22.190106991448854,
+        62.37486441045507
+      ],
+      "rotation": [
+        1.591626646831114,
+        0,
+        0
+      ],
+      "stepId": "edfa8928-d861-4b88-b4b6-ee5a15f4c30a",
+      "assembly": "Sink drain · Island sink drain",
+      "designRole": "sink-trap-wall-tube",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "cabf63dc-4006-4b3a-91a0-7d4c80e06f8f",
+        "tubeKerf": 0.125,
+        "size": [
+          1.5,
+          7.25,
+          1.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "adedf737-1f30-4c27-94fa-965b3951d1d1",
+      "name": "Offcut · Sink wall tube",
+      "material": "oatey-trap-straight-tube",
+      "size": [
+        1.5,
+        1.3740235434408232,
+        1.5
+      ],
+      "position": [
+        4,
+        22.113300740997083,
+        66.06156443213999
+      ],
+      "rotation": [
+        1.591626646831114,
+        0,
+        0
+      ],
+      "stepId": "f14c477e-5c4e-4719-9b24-659b1c67bcc0",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "cabf63dc-4006-4b3a-91a0-7d4c80e06f8f",
+        "tubeKerf": 0.125,
+        "size": [
+          1.5,
+          7.25,
+          1.5
+        ],
+        "offset": [
+          0,
+          5.875976456559177,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "f14c477e-5c4e-4719-9b24-659b1c67bcc0",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, check the cutting loss for each stock unit, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "85e19b84-ed9b-4b4c-93ae-c14c577571b9",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, check the cutting loss for each stock unit, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-f0677e7d",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "4b125fe1-43d7-412d-8c0d-3d9167161547",
+      "title": "Frame a 9′ × 8′ wall",
+      "notes": "Interior nonbearing framing. Verify wall function, floor and ceiling attachment, backing and fireblocking before building.",
+      "complete": false
+    },
+    {
+      "id": "e7240db9-ac84-4da2-8b80-778926d28888",
+      "title": "Assemble Wall 1",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "8fec6ff9-e365-4bbc-986b-8c66bada1e43",
+        "stageKey": "section",
+        "memberIds": [
+          "09d66d0a-3ad2-4471-a16c-e3dadea1a21e",
+          "213de53b-dfea-4e84-bd18-44d5d4ef7057",
+          "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d",
+          "62829781-62cd-4867-9146-0f4f5ce594ea",
+          "6367b215-7053-4a28-92d3-69ff751d930d",
+          "8c2f3b91-9e47-4e9f-acd6-ec6f66fb4e1c",
+          "a29e1ba8-b7ca-43bd-abdc-6fd3704de831",
+          "a7a06ee9-ab72-410a-87f3-4e3e43f75cae",
+          "af6ac41b-d8b7-427a-8e40-10da4e1568dc",
+          "f352a85d-6c46-4c3e-8528-8cf07883b356"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-7c4efd8a",
+        "title": "Assemble Wall 1"
+      }
+    },
+    {
+      "id": "38110f32-120f-4105-869b-0e86fef68ca0",
+      "title": "Frame a 4′ × 8′ wall",
+      "notes": "Interior nonbearing framing. Verify wall function, floor and ceiling attachment, backing and fireblocking before building.",
+      "complete": false
+    },
+    {
+      "id": "d99040e2-87ed-4d1b-a1d3-bf996b68993c",
+      "title": "Assemble Wall 2",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "d36d2174-73b0-4304-860f-f915f3163bba",
+        "stageKey": "section",
+        "memberIds": [
+          "2da016b7-e74d-43fc-a6aa-932e49c477d0",
+          "32a14fd6-8aa1-4e27-a492-8a9be669ef4e",
+          "41c45c66-bdf4-4366-8195-cbda818dbbc1",
+          "4f2a5185-1b54-4b07-b531-6177a8b9c96a",
+          "8cee6b0c-5210-443a-b349-cbe870a116bf",
+          "bf635dc8-26c3-41a9-bfa3-7512a64dbcf7"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-3ddf3463",
+        "title": "Assemble Wall 2"
+      }
+    },
+    {
+      "id": "0c51436c-de62-47ac-8ca1-909e5802a02e",
+      "title": "Rough in Kitchen main",
+      "notes": "Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "1863c0f3-ff00-40b2-9301-a3453648ab2d",
+        "stageKey": "water-rough-in",
+        "memberIds": [
+          "1bec1b38-bf65-4821-8cdd-960cd78bb555",
+          "2b7ee914-3c59-417a-9480-ab58fd099504",
+          "3dce7f65-9ae2-4fa1-9f2d-96a199166be7",
+          "4410a299-6489-4c68-8b17-5bad49e286af",
+          "4f6c73e4-fbc0-47df-b040-521791fd6eeb",
+          "53d87fc3-a018-4777-b783-eb2dd2e5bd23",
+          "67a15941-571f-4ac3-b0ad-08f8795813ba",
+          "901b852f-b1a4-4b4b-a474-4f988c1dcec3",
+          "a9298e41-0f9f-454b-8c76-fc31a465623b",
+          "e2171b71-da35-4c57-b086-0b574f2acef5"
+        ],
+        "notes": "Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.",
+        "fingerprint": "phase-v1-8bb9eeb4",
+        "title": "Rough in Kitchen main"
+      }
+    },
+    {
+      "id": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "title": "Rough in Island feed",
+      "notes": "Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4fe517b5-f501-4bcf-ab68-e93d8f562811",
+        "stageKey": "water-rough-in",
+        "memberIds": [
+          "0873d610-a29d-4d4b-bc91-283154cbf1dc",
+          "1230c277-9a0d-4315-9245-67bf1d188eda",
+          "4d90b912-1cd6-4e07-8ed0-26fb7bdb66c0",
+          "69493ec0-d2ba-4e1b-b680-4946c9414d22",
+          "70a206f7-5d9d-43d2-8325-78fd4e1710e5",
+          "92f5b825-7066-4bfe-b91e-312ca3841405",
+          "94826c6f-5e43-4994-bbe4-611478794b51",
+          "9f873408-b360-4900-be4a-0f150090d82e",
+          "a71cfd4c-30fd-4b99-8cd4-6a8f56c3ab70",
+          "c5f0d48a-cde1-4f22-8149-42b2ce375797",
+          "cd9d51c4-1688-434b-8e8b-bf337c1a2d05",
+          "ee6952fc-d608-414a-8e54-40a3d2933855",
+          "f3409fb8-1b09-4496-9295-42fa98ca91b9"
+        ],
+        "notes": "Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.",
+        "fingerprint": "phase-v1-2fedb49e",
+        "title": "Rough in Island feed"
+      }
+    },
+    {
+      "id": "e50e6131-d5e3-4d3a-b905-ee8a8ca255dc",
+      "title": "Rough in Kitchen main · B",
+      "notes": "Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "627b8683-7a9e-471e-8d56-5891ed35b42e",
+        "stageKey": "water-rough-in",
+        "memberIds": [
+          "018ee748-5797-41aa-b4da-a91a9bdd8208",
+          "0f56050a-671b-4a9e-8b5a-5683ee9c2dc4",
+          "3396b3c1-1197-4132-8102-8dbebb638d40",
+          "44de4a63-8d6a-4c89-8892-d6161da3e511",
+          "c2a3f4a1-ffee-4587-a689-ddfe8c7d2768",
+          "c30f848e-8371-48a1-8fbd-f2fdff22694d",
+          "c5cac585-0402-4d6f-83d8-887f54fb172b",
+          "c7a4fc5a-4fa3-4fba-980d-d460f50d0055",
+          "cdd3df67-e09e-4e5f-a719-11d2b6281dc8",
+          "d48fe5c2-52c2-4687-98cc-950f802ec602"
+        ],
+        "notes": "Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.",
+        "fingerprint": "phase-v1-26e58a33",
+        "title": "Rough in Kitchen main · B"
+      }
+    },
+    {
+      "id": "7b39d63b-be8c-4eea-8de4-34f91d9e83f4",
+      "title": "Connect Kitchen main and Kitchen main · B and Island feed",
+      "notes": "Review the current fitting schedule and dry-fit the cut lengths before joining. Confirm insertion access and test the installation before closing the wall.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "109ce132-d1d6-4cfd-901f-81d7844d7fdd",
+        "stageKey": "water-fitting",
+        "memberIds": [
+          "13b486f4-c165-423c-a78c-0147a8362553"
+        ],
+        "notes": "Review the current fitting schedule and dry-fit the cut lengths before joining. Confirm insertion access and test the installation before closing the wall.",
+        "fingerprint": "phase-v1-e0ff4af0",
+        "title": "Connect Kitchen main and Kitchen main · B and Island feed"
+      }
+    },
+    {
+      "id": "feddd043-2d66-43de-be70-1cba386bf312",
+      "title": "Review water test before concealment",
+      "notes": "Record the field water test for the installed section and review the dated results before concealing the lines. Confirm inspection and release with the authority responsible for the work.",
+      "complete": false,
+      "generated": {
+        "kind": "water-pressure-review",
+        "planId": "85e19b84-ed9b-4b4c-93ae-c14c577571b9",
+        "notes": "Record the field water test for the installed section and review the dated results before concealing the lines. Confirm inspection and release with the authority responsible for the work.",
+        "fingerprint": "phase-v1-5e9b0e5",
+        "title": "Review water test before concealment"
+      }
+    },
+    {
+      "id": "fa72b35d-31ab-40b6-9d32-1211b23ec453",
+      "title": "Fit Island sink cold",
+      "notes": "Follow the recorded insertion mark and confirm handle and outlet access against the finished cabinet. Review the field test boundary and check the final fixture connections for leaks within their ratings.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "c38bedd2-d21d-498c-b815-52c8903901ca",
+        "stageKey": "water-stop",
+        "memberIds": [
+          "f2badb9c-ff8f-405a-8573-e41b80d8cf76"
+        ],
+        "notes": "Follow the recorded insertion mark and confirm handle and outlet access against the finished cabinet. Review the field test boundary and check the final fixture connections for leaks within their ratings.",
+        "fingerprint": "phase-v1-5c96e09d",
+        "title": "Fit Island sink cold"
+      }
+    },
+    {
+      "id": "edfa8928-d861-4b88-b4b6-ee5a15f4c30a",
+      "title": "Fit Island sink drain",
+      "notes": "Dry-fit the trap and confirm the marked wall-tube cut and retaining hardware. Check the measured vent path, removal clearance and finished connections. Water-test the drain for leaks.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "c6fa6090-73db-4361-8c88-bca35874ccbb",
+        "stageKey": "sink-drain",
+        "memberIds": [
+          "3bd8220e-a785-4d7a-a900-8cb994f07cea",
+          "4b192cf2-379e-46c8-b50c-ba15bb731feb"
+        ],
+        "notes": "Dry-fit the trap and confirm the marked wall-tube cut and retaining hardware. Check the measured vent path, removal clearance and finished connections. Water-test the drain for leaks.",
+        "fingerprint": "phase-v1-ad422232",
+        "title": "Fit Island sink drain"
+      }
+    },
+    {
+      "id": "b9cf958d-0af9-4033-8359-fde1715e5c50",
+      "title": "Assemble Island cabinet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "85e19b84-ed9b-4b4c-93ae-c14c577571b9",
+        "stageKey": "assembly:Island cabinet",
+        "memberIds": [
+          "824043ba-bbb5-41bf-a397-59a47a1d6de8",
+          "b5d5c40f-bf6b-4a65-ba6b-cbbb993445cb",
+          "c204f485-cedf-448f-b6e1-5429b447c53c"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-dfa16148",
+        "title": "Assemble Island cabinet"
+      }
+    },
+    {
+      "id": "c5603185-4d58-4184-b163-5e4cb5b7eedd",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "85e19b84-ed9b-4b4c-93ae-c14c577571b9",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-8ee6ac22",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [
+    {
+      "id": "8fec6ff9-e365-4bbc-986b-8c66bada1e43",
+      "name": "Wall 1",
+      "pieceIds": [
+        "62829781-62cd-4867-9146-0f4f5ce594ea",
+        "8c2f3b91-9e47-4e9f-acd6-ec6f66fb4e1c",
+        "6367b215-7053-4a28-92d3-69ff751d930d",
+        "af6ac41b-d8b7-427a-8e40-10da4e1568dc",
+        "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d",
+        "a7a06ee9-ab72-410a-87f3-4e3e43f75cae",
+        "09d66d0a-3ad2-4471-a16c-e3dadea1a21e",
+        "213de53b-dfea-4e84-bd18-44d5d4ef7057",
+        "f352a85d-6c46-4c3e-8528-8cf07883b356",
+        "a29e1ba8-b7ca-43bd-abdc-6fd3704de831"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": {
+        "type": "wall",
+        "width": 108,
+        "height": 96,
+        "depth": 48,
+        "spacing": 16,
+        "wallStock": "hd-spf-2x4-10"
+      },
+      "recipe": null
+    },
+    {
+      "id": "d36d2174-73b0-4304-860f-f915f3163bba",
+      "name": "Wall 2",
+      "pieceIds": [
+        "4f2a5185-1b54-4b07-b531-6177a8b9c96a",
+        "8cee6b0c-5210-443a-b349-cbe870a116bf",
+        "41c45c66-bdf4-4366-8195-cbda818dbbc1",
+        "2da016b7-e74d-43fc-a6aa-932e49c477d0",
+        "32a14fd6-8aa1-4e27-a492-8a9be669ef4e",
+        "bf635dc8-26c3-41a9-bfa3-7512a64dbcf7"
+      ],
+      "origin": [
+        0,
+        0,
+        28
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "generator": {
+        "type": "wall",
+        "width": 48,
+        "height": 96,
+        "depth": 48,
+        "spacing": 16,
+        "wallStock": "hd-kdht-2x4-8"
+      },
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-be1a50b0",
+  "history": [
+    {
+      "id": "2b0f5ccc-48e5-4b62-b258-43fd8466f07d",
+      "at": "2026-11-21T14:11:00.433Z",
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "message": "Recorded one SharkBite 1/2 in PEX-B tube for 1 part starting with P038. Added 1 tube offcut to the Cut pool."
+    },
+    {
+      "id": "0cee2a6a-ec34-4e93-a5a2-766b1ea607c1",
+      "at": "2026-11-21T14:11:00.433Z",
+      "stepId": "8cdb556a-61fe-4051-8b9e-5c89044afbc5",
+      "message": "Stock cut order for P038 · 1. Square-cut 59.35 in from the current end for P038 · Island feed."
+    }
+  ]
+}

@@ -21,6 +21,8 @@ import { waterFittingDimensions, waterFittingIds, waterFittingName, waterFitting
 import { waterFittingPorts, waterFittingSchema } from "./waterFittingSchema";
 import { waterStop } from "./waterStopReference";
 import { waterStopsSchema } from "./waterStopSchema";
+import { sinkTrap } from "./sinkDrainReference";
+import { sinkDrainsSchema } from "./sinkDrainSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -510,6 +512,7 @@ export const currentProjectSchema = z
         new Set(rows.map(({ pieceId }) => pieceId)).size === rows.length;
     }, "Each PEX endpoint and fitting can belong to one connection.").optional(),
     waterStops: waterStopsSchema.optional(),
+    sinkDrains: sinkDrainsSchema.optional(),
     shelfSagPlans: shelfSagPlansSchema.optional(),
     saunaHeaterPlans: z.array(saunaHeaterPlanSchema).max(50).refine(
       (plans) => new Set(plans.map((plan) => plan.roomId)).size === plans.length,
@@ -1430,6 +1433,18 @@ export const catalog: Material[] = [
     stockKind: "equipment", wood: false, cuttable: false, measuredEquipment: true, packCount: 1,
     size: waterStop.size, color: "#9ca9ae", productReference: waterStop.id, priceKind: "unpriced",
     price: 0, unit: "valve", search: "sharkbite pex stop shutoff angle valve kitchenette water fixture ur23036",
+  },
+  {
+    id: sinkTrap.id, name: sinkTrap.name, subtitle: sinkTrap.model, category: "Plumbing",
+    stockKind: "equipment", wood: false, cuttable: false, measuredEquipment: true, packCount: 1,
+    size: sinkTrap.nominal, color: "#e9ebe1", productReference: sinkTrap.id,
+    priceKind: "unpriced", price: 0, unit: "kit", search: "oatey HDC9704B sink drainage p-trap kitchen waste",
+  },
+  {
+    id: sinkTrap.tube, name: "Oatey 1½ in trap wall tube", subtitle: "Straight end included with HDC9704B",
+    category: "Plumbing", stockKind: "linear", wood: false, cuttable: true, packCount: 1, includedComponent: true,
+    shape: "tube-envelope", size: [sinkTrap.diameter, 12, sinkTrap.diameter], color: "#eff0e5",
+    priceKind: "unpriced", price: 0, unit: "tube", search: "included sink wall tube",
   },
   ...waterSupportIds.map((id): Material => ({
     id, name: waterSupportName(id), subtitle: `${waterSupportProducts[id].model} · 15 per jar`,

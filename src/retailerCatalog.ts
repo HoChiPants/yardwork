@@ -19,6 +19,7 @@ import { nailShield, pexCutter, pexInstallation, pexPipes, pexSpec, pexStockLeng
 import { maxFittingInstructions, maxFittingSpec, maxInsertionChart, waterDepthGauge, waterFittingDimensions, waterFittingIds, waterFittingName, waterFittingProduct, waterFittingsReviewedAt, waterTeesReviewedAt } from "./waterFittingReference";
 import { waterSupportIds, waterSupportName, waterSupportProducts, waterSupportReference } from "./waterSupportReference";
 import { waterStop, waterStopDepthNote } from "./waterStopReference";
+import { sinkTrap } from "./sinkDrainReference";
 import { cedarbrookFoil } from "./saunaFoilReference";
 import { saunaCeilingBatt, saunaCeilingJoists, saunaCeilingJoistSize, saunaCeilingReviewedAt } from "./saunaCeilingReference";
 import { owensCorningWallBatt as wallBatt } from "./saunaWallReference";
@@ -59,6 +60,7 @@ const sourceHosts = new Set([
   "www.masonite.com",
   "www.sharkbite.com",
   "www.holdrite.com",
+  "www.oatey.com",
   "lowes.com",
   "www.lowes.com",
   "strongtie.com",
@@ -148,6 +150,7 @@ export const roleQualificationSchema = z.strictObject({
     "pexConnection",
     "pexStudSupport",
     "pexFixtureStop",
+    "sinkDrainTrap",
     "closetRod",
     "closetRodSupport",
     "storageLidHinge",
@@ -3436,6 +3439,23 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     roleQualifications: [{ role: "pexFixtureStop", scope: "One accessible ½ in CTS fixture stub-out with a ⅜ in compression outlet.",
       sourceRefs: [waterStop.spec, waterStop.instructions],
       requirements: ["Verify the delivered valve, operating reach, hose engagement and service space."] }],
+    limitToQualifiedRoles: true, discrepancies: [], capabilities: [], toolCapabilityEvidence: [],
+  },
+  {
+    id: sinkTrap.id, name: sinkTrap.name, manufacturer: "Oatey", manufacturerPartNumber: sinkTrap.model,
+    identityBasis: "manufacturer-part", category: "equipment", status: "reviewed-specs", verifiedAt: sinkTrap.reviewedAt,
+    profile: profile("equipment", sinkTrap.nominal, 1, { finish: "White polypropylene" }),
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [sinkTrap.listing] },
+    offers: [hd(sinkTrap.internet, sinkTrap.model, sinkTrap.sku)],
+    sources: [
+      { url: sinkTrap.listing, verifiedAt: sinkTrap.reviewedAt, note: "Exact one-kit offer for the white slip-joint version." },
+      { url: sinkTrap.drawing, verifiedAt: sinkTrap.reviewedAt, note: "Oatey drawing identifies the 1½ in wall-tube diameter and full assembly reference dimensions." },
+      { url: sinkTrap.product, verifiedAt: sinkTrap.reviewedAt, note: "Exact UPC variant includes the washer for 1¼ in tailpiece and lists no adapter." },
+      { url: sinkTrap.installation, verifiedAt: sinkTrap.reviewedAt, note: "Oatey describes dry-fitting the bend, measuring the wall-tube cut and field leak checks." },
+    ],
+    roleQualifications: [{ role: "sinkDrainTrap", scope: "One accessible tubular sink P-trap assembly with a compatible existing wall waste connector.",
+      sourceRefs: [sinkTrap.drawing, sinkTrap.installation],
+      requirements: ["Measure socket engagement and the actual kit before cutting. Confirm drain venting and final leak testing."] }],
     limitToQualifiedRoles: true, discrepancies: [], capabilities: [], toolCapabilityEvidence: [],
   },
   ...waterSupportIds.map((id): RetailerProduct => {

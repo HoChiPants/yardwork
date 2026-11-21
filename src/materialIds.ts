@@ -1,6 +1,7 @@
 import { waterFittingIds } from "./waterFittingReference";
 import { waterSupportIds } from "./waterSupportReference";
 import { waterStop } from "./waterStopReference";
+import { sinkTrap } from "./sinkDrainReference";
 
 export const materialIds = [
   "stud",
@@ -51,6 +52,8 @@ export const materialIds = [
   ...waterFittingIds,
   ...waterSupportIds,
   waterStop.id,
+  sinkTrap.id,
+  sinkTrap.tube,
   "hd-masonite-75777",
   "cedarbrook-pedestal-48",
   "cedarbrook-pedestal-60",

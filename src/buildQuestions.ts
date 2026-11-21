@@ -17,6 +17,7 @@ import { reviewWaterRun } from "./wallWater";
 import { fittingLabel, reviewWaterFitting } from "./waterFittings";
 import { reviewWaterPressure } from "./waterPressure";
 import { reviewWaterStop } from "./waterStops";
+import { reviewSinkDrain } from "./sinkDrain";
 import { longSupportSpan, waterSupportNetwork, waterSupportSpanLine } from "./waterSupportNetwork";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
@@ -35,6 +36,7 @@ export type BuildQuestion =
   | { kind: "water-fitting"; tee?: boolean }
   | { kind: "water-pressure" }
   | { kind: "water-stop" }
+  | { kind: "sink-drain" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
@@ -52,6 +54,7 @@ export type BuildQuestionAction =
   | { kind: "water-fitting"; fittingId?: string; tee?: boolean }
   | { kind: "water-pressure"; recordId?: string }
   | { kind: "water-stop"; stopId?: string }
+  | { kind: "sink-drain"; drainId?: string }
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
@@ -106,6 +109,7 @@ const wallWaterQuestion = /^(?:(?:plan|route|add|lay out) (?:a |the )?(?:pex|wat
 const fittingQuestion = /^(?:(?:how (?:do|can|should) i )?(?:connect|join) (?:two |my |these |the )?(?:pex|water) (?:runs|lines|pipes)(?: (?:at|around) (?:a |the )?corner)?|(?:review|check|plan) (?:the |my |a )?pex (?:fittings?|connections?))$/i;
 const teeQuestion = /^(?:(?:how (?:do|can|should) i )?(?:branch|tee off) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)|(?:add|plan) (?:a |the )?tee (?:in|into|on|to) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)(?: for .+)?)$/i;
 const pressureQuestion = /^(?:(?:how (?:do|can|should) i )?pressure[- ]test (?:the |my |a )?(?:pex|water(?: supply)?) (?:main|runs?|lines?|pipes?|system)|(?:log|record|review|check|show) (?:a |the |my )?(?:pex |water )?pressure tests?)$/i;
+const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
 const waterSupportQuestion = /^(?:(?:how (?:do|can|should) i )support (?:the |my )?(?:pex|water) (?:runs?|lines?|pipes?)|(?:check|review|show|plan) (?:the |my )?(?:pex |water line )(?:supports?|support spacing))$/i;
 const motionQuestion =
@@ -133,6 +137,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (teeQuestion.test(text)) return { kind: "water-fitting", tee: true };
   if (pressureQuestion.test(text)) return { kind: "water-pressure" };
   if (waterStopQuestion.test(text)) return { kind: "water-stop" };
+  if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
   const motion = motionQuestion.exec(text);
@@ -480,6 +485,17 @@ export function answerBuildQuestion(
         link: question.tee
           ? { label: "Branch a PEX main", action: { kind: "water-fitting", tee: true } }
           : { label: "Connect PEX runs", action: { kind: "water-fitting" } },
+      };
+    case "sink-drain":
+      return {
+        title: "Fit a sink drain",
+        detail: "Mark the tailpiece and wall socket. The planner uses your dry-fit dimensions to check the trap, measure the straight tube cut and review the path to the vent.",
+        rows: (project.sinkDrains ?? []).map((record) => ({
+          id: record.id, title: record.name,
+          detail: reviewSinkDrain(project, record).problem ?? "The saved trap and cut tube match their fit measurements.",
+          link: { label: "Review this sink drain", action: { kind: "sink-drain", drainId: record.id } },
+        })),
+        link: { label: "Open sink drains", action: { kind: "sink-drain" } },
       };
     case "water-stop":
       return {

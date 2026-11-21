@@ -1384,6 +1384,23 @@ export function projectMotionReviews(project: Project, includeScenarios = true) 
 
 export type ProjectMotionReviews = ReturnType<typeof projectMotionReviews>;
 
+/** Compare the moving parts against newly placed fixed hardware across saved tests. */
+export function motionObstacleWarnings(project: Project, obstacleIds: ReadonlySet<string>, obstacle: string) {
+  return projectMotionReviews(project).flatMap(({ plan, baseline, saved, scenarios }) => {
+    const tests = [
+      { label: plan.label, review: baseline.review },
+      ...(saved ? [{ label: `${plan.label} · Saved test`, review: saved.review }] : []),
+      ...scenarios.map(({ name, result }) => ({ label: `${plan.label} · ${name}`, review: result.review })),
+    ];
+    return tests.flatMap(({ label, review }) => {
+      if (!review) return [];
+      const hit = review.hits.filter(({ obstacleId }) => obstacleIds.has(obstacleId)).sort((a, b) => a.first - b.first)[0];
+      return hit ? [`${label} · Possible contact with ${obstacle} near ${motionReviewDistance(review, hit.first, hit.phase)}.`] : [];
+    });
+  });
+}
+
+
 function motionHitLine(project: Project, review: MotionReview, hit: MotionReview["hits"][number]) {
   const parts = `${partLabel(project, hit.movingId)} against ${partLabel(project, hit.obstacleId)}`;
   const pairs = `${parts} near ${motionReviewDistance(review, hit.first, hit.phase)}`;

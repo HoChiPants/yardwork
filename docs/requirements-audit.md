@@ -1,6 +1,10 @@
 # Current evidence and remaining qualification
 
-Local development checkpoint, November 20, 2026. The current iteration is uncommitted and unpushed. Earlier public CI does not qualify these changes.
+November 21, 2026. The current evidence covers the measured sink drain release in project format 113. Earlier checkpoints below cover the tested versions and workflows they identify.
+
+## Kitchenette sink drain, format 113
+
+Both production builds and all 1,617 domain tests passed. Five whole-build examples passed their generated-artifact checks. The new Chrome workflow used a 390-pixel viewport to open an earlier kitchenette plan, preview a flat tube and correct the measured fall. It confirmed that the pullout approached the tube envelope at 9.91 inches of travel. The saved project reopened with a 5.75098-inch cut, a 1.37402-inch remnant from the same blank and the exact HDC9704B kit. Markdown and print kept the measured vent review. The measurements in the portable study exercise the software checks. Field measurements, the actual kit and the concealed installation still need verification. [Kitchenette drain plan](../public/examples/plumbing/kitchen-drain.yardwork.json) · [Build guide](../public/examples/plumbing/kitchen-drain-guide.md)
 
 ## Container save and reopen, format 81
 

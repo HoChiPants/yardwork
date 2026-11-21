@@ -16,6 +16,9 @@ import { DoorOpeningFields, DoorwayPanel, doorwayExample } from "./DoorwayPanel"
 import { WallWaterPanel } from "./WallWaterPanel";
 import { WaterFittingPanel } from "./WaterFittingPanel";
 import { WaterStopPanel } from "./WaterStopPanel";
+import { SinkDrainPanel } from "./SinkDrainPanel";
+import { removeSinkDrain, sinkDrainGuide } from "./sinkDrain";
+import { sinkTrap } from "./sinkDrainReference";
 import { WaterPressurePanel } from "./WaterPressurePanel";
 import { WaterSupportPanel } from "./WaterSupportPanel";
 import { removeWaterRun, waterRunGuide } from "./wallWater";
@@ -371,6 +374,7 @@ type Modal =
   | "water-fitting"
   | "water-pressure"
   | "water-stop"
+  | "sink-drain"
   | "water-support"
   | "export"
   | "assistant"
@@ -714,6 +718,7 @@ export function App() {
   const [waterFittingTarget, setWaterFittingTarget] = useState<string>();
   const [waterPressureTarget, setWaterPressureTarget] = useState<string>();
   const [waterStopTarget, setWaterStopTarget] = useState<string>();
+  const [sinkDrainTarget, setSinkDrainTarget] = useState<string>();
   const [waterFittingTee, setWaterFittingTee] = useState(false);
   const [snap, setSnap] = useState(true),
     [explode, setExplode] = useState(false),
@@ -1355,6 +1360,10 @@ export function App() {
         setWaterFittingTee(!!action.tee);
         setModal("water-fitting");
         break;
+      case "sink-drain":
+        setSinkDrainTarget(action.drainId);
+        setModal("sink-drain");
+        return;
       case "water-stop":
         setWaterStopTarget(action.stopId);
         setModal("water-stop");
@@ -3868,6 +3877,7 @@ export function App() {
                 <button type="button" className="button secondary full" onClick={() => { setWaterFittingTarget(undefined); setWaterFittingTee(false); setModal("water-fitting"); }}>Connect PEX runs</button>}
               {!!(project.waterRuns?.some(({ materialId }) => materialId === waterStop.pipe) || project.waterStops?.length) &&
                 <button type="button" className="button secondary full" onClick={() => { setWaterStopTarget(undefined); setModal("water-stop"); }}>Fit a fixture shutoff</button>}
+              <button type="button" className="button secondary full" onClick={() => { setSinkDrainTarget(undefined); setModal("sink-drain"); }}>Fit a sink drain</button>
               {!!(project.waterRuns?.length || project.waterPressureTests?.length) &&
                 <button type="button" className="button secondary full" onClick={() => { setWaterPressureTarget(undefined); setModal("water-pressure"); }}>Water pressure test</button>}
               {!!project.waterRuns?.length &&
@@ -4143,6 +4153,11 @@ export function App() {
                     setWaterStopTarget(project.waterStops?.find(({ pieceId }) => pieceId === piece.id)?.id);
                     setModal("water-stop");
                   }}>Review fixture shutoff</button>}
+                {project.sinkDrains?.some(({ bodyId, tubeId }) => bodyId === piece.id || tubeId === piece.id) &&
+                  <button type="button" className="button secondary full" onClick={() => {
+                    setSinkDrainTarget(project.sinkDrains?.find(({ bodyId, tubeId }) => bodyId === piece.id || tubeId === piece.id)?.id);
+                    setModal("sink-drain");
+                  }}>Review sink drain</button>}
                 <label className="field">
                   Part name
                   <input
@@ -5290,7 +5305,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5393,6 +5408,26 @@ export function App() {
                 setPanel("sections");
                 setModal(null);
                 notify("Fitting removed. The pipe cuts stay in the plan.");
+              })} />}
+            {modal === "sink-drain" && <SinkDrainPanel project={project} measurement={measurement} initialDrain={sinkDrainTarget}
+              onApply={(draft) => safe(() => {
+                if (current.current !== project) throw Error("The workspace changed. Preview the sink drain again.");
+                change(draft.project);
+                setStage(null);
+                setPlaying(false);
+                setExplode(false);
+                setMode("select");
+                inspectStock(draft.record.bodyId);
+                setModal(null);
+                notify("Sink drain and wall-tube cut added.");
+              })}
+              onRemove={(record) => safe(() => {
+                change((live) => removeSinkDrain(live, record));
+                setSelected(null);
+                setStage(null);
+                setPanel("sections");
+                setModal(null);
+                notify("Sink drain removed. The usable tube stays in the Cut pool.");
               })} />}
             {modal === "water-stop" && <WaterStopPanel project={project} initialStop={waterStopTarget}
               onApply={(draft) => safe(() => {
@@ -6812,6 +6847,13 @@ export function App() {
             <h2>PEX fittings and insertion marks</h2>
             <ul>{exportGuide.waterFittings.flatMap((fitting) => waterFittingGuide(exportGuide, fitting)).map((line, i) => <li key={i}>{line}</li>)}</ul>
             <p><a href={maxInsertionChart}>Insertion chart</a>{" · "}<a href={maxFittingInstructions}>SharkBite installation</a></p>
+          </section>
+        )}
+        {!!exportGuide.sinkDrains?.length && (
+          <section className="sink-drain-print">
+            <h2>Sink drains</h2>
+            <ul>{exportGuide.sinkDrains.flatMap((record) => sinkDrainGuide(exportGuide, record)).map((line, i) => <li key={i}>{line}</li>)}</ul>
+            <p><a href={sinkTrap.drawing}>Oatey kit drawing</a>{" · "}<a href={sinkTrap.installation}>Installation</a></p>
           </section>
         )}
         {!!exportGuide.waterStops?.length && (

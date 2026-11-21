@@ -3,6 +3,7 @@ import type { Project, Step } from "./model";
 import { waterRunStageKey } from "./wallWater";
 import { waterFittingStageKey } from "./waterFittings";
 import { waterStopStageKey } from "./waterStops";
+import { sinkDrainStageKey } from "./sinkDrain";
 import { waterFittingPorts } from "./waterFittingSchema";
 
 type NumberedStep = { step: Step; number: number };
@@ -130,6 +131,8 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
       requireBefore(fixture, finish);
     }
   }
+  for (const drain of project.sinkDrains ?? [])
+    requireBefore(byOwner.get(drain.id)?.get(sinkDrainStageKey), finish);
   for (const plan of project.restraintPlans) {
     if (plan.receiver && stageByMember.has(plan.receiver.pieceId))
       requireBefore(reviewSteps.get(reviewKey("restraint-preparation", plan.id)), finish);

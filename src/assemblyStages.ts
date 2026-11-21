@@ -3,6 +3,7 @@ import { doorwayGuideNote, doorwayLeafRole, doorJambMaterial } from "./doorWall"
 import { waterRunMembers, waterRunStageKey } from "./wallWater";
 import { waterFittingStageKey } from "./waterFittings";
 import { waterStopStageKey } from "./waterStops";
+import { sinkDrainStageKey } from "./sinkDrain";
 import { waterFittingPorts } from "./waterFittingSchema";
 import type { IdeaEntry } from "./ideaBindingSchema";
 import { resolveGuidePlacements } from "./guidePlacementResolution";
@@ -496,6 +497,11 @@ export function baseAssemblyStages(project: Project): AssemblyStage[] {
     const piece = activeById.get(stop.pieceId);
     if (piece) append(stop.id, waterStopStageKey, `Fit ${stop.name}`, [piece],
       "Follow the recorded insertion mark and confirm handle and outlet access against the finished cabinet. Review the field test boundary and check the final fixture connections for leaks within their ratings.");
+  }
+  for (const drain of project.sinkDrains ?? []) {
+    const members = [drain.bodyId, drain.tubeId].flatMap((id) => activeById.get(id) ?? []);
+    append(drain.id, sinkDrainStageKey, `Fit ${drain.name}`, members,
+      "Dry-fit the trap and confirm the marked wall-tube cut and retaining hardware. Check the measured vent path, removal clearance and finished connections. Water-test the drain for leaks.");
   }
   const looseGroups = new Map<string, Piece[]>();
   for (const piece of active) {

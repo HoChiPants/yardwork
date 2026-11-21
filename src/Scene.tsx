@@ -22,6 +22,7 @@ import { fitPerspectiveBounds, workshopViewOffset, WORKSHOP_MAX_POLAR_ANGLE, typ
 import { motionViewport, unionBounds } from "./motionCamera";
 import { isWaterFitting, waterFittingProducts } from "./waterFittingReference";
 import { waterStop } from "./waterStopReference";
+import { sinkTrap } from "./sinkDrainReference";
 import { isWaterSupport, waterSupportProducts, waterSupportReference, type WaterSupportId } from "./waterSupportReference";
 import { pexPipes } from "./wallWaterReference";
 import { isPexPipe } from "./wallWaterReference";
@@ -222,6 +223,31 @@ function WaterSupportMesh({ size, color, id, fitted }: { size: V3; color: string
   </>;
 }
 
+function SinkTrapMesh({ size, color, outletDrop }: { size: V3; color: string; outletDrop: number }) {
+  const [length, height, width] = size;
+  const radius = sinkTrap.diameter / 24;
+  const path = useMemo(() => {
+    const lip = height / 2 - Math.max(0, radius - outletDrop / 12);
+    const outlet = lip - outletDrop / 12;
+    const low = -height / 2 + radius;
+    const inletX = (width - length) / 2;
+    const outletX = length / 2;
+    const curve = new THREE.CurvePath<THREE.Vector3>();
+    const v = (x: number, y: number) => new THREE.Vector3(x, y, 0);
+    const middle = (inletX + outletX) / 2;
+    curve.add(new THREE.LineCurve3(v(inletX, lip), v(inletX, low + 0.4 * radius)));
+    curve.add(new THREE.CubicBezierCurve3(v(inletX, low + 0.4 * radius), v(inletX + radius * 0.15, low),
+      v(middle - radius * 0.4, low), v(middle, low)));
+    curve.add(new THREE.CubicBezierCurve3(v(middle, low), v(outletX - radius, low),
+      v(outletX - radius, outlet), v(outletX, outlet)));
+    return curve;
+  }, [height, length, width, outletDrop, radius]);
+  return <mesh castShadow receiveShadow>
+    <tubeGeometry args={[path, 32, radius, 12, false]} />
+    <meshStandardMaterial color={color} roughness={0.55} />
+  </mesh>;
+}
+
 function WaterStopMesh({ size, color }: { size: V3; color: string }) {
   const [length, height, width] = size;
   const center = (width - height) / 2;
@@ -329,8 +355,10 @@ function PartMesh({
   onPickFittedFace,
   readOnly = false,
   interference = false,
+  sinkOutletDrop,
 }: {
   piece: Piece;
+  sinkOutletDrop?: number;
   selected: boolean;
   onSelect: (id: string) => void;
   xray: boolean;
@@ -476,6 +504,8 @@ function PartMesh({
           <PedestalBenchMesh size={size} color={color} texture={texture} />
         ) : isWaterFitting(m.id) && !measuring && !fastenerPicking && !fittedFacePicking ? (
           <WaterFittingMesh size={size} color={color} kind={waterFittingProducts[m.id].kind} />
+        ) : m.id === sinkTrap.id && !measuring && !fastenerPicking && !fittedFacePicking ? (
+          <SinkTrapMesh size={size} color={color} outletDrop={sinkOutletDrop ?? 0.5} />
         ) : m.id === waterStop.id && !measuring && !fastenerPicking && !fittedFacePicking ? (
           <WaterStopMesh size={size} color={color} />
         ) : isWaterSupport(m.id) && !measuring && !fastenerPicking && !fittedFacePicking ? (
@@ -827,6 +857,7 @@ function PlacedPart({
     >
       <PartMesh
         piece={p}
+        sinkOutletDrop={p.material === sinkTrap.id ? props.project.sinkDrains?.find(({ bodyId }) => bodyId === p.id)?.outletDrop : undefined}
         selected={selected}
         onSelect={props.onSelect}
         xray={props.xray}

@@ -1,7 +1,7 @@
 import { inspectCutStock, pieceCutKerf } from "./cutStock";
 import { cutPiece } from "./engine";
 import { part, projectSchema, step, uid, type Project } from "./model";
-import { motionReviewDistance, projectMotionReviews } from "./mechanismMotion";
+import { motionObstacleWarnings } from "./mechanismMotion";
 import { previewWaterRun } from "./wallWaterApply";
 import { waterRunDraft } from "./wallWaterSchema";
 import { waterStop } from "./waterStopReference";
@@ -65,18 +65,6 @@ export function previewWaterStop(project: Project, input: unknown, existingId?: 
   });
   const check = reviewWaterStop(next, stop);
   if (!check.layout) throw Error(check.problem);
-  const movement = projectMotionReviews(next).flatMap(({ plan, baseline, saved, scenarios }) => {
-    const tests = [
-      { label: plan.label, review: baseline.review },
-      ...(saved ? [{ label: `${plan.label} · Saved test`, review: saved.review }] : []),
-      ...scenarios.map(({ name, result }) => ({ label: `${plan.label} · ${name}`, review: result.review })),
-    ];
-    return tests.flatMap(({ label, review }) => {
-      if (!review) return [];
-      const hit = review.hits.filter(({ obstacleId }) => obstacleId === stop.pieceId)
-        .sort((a, b) => a.first - b.first)[0];
-      return hit ? [`${label} · Possible contact with the valve near ${motionReviewDistance(review, hit.first, hit.phase)}.`] : [];
-    });
-  });
+  const movement = motionObstacleWarnings(next, new Set([stop.pieceId]), "the valve");
   return { project: next, stop, layout: check.layout, before: run.end - run.start, after, scrap, movement };
 }

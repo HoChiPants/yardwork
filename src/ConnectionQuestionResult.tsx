@@ -26,7 +26,7 @@ export function ConnectionQuestionResult({
   onAction: (action: ConnectionQuestionAction) => void;
 }) {
   return (
-    <section className="proposal connection-question" aria-label="Workspace joint review">
+    <section className="proposal workspace-question" aria-label="Workspace joint review">
       <h3>Workspace joint review</h3>
       {"message" in answer ? (
         <p role="status">

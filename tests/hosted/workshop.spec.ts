@@ -10,7 +10,8 @@ import { saveWoodJointDecision } from "../../src/woodJointDecisions";
 import { bounds } from "../../src/engine";
 import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
 import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
-import { saveMotionPlan } from "../../src/mechanismMotion";
+import { saveMotionPlan, saveMotionTestScenario } from "../../src/mechanismMotion";
+import { addMeasuredOffcut } from "../../src/measuredOffcuts";
 import { partLabel } from "../../src/partLabels";
 
 test("the hosted workshop plans locally, saves revisions and exports a restorable archive", async ({ page }) => {
@@ -133,6 +134,88 @@ test("a joint question finds actual parts, previews a direction and reopens its 
   await page.getByRole("dialog").getByRole("button", { name: /^Build guide/ }).click();
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("Centered entry chosen after comparing both sides");
+});
+
+test("questions about a build open its support check, saved motion and measured scrap cuts", async ({ page }) => {
+  const start = blank("Questions for the current build");
+  const step = start.steps[0].id;
+  const seat = { ...part("Seat lid", "plytanium-703", [24, 0.703, 12], [0, 4.3515, 0], step, "Seat"), designRole: "seat-lid" };
+  const rail = part("Unsupported seat rail", "stud", [3, 2, 8], [6, 3, 0], step, "Seat");
+  const drawer = part("Pull-out drawer", "plywood", [1, 2, 1], [41, 10, -8], step, "Cabinet");
+  const door = part("Cabinet door", "plywood", [12, 5, 0.75], [42, 10, 0], step, "Cabinet");
+  const filler = part("Filler blank", "stud", [3.5, 1.5, 12], [48, 0.75, 18], step, "Cabinet");
+  const stock = addMeasuredOffcut({ ...start, pieces: [seat, rail, drawer, door, filler] }, step, "stud", [20, 3.5, 1.5], "Bench scrap");
+  const slide = saveMotionPlan(stock, {
+    label: drawer.name, memberIds: [drawer.id],
+    mechanism: { kind: "slide", axis: [0, 0, 1], travel: 24 },
+  });
+  const swing = saveMotionPlan(slide.project, {
+    label: door.name, memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: [36, 10, 0], travel: 90 },
+  });
+  const { project } = saveMotionTestScenario(swing.project, slide.plan.id, "Limited opening", {
+    linkedId: swing.plan.id, held: [], openingOrder: "companion-first",
+    sequenceTargets: { selected: { kind: "slide", travel: 12.5 }, companion: { kind: "hinge", travel: 75 } },
+  });
+  const plannerRequests: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/planner") plannerRequests.push(request.url());
+  });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "build-questions.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.project.name).toBe(`${start.name} · imported`);
+  const before = (await draft()).project;
+  const beginQuestion = () => page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  const ask = async (prompt: string) => {
+    await beginQuestion();
+    await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill(prompt);
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  };
+  await beginQuestion();
+  await dialog.getByText("Questions about this build", { exact: true }).click();
+  await dialog.getByRole("button", { name: "Review weak spots", exact: true }).click();
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const support = dialog.getByRole("region", { name: "Support and connection review", exact: true });
+  const firstConcern = support.getByRole("article").first();
+  await expect(firstConcern).toContainText("Seat support to floor");
+  await expect(firstConcern).toContainText("Unsupported seat rail");
+  await firstConcern.getByRole("button", { name: "Inspect this check", exact: true }).click();
+  await expect(page.getByTestId("panel-floor-bearing-marker")).toContainText("Contacts to review");
+  await page.getByRole("button", { name: "Hide highlighted area", exact: true }).click();
+
+  await ask("Can the drawer open?");
+  const motion = dialog.getByRole("region", { name: "Modeled motion review", exact: true });
+  await expect(motion.getByRole("article", { name: "Motion alone", exact: true })).toContainText("Obstruction · Cabinet door");
+  const limited = motion.getByRole("article", { name: "Limited opening", exact: true });
+  await expect(limited).toContainText("No modeled clearance findings");
+  await expect(limited).toContainText("Cabinet door at 75°, then Pull-out drawer at 12.5 in");
+  await limited.getByRole("button", { name: "Inspect this motion", exact: true }).click();
+  const movement = page.getByRole("region", { name: "Motion and clearance", exact: true });
+  await movement.getByRole("button", { name: "Inspect test endpoint", exact: true }).click();
+  await expect(page.getByTestId("motion-preview-label")).toContainText("Pull-out drawer · 12.5 in");
+
+  await ask("What can I use O001 for?");
+  const scrap = dialog.getByRole("region", { name: "Offcut matches", exact: true });
+  await expect(scrap).toContainText("Filler blank");
+  await expect(scrap).toContainText("O001 · Offcut · Bench scrap");
+  expect((await draft()).project).toEqual(before);
+  expect(plannerRequests).toEqual([]);
+  await scrap.getByRole("button", { name: "Review cuts and stock to buy", exact: true }).click();
+  await expect(dialog.getByRole("list", { name: "Proposed cuts in order", exact: true })).toContainText("Filler blank");
+  await dialog.getByRole("button", { name: "Apply offcut plan", exact: true }).click();
+  await expect.poll(async () => (await draft()).project.pieces.find((piece: { id: string }) => piece.id === filler.id)?.cutStock).toBeTruthy();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const markdown = await readFile((await (await download).path())!, "utf8");
+  expect(markdown).toMatch(/Recorded offcut cut order[\s\S]*Filler blank/);
 });
 
 test("build preparation opens the other touching pair when the first screw path is reviewed", async ({ page }) => {

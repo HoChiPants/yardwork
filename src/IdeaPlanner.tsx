@@ -25,12 +25,14 @@ import {
   Sparkles,
 } from "lucide-react";
 import { format, material, type Project, type V3 } from "./model";
-import { bounds } from "./engine";
+import { bounds, type Finding } from "./engine";
 import { Scene } from "./Scene";
 import { LengthInput } from "./LengthInput";
 import { PricingSummary } from "./PricingSummary";
 import { ConnectionQuestionResult, type ConnectionQuestionAction } from "./ConnectionQuestionResult";
 import { answerConnectionQuestion, connectionQuestion, type ConnectionQuestion } from "./connectionQuestions";
+import { BuildQuestionResult } from "./BuildQuestionResult";
+import { answerBuildQuestion, buildQuestion, type BuildQuestion, type BuildQuestionAction } from "./buildQuestions";
 import { partLabel } from "./partLabels";
 import { updateStructureParameter } from "./structureIdeas";
 import { editFurniturePlan, straightRun } from "./ideaEdits";
@@ -111,12 +113,16 @@ export default function IdeaPlanner({
   initialTarget = null,
   onApply,
   onConnectionAction,
+  findings,
+  onBuildQuestionAction,
   onClose,
 }: {
   project: Project;
   initialTarget?: { bindingId: string; entryIds?: string[] } | null;
   onApply: (next: Project) => void;
   onConnectionAction: (action: ConnectionQuestionAction) => void;
+  findings: readonly Finding[];
+  onBuildQuestionAction: (action: BuildQuestionAction) => void;
   onClose: () => void;
 }) {
   const previousPlan = useRef<IdeaPlan | null>(null);
@@ -135,7 +141,9 @@ export default function IdeaPlanner({
   } | null>(null);
   const [planningStatus, setPlanningStatus] = useState("");
   const [exploredPrompt, setExploredPrompt] = useState("");
-  const [jointRequest, setJointRequest] = useState<{ prompt: string; question: ConnectionQuestion } | null>(null);
+  const [workspaceRequest, setWorkspaceRequest] = useState<{
+    prompt: string;
+  } & ({ kind: "joint"; question: ConnectionQuestion } | { kind: "build"; question: BuildQuestion }) | null>(null);
   const [prompt, setPrompt] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -144,9 +152,13 @@ export default function IdeaPlanner({
       provider: string;
       message: string;
     } | null>(null);
-  const jointAnswer = useMemo(() => jointRequest?.prompt === prompt
-    ? answerConnectionQuestion(project, jointRequest.question) : null,
-  [jointRequest, project, prompt]);
+  const jointAnswer = useMemo(() => workspaceRequest?.kind === "joint" && workspaceRequest.prompt === prompt
+    ? answerConnectionQuestion(project, workspaceRequest.question) : null,
+  [workspaceRequest, project, prompt]);
+  const buildAnswer = useMemo(() => workspaceRequest?.kind === "build" && workspaceRequest.prompt === prompt
+    ? answerBuildQuestion(project, workspaceRequest.question, findings) : null,
+  [workspaceRequest, project, findings, prompt]);
+  const hasWorkspaceAnswer = !!(jointAnswer || buildAnswer);
   const sampleWood = project.pieces.find((piece) => !piece.offcut && material(piece.material).wood);
   function loadTarget(next: typeof target) {
     const active = activeRequest.current;
@@ -159,7 +171,7 @@ export default function IdeaPlanner({
     originalPlan.current = null;
     previousPlan.current = null;
     setResult(null);
-    setJointRequest(null);
+    setWorkspaceRequest(null);
     setPrompt("");
     setExploredPrompt("");
     setBusy(false);
@@ -284,14 +296,17 @@ export default function IdeaPlanner({
   }
   async function generate() {
     if (activeRequest.current || !prompt.trim()) return;
-    const question = connectionQuestion(project, prompt);
-    if (question) {
-      setJointRequest({ prompt, question });
+    const joint = connectionQuestion(project, prompt);
+    const review = joint ? null : buildQuestion(prompt);
+    const workspace = joint ? { prompt, kind: "joint" as const, question: joint }
+      : review ? { prompt, kind: "build" as const, question: review } : null;
+    if (workspace) {
+      setWorkspaceRequest(workspace);
       setError("");
       setPlanningStatus("");
       return;
     }
-    setJointRequest(null);
+    setWorkspaceRequest(null);
     const previous = result?.plan ?? previousPlan.current,
       previousResult = result;
     const request = {
@@ -472,7 +487,7 @@ export default function IdeaPlanner({
           placeholder="An L-shaped kitchenette banquette, 6 ft along the back with a 4 ft return. I want storage below and a wood back."
           onChange={(e) => {
             setPrompt(e.target.value);
-            setJointRequest(null);
+            setWorkspaceRequest(null);
             setError("");
           }}
         />
@@ -499,17 +514,30 @@ export default function IdeaPlanner({
               {example}
             </button>
           ))}
-          {sampleWood && (
-            <button type="button" disabled={busy} onClick={() => {
-              setPrompt(`Review screw joints for ${partLabel(project, sampleWood.id)}`);
-              setJointRequest(null);
-              setError("");
-              setPlanningStatus("");
-            }}>
-              Review a joint
-            </button>
-          )}
         </div>
+      )}
+      {project.pieces.length > 0 && (
+        <details className="field-section">
+          <summary>Questions about this build</summary>
+          <div className="prompt-examples">
+            {[
+              ["Review weak spots", "What looks weak in this build?"],
+              ...(sampleWood ? [["Review a joint", `Review screw joints for ${partLabel(project, sampleWood.id)}`]] : []),
+              ...((project.motionPlans?.length || project.sections.some((section) => section.recipe?.openingLid))
+                ? [["Check movement", `Check motion for "${project.motionPlans?.[0]?.label ?? project.sections.find((section) => section.recipe?.openingLid)?.name}"`]] : []),
+              ...(project.pieces.some(({ offcut }) => offcut) ? [["Find uses for scraps", "What scraps can I reuse?"]] : []),
+            ].map(([label, example]) => (
+              <button type="button" key={label} disabled={busy} onClick={() => {
+                setPrompt(example);
+                setWorkspaceRequest(null);
+                setError("");
+                setPlanningStatus("");
+              }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </details>
       )}
       <button
         className="button primary full"
@@ -555,7 +583,7 @@ export default function IdeaPlanner({
           “rotate the whole design 90 degrees around the workspace origin.”
         </p>
       )}
-      {!jointAnswer && result && prompt !== exploredPrompt && (
+      {!hasWorkspaceAnswer && result && prompt !== exploredPrompt && (
         <p className="notice">
           Description changed. Explore again to refine this proposal while
           keeping unspecified dimensions.
@@ -568,7 +596,8 @@ export default function IdeaPlanner({
         </div>
       )}
       {jointAnswer && <ConnectionQuestionResult answer={jointAnswer} onAction={onConnectionAction} />}
-      {!jointAnswer && result && (
+      {buildAnswer && <BuildQuestionResult answer={buildAnswer} onAction={onBuildQuestionAction} />}
+      {!hasWorkspaceAnswer && result && (
         <div className="proposal idea-proposal">
           <div>
             <CheckCircle2 size={19} />

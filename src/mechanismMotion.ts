@@ -1288,8 +1288,8 @@ export function runMotionTest(
   }
 }
 
-export function projectMotionReviews(project: Project, includeScenarios = true) {
-  return (project.motionPlans ?? []).map((plan) => ({
+export function reviewMotionTests(project: Project, plan: MotionPlan, includeScenarios = true) {
+  return {
     plan,
     baseline: runMotionTest(project, plan),
     saved: plan.testSetup ? runMotionTest(project, plan, plan.testSetup) : undefined,
@@ -1297,7 +1297,11 @@ export function projectMotionReviews(project: Project, includeScenarios = true) 
       ...scenario,
       result: runMotionTest(project, plan, scenario.setup),
     })),
-  }));
+  };
+}
+
+export function projectMotionReviews(project: Project, includeScenarios = true) {
+  return (project.motionPlans ?? []).map((plan) => reviewMotionTests(project, plan, includeScenarios));
 }
 
 export type ProjectMotionReviews = ReturnType<typeof projectMotionReviews>;

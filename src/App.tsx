@@ -79,6 +79,7 @@ import { Scene } from "./Scene";
 import { useInspectorFocus } from "./useInspectorFocus";
 import IdeaPlanner from "./IdeaPlanner";
 import type { ConnectionQuestionAction } from "./ConnectionQuestionResult";
+import type { BuildQuestionAction } from "./buildQuestions";
 import { AppliedDesignsPanel } from "./AppliedDesignsPanel";
 import { GreenhouseFoundationsPanel } from "./GreenhouseFoundationsPanel";
 import { greenhouseFoundationGuide, greenhouseFoundationReviews, greenhouseFoundationScope } from "./greenhouseFoundation";
@@ -876,6 +877,35 @@ export function App() {
     setView((previous) => ({ preset: perspective ? "iso" : "top", nonce: previous.nonce + 1 }));
     inspectWorkspace();
   }
+  function openWorkspaceFinding(finding: Finding, toggle = true) {
+    if (finding.area) {
+      if (toggle && shownCheckArea === finding.area) setShownAreaFinding(null);
+      else showFindingArea(finding);
+    } else if (finding.connectionScope) {
+      openConnectionReview(finding.connectionScope);
+    } else if (finding.hingePlanId) {
+      const plan = project.lidHingePlans.find(({ id }) => id === finding.hingePlanId);
+      if (plan) {
+        setSelectedSectionId(plan.sectionId);
+        setSelectionScope("section");
+        setPanel("sections");
+      }
+    } else if (finding.fastenerPlanId) {
+      openFasteners(finding.fastenerPlanId);
+      if (finding.pieceId) setSelected(finding.pieceId);
+    } else if (finding.restraintPlanId) {
+      openRestraints();
+      if (finding.pieceId) setSelected(finding.pieceId);
+    } else if (finding.attachmentPlanId) {
+      openAttachments(finding.attachmentPlanId);
+      if (finding.pieceId) setSelected(finding.pieceId);
+    } else if (finding.pieceId) {
+      setSelectionScope("part");
+      setSelectedSectionId(null);
+      setSelected(finding.pieceId);
+      setPanel("part");
+    }
+  }
   function editClearanceObstruction(
     id: string,
     target: NonNullable<typeof clearanceRetest>["target"],
@@ -930,12 +960,12 @@ export function App() {
     }
     setClearanceRetest(null);
   }
-  function openBuildPreparationItem(action: BuildPreparationAction) {
+  function openBuildPreparationItem(action: BuildPreparationAction, fromPreparation = true) {
     if (action.kind === "offcut-cut") {
       openOffcutReleaseReview(action.id);
       return;
     }
-    setReturnToPreparation(action.kind !== "connections" && action.kind !== "handoff" && action.kind !== "guide-step");
+    setReturnToPreparation(fromPreparation && action.kind !== "connections" && action.kind !== "handoff" && action.kind !== "guide-step");
     switch (action.kind) {
       case "guide-step":
         if (guidePartFocus) exitGuidePartView();
@@ -961,9 +991,11 @@ export function App() {
         break;
       case "motion": {
         const entry = motionReviews.find(({ plan }) => plan.id === action.planId);
-        const scenario = entry?.scenarios.find(({ id }) => id === action.scenarioId);
+        const recorded = !fromPreparation && entry?.plan.testScenarios?.find(({ id }) => id === action.scenarioId);
+        const scenario = entry?.scenarios.find(({ id }) => id === action.scenarioId) ??
+          (recorded && entry ? { ...recorded, result: runMotionTest(project, entry.plan, recorded.setup) } : undefined);
         const result = action.scenarioId ? scenario?.result : entry?.[action.variant];
-        const finding = result && motionTestFindings(project, result, !!scenario).find(({ id }) => id === action.findingId);
+        const finding = result && motionTestFindings(project, result, !fromPreparation || !!scenario).find(({ id }) => id === action.findingId);
         if (!entry || !result || !finding) {
           notify("This clearance finding has changed. Review the current checklist.", true);
           break;
@@ -982,8 +1014,12 @@ export function App() {
         break;
       }
       case "lid": {
-        const entry = lidTravelChecks.find(({ section }) => section.id === action.sectionId);
-        const finding = entry?.findings.find(({ id }) => id === action.findingId);
+        const section = !fromPreparation && project.sections.find(({ id, recipe }) => id === action.sectionId && recipe?.openingLid);
+        const entry = lidTravelChecks.find(({ section }) => section.id === action.sectionId) ??
+          (section ? { section, ...inspectLidTravel(project, section.id) } : undefined);
+        const finding = entry?.findings.find(({ id }) => id === action.findingId) ??
+          (!fromPreparation && action.findingId === "clear" && entry?.review && !entry.findings.length
+            ? { id: "clear", angle: 0, detail: "No modeled lid travel findings." } : undefined);
         if (!entry || !finding) {
           notify("This lid finding has changed. Review the current checklist.", true);
           break;
@@ -1158,6 +1194,43 @@ export function App() {
       setReturnToConnections(true);
     }
     setModal(null);
+  }
+  function openAskedBuildReview(action: BuildQuestionAction) {
+    if (!canLeaveWorkingDraft()) return;
+    if (project !== current.current) throw Error("The build changed. Explore the question again.");
+    if (action.kind === "offcut-reuse") {
+      if (action.plan.source !== project) throw Error("The Cut pool changed. Explore the question again.");
+      setOffcutReusePlan(action.plan);
+      setModal("offcut-reuse");
+      return;
+    }
+    setModal(null);
+    setReturnToPreparation(false);
+    switch (action.kind) {
+      case "finding": {
+        const finding = findings.find(({ id }) => id === action.id);
+        if (!finding) throw Error("This check changed. Explore the question again.");
+        setPanel("checks");
+        openWorkspaceFinding(finding, false);
+        break;
+      }
+      case "checks":
+        setPanel("checks");
+        break;
+      case "cut-pool":
+        setLibrary("cuts");
+        break;
+      case "motion-setup":
+        setRemovalTarget(null);
+        setMotionPreview(null);
+        setMotionTestSelection(null);
+        setPanel("motion");
+        break;
+      case "motion":
+      case "lid":
+        openBuildPreparationItem(action, false);
+        break;
+    }
   }
   function reviewConnectionIntent(intent: ConnectionIntent, scope?: ConnectionReviewScope) {
     if (scope) openConnectionReview(scope);
@@ -3564,31 +3637,7 @@ export function App() {
                     key={f.id}
                     className={`finding ${f.severity}`}
                     aria-pressed={f.area ? shownCheckArea === f.area : undefined}
-                    onClick={() => {
-                      if (f.area) {
-                        if (shownCheckArea === f.area) setShownAreaFinding(null);
-                        else showFindingArea(f);
-                      } else if (f.connectionScope) {
-                        openConnectionReview(f.connectionScope);
-                      } else if (f.hingePlanId) {
-                        const plan = project.lidHingePlans.find((plan) => plan.id === f.hingePlanId);
-                        if (plan) { setSelectedSectionId(plan.sectionId); setSelectionScope("section"); setPanel("sections"); }
-                      } else if (f.fastenerPlanId) {
-                        openFasteners(f.fastenerPlanId);
-                        if (f.pieceId) setSelected(f.pieceId);
-                      } else if (f.restraintPlanId) {
-                        openRestraints();
-                        if (f.pieceId) setSelected(f.pieceId);
-                      } else if (f.attachmentPlanId) {
-                        openAttachments(f.attachmentPlanId);
-                        if (f.pieceId) setSelected(f.pieceId);
-                      } else if (f.pieceId) {
-                        setSelectionScope("part");
-                        setSelectedSectionId(null);
-                        setSelected(f.pieceId);
-                        setPanel("part");
-                      }
-                    }}
+                    onClick={() => openWorkspaceFinding(f)}
                   >
                     {f.severity === "info" ? (
                       <Info size={16} />
@@ -4808,6 +4857,8 @@ export function App() {
                 project={project}
                 initialTarget={ideaTarget}
                 onConnectionAction={(action) => safe(() => openAskedConnection(action))}
+                findings={findings}
+                onBuildQuestionAction={(action) => safe(() => openAskedBuildReview(action))}
                 onApply={(next) => {
                   safe(() => {
                     change(next);

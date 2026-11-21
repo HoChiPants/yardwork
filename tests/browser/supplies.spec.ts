@@ -43,6 +43,12 @@ async function openSupplies(page: Page) {
     await panel.locator(":scope > summary").click();
   return panel;
 }
+async function openCostEstimate(page: Page) {
+  const summary = page.getByText("Project cost estimate", { exact: true });
+  const estimate = summary.locator("..");
+  if ((await estimate.getAttribute("open")) === null) await summary.click();
+  return estimate;
+}
 async function add(page: Page, productId: string, packs: number) {
   const panel = await openSupplies(page);
   await panel
@@ -189,13 +195,16 @@ test("edit an exact Home Depot tool snapshot without losing its precise check ti
   await tools.locator(":scope > summary").click();
   const row = tools.locator(".supply-row");
   const edit = row.getByRole("button", { name: `Record supply snapshot for ${name(drill)}`, exact: true });
-  await expect(row).toContainText("$123.45");
+  await expect(row).not.toContainText("$123.45");
+  const estimate = await openCostEstimate(page);
+  await expect(estimate).toContainText("$123.45 in observed tool purchases");
   await edit.click();
   const form = tools.locator(".supply-snapshot");
+  await expect(form.getByRole("spinbutton", { name: "Supply snapshot price per pack", exact: true })).toHaveValue("123.45");
   await form.getByRole("spinbutton", { name: "Supply snapshot price per pack", exact: true }).fill("119");
   await form.getByRole("spinbutton", { name: "Supply snapshot available packs", exact: true }).fill("1");
   await form.getByRole("button", { name: "Record tool snapshot", exact: true }).click();
-  await expect(row).toContainText("$119.00");
+  await expect(estimate).toContainText("$119.00 in observed tool purchases");
   await expect(form).toHaveCount(0);
   const updated = await draft(page);
   const expected = { ...current, price: 119, available: 1 };
@@ -278,7 +287,8 @@ test("hinge purchases edit, snapshot, save/reopen and export without becoming ge
   await form
     .getByRole("button", { name: "Record supply snapshot", exact: true })
     .click();
-  await expect(row).toContainText("$37.50");
+  await expect(row).not.toContainText("$37.50");
+  await expect(await openCostEstimate(page)).toContainText("$37.50 from 1 observed line");
   const updated = await draft(page);
   expect(updated.store).toBe("101");
   expect(updated.zip).toBe("84121");
@@ -296,9 +306,7 @@ test("hinge purchases edit, snapshot, save/reopen and export without becoming ge
     .filter({ hasText: projectName })
     .click();
   await openSupplies(page);
-  await expect(
-    page.locator(".supply-row").filter({ hasText: name(hingeId) }),
-  ).toContainText("$37.50");
+  await expect(await openCostEstimate(page)).toContainText("$37.50 from 1 observed line");
   const csv = await downloadText(page, /^Shopping list CSV/);
   expect(csv).toContain(name(hingeId));
   expect(csv).toContain("Banquette seat lid");
@@ -343,7 +351,7 @@ test("heterogeneous kits count purchase packs directly and marketplace items can
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await openSupplies(page);
   await expect(tape).toContainText(/No current reviewed Lowe's offer/);
-  await expect(tape).toContainText("Unpriced");
+  await expect((await openCostEstimate(page)).getByTestId("pricing-unpriced")).toContainText("Unpriced: 1 line");
   const support = await add(page, supportId, 1);
   await expect(support).toContainText("Max Warehouse");
   await expect(
@@ -443,7 +451,8 @@ test.describe("phone supply workflow", () => {
     await form
       .getByRole("button", { name: "Record supply snapshot", exact: true })
       .click();
-    await expect(row).toContainText("$8.50");
+    await expect(row).not.toContainText("$8.50");
+    await expect(await openCostEstimate(page)).toContainText("$8.50 from 1 observed line");
     const panel = page.locator(".supplies-panel");
     await panel
       .getByText("Import supply snapshot JSON", { exact: true })

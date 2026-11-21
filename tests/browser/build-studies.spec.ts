@@ -1269,11 +1269,8 @@ test("the lined sauna retains editable courses, quote-only bundle sourcing and i
   await expect(
     page.getByText("22 bundles · 160 parts", { exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Direct supplier · price and availability to confirm", {
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expect(page.locator(".bom-row").filter({ has: supplierLink }))
+    .toContainText("Confirm availability with supplier");
   await supplierLink.scrollIntoViewIfNeeded();
   await page.screenshot({ path: info.outputPath("sauna-lining-bundles.png") });
 

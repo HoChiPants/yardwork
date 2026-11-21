@@ -1,14 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { inspectCutStock } from "../src/cutStock";
+import { inspectCutStock, setCutSourceOnHand } from "../src/cutStock";
 import { bom, guideMarkdown } from "../src/engine";
-import { acceptIdeaRevisionPreview, bindingPlan, bindingToken, previewIdeaRevision } from "../src/ideaBindings";
+import { acceptIdeaRevisionPreview, bindingPlan, bindingReview, bindingToken, previewIdeaRevision } from "../src/ideaBindings";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
 import { blank, part, projectSchema } from "../src/model";
 import { assignOffcutToPart, fittingOffcuts } from "../src/offcutAssignment";
+import { planOffcutRelease } from "../src/offcutReleasePlan";
+import { completePlannedCutSource, releasePlannedCutSources } from "../src/plannedCutSources";
 import { localIdeaPlan, previewIdeaPlan } from "../src/planning";
 import { previewProposalStock, proposalStockRequest } from "../src/proposalStock";
-import { recordStockCutLayouts } from "../src/recordStockCutLayout";
+import { planStockCutLayouts, recordStockCutLayouts } from "../src/recordStockCutLayout";
 
 const prompt = "Build a workbench 48 inches wide, 20 inches deep and 36 inches tall";
 
@@ -109,4 +111,85 @@ test("saving proposal wood orders uses the previewed sources and makes labeled o
   const sharedPlan = recordStockCutLayouts(preview.project, preview.recordable.map(({ layout }) => layout));
   assert.deepEqual({ ...sharedPlan.project.pieces[0], cutStock: null }, existing);
   assert.equal(inspectCutStock(sharedPlan.project).valid.size, 3);
+});
+
+test("a revision releases its untouched planned stock and retains purchased blanks and confirmed cuts", () => {
+  const { project, existing } = shop();
+  const draft = previewIdeaPlan(project, localIdeaPlan({ prompt })).project;
+  const stock = previewProposalStock(project, draft, null);
+  const exclusive = stock.recordable.filter(({ existingPartIds }) => !existingPartIds.length);
+  const planned = planStockCutLayouts(stock.project, exclusive.map(({ layout }) => layout));
+  const [purchased, cut, pending] = planned.sourceIds;
+  assert.ok(pending);
+  assert.equal(bindingReview(planned.project, planned.project.ideaBindings[0].id).manualEdits, 0);
+  const originalPurchase = setCutSourceOnHand(planned.project, purchased, true);
+  const completed = completePlannedCutSource(originalPurchase, cut);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(completed)));
+  assert.ok(!reopened.plannedCutSources?.some(({ sourceId }) => sourceId === cut));
+  assert.ok(reopened.onHandCutSources?.includes(cut));
+
+  const id = reopened.ideaBindings[0].id;
+  const next = localIdeaPlan({ previousPlan: bindingPlan(reopened, id), prompt: "Make the workbench 42 inches wide" });
+  const revision = previewIdeaRevision(reopened, id, next, bindingToken(reopened, id));
+  assert.equal(revision.impact.releasedStockUnits, planned.sourceIds.length - 1);
+  assert.equal(revision.project.plannedCutSources, undefined);
+  assert.deepEqual(revision.project.pieces.find(({ id }) => id === existing.id), existing);
+  assert.ok(reopened.pieces.some(({ cutStock }) => cutStock?.id === pending));
+  assert.ok(!revision.project.pieces.some(({ cutStock }) => cutStock?.id === pending));
+  const { groups, valid } = inspectCutStock(revision.project);
+  assert.ok(valid.has(purchased) && valid.has(cut));
+  assert.equal(groups.get(purchased)?.length, 1);
+  const full = groups.get(purchased)![0];
+  assert.equal(full.offcut, true);
+  assert.deepEqual(full.size, full.cutStock?.size);
+  const reuse = previewProposalStock(reopened, revision.project,
+    [revision.project.partLabels.find(({ partId }) => partId === full.id)!.label]);
+  assert.ok(reuse.plan?.assignments.length);
+  assert.ok(reuse.project.pieces.some(({ cutStock, offcut }) => cutStock?.id === purchased && !offcut));
+  assert.ok(groups.get(cut)?.every(({ offcut }) => offcut));
+  const removedHistory = new Set(reopened.plannedCutSources?.flatMap(({ historyIds }) => historyIds));
+  assert.ok(!revision.project.history.some(({ id }) => removedHistory.has(id)));
+  assert.match(guideMarkdown(revision.project), /Released uncut stock plan/);
+});
+
+test("a planned unit stays reserved when a scrap is assigned until that assignment is released", () => {
+  const { project, existing } = shop();
+  const draft = previewIdeaPlan(project, localIdeaPlan({ prompt })).project;
+  const stock = previewProposalStock(project, draft, null);
+  const exclusive = stock.recordable.find(({ existingPartIds, layout }) =>
+    !existingPartIds.length && layout.materialId === "stud" && layout.leftovers.some(({ length }) => length > 11));
+  assert.ok(exclusive);
+  const planned = planStockCutLayouts(stock.project, [exclusive.layout]);
+  const [sourceId] = planned.sourceIds;
+  const [match] = fittingOffcuts(planned.project, existing, undefined,
+    new Set(planned.project.pieces.filter(({ offcut, cutStock }) => offcut && cutStock?.id === sourceId).map(({ id }) => id)));
+  assert.ok(match);
+  const used = assignOffcutToPart(planned.project, existing.id, match.piece.id);
+  assert.throws(() => releasePlannedCutSources(used, [sourceId]), /dependent offcut assignments/);
+  assert.match(guideMarkdown(used), /Complete the source stock cut order before using this blank/);
+  const receipt = used.history.at(-1)!;
+  const returned = planOffcutRelease(used, receipt.id);
+  const released = releasePlannedCutSources(returned.project, [sourceId]);
+  assert.equal(released.project.plannedCutSources, undefined);
+  assert.ok(!released.project.pieces.some(({ cutStock }) => cutStock?.id === sourceId));
+  assert.deepEqual(released.project.pieces.find(({ id }) => id === existing.id), existing);
+});
+
+
+test("a revision keeps stock shared with a part outside the design", () => {
+  const { project, existing } = shop();
+  const draft = previewIdeaPlan(project, localIdeaPlan({ prompt })).project;
+  const stock = previewProposalStock(project, draft, null);
+  const shared = stock.recordable.find(({ existingPartIds }) => existingPartIds.includes(existing.id))!;
+  const pending = planStockCutLayouts(stock.project, [shared.layout]);
+  const [sourceId] = pending.sourceIds;
+  const before = pending.project.pieces.find(({ id }) => id === existing.id);
+  assert.equal(before?.cutStock?.id, sourceId);
+  const id = pending.project.ideaBindings[0].id;
+  const next = localIdeaPlan({ previousPlan: bindingPlan(pending.project, id), prompt: "Make the workbench 42 inches wide" });
+  const review = previewIdeaRevision(pending.project, id, next, bindingToken(pending.project, id));
+  assert.equal(review.impact.releasedStockUnits, 0);
+  assert.deepEqual(review.project.plannedCutSources, pending.project.plannedCutSources);
+  assert.deepEqual(review.project.pieces.find(({ id }) => id === existing.id), before);
+  assert.throws(() => acceptIdeaRevisionPreview(review), /explicitly allow the rebuild/);
 });

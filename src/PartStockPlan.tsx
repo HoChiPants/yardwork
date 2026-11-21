@@ -24,6 +24,8 @@ export function PartStockPlan({
   inspection,
   onRecord,
   onStockOnHand,
+  onCompleteCut,
+  onReleaseCut,
   onSaveLoss,
   onApplyWoodKerf,
   onAssignOffcut,
@@ -37,6 +39,8 @@ export function PartStockPlan({
   inspection: CutStockInspection;
   onRecord: (layout: StockCutLayout, onHand: boolean) => void;
   onStockOnHand: (sourceId: string, onHand: boolean) => void;
+  onCompleteCut: (sourceId: string) => void;
+  onReleaseCut: (sourceId: string) => void;
   onSaveLoss: (layout: StockCutLayout) => void;
   onApplyWoodKerf: (source: Project, next: Project) => void;
   onAssignOffcut: (pieceId: string, offcutId: string) => void;
@@ -174,6 +178,8 @@ export function PartStockPlan({
           inspection={inspection}
           focusedId={piece.id}
           onStockOnHand={(onHand) => onStockOnHand(piece.cutStock!.id, onHand)}
+          onCompleteCut={() => onCompleteCut(piece.cutStock!.id)}
+          onReleaseCut={() => onReleaseCut(piece.cutStock!.id)}
         />
       ) : row && sequence ? (
         <div className="stock-cut-order">

@@ -2,6 +2,7 @@ import { useId, useMemo } from "react";
 import { material, type Project } from "./model";
 import { formatPreciseInches } from "./measurement";
 import { fitLayoutLabel } from "./layoutLabels";
+import { cutPlanCanRelease } from "./plannedCutSources";
 import {
   cutStockLayout,
   type CutStockGap,
@@ -19,6 +20,8 @@ export function CutStockLayout({
   sourceId,
   onSelectPart,
   onStockOnHand,
+  onCompleteCut,
+  onReleaseCut,
   focusedId,
   printable = false,
   inspection,
@@ -27,6 +30,8 @@ export function CutStockLayout({
   sourceId: string;
   onSelectPart?: (pieceId: string) => void;
   onStockOnHand?: (onHand: boolean) => void;
+  onCompleteCut?: () => void;
+  onReleaseCut?: () => void;
   focusedId?: string;
   printable?: boolean;
   inspection?: CutStockInspection;
@@ -37,6 +42,10 @@ export function CutStockLayout({
   );
   const patternId = `source-gap-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const onHand = project.onHandCutSources?.includes(sourceId) ?? false;
+  const plan = project.plannedCutSources?.find((item) => item.sourceId === sourceId);
+  const canRelease = plan && onReleaseCut
+    ? cutPlanCanRelease(plan, inspection?.groups.get(sourceId) ?? project.pieces.filter((piece) => piece.cutStock?.id === sourceId))
+    : false;
   if (layout.state === "invalid" || layout.state === "missing")
     return (
       <section
@@ -44,6 +53,7 @@ export function CutStockLayout({
         aria-label="Recorded cut source"
         data-source-id={sourceId}
         data-layout-state={layout.state}
+        data-cut-plan={plan ? "planned" : undefined}
       >
         <h4>Recorded cut source · layout unavailable</h4>
         {layout.issues.map((issue) => (
@@ -76,6 +86,7 @@ export function CutStockLayout({
       aria-label="Recorded cut source"
       data-source-id={sourceId}
       data-layout-state={layout.state}
+      data-cut-plan={plan ? "planned" : undefined}
       data-source-size={JSON.stringify(layout.sourceSize)}
     >
       <h4>
@@ -92,6 +103,24 @@ export function CutStockLayout({
           I already have this stock
         </label>
       ) : onHand ? <p className="small-note">Marked on hand</p> : null}
+      {plan && (
+        <div className="field-section">
+          <p className="small-note">Cuts planned. The listed leftovers are expected after cutting this stock.</p>
+          {!printable && onCompleteCut && (
+            <div className="button-row">
+              <button type="button" className="button secondary small" onClick={onCompleteCut}>Mark cuts complete</button>
+              {onReleaseCut && (
+                <button type="button" className="button secondary small" disabled={!canRelease} onClick={onReleaseCut}>
+                  Release uncut stock plan
+                </button>
+              )}
+            </div>
+          )}
+          {!printable && onReleaseCut && !canRelease && (
+            <p className="small-note">This planned stock has changed. Review its cuts and release dependent offcut assignments before releasing it.</p>
+          )}
+        </div>
+      )}
       <p className="small-note">
         Source-local length: {axisName(axes.length)} · width:{" "}
         {axisName(axes.width)} · thickness: {axisName(axes.thickness)}. Starts

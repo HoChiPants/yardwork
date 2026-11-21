@@ -234,6 +234,7 @@ import { PartStockPlan } from "./PartStockPlan";
 import { StockGroupComparison } from "./StockGroupComparison";
 import { previewGroupStockReplacement, previewPartStockReplacement } from "./partStockReplacement";
 import { CutStockLayout } from "./CutStockLayoutView";
+import { completePlannedCutSource, releasePlannedCutSources } from "./plannedCutSources";
 import { cutStockLayoutMarkdown } from "./cutStockLayout";
 import "./CutStockLayout.css";
 import { cutInstructions, cutInstructionsText } from "./cutInstructions";
@@ -1737,6 +1738,18 @@ export function App() {
   }
   function markStockOnHand(sourceId: string, onHand: boolean) {
     safe(() => change((p) => setCutSourceOnHand(p, sourceId, onHand)));
+  }
+  function completeStockCuts(sourceId: string) {
+    safe(() => {
+      change((p) => completePlannedCutSource(p, sourceId));
+      notify("Cuts marked complete. The stock is on hand and the offcuts are ready to reuse.");
+    });
+  }
+  function releaseStockCuts(sourceId: string) {
+    safe(() => {
+      change((p) => releasePlannedCutSources(p, [sourceId]).project);
+      notify("Uncut stock plan released. Parts can use a new cut layout.");
+    });
   }
   const printCutSequences = useMemo(
     () => exportGuide === project ? cutSequences : stockCutSequences(exportGuide, bom(exportGuide)),
@@ -4511,9 +4524,13 @@ export function App() {
                   <SheetLayouts row={r} project={project} />
                   {(sourceIdsByMaterial.get(r.id) ?? []).map((sourceId, index) => (
                     <details className="recorded-source-layout" key={sourceId}>
-                      <summary>Recorded cut source {index + 1} · parts and offcuts</summary>
+                      <summary>Recorded cut source {index + 1} · {
+                        project.plannedCutSources?.some((plan) => plan.sourceId === sourceId) ? "cuts planned" : "parts and offcuts"
+                      }</summary>
                       <CutStockLayout project={project} sourceId={sourceId} inspection={currentCutSources}
                         onStockOnHand={(onHand) => markStockOnHand(sourceId, onHand)}
+                        onCompleteCut={() => completeStockCuts(sourceId)}
+                        onReleaseCut={() => releaseStockCuts(sourceId)}
                         onSelectPart={(id) => {
                           setSelected(id); setSelectedSectionId(null); setSelectionScope("part");
                           setPanel("part"); setStage(null); setPlaying(false); setMode("select");
@@ -5035,6 +5052,8 @@ export function App() {
                 onApplyWoodKerf={applyWoodStockKerf}
                 onRecord={recordStockUnit}
                 onStockOnHand={markStockOnHand}
+                onCompleteCut={completeStockCuts}
+                onReleaseCut={releaseStockCuts}
                 onReviewOffcut={openOffcutReleaseReview}
                 onReplaceStock={(pieceId, stockId) => safe(() => {
                   change((p) => previewPartStockReplacement(p, pieceId, stockId).project);
@@ -6093,6 +6112,7 @@ export function App() {
                 <div key={piece.id}>
                   <strong>
                     {partLabel(exportGuide, piece.id)} · {piece.name}
+                    {exportGuide.plannedCutSources?.some(({ sourceId }) => sourceId === piece.cutStock?.id) && " · Expected after cutting"}
                   </strong>
                   <pre className="print-cut-details">{printCuts(piece)}</pre>
                 </div>

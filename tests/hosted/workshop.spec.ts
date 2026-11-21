@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { restoreWorkshopArchive } from "../../server/workshopArchive";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { drawerSlideReference } from "../../src/drawerSlideReference";
-import { applyCommand, blank, part } from "../../src/model";
+import { applyCommand, blank, part, type Project } from "../../src/model";
 import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
 import { saveWoodJointDecision } from "../../src/woodJointDecisions";
 import { bounds, cutPiece } from "../../src/engine";
@@ -1358,6 +1358,62 @@ test("a proposal reuses a named scrap and saves board and sheet cut orders with 
   expect(guide).toMatch(/Recorded offcut cut order[\s\S]+O001[\s\S]+O004/);
   expect(guide).toMatch(/Stock cut order for P\d+ · 1\. Crosscut/);
   expect(guide).toMatch(/Recorded one .* sheet for .* Added 2 rectangular offcuts to the Cut pool/);
+});
+
+test("a design revision releases uncut plans and preserves completed stock", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  const dialog = page.getByRole("dialog");
+  const ask = async (prompt: string) => {
+    await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill(prompt);
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  };
+  const apply = dialog.getByRole("button", { name: "Add proposed layout", exact: true });
+  await ask("Build a workbench 48 inches wide, 20 inches deep and 36 inches tall");
+  await expect(apply).toBeEnabled();
+  await ask("Save the cut order with this proposal");
+  await apply.click();
+  await expect(dialog).toHaveCount(0);
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.project.plannedCutSources?.length).toBeGreaterThan(2);
+  const before: Project = (await draft()).project;
+  const [finished, purchased, ...pending] = before.plannedCutSources!;
+
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const cutSource = page.locator(".recorded-source-layout").filter({
+    has: page.locator(`[data-source-id="${finished.sourceId}"]`),
+  });
+  await cutSource.locator("summary").click();
+  await expect(cutSource).toContainText("Cuts planned.");
+  await cutSource.getByRole("button", { name: "Mark cuts complete", exact: true }).click();
+  await expect(cutSource.getByRole("button", { name: "Mark cuts complete", exact: true })).toHaveCount(0);
+  await expect.poll(async () => (await draft())?.project.onHandCutSources).toContain(finished.sourceId);
+
+  const purchasedSource = page.locator(".recorded-source-layout").filter({
+    has: page.locator(`[data-source-id="${purchased.sourceId}"]`),
+  });
+  await purchasedSource.locator("summary").click();
+  await purchasedSource.getByRole("checkbox", { name: "I already have this stock", exact: true }).check();
+  await purchasedSource.getByRole("button", { name: "Release uncut stock plan", exact: true }).click();
+  await expect.poll(async () => (await draft())?.project.pieces.filter((p: Project["pieces"][number]) =>
+    p.cutStock?.id === purchased.sourceId).length).toBe(1);
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("combobox", { name: "Design to edit", exact: true }).selectOption(before.ideaBindings[0].id);
+  await ask("Make the workbench 42 inches wide");
+  await expect(dialog).toContainText(`Return ${pending.length} uncut stock units to planning.`);
+  await dialog.locator(".rebuild-review input").check();
+  await dialog.getByRole("button", { name: "Apply design changes", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(async () => (await draft())?.project.sections[0]?.recipe?.width).toBe(42);
+  const after: Project = (await draft()).project;
+  expect(after.plannedCutSources).toBeUndefined();
+  expect(after.onHandCutSources).toEqual(expect.arrayContaining([finished.sourceId, purchased.sourceId]));
+  expect(after.pieces.some(({ cutStock }) => pending.some(({ sourceId }) => sourceId === cutStock?.id))).toBe(false);
+  expect(after.pieces.filter(({ cutStock }) => cutStock?.id === finished.sourceId).every(({ offcut }) => offcut)).toBe(true);
+  const [full] = after.pieces.filter(({ cutStock }) => cutStock?.id === purchased.sourceId);
+  expect(full.offcut).toBe(true);
+  expect(full.size).toEqual(full.cutStock?.size);
 });
 
 test("a named cabinet opening produces a drawer cut list and stops the saved slide at an obstruction", async ({ page }) => {

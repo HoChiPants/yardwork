@@ -36,7 +36,7 @@ import { BuildQuestionResult } from "./BuildQuestionResult";
 import { answerBuildQuestion, buildQuestion, type BuildQuestion, type BuildQuestionAction } from "./buildQuestions";
 import { ProposalStockReview } from "./ProposalStockReview";
 import { previewProposalStock, proposalStockRequest, type ProposalCutScope } from "./proposalStock";
-import { recordStockCutLayouts } from "./recordStockCutLayout";
+import { planStockCutLayouts } from "./recordStockCutLayout";
 import { partLabel } from "./partLabels";
 import { updateStructureParameter } from "./structureIdeas";
 import { editFurniturePlan, straightRun } from "./ideaEdits";
@@ -1138,6 +1138,13 @@ export default function IdeaPlanner({
                     connections. {preview.revision.impact.offcuts} cut parts
                     retained for reuse.
                   </p>
+                  {preview.revision.impact.releasedStockUnits > 0 && (
+                    <p>
+                      Return {preview.revision.impact.releasedStockUnits} uncut{" "}
+                      {preview.revision.impact.releasedStockUnits === 1 ? "stock unit" : "stock units"} to planning.
+                      Full blanks you marked on hand go to the Cut pool.
+                    </p>
+                  )}
                   {preview.revision.impact.affectedFastenerPlans > 0 && (
                     <p>
                       {preview.revision.impact.affectedFastenerPlans} fastening
@@ -1237,7 +1244,7 @@ export default function IdeaPlanner({
                     : preview.value.project;
                   const next = stock.value?.project ?? approved;
                   const withCuts = cutScope
-                    ? recordStockCutLayouts(next, selectedCutUnits.map(({ layout }) => layout)).project
+                    ? planStockCutLayouts(next, selectedCutUnits.map(({ layout }) => layout)).project
                     : next;
                   onApply(withCuts, project);
                 } catch (error) {

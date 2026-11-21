@@ -44,13 +44,18 @@ export function previewProposalStock(
   const newPartIds = new Set(candidate.pieces
     .filter((part) => !part.offcut && !sourcePartIds.has(part.id) && material(part.material).cuttable)
     .map(({ id }) => id));
-  const scraps = new Set(current.pieces.filter(({ offcut }) => offcut).map(({ id }) => id));
+  const pendingSources = new Set(candidate.plannedCutSources?.map(({ sourceId }) => sourceId));
+  const returned = new Set(current.plannedCutSources?.flatMap(({ sourceId }) =>
+    !pendingSources.has(sourceId) && current.onHandCutSources?.includes(sourceId) ? [sourceId] : []));
+  const scraps = new Set(candidate.pieces.filter(({ id, offcut, cutStock }) =>
+    offcut && (sourcePartIds.has(id) || (cutStock && returned.has(cutStock.id))))
+    .map(({ id }) => id));
   let plan: ReturnType<typeof planOffcutReuse> | undefined;
   let project = candidate;
   if (offcutLabels !== null) {
     let available = [...scraps];
     if (offcutLabels.length) {
-      const labels = new Map(ensurePartLabels(current).partLabels.map(({ label, partId }) => [label, partId]));
+      const labels = new Map(ensurePartLabels(candidate).partLabels.map(({ label, partId }) => [label, partId]));
       available = offcutLabels.map((label) => {
         const id = labels.get(label);
         if (!id || !scraps.has(id)) throw Error(`${label} is missing from the Cut pool. Check its label or use all current offcuts.`);
@@ -82,6 +87,7 @@ export function previewProposalStock(
     project,
     plan,
     newPartCount: newPartIds.size,
+    availableOffcuts: scraps.size,
     materials: cutMaterials,
     recordable,
     pricing: project === candidate ? undefined : projectPricingCoverage(project, rows),

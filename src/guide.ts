@@ -189,6 +189,7 @@ function designInputs(project: Project) {
     ...(project.sunliteThermal ? { sunliteThermal: project.sunliteThermal } : {}),
     ...(project.sunliteMounts?.length ? { sunliteMounts: project.sunliteMounts } : {}),
     ...(project.tubeCutPlans?.length ? { tubeCutPlans: project.tubeCutPlans } : {}),
+    ...(project.plannedCutSources?.length ? { plannedCutSources: project.plannedCutSources.map(({ sourceId }) => sourceId) } : {}),
     ...(project.woodKerfs ? { woodKerfs: project.woodKerfs } : {}),
     partLabels: project.partLabels,
     attachmentPlans: project.attachmentPlans,

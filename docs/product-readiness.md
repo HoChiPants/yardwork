@@ -12,6 +12,10 @@ The guide compares saved step order against modeled assembly prerequisites and t
 
 The catalog has 62 editable stocks. The registry contains 127 product records and 145 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
 
+## November 20, 2026 · Revise an uncut stock plan
+
+A saved proposal marks its stock layouts and expected offcuts as planned. **List → Recorded cut source** can confirm completed cuts or release an unchanged uncut source. Release returns a stock unit marked on hand to the Cut pool as one full blank. Revision previews release untouched uncut sources used only by the parts being replaced. Shared layouts and downstream scrap assignments keep their source until reviewed. Markdown and print show when an offcut assignment depends on a planned stock cut.
+
 ## November 20, 2026 · Save proposal cut orders
 
 **Plan an idea → Cuts and stock** can save reviewed wood board and sheet layouts when adding or revising a design. It records the same blank assignments shown in the preview, generates labeled remnants, and retains the saw order in the guide. Units shared with existing parts require explicit selection. The material counts still include the planned purchase. Check actual stock, grain and blade kerf before cutting. [Kreg cut-list and stock layout example](https://learn.kregtool.com/wp-content/themes/kreg-cms/prince.php?action=download&author=Kreg+Tool&plan_id=5495&plan_name=decorative-wall-mirror&template=project_plan)

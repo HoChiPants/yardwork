@@ -437,6 +437,14 @@ export const currentProjectSchema = z
     onHandCutSources: z.array(id).max(2000)
       .refine((sources) => new Set(sources).size === sources.length, "Keep one entry per on-hand cut source.")
       .optional(),
+    plannedCutSources: z.array(z.strictObject({
+      sourceId: id,
+      fingerprint: z.string().min(1).max(80),
+      historyIds: z.array(id).min(1).max(2000),
+    })).max(2000)
+      .refine((plans) => new Set(plans.map(({ sourceId }) => sourceId)).size === plans.length,
+        "Keep one cut plan per stock source.")
+      .optional(),
     projectCode: projectCodeSchema.optional(),
     shelfSagPlans: shelfSagPlansSchema.optional(),
     saunaHeaterPlans: z.array(saunaHeaterPlanSchema).max(50).refine(

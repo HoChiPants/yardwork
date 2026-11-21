@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 94**. Yardwork reads valid formats 1–93 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 95**. Yardwork reads valid formats 1–94 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 95 adds optional `plannedCutSources` to distinguish proposal stock reserved for future cuts. Each entry references its source, original cut geometry and guide operations. Confirming the cuts keeps the source and records the stock on hand. Earlier sources retain their recorded geometry and ownership without an inferred completion state.
 
 Format 94 adds optional screw sources to the cabinet and drawer portions of each measured rail layout. A source can record reserved counts from included or on-hand hardware, or a field-checked Everbilt 801582 pack choice and the measured depth between the seated head and the wood face. Earlier rail layouts open with their original drill paths and no screw source selected.
 

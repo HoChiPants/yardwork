@@ -28,6 +28,7 @@ export function CutPool({
           pieceThroughOpenings(piece).length),
     );
   const pieces = view === "scrap" ? scrap : used;
+  const planned = new Set(project.plannedCutSources?.map(({ sourceId }) => sourceId));
   return (
     <section className="cut-pool" aria-label="Cut pool">
       <div className="category-filter">
@@ -75,7 +76,9 @@ export function CutPool({
         >
           <strong>
             {partLabel(project, piece.id)} ·{" "}
-            {piece.offcut ? "Reusable offcut" : "Used in build"}
+            {planned.has(piece.cutStock?.id ?? "")
+              ? (piece.offcut ? "Expected offcut" : "Reserved for build")
+              : (piece.offcut ? "Reusable offcut" : "Used in build")}
           </strong>
           <p>{material(piece.material).name}</p>
           {piece.name !== `Offcut · ${material(piece.material).name}` && piece.name.startsWith("Offcut · ") && (

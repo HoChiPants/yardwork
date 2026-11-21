@@ -23,7 +23,7 @@ export function ProposalStockReview({
   setCutScope: (scope: ProposalCutScope | null) => void;
   selectedCutUnits: StockReview["recordable"];
 }) {
-  const hasOffcuts = project.pieces.some(({ offcut }) => offcut);
+  const hasOffcuts = review ? review.availableOffcuts > 0 : project.pieces.some(({ offcut }) => offcut);
   const shared = review?.recordable.filter(({ existingPartIds }) => existingPartIds.length) ?? [];
   const exclusive = (review?.recordable.length ?? 0) - shared.length;
   const expectedOffcuts = selectedCutUnits.reduce((sum, { layout }) => sum + layout.leftovers.length, 0);

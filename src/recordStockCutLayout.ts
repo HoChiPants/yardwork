@@ -20,6 +20,7 @@ import { rotate } from "./spatial";
 import { stockAxes } from "./stockAxes";
 import { stockCutSequences, type StockCutLayout, type StockCutSequence } from "./stockCutSequence";
 import { formatStockLength } from "./measurement";
+import { cutPlanFingerprint } from "./plannedCutSources";
 
 function indexReviewedLayouts(project: Project, rows: ReturnType<typeof bom>, loss: number | null) {
   const index = new Map<string, StockCutSequence>();
@@ -182,11 +183,10 @@ function prepareStockUnit(
   return { sourceId, remnantPieces, notes, stepId: anchor.stepId };
 }
 
-/** Commit an exact set of reviewed cuts as one change, with no intermediate repacking. */
-export function recordStockCutLayouts(
+function saveStockCutLayouts(
   project: Project,
   requested: readonly StockCutLayout[],
-  onHand = false,
+  { onHand, planned }: { onHand: boolean; planned: boolean },
 ) {
   if (!requested.length) throw Error("Choose stock units to record.");
   const before = bom(project);
@@ -215,6 +215,20 @@ export function recordStockCutLayouts(
       ? { ...rest, ...(remainingTubePlans?.length ? { tubeCutPlans: remainingTubePlans } : {}) }
       : labeled;
   const at = new Date().toISOString();
+  const stockHistory = recorded.map(({ notes, stepId }) => notes.map((message) => ({
+    id: uid(), at, stepId, message,
+  })));
+  const plannedCutSources = planned ? [
+    ...(project.plannedCutSources ?? []),
+    ...recorded.map(({ sourceId, remnantPieces }, index) => ({
+      sourceId,
+      fingerprint: cutPlanFingerprint([
+        ...current[index].layout.kept.map(({ id }) => keptPieces.get(id)!),
+        ...remnantPieces,
+      ]),
+      historyIds: stockHistory[index].map(({ id }) => id),
+    })),
+  ] : project.plannedCutSources;
   const next = projectSchema.parse(
     ensurePartLabels({
       ...activeProject,
@@ -222,15 +236,8 @@ export function recordStockCutLayouts(
         ...project.pieces.map((piece) => keptPieces.get(piece.id) ?? piece),
         ...remnants,
       ],
-      history: [
-        ...project.history,
-        ...recorded.flatMap(({ notes, stepId }) => notes.map((message) => ({
-          id: uid(),
-          at,
-          stepId,
-          message,
-        }))),
-      ].slice(-5000),
+      ...(plannedCutSources ? { plannedCutSources } : {}),
+      history: [...project.history, ...stockHistory.flat()].slice(-5000),
     }),
   );
   const checked = inspectCutStock(next);
@@ -252,6 +259,17 @@ export function recordStockCutLayouts(
     sourceIds,
     offcuts: remnants.length,
   };
+}
+
+/** Commit an exact set of reviewed cuts as one change, with no intermediate repacking. */
+export function recordStockCutLayouts(project: Project, requested: readonly StockCutLayout[], onHand = false) {
+  return saveStockCutLayouts(project, requested, { onHand, planned: false });
+}
+
+export function planStockCutLayouts(project: Project, requested: readonly StockCutLayout[]) {
+  if (requested.some(({ materialId }) => !material(materialId).wood))
+    throw Error("Choose wood boards or sheets for a planned stock cut order.");
+  return saveStockCutLayouts(project, requested, { onHand: false, planned: true });
 }
 
 /** Record a single reviewed purchase blank, keeping the existing part poses. */

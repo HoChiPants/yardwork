@@ -10,6 +10,11 @@
   line-height: 1.4;
   margin: 0 0 5px;
 }
+.cut-stock-layout[data-cut-plan] .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .cut-stock-layout .cut-stock-source-size {
   font-size: 12px;
   font-weight: 600;

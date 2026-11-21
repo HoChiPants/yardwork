@@ -157,6 +157,7 @@ export function cutStockLayoutMarkdown(
     "",
   ];
   const onHand = project.onHandCutSources?.includes(sourceId);
+  const planned = project.plannedCutSources?.some((plan) => plan.sourceId === sourceId);
   if (layout.state === "invalid" || layout.state === "missing")
     return [
       ...lines,
@@ -169,6 +170,7 @@ export function cutStockLayoutMarkdown(
   lines.push(
     `Source blank: ${inch(layout.length!)} long × ${inch(layout.width!)} wide × ${inch(layout.thickness!)} thick.`,
     ...(onHand ? ["Marked on hand."] : []),
+    ...(planned ? ["Cuts planned. Offcuts become available after cutting this stock."] : []),
     ...(layout.measuredWoodKerf === undefined ? [] : [
       `Recorded blade kerf · ${inch(layout.measuredWoodKerf)} per cut.`,
     ]),
@@ -179,7 +181,7 @@ export function cutStockLayoutMarkdown(
     "| --- | --- | --- | --- | --- | --- |",
     ...layout.regions.map(
       (region) =>
-        `| ${region.label} | ${region.offcut ? "Recorded offcut" : "Kept part"} | ${text(region.name)} | ${region.offset.map(inch).join(", ")} | ${region.size.map(inch).join(" × ")} | ${region.hasProfile ? "Profiled retained shape" : "Rectangular blank"} |`,
+        `| ${region.label} | ${region.offcut ? (planned ? "Expected offcut" : "Recorded offcut") : "Kept part"} | ${text(region.name)} | ${region.offset.map(inch).join(", ")} | ${region.size.map(inch).join(" × ")} | ${region.hasProfile ? "Profiled retained shape" : "Rectangular blank"} |`,
     ),
   );
   if (

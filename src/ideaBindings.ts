@@ -24,6 +24,7 @@ import type { StructureResult } from "./structures";
 import { persistLidPose, siteFaceLidShortfall, transformRecordedLidMotion } from "./lidMotion";
 import { clearanceAxis, reviewSiteClearance } from "./siteClearance";
 import { prepareCollisionSolid, solidOverlap } from "./solidCollision";
+import { releasePlannedCutSources, untouchedPlannedCutSources } from "./plannedCutSources";
 export type IdeaRevisionOptions = {
   entryIds?: string[];
   allowRebuild?: boolean;
@@ -38,6 +39,7 @@ export type IdeaImpact = {
   manualEdits: number;
   missingRoles: number;
   offcuts: number;
+  releasedStockUnits: number;
   changedEntries: number;
   addedEntries: number;
   removedEntries: number;
@@ -139,7 +141,7 @@ function signature(piece: Piece, pose: IdeaEntry["pose"]) {
 function expectedEntry(entry: IdeaEntry) {
   return generateIdeaEntry(blank(), entry.spec, entry.pose);
 }
-function inspectEntry(project: Project, entry: IdeaEntry) {
+function inspectEntry(project: Project, entry: IdeaEntry, uncutSources?: ReadonlyMap<string, readonly Piece[]>) {
   const expected = expectedEntry(entry),
     actualIds = entryPartIds(project, entry),
     manualPartIds: string[] = [],
@@ -172,7 +174,8 @@ function inspectEntry(project: Project, entry: IdeaEntry) {
     }
     let unmatched = 0;
     for (const p of actual) {
-      const key = signature(p, entry.pose),
+      const uncut = p.cutStock && uncutSources?.has(p.cutStock.id);
+      const key = signature(uncut ? { ...p, cutStock: null } : p, entry.pose),
         count = counts.get(key) ?? 0;
       if (count) counts.set(key, count - 1);
       else {
@@ -202,7 +205,8 @@ export function bindingReview(
 ) {
   const b = binding(project, id),
     entries = selection(b, entryIds),
-    reviews = entries.map((e) => inspectEntry(project, e)),
+    uncut = untouchedPlannedCutSources(project),
+    reviews = entries.map((e) => inspectEntry(project, e, uncut)),
     ids = new Set(reviews.flatMap((r) => [...r.actualIds])),
     joints = project.joints.filter((j) => ids.has(j.a) || ids.has(j.b)),
     offcuts = [...new Set(reviews.flatMap((r) => r.offcuts.map((p) => p.id)))];
@@ -601,6 +605,7 @@ export function previewIdeaRevision(
       manualEdits: 0,
       missingRoles: 0,
       offcuts: 0,
+      releasedStockUnits: 0,
       changedEntries: 0,
       addedEntries: newEntries.length,
       removedEntries: 0,
@@ -656,10 +661,11 @@ export function previewIdeaRevision(
   const removedIds = new Set<string>(),
     archiveIds = new Set<string>(),
     retained = new Set<string>();
+  const pristine = destructive.length ? untouchedPlannedCutSources(project) : undefined;
   for (const old of destructive) {
     if (old.sections.some((mapping) => project.sections.some((s) => s.id === mapping.sectionId && s.recordedLidMotion)))
       throw Error("Close the measured lid before rebuilding or removing that saved idea section.");
-    const review = inspectEntry(project, old);
+    const review = inspectEntry(project, old, pristine);
     impact.manualEdits += review.manualEdits;
     impact.missingRoles += review.missingRoleNames.length;
     impact.manualPartIds.push(...review.manualPartIds);
@@ -683,6 +689,25 @@ export function previewIdeaRevision(
   impact.affectedFastenerPlans = impact.affectedFastenerPlanIds.length;
   impact.affectedHingePlanIds = project.lidHingePlans.filter((plan) => removedIds.has(plan.moving.pieceId) || removedIds.has(plan.fixed.pieceId)).map((plan) => plan.id);
   impact.affectedHingePlans = impact.affectedHingePlanIds.length;
+  if (pristine?.size && next.plannedCutSources) {
+    const manualIds = new Set(impact.manualPartIds);
+    const release = next.plannedCutSources.filter((plan) => {
+      const group = pristine.get(plan.sourceId);
+      return group?.some((piece) => removedIds.has(piece.id)) &&
+        group.every((piece) => !manualIds.has(piece.id) && (piece.offcut || removedIds.has(piece.id)));
+    });
+    if (release.length) {
+      const released = releasePlannedCutSources(next, release.map(({ sourceId }) => sourceId));
+      next = released.project;
+      impact.releasedStockUnits = release.length;
+      for (const { sourceId } of release)
+        for (const { id } of pristine.get(sourceId)!) {
+          archiveIds.delete(id);
+          retained.delete(id);
+        }
+      for (const { id } of released.restored) retained.add(id);
+    }
+  }
   for (const pid of archiveIds) retained.add(pid);
   impact.retainedOffcutIds = [...retained];
   impact.offcuts = retained.size;

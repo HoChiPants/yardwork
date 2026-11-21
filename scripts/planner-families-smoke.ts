@@ -15,7 +15,7 @@ import {
 import { generateBuildGuide } from "../src/guide";
 import { bom, guideMarkdown } from "../src/engine";
 import { previewProposalStock } from "../src/proposalStock";
-import { recordStockCutLayouts } from "../src/recordStockCutLayout";
+import { planStockCutLayouts } from "../src/recordStockCutLayout";
 
 const base = process.env.SMOKE_URL ?? "http://127.0.0.1:4173";
 type Preview = ReturnType<typeof previewIdeaPlan>;
@@ -97,9 +97,10 @@ async function propose(
 
     const stock = previewProposalStock(draft, preview.project, null);
     assert.ok(stock.recordable.length, "No reviewed wood stock units to record");
-    const recorded = recordStockCutLayouts(stock.project, stock.recordable.map(({ layout }) => layout));
+    const recorded = planStockCutLayouts(stock.project, stock.recordable.map(({ layout }) => layout));
     const purchases = (project: typeof draft) => bom(project).map(({ id, quantity }) => [id, quantity]);
     assert.deepEqual(purchases(recorded.project), purchases(preview.project));
+    assert.equal(recorded.project.plannedCutSources?.length, recorded.sourceIds.length);
     const project = generateBuildGuide(recorded.project);
     assert.match(guideMarkdown(project), /Stock cut order for P\d+/);
     const save = await fetch(`${base}/api/projects/${project.id}`, {

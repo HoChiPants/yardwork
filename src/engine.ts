@@ -1872,6 +1872,7 @@ export function guideMarkdown(p: Project) {
     lids: projectLidTravelChecks(p),
     handoff: p.retailer === "lowes" ? undefined : homeDepotShoppingList(p, materialRows, supplies),
   });
+  const plannedSources = new Set(p.plannedCutSources?.map(({ sourceId }) => sourceId));
   const describePiece = (x: Piece) => {
     const m = material(x.material);
     const instructions = m.cuttable || pieceThroughOpenings(x).length
@@ -1888,7 +1889,8 @@ export function guideMarkdown(p: Project) {
           .map((line) => `  - ${line}`)
           .join("\n")
       : "";
-    return `- ${partLabel(p, x.id)} · ${x.name}: ${x.size.map(formatPreciseInches).join(" × ")} (${m.name})${instructions ? `\n${instructions}` : ""}`;
+    const pending = x.offcut && x.cutStock && plannedSources.has(x.cutStock.id) ? " · Expected after cutting" : "";
+    return `- ${partLabel(p, x.id)} · ${x.name}: ${x.size.map(formatPreciseInches).join(" × ")} (${m.name})${pending}${instructions ? `\n${instructions}` : ""}`;
   };
   const offcuts = p.pieces.filter(
     (piece) => piece.offcut && material(piece.material).cuttable,

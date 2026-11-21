@@ -1,3 +1,4 @@
+import type { SubfloorReview } from "./subfloor";
 import { DrawingReferenceMesh } from "./DrawingReferenceMesh";
 import type { WallTracePoint } from "./wallTrace";
 import { drawingReferenceBounds } from "./drawingReference";
@@ -83,6 +84,7 @@ export type SceneProps = {
   shownSiteClearanceId?: string | null;
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
   shownTrimSeam?: TrimSeamMarker;
+  shownSubfloor?: SubfloorReview["layout"];
   shownBottomPlate?: { start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownOpeningFlashing?: OpeningFlashingPreview;
@@ -1547,6 +1549,9 @@ function World(props: SceneProps) {
       {!isolated && props.shownFoundation && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <GreenhouseFoundationMarker review={props.shownFoundation} />
       )}
+      {!isolated && props.shownSubfloor && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <SubfloorMarkers layout={props.shownSubfloor} />
+      )}
       {!isolated && props.shownBottomPlate && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <group>
           {props.shownBottomPlate.runs.map(({ points, problem }, index) =>
@@ -1853,4 +1858,26 @@ export function Scene(props: SceneProps) {
       </Suspense>
     </Canvas>
   );
+}
+
+function SubfloorMarkers({ layout }: { layout: NonNullable<SubfloorReview["layout"]> }) {
+  const feet = (point: V3) => point.map((value) => value / 12) as V3;
+  const marks = useMemo(() => new Float32Array(layout.nails.flatMap(feet)), [layout]);
+  return <group>
+    {layout.edges.map(({ name, points, problem }, index) => <Line key={`${name}-${index}`} points={points.map(feet)}
+      color={problem ? "#bd481d" : "#206575"} lineWidth={problem ? 5 : 2} depthTest={false} raycast={() => null} />)}
+    {layout.spans.filter(({ problem }) => problem).map(({ points }, index) =>
+      <Line key={index} points={points.map(feet)} color="#bd481d" lineWidth={4} dashed dashSize={0.2}
+        gapSize={0.12} depthTest={false} raycast={() => null} />)}
+    {!!marks.length && <points raycast={() => null}>
+      <bufferGeometry><bufferAttribute attach="attributes-position" args={[marks, 3]} /></bufferGeometry>
+      <pointsMaterial color="#206575" size={6} sizeAttenuation={false} depthTest={false} />
+    </points>}
+    <Html center position={feet([layout.center[0], layout.center[1] + 2, layout.center[2]])}
+      zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+      <span className="site-clearance-marker" data-testid="subfloor-support-marker">
+        {layout.issues.length ? "Subfloor · Review marked support" : `Subfloor · ${layout.nails.length} estimated nailing locations`}
+      </span>
+    </Html>
+  </group>;
 }

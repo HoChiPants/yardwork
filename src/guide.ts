@@ -1,3 +1,4 @@
+import { subfloorReviews } from "./subfloor";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import {
   projectSchema,
@@ -74,6 +75,7 @@ function preparationScope(project: Project) {
     ...(project.waterFittings?.length ? { waterFittings: project.waterFittings } : {}),
     ...(project.waterStops?.length ? { waterStops: project.waterStops } : {}),
     ...(project.sinkDrains?.length ? { sinkDrains: project.sinkDrains } : {}),
+    ...(project.subfloorChecks?.length ? { subfloorChecks: project.subfloorChecks } : {}),
     ...(project.bottomPlateSeals?.length ? { bottomPlateSeals: project.bottomPlateSeals } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
@@ -631,6 +633,12 @@ export function generateBuildGuide(input: Project): Project {
     throw Error(
       "The assembly guide must cover every active part exactly once.",
     );
+  for (const { panelId, layout, problem } of subfloorReviews(project)) {
+    const name = layout?.piece.name ?? "subfloor panel";
+    addPhase(`Check ${name} support before covering`.slice(0, 120),
+      problem || layout?.issues.join(" ") || "Confirm the delivered panel stamp, joint gaps and framing. Review the modeled bearing and fastening layout in the subfloor schedule before covering the deck.",
+      { kind: "subfloor-support-review", planId: panelId }, { problem, issues: layout?.issues, nails: layout?.nails, supports: layout?.supportIds });
+  }
   for (const review of bottomPlateSealReviews(project)) {
     addPhase(`Air-seal ${review.title}`.slice(0, 120),
       review.problem || "Prepare the marked plate and subfloor and run the recorded bead before covering the seam. Review every interruption and adjoining air-barrier transition in the build guide.",

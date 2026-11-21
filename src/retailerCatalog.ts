@@ -1,3 +1,4 @@
+import { subfloorNails } from "./subfloorReference";
 import { openingFoam, openingSealMaterials, openingAirSealReviewedAt } from "./openingAirSealReference";
 import { sdwsFramingName, sdwsFramingPacks, sdwsFramingReview, sdwsFramingSources } from "./sdwsFramingReference";
 import { pureBondCasework } from "./homeDepotCaseworkReference";
@@ -4684,6 +4685,29 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: floorHangerFasteners.joist.specification, verifiedAt: floorHangerReviewedAt, note: "SD9212 fastener identification and dimensions. The source does not locate holes or give a measured installed tip position for this build." },
     ],
     discrepancies: [], capabilities: [],
+  },
+  {
+    id: subfloorNails.id,
+    name: subfloorNails.name,
+    manufacturer: "Grip-Rite",
+    manufacturerPartNumber: subfloorNails.model,
+    category: "fastener",
+    status: "reviewed-specs",
+    verifiedAt: subfloorNails.reviewedAt,
+    purchaseSpec: {
+      kind: "mass", amount: 1, unit: "lb", qualifier: "advertised", exactCount: null,
+      sourceRefs: [subfloorNails.specification, subfloorNails.listing],
+    },
+    profile: profile("fastener", null, null, { fastenerLength: 2.5, finish: "Bright steel" }),
+    offers: [hd(subfloorNails.internet, subfloorNails.model, subfloorNails.sku)],
+    sources: [
+      { url: subfloorNails.specification, verifiedAt: subfloorNails.reviewedAt,
+        note: "Exact 8C1 listing with 8d, 2½ in, 10¼ gauge, smooth shank, 9/32 in head and bright steel. Confirm delivered dimensions before using a specified fastener schedule." },
+      { url: subfloorNails.listing, verifiedAt: subfloorNails.reviewedAt,
+        note: "Exact 8C1, SKU 192996. One advertised 1-lb box of smooth, hand-drive common nails for interior wood applications." },
+    ],
+    discrepancies: ["Use the advertised box weight for shopping. Verify actual piece count, delivered shank diameter and suitability for the specified detail."],
+    capabilities: [],
   },
 ]);
 

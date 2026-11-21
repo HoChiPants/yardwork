@@ -1,3 +1,5 @@
+import { subfloorReference } from "./subfloorReference";
+
 export const bottomPlateSealant = {
   id: "osi-sc175-1496542",
   name: "OSI SC175 draft sealant",
@@ -27,5 +29,5 @@ export const subfloorPanel = {
   sku: "486701",
   size: [47.875, 0.703, 95.875] as [number, number, number],
   listing: "https://www.homedepot.com/p/203169027",
-  floorGuide: "https://www.apawood.org/buildertips/pdfs/Q300.pdf",
+  floorGuide: subfloorReference.guide,
 } as const;

@@ -1,0 +1,683 @@
+{
+  "schemaVersion": 115,
+  "id": "c1c7c5c9-0f37-4bf4-805a-54f60e351670",
+  "name": "Subfloor blocking study",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "6312ddd8-05f4-4f1c-b826-42f2063f69c1"
+  ],
+  "subfloorChecks": [
+    "0fd34faa-a572-4bab-be74-e63cdee1d024"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "a73c1d26-cb9f-432c-b99a-92d1bc0d6238",
+      "label": "P001"
+    },
+    {
+      "partId": "484d9a90-e2d1-4790-8e31-3728b0d3fa5f",
+      "label": "P002"
+    },
+    {
+      "partId": "51f00448-a52b-4631-a321-b826d806c147",
+      "label": "P003"
+    },
+    {
+      "partId": "1cde142a-b2b5-4030-b845-ed26af9b3df7",
+      "label": "P004"
+    },
+    {
+      "partId": "84408dd4-65be-4128-87af-b1f7e7740fee",
+      "label": "P005"
+    },
+    {
+      "partId": "3fa9c30a-dc8b-4bec-970e-74cedb676320",
+      "label": "P006"
+    },
+    {
+      "partId": "acc16710-1e1c-41b7-8f79-e16cc11c0fab",
+      "label": "P007"
+    },
+    {
+      "partId": "d43111dd-a0eb-4f62-a3b8-e9d7ddde8dff",
+      "label": "P008"
+    },
+    {
+      "partId": "3d38e8cd-ce30-49b6-9c83-6bcdd951daee",
+      "label": "P009"
+    },
+    {
+      "partId": "0fd34faa-a572-4bab-be74-e63cdee1d024",
+      "label": "P010"
+    },
+    {
+      "partId": "5e582c20-d86e-4db0-86dd-57a80ec0b0f8",
+      "label": "O001"
+    },
+    {
+      "partId": "c9cd3e7d-8956-4008-90db-b57bbedb28c8",
+      "label": "O002"
+    },
+    {
+      "partId": "1203fbf1-d034-47c5-b5f8-63c02cb7ce45",
+      "label": "O003"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-21T17:00:31.601Z",
+  "pieces": [
+    {
+      "id": "a73c1d26-cb9f-432c-b99a-92d1bc0d6238",
+      "name": "Joist 1",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        33.5
+      ],
+      "position": [
+        0,
+        3.625,
+        -35.25
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "6312ddd8-05f4-4f1c-b826-42f2063f69c1",
+        "size": [
+          1.5,
+          7.25,
+          56.125
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "484d9a90-e2d1-4790-8e31-3728b0d3fa5f",
+      "name": "Joist 2",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        33.5
+      ],
+      "position": [
+        0,
+        3.625,
+        -12
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "51f00448-a52b-4631-a321-b826d806c147",
+      "name": "Joist 3",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        33.5
+      ],
+      "position": [
+        0,
+        3.625,
+        12
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "1cde142a-b2b5-4030-b845-ed26af9b3df7",
+      "name": "Joist 4",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        33.5
+      ],
+      "position": [
+        0,
+        3.625,
+        35.25
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "84408dd4-65be-4128-87af-b1f7e7740fee",
+      "name": "Side A block 1",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        21.75
+      ],
+      "position": [
+        -15.25,
+        3.625,
+        -23.625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "3fa9c30a-dc8b-4bec-970e-74cedb676320",
+      "name": "Side A block 2",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        22.5
+      ],
+      "position": [
+        -15.25,
+        3.625,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "acc16710-1e1c-41b7-8f79-e16cc11c0fab",
+      "name": "Side A block 3",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        21.75
+      ],
+      "position": [
+        -15.25,
+        3.625,
+        23.625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "d43111dd-a0eb-4f62-a3b8-e9d7ddde8dff",
+      "name": "Side B block 1",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        21.75
+      ],
+      "position": [
+        15.25,
+        3.625,
+        -23.625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "3d38e8cd-ce30-49b6-9c83-6bcdd951daee",
+      "name": "Side B block 3",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        21.75
+      ],
+      "position": [
+        15.25,
+        3.625,
+        23.625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "0fd34faa-a572-4bab-be74-e63cdee1d024",
+      "name": "72 × 32 in OSB deck",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        32,
+        0.703,
+        72
+      ],
+      "position": [
+        0,
+        7.6015,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "assembly": "Subfloor framing",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "3eb1aa4d-1872-45f7-b84e-36caeae819f0",
+        "size": [
+          47.875,
+          0.703,
+          95.875
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "5e582c20-d86e-4db0-86dd-57a80ec0b0f8",
+      "name": "Offcut · 72 × 32 in OSB deck",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        47.875,
+        0.703,
+        23.75
+      ],
+      "position": [
+        0,
+        7.6015,
+        36.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "4805080d-0ebc-4fd4-b2e0-3bdf503b492d",
+      "assembly": "Subfloor framing",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "3eb1aa4d-1872-45f7-b84e-36caeae819f0",
+        "size": [
+          47.875,
+          0.703,
+          95.875
+        ],
+        "offset": [
+          0,
+          0,
+          72.125
+        ]
+      }
+    },
+    {
+      "id": "c9cd3e7d-8956-4008-90db-b57bbedb28c8",
+      "name": "Offcut · 72 × 32 in OSB deck",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        15.75,
+        0.703,
+        72
+      ],
+      "position": [
+        16.0625,
+        7.6015,
+        -11.9375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "4805080d-0ebc-4fd4-b2e0-3bdf503b492d",
+      "assembly": "Subfloor framing",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "3eb1aa4d-1872-45f7-b84e-36caeae819f0",
+        "size": [
+          47.875,
+          0.703,
+          95.875
+        ],
+        "offset": [
+          32.125,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "1203fbf1-d034-47c5-b5f8-63c02cb7ce45",
+      "name": "Offcut · Joist 1",
+      "material": "two-eight",
+      "size": [
+        1.5,
+        7.25,
+        22.5
+      ],
+      "position": [
+        15.25,
+        3.625,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "4805080d-0ebc-4fd4-b2e0-3bdf503b492d",
+      "assembly": "Subfloor framing",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "6312ddd8-05f4-4f1c-b826-42f2063f69c1",
+        "size": [
+          1.5,
+          7.25,
+          56.125
+        ],
+        "offset": [
+          0,
+          0,
+          33.625
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "4805080d-0ebc-4fd4-b2e0-3bdf503b492d",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "c1c7c5c9-0f37-4bf4-805a-54f60e351670",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-e9a92e4a",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "62c35337-1062-4e17-a31a-2af4989f0744",
+      "title": "Assemble Subfloor framing",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "c1c7c5c9-0f37-4bf4-805a-54f60e351670",
+        "stageKey": "assembly:Subfloor framing",
+        "memberIds": [
+          "0fd34faa-a572-4bab-be74-e63cdee1d024",
+          "1cde142a-b2b5-4030-b845-ed26af9b3df7",
+          "3d38e8cd-ce30-49b6-9c83-6bcdd951daee",
+          "3fa9c30a-dc8b-4bec-970e-74cedb676320",
+          "484d9a90-e2d1-4790-8e31-3728b0d3fa5f",
+          "51f00448-a52b-4631-a321-b826d806c147",
+          "84408dd4-65be-4128-87af-b1f7e7740fee",
+          "a73c1d26-cb9f-432c-b99a-92d1bc0d6238",
+          "acc16710-1e1c-41b7-8f79-e16cc11c0fab",
+          "d43111dd-a0eb-4f62-a3b8-e9d7ddde8dff"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-c6c3d2e1",
+        "title": "Assemble Subfloor framing"
+      }
+    },
+    {
+      "id": "98e8260c-27d9-4343-a32c-12064a5d6e70",
+      "title": "Check 72 × 32 in OSB deck support before covering",
+      "notes": "Long side B lacks ½ in bearing along 22.5 in.",
+      "complete": false,
+      "generated": {
+        "kind": "subfloor-support-review",
+        "planId": "0fd34faa-a572-4bab-be74-e63cdee1d024",
+        "notes": "Long side B lacks ½ in bearing along 22.5 in.",
+        "fingerprint": "phase-v1-9edb56b3",
+        "title": "Check 72 × 32 in OSB deck support before covering"
+      }
+    },
+    {
+      "id": "7fcd54e1-874e-4a5c-bec8-2467f2e8ef88",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "c1c7c5c9-0f37-4bf4-805a-54f60e351670",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-d919b486",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "A small fit study for a 72 × 32 in sheet over four joists. The 2 × 8 scrap in Cut pool matches the missing long-edge block. The board is staged at the missing bay so you can reuse it and compare the updated support check.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-9eff2c52",
+  "history": [
+    {
+      "id": "8c83c132-8795-4d68-8675-27bc3fd8feb3",
+      "at": "2026-11-21T17:00:31.609Z",
+      "stepId": "4805080d-0ebc-4fd4-b2e0-3bdf503b492d",
+      "message": "Planned straight cuts for P010 · 72 × 32 in OSB deck.",
+      "offcutCut": {
+        "sourceId": "3eb1aa4d-1872-45f7-b84e-36caeae819f0",
+        "inputId": "0fd34faa-a572-4bab-be74-e63cdee1d024",
+        "targetId": "0fd34faa-a572-4bab-be74-e63cdee1d024",
+        "retainedTrim": {
+          "inputRegionSize": [
+            47.875,
+            0.703,
+            95.875
+          ]
+        },
+        "inputSize": [
+          0.703,
+          47.875,
+          95.875
+        ],
+        "result": {
+          "size": [
+            32,
+            0.703,
+            72
+          ],
+          "sourceSize": [
+            47.875,
+            0.703,
+            95.875
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 72
+          },
+          {
+            "kind": "rip",
+            "size": 32
+          }
+        ],
+        "remnants": [
+          {
+            "id": "5e582c20-d86e-4db0-86dd-57a80ec0b0f8",
+            "size": [
+              0.703,
+              47.875,
+              23.75
+            ]
+          },
+          {
+            "id": "c9cd3e7d-8956-4008-90db-b57bbedb28c8",
+            "size": [
+              0.703,
+              15.75,
+              72
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "a6e32f79-78b1-4e65-8f45-a9841cf4f906",
+      "at": "2026-11-21T17:00:31.609Z",
+      "stepId": "4805080d-0ebc-4fd4-b2e0-3bdf503b492d",
+      "message": "Planned straight cuts for P001 · Joist 1.",
+      "offcutCut": {
+        "sourceId": "6312ddd8-05f4-4f1c-b826-42f2063f69c1",
+        "inputId": "a73c1d26-cb9f-432c-b99a-92d1bc0d6238",
+        "targetId": "a73c1d26-cb9f-432c-b99a-92d1bc0d6238",
+        "retainedTrim": {
+          "inputRegionSize": [
+            1.5,
+            7.25,
+            56.125
+          ]
+        },
+        "inputSize": [
+          1.5,
+          7.25,
+          56.125
+        ],
+        "result": {
+          "size": [
+            1.5,
+            7.25,
+            33.5
+          ],
+          "sourceSize": [
+            1.5,
+            7.25,
+            56.125
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 33.5
+          }
+        ],
+        "remnants": [
+          {
+            "id": "1203fbf1-d034-47c5-b5f8-63c02cb7ce45",
+            "size": [
+              1.5,
+              7.25,
+              22.5
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

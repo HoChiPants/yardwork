@@ -1,0 +1,62 @@
+import { readFile } from "node:fs/promises";
+import { expect, test } from "@playwright/test";
+import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+
+const samplePath = "examples/flooring/subfloor.yardwork.json";
+
+test("subfloor support updates after staging a recorded blocking offcut and stays in the guide", async ({ page }) => {
+  test.setTimeout(150_000);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("button", { name: "Check subfloor support", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  const example = dialog.getByRole("link", { name: "Download the subfloor blocking study" });
+  expect(await example.getAttribute("href")).toContain(samplePath);
+  const response = await page.request.get((await example.getAttribute("href"))!);
+  expect(response.ok()).toBe(true);
+  const sample = await response.json();
+  const trackedPanel = sample.subfloorChecks[0];
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "subfloor.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify({ ...sample, subfloorChecks: [] })),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("Does my subfloor need blocking?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await dialog.getByRole("button", { name: "Open subfloor support", exact: true }).click();
+  const preview = dialog.getByRole("region", { name: "Subfloor support preview" });
+  await expect(preview).toContainText("4 continuous joist lines · Widest spacing 24 in on center");
+  await expect(preview).toContainText("Long side B lacks ½ in bearing along 22.5 in");
+  await expect(preview).toContainText("Check matching Cut pool piece O003");
+  await preview.getByRole("button", { name: "Save check to guide", exact: true }).click();
+  await preview.getByRole("button", { name: "Show support in 3D", exact: true }).click();
+  await expect(page.getByTestId("subfloor-support-marker")).toContainText("Review marked support");
+  const pool = page.getByRole("region", { name: "Cut pool", exact: true });
+  if (!(await pool.isVisible())) await page.getByRole("button", { name: "Cut pool (3)", exact: true }).click();
+  await pool.getByRole("button", { name: "Reuse O003", exact: true }).click();
+  await expect(pool.getByRole("button", { name: "Reuse O003", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("button", { name: "Check subfloor support", exact: true }).click();
+  await expect(preview).toContainText("48 estimated panel nailing locations");
+  await preview.getByRole("button", { name: "Show support in 3D", exact: true }).click();
+  await expect(page.getByTestId("subfloor-support-marker")).toContainText("48 estimated nailing locations");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const saved = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await saved())?.revision).toBe(1);
+  expect((await saved()).project.subfloorChecks).toEqual([trackedPanel]);
+  expect((await saved()).project.pieces.find(({ name }: { name: string }) => name === "Reused · Joist 1").offcut).toBe(false);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").first().click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const downloadable = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await downloadable).path())!, "utf8");
+  expect(guide).toMatch(/Subfloor support and blocking[\s\S]*48 estimated panel nailing locations/);
+  expect(guide).toContain("Check 72 × 32 in OSB deck support before covering");
+  expect(guide).toContain("202308488");
+  await expect(page.locator(".print-guide .subfloor-support-print")).toContainText("48 estimated panel nailing locations");
+});

@@ -1,3 +1,4 @@
+import { subfloorNails } from "./subfloorReference";
 import { openingFoam, openingSilicone } from "./openingAirSealReference";
 import { sdwsFramingPacks } from "./sdwsFramingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
@@ -446,6 +447,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "100-screw box",
     contents: [{ name: "SD9212 #9 × 2½ in connector screw · ¼ in hex", quantity: 100 }],
     requirements: [floorHangerScope],
+  },
+  [subfloorNails.id]: {
+    purchaseUnit: "1-lb box",
+    contents: [{ name: subfloorNails.name, quantity: 1, unit: "lb", qualifier: "advertised" }],
+    requirements: ["Check the actual count, specified dimensions and acceptable finish before using this bright hand-drive nail in a dry, untreated wood floor assembly."],
   },
 };
 const toolPurchaseDefinitions: Record<string, SupplyDefinition> = {

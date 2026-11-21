@@ -1,3 +1,5 @@
+import { subfloorReport, subfloorReviews } from "./subfloor";
+import { subfloorNails, subfloorReference } from "./subfloorReference";
 import { bottomPlateSealGuide, bottomPlateSealReviews } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { drawingReferenceDescription } from "./drawingReference";
@@ -820,6 +822,13 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (review.problem) findings.push({
       id: `water-stop-${stop.id}`, severity: "warning", title: `Review fixture shutoff · ${stop.name}`,
       detail: review.problem, ...(p.pieces.some(({ id }) => id === stop.pieceId) && { pieceId: stop.pieceId }),
+    });
+  }
+  for (const { panelId, layout, problem } of subfloorReviews(p)) {
+    const detail = problem || layout?.issues.join(" ");
+    if (detail) findings.push({ id: `subfloor-${panelId}`, severity: "warning",
+      title: `Review subfloor support${layout ? ` · ${layout.piece.name}` : ""}`, detail,
+      ...(p.pieces.some(({ id }) => id === panelId) && { pieceId: panelId }),
     });
   }
   for (const { record, title, layout, problem } of bottomPlateSealReviews(p)) {
@@ -2214,6 +2223,9 @@ export function guideMarkdown(p: Project) {
       waterSupportGuideLines(waterSupportNetwork(p)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[PEX support guidance](${pexInstallation}) · [IRC piping support](${waterSupportReference.code}) · [HoldRite installation](${waterSupportReference.instructions})\n` : "") +
+    (p.subfloorChecks?.length ? "\n\n## Subfloor support and blocking\n\n" +
+      subfloorReport(p).map((line) => "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[APA Table 14 and Figure 1](${subfloorReference.specification}) · [2021 IRC floor table (Seattle edition)](${subfloorReference.code}) · [8d common nail example](${subfloorNails.listing})\n` : "") +
     (p.bottomPlateSeals?.length ? "\n\n## Bottom plate air seals\n\n" +
       bottomPlateSealGuide(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

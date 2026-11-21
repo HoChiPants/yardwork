@@ -9,6 +9,9 @@ import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBacker
 import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
+import { SubfloorPanel } from "./SubfloorPanel";
+import { subfloorReport, subfloorReviews, trackSubfloorPanel } from "./subfloor";
+import { subfloorReference } from "./subfloorReference";
 import { BottomPlateSealPanel } from "./BottomPlateSealPanel";
 import { bottomPlateSealGuide, bottomPlateSealReviews, removeBottomPlateSeal } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
@@ -378,6 +381,7 @@ type Modal =
   | "water-pressure"
   | "water-stop"
   | "sink-drain"
+  | "subfloor-support"
   | "bottom-plate-seal"
   | "water-support"
   | "export"
@@ -610,6 +614,8 @@ export function App() {
   const [shownRodSupportId, setShownRodSupportId] = useState<string | null>(null);
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
   const [shownTrimSeam, setShownTrimSeam] = useState<{ project: Project; pair: string; marker: TrimSeamMarker } | null>(null);
+  const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string } | null>(null);
+  const [subfloorTarget, setSubfloorTarget] = useState<string>();
   const [shownBottomPlate, setShownBottomPlate] = useState<{ projectId: string; id: string } | null>(null);
   const [bottomPlateTarget, setBottomPlateTarget] = useState<string>();
   const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
@@ -1366,6 +1372,10 @@ export function App() {
         setWaterFittingTee(!!action.tee);
         setModal("water-fitting");
         break;
+      case "subfloor-support":
+        setSubfloorTarget(action.panelId);
+        setModal("subfloor-support");
+        return;
       case "bottom-plate-seal":
         setBottomPlateTarget(action.planId);
         setModal("bottom-plate-seal");
@@ -1764,11 +1774,29 @@ export function App() {
   const woodJointDetails = useMemo(() => woodJointDecisionEntries(project), [project]);
   const sillGasketReview = useMemo(() => reviewSillGaskets(project), [project]);
   const openingFlashingReview = useMemo(() => reviewOpeningFlashings(project), [project]);
+  const visibleSubfloor = useMemo(() => shownSubfloor?.projectId === project.id && panel === "sections"
+    ? subfloorReviews(project, [shownSubfloor.panelId])[0]?.layout : undefined, [panel, project, shownSubfloor]);
+  function showSubfloor(panelId: string) {
+    if (guidePartFocus) exitGuidePartView();
+    setShownSubfloor({ projectId: project.id, panelId });
+    setShownBottomPlate(null);
+    setShownSillGasketId(null);
+    setPlaying(false);
+    setStage(null);
+    setExplode(false);
+    setMotionPreview(null);
+    setLidMotionPreview(null);
+    setSectionMotionPreview(null);
+    setPanel("sections");
+    setModal(null);
+    inspectWorkspace();
+  }
   const visibleBottomPlate = useMemo(() => shownBottomPlate?.projectId === project.id && panel === "sections"
     ? bottomPlateSealReviews(project).find(({ record }) => record.id === shownBottomPlate.id) : undefined,
     [panel, project, shownBottomPlate]);
   function showBottomPlate(id: string) {
     if (guidePartFocus) exitGuidePartView();
+    setShownSubfloor(null);
     setShownBottomPlate({ projectId: project.id, id });
     setShownSillGasketId(null);
     setPlaying(false);
@@ -3015,6 +3043,7 @@ export function App() {
               shownTrimSeam={panel === "connections" && shownTrimSeam?.project === project &&
                 shownTrimSeam.pair === liveConnectionContext?.scope.focusPair?.slice().sort().join("/")
                 ? shownTrimSeam.marker : undefined}
+              shownSubfloor={visibleSubfloor}
               shownBottomPlate={visibleBottomPlate?.layout ? {
                 start: visibleBottomPlate.layout.ends[0], outdated: !!visibleBottomPlate.outdated,
                 runs: visibleBottomPlate.layout.runs,
@@ -3919,6 +3948,11 @@ export function App() {
                 setBottomPlateTarget(shownBottomPlate?.projectId === project.id ? shownBottomPlate.id : undefined);
                 setModal("bottom-plate-seal");
               }}>Seal a bottom plate</button>
+              <button type="button" className="button secondary full" onClick={() => {
+                setSubfloorTarget(shownSubfloor?.projectId === project.id ? shownSubfloor.panelId : selected ?? undefined);
+                setModal("subfloor-support");
+              }}>Check subfloor support</button>
+              {visibleSubfloor && <button type="button" className="text-button" onClick={() => setShownSubfloor(null)}>Hide subfloor support</button>}
               {visibleBottomPlate && <button type="button" className="text-button" onClick={() => setShownBottomPlate(null)}>Hide bottom plate seam</button>}
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
                 shownId={shownSillGasketId} onChange={change} onShow={(id) => {
@@ -5342,7 +5376,7 @@ export function App() {
         >
           <section
             key={modal}
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "bottom-plate-seal" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "bottom-plate-seal" || modal === "subfloor-support" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5445,6 +5479,11 @@ export function App() {
                 setPanel("sections");
                 setModal(null);
                 notify("Fitting removed. The pipe cuts stay in the plan.");
+              })} />}
+            {modal === "subfloor-support" && <SubfloorPanel project={project} initialId={subfloorTarget}
+              onShow={showSubfloor} onTrack={(id, enabled) => safe(() => {
+                change((live) => trackSubfloorPanel(live, id, enabled));
+                notify(enabled ? "Subfloor check saved to the project and guide." : "Subfloor check removed from the guide.");
               })} />}
             {modal === "bottom-plate-seal" && <BottomPlateSealPanel project={project} selectedPart={selected} initialId={bottomPlateTarget}
               onSave={(draft) => safe(() => {
@@ -6898,6 +6937,14 @@ export function App() {
             <h2>PEX fittings and insertion marks</h2>
             <ul>{exportGuide.waterFittings.flatMap((fitting) => waterFittingGuide(exportGuide, fitting)).map((line, i) => <li key={i}>{line}</li>)}</ul>
             <p><a href={maxInsertionChart}>Insertion chart</a>{" · "}<a href={maxFittingInstructions}>SharkBite installation</a></p>
+          </section>
+        )}
+        {!!exportGuide.subfloorChecks?.length && (
+          <section className="subfloor-support-print">
+            <h2>Subfloor support and blocking</h2>
+            <ul>{subfloorReport(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={subfloorReference.specification}>APA Table 14 and Figure 1</a>{" · "}
+              <a href={subfloorReference.code}>2021 IRC floor table (Seattle edition)</a></p>
           </section>
         )}
         {!!exportGuide.bottomPlateSeals?.length && (

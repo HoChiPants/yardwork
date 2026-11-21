@@ -23,6 +23,7 @@ import { waterStop } from "./waterStopReference";
 import { waterStopsSchema } from "./waterStopSchema";
 import { sinkTrap } from "./sinkDrainReference";
 import { subfloorPanel } from "./bottomPlateSealReference";
+import { subfloorChecksSchema } from "./subfloorSchema";
 import { bottomPlateSealsSchema } from "./bottomPlateSealSchema";
 import { sinkDrainsSchema } from "./sinkDrainSchema";
 import { materialIds } from "./materialIds";
@@ -263,6 +264,7 @@ export const stepSchema = z.object({
           "project-finish",
           "water-pressure-review",
           "bottom-plate-air-seal",
+          "subfloor-support-review",
         ]),
         planId: id,
         notes: z.string().max(4500),
@@ -517,6 +519,7 @@ export const currentProjectSchema = z
     waterStops: waterStopsSchema.optional(),
     sinkDrains: sinkDrainsSchema.optional(),
     bottomPlateSeals: bottomPlateSealsSchema.optional(),
+    subfloorChecks: subfloorChecksSchema.optional(),
     shelfSagPlans: shelfSagPlansSchema.optional(),
     saunaHeaterPlans: z.array(saunaHeaterPlanSchema).max(50).refine(
       (plans) => new Set(plans.map((plan) => plan.roomId)).size === plans.length,

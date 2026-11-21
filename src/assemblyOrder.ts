@@ -3,6 +3,7 @@ import type { Project, Step } from "./model";
 import { waterRunStageKey } from "./wallWater";
 import { waterFittingStageKey } from "./waterFittings";
 import { waterStopStageKey } from "./waterStops";
+import { subfloorReviews } from "./subfloor";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { sinkDrainStageKey } from "./sinkDrain";
 import { waterFittingPorts } from "./waterFittingSchema";
@@ -134,11 +135,19 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
   }
   for (const drain of project.sinkDrains ?? [])
     requireBefore(byOwner.get(drain.id)?.get(sinkDrainStageKey), finish);
+  for (const { panelId, layout } of subfloorReviews(project)) {
+    const check = reviewSteps.get(reviewKey("subfloor-support-review", panelId));
+    for (const id of [panelId, ...(layout?.supportIds ?? [])]) requireBefore(stageByMember.get(id), check);
+    requireBefore(check, finish);
+  }
   for (const { record, layout } of bottomPlateSealReviews(project)) {
     const seal = reviewSteps.get(reviewKey("bottom-plate-air-seal", record.id));
     requireBefore(stageByMember.get(record.plateId), seal);
     const supportIds = new Set(layout?.runs.flatMap(({ panelId }) => panelId ? [panelId] : []));
-    for (const id of supportIds) requireBefore(stageByMember.get(id), seal);
+    for (const id of supportIds) {
+      requireBefore(stageByMember.get(id), seal);
+      requireBefore(reviewSteps.get(reviewKey("subfloor-support-review", id)), seal);
+    }
     requireBefore(seal, finish);
   }
   for (const plan of project.restraintPlans) {

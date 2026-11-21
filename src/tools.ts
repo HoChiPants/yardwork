@@ -1,3 +1,4 @@
+import { subfloorReviews } from "./subfloor";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { bottomPlateSealant, quartCartridgeGun } from "./bottomPlateSealReference";
 import { openingSilicone } from "./openingAirSealReference";
@@ -459,6 +460,11 @@ export function toolChecklist(
         kind: "roof-drip-edge", id: gibraltarDripEdge.id,
         reason: "The saved drip edge layout includes partial cuts or corner trim allowances.",
       });
+  }
+  for (const { panelId, layout } of subfloorReviews(project)) {
+    if (layout?.nails.length) add("drive-nail", {
+      kind: "piece", id: panelId, reason: "Fasten the checked subfloor sheet after confirming the actual attachment schedule.",
+    }, "conditional", "Applies if you select a compatible hand-drive nail. Check the actual fastener, access and adhesive instructions.");
   }
   for (const { record, problem, title } of bottomPlateSealReviews(project)) {
     if (!problem) add("apply-quart-sealant", { kind: "piece", id: record.plateId, reason: title });

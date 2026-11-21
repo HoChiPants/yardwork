@@ -1869,6 +1869,55 @@ test("drawer rail marks catch breakthrough and reopen with checked coordinates a
 });
 
 
+test("repairing a tilted glazing panel restores its drainage cut estimates", async ({ page }) => {
+  const project = blank("Roof glazing drainage");
+  const panel = part("Roof panel", "sunlite-8mm", [24, 36, 8 / 25.4], [0, 24, 0],
+    project.steps[0].id, "Glazing", [Math.PI / 3, 0, Math.PI / 6]);
+  panel.stockLengthAxis = 1;
+  project.pieces = [panel];
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "glazing-drainage.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const summary = page.locator("summary").filter({ hasText: "SUNLITE panel accessory estimate" });
+  const estimate = summary.locator("..");
+  await summary.click();
+  await expect(estimate).toContainText("30° off the modeled drainage slope.");
+  await expect(estimate.getByRole("button", { name: "Add missing estimated supplies" })).toHaveCount(0);
+  await page.getByRole("button", { name: /^Checks/ }).click();
+  await page.getByRole("button", { name: /^Glazing flute direction needs review/ }).click();
+  const roll = page.getByRole("spinbutton", { name: "Roll", exact: true });
+  await roll.fill("0");
+  await roll.press("Enter");
+  await page.getByRole("button", { name: /^Checks/ }).click();
+  await expect(page.getByRole("button", { name: /^Glazing flute direction needs review/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await summary.click();
+  await expect(estimate).toContainText("Upper nonvented tape 24 in");
+  await expect(estimate).toContainText("lower vented tape 24 in");
+  await estimate.getByRole("button", { name: "Add missing estimated supplies" }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = (await draft()).project as Project;
+  expect(saved.supplies.map(({ productId, quantity }) => [productId, quantity])).toEqual([
+    ["sunlite-96715", 1], ["sunlite-92763", 1],
+  ]);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await summary.click();
+  await expect(estimate).toContainText("Upper nonvented tape 24 in");
+  await expect(estimate.getByRole("button", { name: "Add missing estimated supplies" })).toHaveCount(0);
+});
+
 test("a fitted greenhouse door saves a checked weatherseal and exports the strips and exact Home Depot pack", async ({ page }) => {
   const base = createBuildStudy("greenhouse", undefined, undefined, {
     greenhouseGlazing: { materialId: "sunlite-8mm", productRegistryRef: "sunlite-132506" },

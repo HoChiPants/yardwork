@@ -2,6 +2,12 @@
 
 November 21, 2026. This ledger records the tested versions and workflows at each checkpoint.
 
+## SUNLITE flute alignment, format 118
+
+Checks compares the modeled flute axis with the downhill direction in the panel's plane. Misaligned panels stay in the backing and seam review. Their tape and accessory profile estimates pause until alignment is corrected. Saved tape entries stay available for review.
+
+The browser check corrected a panel that was 30° off slope, added the resulting tape and profile estimates, and reopened the saved project. A separate browser case retained the greenhouse door weatherseal workflow. The four related native greenhouse browser cases, both production builds, 1,640 domain tests and five example validations passed. [Palram positioning instructions](https://industriesfm.com/wp-content/uploads/2024/04/SUNLITE-Technical-Installation-Guide.pdf)
+
 ## Board cuts during placement, format 118
 
 The finished-length field can reserve a selected new board, place its finished part in 3D and keep the expected offcut in the Cut pool. The cut order uses the selected stock length and the saved blade allowance. Other unassigned parts keep their existing stock planning.

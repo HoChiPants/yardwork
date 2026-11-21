@@ -41,6 +41,7 @@ type Side = {
   outward: Vector3;
 };
 type PanelEdges = {
+  pieceId: string;
   label: string;
   upper: ProfileRun[];
   lower: ProfileRun[];
@@ -56,8 +57,30 @@ type Seam = ProfileRun & {
   issue: string | null;
 };
 const axis = (i: number) => new Vector3().setComponent(i, 1);
+const worldDirection = (piece: Piece, v: Vector3) =>
+  new Vector3(...rotate(v.toArray() as V3, piece.rotation));
 const inches = (value: number) =>
   formatPreciseInches(Math.round(value * 1000) / 1000);
+
+export function sunliteFluteDrainage(piece: Piece) {
+  if (piece.stockLengthAxis == null)
+    return { issue: "Set the stock length axis to the actual flute direction." };
+  const { length, thickness } = stockAxes(piece);
+  const flute = worldDirection(piece, axis(length));
+  if (Math.abs(flute.y) < directionTolerance)
+    return { issue: "The flutes are level. Establish the upper and lower drainage ends." };
+  const panelNormal = worldDirection(piece, axis(thickness));
+  const uphill = axis(1).projectOnPlane(panelNormal).normalize();
+  const alongside = Math.min(1, Math.abs(flute.dot(uphill)));
+  if (alongside < 1 - directionTolerance) {
+    const degrees = Number((Math.acos(alongside) * 180 / Math.PI).toFixed(2));
+    return {
+      flute,
+      issue: `The flutes are ${degrees}° off the modeled drainage slope. Align the channels down the panel before planning its tape or profiles.`,
+    };
+  }
+  return { flute };
+}
 
 export function sunliteHasPerimeterOpening(piece: Piece) {
   const { thickness } = stockAxes(piece);
@@ -73,12 +96,10 @@ export function sunliteHasPerimeterOpening(piece: Piece) {
 }
 
 function panelEdges(piece: Piece, label: string): PanelEdges {
-  const result: PanelEdges = { label, upper: [], lower: [], sides: [] };
-  if (piece.stockLengthAxis == null)
-    return {
-      ...result,
-      issue: "Set the stock length axis to the actual flute direction.",
-    };
+  const result: PanelEdges = { pieceId: piece.id, label, upper: [], lower: [], sides: [] };
+  const drainage = sunliteFluteDrainage(piece);
+  if (!drainage.flute) return { ...result, issue: drainage.issue };
+  const { flute } = drainage;
   const { length, width, thickness } = stockAxes(piece);
   if (sunliteHasPerimeterOpening(piece))
     return {
@@ -92,17 +113,8 @@ function panelEdges(piece: Piece, label: string): PanelEdges {
       issue:
         "Review the modeled thickness and flute direction against 8 mm stock.",
     };
-  const worldDirection = (v: Vector3) =>
-    new Vector3(...rotate(v.toArray() as V3, piece.rotation));
-  const flute = worldDirection(axis(length));
-  if (Math.abs(flute.y) < directionTolerance)
-    return {
-      ...result,
-      issue:
-        "The flutes are level. Establish the upper and lower drainage ends.",
-    };
   const world = (v: Vector3) =>
-    worldDirection(v).add(new Vector3(...piece.position));
+    worldDirection(piece, v).add(new Vector3(...piece.position));
   const solid = clipBox(piece.size, piece.cutPlanes);
   for (const [index, face] of solid.faces.entries()) {
     const ring = face.indices.map((i) => new Vector3(...solid.vertices[i]));
@@ -128,7 +140,7 @@ function panelEdges(piece: Piece, label: string): PanelEdges {
     const edgePoints: [V3, V3] = [aWorld.toArray(), bWorld.toArray()];
     const fingerprint = bindingHash({
       endpoints: edgePoints,
-      normal: worldDirection(new Vector3(...face.normal)).toArray(),
+      normal: worldDirection(piece, new Vector3(...face.normal)).toArray(),
       stockLengthAxis: length,
     });
     const planeAlongFlutes = face.normal[length];
@@ -150,7 +162,7 @@ function panelEdges(piece: Piece, label: string): PanelEdges {
         a: aWorld,
         b: bWorld,
         along: flute,
-        outward: worldDirection(axis(width)).multiplyScalar(
+        outward: worldDirection(piece, axis(width)).multiplyScalar(
           Math.sign(face.normal[width]),
         ),
       });
@@ -158,12 +170,14 @@ function panelEdges(piece: Piece, label: string): PanelEdges {
   }
   if (!result.upper.length || !result.lower.length)
     return {
-      label,
+      ...result,
       upper: [],
       lower: [],
       sides: [],
       issue: "Both fluted ends could not be identified on the retained shape.",
     };
+  if (drainage.issue)
+    return { ...result, upper: [], lower: [], issue: drainage.issue };
   return result;
 }
 
@@ -245,7 +259,8 @@ export function sunliteTakeoff(project: Project) {
   const upper = panels.flatMap((p) => p.upper),
     lower = panels.flatMap((p) => p.lower);
   const seams = sideSeams(panels.flatMap((p) => p.sides));
-  const fullSeams = seams.filter((seam) => seam.full);
+  const panelsToReview = new Set(panels.filter(({ issue }) => issue).map(({ pieceId }) => pieceId));
+  const fullSeams = seams.filter((seam) => seam.full && seam.pieceIds.every((id) => !panelsToReview.has(id)));
   const profileRuns: SunliteProfileRun[] = [
     ...fullSeams.map(({ id, label, length, fingerprint, points }) => ({
       id,

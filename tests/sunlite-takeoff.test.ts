@@ -263,6 +263,26 @@ test("center-plane length uses the clipped sloped edge, and rotating the sheet f
   assert.match(flat.panels[0].issue!, /flutes are level/);
 });
 
+test("a panel turned across the roof slope pauses new closure cuts and keeps the prior tape measurement", () => {
+  const project = blank("Roof drainage");
+  const slope = Math.PI / 3;
+  const piece = { ...panel(project, [0, 24, 0]), rotation: [slope, 0, 0] as V3 };
+  project.pieces = [piece];
+  const ready = fillSunliteTapeAllowances(project, { ...tapeEvidence, upper: 1, lower: 1 });
+  assert.equal(reviewSunliteTape(ready)?.readyCount, 2);
+  assert.ok(!validate(ready).some(({ id }) => id === `sunlite-flute-drainage-${piece.id}`));
+  const turned = { ...ready, pieces: [{ ...piece, rotation: [slope, 0, Math.PI / 6] as V3 }] };
+  const estimate = sunliteTakeoff(turned)!;
+  assert.equal(estimate.upperInches, 0);
+  assert.equal(estimate.lowerInches, 0);
+  assert.equal(estimate.profileRuns.length, 0);
+  assert.match(estimate.panels[0].issue!, /30° off the modeled drainage slope/);
+  assert.match(guideMarkdown(turned), /30° off the modeled drainage slope/);
+  assert.ok(validate(turned).some(({ id, pieceId }) => id === `sunlite-flute-drainage-${piece.id}` && pieceId === piece.id));
+  assert.deepEqual(projectSchema.parse(turned).sunliteTapeCuts, ready.sunliteTapeCuts);
+  assert.equal(reviewSunliteTape(turned)?.readyCount, 0);
+});
+
 test("count seams only at the modeled shared edge and flag stagger, competing neighbors and oversized runs", () => {
   const project = blank();
   const a = panel(project, [0, 54, 0], [24, 108, 8 / 25.4]);

@@ -104,7 +104,7 @@ import { saunaBenchGuideLines, saunaBenchReviews } from "./saunaBenches";
 import { cedarbrookBenchInstructions } from "./saunaBenchReference";
 import { greenhouseDoorKits } from "./greenhouseDoorReference";
 import { profileNames, reviewSunliteProfiles, sunliteProfileMarkdown } from "./sunliteProfiles";
-import { sunliteGuideMarkdown } from "./sunliteTakeoff";
+import { sunliteFluteDrainage, sunliteGuideMarkdown } from "./sunliteTakeoff";
 import { sunliteTapeMarkdown } from "./sunliteTapePlan";
 import { edgeBandingMarkdown } from "./edgeBanding";
 import { coldRetentionText, sunliteThermalMarkdown, sunliteThermalReview, thermalAxisText } from "./sunliteThermal";
@@ -784,6 +784,17 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
         label: `Sash backing gap · ${formatPreciseInches(longest.length)}`,
         labelPoint: longest.points[0].map((n, i) => (n + longest.points[1][i]) / 2) as V3,
       } } : {}),
+    });
+  }
+  for (const pane of p.pieces) {
+    if (pane.offcut || pane.material !== "sunlite-8mm") continue;
+    const { issue } = sunliteFluteDrainage(pane);
+    if (issue) findings.push({
+      id: `sunlite-flute-drainage-${pane.id}`,
+      severity: "warning",
+      title: "Glazing flute direction needs review",
+      detail: `${pane.name} · ${issue}`,
+      pieceId: pane.id,
     });
   }
   if (p.sunliteProfilePlan?.cuts.length) {

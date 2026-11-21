@@ -17,6 +17,7 @@ import { cedarbrookDoor } from "./saunaDoorReference";
 import { interiorDoor } from "./doorWall";
 import { nailShield, pexCutter, pexInstallation, pexPipes, pexSpec, pexStockLength, wallWaterReviewedAt, type PexPipeId } from "./wallWaterReference";
 import { maxFittingInstructions, maxFittingSpec, maxInsertionChart, waterDepthGauge, waterFittingDimensions, waterFittingIds, waterFittingName, waterFittingProduct, waterFittingsReviewedAt, waterTeesReviewedAt } from "./waterFittingReference";
+import { waterSupportIds, waterSupportName, waterSupportProducts, waterSupportReference } from "./waterSupportReference";
 import { cedarbrookFoil } from "./saunaFoilReference";
 import { saunaCeilingBatt, saunaCeilingJoists, saunaCeilingJoistSize, saunaCeilingReviewedAt } from "./saunaCeilingReference";
 import { owensCorningWallBatt as wallBatt } from "./saunaWallReference";
@@ -56,6 +57,7 @@ const sourceHosts = new Set([
   "www.homedepot.com",
   "www.masonite.com",
   "www.sharkbite.com",
+  "www.holdrite.com",
   "lowes.com",
   "www.lowes.com",
   "strongtie.com",
@@ -143,6 +145,7 @@ export const roleQualificationSchema = z.strictObject({
     "potableWaterPipe",
     "pipeNailShield",
     "pexConnection",
+    "pexStudSupport",
     "closetRod",
     "closetRodSupport",
     "storageLidHinge",
@@ -3412,6 +3415,30 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       roleQualifications: [{ role: "pexConnection", scope: "One SharkBite Max fitting with compatible PEX sized for each socket.",
         sourceRefs: [maxFittingSpec, maxInsertionChart, maxFittingInstructions],
         requirements: ["Confirm delivered dimensions and pipe approval. Field-check support, insertion access and test requirements."] }],
+      limitToQualifiedRoles: true, discrepancies: [], capabilities: [], toolCapabilityEvidence: [],
+    };
+  }),
+  ...waterSupportIds.map((id): RetailerProduct => {
+    const record = waterSupportProducts[id], spec = waterSupportReference;
+    const url = `https://www.homedepot.com/p/${record.internet}`;
+    return {
+      id, name: `${waterSupportName(id)} (15-pack)`,
+      manufacturer: "HoldRite", manufacturerPartNumber: record.model, identityBasis: "manufacturer-part",
+      category: "equipment", status: "reviewed-specs", verifiedAt: spec.reviewedAt,
+      profile: profile("equipment", [spec.depth, spec.flangeHeight, spec.flangeWidth], spec.packCount, { finish: "LDPE" }),
+      purchaseSpec: { kind: "counted", count: spec.packCount, sourceRefs: [url] },
+      offers: [hd(record.internet, record.model)],
+      sources: [
+        { url, verifiedAt: spec.reviewedAt, note: "Exact fifteen-unit jar for the selected CTS pipe size." },
+        { url: spec.product, verifiedAt: spec.reviewedAt, note: "HoldRite documents the compatible CTS pipe sizes and use through wood studs." },
+        { url: spec.spec, verifiedAt: spec.reviewedAt, note: "Manufacturer drawing gives the sleeve and flange envelope plus the 1⅜ in bore requirement." },
+        { url: spec.instructions, verifiedAt: spec.reviewedAt, note: "The flange fastens to the framing with two nails before the pipe is threaded through." },
+      ],
+      roleQualifications: [{
+        role: "pexStudSupport", scope: "One correctly sized LDPE isolator at a checked bore in wood framing.",
+        sourceRefs: [spec.spec, spec.instructions],
+        requirements: ["Check the delivered flange, fasteners, tubing clearance, support and expansion allowance."],
+      }],
       limitToQualifiedRoles: true, discrepancies: [], capabilities: [], toolCapabilityEvidence: [],
     };
   }),

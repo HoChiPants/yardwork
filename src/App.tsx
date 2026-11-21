@@ -16,9 +16,12 @@ import { DoorOpeningFields, DoorwayPanel, doorwayExample } from "./DoorwayPanel"
 import { WallWaterPanel } from "./WallWaterPanel";
 import { WaterFittingPanel } from "./WaterFittingPanel";
 import { WaterPressurePanel } from "./WaterPressurePanel";
+import { WaterSupportPanel } from "./WaterSupportPanel";
 import { removeWaterRun, waterRunGuide } from "./wallWater";
 import { removeWaterFitting, waterFittingGuide } from "./waterFittings";
 import { reviewWaterPressure, waterPressureGuideStep, waterPressureObservations } from "./waterPressure";
+import { waterSupportGuideLines, waterSupportNetwork } from "./waterSupportNetwork";
+import { waterSupportReference } from "./waterSupportReference";
 import { maxInsertionChart, maxFittingInstructions } from "./waterFittingReference";
 import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { previewDoorway } from "./doorwayPreview";
@@ -364,6 +367,7 @@ type Modal =
   | "wall-water"
   | "water-fitting"
   | "water-pressure"
+  | "water-support"
   | "export"
   | "assistant"
   | "base"
@@ -1350,6 +1354,9 @@ export function App() {
         setWaterPressureTarget(action.recordId);
         setModal("water-pressure");
         break;
+      case "water-support":
+        setModal("water-support");
+        break;
       case "greenhouse-weatherseal": {
         const plan = project.motionPlans?.find(({ id }) => id === action.motionId);
         if (!plan) throw Error("This door swing has changed. Explore the question again.");
@@ -1786,6 +1793,9 @@ export function App() {
     }
   }, [project, guideReady]);
   const exportGuide = guideExport.project;
+  const printWaterSupport = useMemo(() => exportGuide.waterRuns?.length
+    ? waterSupportGuideLines(waterSupportNetwork(exportGuide))
+    : [], [exportGuide]);
   const printPreparation = useMemo(() => exportGuide === project ? preparation : [
     ...assemblyOrderPreparation(reviewAssemblyOrder(exportGuide)),
     ...preparation.filter(({ id }) => id !== "order"),
@@ -3849,6 +3859,8 @@ export function App() {
                 <button type="button" className="button secondary full" onClick={() => { setWaterFittingTarget(undefined); setWaterFittingTee(false); setModal("water-fitting"); }}>Connect PEX runs</button>}
               {!!(project.waterRuns?.length || project.waterPressureTests?.length) &&
                 <button type="button" className="button secondary full" onClick={() => { setWaterPressureTarget(undefined); setModal("water-pressure"); }}>Water pressure test</button>}
+              {!!project.waterRuns?.length &&
+                <button type="button" className="button secondary full" onClick={() => setModal("water-support")}>Review PEX support spacing</button>}
               <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
@@ -3978,6 +3990,8 @@ export function App() {
                 }}
               />
               <button type="button" className="button secondary full" onClick={() => openSiteClearances("checks")}>Measured site clearances</button>
+              {!!project.waterRuns?.length &&
+                <button type="button" className="button secondary full" onClick={() => setModal("water-support")}>Review PEX support spacing</button>}
               <div className="check-summary">
                 <span className="warning-dot" />
                 {warnings.length} things to review<span>Concept plan</span>
@@ -5260,7 +5274,7 @@ export function App() {
           }}
         >
           <section
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-pressure" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5366,6 +5380,12 @@ export function App() {
               })} />}
             {modal === "water-pressure" && <WaterPressurePanel project={project} initialRecord={waterPressureTarget}
               onChange={(next) => { change(next); notify("Water test record added to the guide."); }} />}
+            {modal === "water-support" && <WaterSupportPanel project={project}
+              onPlanRun={(runId) => { setWaterRunTarget(runId); setModal("wall-water"); }}
+              onInspect={(pieceId) => {
+                setModal(null); setStage(null); setPlaying(false); setExplode(false); setMode("select");
+                inspectStock(pieceId);
+              }} />}
             {modal === "catalog" && <CatalogReferences />}
             {modal === "studies" && (
               <BuildStudies
@@ -6767,6 +6787,15 @@ export function App() {
               <ul>{waterPressureObservations(record).map((line, index) => <li key={index}>{line}</li>)}</ul>
               <ProjectCodeRows rows={reviewWaterPressure(exportGuide, record).rows} />
             </div>)}
+          </section>
+        )}
+        {!!printWaterSupport.length && (
+          <section className="water-support-print">
+            <h2>PEX support spacing</h2>
+            <ul>{printWaterSupport.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={pexInstallation}>RWC PEX support guidance</a>{" · "}
+              <a href={waterSupportReference.code}>IRC piping support</a>{" · "}
+              <a href={waterSupportReference.instructions}>HoldRite installation</a></p>
           </section>
         )}
         {printOpeningFlashing.length > 0 && (

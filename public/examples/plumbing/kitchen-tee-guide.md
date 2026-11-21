@@ -16,9 +16,9 @@ The current layouts have no listed stock conflicts.
 
 - Assemble Wall 1 · 10 parts without connection plans.
 - Assemble Wall 2 · 6 parts without connection plans.
-- Rough in Kitchen main · 7 parts without connection plans.
-- Rough in Island feed · 7 parts without connection plans.
-- Rough in Kitchen main · B · 7 parts without connection plans.
+- Rough in Kitchen main · 10 parts without connection plans.
+- Rough in Island feed · 10 parts without connection plans.
+- Rough in Kitchen main · B · 10 parts without connection plans.
 - Connect Kitchen main and Kitchen main · B and Island feed · 1 part without a connection plan.
 
 ### Modeled wood contacts
@@ -44,6 +44,8 @@ The current layouts have no listed stock conflicts.
 - SharkBite 1/2 in PEX-B · 10 ft straight · 0.625 in outside diameter · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
 - Simpson Strong-Tie NS1 nail shield · 1½ × 3 in · single plate · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
 - SharkBite Max 3/4 × 3/4 × 1/2 in reducing tee · UR412A · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
+- HoldRite 1/2 in through-stud isolator · 161J15 · 15 per jar · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
+- HoldRite 3/4 in through-stud isolator · 162J15 · 15 per jar · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
 - \#2 KD-HT 2 × 4 · Home Depot · 8 ft · 1½ × 3½ in actual · 8 ft · full-length stud · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
 - SPF 2 × 4 · Home Depot · 10 ft · 1½ × 3½ in actual · 10 ft · framing · Choose a Home Depot store for ZIP 84121 and record a current snapshot.
 
@@ -71,7 +73,7 @@ The current layouts have no listed stock conflicts.
 
 No priced subtotal · partial.
 
-0 priced lines of 5 purchase lines. $0.00 from 0 observed lines; $0.00 from 0 example-price lines. 5 unpriced lines (1 × stick; 18 × plate; 1 × fitting; 16 × board purchase units). Unknown prices are excluded, not free.
+0 priced lines of 7 purchase lines. $0.00 from 0 observed lines; $0.00 from 0 example-price lines. 7 unpriced lines (1 × stick; 18 × plate; 1 × fitting; 2 × jar; 16 × board purchase units). Unknown prices are excluded, not free.
 
 Materials: unpriced; selected supplies: unpriced.
 
@@ -90,6 +92,8 @@ The purchase list credits each marked source once.
 - 1 × stick · SharkBite 1/2 in PEX-B · [Internet #202033036](https://www.homedepot.com/p/202033036) · model U860W10.
 - 18 × plate · Simpson Strong-Tie NS1 nail shield · [Internet #100375167](https://www.homedepot.com/p/100375167) · model NS1.
 - 1 × fitting · SharkBite Max 3/4 × 3/4 × 1/2 in reducing tee · [Internet #325997410](https://www.homedepot.com/p/325997410) · model UR412A.
+- 1 × jar · HoldRite 1/2 in through-stud isolator · [Internet #308675097](https://www.homedepot.com/p/308675097) · model 161J15.
+- 1 × jar · HoldRite 3/4 in through-stud isolator · [Internet #308675098](https://www.homedepot.com/p/308675098) · model 162J15.
 - 6 × board · #2 KD-HT 2 × 4 · Home Depot · 8 ft · [Internet #312528776](https://www.homedepot.com/p/312528776) · model 058449.
 - 10 × board · SPF 2 × 4 · Home Depot · 10 ft · [Internet #100077951](https://www.homedepot.com/p/100077951) · model 161659.
 
@@ -204,18 +208,21 @@ Saved connection-intent review only. Current geometry evidence, plan references 
 
 ## 6. Rough in Kitchen main
 
-Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.
+Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.
 
 - P017 · Kitchen main: 0.875 in × 50.5 in × 0.875 in (SharkBite 3/4 in PEX-B)
   - Blank before profiles: X 0.875 in × Y 50.5 in × Z 0.875 in; local length Y, width X, thickness Z (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 9c29fcdd-2e3a-449d-a3d3-4db0de86de50: original blank X 0.875 in × Y 110 in × Z 0.875 in. Retained part source-local region X 0 to 0.875 in, Y 0 to 50.5 in, Z 0 to 0.875 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0 in; profile-face saw kerf is not reconstructed.
-- P019 · Kitchen main · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
-- P020 · Kitchen main · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
 - P021 · Kitchen main · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
 - P022 · Kitchen main · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
 - P023 · Kitchen main · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
 - P024 · Kitchen main · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P025 · Kitchen main · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P026 · Kitchen main · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P027 · Kitchen main · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 3/4 in through-stud isolator)
+- P028 · Kitchen main · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 3/4 in through-stud isolator)
+- P029 · Kitchen main · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 3/4 in through-stud isolator)
 
 
 
@@ -223,25 +230,28 @@ Lay out the checked bores after confirming the framing and hidden services. Dry-
 
 No connection, support or restraint intent is recorded for these actual members.
 
-7 actual part(s); 7 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
-- 7 part(s) have no internal connection intent: P021, P022, P023, P019, P017, P024, P020.
+10 actual part(s); 10 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
+- 10 part(s) have no internal connection intent: P023, P024, P025, P021, P017, P026, P028, P029, P027, P022.
 
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
 
 ## 7. Rough in Island feed
 
-Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.
+Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.
 
-- P031 · Island feed: 0.625 in × 48.35 in × 0.625 in (SharkBite 1/2 in PEX-B)
+- P019 · Island feed: 0.625 in × 48.35 in × 0.625 in (SharkBite 1/2 in PEX-B)
   - Blank before profiles: X 0.625 in × Y 48.35 in × Z 0.625 in; local length Y, width X, thickness Z (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
+- P030 · Island feed · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P031 · Island feed · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
 - P032 · Island feed · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
 - P033 · Island feed · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
 - P034 · Island feed · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
 - P035 · Island feed · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
-- P036 · Island feed · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
-- P037 · Island feed · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P036 · Island feed · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 1/2 in through-stud isolator)
+- P037 · Island feed · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 1/2 in through-stud isolator)
+- P038 · Island feed · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 1/2 in through-stud isolator)
 
 
 
@@ -249,26 +259,29 @@ Lay out the checked bores after confirming the framing and hidden services. Dry-
 
 No connection, support or restraint intent is recorded for these actual members.
 
-7 actual part(s); 7 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
-- 7 part(s) have no internal connection intent: P035, P034, P033, P032, P031, P037, P036.
+10 actual part(s); 10 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
+- 10 part(s) have no internal connection intent: P033, P032, P031, P030, P038, P019, P037, P036, P035, P034.
 
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
 
 ## 8. Rough in Kitchen main · B
 
-Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.
+Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule.
 
 - P018 · Kitchen main · B: 0.875 in × 50.5 in × 0.875 in (SharkBite 3/4 in PEX-B)
   - Blank before profiles: X 0.875 in × Y 50.5 in × Z 0.875 in; local length Y, width X, thickness Z (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 9c29fcdd-2e3a-449d-a3d3-4db0de86de50: original blank X 0.875 in × Y 110 in × Z 0.875 in. Retained part source-local region X 0 to 0.875 in, Y 51.5 to 102 in, Z 0 to 0.875 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0 in; profile-face saw kerf is not reconstructed.
-- P025 · Kitchen main · B · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
-- P026 · Kitchen main · B · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
-- P027 · Kitchen main · B · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
-- P028 · Kitchen main · B · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
-- P029 · Kitchen main · B · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
-- P030 · Kitchen main · B · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P039 · Kitchen main · B · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P040 · Kitchen main · B · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P041 · Kitchen main · B · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P042 · Kitchen main · B · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P043 · Kitchen main · B · front nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P044 · Kitchen main · B · back nail shield: 1.5 in × 3 in × 0.0625 in (Simpson Strong-Tie NS1 nail shield)
+- P045 · Kitchen main · B · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 3/4 in through-stud isolator)
+- P046 · Kitchen main · B · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 3/4 in through-stud isolator)
+- P047 · Kitchen main · B · stud isolator: 0.0625 in × 2.2 in × 1.7 in (HoldRite 3/4 in through-stud isolator)
 
 
 
@@ -276,8 +289,8 @@ Lay out the checked bores after confirming the framing and hidden services. Dry-
 
 No connection, support or restraint intent is recorded for these actual members.
 
-7 actual part(s); 7 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
-- 7 part(s) have no internal connection intent: P018, P025, P029, P030, P026, P027, P028.
+10 actual part(s); 10 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
+- 10 part(s) have no internal connection intent: P018, P039, P045, P043, P044, P046, P040, P041, P047, P042.
 
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
@@ -286,7 +299,7 @@ Saved connection-intent review only. Current geometry evidence, plan references 
 
 Review the current fitting schedule and dry-fit the cut lengths before joining. Confirm insertion access and test the installation before closing the wall.
 
-- P038 · SharkBite Max UR412A reducing tee: 3.5 in × 2.3 in × 1.3 in (SharkBite Max 3/4 × 3/4 × 1/2 in reducing tee)
+- P020 · SharkBite Max UR412A reducing tee: 3.5 in × 2.3 in × 1.3 in (SharkBite Max 3/4 × 3/4 × 1/2 in reducing tee)
 
 
 
@@ -295,7 +308,7 @@ Review the current fitting schedule and dry-fit the cut lengths before joining. 
 No connection, support or restraint intent is recorded for these actual members.
 
 1 actual part(s); 1 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
-- 1 part(s) have no internal connection intent: P038.
+- 1 part(s) have no internal connection intent: P020.
 
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
@@ -474,19 +487,28 @@ Review how each touching pair is held in the build. Some contacts are intended t
 ## Wall water-line schedule
 
 - Kitchen main in Wall 1 · Cut 50.5 in from SharkBite U870W10 using a PEX cutter. Verify fitting insertion and final cut length at both ends.
-- Wall 1 · stud 2 · Ø 1.125 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.1875 in. NS1 shield on front and back; included under the 1½ in planning margin.
-- Wall 1 · stud 3 · Ø 1.125 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.1875 in. NS1 shield on front and back; included under the 1½ in planning margin.
-- Wall 1 · stud 4 · Ø 1.125 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.1875 in. NS1 shield on front and back; included under the 1½ in planning margin.
+- Wall 1 · stud 2 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- Wall 1 · stud 3 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- Wall 1 · stud 4 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- 3 HoldRite 162J15 isolators · 6 flange nails specified. Confirm the delivered hardware and fasteners before threading the pipe.
+- Longest span between modeled supports · 16 in.
+- End reaches from the nearest isolator · Start 12.25 in · End 6.25 in. Review the actual support at fixtures and connections.
 - Verify the wall function, hidden services, shield coverage, pipe supports, fitting system and local requirements before closing the wall.
 - Island feed in Wall 2 · Cut 48.35 in from SharkBite U860W10 using a PEX cutter. Verify fitting insertion and final cut length at both ends.
-- Wall 2 · stud 1 · Ø 0.875 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.3125 in. NS1 shield on front and back; included under the 1½ in planning margin.
-- Wall 2 · stud 2 · Ø 0.875 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.3125 in. NS1 shield on front and back; included under the 1½ in planning margin.
-- Wall 2 · stud 3 · Ø 0.875 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.3125 in. NS1 shield on front and back; included under the 1½ in planning margin.
+- Wall 2 · stud 1 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- Wall 2 · stud 2 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- Wall 2 · stud 3 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- 3 HoldRite 161J15 isolators · 6 flange nails specified. Confirm the delivered hardware and fasteners before threading the pipe.
+- Longest span between modeled supports · 16 in.
+- End reaches from the nearest isolator · Start 3.35 in · End 13.75 in. Review the actual support at fixtures and connections.
 - Verify the wall function, hidden services, shield coverage, pipe supports, fitting system and local requirements before closing the wall.
 - Kitchen main · B in Wall 1 · Cut 50.5 in from SharkBite U870W10 using a PEX cutter. Verify fitting insertion and final cut length at both ends.
-- Wall 1 · stud 5 · Ø 1.125 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.1875 in. NS1 shield on front and back; included under the 1½ in planning margin.
-- Wall 1 · stud 6 · Ø 1.125 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.1875 in. NS1 shield on front and back; included under the 1½ in planning margin.
-- Wall 1 · stud 7 · Ø 1.125 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.1875 in. NS1 shield on front and back; included under the 1½ in planning margin.
+- Wall 1 · stud 5 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- Wall 1 · stud 6 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- Wall 1 · stud 7 · Ø 1.375 in through the stud’s 1½ in thickness. Center 22.5 in above the stud’s lower end and 1.75 in from its back face. Remaining bore-to-face wood 1.0625 in. NS1 shield on front and back; included under the 1½ in planning margin. Seat the HoldRite flange on the face toward the run’s start, with the nail ears aligned up and down the stud.
+- 3 HoldRite 162J15 isolators · 6 flange nails specified. Confirm the delivered hardware and fasteners before threading the pipe.
+- Longest span between modeled supports · 16 in.
+- End reaches from the nearest isolator · Start 8.75 in · End 9.75 in. Review the actual support at fixtures and connections.
 - Verify the wall function, hidden services, shield coverage, pipe supports, fitting system and local requirements before closing the wall.
 
 [Stud boring](https://codes.iccsafe.org/content/IRC2024P2/chapter-6-wall-construction) · [Pipe protection](https://codes.iccsafe.org/content/IRC2021V3.0/chapter-26-general-plumbing-requirements) · [SharkBite installation](https://www.sharkbite.com/sites/default/files/resources/RWC-Piping-Systems-Installation-Guide-PSIG.pdf)
@@ -504,11 +526,30 @@ Review how each touching pair is held in the build. Some contacts are intended t
 [SharkBite Max insertion depth](https://www.sharkbite.com/us/en/resources/pipe-insertion-depth-chart) · [SharkBite installation guide](https://www.sharkbite.com/sites/default/files/files/sharkbite-max-install-instructions-2024-07.pdf)
 
 
+## PEX support spacing
+
+- 9 modeled through-stud supports. Centerline spans include the modeled path through valid fittings. Review the 32 in horizontal spacing and field support at open ends.
+- 16 in · Kitchen main at Wall 1 · stud 3 to Kitchen main at Wall 1 · stud 2 · Between isolators.
+- 16 in · Kitchen main at Wall 1 · stud 3 to Kitchen main at Wall 1 · stud 4 · Between isolators.
+- 16 in · Kitchen main at Wall 1 · stud 4 to Kitchen main · B at Wall 1 · stud 5 · Between isolators.
+- 16 in · Island feed at Wall 2 · stud 2 to Island feed at Wall 2 · stud 3 · Between isolators.
+- 16 in · Kitchen main · B at Wall 1 · stud 5 to Kitchen main · B at Wall 1 · stud 6 · Between isolators.
+- 16 in · Kitchen main · B at Wall 1 · stud 6 to Kitchen main · B at Wall 1 · stud 7 · Between isolators.
+- 15.25 in · Island feed at Wall 2 · stud 2 to Island feed at Wall 2 · stud 1 · Between isolators.
+- 13.75 in · Island feed at Wall 2 · stud 3 to Island feed end · Review end support.
+- 13.25 in · Island feed at Wall 2 · stud 1 to Kitchen main · B at Wall 1 · stud 5 · Between isolators.
+- 12.25 in · Kitchen main at Wall 1 · stud 2 to Kitchen main start · Review end support.
+- 10.75 in · Kitchen main at Wall 1 · stud 4 to Island feed at Wall 2 · stud 1 · Between isolators.
+- 9.75 in · Kitchen main · B end to Kitchen main · B at Wall 1 · stud 7 · Review end support.
+
+[PEX support guidance](https://www.sharkbite.com/sites/default/files/resources/RWC-Piping-Systems-Installation-Guide-PSIG.pdf) · [IRC piping support](https://codes.iccsafe.org/content/IRC2021V3.0/chapter-26-general-plumbing-requirements) · [HoldRite installation](https://www.holdrite.com/sites/default/files/files/holdrite-through-stud-series-161-162-163-installation-instructions.pdf)
+
+
 ## Connection intent review
 
 Saved connection-intent review only. Current geometry evidence, plan references and intent groups do not establish complete joinery, installed hardware, strength or code approval. Explicit-location records and legacy quantities are not a shopping takeoff or drilling/machine instructions.
 
-38 actual part(s); 38 have no current internal task intent. 0 started record(s), 0 pending record(s), 0 geometry-reviewed record(s), 0 legacy pair record(s), 0 excluded record(s). External restraint associations remain separate from internal assembly.
+47 actual part(s); 47 have no current internal task intent. 0 started record(s), 0 pending record(s), 0 geometry-reviewed record(s), 0 legacy pair record(s), 0 excluded record(s). External restraint associations remain separate from internal assembly.
 
 No connection, support or restraint intent is recorded for these actual members.
 
@@ -521,15 +562,15 @@ Legacy quantities and typed locations remain separate source records. Matching p
   - 10 part(s) have no internal connection intent: P007, P008, P005, P001, P003, P002, P010, P006, P004, P009.
 - **Assemble Wall 2**: 6 actual part(s); 6 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
   - 6 part(s) have no internal connection intent: P014, P015, P013, P011, P012, P016.
-- **Rough in Kitchen main**: 7 actual part(s); 7 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
-  - 7 part(s) have no internal connection intent: P021, P022, P023, P019, P017, P024, P020.
-- **Rough in Island feed**: 7 actual part(s); 7 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
-  - 7 part(s) have no internal connection intent: P035, P034, P033, P032, P031, P037, P036.
-- **Rough in Kitchen main · B**: 7 actual part(s); 7 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
-  - 7 part(s) have no internal connection intent: P018, P025, P029, P030, P026, P027, P028.
+- **Rough in Kitchen main**: 10 actual part(s); 10 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
+  - 10 part(s) have no internal connection intent: P023, P024, P025, P021, P017, P026, P028, P029, P027, P022.
+- **Rough in Island feed**: 10 actual part(s); 10 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
+  - 10 part(s) have no internal connection intent: P033, P032, P031, P030, P038, P019, P037, P036, P035, P034.
+- **Rough in Kitchen main · B**: 10 actual part(s); 10 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
+  - 10 part(s) have no internal connection intent: P018, P039, P045, P043, P044, P046, P040, P041, P047, P042.
 - **Connect Kitchen main and Kitchen main · B and Island feed**: 1 actual part(s); 1 have no current internal task intent; 0 have started plans; 0 have pending details; 0 have excluded intent. These counts can overlap and do not measure construction completeness.
-  - 1 part(s) have no internal connection intent: P038.
+  - 1 part(s) have no internal connection intent: P020.
 
 ### Intent groups
 
-0 internal intent group(s) contain recorded relationships; 38 actual part(s) have no current internal intent-group edge. These are saved-reference groups, not physical-support or strength groups.
+0 internal intent group(s) contain recorded relationships; 47 actual part(s) have no current internal intent-group edge. These are saved-reference groups, not physical-support or strength groups.

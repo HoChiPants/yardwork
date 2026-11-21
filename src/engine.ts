@@ -64,6 +64,8 @@ import { freshStoreCheck } from "./storeSnapshotTime";
 import { suppliesMarkdown, supplyRows, formatSupplyContent } from "./supplies";
 import { codeRowLabels, projectCodeMarkdown, reviewProjectCode } from "./projectCode";
 import { reviewWaterPressure, waterPressureGuideStep, waterPressureObservations } from "./waterPressure";
+import { longSupportSpan, waterSupportGuideLines, waterSupportNetwork, waterSupportSpanLine } from "./waterSupportNetwork";
+import { waterSupportReference } from "./waterSupportReference";
 import { reviewWaterRun, waterRunGuide } from "./wallWater";
 import { reviewWaterFitting, waterFittingGuide } from "./waterFittings";
 import { maxFittingInstructions, maxInsertionChart, waterFittingProducts } from "./waterFittingReference";
@@ -783,20 +785,35 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       });
     }
   }
+  const waterRunsReviewed = new Map<string, ReturnType<typeof reviewWaterRun>>();
   for (const run of p.waterRuns ?? []) {
     const review = reviewWaterRun(p, run);
+    waterRunsReviewed.set(run.id, review);
     if (review.problem) findings.push({
       id: `water-line-${run.id}`, severity: "warning", title: `Review water line · ${run.name}`, detail: review.problem,
       ...(p.pieces.some(({ id }) => id === run.pipeId) && { pieceId: run.pipeId }),
     });
   }
   const checkedWaterFittings = new Set<string>();
+  const waterFittingsReviewed = new Map<string, ReturnType<typeof reviewWaterFitting>>();
   for (const fitting of p.waterFittings ?? []) {
     const review = reviewWaterFitting(p, fitting);
+    waterFittingsReviewed.set(fitting.id, review);
     if (review.layout) checkedWaterFittings.add(fitting.pieceId);
     if (review.problem) findings.push({
       id: `water-fitting-${fitting.id}`, severity: "warning", title: `Review PEX connection · ${waterFittingProducts[fitting.materialId].model}`,
       detail: review.problem, ...(p.pieces.some(({ id }) => id === fitting.pieceId) && { pieceId: fitting.pieceId }),
+    });
+  }
+  if (p.waterRuns?.length) {
+    const spacing = waterSupportNetwork(p, waterRunsReviewed, waterFittingsReviewed);
+    const longest = spacing.spans.find(longSupportSpan);
+    if (longest || spacing.loop) findings.push({
+      id: "water-support-spacing", severity: "warning", title: "Review PEX support spacing",
+      detail: spacing.loop
+        ? "Review unsupported loops and confirm field support locations before relying on the longest span."
+        : `${waterSupportSpanLine(longest!)}. The horizontal reference is 32 in.`,
+      ...(longest?.from.pieceId && { pieceId: longest.from.pieceId }),
     });
   }
   for (const test of p.waterPressureTests ?? []) {
@@ -2159,6 +2176,10 @@ export function guideMarkdown(p: Project) {
     (p.waterFittings?.length ? "\n\n## PEX fittings and insertion marks\n\n" +
       p.waterFittings.flatMap((fitting) => waterFittingGuide(p, fitting)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[SharkBite Max insertion depth](${maxInsertionChart}) · [SharkBite installation guide](${maxFittingInstructions})\n` : "") +
+    (p.waterRuns?.length ? "\n\n## PEX support spacing\n\n" +
+      waterSupportGuideLines(waterSupportNetwork(p)).map((line) =>
+        "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[PEX support guidance](${pexInstallation}) · [IRC piping support](${waterSupportReference.code}) · [HoldRite installation](${waterSupportReference.instructions})\n` : "") +
     (p.waterPressureTests?.length ? "\n\n## Water pressure test records\n\n" + waterPressureGuideStep +
       p.waterPressureTests.map((test) => {
         const clean = (line: string) => line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&");

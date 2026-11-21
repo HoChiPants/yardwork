@@ -21,6 +21,8 @@ import { bounds, type Finding } from "./engine";
 import { fitPerspectiveBounds, workshopViewOffset, WORKSHOP_MAX_POLAR_ANGLE, type PerspectiveBounds } from "./cameraFit";
 import { motionViewport, unionBounds } from "./motionCamera";
 import { isWaterFitting, waterFittingProducts } from "./waterFittingReference";
+import { isWaterSupport, waterSupportProducts, waterSupportReference, type WaterSupportId } from "./waterSupportReference";
+import { pexPipes } from "./wallWaterReference";
 import { isPexPipe } from "./wallWaterReference";
 import { DryerDuctMarkers } from "./DryerDuctMarkers";
 import { reviewDryerDuctLayout } from "./dryerDuctLayout";
@@ -193,6 +195,32 @@ function wireTexture(size: V3) {
   texture.repeat.set(size[axes[0]] / 4, size[axes[1]] / 4);
   return texture;
 }
+function WaterSupportMesh({ size, color, id, fitted }: { size: V3; color: string; id: WaterSupportId; fitted: boolean }) {
+  const hole = pexPipes[waterSupportProducts[id].pipe].outside / 24;
+  const flange = fitted ? size[0] : size[0] / 16;
+  const depth = waterSupportReference.depth / 12;
+  const outline = useMemo(() => {
+    const outer = new THREE.Shape();
+    outer.absellipse(0, 0, size[2] / 2, size[1] / 2, 0, Math.PI * 2, false, 0);
+    const bore = new THREE.Path();
+    bore.absarc(0, 0, hole, 0, Math.PI * 2, true);
+    outer.holes.push(bore);
+    return outer;
+  }, [hole, size[1], size[2]]);
+  const start = -size[0] / 2;
+  const sleeve = Math.max(0, depth - flange);
+  return <>
+    <mesh position={[start, 0, 0]} rotation={[0, Math.PI / 2, 0]} castShadow receiveShadow>
+      <extrudeGeometry args={[outline, { depth: flange, bevelEnabled: false, curveSegments: 16 }]} />
+      <meshStandardMaterial color={color} roughness={0.62} />
+    </mesh>
+    {sleeve > 0 && <mesh position={[start + flange + sleeve / 2, 0, 0]} rotation={[0, 0, -Math.PI / 2]} castShadow>
+      <cylinderGeometry args={[waterSupportReference.bore / 24, waterSupportReference.bore / 24, sleeve, 24, 1, true]} />
+      <meshStandardMaterial color={color} roughness={0.62} side={THREE.DoubleSide} />
+    </mesh>}
+  </>;
+}
+
 function WaterFittingMesh({ size, color, kind }: { size: V3; color: string; kind: "coupling" | "elbow" | "tee" }) {
   const [x, y, diameter] = size;
   const radius = diameter / 2;
@@ -427,6 +455,8 @@ function PartMesh({
           <PedestalBenchMesh size={size} color={color} texture={texture} />
         ) : isWaterFitting(m.id) && !measuring && !fastenerPicking && !fittedFacePicking ? (
           <WaterFittingMesh size={size} color={color} kind={waterFittingProducts[m.id].kind} />
+        ) : isWaterSupport(m.id) && !measuring && !fastenerPicking && !fittedFacePicking ? (
+          <WaterSupportMesh size={size} color={color} id={m.id} fitted={piece.designRole === "water-stud-isolator"} />
         ) : m.shape === "tube-envelope" ? (
           <mesh castShadow receiveShadow>
             <cylinderGeometry

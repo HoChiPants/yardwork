@@ -45,10 +45,20 @@ export function previewWaterRun(project: Project, input: unknown, runId?: string
     };
     return { shield, studId, face };
   });
+  const supports = layout.supports.map(({ placement, studId }) => {
+    const previousId = previous?.isolators?.find((row) => row.studId === studId)?.id;
+    const support: Piece = {
+      ...part(`${draft.name} · stud isolator`, placement.material, placement.size, placement.position, newStep.id, title, placement.rotation),
+      ...(previousId && { id: previousId }),
+      designRole: "water-stud-isolator",
+    };
+    return { support, studId };
+  });
   const run: WaterRun = {
     ...draft, id, stepId: newStep.id, pipeId: pipe.id,
     studs: [...boreMap.keys()],
     shields: shields.map(({ shield, studId, face }) => ({ id: shield.id, studId, face })),
+    ...(supports.length && { isolators: supports.map(({ support, studId }) => ({ id: support.id, studId })) }),
   };
   const def = candidate.pieces.map((piece) => {
     if (piece.id === pipe.id) return pipe;
@@ -58,7 +68,8 @@ export function previewWaterRun(project: Project, input: unknown, runId?: string
   const next = projectSchema.parse({
     ...candidate,
     waterRuns: previous ? project.waterRuns?.map((row) => row.id === run.id ? run : row) : [...(candidate.waterRuns ?? []), run],
-    pieces: [...def, ...(!beforeIds.has(pipe.id) ? [pipe] : []), ...shields.map(({ shield }) => shield)],
+    pieces: [...def, ...(!beforeIds.has(pipe.id) ? [pipe] : []),
+      ...shields.map(({ shield }) => shield), ...supports.map(({ support }) => support)],
     guideFingerprint: null,
   });
   const remainder = spare ? Math.max(0, spare.size[1] - layout.length) :

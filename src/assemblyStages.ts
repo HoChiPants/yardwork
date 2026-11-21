@@ -481,7 +481,9 @@ export function baseAssemblyStages(project: Project): AssemblyStage[] {
   for (const run of project.waterRuns ?? [])
     append(run.id, waterRunStageKey, `Rough in ${run.name}`,
       waterRunMembers(run).flatMap((id) => activeById.get(id) ?? []),
-      "Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.");
+      run.isolators?.length
+        ? "Confirm the framing and services at each bore. Attach the isolators before threading the pipe. Check the shield plates and support spacing against the water-line schedule."
+        : "Lay out the checked bores after confirming the framing and hidden services. Dry-fit the measured pipe and shield plates before closing the wall. See the wall water-line schedule.");
   for (const fitting of project.waterFittings ?? []) {
     const piece = activeById.get(fitting.pieceId);
     if (!piece) continue;

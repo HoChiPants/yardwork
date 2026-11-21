@@ -16,6 +16,7 @@ import { windowWallScope } from "./windowWall";
 import { reviewWaterRun } from "./wallWater";
 import { fittingLabel, reviewWaterFitting } from "./waterFittings";
 import { reviewWaterPressure } from "./waterPressure";
+import { longSupportSpan, waterSupportNetwork, waterSupportSpanLine } from "./waterSupportNetwork";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
@@ -32,6 +33,7 @@ export type BuildQuestion =
   | { kind: "wall-water"; subject?: string }
   | { kind: "water-fitting"; tee?: boolean }
   | { kind: "water-pressure" }
+  | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
   | { kind: "offcuts"; label?: string };
@@ -47,6 +49,7 @@ export type BuildQuestionAction =
   | { kind: "wall-water"; runId?: string }
   | { kind: "water-fitting"; fittingId?: string; tee?: boolean }
   | { kind: "water-pressure"; recordId?: string }
+  | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
@@ -100,6 +103,7 @@ const wallWaterQuestion = /^(?:(?:plan|route|add|lay out) (?:a |the )?(?:pex|wat
 const fittingQuestion = /^(?:(?:how (?:do|can|should) i )?(?:connect|join) (?:two |my |these |the )?(?:pex|water) (?:runs|lines|pipes)(?: (?:at|around) (?:a |the )?corner)?|(?:review|check|plan) (?:the |my |a )?pex (?:fittings?|connections?))$/i;
 const teeQuestion = /^(?:(?:how (?:do|can|should) i )?(?:branch|tee off) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)|(?:add|plan) (?:a |the )?tee (?:in|into|on|to) (?:the |a |my )?(?:pex|water) (?:main|line|pipe)(?: for .+)?)$/i;
 const pressureQuestion = /^(?:(?:how (?:do|can|should) i )?pressure[- ]test (?:the |my |a )?(?:pex|water(?: supply)?) (?:main|runs?|lines?|pipes?|system)|(?:log|record|review|check|show) (?:a |the |my )?(?:pex |water )?pressure tests?)$/i;
+const waterSupportQuestion = /^(?:(?:how (?:do|can|should) i )support (?:the |my )?(?:pex|water) (?:runs?|lines?|pipes?)|(?:check|review|show|plan) (?:the |my )?(?:pex |water line )(?:supports?|support spacing))$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -124,6 +128,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (fittingQuestion.test(text)) return { kind: "water-fitting" };
   if (teeQuestion.test(text)) return { kind: "water-fitting", tee: true };
   if (pressureQuestion.test(text)) return { kind: "water-pressure" };
+  if (waterSupportQuestion.test(text)) return { kind: "water-support" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
   const motion = motionQuestion.exec(text);
   return motion
@@ -485,6 +490,20 @@ export function answerBuildQuestion(
         }),
         link: { label: "Open water pressure tests", action: { kind: "water-pressure" } },
       };
+    case "water-support": {
+      const spacing = waterSupportNetwork(project);
+      return {
+        title: "Check the PEX supports",
+        detail: `${spacing.count} modeled isolators. Review centerline reaches over 32 in and confirm support at open ends.`,
+        rows: spacing.spans.filter(longSupportSpan).slice(0, 6).map((span, index) => ({
+          id: `${span.from.key}/${index}`,
+          title: "Review a long reach",
+          detail: waterSupportSpanLine(span),
+          link: { label: "Inspect PEX support spacing", action: { kind: "water-support" } },
+        })),
+        link: { label: "Open PEX support spacing", action: { kind: "water-support" } },
+      };
+    }
     case "wall-water": {
       const runs = (project.waterRuns ?? []).filter(({ name }) => !question.subject || searchName(name) === searchName(question.subject));
       return {

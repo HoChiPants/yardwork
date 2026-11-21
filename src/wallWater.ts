@@ -10,6 +10,7 @@ import {
 } from "./wallWaterReference";
 import type { WaterRun, WaterRunInput } from "./wallWaterSchema";
 import { waterFittingPorts } from "./waterFittingSchema";
+import { waterSupportForPipe, waterSupportProducts, waterSupportReference } from "./waterSupportReference";
 
 const tolerance = 1e-6;
 const closeVector = (a: V3, b: V3) => a.every((v, index) => Math.abs(v - b[index]) < tolerance);
@@ -20,6 +21,7 @@ const close = (a: number, b: number) => Math.abs(a - b) < tolerance;
 const ends = (start: number, end: number, min: number, max: number) => start < max - tolerance && end > min + tolerance;
 const commonStud = /^wall-stud-\d+$|^window-wall-stud-\d+$/;
 export const waterRunStageKey = "water-rough-in";
+type Placement = Pick<Piece, "material" | "position" | "rotation" | "size">;
 
 export function ownsWaterBore(opening: RoundOpening, id: string) {
   return opening.source && "waterRunId" in opening.source && opening.source.waterRunId === id;
@@ -36,7 +38,7 @@ export function clearWaterBores(piece: Piece, id?: string) {
 }
 
 export function waterRunMembers(run: WaterRun) {
-  return [run.pipeId, ...run.shields.map(({ id }) => id)];
+  return [run.pipeId, ...run.shields.map(({ id }) => id), ...(run.isolators ?? []).map(({ id }) => id)];
 }
 
 export function waterRunFits(a: Piece, b: Pick<Piece, "material" | "position" | "rotation" | "size">) {
@@ -51,13 +53,15 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
   if (!wall || command?.type !== "wall") throw Error("Choose a generated interior nonbearing wall panel.");
   if (!closeVector(rotate([0, 1, 0], wall.rotation), [0, 1, 0])) throw Error("Restore the wall upright before planning a horizontal pipe.");
   const spec = pexPipes[input.materialId];
+  const { isolator } = input;
+  const bore = isolator ? waterSupportReference.bore : input.bore;
   const length = input.end - input.start;
   if (length <= tolerance) throw Error("Enter increasing endpoints from the wall’s left end.");
   if (length > pexStockLength + tolerance) throw Error("This straight run exceeds one 10 ft stick. Plan separately measured runs and fittings.");
-  if (input.bore <= spec.outside + spec.tolerance + tolerance)
+  if (bore <= spec.outside + spec.tolerance + tolerance)
     throw Error(`The bore needs clearance around the actual ${dim(spec.outside)} pipe and its manufacturing tolerance.`);
   const left = -command.width / 2, x0 = left + input.start, x1 = left + input.end;
-  const radius = input.bore / 2;
+  const radius = bore / 2;
   const position: V3 = [(x0 + x1) / 2, input.height, input.depth];
   const { doorOpening: door, windowOpening: window } = command;
   if (door && ends(x0, x1, (door.offset ?? 0) - door.width / 2, (door.offset ?? 0) + door.width / 2) &&
@@ -78,8 +82,8 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
   };
   const envelope = prepareCollisionBox(pipe.size, pipe.position, pipe.rotation);
   const members = new Set(wall.pieceIds), owned = new Set(run ? waterRunMembers(run) : []);
-  if (run) for (const fitting of project.waterFittings ?? [])
-    if (waterFittingPorts(fitting).some(({ runId }) => runId === run.id)) owned.add(fitting.pieceId);
+  const attached = new Set((project.waterFittings ?? []).filter((fitting) =>
+    run && waterFittingPorts(fitting).some(({ runId }) => runId === run.id)).map(({ pieceId }) => pieceId));
   if (project.workZone) {
     const { width, height, depth } = project.workZone;
     const extents = [[-width / 2, width / 2], [0, height], [-depth / 2, depth / 2]];
@@ -90,7 +94,8 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
     ? sectionParts(command, project.steps[0].id, wall.name, wall.origin, wall.rotation).slice(2) : [];
   const studs: { piece: Piece; x: number; opening: RoundOpening; yMark: number; backMark: number;
     nearEdge: number; covers: { front: number; back: number } }[] = [];
-  const shields: { studId: string; face: "front" | "back"; placement: Pick<Piece, "material" | "position" | "rotation" | "size"> }[] = [];
+  const shields: { studId: string; face: "front" | "back"; placement: Placement }[] = [];
+  const supports: { studId: string; distance: number; placement: Placement }[] = [];
   const solids: { piece: Piece; solid: ReturnType<typeof prepareCollisionBox> }[] = [];
   for (const piece of project.pieces) {
     if (piece.offcut || owned.has(piece.id)) continue;
@@ -104,7 +109,7 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
       (commonStud.test(piece.designRole ?? "") || (!piece.designRole && legacy.some((expected) => waterRunFits(piece, expected))));
     if (!isStud || !equalRotation(piece.rotation, wall.rotation)) {
       const rough = prepareCollisionBox(piece.size, piece.position, piece.rotation);
-      const isNearPipe = solidOverlap(envelope, rough, 0);
+      const isNearPipe = !attached.has(piece.id) && solidOverlap(envelope, rough, 0);
       const solid = isNearPipe ? prepareCollisionSolid(piece) ?? rough : rough;
       if (isNearPipe && solidOverlap(envelope, solid, 0))
         throw Error(`The pipe envelope hits ${piece.name}. Move the run away from this part.`);
@@ -125,7 +130,7 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
       throw Error(`${piece.name} is cut, resized, or too close to the bore end. Choose an uninterrupted ordinary stud.`);
     const limit = piece.size[2] * studBoreRatio;
     const face = dz - Math.abs(zMark) - radius;
-    if (input.bore > limit + tolerance) throw Error(`${piece.name} limits this bore to ${dim(limit)} (60% of actual stud depth).`);
+    if (bore > limit + tolerance) throw Error(`${piece.name} limits this bore to ${dim(limit)} (60% of actual stud depth).`);
     if (face < studBoreFace - tolerance) throw Error(`${piece.name} leaves ${dim(face)} from bore edge to stud face. Enter a layout with at least 5/8 in.`);
     const openings = pieceThroughOpenings(run ? clearWaterBores(piece, run.id) : piece);
     if (openings.length >= 6) throw Error(`${piece.name} already has six modeled openings.`);
@@ -142,11 +147,11 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
         : Math.hypot(gapY, gapZ) <= radius + ry + tolerance;
       if (intersects) throw Error(`The bore touches or overlaps an existing opening in ${piece.name}.`);
     }
-    const opening: RoundOpening = { axis: 0, diameter: input.bore, center: [yMark, zMark] };
+    const opening: RoundOpening = { axis: 0, diameter: bore, center: [yMark, zMark] };
     const covers = { front: dz - zMark - (spec.outside + spec.tolerance) / 2, back: dz + zMark - (spec.outside + spec.tolerance) / 2 };
     for (const side of ["front", "back"] as const) {
       if (covers[side] >= pipePlanningCover - tolerance) continue;
-      if (input.bore > nailShield.length + tolerance || Math.abs(yMark) + nailShield.length / 2 > dy + tolerance)
+      if (bore > nailShield.length + tolerance || Math.abs(yMark) + nailShield.length / 2 > dy + tolerance)
         throw Error(`The shield at ${piece.name} would overhang the stud or miss part of the bore.`);
       const sign = side === "front" ? 1 : -1;
       shields.push({ studId: piece.id, face: side, placement: {
@@ -154,6 +159,23 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
         position: toWorld([x, input.height, z + sign * (dz + nailShield.thickness / 2)]),
         rotation: wall.rotation,
         size: [nailShield.width, nailShield.length, nailShield.thickness],
+      } });
+    }
+    if (isolator) {
+      const { flangeHeight, flangeWidth, depth } = waterSupportReference;
+      const sign = isolator.face === "start" ? -1 : 1;
+      const studFace = x + sign * dx;
+      const outerFace = studFace + sign * isolator.flange;
+      if (outerFace < x0 - tolerance || outerFace > x1 + tolerance)
+        throw Error(`The pipe stops short of the isolator flange at ${piece.name}.`);
+      if (Math.abs(yMark) + flangeHeight / 2 > dy + tolerance || Math.abs(zMark) + flangeWidth / 2 > dz + tolerance ||
+          depth - isolator.flange > 2 * dx + tolerance)
+        throw Error(`The isolator needs a clear flange seat and sleeve depth at ${piece.name}.`);
+      supports.push({ studId: piece.id, distance: studFace - x0, placement: {
+        material: waterSupportForPipe(input.materialId),
+        position: toWorld([studFace + sign * isolator.flange / 2, input.height, input.depth]),
+        rotation: composeRotation(wall.rotation, [0, sign === -1 ? 0 : Math.PI, 0]),
+        size: [isolator.flange, flangeHeight, flangeWidth],
       } });
     }
     studs.push({ piece, x, opening, yMark: yMark + dy, backMark: zMark + dz, nearEdge: face, covers });
@@ -168,7 +190,19 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
     const blocker = solids.find(({ piece, solid }) => piece.id !== studId && solidOverlap(shield, solid));
     if (blocker) throw Error(`A shield hits ${blocker.piece.name}. Move the route or review the open stud face for installation.`);
   }
-  return { wall, length, pipe, studs, shields };
+  for (const { placement, studId } of supports) {
+    const flange = prepareCollisionBox(placement.size, placement.position, placement.rotation);
+    const blocker = solids.find(({ piece, solid }) => piece.id !== studId && solidOverlap(flange, solid) &&
+      solidOverlap(flange, prepareCollisionSolid(piece) ?? solid));
+    if (blocker) throw Error(`An isolator flange hits ${blocker.piece.name}. Choose a clear stud face or move the route.`);
+    if (project.workZone) {
+      const { width, height, depth } = project.workZone;
+      const extents = [[-width / 2, width / 2], [0, height], [-depth / 2, depth / 2]];
+      if (extents.some(([lo, hi], i) => flange.bounds.min[i] < lo - tolerance || flange.bounds.max[i] > hi + tolerance))
+        throw Error("An isolator flange crosses the work-zone boundary.");
+    }
+  }
+  return { wall, length, pipe, studs, shields, supports };
 }
 
 export function reviewWaterRun(project: Project, run: WaterRun) {
@@ -176,6 +210,11 @@ export function reviewWaterRun(project: Project, run: WaterRun) {
     const measured = measureWaterRun(project, run, run);
     const pipe = project.pieces.find(({ id }) => id === run.pipeId);
     const edited = !pipe || !waterRunFits(pipe, measured.pipe) || measured.studs.length !== run.studs.length ||
+      measured.supports.length !== (run.isolators?.length ?? 0) || measured.supports.some(({ studId, placement }) => {
+        const id = run.isolators?.find((row) => row.studId === studId)?.id;
+        const support = project.pieces.find((piece) => piece.id === id);
+        return !support || !waterRunFits(support, placement);
+      }) ||
       measured.shields.length !== run.shields.length || measured.studs.some(({ piece, opening }) => {
         const saved = piece.roundOpenings?.filter((candidate) => ownsWaterBore(candidate, run.id));
         return !run.studs.includes(piece.id) || saved?.length !== 1 || saved[0].axis !== 0 ||
@@ -185,7 +224,7 @@ export function reviewWaterRun(project: Project, run: WaterRun) {
         const shield = project.pieces.find((piece) => piece.id === id);
         return !shield || !waterRunFits(shield, placement);
       });
-    if (edited) return { problem: "The pipe, bores or shielding changed. Reopen this run to check its layout again." };
+    if (edited) return { problem: "The pipe, bores, shielding or isolators changed. Reopen this run to check its layout again." };
     return { measured };
   } catch (error) {
     return { problem: error instanceof Error ? error.message : "The pipe route needs review." };
@@ -198,12 +237,39 @@ export function waterRunGuide(project: Project, run: WaterRun) {
   const pipe = pexPipes[run.materialId];
   return [
     `${run.name} in ${measured.wall.name} · Cut ${dim(measured.length)} from SharkBite ${pipe.model} using a PEX cutter. Verify fitting insertion and final cut length at both ends.`,
-    ...measured.studs.map(({ piece, yMark, backMark, nearEdge, covers }) => {
+    ...measured.studs.map(({ piece, opening, yMark, backMark, nearEdge, covers }) => {
+      const support = measured.supports.find(({ studId }) => studId === piece.id);
       const sides = measured.shields.filter(({ studId }) => studId === piece.id).map(({ face }) => face);
       const closeToFace = Math.min(...Object.values(covers)) < pipeProtectionBaseline - tolerance;
-      return `${piece.name} · Ø ${dim(run.bore)} through the stud’s 1½ in thickness. Center ${dim(yMark)} above the stud’s lower end and ${dim(backMark)} from its back face. Remaining bore-to-face wood ${dim(nearEdge)}.${sides.length ? ` NS1 shield on ${sides.join(" and ")}; ${closeToFace ? "pipe cover below 1¼ in" : "included under the 1½ in planning margin"}.` : ""}`;
+      return `${piece.name} · Ø ${dim(opening.diameter)} through the stud’s 1½ in thickness. Center ${dim(yMark)} above the stud’s lower end and ${dim(backMark)} from its back face. Remaining bore-to-face wood ${dim(nearEdge)}.${sides.length ? ` NS1 shield on ${sides.join(" and ")}; ${closeToFace ? "pipe cover below 1¼ in" : "included under the 1½ in planning margin"}.` : ""}${
+        support ? ` Seat the HoldRite flange on the face toward the run’s ${run.isolator!.face}, with the nail ears aligned up and down the stud.` : ""}`;
     }),
+    ...waterSupportGuideLines(measured),
     "Verify the wall function, hidden services, shield coverage, pipe supports, fitting system and local requirements before closing the wall.",
+  ];
+}
+
+export function waterSupportSpans(layout: Pick<ReturnType<typeof measureWaterRun>, "length" | "supports">) {
+  const { supports, length } = layout;
+  const gaps = supports.slice(1).map((next, index) => ({
+    from: supports[index].studId, to: next.studId, length: next.distance - supports[index].distance,
+  }));
+  return {
+    gaps,
+    longest: Math.max(0, ...gaps.map((gap) => gap.length)),
+    over: gaps.filter((gap) => gap.length > waterSupportReference.maximumSpan + tolerance),
+    tails: supports.length ? [supports[0].distance, length - supports.at(-1)!.distance] as const : undefined,
+  };
+}
+
+function waterSupportGuideLines(layout: ReturnType<typeof measureWaterRun>) {
+  if (!layout.supports.length) return [];
+  const { tails, longest, over } = waterSupportSpans(layout);
+  const model = waterSupportProducts[waterSupportForPipe(layout.pipe.material)].model;
+  return [
+    `${layout.supports.length} HoldRite ${model} isolators · ${waterSupportReference.nailsPerSupport * layout.supports.length} flange nails specified. Confirm the delivered hardware and fasteners before threading the pipe.`,
+    ...(layout.supports.length > 1 ? [`Longest span between modeled supports · ${dim(longest)}${over.length ? ` · Review ${over.length} above 32 in` : ""}.`] : []),
+    `End reaches from the nearest isolator · Start ${dim(tails![0])} · End ${dim(tails![1])}. Review the actual support at fixtures and connections.`,
   ];
 }
 

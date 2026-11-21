@@ -16,6 +16,7 @@ import { doorJambMaterial, doorOpeningSchema, doorUnitSchema, doorwayGuideNote, 
 import { nailShield, pexPipes, pexStockLength, type PexPipeId } from "./wallWaterReference";
 import { waterRunSchema } from "./wallWaterSchema";
 import { waterPressureTestsSchema } from "./waterPressureSchema";
+import { waterSupportIds, waterSupportName, waterSupportProducts, waterSupportReference } from "./waterSupportReference";
 import { waterFittingDimensions, waterFittingIds, waterFittingName, waterFittingProducts } from "./waterFittingReference";
 import { waterFittingPorts, waterFittingSchema } from "./waterFittingSchema";
 import { materialIds } from "./materialIds";
@@ -497,9 +498,10 @@ export const currentProjectSchema = z
     waterPressureTests: waterPressureTestsSchema.optional(),
     waterRuns: z.array(waterRunSchema).max(32)
       .refine((runs) => {
-        const members = runs.flatMap((run) => [run.pipeId, ...run.shields.map(({ id }) => id)]);
+        const members = runs.flatMap((run) => [run.pipeId, ...run.shields.map(({ id }) => id),
+          ...(run.isolators ?? []).map(({ id }) => id)]);
         return new Set(runs.map(({ id }) => id)).size === runs.length && new Set(members).size === members.length;
-      }, "Each water line owns a separate pipe and its shield plates.").optional(),
+      }, "Each water line owns its pipe, shields and isolators.").optional(),
     waterFittings: z.array(waterFittingSchema).max(64).refine((rows) => {
       const ports = rows.flatMap(waterFittingPorts).map(({ runId, end }) => `${runId}/${end}`);
       return new Set(ports).size === ports.length && new Set(rows.map(({ id }) => id)).size === rows.length &&
@@ -1415,6 +1417,14 @@ export const catalog: Material[] = [
       unit: "fitting", search: `pex line water plumbing brass fitting ${record.model}`,
     };
   }),
+  ...waterSupportIds.map((id): Material => ({
+    id, name: waterSupportName(id), subtitle: `${waterSupportProducts[id].model} · 15 per jar`,
+    category: "Plumbing", stockKind: "equipment", wood: false, cuttable: false,
+    packCount: waterSupportReference.packCount, measuredEquipment: true,
+    size: [waterSupportReference.depth, waterSupportReference.flangeHeight, waterSupportReference.flangeWidth],
+    color: "#709984", productReference: id, priceKind: "unpriced", price: 0, unit: "jar",
+    search: `PEX tubing support through stud isolator ${waterSupportProducts[id].model}`,
+  })),
   ...cedarbrookBenches.map((bench): Material => ({
     id: bench.materialId,
     name: `Cedarbrook ${bench.length / 12} ft pedestal sauna bench`,

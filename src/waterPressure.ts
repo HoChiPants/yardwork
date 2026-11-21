@@ -64,7 +64,10 @@ export function waterPressureScope(project: Project, rootRunId: string) {
   };
   const scope: WaterPressureTest["scope"] = {
     geometry: JSON.stringify([
-      group.map(({ id, pipeId, materialId }) => [id, pipeId, materialId, pose(pipeId)]),
+      group.map(({ id, pipeId, materialId, isolators }) => [
+        id, pipeId, materialId, pose(pipeId),
+        ...(isolators?.length ? [isolators.map(({ id: partId, studId }) => [partId, studId, pose(partId)])] : []),
+      ]),
       fittings.map(({ fitting, ports }) => [fitting.id, fitting.pieceId, fitting.materialId, ports.map(waterPortKey),
         fitting.reach, fitting.branch?.reach ?? null, pose(fitting.pieceId)]),
     ]),

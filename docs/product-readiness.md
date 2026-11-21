@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 75 placeable material entries. The registry contains 149 product records and 167 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 77 placeable material entries. The registry contains 151 product records and 169 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 21, 2026 · Through-stud PEX support
+
+The water-line planner checks the 1⅜ in bore and the measured HoldRite flange against the original framing and nearby work. The ½ in and ¾ in parts appear in 3D and count toward the matching Home Depot jars, while the guide identifies the seating side, bore marks and flange nail count. The network review measures uninterrupted centerline reaches through couplings, elbows and tees. It calls out long reaches, open ends and changed layouts using the 32 in horizontal spacing reference. Verify fixture support, fasteners and room for expansion in the field. [HoldRite installation](https://www.holdrite.com/sites/default/files/files/holdrite-through-stud-series-161-162-163-installation-instructions.pdf) · [IRC support table](https://codes.iccsafe.org/content/IRC2021V3.0/chapter-26-general-plumbing-requirements)
 
 ## November 21, 2026 · Water test records
 

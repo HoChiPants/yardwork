@@ -1,4 +1,5 @@
 import { waterFittingIds } from "./waterFittingReference";
+import { waterSupportIds } from "./waterSupportReference";
 
 export const materialIds = [
   "stud",
@@ -47,6 +48,7 @@ export const materialIds = [
   "hd-pex-u870w10",
   "hd-nail-shield-ns1",
   ...waterFittingIds,
+  ...waterSupportIds,
   "hd-masonite-75777",
   "cedarbrook-pedestal-48",
   "cedarbrook-pedestal-60",

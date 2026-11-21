@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 110,
+  "schemaVersion": 111,
   "id": "399ce2b1-0590-443f-8b1e-b5f5cdf6e36c",
   "name": "Kitchenette water supply study",
   "kind": "custom",
@@ -20,6 +20,10 @@
       "depth": 0,
       "bore": 1.125,
       "reuse": true,
+      "isolator": {
+        "face": "start",
+        "flange": 0.0625
+      },
       "id": "1863c0f3-ff00-40b2-9301-a3453648ab2d",
       "pipeId": "4f6c73e4-fbc0-47df-b040-521791fd6eeb",
       "stepId": "9c125184-c2bf-4b38-ae9f-8bc5e5979c7f",
@@ -59,6 +63,20 @@
           "studId": "a7a06ee9-ab72-410a-87f3-4e3e43f75cae",
           "face": "back"
         }
+      ],
+      "isolators": [
+        {
+          "id": "a9298e41-0f9f-454b-8c76-fc31a465623b",
+          "studId": "af6ac41b-d8b7-427a-8e40-10da4e1568dc"
+        },
+        {
+          "id": "67a15941-571f-4ac3-b0ad-08f8795813ba",
+          "studId": "2d0d4209-b1fe-450f-9bf1-a7f3bc9e403d"
+        },
+        {
+          "id": "901b852f-b1a4-4b4b-a474-4f988c1dcec3",
+          "studId": "a7a06ee9-ab72-410a-87f3-4e3e43f75cae"
+        }
       ]
     },
     {
@@ -70,6 +88,10 @@
       "height": 24,
       "depth": 0,
       "bore": 0.875,
+      "isolator": {
+        "face": "start",
+        "flange": 0.0625
+      },
       "id": "4fe517b5-f501-4bcf-ab68-e93d8f562811",
       "pipeId": "a6d018fc-3141-4fbb-9dbd-55457d32d1f8",
       "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
@@ -109,6 +131,20 @@
           "studId": "32a14fd6-8aa1-4e27-a492-8a9be669ef4e",
           "face": "back"
         }
+      ],
+      "isolators": [
+        {
+          "id": "cd9d51c4-1688-434b-8e8b-bf337c1a2d05",
+          "studId": "41c45c66-bdf4-4366-8195-cbda818dbbc1"
+        },
+        {
+          "id": "a71cfd4c-30fd-4b99-8cd4-6a8f56c3ab70",
+          "studId": "2da016b7-e74d-43fc-a6aa-932e49c477d0"
+        },
+        {
+          "id": "9f873408-b360-4900-be4a-0f150090d82e",
+          "studId": "32a14fd6-8aa1-4e27-a492-8a9be669ef4e"
+        }
       ]
     },
     {
@@ -121,6 +157,10 @@
       "depth": 0,
       "bore": 1.125,
       "reuse": true,
+      "isolator": {
+        "face": "start",
+        "flange": 0.0625
+      },
       "id": "627b8683-7a9e-471e-8d56-5891ed35b42e",
       "pipeId": "018ee748-5797-41aa-b4da-a91a9bdd8208",
       "stepId": "d7f274dc-69af-47f1-86cd-6118b415f0ca",
@@ -159,6 +199,20 @@
           "id": "c2a3f4a1-ffee-4587-a689-ddfe8c7d2768",
           "studId": "f352a85d-6c46-4c3e-8528-8cf07883b356",
           "face": "back"
+        }
+      ],
+      "isolators": [
+        {
+          "id": "3396b3c1-1197-4132-8102-8dbebb638d40",
+          "studId": "09d66d0a-3ad2-4471-a16c-e3dadea1a21e"
+        },
+        {
+          "id": "c30f848e-8371-48a1-8fbd-f2fdff22694d",
+          "studId": "213de53b-dfea-4e84-bd18-44d5d4ef7057"
+        },
+        {
+          "id": "cdd3df67-e09e-4e5f-a719-11d2b6281dc8",
+          "studId": "f352a85d-6c46-4c3e-8528-8cf07883b356"
         }
       ]
     }
@@ -316,7 +370,7 @@
             -24,
             0
           ],
-          "diameter": 1.125,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "1863c0f3-ff00-40b2-9301-a3453648ab2d"
           }
@@ -356,7 +410,7 @@
             -24,
             0
           ],
-          "diameter": 1.125,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "1863c0f3-ff00-40b2-9301-a3453648ab2d"
           }
@@ -396,7 +450,7 @@
             -24,
             0
           ],
-          "diameter": 1.125,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "1863c0f3-ff00-40b2-9301-a3453648ab2d"
           }
@@ -436,7 +490,7 @@
             -24,
             0
           ],
-          "diameter": 1.125,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "627b8683-7a9e-471e-8d56-5891ed35b42e"
           }
@@ -476,7 +530,7 @@
             -24,
             0
           ],
-          "diameter": 1.125,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "627b8683-7a9e-471e-8d56-5891ed35b42e"
           }
@@ -516,7 +570,7 @@
             -24,
             0
           ],
-          "diameter": 1.125,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "627b8683-7a9e-471e-8d56-5891ed35b42e"
           }
@@ -637,7 +691,7 @@
             -24,
             0
           ],
-          "diameter": 0.875,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "4fe517b5-f501-4bcf-ab68-e93d8f562811"
           }
@@ -677,7 +731,7 @@
             -24,
             0
           ],
-          "diameter": 0.875,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "4fe517b5-f501-4bcf-ab68-e93d8f562811"
           }
@@ -717,7 +771,7 @@
             -24,
             0
           ],
-          "diameter": 0.875,
+          "diameter": 1.375,
           "source": {
             "waterRunId": "4fe517b5-f501-4bcf-ab68-e93d8f562811"
           }
@@ -909,6 +963,59 @@
       }
     },
     {
+      "id": "a6d018fc-3141-4fbb-9dbd-55457d32d1f8",
+      "name": "Island feed",
+      "material": "hd-pex-u860w10",
+      "size": [
+        0.625,
+        48.35,
+        0.625
+      ],
+      "position": [
+        0,
+        24,
+        24.825
+      ],
+      "rotation": [
+        1.5707963267948963,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-pipe",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "13b486f4-c165-423c-a78c-0147a8362553",
+      "name": "SharkBite Max UR412A reducing tee",
+      "material": "hd-sharkbite-ur412a",
+      "size": [
+        3.5,
+        2.3,
+        1.3
+      ],
+      "position": [
+        2.220446049250313e-16,
+        24,
+        0.49999999999999994
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0,
+        -3.141592653589793
+      ],
+      "stepId": "4afb751a-d22d-4d43-9c83-3441eaa44feb",
+      "assembly": "PEX connections",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
       "id": "4410a299-6489-4c68-8b17-5bad49e286af",
       "name": "Kitchen main · front nail shield",
       "material": "hd-nail-shield-ns1",
@@ -1065,6 +1172,330 @@
       "stepId": "9c125184-c2bf-4b38-ae9f-8bc5e5979c7f",
       "assembly": "Rough in Kitchen main",
       "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a9298e41-0f9f-454b-8c76-fc31a465623b",
+      "name": "Kitchen main · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        -38.78125,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9c125184-c2bf-4b38-ae9f-8bc5e5979c7f",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "67a15941-571f-4ac3-b0ad-08f8795813ba",
+      "name": "Kitchen main · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        -22.78125,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9c125184-c2bf-4b38-ae9f-8bc5e5979c7f",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "901b852f-b1a4-4b4b-a474-4f988c1dcec3",
+      "name": "Kitchen main · stud isolator",
+      "material": "hd-holdrite-162j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        -6.78125,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9c125184-c2bf-4b38-ae9f-8bc5e5979c7f",
+      "assembly": "Rough in Kitchen main",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "70a206f7-5d9d-43d2-8325-78fd4e1710e5",
+      "name": "Island feed · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -1.7812500000000036,
+        24,
+        4.75
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4d90b912-1cd6-4e07-8ed0-26fb7bdb66c0",
+      "name": "Island feed · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        1.7812499999999964,
+        24,
+        4.75
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1230c277-9a0d-4315-9245-67bf1d188eda",
+      "name": "Island feed · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -1.7812500000000018,
+        24,
+        20
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0873d610-a29d-4d4b-bc91-283154cbf1dc",
+      "name": "Island feed · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        1.7812499999999982,
+        24,
+        20
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f3409fb8-1b09-4496-9295-42fa98ca91b9",
+      "name": "Island feed · front nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        -1.7812499999999982,
+        24,
+        36
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "ee6952fc-d608-414a-8e54-40a3d2933855",
+      "name": "Island feed · back nail shield",
+      "material": "hd-nail-shield-ns1",
+      "size": [
+        1.5,
+        3,
+        0.0625
+      ],
+      "position": [
+        1.7812500000000018,
+        24,
+        36
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-nail-shield",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "cd9d51c4-1688-434b-8e8b-bf337c1a2d05",
+      "name": "Island feed · stud isolator",
+      "material": "hd-holdrite-161j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        0,
+        24,
+        3.96875
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a71cfd4c-30fd-4b99-8cd4-6a8f56c3ab70",
+      "name": "Island feed · stud isolator",
+      "material": "hd-holdrite-161j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        0,
+        24,
+        19.21875
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-stud-isolator",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9f873408-b360-4900-be4a-0f150090d82e",
+      "name": "Island feed · stud isolator",
+      "material": "hd-holdrite-161j15",
+      "size": [
+        0.0625,
+        2.2,
+        1.7
+      ],
+      "position": [
+        0,
+        24,
+        35.21875
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
+      "assembly": "Rough in Island feed",
+      "designRole": "water-stud-isolator",
       "offcut": false,
       "cutPlanes": [],
       "stockLengthAxis": null,
@@ -1233,215 +1664,81 @@
       "cutStock": null
     },
     {
-      "id": "a6d018fc-3141-4fbb-9dbd-55457d32d1f8",
-      "name": "Island feed",
-      "material": "hd-pex-u860w10",
+      "id": "3396b3c1-1197-4132-8102-8dbebb638d40",
+      "name": "Kitchen main · B · stud isolator",
+      "material": "hd-holdrite-162j15",
       "size": [
-        0.625,
-        48.35,
-        0.625
+        0.0625,
+        2.2,
+        1.7
       ],
       "position": [
-        0,
+        9.21875,
         24,
-        24.825
-      ],
-      "rotation": [
-        1.5707963267948963,
-        -1.5707963267948966,
         0
-      ],
-      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
-      "assembly": "Rough in Island feed",
-      "designRole": "water-pipe",
-      "offcut": false,
-      "cutPlanes": [],
-      "stockLengthAxis": 1,
-      "cutStock": null
-    },
-    {
-      "id": "70a206f7-5d9d-43d2-8325-78fd4e1710e5",
-      "name": "Island feed · front nail shield",
-      "material": "hd-nail-shield-ns1",
-      "size": [
-        1.5,
-        3,
-        0.0625
-      ],
-      "position": [
-        -1.7812500000000036,
-        24,
-        4.75
       ],
       "rotation": [
         0,
-        -1.5707963267948966,
+        0,
         0
       ],
-      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
-      "assembly": "Rough in Island feed",
-      "designRole": "water-nail-shield",
+      "stepId": "d7f274dc-69af-47f1-86cd-6118b415f0ca",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-stud-isolator",
       "offcut": false,
       "cutPlanes": [],
       "stockLengthAxis": null,
       "cutStock": null
     },
     {
-      "id": "4d90b912-1cd6-4e07-8ed0-26fb7bdb66c0",
-      "name": "Island feed · back nail shield",
-      "material": "hd-nail-shield-ns1",
+      "id": "c30f848e-8371-48a1-8fbd-f2fdff22694d",
+      "name": "Kitchen main · B · stud isolator",
+      "material": "hd-holdrite-162j15",
       "size": [
-        1.5,
-        3,
-        0.0625
+        0.0625,
+        2.2,
+        1.7
       ],
       "position": [
-        1.7812499999999964,
+        25.21875,
         24,
-        4.75
+        0
       ],
       "rotation": [
         0,
-        -1.5707963267948966,
+        0,
         0
       ],
-      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
-      "assembly": "Rough in Island feed",
-      "designRole": "water-nail-shield",
+      "stepId": "d7f274dc-69af-47f1-86cd-6118b415f0ca",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-stud-isolator",
       "offcut": false,
       "cutPlanes": [],
       "stockLengthAxis": null,
       "cutStock": null
     },
     {
-      "id": "1230c277-9a0d-4315-9245-67bf1d188eda",
-      "name": "Island feed · front nail shield",
-      "material": "hd-nail-shield-ns1",
+      "id": "cdd3df67-e09e-4e5f-a719-11d2b6281dc8",
+      "name": "Kitchen main · B · stud isolator",
+      "material": "hd-holdrite-162j15",
       "size": [
-        1.5,
-        3,
-        0.0625
+        0.0625,
+        2.2,
+        1.7
       ],
       "position": [
-        -1.7812500000000018,
+        41.21875,
         24,
-        20
-      ],
-      "rotation": [
-        0,
-        -1.5707963267948966,
         0
       ],
-      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
-      "assembly": "Rough in Island feed",
-      "designRole": "water-nail-shield",
-      "offcut": false,
-      "cutPlanes": [],
-      "stockLengthAxis": null,
-      "cutStock": null
-    },
-    {
-      "id": "0873d610-a29d-4d4b-bc91-283154cbf1dc",
-      "name": "Island feed · back nail shield",
-      "material": "hd-nail-shield-ns1",
-      "size": [
-        1.5,
-        3,
-        0.0625
-      ],
-      "position": [
-        1.7812499999999982,
-        24,
-        20
-      ],
       "rotation": [
         0,
-        -1.5707963267948966,
+        0,
         0
       ],
-      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
-      "assembly": "Rough in Island feed",
-      "designRole": "water-nail-shield",
-      "offcut": false,
-      "cutPlanes": [],
-      "stockLengthAxis": null,
-      "cutStock": null
-    },
-    {
-      "id": "f3409fb8-1b09-4496-9295-42fa98ca91b9",
-      "name": "Island feed · front nail shield",
-      "material": "hd-nail-shield-ns1",
-      "size": [
-        1.5,
-        3,
-        0.0625
-      ],
-      "position": [
-        -1.7812499999999982,
-        24,
-        36
-      ],
-      "rotation": [
-        0,
-        -1.5707963267948966,
-        0
-      ],
-      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
-      "assembly": "Rough in Island feed",
-      "designRole": "water-nail-shield",
-      "offcut": false,
-      "cutPlanes": [],
-      "stockLengthAxis": null,
-      "cutStock": null
-    },
-    {
-      "id": "ee6952fc-d608-414a-8e54-40a3d2933855",
-      "name": "Island feed · back nail shield",
-      "material": "hd-nail-shield-ns1",
-      "size": [
-        1.5,
-        3,
-        0.0625
-      ],
-      "position": [
-        1.7812500000000018,
-        24,
-        36
-      ],
-      "rotation": [
-        0,
-        -1.5707963267948966,
-        0
-      ],
-      "stepId": "7e350331-dfda-4733-a680-4b53fc37121f",
-      "assembly": "Rough in Island feed",
-      "designRole": "water-nail-shield",
-      "offcut": false,
-      "cutPlanes": [],
-      "stockLengthAxis": null,
-      "cutStock": null
-    },
-    {
-      "id": "13b486f4-c165-423c-a78c-0147a8362553",
-      "name": "SharkBite Max UR412A reducing tee",
-      "material": "hd-sharkbite-ur412a",
-      "size": [
-        3.5,
-        2.3,
-        1.3
-      ],
-      "position": [
-        2.220446049250313e-16,
-        24,
-        0.49999999999999994
-      ],
-      "rotation": [
-        -1.5707963267948966,
-        0,
-        -3.141592653589793
-      ],
-      "stepId": "4afb751a-d22d-4d43-9c83-3441eaa44feb",
-      "assembly": "PEX connections",
+      "stepId": "d7f274dc-69af-47f1-86cd-6118b415f0ca",
+      "assembly": "Rough in Kitchen main · B",
+      "designRole": "water-stud-isolator",
       "offcut": false,
       "cutPlanes": [],
       "stockLengthAxis": null,

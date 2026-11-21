@@ -423,7 +423,7 @@ test("phone current W plans review matching T25/T15 accessory cards separately f
       card = page.locator("div.section-description").filter({ has: checkbox });
     await expect(card).toContainText("two-bit card");
     await expect(card).toContainText(
-      "Actual tool dimensions and per-operation fit remain unverified",
+      "This is drive-tip evidence only, separate from the powered/manual driver function and actual installation setup.",
     );
     await expect(
       card.getByRole("link", { name: "Home Depot", exact: true }),
@@ -432,6 +432,7 @@ test("phone current W plans review matching T25/T15 accessory cards separately f
       card.getByRole("link", { name: "Lowe's", exact: true }),
     ).toHaveAttribute("href", new RegExp(`/${row.lowes}$`));
     await card.locator("summary").click();
+    await expect(card).toContainText("Full body/working-reach envelope is unknown");
     await expect(
       card.getByRole("link", {
         name: "Manufacturer product specification 1",

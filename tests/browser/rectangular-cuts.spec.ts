@@ -58,7 +58,8 @@ test("a notch can be placed, reviewed, exported and reopened from the cut editor
 
   await page.getByRole("button", { name: "Tools", exact: true }).click();
   await expect(
-    page.getByText("Plan the rectangular through-cut", { exact: true }),
+    page.getByRole("complementary", { name: "Inspector" })
+      .getByText("Plan the rectangular through-cut", { exact: true }),
   ).toBeVisible();
 
   await page.getByRole("button", { name: "Save project", exact: true }).click();

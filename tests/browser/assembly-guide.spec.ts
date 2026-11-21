@@ -151,8 +151,9 @@ for (const study of ["storage-banquette", "shelves", "closet-insert"] as const) 
     };
     const dialog = await openFromGuide();
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator("summary")).toContainText(sheet!.title);
-    expect(await dialog.locator("ol li").allTextContents()).toEqual(sheet!.steps);
+    const sheetSummary = dialog.locator("summary").filter({ hasText: `${sheet!.title} ·` });
+    await expect(sheetSummary).toBeVisible();
+    await expect(sheetSummary.locator("..").locator("ol li")).toHaveText(sheet!.steps);
     for (const otherLabel of labels) await expect(dialog).toContainText(otherLabel);
     await expect(dialog).toContainText("Expected leftovers");
 

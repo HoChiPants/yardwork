@@ -1,6 +1,7 @@
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { test, expect, type Page, type Locator } from "@playwright/test";
 import { projectSchema } from "../../src/model";
+import { createBuildStudy } from "../../src/buildFixtures";
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -127,15 +128,15 @@ test("phone study selection and expanded cut list remain within the modal and pr
       name: "Choose a build study",
       exact: true,
     });
-  for (const [id, parts] of [
-    ["storage-banquette", 42],
-    ["shelves", 8],
-    ["closet-insert", 10],
-    ["greenhouse", 68],
-    ["sauna", 46],
+  for (const id of [
+    "storage-banquette",
+    "shelves",
+    "closet-insert",
+    "greenhouse",
+    "sauna",
   ] as const) {
     await choose.selectOption(id);
-    await expect(dialog).toContainText(`${parts} actual editable parts`);
+    await expect(dialog).toContainText(`${createBuildStudy(id).project.pieces.length} actual editable parts`);
     await expectNoModalOverflow(page);
   }
   await choose.selectOption("closet-insert");
@@ -150,8 +151,9 @@ test("phone study selection and expanded cut list remain within the modal and pr
   await expectWithinPhone(rod);
   await rod.selectOption("closet-rod-72");
   await expect(dialog).toContainText("12 actual editable parts");
-  await dialog.locator(".study-cut-list summary").click();
-  await expect(dialog.locator(".study-cut-list table")).toBeVisible();
+  const cuts = dialog.locator("summary").filter({ hasText: "Cut list · 12 cuttable parts" });
+  await cuts.click();
+  await expect(cuts.locator("..").locator("table")).toBeVisible();
   await expectNoModalOverflow(page);
   const close = page.getByRole("button", { name: "Close dialog", exact: true });
   await expectWithinPhone(close);

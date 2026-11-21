@@ -544,7 +544,8 @@ test("fitted results focus completion controls on desktop and phone, retain exac
       before.pieces.some((old) => old.id === piece.id),
     ),
   ).toEqual(before.pieces);
-  const guided = await regenerate(page),
+  await page.getByRole("button", { name: "Regenerate build guide", exact: true }).click();
+  const guided = await draft(page, guideIsCurrent),
     assigned = assemblyStep(guided, choice.ownerId, choice.stageKey);
   expect(
     assigned.generated?.kind === "assembly-stage" &&
@@ -556,6 +557,7 @@ test("fitted results focus completion controls on desktop and phone, retain exac
   expect(
     guided.sections.find((section) => section.id === setup.sectionId)!.pieceIds,
   ).toContain(blockId);
+  await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
   const reopened = await saveAndReopen(page, guided),
     exported = await exportProject(page),
     imported = await importProject(page, exported);

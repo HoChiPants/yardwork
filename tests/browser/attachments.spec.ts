@@ -537,7 +537,7 @@ test.describe("phone support purchases", () => {
         exact: true,
       }),
     ).toBeDisabled();
-    await expect(panel).toContainText("12 pins remain unallocated");
+    await expect(panel).toContainText("12 pins from selected purchase packs remain unallocated.");
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(390);

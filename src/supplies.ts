@@ -14,6 +14,7 @@ import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
+import { flexWrap, openingFlashingScope } from "./openingFlashingReference";
 import { trimBackerRodScope, trimBackerRods } from "./trimBackerRodReference";
 import { doorSeal } from "./greenhouseDoorSealReference";
 import { woodGlue } from "./woodGlueReference";
@@ -385,6 +386,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
       trimSealant.scope,
       "Use a compatible caulk gun. Dry-fit the trim and test the finish on a matching scrap before filling the seam.",
     ],
+  },
+  [flexWrap.id]: {
+    purchaseUnit: "roll",
+    contents: [{ name: "9 in × 75 ft formable flashing membrane", quantity: 1 }],
+    requirements: [openingFlashingScope],
   },
   ...Object.fromEntries(trimBackerRods.map((rod) => [rod.id, {
     purchaseUnit: "roll",

@@ -4,6 +4,8 @@ import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
 import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
+import { openingFlashingGuideLines, reviewOpeningFlashings } from "./openingFlashing";
+import { flexWrap, openingAirSealGuide, openingFlashingScope } from "./openingFlashingReference";
 import { sillGasketBuildingGuide, sillGasketInstructions, sillGasketScope } from "./sillGasketReference";
 import { offcutCutOrderMarkdown, offcutCutRows } from "./offcutCutGuide";
 import { beamSource, reviewShelfSag, shelfSagGuideLines, shelfSagScope, shelfSagSummary, stiffnessSource } from "./shelfSag";
@@ -627,6 +629,7 @@ export type Finding = {
   restraintPlanId?: string;
   fastenerPlanId?: string;
   hingePlanId?: string;
+  openingFlashingSillId?: string;
   area?: {
     outlines: V3[][];
     boundaries?: V3[][];
@@ -648,6 +651,15 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       severity: "warning",
       detail: row.issues.join(" "),
       pieceId: row.outline ? row.plan.partId : undefined,
+    });
+  }
+  for (const row of reviewOpeningFlashings(p).rows) {
+    if (row.issues.length) findings.push({
+      id: `opening-flashing-${row.plan.members.sill}`,
+      title: `Opening flashing needs review · ${row.title}`,
+      severity: "warning",
+      detail: row.issues.join(" "),
+      openingFlashingSillId: row.plan.members.sill,
     });
   }
   for (const plan of p.lidWeightPlans ?? []) {
@@ -1864,6 +1876,7 @@ export function guideMarkdown(p: Project) {
   const roofAttachments = greenhouseRoofAttachmentLines(p, greenhouseRoofAttachments(p, connections.intents, roofBearing));
   const foundations = greenhouseFoundationGuide(p);
   const sillGasketLines = sillGasketGuideLines(reviewSillGaskets(p));
+  const flashingLines = openingFlashingGuideLines(reviewOpeningFlashings(p));
   const baseConnections = greenhouseBaseGuideLines(p, greenhouseBaseConnections(p, connections.intents));
   const floorJoints = floorBaseConnectionGuideLines(p, floorBaseConnections(p, connections.intents));
   const floorHangers = floorHangerGuideLines(p, connections.intents);
@@ -1933,6 +1946,11 @@ export function guideMarkdown(p: Project) {
             ] : []),
           ].join("\n")
         ).join("\n") + "\n\n"
+      : "") +
+    (flashingLines.length
+      ? "## Opening flashing and drainage\n\n" + openingFlashingScope + "\n\n" +
+        flashingLines.map((line) => `- ${line.replace(/\r?\n/g, " ")}`).join("\n") +
+        `\n\n[DuPont installation guide](${flexWrap.instructions}) · [PNNL interior air seal](${openingAirSealGuide})\n\n`
       : "") +
     (sillGasketLines.length
       ? "## Sill gasket cut plan\n\n" + sillGasketScope + "\n\n" +

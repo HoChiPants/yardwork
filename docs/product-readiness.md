@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 62 editable stocks. The registry contains 130 product records and 148 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 62 editable stocks. The registry contains 131 product records and 149 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 21, 2026 · Rough opening flashing
+
+Plan a one-piece sill pan from four actual framing members and the measured depth of an integral-flanged window or door. The check uses the DuPont after-Tyvek sill dimensions and verifies the chosen exterior outlet pattern. The 3D preview marks the apron and the continuous interior seal around the unit. The guide exports the cut, the order of work and the roll leftovers. Changed framing returns the plan to Checks. Verify the unit instructions, installed flashing laps, slope and drainage on site. [DuPont installation guide](https://www.dupont.com/content/dam/dupont/amer/us/en/performance-building-solutions/public/documents/en/install-guide-single-family-wrb-and-flashing-after-wrb-43-d101048-enus.pdf)
 
 ## November 20, 2026 · Interrupted trim seams and backing
 

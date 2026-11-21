@@ -34,6 +34,7 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
+import { flexWrap } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
 import { doorSeal } from "./greenhouseDoorSealReference";
 import { woodGlue } from "./woodGlueReference";
@@ -43,6 +44,7 @@ export const retailerSchema = z.enum(["home-depot", "lowes"]);
 export type Retailer = z.infer<typeof retailerSchema>;
 const sourceHosts = new Set([
   "www.frostking.com",
+  "www.dupont.com",
   "hdsupplysolutions.com",
   "homedepot.com",
   "www.homedepot.com",
@@ -4169,6 +4171,26 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [trimSealant.listing, trimSealant.specification] },
     discrepancies: ["Home Depot lists both 1 in and 2 in maximum widths. Yardwork screens at 1 in. Check the delivered label and gap preparation."],
+    capabilities: [],
+  },
+  {
+    id: flexWrap.id,
+    name: flexWrap.name,
+    manufacturer: "DuPont",
+    manufacturerPartNumber: flexWrap.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: flexWrap.reviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "formable butyl flashing membrane" }),
+    offers: [hd(flexWrap.internetNumber, flexWrap.model, flexWrap.storeSku)],
+    sources: [
+      { url: flexWrap.listing, verifiedAt: flexWrap.reviewedAt, note: "Exact HHDXXTYVK8 9 in by 75 ft FlexWrap listing." },
+      { url: flexWrap.packReference, verifiedAt: flexWrap.reviewedAt, note: "DuPont confirms one roll per Home Depot purchase." },
+      { url: flexWrap.specification, verifiedAt: flexWrap.reviewedAt, note: "The manufacturer lists both 6 and 9 in widths at 75 ft." },
+      { url: flexWrap.instructions, verifiedAt: flexWrap.reviewedAt, note: "Single-family installation guide specifies the sill length, jamb returns and exterior face lap." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [flexWrap.listing, flexWrap.packReference] },
+    discrepancies: [],
     capabilities: [],
   },
   ...trimBackerRods.map((rod): z.input<typeof retailerProductSchema> => ({

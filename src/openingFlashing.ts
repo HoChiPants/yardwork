@@ -1,0 +1,211 @@
+import { attachmentGeometryFingerprint } from "./attachments";
+import { formatPreciseInches, formatStockLength } from "./measurement";
+import { material, type Piece, type Project, type V3 } from "./model";
+import { flexWrap } from "./openingFlashingReference";
+import {
+  openingFlashingMeasurementsSchema,
+  openingFlashingPlansSchema,
+  openingMembersSchema,
+  type OpeningFlashingMeasurements,
+  type OpeningFlashingPlan,
+  type OpeningMembers,
+} from "./openingFlashingSchema";
+import { ensurePartLabels } from "./partLabels";
+import { sillPlateFootprint } from "./sillGaskets";
+import { rotate } from "./spatial";
+import { packRuns } from "./stockRunPacking";
+import { pieceThroughOpenings } from "./throughOpenings";
+
+const epsilon = 0.001;
+const axes = [0, 1, 2] as const;
+const dot = (a: V3, b: V3) => a.reduce((sum, value, i) => sum + value * b[i], 0);
+const plus = (a: V3, b: V3) => a.map((value, i) => value + b[i]) as V3;
+const scale = (a: V3, n: number) => a.map((value) => value * n) as V3;
+const clean = (n: number) => Number(n.toFixed(6));
+
+export function openingFramingStock(part: Piece) {
+  const stock = material(part.material);
+  return stock.wood && stock.stockKind === "linear" && !stock.shape
+    && !part.offcut && !part.cutPlanes.length && !pieceThroughOpenings(part).length;
+}
+
+function openingBox(part: Piece, origin: V3, basis: [V3, V3, V3]) {
+  if (!openingFramingStock(part)) return null;
+  const directions = axes.map((axis) => rotate(axes.map((i) => Number(i === axis)) as V3, part.rotation));
+  const center = plus(part.position, scale(origin, -1));
+  const relative = basis.map((axis) => dot(center, axis)) as V3;
+  const half: V3 = [0, 0, 0];
+  for (const [axis, direction] of directions.entries()) {
+    const aligned = basis.findIndex((candidate) => Math.abs(dot(direction, candidate)) > 1 - 1e-8);
+    if (aligned < 0) return null;
+    half[aligned] = part.size[axis] / 2;
+  }
+  return {
+    min: relative.map((value, i) => clean(value - half[i])) as V3,
+    max: relative.map((value, i) => clean(value + half[i])) as V3,
+  };
+}
+
+export function roughOpeningFrame(project: Project, members: OpeningMembers) {
+  const byId = new Map(project.pieces.map((part) => [part.id, part]));
+  const sill = byId.get(members.sill);
+  const footprint = sill && sillPlateFootprint(sill);
+  if (!sill || !footprint || !openingFramingStock(sill)) throw Error("Choose a flat, square wood rough sill.");
+  const along = footprint.along;
+  const up: V3 = [0, 1, 0];
+  const across: V3 = [-along[2], 0, along[0]];
+  const basis: [V3, V3, V3] = [along, up, across];
+  const parts = [sill, byId.get(members.jambA), byId.get(members.jambB), byId.get(members.head)];
+  const boxes = parts.map((part) => part && openingBox(part, sill.position, basis));
+  const [base, a, b, head] = boxes;
+  if (!base || !a || !b || !head) throw Error("Use four active, aligned, square-edged wood members for the rough opening.");
+  const [left, right] = a.min[0] < b.min[0] ? [a, b] : [b, a];
+  const x0 = left.max[0], x1 = right.min[0], y0 = base.max[1], y1 = head.min[1];
+  if (x1 - x0 <= epsilon || y1 - y0 <= epsilon)
+    throw Error("The selected jambs, sill and head don't enclose a positive rectangular opening.");
+  if (base.min[0] > x0 + epsilon || base.max[0] < x1 - epsilon ||
+      head.min[0] > x0 + epsilon || head.max[0] < x1 - epsilon ||
+      [left, right].some(({ min, max }) => min[1] > y0 + epsilon || max[1] < y1 - epsilon))
+    throw Error("The sill and head must reach both jamb faces, with continuous jamb support between them.");
+  const frame = [base, left, right, head];
+  const z0 = Math.max(...frame.map(({ min }) => min[2]));
+  const z1 = Math.min(...frame.map(({ max }) => max[2]));
+  if (z1 - z0 <= epsilon) throw Error("The four members need shared wall depth behind the opening.");
+  return {
+    x0, x1, y0, y1, z0, z1,
+    width: clean(x1 - x0), height: clean(y1 - y0), depth: clean(z1 - z0),
+    exteriorPlanes: {
+      positive: Math.max(...frame.map(({ max }) => max[2])) - z1 <= epsilon,
+      negative: z0 - Math.min(...frame.map(({ min }) => min[2])) <= epsilon,
+    },
+    signature: JSON.stringify(parts.map((part, index) => [attachmentGeometryFingerprint(part!), boxes[index]])),
+    at: (x: number, y: number, z: number) => plus(sill.position, plus(scale(along, x), plus(scale(up, y), scale(across, z)))),
+  };
+}
+
+export type OpeningFlashingPreview = {
+  pan: V3[];
+  apron: V3[];
+  drainage: V3[][];
+  interiorSeal: V3[];
+};
+
+export function checkOpeningFlashing(project: Project, members: OpeningMembers, measured: OpeningFlashingMeasurements) {
+  const frame = roughOpeningFrame(project, members);
+  const { width, height, depth, x0, x1, y0, y1, at } = frame;
+  const { tapeWidth, exterior, sheathing, frameDepth, jambReturn, faceLap, pan, drainage } = measured;
+  const sign = exterior === "positive" ? 1 : -1;
+  const outside = (sign > 0 ? frame.z1 : frame.z0) + sign * sheathing;
+  const inside = (value: number) => outside - sign * value;
+  const issues: string[] = [];
+  if (!frame.exteriorPlanes[exterior])
+    issues.push("The selected members don't share a flush exterior face on this side.");
+  if (jambReturn > height + epsilon)
+    issues.push("The jamb return extends past the modeled head.");
+  const returnWidth = pan.kind === "back-dam" ? pan.rise : 0;
+  const bed = clean(tapeWidth - faceLap - returnWidth);
+  if (bed + epsilon < frameDepth + flexWrap.minInteriorAdhesion)
+    issues.push("Allow at least 1 in of membrane beyond the inside edge of the unit after the face lap and any back dam.");
+  if (bed > depth + sheathing + epsilon)
+    issues.push("The planned sill bed extends past the shared backing. Check the width, face lap and back-dam detail.");
+  if (frameDepth > depth + sheathing + epsilon)
+    issues.push("The measured frame edge is beyond the modeled opening depth.");
+  const length = clean(width + jambReturn * 2);
+  if (length > flexWrap.rollLength)
+    issues.push("This continuous cut exceeds a 75 ft roll. Review the chosen system detail.");
+
+  const halfDrain = flexWrap.minDrainageWidth / 2;
+  const centers = drainage.kind === "gaps" ? [...drainage.centers].sort((a, b) => a - b) : [];
+  if (drainage.kind === "gaps") {
+    if (centers[0] < halfDrain || centers.at(-1)! > width - halfDrain)
+      issues.push("Each 2 in drainage opening must fit entirely along the sill.");
+    if (centers[0] > flexWrap.maxCornerDistance || width - centers.at(-1)! > flexWrap.maxCornerDistance)
+      issues.push("Place a drainage gap center within 4 in of each sill corner.");
+    if (centers.some((value, i) => i > 0 && (
+      value - centers[i - 1] < flexWrap.minDrainageSpacing - epsilon ||
+      value - centers[i - 1] > flexWrap.maxDrainageSpacing + epsilon
+    ))) issues.push("Space the drainage gap centers 6 to 12 in apart.");
+  }
+  const xAt = (offset: number) => sign > 0 ? x0 + offset : x1 - offset;
+  const drainLine = (from: number, to: number) => [at(xAt(from), y0, outside), at(xAt(to), y0, outside)];
+  const seal = inside(frameDepth);
+  const preview: OpeningFlashingPreview = {
+    pan: [at(x0, y0 + jambReturn, inside(bed)), at(x0, y0, inside(bed)),
+      at(x1, y0, inside(bed)), at(x1, y0 + jambReturn, inside(bed))],
+    apron: [at(x0, y0, outside), at(x0, y0 - faceLap, outside), at(x1, y0 - faceLap, outside), at(x1, y0, outside)],
+    drainage: drainage.kind === "open" ? [drainLine(0, width)]
+      : centers.map((center) => drainLine(center - halfDrain, center + halfDrain)),
+    interiorSeal: [at(x0, y0, seal), at(x0, y1, seal), at(x1, y1, seal), at(x1, y0, seal), at(x0, y0, seal)],
+  };
+  return { frame, length, bed, issues, preview };
+}
+
+export function saveOpeningFlashing(project: Project, members: OpeningMembers, proposed: OpeningFlashingMeasurements) {
+  const actualMembers = openingMembersSchema.parse(members);
+  const measurements = openingFlashingMeasurementsSchema.parse(proposed);
+  const checked = checkOpeningFlashing(project, actualMembers, measurements);
+  if (checked.issues.length) throw Error(checked.issues.join(" "));
+  const saved: OpeningFlashingPlan = { members: actualMembers, measurements, signature: checked.frame.signature };
+  return { ...project, guideFingerprint: null, openingFlashings: openingFlashingPlansSchema.parse([
+    ...(project.openingFlashings ?? []).filter(({ members }) => members.sill !== actualMembers.sill),
+    saved,
+  ]) };
+}
+
+export function removeOpeningFlashing(project: Project, sillId: string) {
+  return { ...project, guideFingerprint: null, openingFlashings: project.openingFlashings?.filter(({ members }) => members.sill !== sillId) };
+}
+
+export function openingDrainageNote(measured: OpeningFlashingMeasurements) {
+  return measured.drainage.kind === "open"
+    ? "Keep the exterior sill flange open for drainage."
+    : `Leave 2 in drainage gaps centered at ${[...measured.drainage.centers].sort((a, b) => a - b)
+      .map(formatPreciseInches).join(", ")} from the left exterior corner.`;
+}
+
+export function reviewOpeningFlashings(project: Project) {
+  const plans = project.openingFlashings ?? [];
+  if (!plans.length) return { rows: [], groups: [] };
+  const labels = new Map(ensurePartLabels(project).partLabels.map(({ partId, label }) => [partId, label]));
+  const pieces = new Map(project.pieces.map((part) => [part.id, part]));
+  const rows = plans.map((plan) => {
+    const sill = pieces.get(plan.members.sill);
+    const title = `${labels.get(plan.members.sill) ?? "Missing part"} · ${sill?.name ?? "Rough sill"}`;
+    const steps = Object.values(plan.members).map((id) => project.steps.findIndex(({ id: step }) => step === pieces.get(id)?.stepId) + 1);
+    try {
+      const result = checkOpeningFlashing(project, plan.members, plan.measurements);
+      if (result.frame.signature !== plan.signature)
+        result.issues.unshift("The rough framing changed. Check the field measurements and preview again.");
+      return { plan, title, step: Math.max(...steps), result, issues: result.issues };
+    } catch (cause) {
+      return { plan, title, step: 0, result: null, issues: [(cause as Error).message] };
+    }
+  });
+  const groups = flexWrap.widths.flatMap((width) => {
+    const runs = rows.flatMap(({ plan, title, step, result, issues }) =>
+      result && !issues.length && plan.measurements.tapeWidth === width
+        ? [{ title, step, length: result.length }] : []);
+    return runs.length ? [{ width, rolls: packRuns(runs, flexWrap.rollLength).bins }] : [];
+  });
+  return { rows, groups };
+}
+
+export function openingFlashingGuideLines(review: ReturnType<typeof reviewOpeningFlashings>) {
+  return [
+    ...review.rows.map(({ plan, title, step, result, issues }) => {
+      if (issues.length || !result) return `${title} · Review required. ${issues.join(" ")}`;
+      const measured = plan.measurements;
+      const setting = `before setting the ${measured.unit}`;
+      return [title, step ? `After framing in step ${step}, ${setting}` : setting,
+        `Cut ${formatStockLength(result.length)} from ${measured.tapeWidth} in FlexWrap for the ${formatStockLength(result.frame.width)} opening. Turn ${formatPreciseInches(measured.jambReturn)} up each jamb and lap ${formatPreciseInches(measured.faceLap)} over the exterior drainage plane.`,
+        measured.pan.kind === "back-dam"
+          ? `Verify the measured ${formatPreciseInches(measured.pan.rise)} back dam on the interior side.`
+          : "Verify the sill slopes toward the exterior.",
+        openingDrainageNote(measured),
+        "After setting the unit, air-seal its entire interior perimeter before installing trim.",
+      ].join(" · ");
+    }),
+    ...review.groups.flatMap(({ width, rolls }) => rolls.map(({ runs, left }, i) =>
+      `${width} in FlexWrap · Roll ${i + 1} · ${runs.map(({ title, length }) => `Cut ${formatStockLength(length)} for ${title}`).join(" / ")} · ${left ? `Keep ${formatStockLength(left)} for matching cuts.` : "Full roll used."}`)),
+  ];
+}

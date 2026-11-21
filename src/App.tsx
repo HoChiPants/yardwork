@@ -5,6 +5,9 @@ import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodRe
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
 import { SillGasketPanel } from "./SillGasketPanel";
+import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
+import { openingFlashingGuideLines, reviewOpeningFlashings, type OpeningFlashingPreview } from "./openingFlashing";
+import { flexWrap, openingAirSealGuide, openingFlashingScope } from "./openingFlashingReference";
 import { browserWorkshop, workshopAsset, workshopRequest } from "./workshopTransport";
 import { ZodError } from "zod";
 import { FloorBaseFields } from "./FloorBaseFields";
@@ -525,7 +528,7 @@ class SceneBoundary extends Component<
     );
   }
 }
-type WorkshopPanel = "prep" | "part" | "checks" | "materials" | "step" | "sections" | "tools" | "attachments" | "restraints" | "fasteners" | "connections" | "hinges" | "connectors" | "fit-stock" | "motion" | "lid-travel" | "site-clearances";
+type WorkshopPanel = "prep" | "part" | "checks" | "materials" | "step" | "sections" | "tools" | "attachments" | "restraints" | "fasteners" | "connections" | "hinges" | "connectors" | "fit-stock" | "motion" | "lid-travel" | "site-clearances" | "opening-flashing";
 export function App() {
   const [boot] = useState(initial);
   const draftTouched = useRef(false);
@@ -567,6 +570,8 @@ export function App() {
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
   const [shownTrimSeam, setShownTrimSeam] = useState<{ project: Project; pair: string; marker: TrimSeamMarker } | null>(null);
   const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
+  const [openingFlashingTarget, setOpeningFlashingTarget] = useState<{ projectId: string; sillId?: string } | null>(null);
+  const [openingFlashingPreview, setOpeningFlashingPreview] = useState<{ project: Project; value: OpeningFlashingPreview } | null>(null);
   const [shownSiteClearanceId, setShownSiteClearanceId] = useState<string | null>(null);
   const [ventDatumProjectId, setVentDatumProjectId] = useState<string | null>(null);
   const [dryerDuctProjectId, setDryerDuctProjectId] = useState<string | null>(null);
@@ -870,12 +875,20 @@ export function App() {
     if (next !== "lid-travel") setLidTravelInspection(null);
     if (next !== "checks") setShownAreaFinding(null);
     if (next !== "connections") setBaseRailDraft(null);
+    if (next !== "opening-flashing") setOpeningFlashingPreview(null);
     if (next !== "step" && guidePartFocus) exitGuidePartView();
     setPanelState(next);
   }
   function exitGuidePartView() {
     setGuidePartFocus(null);
     setStage(null);
+  }
+  function openOpeningFlashing(sillId?: string) {
+    setReturnToConnections(false);
+    setOpeningFlashingTarget({ projectId: project.id, sillId });
+    setOpeningFlashingPreview(null);
+    setPanel("opening-flashing");
+    inspectorFocus.scrollRef.current?.scrollTo(0, 0);
   }
   function showFindingArea(finding: Finding) {
     if (!finding.area) return;
@@ -912,6 +925,8 @@ export function App() {
     } else if (finding.attachmentPlanId) {
       openAttachments(finding.attachmentPlanId);
       if (finding.pieceId) setSelected(finding.pieceId);
+    } else if (finding.openingFlashingSillId) {
+      openOpeningFlashing(finding.openingFlashingSillId);
     } else if (finding.pieceId) {
       setSelectionScope("part");
       setSelectedSectionId(null);
@@ -1254,6 +1269,9 @@ export function App() {
         break;
       case "treated-wood":
         setPanel("prep");
+        break;
+      case "opening-flashing":
+        openOpeningFlashing(action.sillId);
         break;
       case "greenhouse-weatherseal": {
         const plan = project.motionPlans?.find(({ id }) => id === action.motionId);
@@ -1633,6 +1651,7 @@ export function App() {
   const connectionReview = useMemo(() => connectionCoverage(project), [project]);
   const woodJointDetails = useMemo(() => woodJointDecisionEntries(project), [project]);
   const sillGasketReview = useMemo(() => reviewSillGaskets(project), [project]);
+  const openingFlashingReview = useMemo(() => reviewOpeningFlashings(project), [project]);
   const shownSillGasket = sillGasketReview.rows.find(({ plan }) => plan.partId === shownSillGasketId);
   const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
   const needsWoodContacts = panel === "prep" || modal === "export" || printingGuide ||
@@ -1780,6 +1799,7 @@ export function App() {
   const exportWoodJointDetails = useMemo(() => woodJointDecisionEntries(exportGuide), [exportGuide]);
   const printTrimBacking = useMemo(() => trimBackerRodCutPlan(exportGuide, exportWoodJointDetails), [exportGuide, exportWoodJointDetails]);
   const printSillGaskets = useMemo(() => sillGasketGuideLines(reviewSillGaskets(exportGuide)), [exportGuide]);
+  const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
   const printCutSources = useMemo(
     () => inspectCutStock(exportGuide),
     [exportGuide],
@@ -2775,6 +2795,8 @@ export function App() {
               shownSillGasket={panel === "sections" && shownSillGasket?.outline
                 ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
                 : undefined}
+              shownOpeningFlashing={panel === "opening-flashing" && openingFlashingPreview?.project === project
+                ? openingFlashingPreview.value : undefined}
               shownPlumbingVentLayout={shownVentDatums}
               shownDryerDuctLayout={shownDryerDuct}
               shownCheckArea={shownCheckArea}
@@ -3545,6 +3567,24 @@ export function App() {
               />
             </>
           )}
+          {panel === "opening-flashing" && (
+            <>
+              <button type="button" className="text-button" onClick={() => setPanel("sections")}>← Back to sections</button>
+              <OpeningFlashingPanel key={JSON.stringify([project.id, openingFlashingTarget])}
+                project={project} review={openingFlashingReview} onChange={change}
+                initialSillId={openingFlashingTarget?.projectId === project.id ? openingFlashingTarget.sillId : undefined}
+                onShow={(value) => {
+                  setOpeningFlashingPreview(value ? { project, value } : null);
+                  if (value) {
+                    setStage(null);
+                    setExplode(false);
+                    setPlaying(false);
+                    setMode("select");
+                    inspectWorkspace();
+                  }
+                }} />
+            </>
+          )}
           {panel === "sections" && (
             <>
               <button className="button secondary full attachment-entry" onClick={() => setPanel("motion")}>Test door or drawer movement</button>
@@ -3584,6 +3624,7 @@ export function App() {
                 }
               />
               <button type="button" className="button secondary full" onClick={() => openSiteClearances("sections")}>Measured site clearances</button>
+              <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
                 shownId={shownSillGasketId} onChange={change} onShow={(id) => {
                   setShownSillGasketId(id);
@@ -3770,7 +3811,7 @@ export function App() {
                             ? shownCheckArea === f.area ? "Hide joints" : "Show joints in 3D"
                             : shownCheckArea === f.area ? "Hide gap" : "Show gap in 3D"}</small>}
                     </div>
-                    {(f.pieceId || f.area) && <ChevronRight size={13} />}
+                    {(f.pieceId || f.area || f.openingFlashingSillId) && <ChevronRight size={13} />}
                   </button>
                   {f === areaFinding && f.pieceId && supportTargets.length > 0 && (
                     <PanelSupportBlockFields
@@ -6334,6 +6375,14 @@ export function App() {
             <h2>Sill gasket cut plan</h2>
             <p>{sillGasketScope}</p>
             <ul>{printSillGaskets.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printOpeningFlashing.length > 0 && (
+          <section className="opening-flashing-print">
+            <h2>Opening flashing and drainage</h2>
+            <p>{openingFlashingScope}</p>
+            <ul>{printOpeningFlashing.map((line, i) => <li key={i}>{line}</li>)}</ul>
+            <p><a href={flexWrap.instructions}>DuPont installation guide</a>{" · "}<a href={openingAirSealGuide}>PNNL interior air seal</a></p>
           </section>
         )}
         {exportWoodJointDetails.length > 0 && (

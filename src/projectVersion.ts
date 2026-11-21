@@ -1,5 +1,5 @@
 /** Change the file version whenever persisted feature data changes incompatibly. */
-export const PROJECT_FORMAT_VERSION = 97 as const;
+export const PROJECT_FORMAT_VERSION = 98 as const;
 
 function projectObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);

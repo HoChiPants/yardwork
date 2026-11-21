@@ -446,6 +446,93 @@ test("an interrupted trim seam leaves access open and adds one exact backer rod 
   await expect(page.locator(".print-guide .trim-backer-rod-print")).toContainText("Keep 237 in");
 });
 
+test("rough opening flashing checks drainage and exports the continuous cut with the exact roll", async ({ page }) => {
+  const project = blank("Flanged window rough opening");
+  const step = project.steps[0].id;
+  const board = (name: string, width: number, height: number, x: number, y: number) =>
+    part(name, "two-six", [width, height, 5.5], [x, y, 0], step, "Window framing");
+  const sill = board("Rough sill", 36, 1.5, 0, 32.75);
+  const left = board("Left jamb", 1.5, 48, -18.75, 57.5);
+  const right = board("Right jamb", 1.5, 48, 18.75, 57.5);
+  const head = board("Rough head", 39, 3, 0, 83);
+  project.pieces.push(sill, left, right, head);
+
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "framed-opening.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 97 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  const ask = async (prompt: string) => {
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(prompt);
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+    return dialog.getByRole("region", { name: "Opening flashing review", exact: true });
+  };
+  await (await ask("How should I flash the window opening?"))
+    .getByRole("button", { name: "Plan opening flashing", exact: true }).click();
+  const panel = page.getByRole("region", { name: "Opening flashing plan" });
+  for (const [name, label] of [["Rough sill", "Rough sill"], ["First rough jamb", "Left jamb"], ["Second rough jamb", "Right jamb"], ["Rough head", "Rough head"]]) {
+    const field = panel.getByRole("combobox", { name, exact: true });
+    const option = field.getByRole("option", { name: new RegExp(label + "$") });
+    const value = await option.getAttribute("value");
+    expect(value).toBeTruthy();
+    await field.selectOption(value!);
+  }
+  await panel.getByRole("spinbutton", { name: "Sheathing past the framing face", exact: true }).fill("0.5");
+  await panel.getByRole("spinbutton", { name: "Wall face to inside edge of unit", exact: true }).fill("4.5");
+  await panel.getByRole("spinbutton", { name: "Exterior face lap", exact: true }).fill("2.5");
+  await panel.getByRole("combobox", { name: "Sill drainage detail", exact: true }).selectOption("back-dam");
+  await panel.getByRole("spinbutton", { name: "Measured back-dam height", exact: true }).fill("0.5");
+  await panel.getByRole("combobox", { name: "Exterior sill flange", exact: true }).selectOption("gaps");
+  const centers = panel.getByRole("textbox", { name: "Gap centers from the left exterior corner (in)", exact: true });
+  const review = panel.getByRole("button", { name: "Check flashing fit", exact: true });
+  await centers.fill("3, , 33");
+  await review.click();
+  await expect(panel.getByRole("alert")).toContainText("comma");
+  await centers.fill("3, 33");
+  await review.click();
+  await expect(panel.getByRole("status")).toContainText("6 to 12 in apart");
+  await expect(panel.getByRole("button", { name: "Save flashing plan", exact: true })).toHaveCount(0);
+  await centers.fill("3, 13, 23, 33");
+  await review.click();
+  await expect(panel.getByRole("status")).toContainText("One continuous 4 ft cut");
+  await expect(page.getByTestId("opening-flashing-apron")).toContainText("Exterior apron and drainage");
+  await expect(page.getByTestId("opening-flashing-air-seal")).toContainText("Interior air seal");
+  await panel.getByRole("button", { name: "Save flashing plan", exact: true }).click();
+  await expect(panel.getByRole("list", { name: "Saved flashing plans" })).toContainText("Saved · Cut 4 ft");
+  await panel.getByText("Flashing cuts and leftovers", { exact: true }).click();
+  await expect(panel.getByText(/Keep 71 ft for matching cuts/)).toBeVisible();
+
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await dialog.getByRole("button", { name: "Add 1 roll of DuPont FlexWrap 9 in × 75 ft", exact: true }).click();
+  await expect(dialog.getByText("1 roll · #205187045", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  const answer = await ask("Review flashing for P001");
+  await expect(answer).toContainText("Cut one 4 ft piece");
+  await expect(answer).toContainText("3 in, 13 in, 23 in, 33 in");
+  await answer.getByRole("button", { name: "Open flashing plan", exact: true }).click();
+  await panel.getByRole("button", { name: "Show saved flashing in 3D", exact: true }).click();
+  await expect(page.getByTestId("opening-flashing-air-seal")).toBeVisible();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/## Opening flashing and drainage[\s\S]+Cut 4 ft[\s\S]+entire interior perimeter[\s\S]+Keep 71 ft/);
+  await expect(page.locator(".print-guide .opening-flashing-print")).toContainText("Keep 71 ft");
+});
+
 test("a crosscut practice plan reuses the first scrap on two blanks", async ({ page }) => {
   await page.goto("./");
   await page.getByRole("button", { name: "Cut pool (0)", exact: true }).click();

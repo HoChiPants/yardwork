@@ -33,6 +33,8 @@ import type { SaunaVentilationReview } from "./saunaVentilation";
 import { cedarbrookLining } from "./saunaLiningReference";
 import type { SunliteProfileRun } from "./sunliteTakeoff";
 import type { TrimSeamMarker } from "./trimSeamGeometry";
+import type { OpeningFlashingPreview } from "./openingFlashing";
+import { OpeningFlashingMarkers } from "./OpeningFlashingMarkers";
 import { DrawerSlideMountMarkers } from "./DrawerSlideMountMarkers";
 import { GreenhouseLatchMarkers } from "./GreenhouseLatchMarkers";
 import { RodSupportMarkers } from "./RodSupportMarkers";
@@ -73,6 +75,7 @@ export type SceneProps = {
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
   shownTrimSeam?: TrimSeamMarker;
   shownSillGasket?: { points: V3[]; needsReview: boolean };
+  shownOpeningFlashing?: OpeningFlashingPreview;
   shownPlumbingVentLayout?: PlumbingVentLayout;
   shownDryerDuctLayout?: DryerDuctLayout;
   shownCheckArea?: Finding["area"];
@@ -1372,6 +1375,9 @@ function World(props: SceneProps) {
             </span>
           </Html>
         </group>
+      )}
+      {!isolated && props.shownOpeningFlashing && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <OpeningFlashingMarkers preview={props.shownOpeningFlashing} />
       )}
       {vent && !props.lidPreview && !props.motionPreview && <PlumbingVentMarkers layout={vent} />}
       {!!ductRuns.length && !props.lidPreview && !props.motionPreview && <DryerDuctMarkers runs={ductRuns} />}

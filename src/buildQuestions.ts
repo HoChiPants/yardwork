@@ -2,7 +2,7 @@ import type { BuildPreparationAction } from "./buildPreparation";
 import type { Finding } from "./engine";
 import { drawerBoxOpening } from "./drawerBoxes";
 import { checkGreenhouseDoorSeal, reviewGreenhouseDoorSeal } from "./greenhouseDoorSeal";
-import { formatPreciseInches } from "./measurement";
+import { formatPreciseInches, formatStockLength } from "./measurement";
 import { inspectLidTravel } from "./lidTravelFindings";
 import {
   motionDistance,
@@ -14,12 +14,15 @@ import type { Project } from "./model";
 import type { MotionPlan } from "./motionPlanSchema";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
+import { openingDrainageNote, reviewOpeningFlashings } from "./openingFlashing";
+import { openingFlashingScope } from "./openingFlashingReference";
 import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./treatedWood";
 
 export type BuildQuestion =
   | { kind: "checks" }
   | { kind: "motion"; subject: string }
   | { kind: "greenhouse-weatherseal" }
+  | { kind: "opening-flashing"; sillLabel?: string }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
   | { kind: "offcuts"; label?: string };
@@ -30,6 +33,7 @@ export type BuildQuestionAction =
   | { kind: "cut-pool" }
   | { kind: "motion-setup" }
   | { kind: "greenhouse-weatherseal"; motionId: string }
+  | { kind: "opening-flashing"; sillId?: string }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
@@ -77,6 +81,7 @@ const offcutQuestion =
 const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (p\d{1,6}) and (p\d{1,6})$/i;
 const doorSealQuestion =
   /^(?:how (?:can|do|should) i (?:weatherstrip|weatherseal|seal) (?:the |my )?greenhouse door|(?:check|review|plan|show) (?:the )?(?:weatherstrip|weatherseal|weatherstripping) (?:for|on) (?:the |my )?greenhouse door)$/i;
+const openingFlashingQuestion = /^(?:how (?:can|do|should) i (?:flash|air[ -]seal) (?:the |my )?(?:window|door) opening|(?:plan|review|check|show) (?:(?:sill|opening|window|door) )?flashing)(?: (?:at|on|for) (p\d{1,6}))?$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -94,6 +99,8 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
   if (offcutQuestion.test(text)) return { kind: "offcuts" };
   if (doorSealQuestion.test(text)) return { kind: "greenhouse-weatherseal" };
+  const flashing = openingFlashingQuestion.exec(text);
+  if (flashing) return { kind: "opening-flashing", ...(flashing[1] && { sillLabel: labelKey(flashing[1]) }) };
   const motion = motionQuestion.exec(text);
   return motion
     ? { kind: "motion", subject: motion.slice(1).find(Boolean)! }
@@ -423,6 +430,31 @@ export function answerBuildQuestion(
             link: { label: "Open door movement", action: { kind: "greenhouse-weatherseal", motionId: motion.id } },
           };
         }),
+      };
+    }
+    case "opening-flashing": {
+      const title = "Opening flashing review";
+      const sillId = question.sillLabel
+        ? ensurePartLabels(project).partLabels.find(({ label }) => label === question.sillLabel)?.partId
+        : undefined;
+      if (question.sillLabel && (!sillId || !project.pieces.some(({ id, offcut }) => id === sillId && !offcut)))
+        return { title, detail: "Use the part label of an active rough sill in the model." };
+      const { rows } = reviewOpeningFlashings(project);
+      const relevant = sillId ? rows.filter(({ plan }) => plan.members.sill === sillId) : rows;
+      return {
+        title,
+        detail: relevant.length
+          ? "The recorded sill cuts and drainage details follow the four framing members."
+          : "Choose the modeled sill, two jambs and head. Keep the exterior sill outlets clear, then seal the interior perimeter after setting the unit.",
+        scope: openingFlashingScope,
+        rows: relevant.slice(0, 6).map(({ plan, title, issues, result }) => ({
+          id: plan.members.sill,
+          title,
+          detail: !result || issues.length ? issues.join(" ") :
+            `Cut one ${formatStockLength(result.length)} piece of ${plan.measurements.tapeWidth} in FlexWrap. ${openingDrainageNote(plan.measurements)}`,
+          link: { label: "Open flashing plan", action: { kind: "opening-flashing", sillId: plan.members.sill } },
+        })),
+        link: { label: "Plan opening flashing", action: { kind: "opening-flashing", sillId } },
       };
     }
     case "drawer-box": {

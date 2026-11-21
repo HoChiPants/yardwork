@@ -301,6 +301,8 @@ For dry interior trim, record a **Seal exposed seam** joint detail, then open **
 
 **List → Estimate trim sealant** uses measured gaps and a chosen coverage basis to estimate cartridges for dry interior wood trim. Confirm the estimate to retain the measured takeoff in the shopping list and generated guide. [Sealing and air-barrier references](docs/sealing-and-air-barrier.md)
 
+**Sections → Plan opening flashing** uses an actual rough sill, two jambs and a head to size a DuPont FlexWrap sill cut. Check the exterior lap, interior depth, back dam and drainage in 3D. The guide groups cuts and leftovers by roll width, and List can add the reviewed 9 in Home Depot roll. Ask **“How should I flash the window opening?”** or **“Review flashing for P001.”** [Opening flashing references](docs/sealing-and-air-barrier.md#rough-opening-pans-and-drainage)
+
 **List → Estimate wood glue** lists the largest modeled overlap for each current glue joint. Confirm the total area you will coat across your nonstructural joints and preview the quantity of 16 oz bottles. Save or replace the estimate in the shopping list and build guide after checking the fit. [Titebond product and application instructions](https://titebond.com/print/product/e8d40b45-0ab3-49f7-8a9c-b53970f736af)
 
 The SD9112R100 purchase is an exact 100-screw box. Grip-Rite 16C5 is an advertised 5-lb box with unknown exact nail count; approximate source counts never determine required boxes, nail coverage or spares. Its former Lowe’s reference is retired/conflicting, so no current substitute is inferred. Purchases create no installed hardware or connector schedule. See [fastener purchase sources](docs/common-fastener-purchases.md).

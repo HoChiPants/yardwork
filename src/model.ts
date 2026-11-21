@@ -9,6 +9,7 @@ import { z } from "zod";
 import { cutSourceAxesSchema, tubeCutPlansSchema, tubeKerfSchema, woodKerfSchema } from "./cutSourceAxes";
 import { offcutCutSchema } from "./offcutCutSchema";
 import { greenhouseDoorSealsSchema } from "./greenhouseDoorSealSchema";
+import { openingFlashingPlansSchema } from "./openingFlashingSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -454,6 +455,7 @@ export const currentProjectSchema = z
     ).optional(),
     drawerSlideMounts: drawerSlideMountsSchema.optional(),
     greenhouseDoorSeals: greenhouseDoorSealsSchema.optional(),
+    openingFlashings: openingFlashingPlansSchema.optional(),
     greenhouseLatchPlans: z.array(greenhouseLatchSchema).max(50).refine(
       (plans) => new Set(plans.map(({ motionId }) => motionId)).size === plans.length,
       "Keep one latch layout per door swing.",

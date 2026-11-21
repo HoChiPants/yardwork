@@ -1,4 +1,6 @@
 import { trimSealant } from "./trimSealantReference";
+import { reviewOpeningFlashings } from "./openingFlashing";
+import { flexWrap } from "./openingFlashingReference";
 import { greenhouseDoorSealTakeoff } from "./greenhouseDoorSeal";
 import { doorSeal } from "./greenhouseDoorSealReference";
 import { trimBackerRodCutPlan, trimSeamPurchaseSummary, woodJointDecisionEntries } from "./woodJointDecisions";
@@ -173,6 +175,11 @@ export function homeDepotPurchaseNeeds(
     const seal = greenhouseDoorSealTakeoff(project);
     include(doorSeal.id, "Reviewed greenhouse door weatherseal cuts", seal.required,
       seal.required === null ? "Review the saved door weatherseal plans before adding packs." : undefined);
+  }
+  if (project.openingFlashings?.length) {
+    const { groups } = reviewOpeningFlashings(project);
+    const retail = groups.find(({ width }) => width === flexWrap.retailWidth);
+    if (retail) include(flexWrap.id, "Checked rough opening sill cuts", retail.rolls.length);
   }
   if (project.motionPlans?.length) {
     const slideReview = drawerSlidePurchaseReview(project);

@@ -21,6 +21,8 @@ test("measure a kitchenette sink drain on a phone and keep the cut, interference
   await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("Fit a sink drain");
   await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
   await dialog.getByRole("button", { name: "Open sink drains", exact: true }).click();
+  await expect(dialog.getByRole("heading", { name: "Fit a sink drain", exact: true })).toBeInViewport();
+  await expect(dialog.getByRole("button", { name: "Close dialog", exact: true })).toBeInViewport();
   const field = (name: string) => dialog.getByRole("spinbutton", { name, exact: true });
   const positions = await Promise.all(["X", "Y", "Z"].map((axis) => field(`Tailpiece end ${axis}`).boundingBox()));
   expect(positions.every((box) => box && box.width >= 68 && box.x + box.width < 390)).toBe(true);

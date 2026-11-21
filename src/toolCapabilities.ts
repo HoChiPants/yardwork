@@ -11,6 +11,7 @@ export const toolCapabilities = [
   "wood-rip",
   "plastic-cut",
   "pex-cut",
+  "pex-insertion-mark",
   "metal-cut",
   "metal-deburr",
   "profile-cut",

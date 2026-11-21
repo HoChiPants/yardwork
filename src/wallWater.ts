@@ -9,6 +9,7 @@ import {
   studBoreFace, studBoreRatio,
 } from "./wallWaterReference";
 import type { WaterRun, WaterRunInput } from "./wallWaterSchema";
+import { waterFittingPorts } from "./waterFittingSchema";
 
 const tolerance = 1e-6;
 const closeVector = (a: V3, b: V3) => a.every((v, index) => Math.abs(v - b[index]) < tolerance);
@@ -78,7 +79,7 @@ export function measureWaterRun(project: Project, input: WaterRunInput, run?: Wa
   const envelope = prepareCollisionBox(pipe.size, pipe.position, pipe.rotation);
   const members = new Set(wall.pieceIds), owned = new Set(run ? waterRunMembers(run) : []);
   if (run) for (const fitting of project.waterFittings ?? [])
-    if (fitting.a.runId === run.id || fitting.b.runId === run.id) owned.add(fitting.pieceId);
+    if (waterFittingPorts(fitting).some(({ runId }) => runId === run.id)) owned.add(fitting.pieceId);
   if (project.workZone) {
     const { width, height, depth } = project.workZone;
     const extents = [[-width / 2, width / 2], [0, height], [-depth / 2, depth / 2]];
@@ -209,7 +210,7 @@ export function waterRunGuide(project: Project, run: WaterRun) {
 export function removeWaterRun(project: Project, run: WaterRun, keepPipe = false, keepFittings = false): Project {
   const ids = new Set(waterRunMembers(run));
   const attached = new Set(keepFittings ? [] : (project.waterFittings ?? [])
-    .filter(({ a, b }) => a.runId === run.id || b.runId === run.id).map(({ pieceId }) => pieceId));
+    .filter((fitting) => waterFittingPorts(fitting).some(({ runId }) => runId === run.id)).map(({ pieceId }) => pieceId));
   for (const id of attached) ids.add(id);
   const runs = project.waterRuns?.filter(({ id }) => id !== run.id);
   const pieces = project.pieces.flatMap((piece) => {

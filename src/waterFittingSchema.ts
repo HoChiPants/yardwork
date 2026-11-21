@@ -9,12 +9,26 @@ export const waterFittingInput = z.strictObject({
   a: runEnd,
   b: runEnd,
   reach: z.tuple([measuredReach, measuredReach]),
+  branch: z.strictObject({ port: runEnd, reach: measuredReach }).optional(),
 });
 export type WaterRunEnd = z.infer<typeof runEnd>;
 export type WaterFittingInput = z.infer<typeof waterFittingInput>;
+export const splitWaterMainInput = z.strictObject({
+  mainId: id,
+  branch: runEnd,
+  inlineLength: z.number().finite().positive().max(12),
+  branchReach: measuredReach,
+});
 export const waterFittingSchema = waterFittingInput.extend({
   id,
   pieceId: id,
   materialId: z.enum(waterFittingIds as [WaterFittingId, ...WaterFittingId[]]),
-}).refine(({ a, b }) => a.runId !== b.runId, "Choose two different straight runs.");
+}).refine((fitting) => {
+  const ports = waterFittingPorts(fitting);
+  return new Set(ports.map(({ runId }) => runId)).size === ports.length;
+}, "Choose a different straight run for each socket.");
 export type WaterFitting = z.infer<typeof waterFittingSchema>;
+
+export function waterFittingPorts({ a, b, branch }: Pick<WaterFittingInput, "a" | "b" | "branch">) {
+  return branch ? [a, b, branch.port] : [a, b];
+}

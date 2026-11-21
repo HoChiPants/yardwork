@@ -4,6 +4,8 @@ Use **Sections → Review lid travel** to play or scrub a storage-seat lid. Play
 
 For a storage lid, **Lid travel → Fit a folding lid stay** lets you enter the measured pin positions and arm lengths. Preview the linkage, test for a reach limit up to 90°, and add a separately selected handed Everbilt model to the Home Depot list. The fit and pin marks appear in the build guide.
 
+Use **Sections → Plan a wall water line** to fit straight PEX to a generated nonbearing wall. Once you have a main and a perpendicular branch, choose **Connect PEX runs → Tee into a continuous main** or ask **“Add a tee to the PEX main.”** Preview the two main cuts and the branch cut, with separate insertion marks and the matching Home Depot fitting. A previously recorded main keeps its stock source after splitting. Import the [kitchenette water supply study](public/examples/plumbing/kitchen-tee.yardwork.json) to see a finished layout and its [generated guide](public/examples/plumbing/kitchen-tee-guide.md).
+
 Under **Checks → Project code references**, a through-wall plumbing vent can use measured wall, terminal, lot-line and grade points. These positions appear in 3D and the project guide. Enter the build jurisdiction, code path and date for the Utah review.
 
 For a closet with sourced Everbilt rods, open **Sections → Fit closet rods → End socket backplates** after saving the rod fit. Measure each delivered backplate from the rod center. Yardwork shows where the measured envelope crosses a retained panel edge or cutout, and exports the marks with the build guide.

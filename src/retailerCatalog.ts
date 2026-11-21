@@ -16,7 +16,7 @@ import { cedarbrookLining } from "./saunaLiningReference";
 import { cedarbrookDoor } from "./saunaDoorReference";
 import { interiorDoor } from "./doorWall";
 import { nailShield, pexCutter, pexInstallation, pexPipes, pexSpec, pexStockLength, wallWaterReviewedAt, type PexPipeId } from "./wallWaterReference";
-import { maxFittingInstructions, maxFittingSpec, maxInsertionChart, waterFittingDimensions, waterFittingIds, waterFittingProducts, waterFittingsReviewedAt } from "./waterFittingReference";
+import { maxFittingInstructions, maxFittingSpec, maxInsertionChart, waterDepthGauge, waterFittingDimensions, waterFittingIds, waterFittingName, waterFittingProduct, waterFittingsReviewedAt, waterTeesReviewedAt } from "./waterFittingReference";
 import { cedarbrookFoil } from "./saunaFoilReference";
 import { saunaCeilingBatt, saunaCeilingJoists, saunaCeilingJoistSize, saunaCeilingReviewedAt } from "./saunaCeilingReference";
 import { owensCorningWallBatt as wallBatt } from "./saunaWallReference";
@@ -3364,6 +3364,19 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       [pexCutter.product], "Square-cut the supported 1/2 and 3/4 in PEX sizes.",
       ["Check the delivered model, blade and actual pipe; confirm fitting-specific end preparation."])],
   }),
+  toolReference({
+    id: waterDepthGauge.id, name: "SharkBite UR702A Max insertion depth gauge",
+    manufacturer: "SharkBite", manufacturerPartNumber: waterDepthGauge.model, verifiedAt: waterTeesReviewedAt,
+    offers: [hd(waterDepthGauge.internet, waterDepthGauge.model, waterDepthGauge.sku)],
+    sources: [
+      { url: waterDepthGauge.listing, verifiedAt: waterTeesReviewedAt, note: "Exact tool listing supports both fitting generations." },
+      { url: waterDepthGauge.product, verifiedAt: waterTeesReviewedAt, note: "Manufacturer shows depth marking for 1/2, 3/4 and 1 in tubing." },
+      { url: maxFittingInstructions, verifiedAt: waterTeesReviewedAt, note: "Use the gauge and a permanent marker to prepare the socket-specific insertion mark." },
+    ],
+    toolCapabilityEvidence: [toolEvidence(["pex-insertion-mark"], "manufacturer-product-specification",
+      [waterDepthGauge.product, maxFittingInstructions], "Mark the specified insertion depth for 1/2 and 3/4 in SharkBite Max sockets.",
+      ["Use the marked Max side and the correct pipe-size recess with a permanent marker."])],
+  }),
   {
     id: nailShield.productId, name: "Simpson Strong-Tie NS1 1½ × 3 in nail stop",
     manufacturer: "Simpson Strong-Tie", manufacturerPartNumber: nailShield.model,
@@ -3380,23 +3393,23 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     limitToQualifiedRoles: true, discrepancies: [], capabilities: [],
   },
   ...waterFittingIds.map((id): RetailerProduct => {
-    const fitting = waterFittingProducts[id];
+    const fitting = waterFittingProduct(id);
     const url = `https://www.homedepot.com/p/${fitting.internet}`;
-    const kind = fitting.kind === "elbow" ? "90° elbow" : "straight coupling";
+    const verifiedAt = fitting.branch ? waterTeesReviewedAt : waterFittingsReviewedAt;
     return {
-      id, name: `SharkBite Max ${pexPipes[fitting.pipe].nominal} in ${kind}`,
+      id, name: waterFittingName(id),
       manufacturer: "SharkBite", manufacturerPartNumber: fitting.model, identityBasis: "manufacturer-part",
-      category: "equipment", status: "reviewed-specs", verifiedAt: waterFittingsReviewedAt,
+      category: "equipment", status: "reviewed-specs", verifiedAt,
       profile: profile("equipment", waterFittingDimensions(id), 1, { finish: "Brass" }),
       purchaseSpec: { kind: "counted", count: 1, sourceRefs: [url] },
       offers: [hd(fitting.internet, fitting.model, fitting.sku)],
       sources: [
-        { url, verifiedAt: waterFittingsReviewedAt, note: "Exact SharkBite Max single fitting, with the pictured model and nominal pipe size." },
-        { url: maxFittingSpec, verifiedAt: waterFittingsReviewedAt, note: "Max family dimensional drawing. Published dimensions indicate the nominal exterior envelope." },
-        { url: maxInsertionChart, verifiedAt: waterFittingsReviewedAt, note: `Max insertion depth ${fitting.insertion} in for the selected nominal size.` },
-        { url: maxFittingInstructions, verifiedAt: waterFittingsReviewedAt, note: "Verify the square end, depth mark, seating, service spacing and local testing requirements." },
+        { url, verifiedAt, note: "Exact SharkBite Max single fitting, with the pictured model and nominal pipe sizes." },
+        { url: maxFittingSpec, verifiedAt, note: "Max family dimensional drawing. Published dimensions indicate the nominal exterior envelope." },
+        { url: maxInsertionChart, verifiedAt, note: `Max insertion depth ${fitting.insertion} in inline${fitting.branch ? ` and ${fitting.branch.insertion} in at the branch` : ""}.` },
+        { url: maxFittingInstructions, verifiedAt, note: "Verify the square end, depth mark, seating, service spacing and local testing requirements." },
       ],
-      roleQualifications: [{ role: "pexConnection", scope: "One SharkBite Max fitting between two compatible same-size PEX runs.",
+      roleQualifications: [{ role: "pexConnection", scope: "One SharkBite Max fitting with compatible PEX sized for each socket.",
         sourceRefs: [maxFittingSpec, maxInsertionChart, maxFittingInstructions],
         requirements: ["Confirm delivered dimensions and pipe approval. Field-check support, insertion access and test requirements."] }],
       limitToQualifiedRoles: true, discrepancies: [], capabilities: [], toolCapabilityEvidence: [],

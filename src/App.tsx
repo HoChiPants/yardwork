@@ -701,6 +701,7 @@ export function App() {
   const [assistantTarget, setAssistantTarget] = useState("");
   const [waterRunTarget, setWaterRunTarget] = useState<string>();
   const [waterFittingTarget, setWaterFittingTarget] = useState<string>();
+  const [waterFittingTee, setWaterFittingTee] = useState(false);
   const [snap, setSnap] = useState(true),
     [explode, setExplode] = useState(false),
     [xray, setXray] = useState(false),
@@ -1338,6 +1339,7 @@ export function App() {
         break;
       case "water-fitting":
         setWaterFittingTarget(action.fittingId);
+        setWaterFittingTee(!!action.tee);
         setModal("water-fitting");
         break;
       case "greenhouse-weatherseal": {
@@ -3836,7 +3838,7 @@ export function App() {
               <button type="button" className="button secondary full" onClick={() => setModal("doorway")}>Plan an interior doorway</button>
               <button type="button" className="button secondary full" onClick={() => { setWaterRunTarget(undefined); setModal("wall-water"); }}>Plan a wall water line</button>
               {((project.waterRuns?.length ?? 0) >= 2 || !!project.waterFittings?.length) &&
-                <button type="button" className="button secondary full" onClick={() => { setWaterFittingTarget(undefined); setModal("water-fitting"); }}>Connect PEX runs</button>}
+                <button type="button" className="button secondary full" onClick={() => { setWaterFittingTarget(undefined); setWaterFittingTee(false); setModal("water-fitting"); }}>Connect PEX runs</button>}
               <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
@@ -5328,7 +5330,7 @@ export function App() {
                 setModal(null);
                 notify("Planned water line removed.");
               })} />}
-            {modal === "water-fitting" && <WaterFittingPanel project={project} initialFitting={waterFittingTarget}
+            {modal === "water-fitting" && <WaterFittingPanel project={project} initialFitting={waterFittingTarget} startWithTee={waterFittingTee}
               onApply={(draft) => safe(() => {
                 if (current.current !== project) throw Error("The workspace changed. Preview the connection again.");
                 change(draft.project);
@@ -5341,7 +5343,7 @@ export function App() {
                 setSelectionScope("part");
                 setPanel("part");
                 setModal(null);
-                notify("PEX connection and both pipe cuts updated.");
+                notify("PEX connection and pipe cuts updated.");
               })}
               onRemove={(fitting) => safe(() => {
                 change((live) => removeWaterFitting(live, fitting));

@@ -2,15 +2,18 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { assemblyStages } from "../src/assemblyStages";
 import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
-import { bom, guideMarkdown, validate } from "../src/engine";
+import { bom, guideMarkdown, inspectCutStock, validate } from "../src/engine";
 import { homeDepotShoppingList } from "../src/handoff";
+import { addMeasuredOffcut } from "../src/measuredOffcuts";
 import { blank, part, projectSchema, type Project } from "../src/model";
 import { removeSection, transformSection } from "../src/sections";
 import { emptyWallTrace, reviewWallTrace } from "../src/wallTrace";
 import { previewWaterRun } from "../src/wallWaterApply";
-import { previewWaterFitting } from "../src/waterFittingApply";
+import { previewSplitWaterMain, previewWaterFitting } from "../src/waterFittingApply";
 import { removeWaterFitting, reviewWaterFitting } from "../src/waterFittings";
 import type { WaterFittingInput } from "../src/waterFittingSchema";
+import { reviewWaterRun } from "../src/wallWater";
+import { toolChecklist } from "../src/tools";
 
 function corner() {
   const first = reviewWallTrace(blank("Utility corner"), { ...emptyWallTrace(), a: [-80, 0], b: [-4, 0] }).candidate;
@@ -138,4 +141,105 @@ test("a third run can connect at the other end of an already linked pipe", () =>
   assert.equal(second.project.waterFittings?.length, 2);
   for (const entry of second.project.waterFittings!) assert.ok(reviewWaterFitting(second.project, entry).layout);
   assert.equal(bom(second.project).find(({ id }) => id === "hd-sharkbite-ur008a")?.quantity, 2);
+});
+
+function branchLayout({ onHand = false, mainSize = "hd-pex-u870w10", branchSize = "hd-pex-u860w10" } = {}) {
+  const first = reviewWallTrace(blank("Kitchen service tee"), {
+    ...emptyWallTrace(), a: [-54, 0], b: [54, 0], stock: "hd-spf-2x4-10",
+  }).candidate;
+  let framed = reviewWallTrace(first, { ...emptyWallTrace(), a: [0, 4], b: [0, 52] }).candidate;
+  if (onHand) framed = addMeasuredOffcut(framed, framed.steps[0].id, "hd-pex-u870w10", [110, 0.875, 0.875], "Shop supply remnant");
+  const main = previewWaterRun(framed, { name: "Kitchen main", sectionId: framed.sections[0].id, materialId: mainSize,
+    start: 3, end: 105, height: 24, depth: 0, bore: 1.125, reuse: onHand });
+  const branch = previewWaterRun(main.project, { name: "Island feed", sectionId: framed.sections[1].id, materialId: branchSize,
+    start: -2, end: 45, height: 24, depth: 0, bore: 1.125 });
+  const draft = { mainId: main.run.id, branch: { runId: branch.run.id, end: "start" },
+    inlineLength: 3.5, branchReach: 1.65 };
+  return { project: branch.project, main: main.run, branch: branch.run, draft };
+}
+
+test("a reducing tee splits an existing supply into two in-line cuts and seats the smaller branch separately", () => {
+  const { project, main, branch, draft } = branchLayout();
+  const plan = previewSplitWaterMain(project, draft);
+  assert.equal(plan.fitting.materialId, "hd-sharkbite-ur412a");
+  assert.equal(plan.fitting.a.runId, main.id);
+  assert.equal(plan.fitting.branch?.port.runId, branch.id);
+  assert.equal(plan.split.before, 102);
+  close(plan.split.left, 50.5);
+  close(plan.split.right, 50.5);
+  close(plan.split.removed, 1);
+  close(plan.pipeCuts.find(({ label }) => label === "Island feed")!.after, 48.35);
+  assert.deepEqual(plan.layout.positions.map(({ insertion }) => insertion), [1.25, 1.25, 1]);
+  assert.deepEqual(plan.stocks.map(({ quantity }) => quantity), [1, 1]);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(plan.project)));
+  assert.ok(reopened.waterRuns?.every((run) => reviewWaterRun(reopened, run).measured));
+  assert.ok(reviewWaterFitting(reopened, plan.fitting).layout);
+  assert.match(JSON.stringify(homeDepotShoppingList(reopened)), /325997410/);
+  assert.match(guideMarkdown(reopened), /Island feed · Cut pipe to 48.35 in. Mark 1 in of insertion at the start/);
+  assert.match(guideMarkdown(reopened), /Inline pipe ends · 1 in apart/);
+  assert.ok(toolChecklist(reopened).requirements.some(({ capability, referenceUrls }) =>
+    capability === "pex-insertion-mark" && referenceUrls.includes("https://www.homedepot.com/p/329736096")));
+  const stages = assemblyStages(reopened).map(({ title }) => title);
+  assert.ok(stages.indexOf("Rough in Island feed") < stages.indexOf("Connect Kitchen main and Kitchen main · B and Island feed"));
+  assert.deepEqual(buildQuestion("Add a tee to the PEX main for the island"), { kind: "water-fitting", tee: true });
+  assert.equal(project.waterRuns?.length, 2);
+});
+
+test("a recorded main keeps both splits, original offcut and center trim on one on-hand stock source", () => {
+  const { project, main, branch, draft } = branchLayout({ onHand: true });
+  const source = project.pieces.find(({ id }) => id === main.pipeId)!.cutStock!;
+  const plan = previewSplitWaterMain(project, draft);
+  assert.ok(plan.split.recorded);
+  const assigned = plan.project.pieces.filter(({ cutStock }) => cutStock?.id === source.id);
+  assert.equal(assigned.length, 4);
+  for (const kept of assigned.filter(({ offcut }) => !offcut)) close(kept.size[1], 50.5);
+  assert.deepEqual(assigned.filter(({ offcut }) => offcut).map(({ size }) => size[1]).sort((a, b) => a - b), [1, 8]);
+  assert.ok(inspectCutStock(plan.project).valid.has(source.id));
+  assert.equal(plan.stock?.quantity, 0);
+  assert.ok(plan.project.onHandCutSources?.includes(source.id));
+  const removed = removeSection(plan.project, branch.sectionId);
+  assert.deepEqual(removed.waterFittings, []);
+  assert.ok(!removed.pieces.some(({ id }) => id === plan.fitting.pieceId));
+});
+
+test("splitting a main preserves an existing far-end coupling and its dependent guide stage", () => {
+  const { project, main, draft } = branchLayout();
+  const frame = reviewWallTrace(project, { ...emptyWallTrace(), a: [64, 0], b: [112, 0] }).candidate;
+  const extension = previewWaterRun(frame, {
+    name: "Utility outlet", sectionId: frame.sections.at(-1)!.id, materialId: main.materialId,
+    start: -2, end: 45, height: 24, depth: 0, bore: 1.125,
+  });
+  const connected = previewWaterFitting(extension.project, {
+    a: { runId: main.id, end: "end" }, b: { runId: extension.run.id, end: "start" }, reach: [1.3, 1.3],
+  });
+  const split = previewSplitWaterMain(connected.project, draft);
+  const coupling = split.project.waterFittings?.find(({ id }) => id === connected.fitting.id);
+  assert.equal(coupling?.a.runId, split.fitting.b.runId);
+  assert.equal(coupling?.pieceId, connected.fitting.pieceId);
+  assert.ok(reviewWaterFitting(split.project, coupling!).layout);
+  assert.ok(reviewWaterFitting(split.project, split.fitting).layout);
+});
+
+test("all three tee sockets reject occupied, incompatible or obstructed layouts before changing the draft", () => {
+  const { project, draft } = branchLayout();
+  assert.throws(() => previewSplitWaterMain(project, { ...draft, branchReach: 0.9 }), /the branch must allow 1 in/);
+  assert.throws(() => previewSplitWaterMain(project, { ...draft, branch: { ...draft.branch, end: "end" } }), /facing the main/);
+  const obstruction = part("Branch shoulder obstruction", "plywood", [0.15, 0.2, 0.3], [0.58, 24, 1.35], project.steps[0].id, "Kitchen");
+  const blocked = { ...project, pieces: [...project.pieces, obstruction] };
+  assert.throws(() => previewSplitWaterMain(blocked, draft), /fitting envelope hits Branch shoulder obstruction/);
+  const plan = previewSplitWaterMain(project, draft);
+  assert.throws(() => previewSplitWaterMain(plan.project, draft), /already belongs to another fitting/);
+  const revised = previewWaterFitting(plan.project, {
+    a: plan.fitting.a, b: plan.fitting.b, reach: [1.76, 1.76],
+    branch: { ...plan.fitting.branch!, reach: 1.68 },
+  }, plan.fitting.id);
+  assert.equal(revised.fitting.pieceId, plan.fitting.pieceId);
+  assert.ok(reviewWaterFitting(revised.project, revised.fitting).layout);
+  assert.equal(plan.project.waterFittings?.[0].reach[0], 1.75);
+  for (const [size, result] of [["hd-pex-u860w10", "hd-sharkbite-ur362a"], ["hd-pex-u870w10", "hd-sharkbite-ur370a"]]) {
+    const same = branchLayout({ mainSize: size, branchSize: size });
+    assert.equal(previewSplitWaterMain(same.project, same.draft).fitting.materialId, result);
+  }
+  const upsized = branchLayout({ mainSize: "hd-pex-u860w10", branchSize: "hd-pex-u870w10" });
+  assert.throws(() => previewSplitWaterMain(upsized.project, upsized.draft), /same-size branch or a ½ in branch/);
 });

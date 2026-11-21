@@ -789,8 +789,10 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       ...(p.pieces.some(({ id }) => id === run.pipeId) && { pieceId: run.pipeId }),
     });
   }
+  const checkedWaterFittings = new Set<string>();
   for (const fitting of p.waterFittings ?? []) {
     const review = reviewWaterFitting(p, fitting);
+    if (review.layout) checkedWaterFittings.add(fitting.pieceId);
     if (review.problem) findings.push({
       id: `water-fitting-${fitting.id}`, severity: "warning", title: `Review PEX connection · ${waterFittingProducts[fitting.materialId].model}`,
       detail: review.problem, ...(p.pieces.some(({ id }) => id === fitting.pieceId) && { pieceId: fitting.pieceId }),
@@ -1345,7 +1347,9 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
         "Confirm whether this is intentional embedment. Footing depth and soil conditions are not validated.",
       pieceId: buried.id,
     });
-  const collisionSolids = active.map((piece) => {
+  // Current fittings already checked their leg volumes against the model, with
+  // their intentionally seated pipes allowed inside the sockets.
+  const collisionSolids = active.filter(({ id }) => !checkedWaterFittings.has(id)).map((piece) => {
     try {
       return { piece, solid: prepareCollisionSolid(piece) };
     } catch {

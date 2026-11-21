@@ -193,7 +193,7 @@ function wireTexture(size: V3) {
   texture.repeat.set(size[axes[0]] / 4, size[axes[1]] / 4);
   return texture;
 }
-function WaterFittingMesh({ size, color, elbow }: { size: V3; color: string; elbow: boolean }) {
+function WaterFittingMesh({ size, color, kind }: { size: V3; color: string; kind: "coupling" | "elbow" | "tee" }) {
   const [x, y, diameter] = size;
   const radius = diameter / 2;
   const socket = (axis: "x" | "y", length: number, position: V3, end: -1 | 1) => {
@@ -209,10 +209,14 @@ function WaterFittingMesh({ size, color, elbow }: { size: V3; color: string; elb
       </mesh>
     </group>;
   };
-  if (!elbow) return <>
-    {socket("x", x / 2, [-x / 4, 0, 0], -1)}
-    {socket("x", x / 2, [x / 4, 0, 0], 1)}
-  </>;
+  if (kind !== "elbow") {
+    const tee = kind === "tee", inlineY = tee ? radius - y / 2 : 0;
+    return <>
+      {socket("x", x / 2, [-x / 4, inlineY, 0], -1)}
+      {socket("x", x / 2, [x / 4, inlineY, 0], 1)}
+      {tee && socket("y", y - radius, [0, radius / 2, 0], 1)}
+    </>;
+  }
   const corner: V3 = [radius - x / 2, radius - y / 2, 0];
   return <>
     <mesh position={corner} castShadow>
@@ -422,7 +426,7 @@ function PartMesh({
         {m.shape === "pedestal-bench-envelope" && !measuring && !fastenerPicking && !fittedFacePicking ? (
           <PedestalBenchMesh size={size} color={color} texture={texture} />
         ) : isWaterFitting(m.id) && !measuring && !fastenerPicking && !fittedFacePicking ? (
-          <WaterFittingMesh size={size} color={color} elbow={waterFittingProducts[m.id].kind === "elbow"} />
+          <WaterFittingMesh size={size} color={color} kind={waterFittingProducts[m.id].kind} />
         ) : m.shape === "tube-envelope" ? (
           <mesh castShadow receiveShadow>
             <cylinderGeometry

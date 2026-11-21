@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 62 editable stocks. The registry contains 136 product records and 154 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 75 placeable material entries. The registry contains 149 product records and 167 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 21, 2026 · Branch a framed PEX supply
+
+Connect facing pipe ends with a measured coupling, elbow or tee. A tee can also divide a continuous modeled main where an existing perpendicular branch meets it. The preview checks the delivered socket dimensions, three cut lengths, alignment, clearance around the fitting and space between nearby fittings. A main with a recorded stock source keeps that source for both cuts and the center trim. The guide gives the insertion depth separately for each pipe. The tool checklist includes the matching Max depth gauge and the Home Depot handoff carries the exact fitting. Hydraulic branch sizing, insertion travel, supports and field testing remain separate work. [SharkBite fitting dimensions](https://www.sharkbite.com/sites/default/files/resources/SharkBite-Max-Fittings-Spec-Sheet.pdf) · [SharkBite insertion depths](https://www.sharkbite.com/us/en/resources/pipe-insertion-depth-chart) · [IPC §605.16.3](https://codes.iccsafe.org/content/IPC2021P1/chapter-6-water-supply-and-distribution)
 
 ## November 21, 2026 · Scaled drawing references
 

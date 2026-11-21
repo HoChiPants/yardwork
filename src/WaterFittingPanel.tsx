@@ -2,17 +2,19 @@ import { useMemo, useState } from "react";
 import { ZodError } from "zod";
 import { LengthInput } from "./LengthInput";
 import { formatPreciseInches as dim, formatStockLength } from "./measurement";
-import type { Project } from "./model";
-import { previewWaterFitting } from "./waterFittingApply";
+import { material, type Project } from "./model";
+import { previewSplitWaterMain, previewWaterFitting } from "./waterFittingApply";
 import { maxFittingInstructions, maxInsertionChart, waterFittingProducts } from "./waterFittingReference";
-import type { WaterFitting, WaterRunEnd } from "./waterFittingSchema";
-import { fittingLabel, reviewWaterFitting, waterFittingChoice, waterPortKey } from "./waterFittings";
+import { waterFittingPorts, type WaterFitting, type WaterRunEnd } from "./waterFittingSchema";
+import { fittingLabel, reviewWaterFitting, splitWaterMainChoice, waterFittingChoice, waterPortKey } from "./waterFittings";
 
-type Proposal = ReturnType<typeof previewWaterFitting>;
+type Proposal = ReturnType<typeof previewWaterFitting> & { split?: ReturnType<typeof previewSplitWaterMain>["split"] };
+type ConnectionMode = "two" | "tee" | "split";
 
-export function WaterFittingPanel({ project, initialFitting, onApply, onRemove }: {
+export function WaterFittingPanel({ project, initialFitting, startWithTee, onApply, onRemove }: {
   project: Project;
   initialFitting?: string;
+  startWithTee?: boolean;
   onApply: (value: Proposal) => void;
   onRemove: (value: WaterFitting) => void;
 }) {
@@ -25,49 +27,57 @@ export function WaterFittingPanel({ project, initialFitting, onApply, onRemove }
       <select value={selected} onChange={(event) => select(event.target.value)}>
         <option value="">New connection</option>
         {fittings.map((item) => {
-          const from = project.waterRuns?.find(({ id }) => id === item.a.runId)?.name;
-          const to = project.waterRuns?.find(({ id }) => id === item.b.runId)?.name;
-          return <option key={item.id} value={item.id}>{[from, to, waterFittingProducts[item.materialId].model].filter(Boolean).join(" · ")}</option>;
+          const names = waterFittingPorts(item).map(({ runId }) => project.waterRuns?.find(({ id }) => id === runId)?.name);
+          return <option key={item.id} value={item.id}>{[...names, waterFittingProducts[item.materialId].model].filter(Boolean).join(" · ")}</option>;
         })}
       </select>
     </label>}
     {(project.waterRuns?.length ?? 0) >= 2
-      ? <FittingFields key={selected} project={project} current={current} onApply={onApply} />
+      ? <FittingFields key={selected} project={project} current={current} startWithTee={startWithTee} onApply={onApply} />
       : <p>Add two wall water lines to connect their measured ends.</p>}
     {current && <p>
       <button type="button" className="text-button" onClick={() => onRemove(current)}>Remove fitting</button>
-      <span className="small-note"> The two pipe cuts stay in the plan.</span>
+      <span className="small-note"> The pipe cuts stay in the plan.</span>
     </p>}
   </>;
 }
 
-function FittingFields({ project, current, onApply }: { project: Project; current?: WaterFitting; onApply: (value: Proposal) => void }) {
+function FittingFields({ project, current, startWithTee, onApply }: {
+  project: Project; current?: WaterFitting; startWithTee?: boolean; onApply: (value: Proposal) => void;
+}) {
   const runs = project.waterRuns!;
+  const [mode, setMode] = useState<ConnectionMode>(current ? (current.branch ? "tee" : "two") : startWithTee ? "split" : "two");
   const [a, setA] = useState<WaterRunEnd>(current?.a ?? { runId: runs[0].id, end: "end" });
   const [b, setB] = useState<WaterRunEnd>(current?.b ?? { runId: runs[1].id, end: "start" });
+  const [branch, setBranch] = useState<WaterRunEnd>(current?.branch?.port ?? {
+    runId: (runs[mode === "tee" ? 2 : 1] ?? runs[1]).id, end: "start",
+  });
   const [reach, setReach] = useState<[number, number]>(current?.reach ?? [NaN, NaN]);
+  const [branchReach, setBranchReach] = useState(current?.branch?.reach ?? NaN);
   const [review, setReview] = useState<{ source: Project; value: Proposal } | null>(null);
   const [error, setError] = useState("");
   const preview = review?.source === project ? review.value : null;
-  const remnants = preview?.stock?.bins.flatMap(({ sourceId, remaining }) => !sourceId && remaining > 1e-6 ? [formatStockLength(remaining)] : []) ?? [];
   const savedProblem = useMemo(() => current ? reviewWaterFitting(project, current).problem : undefined, [project, current]);
   const selection = useMemo(() => {
     try {
-      return { choice: waterFittingChoice(project, a, b, current?.id) };
+      const choice = mode === "split" ? splitWaterMainChoice(project, a.runId, branch)
+        : waterFittingChoice(project, mode === "tee" ? [a, b, branch] : [a, b], current?.id);
+      return { choice };
     } catch (issue) {
       return { issue: issue instanceof Error ? issue.message : "Choose two valid pipe ends." };
     }
-  }, [project, a, b, current?.id]);
-  const reserved = new Set((project.waterFittings ?? []).filter(({ id }) => id !== current?.id).flatMap((row) => [row.a, row.b]).map(waterPortKey));
+  }, [project, mode, a, b, branch, current?.id]);
+  const reserved = new Set((project.waterFittings ?? []).filter(({ id }) => id !== current?.id).flatMap(waterFittingPorts).map(waterPortKey));
   const ports = runs.flatMap((run) => (["start", "end"] as const).map((end) => ({ runId: run.id, end, label: `${run.name} · ${end}` })));
-  const choice = selection.choice, straight = choice?.product.kind === "coupling";
+  const choice = selection.choice, tee = mode !== "two", straight = choice?.product.kind === "coupling";
+  const reset = () => { setReach([NaN, NaN]); setBranchReach(NaN); setReview(null); setError(""); };
   function endpoint(label: string, value: WaterRunEnd, update: (port: WaterRunEnd) => void) {
     return <label className="field">{label}
       <select value={waterPortKey(value)} onChange={(event) => {
         const chosen = ports.find((p) => waterPortKey(p) === event.target.value);
         if (!chosen) return;
         update({ runId: chosen.runId, end: chosen.end });
-        setReach([NaN, NaN]); setReview(null); setError("");
+        reset();
       }}>
         {!ports.some((port) => waterPortKey(port) === waterPortKey(value)) && <option value={waterPortKey(value)}>Missing pipe end</option>}
         {ports.map((port) => <option key={waterPortKey(port)} value={waterPortKey(port)} disabled={reserved.has(waterPortKey(port))}>{port.label}</option>)}
@@ -78,8 +88,12 @@ function FittingFields({ project, current, onApply }: { project: Project; curren
   function runPreview() {
     setError(""); setReview(null);
     try {
-      if (!reach.every(Number.isFinite)) throw Error("Enter the measured fitting dimensions.");
-      setReview({ source: project, value: previewWaterFitting(project, { a, b, reach }, current?.id) });
+      if (!reach.every(Number.isFinite) || (tee && !Number.isFinite(branchReach)))
+        throw Error("Enter the measured fitting dimensions.");
+      const value = mode === "split"
+        ? previewSplitWaterMain(project, { mainId: a.runId, branch, inlineLength: 2 * reach[0], branchReach })
+        : previewWaterFitting(project, { a, b, reach, ...(tee && { branch: { port: branch, reach: branchReach } }) }, current?.id);
+      setReview({ source: project, value });
     } catch (issue) {
       setError(issue instanceof ZodError ? issue.issues[0]?.message ?? "Review the fitting dimensions."
         : issue instanceof Error ? issue.message : "The pipe connection needs review.");
@@ -87,17 +101,49 @@ function FittingFields({ project, current, onApply }: { project: Project; curren
   }
   return <>
     {savedProblem && <p className="form-error" role="alert">{savedProblem}</p>}
-    <div className="two-col">
-      {endpoint("Pipe end A", a, setA)}
-      {endpoint("Pipe end B", b, setB)}
-    </div>
+    {!current && <label className="field">Connection type
+      <select value={mode} onChange={(event) => {
+        const next = event.target.value as ConnectionMode;
+        setMode(next);
+        if (next === "tee") setBranch({ runId: runs[2].id, end: "start" });
+        reset();
+      }}>
+        <option value="two">Coupling or elbow</option>
+        <option value="split">Tee into a continuous main</option>
+        {runs.length >= 3 && <option value="tee">Tee between three pipe ends</option>}
+      </select>
+    </label>}
+    {mode === "split" ? <div className="two-col">
+      <label className="field">Main to split
+        <select value={a.runId} onChange={(event) => {
+          setA({ runId: event.target.value, end: "end" }); reset();
+        }}>
+          {runs.map((run) => <option key={run.id} value={run.id}>{run.name}</option>)}
+        </select>
+      </label>
+      {endpoint("Branch pipe end", branch, setBranch)}
+    </div> : <>
+      <div className="two-col">
+        {endpoint(tee ? "Inline pipe end A" : "Pipe end A", a, setA)}
+        {endpoint(tee ? "Inline pipe end B" : "Pipe end B", b, setB)}
+      </div>
+      {tee && endpoint("Branch pipe end", branch, setBranch)}
+    </>}
     {selection.issue && <p role="status">{selection.issue}</p>}
     {choice && <>
-      <p><strong>{fittingLabel(choice.product)}</strong> · {dim(choice.product.insertion)} insertion per pipe</p>
-      <p className="small-note">{straight
+      <p><strong>{fittingLabel(choice.materialId)}</strong> · {dim(choice.product.insertion)} {tee ? "inline insertion" : "insertion per pipe"}
+        {choice.product.branch && ` · ${dim(choice.product.branch.insertion)} branch insertion`}</p>
+      <p className="small-note">{tee
+        ? `Measure between the two inline faces and from their centerline to the branch face. Published dimensions suggest ${dim(choice.product.body)} inline and ${dim(choice.nominalBranchReach!)} to the branch face.`
+        : straight
         ? `Measure between the two socket faces on the delivered coupling. Published overall length is ${dim(choice.product.body)}.`
         : `Measure along each leg from the intersection of the pipe centerlines to its socket face. The published envelope suggests about ${dim(choice.nominalReach)} per leg.`}</p>
-      {straight ? <LengthInput label="Measured face-to-face length" min={0.125} max={12}
+      {tee ? <div className="two-col">
+        <LengthInput label="Measured inline face-to-face length" min={0.125} max={12}
+          value={2 * reach[0]} onChange={(value) => setDimensions([value / 2, value / 2])} />
+        <LengthInput label="Main centerline to branch socket" min={0.125} max={6}
+          value={branchReach} onChange={(value) => { setBranchReach(value); setReview(null); setError(""); }} />
+      </div> : straight ? <LengthInput label="Measured face-to-face length" min={0.125} max={12}
         value={2 * reach[0]} onChange={(value) => setDimensions([value / 2, value / 2])} />
         : <div className="two-col">
           <LengthInput label="Center to socket A" min={0.125} max={6} value={reach[0]} onChange={(value) => setDimensions([value, reach[1]])} />
@@ -107,10 +153,18 @@ function FittingFields({ project, current, onApply }: { project: Project; curren
     </>}
     {error && <p role="alert" className="form-error">{error}</p>}
     {preview && <section className="field-section" aria-label="PEX connection proposal">
-      <ul>{preview.pipeCuts.map((cut, i) => <li key={i}>{cut.label} · {formatStockLength(cut.before)} → <strong>{formatStockLength(cut.after)} cut</strong>{cut.reused ? ` · Use ${cut.reused}` : ""}</li>)}</ul>
-      {preview.stock && <p>{preview.stock.quantity} new {preview.stock.quantity === 1 ? "stick" : "sticks"} of this pipe size for the project.
-        {!!remnants.length && ` Planned remnants from new sticks · ${remnants.join(" + ")}.`}
+      {preview.split && <p>{preview.split.name} · {dim(preview.split.before)} main becomes {dim(preview.split.left)} + {dim(preview.split.right)}.
+        {preview.split.recorded
+          ? ` ${dim(preview.split.trim)} center trim goes to the Cut pool. Both main pieces keep their recorded stock source.`
+          : ` The tee leaves ${dim(preview.split.removed)} between the seated ends. Review the new stock cut order in List.`}
       </p>}
+      <ul>{preview.pipeCuts.map((cut, i) => <li key={i}>{cut.label} · {Math.abs(cut.before - cut.after) > 1e-6 && `${formatStockLength(cut.before)} → `}<strong>{formatStockLength(cut.after)} cut</strong>{cut.reused ? ` · Use ${cut.reused}` : ""}</li>)}</ul>
+      {preview.stocks.map((stock) => {
+        const remnants = stock.bins.flatMap(({ sourceId, remaining }) => !sourceId && remaining > 1e-6 ? [formatStockLength(remaining)] : []);
+        return <p key={stock.id}>{stock.quantity} new {stock.quantity === 1 ? "stick" : "sticks"} of {material(stock.id).name}.
+          {!!remnants.length && ` Planned remnants from new sticks · ${remnants.join(" + ")}.`}
+        </p>;
+      })}
       {preview.affectedConnections > 0 && <p>{preview.affectedConnections} modeled attachments on replaced parts will be removed.</p>}
       <p>Check space to move the actual pipes into the sockets before assembly.</p>
       <button type="button" className="button primary" onClick={() => onApply(preview)}>{current ? "Update connection" : "Add connection"}</button>

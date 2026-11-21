@@ -5,7 +5,7 @@ import { measureWaterRun, removeWaterRun } from "./wallWater";
 import { waterRunInput, type WaterRun } from "./wallWaterSchema";
 import { pexStockLength } from "./wallWaterReference";
 
-export function previewWaterRun(project: Project, input: unknown, runId?: string) {
+export function previewWaterRun(project: Project, input: unknown, runId?: string, stockOffcutId?: string) {
   const draft = waterRunInput.parse(input);
   const previous = project.waterRuns?.find(({ id }) => id === runId);
   if (runId && !previous) throw Error("The saved run is no longer in the project.");
@@ -22,10 +22,12 @@ export function previewWaterRun(project: Project, input: unknown, runId?: string
   const protectedIds = new Set(candidate.pieces.flatMap((p) => p.cutStock?.id && p.guidePlacement ? [p.cutStock.id] : []));
   const sources = draft.reuse ? inspectCutStock(candidate).valid : new Map();
   const spare = draft.reuse && !samePipe ? candidate.pieces.filter((piece) =>
-    piece.offcut && piece.material === draft.materialId && piece.cutStock && sources.has(piece.cutStock.id) &&
+    piece.offcut && (!stockOffcutId || piece.id === stockOffcutId) &&
+    piece.material === draft.materialId && piece.cutStock && sources.has(piece.cutStock.id) &&
     !protectedIds.has(piece.cutStock.id) && !piece.cutPlanes.length &&
     piece.size[1] >= layout.length - 1e-6,
   ).sort((a, b) => a.size[1] - b.size[1])[0] : undefined;
+  if (stockOffcutId && !spare) throw Error("The matching offcut is no longer available for this run.");
   if (spare && spare.size[1] > layout.length + 1e-6) candidate = cutPiece(candidate, spare.id, layout.length, 1);
   const stock = samePipe ? priorPipe : spare && candidate.pieces.find(({ id }) => id === spare.id);
   const pipe = pieceSchema.parse({

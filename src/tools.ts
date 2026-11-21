@@ -1,6 +1,8 @@
 import { openingSilicone } from "./openingAirSealReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { isPexPipe, pexCutter, pexInstallation } from "./wallWaterReference";
+import { reviewWaterFitting } from "./waterFittings";
+import { maxFittingInstructions, waterDepthGauge } from "./waterFittingReference";
 import { reviewWaterRun } from "./wallWater";
 import { flashingKnife, flexWrap } from "./openingFlashingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
@@ -194,6 +196,11 @@ const definitions: Record<
     name: "Square-cut PEX tubing",
     review: "Use a cutter documented for the selected PEX size. Check the cut is clean and square, and verify end preparation and fitting insertion.",
     referenceUrls: [pexCutter.listing, pexInstallation],
+  },
+  "pex-insertion-mark": {
+    name: "Mark SharkBite Max insertion depths",
+    review: "Match the depth gauge to the Max side and the size of each socket. Use a permanent marker and check the seating mark against the fitting instructions.",
+    referenceUrls: [waterDepthGauge.listing, maxFittingInstructions],
   },
   "metal-cut": {
     name: "Shorten the selected metal rod",
@@ -778,6 +785,13 @@ export function toolChecklist(
     ]),
   );
   const currentWaterRuns = new Set((project.waterRuns ?? []).filter((run) => reviewWaterRun(project, run).measured).map(({ id }) => id));
+  for (const fitting of project.waterFittings ?? []) {
+    const { layout } = reviewWaterFitting(project, fitting);
+    if (layout) add("pex-insertion-mark", {
+      kind: "piece", id: fitting.pieceId,
+      reason: `${layout.product.model} · ${layout.positions.length} pipe ends to seat and check.`,
+    });
+  }
   for (const piece of project.pieces) {
     const m = material(piece.material);
     for (const opening of piece.offcut ? [] : (piece.roundOpenings ?? [])) {

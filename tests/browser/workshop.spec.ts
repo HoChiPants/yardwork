@@ -83,9 +83,10 @@ test("adds and cuts lumber, retains offcuts, supports undo, and exports round-tr
     page.getByRole("textbox", { name: "Part name", exact: true }),
   ).toHaveValue("2 × 4 framing lumber");
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
+  await expect(page.getByRole("combobox", { name: "Retained length units", exact: true })).toHaveValue("ft");
   await page
     .getByRole("spinbutton", { name: "Retained length", exact: true })
-    .fill("48");
+    .fill("4");
   await page.getByRole("button", { name: "Apply cuts", exact: true }).click();
   await expect(page.locator(".statusbar")).toContainText("1 offcuts");
   await page.getByRole("button", { name: "Undo", exact: true }).click();

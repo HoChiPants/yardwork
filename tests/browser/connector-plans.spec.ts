@@ -499,6 +499,7 @@ test("an explicit A21Z draft previews one member's entered wood path, saves and 
   await page.getByRole("button", { name: "Guide", exact: true }).click();
   await page.locator(`.step-part[data-part-id='${setup.base.id}']`).click();
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
+  await page.getByRole("combobox", { name: "Retained length units", exact: true }).selectOption("in");
   await page
     .getByRole("spinbutton", { name: "Retained length", exact: true })
     .fill("22");

@@ -1,4 +1,5 @@
 import { DrawingReferenceMesh } from "./DrawingReferenceMesh";
+import type { WallTracePoint } from "./wallTrace";
 import { drawingReferenceBounds } from "./drawingReference";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import {
@@ -98,7 +99,7 @@ export type SceneProps = {
   onMove: (id: string, position: V3, rotation: V3) => void;
   selectedSectionId: string | null;
   onSectionMove: (id: string, origin: V3, deltaRotation: V3, previewed?: boolean) => void;
-  mode: "select" | "move" | "lift" | "rotate" | "screw" | "measure" | "fastener" | "fit-face";
+  mode: "select" | "move" | "lift" | "rotate" | "screw" | "measure" | "fastener" | "fit-face" | "trace-wall";
   interferenceIds?: readonly string[];
   onPickFastenerEntrance?: (pieceId: string, localPoint: V3, localInward: V3) => void;
   onPickFittedFace?: (pieceId: string, localPoint: V3, localOutward: V3) => void;
@@ -108,6 +109,8 @@ export type SceneProps = {
   guidePartFocus?: { pieceId: string; label: string; isolated: boolean };
   measurement?: { a: V3 | null; b: V3 | null };
   onMeasurePoint?: (point: V3) => void;
+  wallTrace?: { a: WallTracePoint | null; b: WallTracePoint | null; footprints: V3[][]; blocked: boolean };
+  onWallTracePoint?: (point: V3) => void;
   snap: boolean;
   explode: boolean;
   xray: boolean;
@@ -744,7 +747,7 @@ function PlacedPart({
         onPickFastenerEntrance={props.onPickFastenerEntrance}
         fittedFacePicking={props.mode === "fit-face"}
         onPickFittedFace={props.onPickFittedFace}
-        readOnly={props.readOnly}
+        readOnly={props.readOnly || props.mode === "trace-wall"}
         interference={props.lidPreview?.interferenceIds?.includes(p.id) ||
           props.lidPreview?.stayArmHitIds?.includes(p.id) ||
           (props.lidPreview?.piece.id === p.id && !!(props.lidPreview.siteFaceHits?.length || props.lidPreview.interferenceIds?.length)) ||
@@ -1284,6 +1287,20 @@ function Measurement({
     </group>
   );
 }
+function WallTraceOverlay({ a, b, footprints, blocked }: NonNullable<SceneProps["wallTrace"]>) {
+  const points = [a, b].flatMap((point) => point ? [[point[0] / 12, 0.02, point[1] / 12] as V3] : []);
+  const color = blocked ? "#b6402b" : "#1c6b63";
+  return <group>
+    {points.length === 2 && <Line points={points} lineWidth={1.5} color={color} transparent opacity={0.6} depthTest={false} renderOrder={1001} raycast={() => null} />}
+    {footprints.map((outline, index) => <Line key={index}
+      points={outline.map(([x, y, z]): V3 => [x / 12, y / 12 + 0.02, z / 12])}
+      lineWidth={2.5} color={color} depthTest={false} renderOrder={1001} raycast={() => null} />)}
+    {[a, b].map((point, index) => point && <Html key={index} center
+      position={[point[0] / 12, 0.035, point[1] / 12]} style={{ pointerEvents: "none" }}>
+      <span className="wall-trace-point" aria-hidden="true">{index === 0 ? "A" : "B"}</span>
+    </Html>)}
+  </group>;
+}
 function World(props: SceneProps) {
   const renderer = useThree((state) => state.gl);
   const texture = useMemo(woodTexture, []);
@@ -1301,7 +1318,16 @@ function World(props: SceneProps) {
   const visible = isolated ? [guidePiece] : stagePieces;
   const reference = props.project.drawingReference;
   const drawing = !isolated && !props.focusedMotion && !props.readOnly && reference?.calibration.visible ? reference : null;
-  const drawingBounds = useMemo(() => drawing ? drawingReferenceBounds(drawing, drawing.calibration) : null, [drawing]);
+  const planLines = props.project.planLines;
+  const drawingBounds = useMemo(() => {
+    if (drawing) return drawingReferenceBounds(drawing, drawing.calibration);
+    if (props.view.preset !== "drawing" || !planLines.length) return null;
+    const points = planLines.flatMap(({ a, b }) => [a, b]);
+    return {
+      min: [0, 1, 2].map((axis) => Math.min(...points.map((point) => point[axis]))) as V3,
+      max: [0, 1, 2].map((axis) => Math.max(...points.map((point) => point[axis]))) as V3,
+    };
+  }, [drawing, planLines, props.view.preset]);
   const framePieces = guidePiece ? visible : visibleStockPieces(props.project, visibility);
   const stockFrameKey = guidePiece ? `guide:${guidePiece.id}:${props.guidePartFocus?.isolated}`
     : assemblyOnly ? "assembly" : props.showOffcuts ? "all-offcuts" : selectedOffcut ?? "assembly";
@@ -1351,13 +1377,16 @@ function World(props: SceneProps) {
         fadeStrength={1.5}
         infiniteGrid
       />
-      {props.mode === "measure" && (
+      {(props.mode === "measure" || props.mode === "trace-wall") && (
         <mesh
           rotation={[-Math.PI / 2, 0, 0]}
           onClick={(e: ThreeEvent<MouseEvent>) => {
             e.stopPropagation();
-            if (e.button === 0 && e.delta <= 4)
-              props.onMeasurePoint?.([e.point.x * 12, 0, e.point.z * 12]);
+            if (e.button === 0 && e.delta <= 4) {
+              const point: V3 = [e.point.x * 12, 0, e.point.z * 12];
+              if (props.mode === "trace-wall") props.onWallTracePoint?.(point);
+              else props.onMeasurePoint?.(point);
+            }
           }}
           onPointerOver={() => {
             document.body.style.cursor = "crosshair";
@@ -1366,7 +1395,7 @@ function World(props: SceneProps) {
             document.body.style.cursor = "auto";
           }}
         >
-          <planeGeometry args={[400, 400]} />
+          <planeGeometry args={props.mode === "trace-wall" ? [2000, 2000] : [400, 400]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
       )}
@@ -1567,6 +1596,7 @@ function World(props: SceneProps) {
       {props.mode === "measure" && (
         <Measurement measurement={props.measurement} />
       )}
+      {props.mode === "trace-wall" && props.wallTrace && <WallTraceOverlay {...props.wallTrace} />}
       {section && (
         <SectionGroup
           key={`${section.id}:${section.origin.join(",")}:${section.rotation.join(",")}`}
@@ -1589,7 +1619,7 @@ function World(props: SceneProps) {
           lineWidth={2}
         />
       ))}
-      {!props.readOnly && props.project.joints.map((j) => {
+      {!props.readOnly && props.mode !== "trace-wall" && props.project.joints.map((j) => {
         const a = visible.find((p) => p.id === j.a),
           b = visible.find((p) => p.id === j.b);
         if (!a || !b) return null;
@@ -1677,7 +1707,7 @@ export function Scene(props: SceneProps) {
       }
       onPointerMissed={() => {
         if (shown.readOnly) return;
-        if (props.mode !== "screw" && props.mode !== "measure" && props.mode !== "fastener" && props.mode !== "fit-face")
+        if (props.mode !== "screw" && props.mode !== "measure" && props.mode !== "fastener" && props.mode !== "fit-face" && props.mode !== "trace-wall")
           props.onSelect("");
       }}
     >

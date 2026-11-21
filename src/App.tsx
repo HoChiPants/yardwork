@@ -1,5 +1,7 @@
 import { DrawingReferencePanel } from "./DrawingReferencePanel";
 import { drawingReferenceDescription, type DrawingReference } from "./drawingReference";
+import { WallTracePanel } from "./WallTracePanel";
+import { emptyWallTrace, reviewWallTrace, snapWallTracePoint, type WallTracePoint } from "./wallTrace";
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
@@ -623,7 +625,7 @@ export function App() {
   const objectActions = useRef<{copy?:()=>void;paste?:()=>void;duplicate?:()=>void;nudge?:(direction:number)=>void}>({});
   const [selected, setSelected] = useState<string | null>(null),
     [mode, setMode] = useState<
-      "select" | "move" | "lift" | "rotate" | "screw" | "measure" | "fastener" | "fit-face"
+      "select" | "move" | "lift" | "rotate" | "screw" | "measure" | "fastener" | "fit-face" | "trace-wall"
     >("select");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     null,
@@ -650,6 +652,19 @@ export function App() {
     a: V3 | null;
     b: V3 | null;
   }>({ a: null, b: null });
+  const [wallTrace, setWallTrace] = useState(emptyWallTrace);
+  useEffect(() => {
+    setWallTrace(emptyWallTrace());
+    setMode((previous) => previous === "trace-wall" ? "select" : previous);
+  }, [project.id]);
+  const wallTraceReview = useMemo(() => {
+    if (mode !== "trace-wall" || !wallTrace.a || !wallTrace.b) return {};
+    try {
+      return { value: reviewWallTrace(project, wallTrace) };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Could not preview this wall." };
+    }
+  }, [mode, project, wallTrace]);
   const measured =
     measurement.a && measurement.b
       ? measureBetween(measurement.a, measurement.b)
@@ -874,6 +889,7 @@ export function App() {
   }
   function setPanel(next:WorkshopPanel) {
     if ((panel === "connectors" || panel === "fit-stock") && next !== panel && !canLeaveWorkingDraft()) return;
+    if (next !== "sections" && mode === "trace-wall") setMode("select");
     if (next !== "motion") {
       setMotionPreview(null);
       setMotionTestSelection(null);
@@ -2002,8 +2018,10 @@ export function App() {
     });
     setModal("assistant");
   }
-  function suggestWindowWallStock(command: Command): Command {
-    if (!command.windowOpening || command.windowOpening.stock || project.retailer !== "home-depot") return command;
+  function suggestWindowWallStock(command: Command, retainedStock?: SectionCommand["wallStock"]): Command {
+    if (!command.windowOpening || command.windowOpening.stock) return command;
+    if (retainedStock) return { ...command, windowOpening: { ...command.windowOpening, stock: retainedStock } };
+    if (project.retailer !== "home-depot") return command;
     const length = Math.max(command.width, command.height - 3);
     const { stud, stud10, stud12 } = homeDepotFraming;
     const stock = [stud, stud10, stud12].find(({ stockSize }) => stockSize[1] >= length) ?? stud12;
@@ -2225,7 +2243,7 @@ export function App() {
         ? target?.generator?.baseStock ??
           (!target && project.retailer === "home-depot" ? fittingBaseBoards(command) : undefined)
         : undefined;
-      setProposal({ ...p, command: baseStock ? { ...command, baseStock } : suggestWindowWallStock(command) });
+      setProposal({ ...p, command: baseStock ? { ...command, baseStock } : suggestWindowWallStock(command, target?.generator?.wallStock) });
     } catch (e) {
       notify((e as Error).message, true);
     } finally {
@@ -2246,6 +2264,41 @@ export function App() {
     setModal(null);
     if (view.preset === "drawing") setView((previous) => ({ preset: "top", nonce: previous.nonce + 1 }));
     notify("Drawing reference removed. Undo is available.");
+  }
+  function startWallTrace() {
+    if (!canLeaveWorkingDraft()) return;
+    setPanel("sections");
+    setStage(null);
+    setPlaying(false);
+    setExplode(false);
+    setSelected(null);
+    setSelectedSectionId(null);
+    setSelectionScope("part");
+    setMode("trace-wall");
+    setWallTrace(emptyWallTrace());
+    setView(({ nonce }) => ({ preset: project.drawingReference?.calibration.visible || project.planLines.length ? "drawing" : "top", nonce: nonce + 1 }));
+    inspectWorkspace();
+  }
+  function pickWallTracePoint([x, , z]: V3) {
+    const point = snapWallTracePoint([x, z], project.planLines, snap);
+    const completePoint = (value: WallTracePoint | null) => value?.every(Number.isFinite);
+    setWallTrace((previous) => !completePoint(previous.a) || completePoint(previous.b)
+      ? { ...previous, a: point, b: null }
+      : { ...previous, b: point });
+  }
+  function addTracedWall() {
+    safe(() => {
+      const preview = wallTraceReview.value;
+      if (!preview || preview.obstructions.length || preview.row?.oversize) return;
+      if (current.current !== project) throw Error("The project changed. Review the wall preview again.");
+      const next = change(preview.candidate);
+      const first = next.sections[project.sections.length];
+      setSelectedSectionId(first.id);
+      setSelectionScope("section");
+      setStepId(preview.added[0].stepId);
+      setMode("select");
+      notify(`Added ${preview.lengths.length === 1 ? "one wall panel" : `${preview.lengths.length} wall panels`}. The guide and cut list are ready to review.`);
+    });
   }
 
   async function importFile(f: File) {
@@ -2893,6 +2946,13 @@ export function App() {
               onMove={(id, position, rotation) => move(id, position, rotation, true)}
               interferenceIds={activeDriverPreview?.blockerIds ?? findings.find((finding)=>finding.id==="collision")?.pieceIds}
               mode={mode}
+              wallTrace={mode === "trace-wall" ? {
+                a: wallTrace.a?.every(Number.isFinite) ? wallTrace.a : null,
+                b: wallTrace.b?.every(Number.isFinite) ? wallTrace.b : null,
+                footprints: wallTraceReview.value?.footprints ?? [],
+                blocked: !!wallTraceReview.value?.obstructions.length || !!wallTraceReview.value?.row?.oversize,
+              } : undefined}
+              onWallTracePoint={pickWallTracePoint}
               measurement={measurement}
               onMeasurePoint={(point) =>
                 setMeasurement((previous) =>
@@ -3006,6 +3066,10 @@ export function App() {
             </button>
           </div>
           <div className="view-tools">
+            <button type="button" aria-label="Trace a wall" title="Frame a wall along two points"
+              className={mode === "trace-wall" ? "active" : ""}
+              aria-pressed={mode === "trace-wall"}
+              onClick={() => mode === "trace-wall" ? setMode("select") : startWallTrace()}><Ruler size={16} /></button>
             {project.drawingReference && (
               <button type="button" aria-label="Edit drawing reference" title="Scale, move or hide the drawing"
                 onClick={() => setModal("drawing")}>Drawing</button>
@@ -3050,7 +3114,7 @@ export function App() {
                   key={v}
                   className={view.preset === v || (view.preset === "drawing" && v === "top") ? "active" : ""}
                   onClick={() =>
-                    setView((s) => ({ preset: v === "top" && project.drawingReference?.calibration.visible ? "drawing" : v, nonce: s.nonce + 1 }))
+                    setView((s) => ({ preset: v === "top" && (project.drawingReference?.calibration.visible || mode === "trace-wall" && project.planLines.length) ? "drawing" : v, nonce: s.nonce + 1 }))
                   }
                 >
                   {v === "iso"
@@ -3077,7 +3141,7 @@ export function App() {
               <CircleHelp size={17} />
             </button>
           </div>
-          {!project.pieces.length && !project.workZone && !project.drawingReference?.calibration.visible && !shownVentDatums && !shownDryerDuct && (
+          {!project.pieces.length && !project.workZone && !project.planLines.length && !project.drawingReference?.calibration.visible && !shownVentDatums && !shownDryerDuct && mode !== "trace-wall" && (
             <div className="empty-workspace">
               <Box size={30} />
               <h2>A space for your next idea.</h2>
@@ -3096,6 +3160,15 @@ export function App() {
                   Plan an idea
                 </button>
               </div>
+            </div>
+          )}
+          {mode === "trace-wall" && (
+            <div className="wall-trace-hint">
+              <span role="status">{!wallTrace.a?.every(Number.isFinite)
+                ? "Click point A on the floor or drawing."
+                : !wallTrace.b?.every(Number.isFinite) ? "Click point B to finish the run."
+                  : "Wall run marked. Click again to start a different run."}</span>
+              {inspectorFocus.compact && <button type="button" className="text-button" onClick={inspectorFocus.expand}>Wall settings</button>}
             </div>
           )}
           {!workspaceReviewActive && piece && mode !== "measure" && mode !== "fastener" && (
@@ -3642,6 +3715,10 @@ export function App() {
           )}
           {panel === "sections" && (
             <>
+              {mode === "trace-wall" ? (
+                <WallTracePanel trace={wallTrace} onChange={setWallTrace} review={wallTraceReview.value} error={wallTraceReview.error}
+                  onAdd={addTracedWall} onClose={() => setMode("select")} onPick={inspectWorkspace} />
+              ) : <button className="button secondary full attachment-entry" onClick={startWallTrace}>Trace an interior wall</button>}
               <button className="button secondary full attachment-entry" onClick={() => setPanel("motion")}>Test door or drawer movement</button>
               <button className="button secondary full attachment-entry" onClick={() => openConnectors()}>Plan A21Z connector</button>
               <button className="button secondary full attachment-entry" onClick={() => openFasteners()}>

@@ -27,8 +27,7 @@ export function LengthInput({
     Number.isFinite(value) ? String(Number((value / scale).toFixed(5))) : "",
   );
   useEffect(() => {
-    if (Number.isFinite(value))
-      setDraft(String(Number((value / scale).toFixed(5))));
+    setDraft(Number.isFinite(value) ? String(Number((value / scale).toFixed(5))) : "");
   }, [value, scale]);
   return (
     <div className="field length-field">

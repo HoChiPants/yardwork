@@ -1,0 +1,104 @@
+import { LengthInput } from "./LengthInput";
+import { formatStockLength } from "./measurement";
+import { framingStockDimensions, material } from "./model";
+import { partitionCodeSource, partitionFramingSource, type reviewWallTrace, type WallTrace } from "./wallTrace";
+
+const stockChoices = ["hd-kdht-2x4-8", "hd-spf-2x4-10", "hd-spf-2x4-12", "hd-spf-2x6-8", "hd-spf-2x6-12"] as const;
+
+export function WallTracePanel({ trace, onChange, review, error, onAdd, onClose, onPick }: {
+  trace: WallTrace;
+  onChange: (next: WallTrace) => void;
+  review?: ReturnType<typeof reviewWallTrace>;
+  error?: string;
+  onAdd: () => void;
+  onClose: () => void;
+  onPick: () => void;
+}) {
+  const row = review?.row;
+  const assignments = review?.reuse?.assignments ?? [];
+  return (
+    <section className="wall-trace-panel" aria-label="Trace wall settings">
+      <h3>Trace an interior wall</h3>
+      <p>Pick a run on the plan or enter the two ends. The preview places editable nonbearing framing along that line.</p>
+      <div className="inline">
+        <button type="button" className="button secondary" onClick={onPick}>Pick on plan</button>
+        <button type="button" className="text-button" onClick={() => onChange({ ...trace, a: null, b: null })}>Clear points</button>
+      </div>
+      <details open={!trace.a || !trace.b ? undefined : true}>
+        <summary>Exact wall coordinates</summary>
+        {(["a", "b"] as const).map((endpoint) => (
+          <div className="wall-trace-fields" key={endpoint}>
+            {(["X", "Z"] as const).map((axis, index) => (
+              <LengthInput key={axis} label={`Point ${endpoint.toUpperCase()} ${axis}`} min={-12000} max={12000}
+                value={trace[endpoint]?.[index] ?? NaN} onChange={(value) => {
+                  const point: [number, number] = [...(trace[endpoint] ?? [NaN, NaN])];
+                  point[index] = value;
+                  onChange({ ...trace, [endpoint]: point });
+                }} />
+            ))}
+          </div>
+        ))}
+      </details>
+      <div className="wall-trace-fields">
+        <LengthInput label="Wall height" value={trace.height} min={12} max={120} defaultUnit="ft" onChange={(height) => onChange({ ...trace, height })} />
+        <LengthInput label="Base elevation" value={trace.elevation} min={0} max={11880} onChange={(elevation) => onChange({ ...trace, elevation })} />
+      </div>
+      <label className="field">
+        <span>Framing lumber</span>
+        <select value={trace.stock} onChange={(event) => onChange({ ...trace, stock: event.target.value as WallTrace["stock"] })}>
+          {stockChoices.map((id) => {
+            const { length, depth } = framingStockDimensions(id);
+            return <option key={id} value={id}>{depth === 3.5 ? "2 × 4" : "2 × 6"} · {formatStockLength(length)} · {material(id).name.includes("KD-HT") ? "KD-HT" : "SPF"}</option>;
+          })}
+        </select>
+      </label>
+      <div className="wall-trace-fields">
+        <label className="field"><span>Stud spacing</span>
+          <select value={trace.spacing} onChange={(event) => onChange({ ...trace, spacing: Number(event.target.value) as WallTrace["spacing"] })}>
+            {[12, 16, 24].map((value) => <option key={value} value={value}>{value} in</option>)}
+          </select>
+        </label>
+        <label className="field"><span>Align line to</span>
+          <select value={trace.alignment} onChange={(event) => onChange({ ...trace, alignment: event.target.value as WallTrace["alignment"] })}>
+            <option value="center">Center</option><option value="left">Left face</option><option value="right">Right face</option>
+          </select>
+        </label>
+      </div>
+      <details>
+        <summary>Trim the ends for adjoining walls</summary>
+        <p>Left and right refer to the top view looking from point A to point B.</p>
+        <div className="wall-trace-fields">
+          <LengthInput label="Start trim" value={trace.startTrim} min={0} max={24000} onChange={(startTrim) => onChange({ ...trace, startTrim })} />
+          <LengthInput label="End trim" value={trace.endTrim} min={0} max={24000} onChange={(endTrim) => onChange({ ...trace, endTrim })} />
+        </div>
+      </details>
+      <label className="check-row"><input type="checkbox" checked={trace.reuse} onChange={(event) => onChange({ ...trace, reuse: event.target.checked })} /> Use matching offcuts from this project</label>
+      {error && <p role="status">{error}</p>}
+      {review && (
+        <div className="wall-trace-review">
+          <output aria-label="Wall run preview">{formatStockLength(review.runLength)} · {review.lengths.length} {review.lengths.length === 1 ? "panel" : "panels"} · {review.added.length} parts</output>
+          {review.lengths.length > 1 && <p>Panel lengths {review.lengths.map(formatStockLength).join(" + ")}. The guide flags where to dry-fit the joints.</p>}
+          {review.outsideZone && <p role="status">Part of this wall extends outside the work zone. Check the placement before adding it.</p>}
+          {!!review.obstructions.length && <p role="alert">Wall overlaps {review.obstructions.slice(0, 3).map(({ name }) => name).join(", ")}{review.obstructions.length > 3 ? ` and ${review.obstructions.length - 3} more` : ""}. Adjust the ends, alignment or elevation.</p>}
+          {!!row?.oversize && <p role="alert">Some members exceed the usable stock length after saw kerf. Adjust the dimensions or choose longer lumber.</p>}
+          {row && <details>
+            <summary>{row.purchasedStockUnits} {row.purchasedStockUnits === 1 ? "new board" : "new boards"} for this run</summary>
+            <ol>{row.bins.map((bin, index) => <li key={index}>
+              {bin.cuts.map(({ name, length }) => `${name} ${formatStockLength(length)}`).join(" · ")}
+              {bin.remaining > 0 && ` · ${formatStockLength(bin.remaining)} remaining`}
+            </li>)}</ol>
+          </details>}
+          {!!assignments.length && <details>
+            <summary>{assignments.length} {assignments.length === 1 ? "part from saved offcuts" : "parts from saved offcuts"}</summary>
+            <ul>{assignments.map(({ partId, target, from, operations }) => <li key={partId}>{target} from {from}. {operations.join(" · ")}</li>)}</ul>
+          </details>}
+        </div>
+      )}
+      <div className="inline">
+        <button type="button" className="button primary" disabled={!review || !!review.obstructions.length || !!row?.oversize} onClick={onAdd}>Add traced wall</button>
+        <button type="button" className="text-button" onClick={onClose}>Cancel trace</button>
+      </div>
+      <p className="wall-trace-sources">Verify attachment, backing and fireblocking before building. <a href={partitionFramingSource} target="_blank" rel="noreferrer">PNNL framing</a> · <a href={partitionCodeSource} target="_blank" rel="noreferrer">IRC R602.5</a></p>
+    </section>
+  );
+}

@@ -11,7 +11,7 @@ import { cutSourceAxesSchema, tubeCutPlansSchema, tubeKerfSchema, woodKerfSchema
 import { offcutCutSchema } from "./offcutCutSchema";
 import { greenhouseDoorSealsSchema } from "./greenhouseDoorSealSchema";
 import { openingFlashingPlansSchema } from "./openingFlashingSchema";
-import { windowOpeningSchema, windowWallPrompt, windowWallScope, windowWallTemplate } from "./windowWall";
+import { wallFramingStockIds, windowOpeningSchema, windowWallPrompt, windowWallScope, windowWallTemplate } from "./windowWall";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
 import { moduleRecipeSchema } from "./recipeSchemas";
@@ -381,7 +381,11 @@ export type Command = z.infer<typeof commandSchema>;
 const baseBoardSchema = z.enum(baseBoardIds);
 const sectionCommandSchema = commandSchema.extend({
   baseStock: z.strictObject({ rim: baseBoardSchema, joist: baseBoardSchema }).optional(),
+  wallStock: z.enum(wallFramingStockIds).optional(),
 }).superRefine((command, ctx) => {
+  if (command.wallStock && command.type !== "wall") {
+    ctx.addIssue({ code: "custom", message: "Wall lumber needs a wall section.", path: ["wallStock"] });
+  }
   if (command.windowOpening && command.type !== "wall") {
     ctx.addIssue({ code: "custom", message: "A window opening needs a wall section.", path: ["windowOpening"] });
   } else if (command.windowOpening) {
@@ -1602,35 +1606,42 @@ export function wallParts(
   stepId: string,
   origin: V3 = [0, 0, 0],
   assembly = "Wall",
+  stock?: (typeof wallFramingStockIds)[number],
 ): Piece[] {
   const [x, y, z] = origin;
+  const materialId = stock ?? "stud";
+  const depth = framingStockDimensions(materialId).depth;
   const pieces = [
     part(
       `${assembly} · bottom plate`,
-      "stud",
-      [width, 1.5, 3.5],
+      materialId,
+      [width, 1.5, depth],
       [x, y + 0.75, z],
       stepId,
       assembly,
     ),
     part(
       `${assembly} · top plate`,
-      "stud",
-      [width, 1.5, 3.5],
+      materialId,
+      [width, 1.5, depth],
       [x, y + height - 0.75, z],
       stepId,
       assembly,
     ),
   ];
   const locations = [0.75];
-  for (let c = spacing; c < width - 1.5; c += spacing) locations.push(c);
-  locations.push(width - 0.75);
+  const end = width - 0.75;
+  for (let c = spacing; stock ? c <= end - 1.5 : c < width - 1.5; c += spacing)
+    locations.push(c);
+  const last = locations.at(-1)!;
+  if (stock && end - last > spacing) locations.push((end + last) / 2);
+  locations.push(end);
   locations.forEach((c, i) =>
     pieces.push(
       part(
         `${assembly} · stud ${i + 1}`,
-        "stud",
-        [1.5, height - 3, 3.5],
+        materialId,
+        [1.5, height - 3, depth],
         [x - width / 2 + c, y + height / 2, z],
         stepId,
         assembly,
@@ -1638,6 +1649,11 @@ export function wallParts(
     ),
   );
   return pieces;
+}
+export function framingStockDimensions(stock: (typeof wallFramingStockIds)[number]) {
+  const board = material(stock);
+  const [, depth, length] = [...(board.stockSize ?? board.size)].sort((a, b) => a - b);
+  return { depth, length };
 }
 export function coop(): Project {
   const p = blank("The backyard coop");
@@ -1901,13 +1917,13 @@ export function sectionParts(
 ): Piece[] {
   let pieces: Piece[] = [];
   if (command.type === "wall" && command.windowOpening) {
-    const stock = command.windowOpening.stock ?? "stud";
-    const depth = [...(material(stock).stockSize ?? material(stock).size)].sort((a, b) => a - b)[1];
+    const stock = command.windowOpening.stock ?? command.wallStock ?? "stud";
+    const { depth } = framingStockDimensions(stock);
     pieces = windowWallTemplate(command, command.windowOpening, depth).map((member) => ({
       ...part(`${name} · ${member.name}`, stock, member.size, member.position, stepId, name),
       designRole: member.role,
     }));
-  } else if (command.type === "wall")
+  } else if (command.type === "wall") {
     pieces = wallParts(
       command.width,
       command.height,
@@ -1915,8 +1931,13 @@ export function sectionParts(
       stepId,
       [0, 0, 0],
       name,
+      command.wallStock,
     );
-  else if (command.type === "foundation") {
+    if (command.wallStock) pieces = pieces.map((piece, index) => ({
+      ...piece,
+      designRole: ["wall-bottom-plate", "wall-top-plate"][index] ?? `wall-stud-${index - 1}`,
+    }));
+  } else if (command.type === "foundation") {
     const lengths = baseMemberLengths(command);
     const depth = baseBoardDepth(command.baseStock?.rim);
     for (const [side, z] of [["back", -command.depth / 2 + 0.75], ["front", command.depth / 2 - 0.75]] as const)
@@ -1960,6 +1981,7 @@ export function applyCommand(
   project: Project,
   raw: SectionCommand,
   targetSectionId?: string,
+  placement?: { origin: V3; rotation: V3; stepNotes: string },
 ): Project {
   let command = sectionCommandSchema.parse(raw);
   if (targetSectionId) {
@@ -1975,6 +1997,8 @@ export function applyCommand(
     }
     if (command.type === "wall" && command.windowOpening === undefined && section.generator.windowOpening)
       command = sectionCommandSchema.parse({ ...command, windowOpening: section.generator.windowOpening });
+    if (command.type === "wall" && !command.wallStock && section.generator.wallStock)
+      command = sectionCommandSchema.parse({ ...command, wallStock: section.generator.wallStock });
     const oldIds = new Set(section.pieceIds);
     const existing = project.pieces.filter(({ id }) => oldIds.has(id));
     if (!existing.length) throw Error("The section has no active parts. Choose a wall or base with framing.");
@@ -1986,7 +2010,9 @@ export function applyCommand(
       section.origin,
       section.rotation,
     );
-    const pieces = command.windowOpening && section.generator.windowOpening ? generated.map((candidate) => {
+    const keepMatchingParts = (command.windowOpening && section.generator.windowOpening) ||
+      (command.wallStock && section.generator.wallStock);
+    const pieces = keepMatchingParts ? generated.map((candidate) => {
       const prior = existing.find((piece) =>
         piece.designRole === candidate.designRole && piece.material === candidate.material &&
         !piece.offcut && !piece.cutPlanes.length && !pieceThroughOpenings(piece).length &&
@@ -2031,12 +2057,12 @@ export function applyCommand(
   const p = structuredClone(project),
     s = step(
       commandStepTitle(command),
-      command.windowOpening ? windowWallScope
-        : "Generated concept. Review connections, support, bracing, and stock dimensions.",
+      placement?.stepNotes ?? (command.windowOpening ? windowWallScope
+        : "Generated concept. Review connections, support, bracing, and stock dimensions."),
     );
   p.steps.push(s);
   // Rotated parts need their world bounds when finding free ground beside the project.
-  const maxX = p.pieces.reduce(
+  const maxX = placement ? 0 : p.pieces.reduce(
     (max, a) =>
       Math.max(
         max,
@@ -2059,7 +2085,7 @@ export function applyCommand(
       ),
     -command.width / 2 - 12,
   );
-  const origin: V3 = [
+  const origin: V3 = placement?.origin ?? [
     p.pieces.length ? maxX + command.width / 2 + 12 : 0,
     0,
     0,
@@ -2067,8 +2093,9 @@ export function applyCommand(
   const prefix = command.type === "wall" ? "Wall" : "Base";
   let n = 1;
   while (p.sections.some((s) => s.name === `${prefix} ${n}`)) n++;
+  const rotation: V3 = placement?.rotation ?? [0, 0, 0];
   const name = `${prefix} ${n}`,
-    pieces = sectionParts(command, s.id, name, origin, [0, 0, 0]);
+    pieces = sectionParts(command, s.id, name, origin, rotation);
   p.pieces.push(...pieces);
   p.sections.push({
     id: uid(),
@@ -2077,7 +2104,7 @@ export function applyCommand(
     generator: command,
     recipe: null,
     origin,
-    rotation: [0, 0, 0],
+    rotation,
   });
   return p;
 }

@@ -193,6 +193,7 @@ export function useInspectorFocus(projectId: string) {
   return {
     inspectorRef,
     scrollRef,
+    compact,
     focused,
     active,
     returnable: compact && view.returnable,

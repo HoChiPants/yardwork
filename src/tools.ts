@@ -1,3 +1,4 @@
+import { openingSilicone } from "./openingAirSealReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { flashingKnife, flexWrap } from "./openingFlashingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
@@ -208,6 +209,11 @@ const definitions: Record<
     review: "Measure and cut strips on a suitable backing. When trimming the flap, protect the flashing below. Press the membrane evenly onto the prepared wall face with firm hand pressure or a smooth roller.",
     referenceUrls: [flexWrap.instructions, flashingKnife.specification],
   },
+  "apply-window-sealant": {
+    name: "Apply window sealant with a cartridge gun",
+    review: "Check that the gun seats the delivered cartridge. Use a blunt tool for the backing rod and check access at the shims and corners.",
+    referenceUrls: [openingSilicone.specification],
+  },
   "pilot-bit-1-16": {
     name: "Review a 1/16 in pilot bit",
     review:
@@ -408,11 +414,15 @@ export function toolChecklist(
         reason: "The saved drip edge layout includes partial cuts or corner trim allowances.",
       });
   }
-  if (project.openingFlashings?.some(({ measurements }) => measurements.jambHead)) {
+  if (project.openingFlashings?.some(({ measurements }) => measurements.jambHead || measurements.airSeal)) {
     for (const { plan, title, result, issues } of reviewOpeningFlashings(project).rows) {
-      if (!result?.jambHead || issues.length) continue;
-      add("trim-flashing-tape", { kind: "opening-flashing", id: plan.members.sill,
-        reason: `${title} · three jamb and head cuts and a wall-wrap head flap.` });
+      if (!result || issues.length) continue;
+      if (result.jambHead)
+        add("trim-flashing-tape", { kind: "opening-flashing", id: plan.members.sill,
+          reason: `${title} · three jamb and head cuts and a wall-wrap head flap.` });
+      if (result.airSeal?.material.id === openingSilicone.id)
+        add("apply-window-sealant", { kind: "opening-flashing", id: plan.members.sill,
+          reason: `${title} · interior silicone over dry-fitted closed-cell backing.` });
     }
   }
   for (const mount of project.sunliteMounts ?? []) {

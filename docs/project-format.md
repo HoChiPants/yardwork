@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 100**. Yardwork reads valid formats 1–99 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 101**. Yardwork reads valid formats 1–100 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 101 can retain an interior air seal on each opening flashing plan. It records the four field gap widths, smallest available depth, planned seal depth, chosen material method, and optional work session. Stock and rod lengths are derived from current geometry. Earlier plans keep their original sill, flashing, and drainage measurements.
 
 Format 100 lets a saved rectangular window flashing plan retain optional jamb and head tape measurements. It records the three flange widths and insets, tape width, and extensions beyond the sill apron and jambs. Older openings keep their saved pan and drainage without inferred tape dimensions.
 

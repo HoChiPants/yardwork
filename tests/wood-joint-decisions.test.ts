@@ -1,3 +1,5 @@
+import { saveOpeningFlashing } from "../src/openingFlashing";
+import { generatedWindowMembers } from "../src/windowWall";
 import assert from "node:assert/strict";
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { test } from "node:test";
@@ -9,7 +11,7 @@ import { bearingConnections } from "../src/bearingConnections";
 import { connectionCoverage } from "../src/connectionCoverage";
 import { guideMarkdown } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
-import { blank, part, projectSchema, type Project, type V3 } from "../src/model";
+import { applyCommand, parsePrompt, blank, part, projectSchema, type Project, type V3 } from "../src/model";
 import { reviewModeledWoodContacts } from "../src/modeledWoodContacts";
 import { composeRotation, rotate } from "../src/spatial";
 import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimSeamPurchaseSummary, woodJointDecisionEntries } from "../src/woodJointDecisions";
@@ -212,4 +214,28 @@ test("trim takeoff rejects invalid ranges and backing mismatches while fitting s
   const [{ product, rolls }] = trimBackerRodCutPlan(backed);
   assert.equal(product.internetNumber, "100159362");
   assert.deepEqual(rolls.map(({ left, runs }) => [left, ...runs.map(({ length }) => length)]), [[5, 135, 100]]);
+});
+
+test("measured trim and opening backing share the same exact rod roll and purchase", () => {
+  const { project, panel, rail } = aJoint(5 / 16);
+  const seam = saveWoodJointDecision(project, panel.id, rail.id, "sealant", "Back the trim seam.");
+  const detail = seam.woodJointDecisions![0];
+  const piece = (id: string) => project.pieces.find((item) => item.id === id)!;
+  const edge = modeledTrimSeamEdges(piece(detail.firstId), piece(detail.secondId))!.edges.find(({ length }) => length === 4)!;
+  const trimmed = saveTrimSeam(seam, panel.id, rail.id, {
+    edgeIds: [edge.id], gapWidth: 5 / 16, gapDepth: 1 / 4, fieldCoverageFeet: 20, backerRodId: "frost-king-c21h",
+  });
+  const framed = applyCommand(trimmed, parsePrompt("Build a wall 8 ft wide and 8 ft tall with a 36 by 48 in rough window opening, sill 32 in above floor"));
+  const saved = saveOpeningFlashing(framed, generatedWindowMembers(framed, framed.sections[0])!, {
+    unit: "window", exterior: "positive", sheathing: 0.5, frameDepth: 2.75, tapeWidth: 6, faceLap: 2, jambReturn: 6,
+    pan: { kind: "slope" }, drainage: { kind: "open" },
+    airSeal: { method: "silicone", left: 0.25, right: 0.25, sill: 0.25, head: 0.25, availableDepth: 1, sealDepth: 0.25 },
+  });
+  const plan = trimBackerRodCutPlan(saved);
+  assert.equal(plan[0].rolls.length, 1);
+  assert.equal(plan[0].rolls[0].runs.length, 5);
+  assert.equal(plan[0].rolls[0].left, 69);
+  const need = homeDepotPurchaseNeeds(saved).find(({ id }) => id === "frost-king-c21h");
+  assert.equal(need?.missing, 1);
+  assert.ok(need?.canAdd);
 });

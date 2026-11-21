@@ -1,3 +1,4 @@
+import { openingAirSealRodRuns, reviewOpeningFlashings } from "./openingFlashing";
 import { attachmentGeometryFingerprint } from "./attachments";
 import { reviewConnectionContact } from "./connectionContacts";
 import type { Piece, Project, V3 } from "./model";
@@ -202,6 +203,8 @@ export function trimSeamLine(entry: WoodJointDecisionEntry) {
 }
 
 export function trimBackerRodCutPlan(project: Project, entries = woodJointDecisionEntries(project)) {
+  const openingRuns = project.openingFlashings?.some(({ measurements }) => measurements.airSeal?.method === "silicone")
+    ? openingAirSealRodRuns(reviewOpeningFlashings(project)) : [];
   return trimBackerRods.flatMap((product) => {
     const runs = entries.flatMap(({ title, trimSeam }) => {
       const estimate = trimSeam?.estimate;
@@ -210,9 +213,10 @@ export function trimBackerRodCutPlan(project: Project, entries = woodJointDecisi
         sealedSpans.map((span) => ({ ...span, title: `${title} · ${label}` })),
       );
     });
-    if (!runs.length) return [];
-    const { bins } = packRuns(runs, trimBackerRodLength);
-    return [{ product, rolls: bins }];
+    const airSealRuns = openingRuns.filter(({ productId }) => productId === product.id);
+    if (!runs.length && !airSealRuns.length) return [];
+    const { bins } = packRuns([...runs, ...airSealRuns], trimBackerRodLength);
+    return [{ product, rolls: bins, hasAirSeal: airSealRuns.length > 0 }];
   });
 }
 

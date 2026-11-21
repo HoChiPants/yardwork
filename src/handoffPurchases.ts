@@ -168,20 +168,27 @@ export function homeDepotPurchaseNeeds(
     const trim = trimSeamPurchaseSummary(project, details);
     if (trim) include(trimSealant.id, "Measured wood trim seams", trim.required,
       trim.required === null ? "Review measured seams and cartridge coverage." : undefined);
-    for (const { product, rolls } of trimBackerRodCutPlan(project, details))
-      include(product.id, "Measured wood trim backing cuts", rolls.length);
   }
   if (project.greenhouseDoorSeals?.length) {
     const seal = greenhouseDoorSealTakeoff(project);
     include(doorSeal.id, "Reviewed greenhouse door weatherseal cuts", seal.required,
       seal.required === null ? "Review the saved door weatherseal plans before adding packs." : undefined);
   }
+  if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam?.backerRodId) ||
+      project.openingFlashings?.some(({ measurements }) => measurements.airSeal?.method === "silicone")) {
+    for (const { product, rolls, hasAirSeal } of trimBackerRodCutPlan(project))
+      include(product.id, hasAirSeal ? "Measured interior seal and matching trim backing cuts" : "Measured wood trim backing cuts", rolls.length);
+  }
   if (project.openingFlashings?.length) {
-    const { groups, tapeGroups } = reviewOpeningFlashings(project);
+    const { groups, tapeGroups, airSealBatches } = reviewOpeningFlashings(project);
     const retail = groups.find(({ width }) => width === flexWrap.retailWidth);
     if (retail) include(flexWrap.id, "Checked rough opening sill cuts", retail.rolls.length);
     for (const { product, boxes } of tapeGroups)
       include(product.id, "Checked jamb and head tape cuts", boxes);
+    const units = new Map<string, number>();
+    for (const { material, units: count } of airSealBatches)
+      units.set(material.id, (units.get(material.id) ?? 0) + count);
+    for (const [id, count] of units) include(id, "Interior air seal estimates by work session", count);
   }
   if (project.motionPlans?.length) {
     const slideReview = drawerSlidePurchaseReview(project);

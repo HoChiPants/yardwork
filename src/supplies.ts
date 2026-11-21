@@ -1,3 +1,4 @@
+import { openingFoam, openingSilicone } from "./openingAirSealReference";
 import { sdwsFramingPacks } from "./sdwsFramingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
@@ -391,6 +392,16 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "roll",
     contents: [{ name: "9 in × 75 ft formable flashing membrane", quantity: 1 }],
     requirements: [openingFlashingScope],
+  },
+  [openingFoam.id]: {
+    purchaseUnit: "can",
+    contents: [{ name: "12 oz window and door foam with Smart Dispenser", quantity: 1 }],
+    requirements: ["Use the included straw and follow the label for preparation, ventilation, protection and expansion."],
+  },
+  [openingSilicone.id]: {
+    purchaseUnit: "cartridge",
+    contents: [{ name: "10.1 fl oz clear Silicone Max cartridge", quantity: 1 }],
+    requirements: ["Verify the substrate and rod fit. Use a compatible caulking gun."],
   },
   ...Object.fromEntries(windowFlashingTape.products.map((tape) => [tape.id, {
     purchaseUnit: "4-roll box",

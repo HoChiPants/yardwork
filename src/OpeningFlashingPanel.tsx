@@ -1,11 +1,13 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { ZodError } from "zod";
+import { openingAirSealEdgeLine, openingAirSealSummary, type OpeningAirSeal } from "./openingAirSeal";
+import { openingFoam, openingSilicone } from "./openingAirSealReference";
 import { LengthInput } from "./LengthInput";
 import { formatPreciseInches, formatStockLength } from "./measurement";
 import type { Project } from "./model";
 import { partLabel } from "./partLabels";
 import {
-  checkOpeningFlashing, openingDrainageNote, openingFlashingRollLines, openingFramingStock,
+  checkOpeningFlashing, openingAirSealBatchLines, openingDrainageNote, openingFlashingRollLines, openingFramingStock,
   removeOpeningFlashing, reviewOpeningFlashings, saveOpeningFlashing,
   type OpeningFlashingPreview,
 } from "./openingFlashing";
@@ -56,6 +58,55 @@ function WindowFlangeFields({ tape, onChange }: { tape: WindowFlashingTape; onCh
   );
 }
 
+const initialAirSeal: OpeningAirSeal = {
+  method: "foam", left: NaN, right: NaN, head: NaN, sill: NaN, availableDepth: NaN, sealDepth: 0.5,
+};
+
+function OpeningAirSealFields({ seal, onChange }: { seal: OpeningAirSeal; onChange: (seal: OpeningAirSeal) => void }) {
+  function gapField(edge: "left" | "right" | "head" | "sill", label: string) {
+    return <LengthInput label={label} value={seal[edge]} min={0.001} max={6} required
+      onChange={(value) => onChange({ ...seal, [edge]: value })} />;
+  }
+  return (
+    <section className="field-section" aria-label="Interior air seal measurements">
+      <p className="small-note">Measure the gap at the inside edge of the installed unit. Use the exterior view to name the left and right sides.</p>
+      <label className="field">Air seal material
+        <select value={seal.method} onChange={({ currentTarget }) => {
+          const method = currentTarget.value === "silicone" ? "silicone" : "foam";
+          onChange({ ...seal, method, sealDepth: method === "silicone" ? 0.25 : 0.5 });
+        }}>
+          <option value="foam">Low-expansion window and door foam</option>
+          <option value="silicone">Silicone over closed-cell rod</option>
+        </select>
+      </label>
+      <div className="two-col">
+        {gapField("left", "Left interior gap")}
+        {gapField("right", "Right interior gap")}
+      </div>
+      <div className="two-col">
+        {gapField("head", "Head interior gap")}
+        {gapField("sill", "Sill interior gap")}
+      </div>
+      <div className="two-col">
+        <LengthInput label="Smallest available depth" value={seal.availableDepth} min={0.001} max={12} required
+          onChange={(availableDepth) => onChange({ ...seal, availableDepth })} />
+        <LengthInput label="Planned seal depth" value={seal.sealDepth} min={0.001} max={6} required
+          onChange={(sealDepth) => onChange({ ...seal, sealDepth })} />
+      </div>
+      <label className="field">Work session (optional)
+        <input value={seal.batch ?? ""} maxLength={60} placeholder="Same work session" onChange={({ currentTarget }) =>
+          onChange({ ...seal, batch: currentTarget.value || undefined })} />
+      </label>
+      <p className="small-note">Use matching session names to share containers. Use different names for work done separately.</p>
+      <p className="small-note">{seal.method === "foam"
+        ? "Depth estimates the finished interior seal. Follow the label for expansion and verify coverage with a trial bead."
+        : "Depth is the space above the rod. Verify rod compression and sealant compatibility with the frame and sill membrane."}{" "}
+        <a href={seal.method === "foam" ? openingFoam.instructions : openingSilicone.specification} target="_blank" rel="noreferrer">Material instructions</a>
+      </p>
+    </section>
+  );
+}
+
 function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
   project: Project;
   sill: string;
@@ -94,6 +145,7 @@ function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
         throw Error("Enter 2 to 100 gap centers in inches, separated by commas.");
       const data = openingFlashingMeasurementsSchema.parse({
         ...measured,
+        airSeal: measured.airSeal ? { ...measured.airSeal, batch: measured.airSeal.batch?.trim() || undefined } : undefined,
         drainage: measured.drainage.kind === "open" ? measured.drainage : {
           kind: "gaps",
           centers: positions,
@@ -183,6 +235,12 @@ function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
         Plan jamb and head tape
       </label>}
       {measured.jambHead && <WindowFlangeFields tape={measured.jambHead} onChange={(tape) => measure("jambHead", tape)} />}
+      <label className="checkbox-field">
+        <input type="checkbox" checked={Boolean(measured.airSeal)}
+          onChange={({ currentTarget }) => measure("airSeal", currentTarget.checked ? initialAirSeal : undefined)} />
+        Measure the interior air seal
+      </label>
+      {measured.airSeal && <OpeningAirSealFields seal={measured.airSeal} onChange={(value) => measure("airSeal", value)} />}
       <button type="submit" className="button secondary full">Check flashing fit</button>
       {current && (
         <div role="status" className="field-section">
@@ -195,6 +253,12 @@ function OpeningMeasurements({ project, sill, saved, onChange, onShow }: {
                 {current.result.jambHead.cuts.map(({ edge, length }) => <li key={edge}>{edge} · {formatStockLength(length)}</li>)}
               </ul>
             )}
+            {current.result.airSeal && <>
+              <p>{openingAirSealSummary(current.result.airSeal)}</p>
+              <ul aria-label="Interior air seal runs">
+                {current.result.airSeal.edges.map((run) => <li key={run.edge}>{openingAirSealEdgeLine(run)}</li>)}
+              </ul>
+            </>}
             <p className="small-note">Orange marks the pan and apron. Dashed green marks drainage. Blue marks the interior air seal after setting the unit.{current.result.jambHead ? " Purple marks the jamb and head strips." : ""}</p>
             <button type="button" className="button secondary full" onClick={save}>Save flashing plan</button>
           </>}
@@ -236,7 +300,7 @@ export function OpeningFlashingPanel({ project, initialSillId, review, onChange,
           {review.rows.map(({ plan, title, result, issues }) => (
             <li key={plan.members.sill}>
               <strong>{title}</strong>
-              <p className="small-note">{issues.length || !result ? issues.join(" ") : `Saved · Cut ${formatStockLength(result.length)}${result.jambHead ? " · 3 jamb and head cuts" : ""}`}</p>
+              <p className="small-note">{issues.length || !result ? issues.join(" ") : `Saved · Cut ${formatStockLength(result.length)}${result.jambHead ? " · 3 jamb and head cuts" : ""}${result.airSeal ? " · Measured interior air seal" : ""}`}</p>
               <div className="inline">
                 {result && !issues.length && <button type="button" className="text-button" onClick={() => onShow(result.preview)}>Show saved flashing in 3D</button>}
                 <button type="button" className="text-button" onClick={() => {
@@ -253,6 +317,10 @@ export function OpeningFlashingPanel({ project, initialSillId, review, onChange,
         <ul>{openingFlashingRollLines(review).map((line, i) => <li key={i}>{line}</li>)}</ul>
         {review.groups.some(({ width }) => width === flexWrap.retailWidth) &&
           <p className="small-note">Select the reviewed 9 in roll in the Home Depot purchase review.</p>}
+      </details>}
+      {review.airSealBatches.length > 0 && <details>
+        <summary>Interior seal materials and leftovers</summary>
+        <ul>{openingAirSealBatchLines(review).map((line, i) => <li key={i}>{line}</li>)}</ul>
       </details>}
       <p className="small-note">
         <a href={flexWrap.instructions} target="_blank" rel="noreferrer">DuPont installation guide</a>{" · "}

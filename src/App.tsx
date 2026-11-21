@@ -6480,7 +6480,7 @@ export function App() {
         )}
         {printTrimBacking.length > 0 && (
           <section className="trim-backer-rod-print">
-            <h2>Trim backer rod cut plan</h2>
+            <h2>{printTrimBacking.some(({ hasAirSeal }) => hasAirSeal) ? "Backer rod cut plan" : "Trim backer rod cut plan"}</h2>
             <p>{trimBackerRodScope}{" "}<a href={trimBackerRodInstructions}>Frost King instructions</a></p>
             <ul>{trimBackerRodGuideLines(printTrimBacking).map((line, index) => <li key={index}>{line}</li>)}</ul>
           </section>

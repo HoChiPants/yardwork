@@ -35,6 +35,7 @@ export const toolCapabilities = [
   "drive-three-quarter-hex",
   "cut-flashing",
   "trim-flashing-tape",
+  "apply-window-sealant",
   "apply-edge-banding",
   "trim-edge-banding",
   "drive-16ga-straight-finish-nail",

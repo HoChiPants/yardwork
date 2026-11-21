@@ -2073,7 +2073,7 @@ export function guideMarkdown(p: Project) {
       woodJointDetails.map((entry) => "- " +
         woodJointDecisionLine(entry).replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       "\n" : "") +
-    (trimBacking.length ? "\n\n## Trim backer rod cut plan\n\n" + trimBackerRodScope + "\n\n" +
+    (trimBacking.length ? `\n\n## ${trimBacking.some(({ hasAirSeal }) => hasAirSeal) ? "Backer rod cut plan" : "Trim backer rod cut plan"}\n\n` + trimBackerRodScope + "\n\n" +
       trimBackerRodGuideLines(trimBacking).map((line) => "- " +
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       `\n\n[Frost King instructions](${trimBackerRodInstructions}) · ${trimBacking.map(({ product }) =>

@@ -515,6 +515,20 @@ test("rough opening flashing checks drainage and exports sill, jamb and head cut
   await expect(page.getByTestId("opening-flashing-jamb-head")).toContainText("Jamb and head tape");
   await expect(page.getByTestId("opening-flashing-apron")).toContainText("Exterior apron and drainage");
   await expect(page.getByTestId("opening-flashing-air-seal")).toContainText("Interior air seal");
+  await panel.getByRole("checkbox", { name: "Measure the interior air seal", exact: true }).check();
+  const sealing = panel.getByRole("region", { name: "Interior air seal measurements", exact: true });
+  await sealing.getByRole("combobox", { name: "Air seal material", exact: true }).selectOption("silicone");
+  for (const edge of ["Left", "Right", "Head", "Sill"])
+    await sealing.getByRole("spinbutton", { name: `${edge} interior gap`, exact: true }).fill("0.25");
+  const availableDepth = sealing.getByRole("spinbutton", { name: "Smallest available depth", exact: true });
+  await availableDepth.fill("0.5");
+  await review.click();
+  await expect(panel.getByRole("status")).toContainText("needs room for the rod and sealant");
+  await availableDepth.fill("1");
+  await review.click();
+  const sealRuns = panel.getByRole("list", { name: "Interior air seal runs", exact: true });
+  await expect(sealRuns).toContainText("Left jamb · 47.75 in · 0.375 in closed-cell rod");
+  await expect(sealRuns).toContainText("Sill · 35.75 in");
   await panel.getByRole("button", { name: "Save flashing plan", exact: true }).click();
   await expect(panel.getByRole("list", { name: "Saved flashing plans" })).toContainText("Saved · Cut 4 ft");
   await panel.getByText("Flashing cuts and leftovers", { exact: true }).click();
@@ -527,6 +541,10 @@ test("rough opening flashing checks drainage and exports sill, jamb and head cut
   await expect(dialog.getByText("1 roll · #205187045", { exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Add 1 4-roll box of DuPont 4 in × 75 ft Flashing Tape (4 rolls)", exact: true }).click();
   await expect(dialog.getByText(/4-roll box · #205187035/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Add 1 cartridge of DAP Silicone Max clear 10.1 fl oz", exact: true }).click();
+  await dialog.getByRole("button", { name: "Add 1 roll of Frost King C21H 3/8 in backer rod", exact: true }).click();
+  await expect(dialog.getByText("1 cartridge · #206046715", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("1 roll · #100067266", { exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
@@ -549,6 +567,8 @@ test("rough opening flashing checks drainage and exports sill, jamb and head cut
   expect(guide).toMatch(/## Opening flashing and drainage[\s\S]+Cut 4 ft[\s\S]+entire interior perimeter[\s\S]+Keep 71 ft/);
   await expect(page.locator(".print-guide .opening-flashing-print")).toContainText("Keep 71 ft");
   expect(guide).toMatch(/head 46 in[\s\S]+4 in DuPont Flashing Tape[\s\S]+1 box of four 75 ft rolls/);
+  expect(guide).toMatch(/167 in of interior air seal[\s\S]+## Backer rod cut plan[\s\S]+Keep 73 in/);
+  expect((await draft()).project.openingFlashings[0].measurements.airSeal.method).toBe("silicone");
   expect((await draft()).project.openingFlashings[0].measurements.jambHead.tapeWidth).toBe(4);
 });
 
@@ -591,6 +611,11 @@ test("a window wall from the planner reuses a shop offcut and starts with the co
   await panel.getByRole("spinbutton", { name: "Sheathing past the framing face", exact: true }).fill("0.5");
   await panel.getByRole("spinbutton", { name: "Wall face to inside edge of unit", exact: true }).fill("2.75");
   await panel.getByRole("combobox", { name: "FlexWrap width", exact: true }).selectOption("6");
+  await panel.getByRole("checkbox", { name: "Measure the interior air seal", exact: true }).check();
+  const sealing = panel.getByRole("region", { name: "Interior air seal measurements", exact: true });
+  for (const edge of ["Left", "Right", "Head", "Sill"])
+    await sealing.getByRole("spinbutton", { name: `${edge} interior gap`, exact: true }).fill("0.375");
+  await sealing.getByRole("spinbutton", { name: "Smallest available depth", exact: true }).fill("1");
   await panel.getByRole("button", { name: "Check flashing fit", exact: true }).click();
   await expect(panel.getByRole("status")).toContainText("One continuous 4 ft cut");
   await panel.getByRole("button", { name: "Save flashing plan", exact: true }).click();
@@ -608,6 +633,7 @@ test("a window wall from the planner reuses a shop offcut and starts with the co
   const sill = saved.pieces.find(({ designRole }) => designRole === "window-rough-sill")!;
   expect(saved.sections[0].generator?.width).toBe(90);
   expect(sill.cutStock?.id).toBe(project.pieces[0].cutStock?.id);
+  expect(saved.openingFlashings?.[0].measurements.airSeal?.method).toBe("foam");
   expect(saved.openingFlashings?.[0].members.sill).toBe(sill.id);
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download");

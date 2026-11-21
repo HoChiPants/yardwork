@@ -1,3 +1,4 @@
+import { openingFoam, openingSealMaterials, openingAirSealReviewedAt } from "./openingAirSealReference";
 import { sdwsFramingName, sdwsFramingPacks, sdwsFramingReview, sdwsFramingSources } from "./sdwsFramingReference";
 import { pureBondCasework } from "./homeDepotCaseworkReference";
 import { framingStockReviewedAt, homeDepotFraming } from "./homeDepotFramingReference";
@@ -45,6 +46,8 @@ export type Retailer = z.infer<typeof retailerSchema>;
 const sourceHosts = new Set([
   "www.frostking.com",
   "www.dupont.com",
+  "www.greatstuff.dupont.com",
+  "www.dap.com",
   "hdsupplysolutions.com",
   "homedepot.com",
   "www.homedepot.com",
@@ -4219,6 +4222,27 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       requirements: ["Confirm the blade and backing for the delivered membrane. Do not cut the installed flashing when trimming the wall-wrap flap."],
     }],
   },
+  ...openingSealMaterials.map((seal): z.input<typeof retailerProductSchema> => ({
+    id: seal.id,
+    name: seal.name,
+    manufacturer: seal.brand,
+    manufacturerPartNumber: seal.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: openingAirSealReviewedAt,
+    profile: profile("consumable", null, 1, {
+      materialFamily: seal.id === openingFoam.id ? "low-expansion window and door polyurethane foam" : "silicone sealant",
+    }),
+    offers: [hd(seal.internetNumber, seal.model, seal.storeSku)],
+    sources: [
+      { url: seal.listing, verifiedAt: openingAirSealReviewedAt, note: "Exact Home Depot model and single-container purchase." },
+      { url: seal.specification, verifiedAt: openingAirSealReviewedAt, note: "Package size, application scope and published coverage basis." },
+      { url: seal.instructions, verifiedAt: openingAirSealReviewedAt, note: "Manufacturer preparation and application instructions." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [seal.listing, seal.specification] },
+    discrepancies: ["Actual yield depends on the installed joint and application. The plan reports an estimate."],
+    capabilities: [],
+  })),
   ...windowFlashingTape.products.map((tape): z.input<typeof retailerProductSchema> => ({
     id: tape.id,
     name: `DuPont ${tape.width} in × 75 ft Flashing Tape (4 rolls)`,

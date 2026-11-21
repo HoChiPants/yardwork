@@ -1,4 +1,6 @@
 import { attachmentGeometryFingerprint } from "./attachments";
+import { checkOpeningAirSeal, openingAirSealEdgeLine, openingAirSealSummary } from "./openingAirSeal";
+import { openingFoam, openingSealMaterials } from "./openingAirSealReference";
 import { formatPreciseInches, formatStockLength } from "./measurement";
 import { material, type Piece, type Project, type V3 } from "./model";
 import { flexWrap, windowFlashingTape } from "./openingFlashingReference";
@@ -182,6 +184,13 @@ export function checkOpeningFlashing(project: Project, members: OpeningMembers, 
   const xAt = (offset: number) => sign > 0 ? x0 + offset : x1 - offset;
   const drainLine = (from: number, to: number) => [at(xAt(from), y0, outside), at(xAt(to), y0, outside)];
   const seal = inside(frameDepth);
+  const airSeal = measured.airSeal ? checkOpeningAirSeal(frame, frameDepth, measured.airSeal) : null;
+  if (airSeal) issues.push(...airSeal.issues);
+  const airLeft = (measured.airSeal?.left ?? 0) / 2, airRight = width - (measured.airSeal?.right ?? 0) / 2;
+  const airTop = y1 - (measured.airSeal?.head ?? 0) / 2, airBottom = y0 + (measured.airSeal?.sill ?? 0) / 2;
+  const sealX = measured.airSeal ? xAt : (x: number) => x0 + x;
+  const sealLine = [[airLeft, airBottom], [airLeft, airTop], [airRight, airTop], [airRight, airBottom], [airLeft, airBottom]]
+    .map(([x, y]) => at(sealX(x), y, seal));
   const jambHead = checkWindowFlashingTape(frame, measured, outside, xAt, centers);
   if (jambHead) issues.push(...jambHead.issues);
   const preview: OpeningFlashingPreview = {
@@ -191,9 +200,9 @@ export function checkOpeningFlashing(project: Project, members: OpeningMembers, 
     drainage: drainage.kind === "open" ? [drainLine(0, width)]
       : centers.map((center) => drainLine(center - halfDrain, center + halfDrain)),
     jambHead: jambHead?.outlines,
-    interiorSeal: [at(x0, y0, seal), at(x0, y1, seal), at(x1, y1, seal), at(x1, y0, seal), at(x0, y0, seal)],
+    interiorSeal: sealLine,
   };
-  return { frame, length, bed, issues, preview, jambHead };
+  return { frame, length, bed, issues, preview, jambHead, airSeal };
 }
 
 export function saveOpeningFlashing(project: Project, members: OpeningMembers, proposed: OpeningFlashingMeasurements) {
@@ -221,7 +230,7 @@ export function openingDrainageNote(measured: OpeningFlashingMeasurements) {
 
 export function reviewOpeningFlashings(project: Project) {
   const plans = project.openingFlashings ?? [];
-  if (!plans.length) return { rows: [], groups: [], tapeGroups: [] };
+  if (!plans.length) return { rows: [], groups: [], tapeGroups: [], airSealBatches: [] };
   const labels = new Map(ensurePartLabels(project).partLabels.map(({ partId, label }) => [partId, label]));
   const pieces = new Map(project.pieces.map((part) => [part.id, part]));
   const rows = plans.map((plan) => {
@@ -251,7 +260,20 @@ export function reviewOpeningFlashings(project: Project) {
     const { bins: rolls } = packRuns(runs, windowFlashingTape.rollLength);
     return [{ product, rolls, boxes: purchaseCount(rolls.length, windowFlashingTape.rollsPerBox).quantity }];
   });
-  return { rows, groups, tapeGroups };
+  const airSealBatches = openingSealMaterials.flatMap((material) => {
+    const batches = new Map<string, { label: string; use: number }>();
+    for (const { plan, result, issues } of rows) {
+      if (issues.length || result?.airSeal?.material.id !== material.id) continue;
+      const label = plan.measurements.airSeal?.batch ?? "Same work session";
+      const key = label.toLowerCase();
+      const past = batches.get(key);
+      batches.set(key, { label: past?.label ?? label, use: (past?.use ?? 0) + result.airSeal.use });
+    }
+    return [...batches.values()].map(({ label, use }) => ({
+      material, label, use, units: Math.max(1, Math.ceil(use - 1e-9)),
+    }));
+  });
+  return { rows, groups, tapeGroups, airSealBatches };
 }
 
 export function openingFlashingRollLines({ groups, tapeGroups }: ReturnType<typeof reviewOpeningFlashings>) {
@@ -265,6 +287,22 @@ export function openingFlashingRollLines({ groups, tapeGroups }: ReturnType<type
       `Home Depot ${product.model} · ${boxes} ${boxes === 1 ? "box" : "boxes"} of four 75 ft rolls · ${boxes * windowFlashingTape.rollsPerBox - rolls.length} unopened rolls left if purchased new.`,
     ]),
   ];
+}
+
+export function openingAirSealBatchLines({ airSealBatches }: ReturnType<typeof reviewOpeningFlashings>) {
+  return airSealBatches.map(({ material, label, use, units }) => {
+    const remainder = ((units - use) * 100).toFixed(1);
+    const keep = material.id === openingFoam.id
+      ? "If saving the opened can, follow the Smart Dispenser instructions for reuse within 30 days."
+      : "Reseal the cartridge following the label if carrying it to another compatible joint.";
+    return `${label} · ${units} ${material.unit}${units === 1 ? "" : "s"} of ${material.name} · Estimated ${remainder}% of one ${material.unit} left. ${keep}`;
+  });
+}
+
+export function openingAirSealRodRuns(review: ReturnType<typeof reviewOpeningFlashings>) {
+  return review.rows.flatMap(({ title, result, issues }) =>
+    result?.airSeal && !issues.length ? result.airSeal.edges.flatMap(({ edge, rod, length }) => rod
+      ? [{ productId: rod.id, title: `${title} · interior ${edge.toLowerCase()}`, length, start: 0, end: length }] : []) : []);
 }
 
 export function openingFlashingGuideLines(review: ReturnType<typeof reviewOpeningFlashings>) {
@@ -286,9 +324,17 @@ export function openingFlashingGuideLines(review: ReturnType<typeof reviewOpenin
           "Fold down the wall-wrap flap and seal its horizontal and diagonal seams. Check the flap trim and drip cap against the installation instructions.",
         ] : []),
         "After setting the unit, air-seal its entire interior perimeter before installing trim.",
+        ...(result.airSeal ? [
+          openingAirSealSummary(result.airSeal),
+          ...result.airSeal.edges.map(openingAirSealEdgeLine),
+          ...(result.airSeal.material.id === openingFoam.id
+            ? ["Follow the foam label for ventilation and protection. Use the included dispenser and leave space for expansion."]
+            : ["Dry-fit the closed-cell rod with a blunt tool. Use a cartridge gun and tool the sealant against the two joint faces."]),
+        ] : []),
       ].join(" · ");
     }),
     ...openingFlashingRollLines(review),
+    ...openingAirSealBatchLines(review),
   ];
 }
 

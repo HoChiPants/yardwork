@@ -1,3 +1,6 @@
+import { openingFoam, openingSilicone } from "../src/openingAirSealReference";
+import type { OpeningAirSeal } from "../src/openingAirSeal";
+import { trimBackerRodCutPlan } from "../src/woodJointDecisions";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
@@ -179,4 +182,71 @@ test("rolls group by actual tape width and wrap into four-roll boxes after shari
   const withBox = addHomeDepotPurchaseNeed(project, windowFlashingTape.products[0].id);
   assert.equal(withBox.supplies.find(({ productId }) => productId === windowFlashingTape.products[0].id)?.quantity, 2);
   assert.equal(homeDepotPurchaseNeeds(withBox).some(({ id }) => id === windowFlashingTape.products[0].id), false);
+});
+
+const foam: OpeningAirSeal = {
+  method: "foam", left: 0.375, right: 0.375, head: 0.375, sill: 0.375,
+  availableDepth: 1, sealDepth: 0.5,
+};
+
+test("the interior seal moves to the measured gap and keeps the exterior drain and stock independent", () => {
+  const { project, members } = frame();
+  const legacy = saveOpeningFlashing(projectSchema.parse({ ...project, schemaVersion: 100 }), members, measured);
+  assert.deepEqual(reviewOpeningFlashings(legacy).airSealBatches, []);
+  const checked = checkOpeningFlashing(project, members, { ...measured, airSeal: foam });
+  assert.deepEqual(checked.issues, []);
+  assert.equal(checked.airSeal?.length, 166.5);
+  assert.equal(checked.airSeal?.use, 166.5 * 0.375 * 0.5 / openingFoam.coverage);
+  assert.deepEqual(checked.preview.interiorSeal[0], [-17.8125, 33.6875, -1.25]);
+  assert.deepEqual(checked.preview.drainage[0], checkOpeningFlashing(project, members, measured).preview.drainage[0]);
+  const reversed = checkOpeningFlashing(project, members, { ...measured, exterior: "negative", airSeal: { ...foam, left: 0.5 } });
+  assert.deepEqual(reversed.preview.interiorSeal[0], [17.75, 33.6875, 1.25]);
+  const saved = saveOpeningFlashing(project, members, { ...measured, airSeal: foam });
+  assert.deepEqual(projectSchema.parse(JSON.parse(JSON.stringify(saved))).openingFlashings, saved.openingFlashings);
+  const need = homeDepotPurchaseNeeds(saved).find(({ id }) => id === openingFoam.id);
+  assert.equal(need?.missing, 1);
+  assert.match(guideMarkdown(saved), /166.5 in of interior air seal[\s\S]+Smart Dispenser[\s\S]+reuse within 30 days/);
+  const answer = answerBuildQuestion(saved, buildQuestion("Review the interior air seal")!, []);
+  assert.match(answer.rows?.[0].detail ?? "", /166.5 in of interior air seal/);
+  const moved = { ...saved, pieces: saved.pieces.filter(({ id }) => id !== members.jambA) };
+  assert.equal(reviewOpeningFlashings(moved).airSealBatches.length, 0);
+  assert.ok(validate(moved).some(({ openingFlashingSillId }) => openingFlashingSillId === members.sill));
+  assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...foam, left: 1.25 } }), /Left jamb is wider/);
+  assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...foam, availableDepth: 0.25 } }), /smallest measured cavity/);
+  assert.throws(() => saveOpeningFlashing(project, members, {
+    ...measured, frameDepth: 0.5, airSeal: foam,
+  }), /back from the exterior drainage plane/);
+});
+
+test("rod sizes follow each measured side and silicone is estimated from the bounded bead over the rod", () => {
+  const { project, members } = frame();
+  const airSeal: OpeningAirSeal = { ...foam, method: "silicone", left: 0.25, sill: 0.25, sealDepth: 0.25 };
+  const checked = checkOpeningFlashing(project, members, { ...measured, airSeal });
+  const run = checked.airSeal!;
+  assert.deepEqual(run.issues, []);
+  assert.deepEqual(run.edges.map(({ rod, length }) => [rod?.model, length]), [
+    ["C21H", 47.6875], ["C22H", 47.6875], ["C22H", 35.6875], ["C21H", 35.6875],
+  ]);
+  assert.equal(run.use, (47.6875 + 35.6875) * (0.25 + 0.375) * 0.25 / openingSilicone.coverage);
+  const saved = saveOpeningFlashing(project, members, { ...measured, airSeal });
+  assert.deepEqual(trimBackerRodCutPlan(saved).map(({ product, rolls }) => [product.model, rolls[0].left]),
+    [["C21H", 156.625], ["C22H", 156.625]]);
+  for (const id of [openingSilicone.id, "frost-king-c21h", "frost-king-c22h"])
+    assert.equal(homeDepotPurchaseNeeds(saved).find((row) => row.id === id)?.missing, 1);
+  assert.match(guideMarkdown(saved), /## Backer rod cut plan[\s\S]+156.625 in/);
+  assert.ok(toolChecklist(saved).requirements.some(({ capability }) => capability === "apply-window-sealant"));
+  assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...airSeal, sealDepth: 0.125 } }), /sealant above the rod/);
+  assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...airSeal, head: 0.5 } }), /needs a closed-cell rod/);
+  assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...airSeal, availableDepth: 0.625 } }), /Right jamb needs room/);
+});
+
+test("sealant stock rounds after grouping matching work sessions, not per opening", () => {
+  const a = frame();
+  const b = frame(a.project, 60);
+  const c = frame(b.project, 120);
+  let project = saveOpeningFlashing(c.project, a.members, { ...measured, airSeal: { ...foam, batch: "Trim day" } });
+  project = saveOpeningFlashing(project, b.members, { ...measured, airSeal: { ...foam, batch: "trim day" } });
+  project = saveOpeningFlashing(project, c.members, { ...measured, airSeal: { ...foam, batch: "Later" } });
+  assert.deepEqual(reviewOpeningFlashings(project).airSealBatches.map(({ label, units }) => [label, units]), [["Trim day", 1], ["Later", 1]]);
+  assert.equal(homeDepotPurchaseNeeds(project).find(({ id }) => id === openingFoam.id)?.missing, 2);
 });

@@ -23,7 +23,7 @@ export const flexWrap = {
 } as const;
 
 export const panFlashingGuide = "https://buildingscience.com/documents/information-sheets/pan-flashing-for-exterior-wall-openings";
-export const openingAirSealGuide = "https://basc.pnnl.gov/resource-guides/air-sealing-window-and-door-rough-openings";
+export { openingAirSealGuide } from "./openingAirSealReference";
 export const openingFlashingScope =
   "For a drained integral-flanged unit installed after DuPont Tyvek. Check the delivered unit instructions, substrate, folds and drainage. Plan the continuous interior air seal after setting the unit.";
 

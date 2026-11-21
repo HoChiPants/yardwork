@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { openingAirSealSchema } from "./openingAirSeal";
 import { flexWrap } from "./openingFlashingReference";
 
 export const openingMembersSchema = z.strictObject({
@@ -33,6 +34,7 @@ export const openingFlashingMeasurementsSchema = z.strictObject({
   jambReturn: z.number().min(flexWrap.minJambReturn).max(48),
   tapeWidth: z.union([z.literal(6), z.literal(9)]),
   jambHead: windowFlashingTapeSchema.optional(),
+  airSeal: openingAirSealSchema.optional(),
   pan: z.discriminatedUnion("kind", [
     z.strictObject({ kind: z.literal("slope") }),
     z.strictObject({ kind: z.literal("back-dam"), rise: z.number().positive().max(3) }),

@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { previewDrawerBox } from "../src/drawerBoxes";
-import { reviewDrawerSlideMount, saveDrawerSlideMount } from "../src/drawerSlideMounts";
+import { drawerRailScrewPurchase, reviewDrawerSlideMount, saveDrawerSlideMount } from "../src/drawerSlideMounts";
+import { drawerRailScrew } from "../src/drawerRailScrewReference";
+import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
 import type { DrawerSlideMountInput } from "../src/drawerSlideMountSchema";
 import { guideMarkdown, validate } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
-import { blank, part, projectSchema, type Project, type V3 } from "../src/model";
+import { blank, part, projectSchema, uid, type Project, type V3 } from "../src/model";
 import { composeRotation, rotate } from "../src/spatial";
 import { editRoundOpening } from "../src/throughOpeningCuts";
 
@@ -106,4 +108,53 @@ test("rigid moves preserve mount references while cut changes and nearby obstruc
     ...values, drawer: { ...values.drawer, centerOffset: 2 },
   });
   assert.match(guideMarkdown(misaligned), /rail heights do not overlap/);
+});
+
+test("checked rail screw choices survive reopen and count by the physical drawer and exact store pack", () => {
+  const { project, plan, left } = cabinet();
+  const chosen = {
+    ...values,
+    cabinet: {
+      ...values.cabinet,
+      fasteners: { source: "included", available: 4 } as const,
+    },
+    drawer: {
+      ...values.drawer,
+      screwDepth: 0.4,
+      fasteners: { source: drawerRailScrew.id, seatToWood: 0.09 } as const,
+    },
+  };
+  const recorded = saveDrawerSlideMount(project, plan.id, chosen);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(recorded)));
+  const guide = guideMarkdown(generateBuildGuide(reopened));
+  assert.match(guide, /Cabinet rail screws · 6 for both sides · 4 compatible screws from the delivered slide package allocated · 2 still needed/);
+  assert.match(guide, /Drawer rail screws · 6 for both sides · Everbilt model 801582/);
+  const need = (p: Project) => homeDepotPurchaseNeeds(p).find(({ id }) => id === drawerRailScrew.id);
+  assert.equal(need(reopened)?.quantityText, "1 screw pack");
+  const supplied = addHomeDepotPurchaseNeed(reopened, drawerRailScrew.id);
+  assert.equal(need(supplied), undefined);
+  assert.deepEqual(supplied.supplies.map(({ productId, quantity }) => [productId, quantity]), [[drawerRailScrew.id, 1]]);
+
+  const duplicate = { ...plan, id: uid(), label: "Alternate drawer movement" };
+  const withDuplicate = { ...reopened, motionPlans: [...reopened.motionPlans!, duplicate] };
+  const repeated = saveDrawerSlideMount(withDuplicate, duplicate.id, chosen);
+  assert.deepEqual(drawerRailScrewPurchase(repeated), { required: 1, screws: 6 });
+  const conflicting = saveDrawerSlideMount(repeated, duplicate.id, {
+    ...chosen,
+    drawer: { ...chosen.drawer, fasteners: { source: "on-hand", available: 6 } },
+  });
+  assert.equal(need(conflicting)?.canAdd, false);
+  assert.match(need(conflicting)?.issue ?? "", /competing/);
+
+  const changed = editRoundOpening(reopened, left.id, null, { axis: 0, fromEdges: [2.453, 16.75], diameter: 0.5 });
+  assert.equal(need(changed)?.canAdd, false);
+  assert.match(need(changed)?.issue ?? "", /unchecked/);
+
+  const incompatible = saveDrawerSlideMount(project, plan.id, {
+    ...chosen,
+    drawer: { ...chosen.drawer, fasteners: { source: drawerRailScrew.id, seatToWood: 0.51 } },
+  });
+  assert.equal(need(incompatible)?.required, null);
+  assert.match(guideMarkdown(incompatible), /does not reach wood/);
+  assert.doesNotMatch(guideMarkdown(incompatible), /Everbilt model 801582/);
 });

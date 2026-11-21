@@ -2,6 +2,7 @@ import { sdwsFramingPacks } from "./sdwsFramingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { catalog, uid, type Project } from "./model";
+import { drawerRailScrew } from "./drawerRailScrewReference";
 import { drawerSlideProducts } from "./drawerSlideReference";
 import { everbiltRodBracket } from "./closetRodReference";
 import { everbiltLidSupport, foldingLidStays, foldingLidStayScope } from "./lidStayReference";
@@ -252,6 +253,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "heater package",
     contents: [{ name: "Harvia KIP 6 kW heater package with Xenio control, Wi-Fi and stones", quantity: 1 }],
     requirements: [harviaKit.installationReview],
+  },
+  [drawerRailScrew.id]: {
+    purchaseUnit: "screw pack",
+    contents: [{ name: "#8 × ½ in Phillips pan-head screw", quantity: drawerRailScrew.count }],
+    requirements: ["Confirm seating, wood engagement and clearance with the delivered slides and selected mounting panels."],
   },
   ...Object.fromEntries(drawerSlideProducts.map((slide) => [
     slide.productId,

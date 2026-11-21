@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 93**. Yardwork reads valid formats 1–92 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 94**. Yardwork reads valid formats 1–93 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 94 adds optional screw sources to the cabinet and drawer portions of each measured rail layout. A source can record reserved counts from included or on-hand hardware, or a field-checked Everbilt 801582 pack choice and the measured depth between the seated head and the wood face. Earlier rail layouts open with their original drill paths and no screw source selected.
 
 Format 93 saves measured drawer rail layouts in `drawerSlideMounts` by motion ID. Each layout stores cabinet and drawer rail measurements, optional separate right-side hole patterns, drill and screw depths, and a signature of the closed mounting panels. Earlier drawer motions open with their existing part IDs, slide selection and travel.
 

@@ -1,6 +1,9 @@
 import { attachmentGeometryFingerprint } from "./attachments";
+import { drawerRailScrew } from "./drawerRailScrewReference";
 import {
   drawerSlideFrame,
+  drawerSlideKey,
+  drawerSlidePurchaseReview,
   rectangularDrawerPanelBounds,
   reviewDrawerSlide,
 } from "./drawerSlides";
@@ -10,6 +13,7 @@ import { formatPreciseInches as inches } from "./measurement";
 import type { Project, V3 } from "./model";
 import { drawerSideLabels, type MotionPlan } from "./motionPlanSchema";
 import { partLabel } from "./partLabels";
+import { purchaseCount } from "./purchaseUnits";
 import { reviewSocketPlateFace, reviewWoodMountHoles, socketFaceAxes, type BackplateExtents } from "./rodMountGeometry";
 import { prepareCollisionBox, prepareCollisionSolid, solidOverlap, type CollisionSolid } from "./solidCollision";
 import { inverseRotation, rotate } from "./spatial";
@@ -19,6 +23,9 @@ const xyz = ["X", "Y", "Z"] as const;
 const dot = (a: V3, b: V3) => a.reduce((sum, n, i) => sum + n * b[i], 0);
 const plus = (a: V3, b: V3) => a.map((n, i) => n + b[i]) as V3;
 const minus = (a: V3, b: V3) => a.map((n, i) => n - b[i]) as V3;
+export const drawerRailRoles = { cabinet: "Cabinet rail", drawer: "Drawer rail" } as const;
+export type DrawerRailRole = keyof typeof drawerRailRoles;
+const railTypes = ["cabinet", "drawer"] as const;
 const roles = [
   { key: "cabinetLeft", type: "cabinet", normalSign: 1, right: false },
   { key: "cabinetRight", type: "cabinet", normalSign: -1, right: true },
@@ -109,14 +116,19 @@ function reviewLayout(project: Project, mount: DrawerSlideMount, layout: ReturnT
       solids.set(other.id, solid);
       return solidOverlap(railSpace, solid, epsilon) ? [partLabel(project, other.id)] : [];
     });
+    const catalogFastener = measured.fasteners?.source === drawerRailScrew.id ? measured.fasteners : undefined;
+    const nominalPenetration = catalogFastener ? drawerRailScrew.nominalLength - catalogFastener.seatToWood : 0;
     const issues = [
       ...alignmentIssues,
+      ...(catalogFastener && nominalPenetration <= epsilon
+        ? ["The listed ½ in screw does not reach wood through the entered thickness under its head."] : []),
       ...(footprint.crossesEdge ? ["Rail footprint extends past retained wood."] : []),
       ...(footprint.crossesVoid ? ["Rail footprint crosses a through-cut."] : []),
       ...(blockers.length ? [`Closed rail space meets ${blockers.join(", ")}.`] : []),
     ];
     const holes = reviewWoodMountHoles(piece, { pointLocal, normalLocal }, extents, {
       ...measured,
+      screwDepth: Math.max(measured.screwDepth, nominalPenetration),
       basis: "Transferred from the delivered Accuride rail",
       centers: (right ? measured.rightCenters ?? measured.centers : measured.centers).map(([back, rise]) => [
         (measured.length / 2 - back) * frontLocal[u] + rise * upLocal[u],
@@ -124,7 +136,7 @@ function reviewLayout(project: Project, mount: DrawerSlideMount, layout: ReturnT
       ]),
     }, !issues.length);
     return {
-      key, piece, issues, holes, center,
+      key, type, piece, issues, holes, center,
       face: `${normalLocal[face.axis] < 0 ? "−" : "+"}${xyz[face.axis]}`,
       frontEdge: limits[2].max,
       bottomEdge: limits[1].min,
@@ -173,6 +185,56 @@ export function clearDrawerSlideMount(project: Project, motionId: string): Proje
   return { ...project, drawerSlideMounts: project.drawerSlideMounts.filter((row) => row.motionId !== motionId) };
 }
 
+type MountReview = ReturnType<typeof reviewDrawerSlideMount>;
+
+export function drawerRailFastenerRows(mount: DrawerSlideMount, review: MountReview) {
+  return railTypes.flatMap((role) => {
+    const fasteners = mount[role].fasteners;
+    if (!fasteners) return [];
+    const label = `${drawerRailRoles[role]} screws`;
+    const count = review.state === "checked"
+      ? review.rails.filter((rail) => rail.type === role).reduce((total, rail) => total + rail.holes.marks.length, 0)
+      : null;
+    const buying = fasteners.source === drawerRailScrew.id;
+    const source = fasteners.source === "included" ? "from the delivered slide package" : "already on hand";
+    const detail = count === null ? "Check mounting geometry before counting screws."
+      : buying ? `${count} for both sides · Everbilt model ${drawerRailScrew.model} · nominal ½ in, with ${inches(fasteners.seatToWood)} under the head before wood. Confirm seating, engagement and clearance on the delivered rail.`
+      : `${count} for both sides · ${fasteners.available} compatible screws ${source} allocated${fasteners.available < count ? ` · ${count - fasteners.available} still needed` : ""}.`;
+    return [{ role, label, fasteners, count, detail }];
+  });
+}
+
+export function drawerRailScrewPurchase(project: Project) {
+  const conflictingSlides = new Set(drawerSlidePurchaseReview(project).conflicts.map(({ key }) => key));
+  const groups = new Map<string, Array<{ signature: string; count: number | null; buying: boolean }>>();
+  for (const mount of project.drawerSlideMounts ?? []) {
+    const mechanism = project.motionPlans?.find(({ id }) => id === mount.motionId)?.mechanism;
+    if (mechanism?.kind !== "slide" || !mechanism.drawerSlide) continue;
+    const key = drawerSlideKey(mechanism.drawerSlide);
+    const review = reviewDrawerSlideMount(project, mount);
+    for (const { role, fasteners, count } of drawerRailFastenerRows(mount, review)) {
+      const groupKey = `${key}/${role}`;
+      const entries = groups.get(groupKey) ?? [];
+      const buying = fasteners.source === drawerRailScrew.id;
+      entries.push({
+        signature: JSON.stringify([mechanism.drawerSlide.productId, fasteners, count]),
+        count: conflictingSlides.has(key) ? null : count,
+        buying,
+      });
+      groups.set(groupKey, entries);
+    }
+  }
+  let count = 0;
+  for (const entries of groups.values()) {
+    if (!entries.some((entry) => entry.buying)) continue;
+    const [first] = entries;
+    if (first.count === null || entries.some((entry) => entry.count === null || entry.signature !== first.signature))
+      return { required: null, screws: null, issue: "Resolve unchecked or competing drawer rail screw choices before adding the pack." };
+    count += first.count;
+  }
+  return { required: purchaseCount(count, drawerRailScrew.count).quantity, screws: count };
+}
+
 export function drawerSlideMountGuideLines(project: Project, motionId: string) {
   const mount = project.drawerSlideMounts?.find((row) => row.motionId === motionId);
   if (!mount) return [];
@@ -192,6 +254,7 @@ export function drawerSlideMountGuideLines(project: Project, motionId: string) {
           `${title} hole ${index} · ${inches(frontEdge - dot(entry, frontAxis))} back from the panel blank's front · ${inches(entry[1] - bottomEdge)} up from the blank's bottom.`),
       ];
     }),
+    ...drawerRailFastenerRows(mount, review).map(({ label, detail }) => `${label} · ${detail}`),
     drawerMountScope,
   ];
 }

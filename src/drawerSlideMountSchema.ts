@@ -1,9 +1,16 @@
 import { z } from "zod";
+import { drawerRailScrew } from "./drawerRailScrewReference";
 
 const positive = (maximum: number) => z.number().finite().positive().max(maximum);
 const back = z.number().finite().nonnegative().max(32);
 const rise = z.number().finite().min(-4).max(4);
 const centers = z.array(z.tuple([back, rise])).min(3, "Transfer at least three screw centers for each rail.").max(12);
+const available = z.number().int().nonnegative().max(9999);
+const fasteners = z.discriminatedUnion("source", [
+  z.strictObject({ source: z.literal("included"), available }),
+  z.strictObject({ source: z.literal("on-hand"), available }),
+  z.strictObject({ source: z.literal(drawerRailScrew.id), seatToWood: positive(4) }),
+]);
 const rail = z.strictObject({
   length: positive(32),
   height: positive(4),
@@ -15,6 +22,7 @@ const rail = z.strictObject({
   pilotDepth: positive(4),
   screwDiameter: positive(1),
   screwDepth: positive(4),
+  fasteners: fasteners.optional(),
 });
 
 export const drawerSlideMountInputSchema = z.strictObject({

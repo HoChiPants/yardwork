@@ -7,6 +7,7 @@ import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { z } from "zod";
 import type { Material } from "./model";
+import { drawerRailScrew } from "./drawerRailScrewReference";
 import { accuride3732, otherAccurideSlides } from "./drawerSlideReference";
 import { cedarDoorStop, greenhouseDoorKits } from "./greenhouseDoorReference";
 import { harviaKit, steel6 } from "./saunaHeaterReference";
@@ -3152,6 +3153,37 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     roleQualifications: [],
     capabilities: [],
   })),
+  {
+    id: drawerRailScrew.id,
+    name: drawerRailScrew.name,
+    manufacturer: "Everbilt",
+    manufacturerPartNumber: drawerRailScrew.model,
+    category: "fastener",
+    status: "reviewed-specs",
+    verifiedAt: drawerRailScrew.reviewedAt,
+    purchaseSpec: { kind: "counted", count: drawerRailScrew.count, sourceRefs: [drawerRailScrew.url] },
+    profile: profile("fastener", null, drawerRailScrew.count, {
+      fastenerLength: drawerRailScrew.nominalLength,
+      finish: "Zinc plated",
+      drive: "Phillips",
+    }),
+    offers: [hd(drawerRailScrew.internetNumber, drawerRailScrew.model, drawerRailScrew.storeSku)],
+    sources: [
+      {
+        url: drawerRailScrew.url,
+        verifiedAt: drawerRailScrew.reviewedAt,
+        note: "Exact #8 × ½ in Phillips pan-head sheet-metal screw, 100 screws. The listing includes wood among the substrates. Consult a store snapshot for location, price and stock.",
+      },
+      {
+        url: accuride3732.manual,
+        verifiedAt: drawerRailScrew.reviewedAt,
+        note: "The 3732 hardware drawing lists the #8 pan-head screw form. The guide calls for final round-hole fasteners. Confirm the actual slot, fastener seating, engagement in the installed panels and running clearance for this SKU.",
+      },
+    ],
+    discrepancies: [],
+    roleQualifications: [],
+    capabilities: [],
+  },
   ...Object.entries(greenhouseDoorKits).map(([id, kit]) => ({
     id,
     name: kit.label,

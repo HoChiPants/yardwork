@@ -11,6 +11,8 @@ import { reviewSunliteMounts, sunliteMountPurchase } from "./sunliteMounts";
 import { attachmentPurchaseSummaries } from "./attachmentPurchases";
 import { everbiltClosetRod, everbiltRodBracket } from "./closetRodReference";
 import { connectorPurchaseSummary } from "./connectorPurchases";
+import { drawerRailScrewPurchase } from "./drawerSlideMounts";
+import { drawerRailScrew } from "./drawerRailScrewReference";
 import { drawerSlidePurchaseReview } from "./drawerSlides";
 import { bom, type BomRow } from "./engine";
 import { fastenerPurchaseSummary } from "./fastenerPurchases";
@@ -169,6 +171,13 @@ export function homeDepotPurchaseNeeds(
       else if (slideReview.conflicts.some(({ productIds }) => productIds.includes(productId)))
         include(productId, "Drawer slide alternatives", null,
           "Choose one slide size for the drawer before adding its hardware.");
+    }
+    if (project.drawerSlideMounts?.some(({ cabinet, drawer }) =>
+      cabinet.fasteners?.source === drawerRailScrew.id || drawer.fasteners?.source === drawerRailScrew.id)) {
+      const screws = drawerRailScrewPurchase(project);
+      include(drawerRailScrew.id,
+        screws.screws === null ? "Drawer rail screws" : `${screws.screws} checked drawer rail screw locations`,
+        screws.required, screws.issue);
     }
     const kit = "everbilt-24417-gate-kit";
     include(

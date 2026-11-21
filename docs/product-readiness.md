@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 62 editable stocks. The registry contains 126 product records and 144 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 62 editable stocks. The registry contains 127 product records and 145 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 20, 2026 · Drawer rail screws
+
+Cabinet and drawer rails each support reserved included or on-hand screws and a field-checked exact Everbilt 801582 option. The model checks both the entered tip depth and the nominal penetration below the measured rail stack. The guide counts checked locations and highlights shortages. Shopping aggregates selected locations into 100-screw packs and flags competing choices for the same physical drawer. Confirm fit, wood engagement and movement on the delivered assembly. [Home Depot 801582](https://www.homedepot.com/p/204275069) · [Accuride 3732 installation instructions](https://www.accuride.com/media/amasty/amfile/attach/a3bcba75b0b82de060a661de95ce9f44.pdf)
 
 ## November 20, 2026 · Measured drawer rail mounting
 

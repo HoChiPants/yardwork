@@ -1,13 +1,12 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { drawerRailScrew } from "./drawerRailScrewReference";
 import { drawerSlideReference } from "./drawerSlideReference";
-import { clearDrawerSlideMount, drawerMountScope, reviewDrawerSlideMount, saveDrawerSlideMount } from "./drawerSlideMounts";
+import { clearDrawerSlideMount, drawerMountScope, drawerRailFastenerRows, drawerRailRoles, reviewDrawerSlideMount, saveDrawerSlideMount, type DrawerRailRole } from "./drawerSlideMounts";
 import type { DrawerSlideMountInput } from "./drawerSlideMountSchema";
 import type { Project } from "./model";
 import { drawerSideLabels, type MotionPlan } from "./motionPlanSchema";
 import { partLabel } from "./partLabels";
 
-const railNames = { cabinet: "Cabinet rail", drawer: "Drawer rail" } as const;
-type Rail = keyof typeof railNames;
 const fields = [
   ["length", "footprint length", 0.001, 32],
   ["height", "footprint height", 0.001, 4],
@@ -29,13 +28,14 @@ function holeCenters(value: FormDataEntryValue | null, label: string) {
 }
 
 function RailFields({ role, saved, closedLength, height }: {
-  role: Rail;
-  saved?: DrawerSlideMountInput[Rail];
+  role: DrawerRailRole;
+  saved?: DrawerSlideMountInput[DrawerRailRole];
   closedLength: number;
   height: number;
 }) {
   const [separate, setSeparate] = useState(!!saved?.rightCenters);
-  const name = railNames[role];
+  const name = drawerRailRoles[role];
+  const [fastenerSource, setFastenerSource] = useState<string>(saved?.fasteners?.source ?? "");
   return (
     <fieldset className="field-section">
       <legend>{name}</legend>
@@ -64,6 +64,39 @@ function RailFields({ role, saved, closedLength, height }: {
           <textarea rows={3} name={`${role}.rightCenters`} defaultValue={saved?.rightCenters?.map((pair) => pair.join(", ")).join("\n")} required />
         </label>
       )}
+      <label className="field">
+        {name} screw source
+        <select name={`${role}.fastenerSource`} value={fastenerSource}
+          onChange={(event) => setFastenerSource(event.target.value)}>
+          <option value="">Decide later</option>
+          <option value="included">Included with the delivered slides</option>
+          <option value="on-hand">Already on hand</option>
+          <option value={drawerRailScrew.id}>Buy {drawerRailScrew.name} at Home Depot</option>
+        </select>
+      </label>
+      {fastenerSource === drawerRailScrew.id ? (
+        <>
+          <label className="field">
+            {name} thickness under the seated head to wood (in)
+            <input type="number" name={`${role}.seatToWood`} min="0.001" max="4" step="any"
+              defaultValue={saved?.fasteners?.source === drawerRailScrew.id ? saved.fasteners.seatToWood : undefined} required />
+          </label>
+          <label className="checkbox-field">
+            <input type="checkbox" name={`${role}.confirmFastener`}
+              defaultChecked={saved?.fasteners?.source === drawerRailScrew.id} required />
+            {name} confirmed this screw seats, engages the wood and clears the delivered moving hardware
+          </label>
+          <p className="small-note">
+            <a href={drawerRailScrew.url} target="_blank" rel="noreferrer">Home Depot · model {drawerRailScrew.model}</a>
+          </p>
+        </>
+      ) : fastenerSource && (
+        <label className="field">
+          {name} compatible screws reserved for both sides
+          <input type="number" name={`${role}.available`} min="0" max="9999" step="1"
+            defaultValue={saved?.fasteners && "available" in saved.fasteners ? saved.fasteners.available : undefined} required />
+        </label>
+      )}
     </fieldset>
   );
 }
@@ -83,12 +116,17 @@ export function DrawerSlideMountPanel({ project, motion, shown, onShow, onChange
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    function read(role: Rail) {
+    function read(role: DrawerRailRole) {
+      const source = form.get(`${role}.fastenerSource`);
+      const fasteners = source === drawerRailScrew.id
+        ? { source, seatToWood: Number(form.get(`${role}.seatToWood`)) }
+        : source ? { source, available: Number(form.get(`${role}.available`)) } : undefined;
       return {
+        ...(fasteners && { fasteners }),
         ...Object.fromEntries(fields.map(([key]) => [key, Number(form.get(`${role}.${key}`))])),
-        centers: holeCenters(form.get(`${role}.centers`), railNames[role]),
+        centers: holeCenters(form.get(`${role}.centers`), drawerRailRoles[role]),
         ...(form.has(`${role}.rightCenters`) && {
-          rightCenters: holeCenters(form.get(`${role}.rightCenters`), `${railNames[role]} right rail`),
+          rightCenters: holeCenters(form.get(`${role}.rightCenters`), `${drawerRailRoles[role]} right rail`),
         }),
       };
     }
@@ -134,6 +172,8 @@ export function DrawerSlideMountPanel({ project, motion, shown, onShow, onChange
               ))}
             </ul>
           )}
+          {saved && drawerRailFastenerRows(saved, review).map(({ role, label, detail }) =>
+            <p className="small-note" key={role}><strong>{label}</strong> · {detail}</p>)}
           {review.rails.length > 0 && (
             <button type="button" className="button secondary small" onClick={() => onShow(shown ? null : motion.id)}>
               {shown ? "Hide rail mounting marks" : "Show rail mounting marks in 3D"}
@@ -149,6 +189,7 @@ export function DrawerSlideMountPanel({ project, motion, shown, onShow, onChange
             Use the rearmost panel front and highest panel bottom as the shared edges.
             Enter one hole per line with its distance behind the rail front and signed height from the rail center, separated by a comma.
             Check that the pattern matches the delivered hardware on both sides.
+            Count only screws reserved for this pair of cabinet or drawer rails.
           </p>
           <form onSubmit={submit}>
             <label className="field">Rail centerline above shared bottom (in)

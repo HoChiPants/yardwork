@@ -1417,7 +1417,7 @@ test("a named cabinet opening produces a drawer cut list and stops the saved sli
   expect(guide).toContain("T46322G18");
 });
 
-test("drawer rail marks catch screw breakthrough and reopen with checked drilling coordinates", async ({ page }) => {
+test("drawer rail marks catch breakthrough and reopen with checked coordinates and exact screws", async ({ page }) => {
   const base = blank("Drawer rail mounting example");
   const cabinetLeft = part("Left cabinet panel", "plywood", [0.75, 24, 18.25], [-8.385, 12, 0], base.steps[0].id, "Drawer");
   const cabinetRight = part("Right cabinet panel", "plywood", [0.75, 24, 18.25], [8.385, 12, 0], base.steps[0].id, "Drawer");
@@ -1474,6 +1474,11 @@ test("drawer rail marks catch screw breakthrough and reopen with checked drillin
   await expect(rightMark).toHaveAttribute("data-state", "conflict");
 
   await fill("Drawer rail seated screw penetration into wood (in)", "0.4");
+  await mounting.getByRole("combobox", { name: "Cabinet rail screw source", exact: true }).selectOption("included");
+  await fill("Cabinet rail compatible screws reserved for both sides", "6");
+  await mounting.getByRole("combobox", { name: "Drawer rail screw source", exact: true }).selectOption("everbilt-801582");
+  await fill("Drawer rail thickness under the seated head to wood (in)", "0.1");
+  await mounting.getByRole("checkbox", { name: /Drawer rail confirmed this screw seats/ }).check();
   await check.click();
   await expect(mounting.getByRole("status")).toContainText("All four rails and the measured mounting paths fit");
   await expect(rightMark).toHaveAttribute("data-state", "checked");
@@ -1482,7 +1487,10 @@ test("drawer rail marks catch screw breakthrough and reopen with checked drillin
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
   await expect.poll(async () => (await draft())?.revision).toBe(1);
-  expect((await draft()).project.drawerSlideMounts[0].drawer).toMatchObject({ screwDepth: 0.4, rightCenters: [[2, 0], [8, 0], [16, 0]] });
+  expect((await draft()).project.drawerSlideMounts[0].drawer).toMatchObject({
+    screwDepth: 0.4, rightCenters: [[2, 0], [8, 0], [16, 0]],
+    fasteners: { source: "everbilt-801582", seatToWood: 0.1 },
+  });
   await page.reload();
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
@@ -1494,5 +1502,15 @@ test("drawer rail marks catch screw breakthrough and reopen with checked drillin
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/Right drawer side · P\d+ hole 1 · 2\.125 in back/);
   expect(guide).toContain("0.4 in into wood");
+  expect(guide).toContain("Cabinet rail screws · 6 for both sides · 6 compatible screws from the delivered slide package allocated");
+  expect(guide).toContain("Drawer rail screws · 6 for both sides · Everbilt model 801582");
   await expect(page.locator(".print-guide")).toContainText("2.125 in back from the panel blank's front");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  const buy = dialog.getByRole("button", { name: /^Add 1 screw pack of Everbilt/ });
+  await expect(buy).toBeVisible();
+  await buy.click();
+  await expect(buy).toHaveCount(0);
+  await expect(dialog.getByText("1 screw pack · #204275069", { exact: true })).toBeVisible();
 });

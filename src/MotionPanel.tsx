@@ -1426,7 +1426,7 @@ export function MotionPanel({
         </section>
       )}
       {selected && editing === null && (
-        <GreenhouseLatchPanel key={selected.id} project={project} plan={selected}
+        <GreenhouseLatchPanel key={`latch-${selected.id}`} project={project} plan={selected}
           shown={shownLatchId === selected.id}
           onShow={(id) => {
             cancel();
@@ -1441,7 +1441,7 @@ export function MotionPanel({
         />
       )}
       {selected && editing === null && (
-        <GreenhouseDoorSealPanel key={selected.id} project={project} motion={selected}
+        <GreenhouseDoorSealPanel key={`seal-${selected.id}`} project={project} motion={selected}
           onPreview={(inspection) => {
             cancel();
             setActiveReview(null);

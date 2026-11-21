@@ -1,4 +1,10 @@
-import { accuride3732 as reference } from "./drawerSlideReference";
+import {
+  accuride3732,
+  drawerSlideProducts,
+  drawerSlideReference,
+  type DrawerSlideProduct,
+  type DrawerSlideProductId,
+} from "./drawerSlideReference";
 import { formatPreciseInches as inches } from "./measurement";
 import { material, type Piece, type Project, type V3 } from "./model";
 import {
@@ -48,6 +54,7 @@ function rectangularBounds(part: Piece, frame: V3[]) {
 type FitRow = { label: string; detail: string; matches: boolean };
 type DrawerSlideReview = {
   setup: DrawerSlideSetup;
+  reference: DrawerSlideProduct;
   rows: FitRow[];
   ready: boolean;
 };
@@ -55,16 +62,18 @@ type DrawerSlideReview = {
 /** Compare selected flat mounting panels in the drawer's closed position. */
 export function reviewDrawerSlide(
   project: Project,
-  plan: MotionPlan,
+  plan: Pick<MotionPlan, "memberIds" | "mechanism">,
 ): DrawerSlideReview | null {
   const mechanism = plan.mechanism;
   if (mechanism.kind !== "slide" || !mechanism.drawerSlide) return null;
   const setup = mechanism.drawerSlide;
+  const reference = drawerSlideReference(setup.productId);
   const rows: FitRow[] = [];
   const add = (label: string, detail: string, matches: boolean) =>
     rows.push({ label, detail, matches });
   const finish = () => ({
     setup,
+    reference,
     rows,
     ready: rows.every((row) => row.matches),
   });
@@ -198,32 +207,73 @@ export function reviewDrawerSlide(
   return finish();
 }
 
-export function drawerSlideDemand(project: Project) {
-  const available = new Set<string>();
+/** Full-travel fit options for the same four panels and saved reference direction. */
+export function compareDrawerSlideLengths(
+  project: Project,
+  memberIds: string[],
+  axis: V3,
+  sides: Omit<DrawerSlideSetup, "productId">,
+) {
+  const panelIds = keys.map((key) => sides[key]);
+  if (panelIds.some((id) => !id) || new Set(panelIds).size !== keys.length) return [];
+  return drawerSlideProducts.map((reference) => reviewDrawerSlide(project, {
+    memberIds,
+    mechanism: {
+      kind: "slide",
+      axis,
+      travel: reference.travel,
+      drawerSlide: { ...sides, productId: reference.productId },
+    },
+  })!);
+}
+
+export const drawerSlideKey = ({ drawerLeft, drawerRight }: DrawerSlideSetup) =>
+  [drawerLeft, drawerRight].sort().join("/");
+
+export function drawerSlidePurchaseReview(project: Project) {
+  const drawers = new Map<string, Set<DrawerSlideProductId>>();
   for (const plan of project.motionPlans ?? []) {
     const review = reviewDrawerSlide(project, plan);
     if (!review?.ready) continue;
-    // A saved alternative for the same drawer sides uses the same pair.
-    available.add(
-      [review.setup.drawerLeft, review.setup.drawerRight].sort().join("/"),
-    );
+    const key = drawerSlideKey(review.setup);
+    const choices = drawers.get(key) ?? new Set<DrawerSlideProductId>();
+    choices.add(review.setup.productId);
+    drawers.set(key, choices);
   }
-  const selected = project.supplies
-    .filter((row) => row.productId === reference.productId)
-    .reduce((total, row) => total + row.quantity, 0);
-  return {
-    needed: available.size,
-    selected,
-    missing: Math.max(0, available.size - selected),
-  };
+  const needed = new Map<DrawerSlideProductId, number>();
+  const conflicts: { key: string; productIds: DrawerSlideProductId[] }[] = [];
+  for (const [key, choices] of drawers) {
+    const productIds = [...choices].sort();
+    if (productIds.length > 1) {
+      conflicts.push({ key, productIds });
+      continue;
+    }
+    const [id] = productIds;
+    needed.set(id, (needed.get(id) ?? 0) + 1);
+  }
+  const purchased = new Map<string, number>();
+  for (const { productId, quantity } of project.supplies)
+    purchased.set(productId, (purchased.get(productId) ?? 0) + quantity);
+  const products = drawerSlideProducts.map(({ productId }) => {
+    const required = needed.get(productId) ?? 0;
+    const selected = purchased.get(productId) ?? 0;
+    return { productId, needed: required, selected, missing: Math.max(0, required - selected) };
+  });
+  return { products, conflicts };
 }
 
-export function addMissingDrawerSlides(project: Project) {
-  const { missing } = drawerSlideDemand(project);
+export function drawerSlideDemand(project: Project, productId: DrawerSlideProductId = accuride3732.productId) {
+  const { needed, selected, missing } = drawerSlidePurchaseReview(project)
+    .products.find((row) => row.productId === productId)!;
+  return { needed, selected, missing };
+}
+
+export function addMissingDrawerSlides(project: Project, productId: DrawerSlideProductId = accuride3732.productId) {
+  const { missing } = drawerSlideDemand(project, productId);
   return missing
     ? addSupply(
         project,
-        reference.productId,
+        productId,
         missing,
         "Drawer slide pairs for modeled openings",
         "Confirm delivered slides, fastener fit and actual mounting surfaces before installation.",

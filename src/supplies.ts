@@ -2,7 +2,7 @@ import { sdwsFramingPacks } from "./sdwsFramingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { catalog, uid, type Project } from "./model";
-import { accuride3732 } from "./drawerSlideReference";
+import { drawerSlideProducts } from "./drawerSlideReference";
 import { everbiltRodBracket } from "./closetRodReference";
 import { everbiltLidSupport, foldingLidStays, foldingLidStayScope } from "./lidStayReference";
 import { dewaltJigsaw } from "./jigsawReference";
@@ -253,16 +253,19 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     contents: [{ name: "Harvia KIP 6 kW heater package with Xenio control, Wi-Fi and stones", quantity: 1 }],
     requirements: [harviaKit.installationReview],
   },
-  [accuride3732.productId]: {
-    purchaseUnit: "left/right slide pair",
-    contents: [
-      { name: "left T46322G22 slide", quantity: 1 },
-      { name: "right T46322G22 slide", quantity: 1 },
-    ],
-    requirements: [
-      "Verify the delivered slide marking, fasteners and the cabinet mounting method. The package is one pair per drawer; included screw quantities and installation details require field review.",
-    ],
-  },
+  ...Object.fromEntries(drawerSlideProducts.map((slide) => [
+    slide.productId,
+    {
+      purchaseUnit: "left/right slide pair",
+      contents: [
+        { name: `left ${slide.orderModel} slide`, quantity: 1 },
+        { name: `right ${slide.orderModel} slide`, quantity: 1 },
+      ],
+      requirements: [
+        "Verify the delivered slide marking, fasteners and the cabinet mounting method. The package is one pair per drawer; included screw quantities and installation details require field review.",
+      ],
+    },
+  ])),
   ...Object.fromEntries(
     Object.entries(greenhouseDoorKits).map(([id, kit]) => [
       id,

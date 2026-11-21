@@ -7,7 +7,7 @@ import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { z } from "zod";
 import type { Material } from "./model";
-import { accuride3732 } from "./drawerSlideReference";
+import { accuride3732, otherAccurideSlides } from "./drawerSlideReference";
 import { cedarDoorStop, greenhouseDoorKits } from "./greenhouseDoorReference";
 import { harviaKit, steel6 } from "./saunaHeaterReference";
 import { cedarbrookLining } from "./saunaLiningReference";
@@ -3110,6 +3110,48 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     roleQualifications: [],
     capabilities: [],
   },
+  ...otherAccurideSlides.map((slide) => ({
+    id: slide.productId,
+    name: slide.name,
+    manufacturer: "Accuride",
+    manufacturerPartNumber: slide.orderModel,
+    category: "connector" as const,
+    status: "reviewed-specs" as const,
+    verifiedAt: slide.reviewedAt,
+    purchaseSpec: { kind: "counted" as const, count: 2, sourceRefs: [slide.homeDepot] },
+    profile: profile("connector", null, 2, {
+      materialFamily: "accuride-3732-side-mount-pair",
+      finish: "Zinc",
+    }),
+    offers: [hd(slide.homeDepotId, slide.orderModel)],
+    sources: [
+      {
+        url: slide.homeDepot,
+        verifiedAt: slide.reviewedAt,
+        note: `Internet #${slide.homeDepotId}, model ${slide.orderModel}, one left/right pair for frameless side mounting. Use a store snapshot for price and quantity.`,
+      },
+      {
+        url: slide.assembly,
+        verifiedAt: slide.reviewedAt,
+        note: "The linked Accuride installation sheet identifies the 3732 family with size-specific dimensions and conventional or 32 mm mounting instructions.",
+      },
+      {
+        url: slide.manual,
+        verifiedAt: slide.reviewedAt,
+        note: `The ${slide.technicalModel} row lists ${slide.closedLength} in closed length and ${slide.travel} in travel. Side space is 0.500 to 0.531 in per side and the rail height is 1.46 in.`,
+      },
+      {
+        url: slide.manufacturerCatalog,
+        verifiedAt: slide.reviewedAt,
+        note: "The 3732 family page lists drawers up to 16 in wide. Confirm the delivered slide marking, mounting hardware and instructions.",
+      },
+    ],
+    discrepancies: [
+      "Retail load figures differ from the manufacturer's tested assembly. Drawer fit uses the technical dimensions and leaves load and mounting verification for the actual cabinet.",
+    ],
+    roleQualifications: [],
+    capabilities: [],
+  })),
   ...Object.entries(greenhouseDoorKits).map(([id, kit]) => ({
     id,
     name: kit.label,

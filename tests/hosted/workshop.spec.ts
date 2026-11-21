@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { restoreWorkshopArchive } from "../../server/workshopArchive";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { drawerSlideReference } from "../../src/drawerSlideReference";
 import { applyCommand, blank, part } from "../../src/model";
 import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
 import { saveWoodJointDecision } from "../../src/woodJointDecisions";
@@ -1161,4 +1162,77 @@ test("a measured hinge path stops opening and closing at trim between clear ends
   expect(guide).toContain("Cabinet door · Measured hinge path");
   expect(guide).toContain("At 45°, datum offset · X 0 in, Y 0 in, Z 2.5 in.");
   await expect(page.locator(".print-guide")).toContainText("At 45°, datum offset · X 0 in, Y 0 in, Z 2.5 in.");
+});
+
+test("compare drawer slide lengths, play the fitted travel and reopen the exact Home Depot pair", async ({ page }) => {
+  const base = blank("Short drawer slide comparison");
+  const cabinetLeft = part("Left cabinet side", "plywood", [0.75, 24, 18.25], [-8.385, 12, 0], base.steps[0].id, "Drawer");
+  const cabinetRight = part("Right cabinet side", "plywood", [0.75, 24, 18.25], [8.385, 12, 0], base.steps[0].id, "Drawer");
+  const drawerLeft = part("Left drawer side", "plywood", [0.5, 4, 18.25], [-7.25, 12, 0], base.steps[0].id, "Drawer");
+  const drawerRight = part("Right drawer side", "plywood", [0.5, 4, 18.25], [7.25, 12, 0], base.steps[0].id, "Drawer");
+  const { project } = saveMotionPlan(
+    { ...base, pieces: [cabinetLeft, cabinetRight, drawerLeft, drawerRight] },
+    { label: "Shallow drawer", memberIds: [drawerLeft.id, drawerRight.id], mechanism: { kind: "slide", axis: [0, 0, 1], travel: 12 } },
+  );
+  const hardware = drawerSlideReference("accuride-t46322g18");
+  const dialog = page.getByRole("dialog");
+  const panel = page.getByRole("region", { name: "Motion and clearance" });
+  const openMotion = () => page.getByRole("button", { name: "Test movement", exact: true }).click();
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "short-drawer.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await openMotion();
+  await panel.getByRole("button", { name: "Edit setup", exact: true }).click();
+  await panel.getByRole("button", { name: "Compare slide fit", exact: true }).click();
+  for (const piece of [cabinetLeft, drawerLeft, drawerRight, cabinetRight]) {
+    await panel.getByRole("combobox", { name: piece.name, exact: true }).selectOption(piece.id);
+  }
+
+  const comparison = panel.getByRole("region", { name: "Drawer slide length comparison" });
+  await expect(comparison.getByRole("listitem")).toHaveCount(6);
+  const shortPair = comparison.getByRole("listitem").filter({ hasText: "18 in slide pair" });
+  await expect(shortPair).toContainText("Fits modeled panels");
+  await expect(shortPair).toContainText("17.72 in closed rail");
+  const longerPair = comparison.getByRole("listitem").filter({ hasText: "20 in slide pair" });
+  await expect(longerPair).toContainText("Review fit");
+  await expect(longerPair).toContainText("18.25 in of common front-to-back panel span");
+  await expect(longerPair.getByRole("button")).toHaveCount(0);
+  await shortPair.getByRole("button", { name: "Use 18 in slide pair" }).click();
+  const travel = panel.getByRole("spinbutton", { name: "Maximum extension" });
+  await expect(travel).toHaveValue("18");
+  await expect(travel).toHaveAttribute("max", "18");
+  await panel.getByRole("button", { name: "Save and test motion", exact: true }).click();
+  const fit = panel.getByRole("region", { name: "Drawer slide fit", exact: true });
+  await expect(fit).toContainText("T46322G18");
+  const listing = fit.getByRole("link", { name: "View 18 in slide pair at Home Depot" });
+  await expect(listing).toHaveAttribute("href", hardware.homeDepot);
+  await fit.getByRole("button", { name: "Add missing slide pair to list" }).click();
+  await expect(fit).toContainText("1 planned pair · 1 in shopping list");
+  await panel.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(page.getByTestId("motion-preview-label")).toHaveAttribute("data-pose", "18");
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  expect((await draft()).project.motionPlans[0].mechanism).toMatchObject({
+    travel: 18, drawerSlide: { productId: hardware.productId },
+  });
+  expect((await draft()).project.supplies).toMatchObject([{ productId: hardware.productId, quantity: 1 }]);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await openMotion();
+  await expect(listing).toHaveAttribute("href", hardware.homeDepot);
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("T46322G18");
+  expect(guide).toContain("Closed rail length 17.72 in");
 });

@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { accuride3732 as reference } from "../src/drawerSlideReference";
+import { accuride3732 as reference, drawerSlideReference } from "../src/drawerSlideReference";
 import {
   addMissingDrawerSlides,
+  compareDrawerSlideLengths,
   drawerSlideDemand,
+  drawerSlidePurchaseReview,
   reviewDrawerSlide,
 } from "../src/drawerSlides";
 import { guideMarkdown, shoppingCsv, validate } from "../src/engine";
+import { homeDepotPurchaseNeeds } from "../src/handoffPurchases";
 import { reviewMotion, saveMotionPlan } from "../src/mechanismMotion";
 import { blank, part, projectSchema, type V3 } from "../src/model";
 import type { MotionPlanInput } from "../src/motionPlanSchema";
@@ -225,4 +228,87 @@ test("a legacy custom slide keeps its extension and a fitted slide rejects forge
       },
     }),
   );
+});
+
+test("short drawer panels fit only the documented closed lengths and use the chosen product travel and listing", () => {
+  const yaw = Math.PI / 3;
+  const { baseProject, input } = drawerFixture(yaw);
+  const { drawerSlide: sides } = input.mechanism;
+  const project = {
+    ...baseProject,
+    pieces: baseProject.pieces.map((piece) =>
+      piece.id === input.memberIds[2]
+        ? { ...piece, position: rotate([0, 12, 9.5], [0, yaw, 0]) }
+        : { ...piece, size: [piece.size[0], piece.size[1], 18.25] as V3 },
+    ),
+  };
+  const comparison = compareDrawerSlideLengths(project, input.memberIds, [0, 0, 1], sides);
+  assert.deepEqual(comparison.map((option) => [option.reference.travel, option.ready]), [
+    [14, true], [16, true], [18, true], [20, false], [22, false], [24, false],
+  ]);
+  assert.match(comparison[3].rows.find((row) => !row.matches)!.detail, /18\.25 in.*19\.69 in/);
+  assert.deepEqual(compareDrawerSlideLengths(project, input.memberIds, [0, 0, 1], {
+    ...sides, cabinetRight: sides.cabinetLeft,
+  }), []);
+
+  const productId = "accuride-t46322g18";
+  const mechanism = { ...input.mechanism, travel: 18, drawerSlide: { ...sides, productId } } as const;
+  assert.throws(() => saveMotionPlan(project, {
+    ...input, mechanism: { ...mechanism, travel: 18.01 },
+  }), /documented drawer slide travel/);
+  const direct = saveMotionPlan(project, { ...input, mechanism });
+  assert.equal(reviewDrawerSlide(direct.project, direct.plan)?.ready, true);
+  const moved = reviewMotion(direct.project, direct.plan).preview(40);
+  assert.equal(moved.travel, 18);
+  const purchase = homeDepotPurchaseNeeds(direct.project).find(({ id }) => id === productId);
+  assert.equal(purchase?.canAdd, true);
+  assert.equal(purchase?.missing, 1);
+  const selected = addMissingDrawerSlides(direct.project, productId);
+  const checkedAt = "2026-11-19T19:00:00.000Z";
+  const observed = recordSupplyInventory({ ...selected, store: "Synthetic QA" }, {
+    productId,
+    retailer: "home-depot",
+    retailerProductId: "202214904",
+    url: drawerSlideReference(productId).homeDepot,
+    checkedAt,
+    zip: "84121",
+    store: "Synthetic QA",
+    price: 25,
+    available: 2,
+  });
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(observed)));
+  assert.deepEqual(reopened.motionPlans, observed.motionPlans);
+  assert.equal(supplyRows(reopened, Date.parse(checkedAt))[0].total, 25);
+  assert.match(shoppingCsv(reopened), /"202214904","1","left\/right slide pair"/);
+  assert.match(guideMarkdown(reopened), /T46322G18.*Modeled dimensions match/s);
+});
+
+test("different fitting slide models for a physical drawer are a purchase decision, while repeated previews use a single pair", () => {
+  const { project, input, plan } = drawerFixture();
+  const productId = "accuride-t46322g18";
+  const alternative = saveMotionPlan(project, {
+    ...input,
+    label: "Different size for the same drawer",
+    mechanism: {
+      ...input.mechanism,
+      travel: 18,
+      drawerSlide: { ...input.mechanism.drawerSlide, productId },
+    },
+  });
+  assert.equal(reviewDrawerSlide(alternative.project, alternative.plan)?.ready, true);
+  assert.equal(drawerSlidePurchaseReview(alternative.project).conflicts.length, 1);
+  for (const id of [reference.productId, productId] as const) {
+    assert.equal(drawerSlideDemand(alternative.project, id).needed, 0);
+    assert.equal(addMissingDrawerSlides(alternative.project, id), alternative.project);
+    const row = homeDepotPurchaseNeeds(alternative.project).find((need) => need.id === id);
+    assert.equal(row?.canAdd, false);
+    assert.match(row?.issue ?? "", /Choose one slide size/);
+  }
+  assert.match(guideMarkdown(alternative.project), /different fitted slide choices/);
+  const resolved = {
+    ...alternative.project,
+    motionPlans: alternative.project.motionPlans!.filter((motion) => motion.id !== plan.id),
+  };
+  assert.equal(drawerSlideDemand(resolved, productId).needed, 1);
+  assert.equal(drawerSlideDemand(resolved).needed, 0);
 });

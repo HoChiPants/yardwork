@@ -17,3 +17,51 @@ export const accuride3732 = {
   maxSideGap: 0.531,
   maxDrawerWidth: 16,
 } as const;
+
+const accurideReviewedAt = "2026-11-21T03:28:00.000Z";
+const homeDepot3732Assembly =
+  "https://images.thdstatic.com/catalog/pdfImages/02/02904f35-c355-40bb-8bc7-bca1a668da1c.pdf";
+
+function sideMountSize<Size extends 14 | 16 | 18 | 20 | 24>(
+  size: Size,
+  closedLength: number,
+  homeDepotId: string,
+) {
+  return {
+    productId: `accuride-t46322g${size}` as const,
+    orderModel: `T46322G${size}`,
+    technicalModel: `3732-${size}`,
+    name: `Accuride ${size} in side-mount drawer slide pair`,
+    homeDepotId,
+    homeDepot: `https://www.homedepot.com/p/${homeDepotId}`,
+    assembly: homeDepot3732Assembly,
+    reviewedAt: accurideReviewedAt,
+    manual: accuride3732.manual,
+    manufacturerCatalog: accuride3732.manufacturerCatalog,
+    closedLength,
+    travel: size,
+    height: accuride3732.height,
+    minSideGap: accuride3732.minSideGap,
+    maxSideGap: accuride3732.maxSideGap,
+    maxDrawerWidth: accuride3732.maxDrawerWidth,
+  };
+}
+
+export const otherAccurideSlides = [
+  sideMountSize(14, 13.78, "202214900"),
+  sideMountSize(16, 15.75, "202214902"),
+  sideMountSize(18, 17.72, "202214904"),
+  sideMountSize(20, 19.69, "202214906"),
+  sideMountSize(24, 23.62, "202214921"),
+] as const;
+
+export const drawerSlideProducts = [...otherAccurideSlides, accuride3732]
+  .sort((a, b) => a.travel - b.travel);
+
+export type DrawerSlideProduct = (typeof drawerSlideProducts)[number];
+export type DrawerSlideProductId = DrawerSlideProduct["productId"];
+export const drawerSlideIds = drawerSlideProducts.map(({ productId }) => productId);
+
+export function drawerSlideReference(id: DrawerSlideProductId) {
+  return drawerSlideProducts.find((product) => product.productId === id)!;
+}

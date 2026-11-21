@@ -9,8 +9,7 @@ import { reviewSunliteMounts, sunliteMountPurchase } from "./sunliteMounts";
 import { attachmentPurchaseSummaries } from "./attachmentPurchases";
 import { everbiltClosetRod, everbiltRodBracket } from "./closetRodReference";
 import { connectorPurchaseSummary } from "./connectorPurchases";
-import { accuride3732 } from "./drawerSlideReference";
-import { drawerSlideDemand } from "./drawerSlides";
+import { drawerSlidePurchaseReview } from "./drawerSlides";
 import { bom, type BomRow } from "./engine";
 import { fastenerPurchaseSummary } from "./fastenerPurchases";
 import { doorKitDemand } from "./greenhouseDoors";
@@ -157,11 +156,13 @@ export function homeDepotPurchaseNeeds(
     include(row.productId, "Allocated physical lid hinges", row.requiredHinges);
   }
   if (project.motionPlans?.length) {
-    include(
-      accuride3732.productId,
-      "Reviewed drawer slide fit",
-      drawerSlideDemand(project).needed,
-    );
+    const slideReview = drawerSlidePurchaseReview(project);
+    for (const { productId, needed } of slideReview.products) {
+      if (needed) include(productId, "Reviewed drawer slide fit", needed);
+      else if (slideReview.conflicts.some(({ productIds }) => productIds.includes(productId)))
+        include(productId, "Drawer slide alternatives", null,
+          "Choose one slide size for the drawer before adding its hardware.");
+    }
     const kit = "everbilt-24417-gate-kit";
     include(
       kit,

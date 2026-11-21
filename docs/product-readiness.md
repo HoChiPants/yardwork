@@ -10,7 +10,22 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 60 editable stocks, including 39 with product references and 21 generic planning choices. The registry contains 111 product records and 129 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 62 editable stocks. The registry contains 126 product records and 144 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 20, 2026 · Drawer slide fit and measured travel
+
+**Test movement** supports hinged and sliding assemblies and testing against a neighboring part held open. For a flat, frameless drawer, **Compare slide fit** compares six exact Accuride 3732 models. The app checks each mounting gap, drawer box width, common mounting height and common front-to-back span. Closed rail length and full travel differ. Choosing a pair in the comparison sets its documented opening travel, and the shopping list counts one left/right pair per physical drawer. Multiple fitted models saved for the same drawer require a choice. Confirm hardware fit, the front setback and fastening in the field. Store availability comes from dated snapshots.
+
+| Nominal size and travel | Closed rail | Home Depot model |
+| --- | --- | --- |
+| 14 in | 13.78 in | [T46322G14](https://www.homedepot.com/p/202214900) |
+| 16 in | 15.75 in | [T46322G16](https://www.homedepot.com/p/202214902) |
+| 18 in | 17.72 in | [T46322G18](https://www.homedepot.com/p/202214904) |
+| 20 in | 19.69 in | [T46322G20](https://www.homedepot.com/p/202214906) |
+| 22 in | 21.65 in | [T46322G22](https://www.homedepot.com/p/202214919) |
+| 24 in | 23.62 in | [T46322G24](https://www.homedepot.com/p/202214921) |
+
+Sources include the [Accuride 3732 technical guide](https://www.accuride.com/media/amasty/amfile/attach/a3bcba75b0b82de060a661de95ce9f44.pdf) and the [Accuride catalog](https://www.accuride.com/media/pdf/ac_ch-product-catalog_v3_0625_.pdf).
 
 ## November 20, 2026 · Simpson SDWS framing packs
 

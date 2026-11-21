@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 90**. Yardwork reads valid formats 1–89 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 91**. Yardwork reads valid formats 1–90 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 91 accepts all six cataloged Accuride 3732 drawer slide pairs in `mechanism.drawerSlide.productId`. The selected product determines the maximum saved travel and matching shopping-list reference. Existing 22 in setups and custom slide motions retain their saved IDs and travel.
 
 Format 90 can save ordered `hingePath` readings on an editable hinge motion. Each reading records its opening angle and the three inch offsets of the closed hinge datum in the moving part’s local coordinate system. The final reading defines the offset at maximum opening. Older swings continue to use their stored fixed pivot.
 

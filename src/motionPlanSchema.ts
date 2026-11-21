@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { accuride3732 } from "./drawerSlideReference";
+import { drawerSlideIds, drawerSlideReference } from "./drawerSlideReference";
 import {
   greenhouseDoorKits,
   type GreenhouseDoorKitId,
@@ -35,7 +35,7 @@ export const drawerSideLabels = {
 } as const;
 export const drawerSlideSchema = z
   .strictObject({
-    productId: z.literal(accuride3732.productId),
+    productId: z.enum(drawerSlideIds),
     cabinetLeft: z.uuid(),
     drawerLeft: z.uuid(),
     drawerRight: z.uuid(),
@@ -116,7 +116,7 @@ const motionMechanism = z.discriminatedUnion("kind", [
     })
     .refine(
       ({ travel, drawerSlide }) =>
-        !drawerSlide || travel <= accuride3732.travel,
+        !drawerSlide || travel <= drawerSlideReference(drawerSlide.productId).travel,
       {
         path: ["travel"],
         message: "Extension exceeds the documented drawer slide travel.",

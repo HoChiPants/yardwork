@@ -1,6 +1,5 @@
 import { Quaternion, Vector3 } from "three";
-import { accuride3732 } from "./drawerSlideReference";
-import { reviewDrawerSlide } from "./drawerSlides";
+import { drawerSlideKey, drawerSlidePurchaseReview, reviewDrawerSlide } from "./drawerSlides";
 import { greenhouseDoorReview } from "./greenhouseDoors";
 import { greenhouseVentReview } from "./greenhouseVents";
 import { saunaDoorReview } from "./saunaDoors";
@@ -1475,17 +1474,20 @@ function savedTestLines(project: Project, label: string, setup: MotionTestSetup,
 }
 
 export function motionReviewLines(project: Project, reviews = projectMotionReviews(project)) {
+  const slideConflicts = new Set(drawerSlidePurchaseReview(project).conflicts.map(({ key }) => key));
   return reviews.flatMap(({ plan, baseline, saved, scenarios }) => {
     const door = boundMotionReview(project, plan);
     const doorLines = door?.warning ? [door.warning] : (door?.lines ?? []);
     const slideFit = reviewDrawerSlide(project, plan);
     const slideLines = slideFit
       ? [
-          `${accuride3732.orderModel} · One left/right side-mount pair · ${slideFit.ready ? "Modeled dimensions match the slide reference." : "Resolve slide dimensions before fitting."}`,
+          `${slideFit.reference.orderModel} · One left/right side-mount pair · ${slideFit.ready ? "Modeled dimensions match the slide reference." : "Resolve slide dimensions before fitting."}`,
           ...slideFit.rows.map(
             (row) =>
               `${row.label}${row.matches ? "" : " · Review"} · ${row.detail}`,
           ),
+          ...(slideConflicts.has(drawerSlideKey(slideFit.setup))
+            ? ["This drawer has different fitted slide choices. Choose one before purchasing its hardware."] : []),
           "Confirm the delivered slides and fasteners. Use the 3732 instructions to align both rails on the actual mounting faces before locating holes.",
         ]
       : [];

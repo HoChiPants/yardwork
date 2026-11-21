@@ -11,6 +11,7 @@ import {
 import { greenhouseVentChoices, greenhouseVentReview } from "./greenhouseVents";
 import { useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
+import { formatPreciseInches } from "./measurement";
 import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
 import { MeasuredHingePathFields } from "./MeasuredHingePathFields";
 import { MotionSequenceTargetsFields } from "./MotionSequenceTargetsFields";
@@ -54,14 +55,20 @@ import {
   type MotionSequenceTargets,
   type MotionTestSetup,
 } from "./motionPlanSchema";
-import { accuride3732 } from "./drawerSlideReference";
+import {
+  drawerSlideProducts,
+  drawerSlideReference,
+  type DrawerSlideProductId,
+} from "./drawerSlideReference";
 import {
   addMissingDrawerSlides,
-  drawerSlideDemand,
+  compareDrawerSlideLengths,
+  drawerSlideKey,
+  drawerSlidePurchaseReview,
   reviewDrawerSlide,
 } from "./drawerSlides";
 import { ensurePartLabels } from "./partLabels";
-import { rotate } from "./spatial";
+import { inverseRotation, rotate } from "./spatial";
 import { useMotionPlayback } from "./useMotionPlayback";
 import type { MotionCollisionFocus } from "./motionCamera";
 
@@ -108,17 +115,16 @@ function MotionEditor({
     existing?.mechanism.kind === "slide"
       ? existing.mechanism.drawerSlide
       : undefined;
-  const [useDrawerSlide, setUseDrawerSlide] = useState(!!initialDrawerSlide);
-  const [drawerSides, setDrawerSides] = useState(
-    initialDrawerSlide ??
-      ({
-        productId: accuride3732.productId,
-        cabinetLeft: "",
-        drawerLeft: "",
-        drawerRight: "",
-        cabinetRight: "",
-      } satisfies DrawerSlideSetup),
+  const [slideId, setSlideId] = useState<DrawerSlideProductId | "">(
+    initialDrawerSlide?.productId ?? "",
   );
+  const [showSlideComparison, setShowSlideComparison] = useState(false);
+  const [drawerSides, setDrawerSides] = useState<Omit<DrawerSlideSetup, "productId">>({
+    cabinetLeft: initialDrawerSlide?.cabinetLeft ?? "",
+    drawerLeft: initialDrawerSlide?.drawerLeft ?? "",
+    drawerRight: initialDrawerSlide?.drawerRight ?? "",
+    cabinetRight: initialDrawerSlide?.cabinetRight ?? "",
+  });
   const [edge, setEdge] = useState<
     "left" | "right" | "back" | "front" | "exact"
   >(existing ? "exact" : "left");
@@ -152,10 +158,28 @@ function MotionEditor({
   const reference = active.find((p) => p.id === ids[0]);
   const partName = (id: string) =>
     `${labels.get(id) ?? "Part"} · ${active.find((p) => p.id === id)?.name ?? "Missing part"}`;
+  const direction = directions[axis]?.axis;
+  const worldAxis =
+    direction && frame === "moving-part" && reference
+      ? rotate(direction, reference.rotation)
+      : direction ?? initial?.mechanism.axis;
+  const slide = slideId ? drawerSlideReference(slideId) : undefined;
+  const fitOptions = showSlideComparison && kind === "slide" && reference && worldAxis
+    ? compareDrawerSlideLengths(
+        project,
+        ids,
+        rotate(worldAxis, inverseRotation(reference.rotation)),
+        drawerSides,
+      )
+    : [];
+  function chooseSlide(id: DrawerSlideProductId | "") {
+    setSlideId(id);
+    if (id) setTravel(drawerSlideReference(id).travel);
+  }
   function chooseKind(next: typeof kind) {
     setKind(next);
     setTravel(
-      next === "hinge" ? 90 : useDrawerSlide ? accuride3732.travel : 18,
+      next === "hinge" ? 90 : (slide?.travel ?? 18),
     );
     setAxis(
       next === "slide" ? 4 : edge === "exact" ? 2 : hingeEdgeDirections[edge],
@@ -170,11 +194,6 @@ function MotionEditor({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
-      const direction = directions[axis]?.axis;
-      const worldAxis =
-        direction && frame === "moving-part" && reference
-          ? rotate(direction, reference.rotation)
-          : direction ?? initial?.mechanism.axis;
       if (!worldAxis) throw Error("Choose the direction of movement.");
       onSave({
         label:
@@ -187,7 +206,7 @@ function MotionEditor({
                 kind,
                 axis: worldAxis,
                 travel,
-                ...(useDrawerSlide ? { drawerSlide: drawerSides } : {}),
+                ...(slideId ? { drawerSlide: { ...drawerSides, productId: slideId } } : {}),
               }
             : {
                 kind,
@@ -344,20 +363,26 @@ function MotionEditor({
           <label className="field">
             Slide hardware
             <select
-              value={useDrawerSlide ? accuride3732.productId : ""}
-              onChange={(e) => {
-                const selected = !!e.target.value;
-                setUseDrawerSlide(selected);
-                if (selected) setTravel(accuride3732.travel);
-              }}
+              value={slideId}
+              onChange={(e) => chooseSlide(e.target.value as typeof slideId)}
             >
               <option value="">Custom slide travel</option>
-              <option value={accuride3732.productId}>
-                {accuride3732.name}
-              </option>
+              {drawerSlideProducts.map((option) => (
+                <option value={option.productId} key={option.productId}>
+                  {option.name}
+                </option>
+              ))}
             </select>
           </label>
-          {useDrawerSlide && (
+          <button
+            type="button"
+            className="text-button"
+            aria-expanded={showSlideComparison}
+            onClick={() => setShowSlideComparison(!showSlideComparison)}
+          >
+            {showSlideComparison ? "Hide slide comparison" : "Compare slide fit"}
+          </button>
+          {(slide || showSlideComparison) && (
             <fieldset className="field-section">
               <legend>Mounting panels</legend>
               <p className="small-note">
@@ -374,7 +399,7 @@ function MotionEditor({
                     {drawerSideLabels[key]}
                     <select
                       value={drawerSides[key]}
-                      required
+                      required={!!slide}
                       onChange={(e) =>
                         setDrawerSides({
                           ...drawerSides,
@@ -393,6 +418,34 @@ function MotionEditor({
                 );
               })}
             </fieldset>
+          )}
+          {showSlideComparison && (
+            <section className="field-section" aria-label="Drawer slide length comparison">
+              {fitOptions.length === 0 ? (
+                <p className="small-note">Choose the slide direction and four different mounting panels to compare lengths.</p>
+              ) : (
+                <ul className="motion-findings">
+                  {fitOptions.map(({ reference: option, rows, ready }) => (
+                    <li key={option.productId}>
+                      <strong>{option.travel} in slide pair · {ready ? "Fits modeled panels" : "Review fit"}</strong>
+                      <p className="small-note">
+                        {formatPreciseInches(option.closedLength)} closed rail · {option.travel} in full extension.
+                        {!ready && <> {rows.find((row) => !row.matches)?.detail}</>}
+                      </p>
+                      {ready && (
+                        <button
+                          type="button"
+                          className="text-button"
+                          onClick={() => chooseSlide(option.productId)}
+                        >
+                          Use {option.travel} in slide pair
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           )}
         </>
       )}
@@ -414,7 +467,7 @@ function MotionEditor({
           label="Maximum extension"
           value={travel}
           onChange={setTravel}
-          max={useDrawerSlide ? accuride3732.travel : 240}
+          max={slide?.travel ?? 240}
         />
       )}
       {kind === "hinge" && (
@@ -431,7 +484,7 @@ function MotionEditor({
           !ids.length ||
           !Number.isFinite(travel) ||
           (kind === "slide" &&
-            useDrawerSlide &&
+            !!slide &&
             drawerSideKeys.some(
               (key) =>
                 !active.some(
@@ -1378,7 +1431,7 @@ export function MotionPanel({
           onAdd={() => {
             setError("");
             try {
-              const next = addMissingDrawerSlides(project);
+              const next = addMissingDrawerSlides(project, slideFit.setup.productId);
               if (next === project) return;
               const saved = onChange(next);
               if (selected && preview) test(selected, saved, preview.travel);
@@ -1423,12 +1476,15 @@ function DrawerSlideFit({
   fit: NonNullable<ReturnType<typeof reviewDrawerSlide>>;
   onAdd: () => void;
 }) {
-  const demand = drawerSlideDemand(project);
+  const { products, conflicts } = drawerSlidePurchaseReview(project);
+  const { reference } = fit;
+  const demand = products.find(({ productId }) => productId === reference.productId)!;
+  const conflict = conflicts.some(({ key }) => key === drawerSlideKey(fit.setup));
   return (
     <section className="field-section" aria-label="Drawer slide fit">
       <h3>Drawer slide fit</h3>
       <p className="small-note">
-        {accuride3732.orderModel} ·{" "}
+        {reference.orderModel} ·{" "}
         {fit.ready
           ? "Modeled dimensions match the slide reference."
           : "Review the flagged dimensions."}
@@ -1449,15 +1505,27 @@ function DrawerSlideFit({
         flat, frameless cabinet sides and the modeled drawer box.
       </p>
       <p className="small-note">
-        <a href={accuride3732.manual} target="_blank" rel="noreferrer">
+        <a href={reference.manual} target="_blank" rel="noreferrer">
           Accuride 3732 installation and travel
         </a>
       </p>
+      {project.retailer !== "lowes" && (
+        <p className="small-note">
+          <a href={reference.homeDepot} target="_blank" rel="noreferrer">
+            View {reference.travel} in slide pair at Home Depot
+          </a>
+        </p>
+      )}
+      {conflict && (
+        <p className="small-note">
+          This drawer has different fitted slide choices. Choose one before purchasing its hardware.
+        </p>
+      )}
       <p className="small-note">
         {demand.needed} planned {demand.needed === 1 ? "pair" : "pairs"} ·{" "}
         {demand.selected} in shopping list
       </p>
-      {demand.missing > 0 && (
+      {!conflict && demand.missing > 0 && (
         <button type="button" className="button secondary" onClick={onAdd}>
           Add missing slide {demand.missing === 1 ? "pair" : "pairs"} to list
         </button>

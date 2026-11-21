@@ -34,6 +34,7 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
+import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
 import { doorSeal } from "./greenhouseDoorSealReference";
 import { woodGlue } from "./woodGlueReference";
 import { sillGasketInstructions, sillGasketListing, sillGasketReviewedAt, sillGaskets } from "./sillGasketReference";
@@ -4170,6 +4171,25 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     discrepancies: ["Home Depot lists both 1 in and 2 in maximum widths. Yardwork screens at 1 in. Check the delivered label and gap preparation."],
     capabilities: [],
   },
+  ...trimBackerRods.map((rod): z.input<typeof retailerProductSchema> => ({
+    id: rod.id,
+    name: rod.name,
+    manufacturer: "Frost King",
+    manufacturerPartNumber: rod.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: trimBackerRodReviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "poly foam backer rod" }),
+    offers: [hd(rod.internetNumber, rod.model, rod.storeSku)],
+    sources: [
+      { url: rod.listing, verifiedAt: trimBackerRodReviewedAt, note: `One 20 ft roll of ${rod.model}.` },
+      { url: trimBackerRodSpecification, verifiedAt: trimBackerRodReviewedAt, note: "Frost King identifies the diameters and roll lengths by model." },
+      { url: trimBackerRodInstructions, verifiedAt: trimBackerRodReviewedAt, note: "Dry-fit a rod slightly wider than the joint. Leave at least 1/4 in above the rod for the sealant." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [rod.listing, trimBackerRodSpecification] },
+    discrepancies: [],
+    capabilities: [],
+  })),
   {
     id: woodGlue.id,
     name: woodGlue.name,

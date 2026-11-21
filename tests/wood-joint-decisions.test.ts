@@ -3,7 +3,7 @@ import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { test } from "node:test";
 import { answerConnectionQuestion, connectionQuestion } from "../src/connectionQuestions";
 import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
-import { modeledTrimSeamEdges } from "../src/trimSeamGeometry";
+import { estimateModeledTrimSeam, modeledTrimSeamEdges, trimSeamMarker } from "../src/trimSeamGeometry";
 import { trimSealant } from "../src/trimSealantReference";
 import { bearingConnections } from "../src/bearingConnections";
 import { connectionCoverage } from "../src/connectionCoverage";
@@ -12,7 +12,7 @@ import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import { blank, part, projectSchema, type Project, type V3 } from "../src/model";
 import { reviewModeledWoodContacts } from "../src/modeledWoodContacts";
 import { composeRotation, rotate } from "../src/spatial";
-import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimSeamPurchaseSummary, woodJointDecisionEntries } from "../src/woodJointDecisions";
+import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimSeamPurchaseSummary, woodJointDecisionEntries } from "../src/woodJointDecisions";
 import { reviewWoodSupport } from "../src/woodSupport";
 
 function aJoint(gap = 0) {
@@ -130,4 +130,86 @@ test("chosen dry-trim edges survive a rigid move and feed the joint answer, guid
   assert.equal(trimSeamPurchaseSummary(reconfirmedNote)?.review, 1);
   const removed = saveTrimSeam(reconfirmedNote, panel.id, rail.id, null);
   assert.equal(trimSeamPurchaseSummary(removed)?.review, 0);
+});
+
+test("trim interruptions and fitted backing follow the same edge datum through guide, roll cuts and revisions", () => {
+  const { project, panel, rail } = aJoint(5 / 16);
+  const note = saveWoodJointDecision(project, panel.id, rail.id, "sealant", "Keep the mounting access clear.");
+  const detail = note.woodJointDecisions![0];
+  const byId = (id: string) => project.pieces.find((piece) => piece.id === id)!;
+  const shape = modeledTrimSeamEdges(byId(detail.firstId), byId(detail.secondId))!;
+  const edge = shape.edges.find(({ length }) => length === 4)!;
+  const input = {
+    edgeIds: [edge.id], gapWidth: 5 / 16, gapDepth: 1 / 4, fieldCoverageFeet: 20,
+    openSpans: [{ edgeId: edge.id, start: 1, end: 2 }], backerRodId: "frost-king-c21h" as const,
+  };
+  const old = projectSchema.parse({ ...note, schemaVersion: 96 });
+  assert.equal(old.woodJointDecisions?.[0].trimSeam, undefined);
+  const saved = saveTrimSeam(old, panel.id, rail.id, input);
+  const readback = projectSchema.parse(JSON.parse(JSON.stringify(saved)));
+  assert.deepEqual(readback.pieces, project.pieces);
+  assert.deepEqual(readback.woodJointDecisions?.[0].trimSeam?.openSpans, input.openSpans);
+  const review = woodJointDecisionEntries(readback)[0].trimSeam?.estimate;
+  assert.equal(review?.lengthInches, 3);
+  assert.deepEqual(review?.edges[0].sealedSpans.map(({ length }) => length), [1, 2]);
+  assert.equal(trimSeamMarker(edge, "Preview", input.openSpans).segments.filter(({ open }) => open).length, 1);
+  const turn: V3 = [0.31, 0.38, 0.17];
+  const moved = {
+    ...readback,
+    pieces: readback.pieces.map((piece) => ({
+      ...piece, rotation: composeRotation(turn, piece.rotation),
+      position: rotate(piece.position, turn).map((value) => value + 5) as V3,
+    })),
+  };
+  const movedEdge = woodJointDecisionEntries(moved)[0].trimSeam?.estimate?.edges[0];
+  assert.deepEqual(movedEdge?.localStart, edge.localStart);
+  assert.deepEqual(movedEdge?.sealedSpans, review?.edges[0].sealedSpans);
+  const guide = guideMarkdown(moved);
+  assert.match(guide, /keep open 1 in to 2 in/);
+  assert.match(guide, /Trim backer rod cut plan[\s\S]+Roll 1 · Cut 2 in[\s\S]+Keep 237 in/);
+  assert.equal(trimBackerRodCutPlan(moved)[0].rolls[0].left, 237);
+  const answer = answerConnectionQuestion(moved, connectionQuestion(moved, "How should I seal the gap between P001 and P002?")!);
+  assert.ok("pairs" in answer);
+  assert.equal(answer.pairs[0].contact.gap?.toFixed(4), "0.3125");
+  assert.match(answer.pairs[0].trimSeam ?? "", /keep open 1 in to 2 in.*C21H/);
+  assert.equal(homeDepotPurchaseNeeds(moved).find(({ id }) => id === "frost-king-c21h")?.missing, 1);
+  assert.equal(addHomeDepotPurchaseNeed(moved, "frost-king-c21h").supplies[0].quantity, 1);
+
+  const edited = { ...readback, pieces: [panel, { ...rail, position: [0.5, 4, -1.7] as V3 }] };
+  assert.equal(trimBackerRodCutPlan(edited).length, 0);
+  assert.equal(trimSeamPurchaseSummary(edited)?.review, 1);
+  assert.doesNotMatch(guideMarkdown(edited), /Trim backer rod cut plan/);
+});
+
+test("trim takeoff rejects invalid ranges and backing mismatches while fitting separate cuts onto a roll", () => {
+  const { project, panel, rail } = aJoint(5 / 16);
+  const shape = modeledTrimSeamEdges(panel, rail)!;
+  const edge = shape.edges.find(({ length }) => length === 4)!;
+  const input = {
+    edgeIds: [edge.id], gapWidth: 5 / 16, gapDepth: 1 / 4, fieldCoverageFeet: 20,
+    backerRodId: "frost-king-c21h" as const,
+  };
+  const open = (start: number, end: number, edgeId = edge.id) => ({ edgeId, start, end });
+  assert.throws(() => estimateModeledTrimSeam(shape, { ...input, gapWidth: 3 / 8 }), /slightly wider/);
+  assert.throws(() => estimateModeledTrimSeam(shape, { ...input, gapDepth: 0.2 }), /above the fitted rod/);
+  assert.throws(() => estimateModeledTrimSeam(shape, { ...input, fieldCoverageFeet: undefined }), /coverage from a trial/);
+  assert.throws(() => estimateModeledTrimSeam(shape, { ...input, openSpans: [open(1, 2), open(1.5, 3)] }), /no overlap/);
+  assert.throws(() => estimateModeledTrimSeam(shape, { ...input, openSpans: [open(2, 5)] }), /inside the edge/);
+  assert.throws(() => estimateModeledTrimSeam(shape, { ...input, openSpans: [open(0, 4)] }), /at least one section/);
+  assert.throws(() => estimateModeledTrimSeam(shape, { ...input, openSpans: [open(1, 2, "other")] }), /selected edges only/);
+
+  const longPanel = { ...panel, size: [10, 280, 0.703] as V3, position: [0, 140, 0] as V3 };
+  const longRail = { ...rail, size: [1.5, 260, 2] as V3, position: [0.5, 131, rail.position[2]] as V3 };
+  const long = { ...project, pieces: [longPanel, longRail] };
+  const noted = saveWoodJointDecision(long, panel.id, rail.id, "sealant", "Leave the middle access section clear.");
+  const { firstId } = noted.woodJointDecisions![0];
+  const longShape = firstId === panel.id ? modeledTrimSeamEdges(longPanel, longRail)! : modeledTrimSeamEdges(longRail, longPanel)!;
+  const longEdge = longShape.edges.find(({ length }) => length === 260)!;
+  assert.throws(() => saveTrimSeam(noted, panel.id, rail.id, { ...input, edgeIds: [longEdge.id] }), /exceeds the 20 ft roll/);
+  const backed = saveTrimSeam(noted, panel.id, rail.id, {
+    ...input, edgeIds: [longEdge.id], openSpans: [open(100, 125, longEdge.id)], backerRodId: "frost-king-c22h",
+  });
+  const [{ product, rolls }] = trimBackerRodCutPlan(backed);
+  assert.equal(product.internetNumber, "100159362");
+  assert.deepEqual(rolls.map(({ left, runs }) => [left, ...runs.map(({ length }) => length)]), [[5, 135, 100]]);
 });

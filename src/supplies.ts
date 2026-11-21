@@ -14,6 +14,7 @@ import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
+import { trimBackerRodScope, trimBackerRods } from "./trimBackerRodReference";
 import { doorSeal } from "./greenhouseDoorSealReference";
 import { woodGlue } from "./woodGlueReference";
 import { sillGaskets, sillGasketScope } from "./sillGasketReference";
@@ -385,6 +386,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
       "Use a compatible caulk gun. Dry-fit the trim and test the finish on a matching scrap before filling the seam.",
     ],
   },
+  ...Object.fromEntries(trimBackerRods.map((rod) => [rod.id, {
+    purchaseUnit: "roll",
+    contents: [{ name: `${rod.name} · 20 ft`, quantity: 1 }],
+    requirements: [trimBackerRodScope],
+  }])),
   [woodGlue.id]: {
     purchaseUnit: "bottle",
     contents: [{ name: "16 fl oz bottle of wood glue", quantity: 1 }],

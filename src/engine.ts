@@ -1,7 +1,8 @@
 import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
 import { buildPreparation, buildPreparationMarkdown } from "./buildPreparation";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
-import { woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketBuildingGuide, sillGasketInstructions, sillGasketScope } from "./sillGasketReference";
 import { offcutCutOrderMarkdown, offcutCutRows } from "./offcutCutGuide";
@@ -1857,6 +1858,7 @@ export function guideMarkdown(p: Project) {
   const bearingReview = bearingConnections(p, woodSupportReview, connections);
   const bearingJoints = bearingConnectionGuideLines(p, bearingReview, connections);
   const woodJointDetails = woodJointDecisionEntries(p);
+  const trimBacking = trimBackerRodCutPlan(p, woodJointDetails);
   const roofBearing = reviewGreenhouseRafterBearing(p);
   const rafterBearing = rafterBearingGuideLines(p, roofBearing);
   const roofAttachments = greenhouseRoofAttachmentLines(p, greenhouseRoofAttachments(p, connections.intents, roofBearing));
@@ -2039,6 +2041,11 @@ export function guideMarkdown(p: Project) {
       woodJointDetails.map((entry) => "- " +
         woodJointDecisionLine(entry).replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       "\n" : "") +
+    (trimBacking.length ? "\n\n## Trim backer rod cut plan\n\n" + trimBackerRodScope + "\n\n" +
+      trimBackerRodGuideLines(trimBacking).map((line) => "- " +
+        line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
+      `\n\n[Frost King instructions](${trimBackerRodInstructions}) · ${trimBacking.map(({ product }) =>
+        `[${product.model} at Home Depot](${product.listing})`).join(" · ")}\n` : "") +
     (roofBacking.length ? "\n\n## SUNLITE roof seam backing\n\n" +
       roofBackingScope + "\n\n" +
       roofBacking.flatMap(roofBackingGuideLines).map((line) => "- " +

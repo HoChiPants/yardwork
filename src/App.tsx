@@ -1,6 +1,7 @@
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
-import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
 import { SillGasketPanel } from "./SillGasketPanel";
@@ -168,7 +169,7 @@ import {
   browserDraftRecoveries,
 } from "./drafts";
 import { SuppliesPanel } from "./SuppliesPanel";
-import type { TrimSeamMarker } from "./TrimSeamPanel";
+import type { TrimSeamMarker } from "./trimSeamGeometry";
 import { TrimSealantPanel } from "./TrimSealantPanel";
 import { WoodGluePanel } from "./WoodGluePanel";
 import { PrintSunliteProfiles, SunliteProfilePanel } from "./SunliteProfilePanel";
@@ -1777,6 +1778,7 @@ export function App() {
   const lidStayFitSchedule = useMemo(() => lidStayFitGuideRows(exportGuide), [exportGuide]);
   const exportConnectionReview = useMemo(() => connectionCoverage(exportGuide), [exportGuide]);
   const exportWoodJointDetails = useMemo(() => woodJointDecisionEntries(exportGuide), [exportGuide]);
+  const printTrimBacking = useMemo(() => trimBackerRodCutPlan(exportGuide, exportWoodJointDetails), [exportGuide, exportWoodJointDetails]);
   const printSillGaskets = useMemo(() => sillGasketGuideLines(reviewSillGaskets(exportGuide)), [exportGuide]);
   const printCutSources = useMemo(
     () => inspectCutStock(exportGuide),
@@ -6340,6 +6342,13 @@ export function App() {
             <p>{woodJointDecisionScope}</p>
             <ul>{exportWoodJointDetails.map((entry) =>
               <li key={entry.id}>{woodJointDecisionLine(entry)}</li>)}</ul>
+          </section>
+        )}
+        {printTrimBacking.length > 0 && (
+          <section className="trim-backer-rod-print">
+            <h2>Trim backer rod cut plan</h2>
+            <p>{trimBackerRodScope}{" "}<a href={trimBackerRodInstructions}>Frost King instructions</a></p>
+            <ul>{trimBackerRodGuideLines(printTrimBacking).map((line, index) => <li key={index}>{line}</li>)}</ul>
           </section>
         )}
         {printRafterBearing.length > 0 && (

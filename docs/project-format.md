@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 96**. Yardwork reads valid formats 1–95 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 97**. Yardwork reads valid formats 1–96 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 97 adds optional `openSpans` and `backerRodId` to a measured trim seam. Ranges measure from the marked local start of a saved edge. Earlier measured seams still include their selected full edges.
 
 Format 96 adds optional `greenhouseDoorSeals` entries by door and motion ID. They record the reviewed three-run layout signature, and resolve current cut lengths and clearance from the modeled wood faces and saved swing. Earlier door stops and swing plans retain their original measurements.
 

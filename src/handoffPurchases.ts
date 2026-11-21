@@ -1,7 +1,7 @@
 import { trimSealant } from "./trimSealantReference";
 import { greenhouseDoorSealTakeoff } from "./greenhouseDoorSeal";
 import { doorSeal } from "./greenhouseDoorSealReference";
-import { trimSeamPurchaseSummary } from "./woodJointDecisions";
+import { trimBackerRodCutPlan, trimSeamPurchaseSummary, woodJointDecisionEntries } from "./woodJointDecisions";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { assemblyStages } from "./assemblyStages";
 import { connectionPreparationItems } from "./buildPreparation";
@@ -162,9 +162,12 @@ export function homeDepotPurchaseNeeds(
     include(row.productId, "Allocated physical lid hinges", row.requiredHinges);
   }
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
-    const trim = trimSeamPurchaseSummary(project);
+    const details = woodJointDecisionEntries(project);
+    const trim = trimSeamPurchaseSummary(project, details);
     if (trim) include(trimSealant.id, "Measured wood trim seams", trim.required,
       trim.required === null ? "Review measured seams and cartridge coverage." : undefined);
+    for (const { product, rolls } of trimBackerRodCutPlan(project, details))
+      include(product.id, "Measured wood trim backing cuts", rolls.length);
   }
   if (project.greenhouseDoorSeals?.length) {
     const seal = greenhouseDoorSealTakeoff(project);

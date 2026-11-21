@@ -4,6 +4,8 @@ import type { Piece, Project, V3 } from "./model";
 import { ensurePartLabels } from "./partLabels";
 import { inverseRotation, rotate } from "./spatial";
 import { formatPreciseInches, formatStockLength } from "./measurement";
+import { packRuns } from "./stockRunPacking";
+import { trimBackerRodLength, trimBackerRods } from "./trimBackerRodReference";
 import { estimateModeledTrimSeam, modeledTrimSeamEdges } from "./trimSeamGeometry";
 import { trimSealant } from "./trimSealantReference";
 import { maxSupplyQuantity } from "./supplySchema";
@@ -44,7 +46,7 @@ function signature(first: Piece, second: Piece) {
 }
 
 function reviewable(first: Piece, second: Piece, method: WoodJointMethod) {
-  const contact = reviewConnectionContact(first, second);
+  const contact = reviewConnectionContact(first, second, method === "sealant" ? trimSealant.screenWidth : undefined);
   return contact.state === "face-contact" || (method === "sealant" && contact.state === "near-face");
 }
 
@@ -168,7 +170,7 @@ export function woodJointDecisionEntries(project: Project) {
     }
     return {
       id: woodPairKey(...memberIds), title, memberIds, decision, status, stage,
-      trimSeam, trialScraps: [...trialScraps],
+      trimSeam, trialScraps: [...trialScraps], firstLabel: labels.get(decision.firstId),
     };
   });
 }
@@ -179,12 +181,48 @@ export function trimSeamLine(entry: WoodJointDecisionEntry) {
   const { trimSeam } = entry;
   if (!trimSeam) return "";
   if ("issue" in trimSeam) return trimSeam.issue;
-  const { edges, note } = trimSeam.estimate;
-  const spans = edges.map(({ label, length }) => `${label} (${formatPreciseInches(length)})`).join(", ");
+  const { edges, note, backerRod } = trimSeam.estimate;
+  const ranges = (spans: { start: number; end: number }[]) => spans
+    .map(({ start, end }) => `${formatPreciseInches(start)} to ${formatPreciseInches(end)}`).join(", ");
+  const spans = edges.map(({ label, length, openSpans, sealedSpans, localStart }) => {
+    if (!openSpans.length) return `${label} (${formatPreciseInches(length)})`;
+    const start = localStart.map((value, i) => `${"XYZ"[i]} ${formatPreciseInches(value)}`).join(", ");
+    return [
+      `${label} from ${entry.firstLabel}'s center (local ${start})`,
+      sealedSpans.length ? `seal ${ranges(sealedSpans)}` : "",
+      `keep open ${ranges(openSpans)}`,
+    ].filter(Boolean).join(" · ");
+  }).join(", ");
   const trial = entry.trialScraps.length
     ? ` Test the finish on ${entry.trialScraps.length === 1 ? "offcut" : "offcuts"} ${entry.trialScraps.join(", ")} from the same stock in Cut pool.`
     : "";
-  return `Trim sealant · ${spans} · ${note} Use a compatible cartridge gun.${trial}`;
+  const backing = backerRod
+    ? ` Fit ${backerRod.name} along the seal runs before caulking.` : "";
+  return `Trim sealant · ${spans} · ${note}${backing} Use a compatible cartridge gun.${trial}`;
+}
+
+export function trimBackerRodCutPlan(project: Project, entries = woodJointDecisionEntries(project)) {
+  return trimBackerRods.flatMap((product) => {
+    const runs = entries.flatMap(({ title, trimSeam }) => {
+      const estimate = trimSeam?.estimate;
+      if (estimate?.backerRod?.id !== product.id) return [];
+      return estimate.edges.flatMap(({ label, sealedSpans }) =>
+        sealedSpans.map((span) => ({ ...span, title: `${title} · ${label}` })),
+      );
+    });
+    if (!runs.length) return [];
+    const { bins } = packRuns(runs, trimBackerRodLength);
+    return [{ product, rolls: bins }];
+  });
+}
+
+export function trimBackerRodGuideLines(groups: ReturnType<typeof trimBackerRodCutPlan>) {
+  return groups.flatMap(({ product, rolls }) => rolls.map(({ runs, left }, index) => {
+    const cuts = runs.map(({ title, start, end, length }) =>
+      `${formatPreciseInches(length)} for ${title} (${formatPreciseInches(start)} to ${formatPreciseInches(end)})`,
+    );
+    return `${product.name} · Roll ${index + 1} · Cut ${cuts.join(" / ")}. ${left > 0 ? `Keep ${formatPreciseInches(left)} for a future matching run.` : "Full roll used."}`;
+  }));
 }
 
 export function trimSeamPurchaseSummary(

@@ -10,7 +10,11 @@ Guides generate from actual parts, cuts and recorded connections. Explicit part-
 
 The guide compares saved step order against modeled assembly prerequisites and the actual members named in saved hardware plans. This covers shelf-pin drilling review before shelf placement, screw and bracket setup before joining the planned pair, banquette hinge review between the shell and lid, and furniture restraint review before the final check. Build preparation links to the affected step and names the prerequisite by its current step number. Markdown and print carry the same findings. Custom and unmodeled tasks still rely on the builder's intended sequence.
 
-The catalog has 62 editable stocks. The registry contains 128 product records and 146 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+The catalog has 62 editable stocks. The registry contains 130 product records and 148 retailer references, including historical offers. The Home Depot workflow uses configurable store and ZIP snapshots for observed price and quantity. The default ZIP is 84121.
+
+## November 20, 2026 · Interrupted trim seams and backing
+
+**Plan trim sealant** marks ranges you want to keep open from the edge start shown in 3D. Only the remaining runs count toward cartridge coverage. A dry-fitted 3/8 in or 1/2 in Frost King rod can back those runs. The guide places whole lengths on 20 ft rolls by diameter and records leftover lengths. The sourced Home Depot rolls are available in the purchase review. Ask about the gap between two part labels to see the current modeled fit and saved runs. Verify the field fit, clearance above the rod, and sealant coverage before applying. [Frost King instructions](https://www.frostking.com/attachments/Product/136/documents/Instruction-Sheet-Caulk-Saver.pdf)
 
 ## November 20, 2026 · Greenhouse door weatherseal
 

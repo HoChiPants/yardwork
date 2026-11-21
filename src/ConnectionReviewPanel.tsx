@@ -11,7 +11,9 @@ import { FloorBaseConnectionsPanel } from "./FloorBaseConnectionsPanel";
 import type { FloorHangerPlan } from "./floorHangerSchema";
 import type { BearingConnectionReview } from "./bearingConnections";
 import { modeledWoodContactDetail, modeledWoodContactScope, type ModeledWoodContact, type ModeledWoodContactReview } from "./modeledWoodContacts";
-import { TrimSeamPanel, type TrimSeamMarker } from "./TrimSeamPanel";
+import { TrimSeamPanel } from "./TrimSeamPanel";
+import type { TrimSeamMarker } from "./trimSeamGeometry";
+import { trimSealant } from "./trimSealantReference";
 import type { TrimSeamInput } from "./woodJointDecisionSchema";
 import { WoodJointDecisionPanel } from "./WoodJointDecisionPanel";
 import { woodPairKey, type WoodJointDecisionEntry } from "./woodJointDecisions";
@@ -223,7 +225,7 @@ export function ConnectionReviewPanel({
     if (!focusedPair) return null;
     const [a, b] = focusedPair.map((id) =>
       project.pieces.find((piece) => piece.id === id && !piece.offcut));
-    return a && b ? reviewConnectionContact(a, b) : null;
+    return a && b ? reviewConnectionContact(a, b, trimSealant.screenWidth) : null;
   }, [project, focusedPair]);
   const focusedIntents = focusedPair ? scopedIntents.filter(({ pieceIds }) =>
     pieceIds.length === 2 && focusedPair.every((id) => pieceIds.includes(id))) : [];
@@ -312,7 +314,7 @@ export function ConnectionReviewPanel({
             onClear={() => onClearWoodJointDetail(focusedPair[0], focusedPair[1])}
           />
           {focusedDetail?.decision.method === "sealant" && (
-            <TrimSeamPanel key={focusedKey} project={project} entry={focusedDetail}
+            <TrimSeamPanel key={JSON.stringify([focusedKey, focusedDetail.status, focusedDetail.decision.contactSignature])} project={project} entry={focusedDetail}
               onSave={(input) => onSaveTrimSeam(focusedPair[0], focusedPair[1], input)}
               onShow={onShowTrimSeam} />
           )}
@@ -655,6 +657,14 @@ export function ConnectionReviewPanel({
               : ` · modeled face gap ${formatPreciseInches(chosen.gap)}`}
             . {chosen.reason}
           </p>
+        )}
+        {onFocusModeledContact && (
+          <button type="button" className="text-button" disabled={!chosen} onClick={() => onFocusModeledContact({
+            title: `${optionText(firstId)} ↔ ${optionText(secondId)}`,
+            memberIds: [firstId, secondId],
+          })}>
+            Review joint detail
+          </button>
         )}
         <button
           type="button"

@@ -32,6 +32,7 @@ import { SaunaVentilationMarkers } from "./SaunaVentilationMarkers";
 import type { SaunaVentilationReview } from "./saunaVentilation";
 import { cedarbrookLining } from "./saunaLiningReference";
 import type { SunliteProfileRun } from "./sunliteTakeoff";
+import type { TrimSeamMarker } from "./trimSeamGeometry";
 import { DrawerSlideMountMarkers } from "./DrawerSlideMountMarkers";
 import { GreenhouseLatchMarkers } from "./GreenhouseLatchMarkers";
 import { RodSupportMarkers } from "./RodSupportMarkers";
@@ -70,7 +71,7 @@ export type SceneProps = {
   showOffcuts?: boolean;
   shownSiteClearanceId?: string | null;
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
-  shownTrimSeam?: { points: [V3, V3]; label: string };
+  shownTrimSeam?: TrimSeamMarker;
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownPlumbingVentLayout?: PlumbingVentLayout;
   shownDryerDuctLayout?: DryerDuctLayout;
@@ -1430,12 +1431,26 @@ function World(props: SceneProps) {
       )}
       {markedRun && !props.explode && props.stage === null && !props.motionPreview && !props.lidPreview && (
         <group>
-          <Line points={markedRun.points.map((point) => point.map((v) => v / 12) as V3)}
-            color="#2382a5" lineWidth={4} depthTest={false} raycast={() => null} />
+          {(props.shownTrimSeam?.segments ?? [{ points: markedRun.points, open: false }]).map(({ points, open }, i) =>
+            <Line key={i} points={points.map((point) => point.map((v) => v / 12) as V3)}
+              color={open ? "#b75b22" : "#2382a5"} dashed={open} dashSize={0.045} gapSize={0.03}
+              lineWidth={4} depthTest={false} raycast={() => null} />,
+          )}
+          {props.shownTrimSeam && (
+            <mesh position={markedRun.points[0].map((v) => v / 12) as V3} renderOrder={9} raycast={() => null}>
+              <sphereGeometry args={[0.022, 12, 8]} />
+              <meshBasicMaterial color="#195b73" depthTest={false} depthWrite={false} />
+            </mesh>
+          )}
           <Html center position={markedRun.points[0].map((v, i) =>
-            (v + markedRun.points[1][i]) / 24) as V3}
+            props.shownTrimSeam
+              ? v / 12 + (i === 1 ? 0.08 : 0)
+              : (v + markedRun.points[1][i]) / 24) as V3}
             zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
-            <span className="site-clearance-marker" data-testid={props.shownTrimSeam ? "trim-seam-marker" : props.shownBandingEdge ? "edge-banding-marker" : "sunlite-profile-marker"}>{markedRun.label}</span>
+            <span className="site-clearance-marker" data-testid={props.shownTrimSeam ? "trim-seam-marker" : props.shownBandingEdge ? "edge-banding-marker" : "sunlite-profile-marker"}>
+              {props.shownTrimSeam && <><strong data-testid="trim-seam-start">Start</strong>{" · "}</>}
+              {markedRun.label}
+            </span>
           </Html>
         </group>
       )}

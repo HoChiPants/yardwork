@@ -373,6 +373,79 @@ test("glue and measured trim seams follow actual parts into the saved project, c
   await expect(page.locator(".print-guide .wood-joint-details-print")).toContainText("4 in of dry interior trim seams");
 });
 
+test("an interrupted trim seam leaves access open and adds one exact backer rod roll", async ({ page }) => {
+  const project = blank("Interrupted trim opening");
+  const step = project.steps[0].id;
+  const panel = part("Front panel", "plytanium-703", [14, 10, 0.703], [2, 6, 0], step, "Casework");
+  const rail = part("Seam rail", "stud", [1.5, 4, 2], [3, 4, -1.3515 - 5 / 16], step, "Casework");
+  project.pieces.push(panel, rail);
+  const base = saveWoodJointDecision(project, panel.id, rail.id, "sealant", "Leave the mounting clip accessible.");
+
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "older-trim.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...base, schemaVersion: 96 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  async function ask() {
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("How should I seal the gap between P001 and P002?");
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+    return dialog.getByRole("region", { name: "Workspace joint review" });
+  }
+  const question = await ask();
+  await expect(question).toContainText("0.3125 in gap");
+  await question.getByRole("button", { name: "Inspect joint", exact: true }).click();
+  const seam = page.getByRole("region", { name: "Selected wood contact" });
+  await seam.getByText("Plan trim sealant", { exact: true }).click();
+  const edge = seam.getByRole("listitem").filter({ hasText: /Edge \d · 4 in/ }).first();
+  await edge.getByRole("checkbox").check();
+  await edge.getByText(/Keep part of edge.*open/).click();
+  await edge.getByRole("button", { name: "Add keep-open range", exact: true }).click();
+  await edge.getByLabel("Keep open start (in)", { exact: true }).fill("1");
+  await edge.getByLabel("Keep open end (in)", { exact: true }).fill("2");
+  await edge.getByRole("button", { name: /Show edge.*in 3D/ }).click();
+  await expect(page.getByTestId("trim-seam-start")).toHaveText("Start");
+  await expect(page.getByTestId("trim-seam-marker")).toContainText("4 in");
+  await seam.getByLabel("Measured bead width (in)", { exact: true }).fill("0.3125");
+  await seam.getByRole("combobox", { name: "Backer rod", exact: true }).selectOption("frost-king-c21h");
+  await seam.getByLabel("Measured bead depth (in)", { exact: true }).fill("0.25");
+  await seam.getByLabel("Trial coverage (ft per cartridge)", { exact: true }).fill("20");
+  await seam.getByRole("checkbox", { name: /I checked the chosen rod fits/ }).check();
+  await seam.getByRole("button", { name: "Save measured seam", exact: true }).click();
+  await expect(seam.getByText(/Trim sealant · Edge .*keep open 1 in to 2 in/)).toContainText("3 in of dry interior trim seams");
+
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByText("Estimate trim sealant", { exact: true }).click();
+  await page.getByText("Backer rod cuts and leftovers", { exact: true }).click();
+  await expect(page.getByText(/Keep 237 in for a future matching run/).filter({ visible: true })).toBeVisible();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await dialog.getByRole("button", { name: "Add 1 roll of Frost King C21H 3/8 in backer rod", exact: true }).click();
+  const item = dialog.getByRole("list", { name: "Home Depot purchase review" }).getByRole("listitem").filter({ hasText: "100067266" });
+  await expect(item).toContainText("1 roll · #100067266");
+  await expect(item).toContainText("No recent store snapshot");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await expect(await ask()).toContainText("keep open 1 in to 2 in");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/## Trim backer rod cut plan[\s\S]+Keep 237 in/);
+  expect(guide).toContain("https://www.homedepot.com/p/100067266");
+  await expect(page.locator(".print-guide .trim-backer-rod-print")).toContainText("Keep 237 in");
+});
+
 test("a crosscut practice plan reuses the first scrap on two blanks", async ({ page }) => {
   await page.goto("./");
   await page.getByRole("button", { name: "Cut pool (0)", exact: true }).click();

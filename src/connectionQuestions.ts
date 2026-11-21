@@ -6,6 +6,7 @@ import {
 import { material, type Piece, type Project } from "./model";
 import { ensurePartLabels } from "./partLabels";
 import { modeledTrimSeamEdges } from "./trimSeamGeometry";
+import { trimSealant } from "./trimSealantReference";
 import { trimSeamLine, woodJointDecisionEntries, woodPairKey } from "./woodJointDecisions";
 
 export type ConnectionQuestion = {
@@ -18,7 +19,7 @@ const findNearby =
   /^(?:what can i (?:screw|attach) (.+?) to|(?:find|review|show|suggest) (?:nearby )?(?:wood[- ]screw |screw )?(?:joints|connections) (?:for|near|around) (.+))$/i;
 const pairRequest =
   /^(?:(?:screw|attach|fasten|join|connect)(?: from)?|(?:plan|review|check|compare) (?:a |the )?(?:wood[- ]screw |screw )?(?:joint|connection)(?: from| between)?)\s+(.+)$/i;
-const trimRequest = /^(?:plan|review|check) (?:the )?(?:trim seam|trim sealant|sealant joint) between\s+(.+)$/i;
+const trimRequest = /^(?:(?:plan|review|check) (?:the )?(?:trim seam|trim sealant|sealant joint)|seal(?: (?:the )?(?:gap|seam|joint))?) between\s+(.+)$/i;
 const pairMembers =
   /^(?:"([^"]+)"|([^"]+?))\s+(?:to|into|onto|and)\s+(?:"([^"]+)"|([^"]+))$/i;
 const partNumber = /^([po])(\d{1,6})$/i;
@@ -120,13 +121,15 @@ export function answerConnectionQuestion(project: Project, question: ConnectionQ
     if (!("piece" in second)) return second;
     if (anchor.id === second.piece.id)
       return { message: "Choose two different active wood parts.", choices: [] };
-    const answer = pair(second.piece.id, reviewConnectionContact(first.piece, second.piece));
+    const answer = pair(second.piece.id, reviewConnectionContact(
+      first.piece, second.piece, question.kind === "trim-seam" ? trimSealant.screenWidth : undefined,
+    ));
     if (question.kind === "trim-seam") {
       const id = woodPairKey(first.piece.id, second.piece.id);
       const saved = woodJointDecisionEntries(project).find((entry) => entry.id === id);
       const measured = saved && trimSeamLine(saved);
       answer.trimSeam = measured || (modeledTrimSeamEdges(first.piece, second.piece)?.edges.length
-        ? "Inspect the joint to choose an exposed edge and record the measured bead."
+        ? "Inspect the joint to choose exposed edges, mark sections to leave open, and record the measured bead or fitted backer rod."
         : "Review the fit and measure exposed seams in the field.");
     }
     return { anchor, pairs: [answer], more: false };

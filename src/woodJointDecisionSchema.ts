@@ -1,16 +1,28 @@
 import { z } from "zod";
+import { trimBackerRods } from "./trimBackerRodReference";
 import { trimSealant } from "./trimSealantReference";
 
+const trimSeamEdgeId = z.string().min(1).max(160);
+const trimSeamOpenSpan = z.strictObject({
+  edgeId: trimSeamEdgeId,
+  start: z.number().nonnegative(),
+  end: z.number().positive(),
+}).refine(({ start, end }) => start < end, "The keep-open end must be after its start.");
+export const trimSeamOpenSpanLimit = 64;
+
 export const trimSeamInputSchema = z.strictObject({
-  edgeIds: z.array(z.string().min(1).max(160)).min(1).max(64).refine(
+  edgeIds: z.array(trimSeamEdgeId).min(1).max(64).refine(
     (ids) => new Set(ids).size === ids.length,
     "Choose each seam edge once.",
   ),
   gapWidth: z.number().positive().max(trimSealant.screenWidth),
   gapDepth: z.number().positive().max(trimSealant.screenDepth),
   fieldCoverageFeet: z.number().positive().optional(),
+  openSpans: z.array(trimSeamOpenSpan).min(1).max(trimSeamOpenSpanLimit).optional(),
+  backerRodId: z.enum(trimBackerRods.map(({ id }) => id)).optional(),
 });
 export type TrimSeamInput = z.infer<typeof trimSeamInputSchema>;
+export type TrimSeamOpenSpan = z.infer<typeof trimSeamOpenSpan>;
 const trimSeamSchema = trimSeamInputSchema.extend({
   contactSignature: z.string().min(1).max(600),
 });

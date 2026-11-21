@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { Project } from "./model";
 import { addHomeDepotPurchaseNeed } from "./handoffPurchases";
-import { trimSeamPurchaseSummary } from "./woodJointDecisions";
+import { trimBackerRodCutPlan, trimBackerRodGuideLines, trimSeamPurchaseSummary, woodJointDecisionEntries } from "./woodJointDecisions";
 import { addSupply } from "./supplies";
 import { trimSealant } from "./trimSealantReference";
 import { estimateTrimSealant } from "./trimSealantTakeoff";
@@ -13,8 +13,10 @@ export function TrimSealantPanel({
   project: Project;
   onChange: (project: Project) => void;
 }) {
-  const planned = project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)
-    ? trimSeamPurchaseSummary(project) : null;
+  const joints = project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)
+    ? woodJointDecisionEntries(project) : [];
+  const planned = trimSeamPurchaseSummary(project, joints);
+  const backing = trimBackerRodCutPlan(project, joints);
   const missing = Math.max(0, (planned?.required ?? 0) - (planned?.selected ?? 0));
   const [basis, setBasis] = useState("");
   const [result, setResult] = useState<ReturnType<typeof estimateTrimSealant>>();
@@ -73,6 +75,12 @@ export function TrimSealantPanel({
               }
             }}>Add missing seam {missing === 1 ? "cartridge" : "cartridges"}</button>}
         </section>
+      )}
+      {backing.length > 0 && (
+        <details>
+          <summary>Backer rod cuts and leftovers</summary>
+          <ul>{trimBackerRodGuideLines(backing).map((line, index) => <li key={index} className="small-note">{line}</li>)}</ul>
+        </details>
       )}
       <form onSubmit={estimate} onChange={() => {
         setResult(undefined);

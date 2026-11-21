@@ -1,6 +1,12 @@
 # Current evidence and remaining qualification
 
-November 21, 2026. The current evidence covers the bottom plate air-seal release in project format 114. Earlier checkpoints below cover the tested versions and workflows they identify.
+November 21, 2026. The current evidence covers the bottom plate air-seal release and the banquette planning correction in project format 114. Earlier checkpoints below cover the tested versions and workflows they identify.
+
+## Native model planning and the original kitchenette prompt
+
+The connected planner now uses a seating return only when the request describes that footprint. A seating request without measurements proposes editable defaults and labels them as provisional. The original kitchenette wording previously produced a return-length question with no geometry. It now generates three straight storage seats, with opening lids and no backs. In a Chrome run with native Qwen2.5 3B the proposal arrived in 13.1 seconds, saved 42 parts and exported its build guide.
+
+The same final code passed seven connected model cases on Apple M2 using native Ollama with Metal. The follow-up preserved the original sections, while shelf, closet, sauna and both greenhouse cases matched the requested geometry. The warm API times were 1.6 to 5.2 seconds on that machine. The 1.5B model passed six of seven cases on the Mac. Its cold storage prompt and warm greenhouse prompt each hit the 180-second limit in the 4 GB CPU-only Docker environment. These timings apply to the tested model and machine. [Ollama Qwen2.5 variants](https://ollama.com/library/qwen2.5)
 
 ## Wood bottom plate air seal, format 114
 

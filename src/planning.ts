@@ -32,6 +32,7 @@ import {
   namedMeasurement,
   normalizeIdeaText,
   retainWithQuestion,
+  requestsBanquetteReturn,
   widthAppliesToEach,
 } from "./ideaEdits";
 import { localStructureIdea } from "./structureIdeas";
@@ -297,7 +298,7 @@ function localSupportedIdeaPlan(request: PlannerRequest): IdeaPlan {
     ? Number(pair[3]) * (/^in/.test(pairUnit) ? 1 : 12)
     : undefined;
   const lShape =
-    kind === "bench" && /\b(l[ -]shap(?:e|ed)|corner|return)\b/.test(text);
+    kind === "bench" && requestsBanquetteReturn(text);
   const suppliedW = named("wide|width|long|length|along the back") ?? pairW;
   const suppliedD =
     named("deep|depth|seat depth") ?? (!lShape ? pairD : undefined);

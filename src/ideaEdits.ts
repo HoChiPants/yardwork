@@ -49,6 +49,13 @@ export function normalizeIdeaText(input: string) {
     )
     .replace(/(\d)-(foot|feet|inch|inches)\b/g, "$1 $2");
 }
+export function requestsBanquetteReturn(input: string) {
+  const text = input.toLowerCase().replace(
+    /\b(?:no|without|omit|remove|exclude)\s+(?:(?:an?|the|any|existing)\s+)?(?:(?:l[ -]?shaped|corner|side)\s+)?(?:return|corner|l[ -]?shaped layout)\b/g,
+    "",
+  );
+  return /\b(?:l[ -]?shap(?:e|ed)|corner|return)\b/.test(text);
+}
 export function mentionedFamily(input: string): BuildFamily | undefined {
   const text = input.toLowerCase();
   let word: string | undefined,

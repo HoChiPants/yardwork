@@ -17,6 +17,7 @@ import {
   namedMeasurement,
   editCaseworkShelfCount,
   normalizeIdeaText,
+  requestsBanquetteReturn,
 } from "../src/ideaEdits";
 import {
   ideaPlanSchema,
@@ -137,13 +138,6 @@ export function wireIntentToPlan(
     });
   if (!request.previousPlan) delete wire.targetSection;
   const prompt = normalizeIdeaText(request.prompt);
-  if (
-    (wire.family === "banquette" || wire.family === "bench") &&
-    /\bstraight\b/.test(prompt) && !/\b(?:l[ -]shap(?:e|ed)|corner|return)\b/.test(prompt)
-  ) {
-    wire.shape = "straight";
-    delete wire.returnLength;
-  }
   const explicitlyNamed = (id: (typeof materialIds)[number]) =>
     prompt.includes(id) || prompt.includes(normalizeIdeaText(material(id).name));
   const namesFramingStock =
@@ -285,6 +279,21 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
       family: requestedFamily === "shelf" ? "shelves" : requestedFamily,
       operation: intent.operation,
     });
+  }
+  if (intent.family === "banquette" || intent.family === "bench") {
+    // A return changes the layout, so the requested footprint must support it.
+    if (!requestsBanquetteReturn(request.prompt)) {
+      delete intent.shape;
+      delete intent.returnLength;
+    }
+    const normalized = normalizeIdeaText(request.prompt);
+    // Use the editable seating defaults when the request includes features but no measurements.
+    if (!/\b\d+(?:\.\d+)?\s*(?:feet|foot|ft|inches|inch|in)\b|\d\s*[′'″"]|\b(?:counter|bar)[ -]height\b/.test(normalized)) {
+      delete intent.width;
+      delete intent.depth;
+      delete intent.height;
+      delete intent.returnLength;
+    }
   }
   const text = request.prompt.toLowerCase(),
     noStorage = /\b(?:no|without|remove)\s+(?:the\s+)?storage\b/.test(text),

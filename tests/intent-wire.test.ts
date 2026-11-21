@@ -190,6 +190,28 @@ test("a straight storage run ignores an inferred return and a greenhouse omits z
   assert.equal(greenhouse.structures[0].parameters.width, 84);
 });
 
+test("the original storage request keeps three seats when the model invents a return and dimensions", () => {
+  const prompt = "a kitchenette banquette with three sections and an openable lid, no back since the wall will be the back with storage in the bottom so its closed off but the seats open to create a space underneath";
+  const intent = {
+    family: "banquette", operation: "create", width: 48, depth: 24, height: 30,
+    shape: "l", returnLength: 24, sectionCount: 3, storage: true, openingLid: true, backHeight: 0,
+  };
+  for (const wording of [prompt, prompt + ". Leave it without a return."]) {
+    const plan = wireIntentToPlan({ prompt: wording }, intent);
+    assert.equal(plan.modules.length, 3);
+    assert.equal(plan.questions.length, 0);
+    assert.ok(plan.modules.every((module) => module.yaw === 0 && module.storage && module.openingLid && module.backHeight === 0));
+    const preview = previewIdeaPlan(blank(), plan);
+    assert.equal(preview.addedParts, 42);
+    assert.equal(preview.max[0] - preview.min[0], 72);
+    assert.equal(preview.max[2] - preview.min[2], 24);
+    assert.equal(preview.max[1] - preview.min[1], 18);
+    assert.ok(plan.assumptions.some((note) => note.includes("Provisional finished seat height: 18 in")));
+  }
+  const bar = wireIntentToPlan({ prompt: "a bar-height banquette with no back" }, intent);
+  assert.equal(bar.modules[0].height, 30);
+});
+
 test("named section wire edits preserve entry IDs, selected sources and unrequested neighbor geometry", () => {
   const previous = localIdeaPlan({
     prompt:

@@ -14,6 +14,7 @@ import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandin
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
 import { woodGlue } from "./woodGlueReference";
+import { sillGaskets, sillGasketScope } from "./sillGasketReference";
 import { everbiltAngleShelfPinIds, everbiltAngleShelfPins, shelfPinProducts } from "./shelfPinReference";
 import {
   findRetailerProduct,
@@ -377,6 +378,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
       "Dry-fit the joint and check clamp access, surface preparation and assembly time against the product instructions.",
     ],
   },
+  ...Object.fromEntries(sillGaskets.map((gasket) => [gasket.id, {
+    purchaseUnit: "roll",
+    contents: [{ name: `${gasket.width} in × 50 ft sill gasket`, quantity: 1 }],
+    requirements: [sillGasketScope],
+  }])),
   "simpson-lus26z": {
     purchaseUnit: "hanger",
     contents: [{ name: "LUS26Z face-mount hanger", quantity: 1 }],

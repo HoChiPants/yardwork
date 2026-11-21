@@ -2,6 +2,8 @@ import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
 import { buildPreparation, buildPreparationMarkdown } from "./buildPreparation";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
+import { sillGasketBuildingGuide, sillGasketInstructions, sillGasketScope } from "./sillGasketReference";
 import { offcutCutOrderMarkdown, offcutCutRows } from "./offcutCutGuide";
 import { beamSource, reviewShelfSag, shelfSagGuideLines, shelfSagScope, shelfSagSummary, stiffnessSource } from "./shelfSag";
 import { homeDepotShoppingList } from "./handoff";
@@ -628,6 +630,15 @@ export type Finding = {
 };
 export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Finding[] {
   const findings: Finding[] = [];
+  for (const row of reviewSillGaskets(p).rows) {
+    if (row.issues.length) findings.push({
+      id: `sill-gasket-${row.plan.partId}`,
+      title: `Sill gasket needs review · ${row.title}`,
+      severity: "warning",
+      detail: row.issues.join(" "),
+      pieceId: row.outline ? row.plan.partId : undefined,
+    });
+  }
   for (const plan of p.lidWeightPlans ?? []) {
     const review = reviewLidWeight(p, plan);
     if (review.state === "stale") findings.push({
@@ -1804,6 +1815,7 @@ export function guideMarkdown(p: Project) {
   const rafterBearing = rafterBearingGuideLines(p, roofBearing);
   const roofAttachments = greenhouseRoofAttachmentLines(p, greenhouseRoofAttachments(p, connections.intents, roofBearing));
   const foundations = greenhouseFoundationGuide(p);
+  const sillGasketLines = sillGasketGuideLines(reviewSillGaskets(p));
   const baseConnections = greenhouseBaseGuideLines(p, greenhouseBaseConnections(p, connections.intents));
   const floorJoints = floorBaseConnectionGuideLines(p, floorBaseConnections(p, connections.intents));
   const floorHangers = floorHangerGuideLines(p, connections.intents);
@@ -1870,6 +1882,11 @@ export function guideMarkdown(p: Project) {
             ] : []),
           ].join("\n")
         ).join("\n") + "\n\n"
+      : "") +
+    (sillGasketLines.length
+      ? "## Sill gasket cut plan\n\n" + sillGasketScope + "\n\n" +
+        sillGasketLines.map((line) => `- ${line.replace(/\r?\n/g, " ")}`).join("\n") +
+        `\n\n[Owens Corning instructions](${sillGasketInstructions}) · [PNNL sill plate detail](${sillGasketBuildingGuide})\n\n`
       : "") +
     lidSiteGuideMarkdown(p) +
     lidWeightGuideMarkdown(p) +

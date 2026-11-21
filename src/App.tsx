@@ -1,6 +1,9 @@
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { clearWoodJointDecision, saveWoodJointDecision, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
+import { sillGasketScope } from "./sillGasketReference";
+import { SillGasketPanel } from "./SillGasketPanel";
 import { browserWorkshop, workshopAsset, workshopRequest } from "./workshopTransport";
 import { ZodError } from "zod";
 import { FloorBaseFields } from "./FloorBaseFields";
@@ -552,6 +555,7 @@ export function App() {
   const [shownLatchId, setShownLatchId] = useState<string | null>(null);
   const [shownRodSupportId, setShownRodSupportId] = useState<string | null>(null);
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
+  const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
   const [shownSiteClearanceId, setShownSiteClearanceId] = useState<string | null>(null);
   const [ventDatumProjectId, setVentDatumProjectId] = useState<string | null>(null);
   const [dryerDuctProjectId, setDryerDuctProjectId] = useState<string | null>(null);
@@ -1494,6 +1498,8 @@ export function App() {
   const guideReady = guideIsCurrent(project);
   const connectionReview = useMemo(() => connectionCoverage(project), [project]);
   const woodJointDetails = useMemo(() => woodJointDecisionEntries(project), [project]);
+  const sillGasketReview = useMemo(() => reviewSillGaskets(project), [project]);
+  const shownSillGasket = sillGasketReview.rows.find(({ plan }) => plan.partId === shownSillGasketId);
   const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
   const needsWoodContacts = panel === "prep" || modal === "export" || printingGuide ||
     (panel === "connections" && !!liveConnectionContext?.scope.modeledContactList);
@@ -1615,6 +1621,7 @@ export function App() {
   const lidStayFitSchedule = useMemo(() => lidStayFitGuideRows(exportGuide), [exportGuide]);
   const exportConnectionReview = useMemo(() => connectionCoverage(exportGuide), [exportGuide]);
   const exportWoodJointDetails = useMemo(() => woodJointDecisionEntries(exportGuide), [exportGuide]);
+  const printSillGaskets = useMemo(() => sillGasketGuideLines(reviewSillGaskets(exportGuide)), [exportGuide]);
   const printCutSources = useMemo(
     () => inspectCutStock(exportGuide),
     [exportGuide],
@@ -2602,6 +2609,9 @@ export function App() {
               shownRodSupportId={panel === "sections" ? shownRodSupportId : null}
               shownSiteClearanceId={panel === "site-clearances" ? shownSiteClearanceId : null}
               shownFoundation={panel === "site-clearances" ? shownFoundation : undefined}
+              shownSillGasket={panel === "sections" && shownSillGasket?.outline
+                ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
+                : undefined}
               shownPlumbingVentLayout={shownVentDatums}
               shownDryerDuctLayout={shownDryerDuct}
               shownCheckArea={shownCheckArea}
@@ -3390,6 +3400,20 @@ export function App() {
                 }
               />
               <button type="button" className="button secondary full" onClick={() => openSiteClearances("sections")}>Measured site clearances</button>
+              <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
+                shownId={shownSillGasketId} onChange={change} onShow={(id) => {
+                  setShownSillGasketId(id);
+                  if (id) {
+                    if (guidePartFocus) exitGuidePartView();
+                    setStage(null);
+                    setPlaying(false);
+                    setExplode(false);
+                    setMotionPreview(null);
+                    setLidMotionPreview(null);
+                    setSectionMotionPreview(null);
+                    inspectWorkspace();
+                  }
+                }} />
               <CaseworkTipUpPanel key={`casework-tip-up-${project.id}`} project={project}
                 onChange={change} previewActive={activeSectionMotion?.target === "casework"}
                 onStartPreview={startSectionMotionPreview}
@@ -6090,6 +6114,13 @@ export function App() {
             <h2>Bearing joints</h2>
             <p>{bearingConnectionScope}</p>
             <ul>{printBearingConnections.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printSillGaskets.length > 0 && (
+          <section className="sill-gaskets-print">
+            <h2>Sill gasket cut plan</h2>
+            <p>{sillGasketScope}</p>
+            <ul>{printSillGaskets.map((line, index) => <li key={index}>{line}</li>)}</ul>
           </section>
         )}
         {exportWoodJointDetails.length > 0 && (

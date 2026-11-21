@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { restoreWorkshopArchive } from "../../server/workshopArchive";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
-import { blank, part } from "../../src/model";
+import { applyCommand, blank, part } from "../../src/model";
 import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
 import { saveWoodJointDecision } from "../../src/woodJointDecisions";
 import { bounds } from "../../src/engine";
@@ -532,4 +532,61 @@ test("rip first preserves a long scrap and applies both cuts as one saved plan",
   const ordered = /Trim P001 · Shelf blank[\s\S]*Rip to 2 ft · Crosscut to 40 in[\s\S]*Long filler[\s\S]*remnant from cut 1/;
   expect(guide).toMatch(ordered);
   await expect(page.locator(".print-guide .offcut-cut-order-print")).toContainText(ordered);
+});
+
+test("a measured sill gasket checks support, shows its footprint and exports exact rolls", async ({ page }) => {
+  const project = applyCommand(blank("Gasket wall"), { type: "wall", width: 96, height: 72, depth: 48, spacing: 16 });
+  const plate = project.pieces.find(({ name }) => name.endsWith("bottom plate"))!;
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "gasket-wall.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 84 })),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  const title = page.getByText("Plan sill gaskets", { exact: true });
+  await title.click();
+  const fields = page.locator("details.field-section").filter({ has: title });
+  await fields.getByRole("combobox", { name: "Wood sill plate", exact: true }).selectOption(plate.id);
+  await fields.getByRole("spinbutton", { name: "Measured top elevation", exact: true }).fill("0");
+  await fields.getByRole("spinbutton", { name: "Continuous support length under this sill", exact: true }).fill("96");
+  const width = fields.getByRole("spinbutton", { name: "Measured support width", exact: true });
+  await width.fill("3");
+  await fields.getByRole("spinbutton", { name: "Extra length for overlaps and trimming", exact: true }).fill("2");
+  const save = fields.getByRole("button", { name: "Save gasket run", exact: true });
+  const buy = fields.getByRole("button", { name: "Add missing gasket rolls", exact: true });
+  await save.click();
+  await expect(fields.getByRole("list", { name: "Measured sill gasket runs" })).toContainText("do not cover the full plate width");
+  await expect(buy).toHaveCount(0);
+  await width.fill("6");
+  await save.click();
+  await expect(fields.getByRole("list", { name: "Measured sill gasket runs" })).toContainText("One 98 in strip");
+  await fields.getByRole("button", { name: "Show gasket footprint", exact: true }).click();
+  await expect(page.getByTestId("sill-gasket-marker")).toContainText("Sill gasket footprint");
+  await buy.click();
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  const saved = (await readDraft()).project;
+  expect(saved.sillGaskets[0]).toMatchObject({ partId: plate.id, measured: { supportWidth: 6, allowance: 2 } });
+  expect(saved.supplies[0]).toMatchObject({ productId: "owens-corning-comfortseal-1fs", quantity: 1 });
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: "Gasket wall" }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list" }).click();
+  await expect(dialog.getByRole("listitem").filter({ hasText: /#202084452/ })).toContainText("1 roll");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("## Sill gasket cut plan");
+  expect(guide).toContain("Cut 98 in including 2 in for overlaps and trimming.");
+  await expect(page.locator(".print-guide .sill-gaskets-print")).toContainText("502 in remaining");
 });

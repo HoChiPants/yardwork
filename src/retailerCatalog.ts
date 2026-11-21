@@ -34,6 +34,7 @@ import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edge
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { trimSealant } from "./trimSealantReference";
 import { woodGlue } from "./woodGlueReference";
+import { sillGasketInstructions, sillGasketListing, sillGasketReviewedAt, sillGaskets } from "./sillGasketReference";
 
 export const retailerSchema = z.enum(["home-depot", "lowes"]);
 export type Retailer = z.infer<typeof retailerSchema>;
@@ -4087,6 +4088,27 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     discrepancies: [],
     capabilities: [],
   },
+  ...sillGaskets.map((gasket): z.input<typeof retailerProductSchema> => {
+    const listing = sillGasketListing(gasket.internetNumber);
+    return {
+      id: gasket.id,
+      name: `Owens Corning ComfortSeal ${gasket.width} in × 50 ft sill gasket`,
+      manufacturer: "Owens Corning",
+      manufacturerPartNumber: gasket.model,
+      category: "consumable",
+      status: "reviewed-specs",
+      verifiedAt: sillGasketReviewedAt,
+      profile: profile("consumable", null, 1, { materialFamily: "polyethylene-foam-gasket" }),
+      offers: [hd(gasket.internetNumber, gasket.model, gasket.storeSku)],
+      sources: [
+        { url: listing, verifiedAt: sillGasketReviewedAt, note: `The ${gasket.model} listing identifies one ${gasket.width} in × 50 ft roll.` },
+        { url: sillGasketInstructions, verifiedAt: sillGasketReviewedAt, note: "The manufacturer documents the roll widths and overlap at both end and perpendicular joints." },
+      ],
+      purchaseSpec: { kind: "counted", count: 1, sourceRefs: [listing, sillGasketInstructions] },
+      discrepancies: ["Use the exact listing title and the ComfortSeal technical sheet for width. Some retailer copy still names FoamSealR and has a generic width summary."],
+      capabilities: [],
+    };
+  }),
   toolReference({
     id: edgeTrimmer.id,
     name: edgeTrimmer.name,

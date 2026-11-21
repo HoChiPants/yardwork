@@ -69,6 +69,7 @@ export type SceneProps = {
   showOffcuts?: boolean;
   shownSiteClearanceId?: string | null;
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
+  shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownPlumbingVentLayout?: PlumbingVentLayout;
   shownDryerDuctLayout?: DryerDuctLayout;
   shownCheckArea?: Finding["area"];
@@ -1355,6 +1356,18 @@ function World(props: SceneProps) {
       ))}
       {!isolated && props.shownFoundation && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <GreenhouseFoundationMarker review={props.shownFoundation} />
+      )}
+      {!isolated && props.shownSillGasket && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <group>
+          <Line points={props.shownSillGasket.points.map((point) => point.map((n) => n / 12) as V3)}
+            color={props.shownSillGasket.needsReview ? "#ba4c2b" : "#35748c"} lineWidth={3} depthTest={false} raycast={() => null} />
+          <Html center position={props.shownSillGasket.points[0].map((n) => n / 12) as V3}
+            zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+            <span className="site-clearance-marker" data-testid="sill-gasket-marker">
+              {props.shownSillGasket.needsReview ? "Sill gasket · Needs review" : "Sill gasket footprint"}
+            </span>
+          </Html>
+        </group>
       )}
       {vent && !props.lidPreview && !props.motionPreview && <PlumbingVentMarkers layout={vent} />}
       {!!ductRuns.length && !props.lidPreview && !props.motionPreview && <DryerDuctMarkers runs={ductRuns} />}

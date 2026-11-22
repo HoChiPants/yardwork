@@ -6,6 +6,7 @@ import { baseBoardDepth, baseBoardIds, baseBoards, baseMemberLengths, baseMember
 import { floorHangerPlanSchema } from "./floorHangerSchema";
 import { rimAirSealPlansSchema } from "./rimAirSealSchema";
 import { roofValleysSchema } from "./roofValleySchema";
+import { roofVentFlashingsSchema } from "./roofVentFlashingSchema";
 import { greenhouseFoundationSchema } from "./greenhouseFoundationSchema";
 import { siteClearanceSchema } from "./siteClearanceSchema";
 import { z } from "zod";
@@ -476,6 +477,7 @@ export const currentProjectSchema = z
     schemaVersion: z.literal(PROJECT_FORMAT_VERSION),
     rimAirSeals: rimAirSealPlansSchema.optional(),
     roofValleys: roofValleysSchema.optional(),
+    roofVentFlashings: roofVentFlashingsSchema.optional(),
     id,
     name: z.string().min(1).max(120),
     kind: z.enum(["coop", "wall", "custom", "bathroom", "pool"]),

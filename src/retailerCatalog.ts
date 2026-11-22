@@ -44,6 +44,7 @@ import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from
 import { bottomPlateSealant, subfloorPanel } from "./bottomPlateSealReference";
 import { rimFoam } from "./rimAirSealReference";
 import { weatherWatch } from "./roofValleyReference";
+import { oateyRoofVentBoot } from "./roofVentFlashingReference";
 import { trimSealant } from "./trimSealantReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
@@ -4439,6 +4440,25 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: weatherWatch.evaluation, verifiedAt: weatherWatch.reviewedAt, note: "ICC-ES ESR-1322 covers the listed membrane and installation conditions." },
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [weatherWatch.listing, weatherWatch.specification] },
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: oateyRoofVentBoot.id,
+    name: oateyRoofVentBoot.label,
+    manufacturer: "Oatey",
+    manufacturerPartNumber: oateyRoofVentBoot.model,
+    category: "equipment",
+    status: "reviewed-specs",
+    verifiedAt: oateyRoofVentBoot.reviewedAt,
+    profile: profile("equipment", null, 1, { materialFamily: "thermoplastic vent roof flashing" }),
+    offers: [hd(oateyRoofVentBoot.internet, oateyRoofVentBoot.model)],
+    sources: [
+      { url: oateyRoofVentBoot.listing, verifiedAt: oateyRoofVentBoot.reviewedAt, note: "Single 18 in × 18 in thermoplastic roof vent flashing, model 11888." },
+      { url: oateyRoofVentBoot.product, verifiedAt: oateyRoofVentBoot.reviewedAt, note: "2 in nominal vent pipe size and an allowable roof pitch up to 45°." },
+      { url: oateyRoofVentBoot.installation, verifiedAt: oateyRoofVentBoot.reviewedAt, note: "Confirm collar fit and fasten the flashing beneath the next shingle courses." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [oateyRoofVentBoot.listing, oateyRoofVentBoot.product] },
     discrepancies: [],
     capabilities: [],
   },

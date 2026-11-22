@@ -16,6 +16,29 @@ import { rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
 import { reviewRimAirSeals } from "./rimAirSeals";
 import { valleyPurchasePurpose, weatherWatch } from "./roofValleyReference";
 import { reviewRoofValleys } from "./roofValleys";
+import { oateyRoofVentBoot, roofVentPurchasePurpose } from "./roofVentFlashingReference";
+import { roofVentFlashingCount } from "./roofVentFlashing";
+
+const linkedPurchasePlans: Partial<Record<string, { purpose: string; units: (project: Project) => number }>> = {
+  [rimFoam.id]: {
+    purpose: rimFoamPurchasePurpose,
+    units(project) {
+      const plan = reviewRimAirSeals(project);
+      return plan.needsReview ? 0 : plan.sheets.length;
+    },
+  },
+  [weatherWatch.id]: {
+    purpose: valleyPurchasePurpose,
+    units(project) {
+      const plan = reviewRoofValleys(project);
+      return plan.needsReview ? 0 : plan.rolls.length;
+    },
+  },
+  [oateyRoofVentBoot.id]: {
+    purpose: roofVentPurchasePurpose,
+    units: (project) => roofVentFlashingCount(project) ?? 0,
+  },
+};
 const clean = (value: string) => value.replace(/[\r\n\t]+/g, " ").trim();
 const ventPurchaseReview = {
   name: "Sauna ventilation",
@@ -333,21 +356,12 @@ export function homeDepotShoppingList(project: Project, rows = bom(project), sup
 
   for (const supply of supplies) {
     let quantity = supply.quantity;
-    const plannedPurpose = supply.productId === rimFoam.id ? rimFoamPurchasePurpose :
-      supply.productId === weatherWatch.id ? valleyPurchasePurpose : undefined;
-    if (plannedPurpose) {
-      const selectedForPlan = supply.selections.filter(({ purpose }) => purpose === plannedPurpose)
+    const linked = linkedPurchasePlans[supply.productId];
+    if (linked) {
+      const selectedForPlan = supply.selections.filter(({ purpose }) => purpose === linked.purpose)
         .reduce((total, row) => total + row.quantity, 0);
       if (selectedForPlan) {
-        let supported: number;
-        if (plannedPurpose === rimFoamPurchasePurpose) {
-          const plan = reviewRimAirSeals(project);
-          supported = plan.needsReview ? 0 : plan.sheets.length;
-        } else {
-          const plan = reviewRoofValleys(project);
-          supported = plan.needsReview ? 0 : plan.rolls.length;
-        }
-        const withheld = selectedForPlan - supported;
+        const withheld = selectedForPlan - linked.units(project);
         if (withheld > 0) {
           quantity -= withheld;
           reviews.push({ name: supply.name, reason: `Review ${withheld} previously selected ${purchaseUnitLabel(supply.purchaseUnit, withheld)} against the current cut plan.` });

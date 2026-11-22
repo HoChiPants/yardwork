@@ -123,6 +123,8 @@ import { rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import { reviewRoofValleys, roofValleyGuideLines } from "./roofValleys";
 import { valleyKey } from "./roofValleySchema";
 import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
+import { roofVentFlashingGuideLines, roofVentFlashingReviews } from "./roofVentFlashing";
+import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { floorHangerGuideLines } from "./floorHangerPlans";
 import { floorHangerReport, floorHangerScope } from "./floorHangerReference";
 import { closetRods, reviewRodFit, rodFitMarkdown } from "./rodFits";
@@ -700,6 +702,12 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (issue) findings.push({
       id: `roof-valley-${valleyKey(plan.input.panels)}`, title: `Review roof valley · ${plan.input.label}`,
       severity: "warning", detail: issue,
+    });
+  }
+  for (const { plan, issue } of roofVentFlashingReviews(p)) {
+    if (issue) findings.push({
+      id: `roof-vent-flashing-${plan.id}`, title: `Review roof vent flashing · ${plan.input.label}`,
+      severity: "warning", detail: issue, pieceId: plan.input.panelId,
     });
   }
   for (const row of reviewOpeningFlashings(p).rows) {
@@ -2043,6 +2051,7 @@ export function guideMarkdown(p: Project) {
   const floorJoints = floorBaseConnectionGuideLines(p, floorBaseConnections(p, connections.intents));
   const rimAirSeals = rimAirSealGuideLines(reviewRimAirSeals(p));
   const roofValleys = roofValleyGuideLines(p);
+  const roofVentFlashings = roofVentFlashingGuideLines(p);
   const floorHangers = floorHangerGuideLines(p, connections.intents);
   const doorKits = new Set((p.motionPlans ?? []).flatMap((plan) => {
     const kit = plan.mechanism.kind === "hinge" ? plan.mechanism.greenhouseDoor?.kitId : null;
@@ -2279,6 +2288,8 @@ export function guideMarkdown(p: Project) {
     projectCodeMarkdown(p) +
     (roofValleys.length ? `\n\n## Roof valley membrane cuts\n\n${valleyScope}\n\n[GAF installation instructions](${weatherWatch.instructions}) · [PNNL roof valley guidance](${valleyFieldGuide})\n\n` +
       roofValleys.map((line) => "- " + line.replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
+    (roofVentFlashings.length ? `\n\n## Roof vent flashing\n\n${roofVentFlashingScope}\n\n[Oatey installation guidance](${oateyRoofVentBoot.installation}) · [PNNL roof penetration guidance](${oateyRoofVentBoot.integration})\n\n` +
+      roofVentFlashings.map((line) => "- " + line.replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     (p.waterRuns?.length ? "\n\n## Wall water-line schedule\n\n" +
       p.waterRuns.flatMap((run) => waterRunGuide(p, run)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[Stud boring](${studBoreSource}) · [Pipe protection](${pipeProtectionSource}) · [SharkBite installation](${pexInstallation})\n` : "") +

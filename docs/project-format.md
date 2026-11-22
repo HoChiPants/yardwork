@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 120**. Yardwork reads valid formats 1–119 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 121**. Yardwork reads valid formats 1–120 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 121 optionally stores `roofVentFlashings` with the retained roof panel ID, measured pipe center and diameter, planned clearance, flange offsets, field confirmation and layout signature. Current geometry determines the cut envelope and shopping quantity. Earlier files keep their existing roof plans and open without a vent layout.
 
 Format 120 optionally stores measured weather-barrier layouts in `roofValleys`. Each entry keeps the model panel IDs, centerline signature, measured downhill length, peak extension, lap and optional measured offcut. Opening the guide checks the current panel geometry before calculating strip lengths and roll purchases. Earlier roof projects retain their saved decking and covering.
 

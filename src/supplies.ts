@@ -18,6 +18,7 @@ import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReferenc
 import { bottomPlateScope, bottomPlateSealant } from "./bottomPlateSealReference";
 import { rimFoam, rimSealScope } from "./rimAirSealReference";
 import { valleyScope, weatherWatch } from "./roofValleyReference";
+import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
 import { trimSealant } from "./trimSealantReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
@@ -407,6 +408,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "roll",
     contents: [{ name: "36 in × 50 ft mineral-surfaced leak barrier", quantity: 1 }],
     requirements: [valleyScope],
+  },
+  [oateyRoofVentBoot.id]: {
+    purchaseUnit: "piece",
+    contents: [{ name: "18 in × 18 in thermoplastic flashing and vent collar", quantity: 1 }],
+    requirements: [roofVentFlashingScope],
   },
   [rimFoam.id]: {
     purchaseUnit: "sheet",

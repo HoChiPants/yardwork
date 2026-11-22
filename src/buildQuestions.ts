@@ -35,6 +35,7 @@ import { reviewRimAirSeals, rimAirSealKey } from "./rimAirSeals";
 import { rimSealScope } from "./rimAirSealReference";
 import { modeledRoofValleys } from "./roofValleys";
 import { valleyScope } from "./roofValleyReference";
+import { roofVentFlashingScope } from "./roofVentFlashingReference";
 import type { RimSide } from "./rimAirSealSchema";
 
 export type BuildQuestion =
@@ -53,6 +54,7 @@ export type BuildQuestion =
   | { kind: "bottom-plate-seal" }
   | { kind: "rim-air-seal" }
   | { kind: "roof-valley" }
+  | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string] }
@@ -77,6 +79,7 @@ export type BuildQuestionAction =
   | { kind: "bottom-plate-seal"; planId?: string }
   | { kind: "rim-air-seal"; sectionId?: string; side?: RimSide }
   | { kind: "roof-valley" }
+  | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string] }
   | { kind: "treated-wood" }
@@ -146,6 +149,7 @@ const subfloorQuestion = /^(?:(?:check|review|show|plan) (?:the |my )?(?:subfloo
 const bottomPlateQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[ -]seal|seal|caulk) (?:the |a |my )?(?:wall )?(?:bottom|sole) plates?(?: to (?:the )?(?:wood )?subfloor)?|(?:plan|review|check|show) (?:the |a )?(?:bottom|sole) plate (?:air[ -]seals?|seals?))$/i;
 const rimAirSealQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[- ]seal|seal|insulate) (?:the |my )?(?:rim[- ]joists?|band[- ]joists?|floor rims?)|(?:plan|review|check|show) (?:the )?(?:rim(?:[- ]joist)?|band[- ]joist|floor rim) (?:air[- ]seal(?:ing)?|insulation|foam cuts))$/i;
 const roofValleyQuestion = /^(?:(?:how (?:do|can|should) i )?(?:line|seal|waterproof) (?:the |a |my )?roof valle(?:y|ys)|(?:plan|review|check|show) (?:the )?roof valley (?:lining|membrane|cuts))$/i;
+const roofVentFlashingQuestion = /^(?:how (?:do|can|should) i (?:flash|seal) (?:the |a |my )?(?:(?:plumbing )?vent(?: pipe)? through (?:the |a |my )?roof|roof vent(?: pipe)?)|(?:plan|review|check|show) (?:the |my )?roof vent flashing)$/i;
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
 const waterSupportQuestion = /^(?:(?:how (?:do|can|should) i )support (?:the |my )?(?:pex|water) (?:runs?|lines?|pipes?)|(?:check|review|show|plan) (?:the |my )?(?:pex |water line )(?:supports?|support spacing))$/i;
@@ -193,6 +197,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (bottomPlateQuestion.test(text)) return { kind: "bottom-plate-seal" };
   if (rimAirSealQuestion.test(text)) return { kind: "rim-air-seal" };
   if (roofValleyQuestion.test(text)) return { kind: "roof-valley" };
+  if (roofVentFlashingQuestion.test(text)) return { kind: "roof-vent-flashing" };
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
@@ -636,6 +641,13 @@ export function answerBuildQuestion(
           link: { label: "Review this bottom plate seam", action: { kind: "bottom-plate-seal", planId: record.id } },
         })),
         link: { label: "Open bottom plate air seal", action: { kind: "bottom-plate-seal" } },
+      };
+    case "roof-vent-flashing":
+      return {
+        title: "Flash a roof vent pipe",
+        detail: "Choose the retained deck panel and enter the measured pipe position and flange edges. The preview lays out the opening across the full thickness of the sloped decking.",
+        scope: roofVentFlashingScope,
+        link: { label: "Open roof vent flashing planner", action: { kind: "roof-vent-flashing" } },
       };
     case "roof-valley": {
       const valleys = modeledRoofValleys(project).filter(({ issue }) => !issue);

@@ -95,6 +95,7 @@ export type SceneProps = {
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[] }>;
   shownRoofValley?: [V3, V3];
+  shownRoofVent?: { center: V3; flange: V3[]; layout: V3[] };
   shownOpeningFlashing?: OpeningFlashingPreview;
   shownPlumbingVentLayout?: PlumbingVentLayout;
   shownDryerDuctLayout?: DryerDuctLayout;
@@ -1621,6 +1622,17 @@ function World(props: SceneProps) {
             color="#28677d" lineWidth={4} depthTest={false} raycast={() => null} />
           <Html position={props.shownRoofValley[0].map((value) => value / 12) as V3} style={{ pointerEvents: "none" }}>
             <span className="site-clearance-marker" data-testid="roof-valley-marker">Valley centerline · eave</span>
+          </Html>
+        </group>
+      )}
+      {!isolated && props.shownRoofVent && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <group>
+          {[props.shownRoofVent.flange, props.shownRoofVent.layout].map((points, index) =>
+            <Line key={index} points={[...points, points[0]].map((point) => point.map((value) => value / 12) as V3)}
+              color={index === 0 ? "#28677d" : "#af5a20"} lineWidth={3} depthTest={false} raycast={() => null} />)}
+          <Html position={props.shownRoofVent.center.map((value, index) => (value + (index === 1 ? 1 : 0)) / 12) as V3}
+            style={{ pointerEvents: "none" }}>
+            <span className="site-clearance-marker" data-testid="roof-vent-marker">Vent center · opening and flange</span>
           </Html>
         </group>
       )}

@@ -5,6 +5,8 @@ import { guideMarkdown } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import {
   motionPivotPreset,
+  motionReviewHasLimits,
+  motionReviewTravel,
   motionSetup,
   motionTestFindings,
   projectMotionReviews,
@@ -291,6 +293,92 @@ test("a linked door and drawer use their own angles and distances and detect a m
   );
 });
 
+test("linked targets change the whole shared path and keep both mechanism ranges intact", () => {
+  const project = blank("Cabinet access practice");
+  const diagonal = 6 / Math.sqrt(2);
+  const door = panel(project, "Cabinet door", [12, 5, 0.75], [6, 10, 0]);
+  const drawer = panel(project, "Pull-out drawer", [1, 2, 1], [diagonal, 10, diagonal - 12]);
+  const a = saveMotionPlan({ ...project, pieces: [door, drawer] }, {
+    label: door.name, memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: [0, 10, 0], travel: 90 },
+  });
+  const b = saveMotionPlan(a.project, {
+    label: drawer.name, memberIds: [drawer.id],
+    mechanism: { kind: "slide", axis: [0, 0, 1], travel: 24 },
+  });
+  const fullSetup = { linkedId: b.plan.id, held: [] };
+  const full = runMotionTest(b.project, a.plan, fullSetup).review!;
+  assert.ok(full.hits.length);
+  assert.equal(motionReviewTravel(full), 90);
+
+  const limited = {
+    ...fullSetup,
+    sequenceTargets: {
+      selected: { kind: "hinge", travel: 40 } as const,
+      companion: { kind: "slide", travel: 8 } as const,
+    },
+  };
+  const result = saveMotionTestScenario(b.project, a.plan.id, "Limited together", limited);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(result.project)));
+  const main = reopened.motionPlans![0];
+  assert.deepEqual(main.testScenarios![0].setup, limited);
+  assert.deepEqual(reopened.motionPlans!.map(({ mechanism }) => mechanism.travel), [90, 24]);
+  const review = runMotionTest(reopened, main, limited).review!;
+  assert.equal(motionReviewTravel(review), 40);
+  assert.equal(motionReviewHasLimits(review), true);
+  assert.deepEqual(review.hits, []);
+  const halfway = review.preview(20);
+  near(halfway.pieces.find(({ id }) => id === door.id)!.position[0], 6 * Math.cos(20 * Math.PI / 180));
+  near(halfway.pieces.find(({ id }) => id === drawer.id)!.position[2], drawer.position[2] + 4);
+  assert.equal(halfway.positionText, "Cabinet door 20° · Pull-out drawer 4 in");
+  assert.equal(review.playbackLimit(0, 100).travel, 40);
+  assert.equal(review.playbackLimit(40, 0).travel, 0);
+  assert.match(guideMarkdown(reopened), /Limited together · moves with Pull-out drawer · Test targets · Cabinet door 40°, Pull-out drawer 8 in/);
+
+  // A different ratio still needs a full sweep: each endpoint clears, but the parts cross in between.
+  const changed = runMotionTest(reopened, main, {
+    ...limited, sequenceTargets: {
+      selected: { kind: "hinge", travel: 60 },
+      companion: { kind: "slide", travel: 18 },
+    },
+  }).review!;
+  assert.deepEqual(changed.preview(0).interferenceIds, []);
+  assert.deepEqual(changed.preview(60).interferenceIds, []);
+  assert.ok(changed.hits.some(({ kind }) => kind === "solid"));
+  for (const [from, to] of [[0, 60], [60, 0]]) {
+    const limit = changed.playbackLimit(from, to);
+    assert.ok(limit.travel > 29 && limit.travel < 46);
+    assert.deepEqual(changed.preview(limit.travel).interferenceIds, []);
+  }
+  const edited = { ...reopened, motionPlans: reopened.motionPlans!.map((plan) =>
+    plan.id === b.plan.id ? { ...plan, mechanism: { ...b.plan.mechanism, travel: 6 } } : plan) };
+  assert.match(runMotionTest(edited, main, limited).error!, /travel target for Pull-out drawer no longer fits/);
+  assert.deepEqual(reopened.pieces.map(({ position }) => position), b.project.pieces.map(({ position }) => position));
+});
+
+test("a saved solo opening limit stops at the requested angle and preserves older test setups", () => {
+  const source = blank("Door near a wall return");
+  const door = panel(source, "Cabinet door", [12, 5, 0.75], [6, 10, 0]);
+  const obstacle = panel(source, "Wall return", [0.6, 5, 0.6], [0, 10, 11.5]);
+  const saved = saveMotionPlan({ ...source, pieces: [door, obstacle] }, {
+    label: door.name, memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: [0, 10, 0], travel: 90 },
+  });
+  const legacy = projectSchema.parse(JSON.parse(JSON.stringify({ ...saved.project, schemaVersion: 134 })));
+  const plan = legacy.motionPlans![0];
+  assert.equal(legacy.schemaVersion, 135);
+  assert.ok(runMotionTest(legacy, plan).review!.hits.length);
+  const setup = { held: [], sequenceTargets: { selected: { kind: "hinge", travel: 75 } as const } };
+  const updated = saveMotionTestSetup(legacy, plan.id, setup);
+  assert.deepEqual(updated.motionPlans![0].testSetup, setup);
+  const review = runMotionTest(updated, plan, setup).review!;
+  assert.equal(motionReviewTravel(review), 75);
+  assert.deepEqual(review.hits, []);
+  assert.equal(review.playbackLimit(0, 90).travel, 75);
+  assert.equal(review.preview(90).travel, 75);
+  assert.match(guideMarkdown(updated), /Saved clearance test · Cabinet door · Test targets · Cabinet door 75°/);
+});
+
 test("opening order checks both motions with the correct held poses and reverses on closing", () => {
   const base = blank("Door in front of drawer");
   const door = panel(base, "Cabinet door", [12, 5, 0.75], [6, 10, 0]);
@@ -404,7 +492,8 @@ test("a limited door-first test uses both physical targets and rejects stale tra
   assert.match(runMotionTest(stale, plan, limited).error!, /travel target for Cabinet door no longer fits/);
   assert.match(guideMarkdown(stale), /Limited opening.*Needs review.*travel target for Cabinet door/);
   assert.throws(() => saveMotionTestSetup(stale, plan.id, limited), /target for Cabinet door/);
-  assert.throws(() => saveMotionTestSetup(reopened, plan.id, { ...limited, openingOrder: undefined }), /Choose two motions and an opening order/);
+  assert.throws(() => saveMotionTestSetup(reopened, plan.id,
+    { ...limited, openingOrder: undefined, linkedId: undefined }), /Choose a second motion/);
 });
 
 test("named clearance tests preserve both opening orders and recheck the current geometry", () => {

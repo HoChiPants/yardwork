@@ -678,6 +678,8 @@ export function resolveMotionTestSetup(project: Project, setup?: MotionTestSetup
     return plan;
   };
   const linked = setup?.linkedId ? find(setup.linkedId) : undefined;
+  if (!linked && setup?.sequenceTargets?.companion)
+    throw Error("Choose a second motion before setting its travel target.");
   const held = (setup?.held ?? []).map(({ motionId, percent }): HeldMotion => {
     const plan = find(motionId);
     return { plan, travel: (plan.mechanism.travel * percent) / 100 };
@@ -695,7 +697,8 @@ function checkMotionTestReferences(project: Project, active: MotionPlan, setup: 
       throw Error("Choose test motions with their own active moving parts.");
     occupied.push(other);
   }
-  if (linked && setup.openingOrder) motionSequence(active, linked, setup.openingOrder, setup.sequenceTargets);
+  motionTestTravel(active, setup.sequenceTargets?.selected);
+  if (linked) motionTestTravel(linked, setup.sequenceTargets?.companion);
   if (setup.clearance) {
     members(project, [setup.clearance.movingId, setup.clearance.otherId]);
     if (!hasClearanceMovingPart(active, linked, setup.clearance))
@@ -794,6 +797,7 @@ export function reviewMotion(
   held: readonly HeldMotion[] = [],
   linked?: MotionPlan,
   testedTravel = plan.mechanism.travel,
+  linkedTravel = linked?.mechanism.travel,
 ) {
   const doorReview = boundMotionReview(project, plan);
   if (doorReview?.warning) throw Error(doorReview.warning);
@@ -822,7 +826,7 @@ export function reviewMotion(
       parkedPieces,
       linked: linked && {
         parts: members(project, linked.memberIds),
-        mechanism: motionSetup(project, linked).mechanism,
+        mechanism: { ...motionSetup(project, linked).mechanism, travel: linkedTravel ?? linked.mechanism.travel },
       },
       measuredSite: true,
     },
@@ -831,10 +835,18 @@ export function reviewMotion(
     ...path,
     plan,
     linked,
+    testedTravel,
+    linkedTravel,
     preview(requested: number, inspectAt?: number, siteFaceId?: string) {
+      const pose = path.preview(requested, inspectAt, siteFaceId);
+      const limitedPair = linked && linkedTravel !== undefined &&
+        (testedTravel !== plan.mechanism.travel || linkedTravel !== linked.mechanism.travel);
       return {
-        ...path.preview(requested, inspectAt, siteFaceId),
+        ...pose,
         label: linked ? `${plan.label} + ${linked.label}` : plan.label,
+        ...(limitedPair ? {
+          positionText: `${plan.label} ${motionDistance(pose.travel, plan.mechanism.kind)} · ${linked.label} ${motionDistance(pose.travel * linkedTravel / testedTravel, linked.mechanism.kind)}`,
+        } : {}),
       };
     },
   };
@@ -1246,14 +1258,15 @@ const phaseTravel = (phase: MotionPhase, target: number, total: number) =>
 const sequenceTravel = (phase: MotionPhase, target: number, local: number) =>
   phaseStart(phase) + (local / target) * phaseSize;
 
+function motionTestTravel(plan: MotionPlan, target?: MotionSequenceTargets["selected"]) {
+  if (target && (target.kind !== plan.mechanism.kind || target.travel > plan.mechanism.travel))
+    throw Error(`The saved travel target for ${plan.label} no longer fits its motion. Update the test target or restore full travel.`);
+  return target?.travel ?? plan.mechanism.travel;
+}
+
 function motionSequence(selected: MotionPlan, companion: MotionPlan, order: MotionOpeningOrder, targets?: MotionSequenceTargets): MotionSequence {
-  const leg = (plan: MotionPlan, target?: MotionSequenceTargets["selected"]) => {
-    if (target && (target.kind !== plan.mechanism.kind || target.travel > plan.mechanism.travel))
-      throw Error(`The saved travel target for ${plan.label} no longer fits its motion. Update the test target or restore full travel.`);
-    return { plan, travel: target?.travel ?? plan.mechanism.travel };
-  };
-  const first = leg(selected, targets?.selected);
-  const second = leg(companion, targets?.companion);
+  const first = { plan: selected, travel: motionTestTravel(selected, targets?.selected) };
+  const second = { plan: companion, travel: motionTestTravel(companion, targets?.companion) };
   return order === "selected-first" ? [first, second] : [second, first];
 }
 
@@ -1300,6 +1313,8 @@ function reviewMotionSequence(
   return {
     plan,
     linked: undefined,
+    testedTravel: sequenceEnd,
+    linkedTravel: undefined,
     sequence,
     bounds: sweepBounds,
     hits: phaseIndices.flatMap((phase) => phases[phase].hits.map((hit) => ({
@@ -1368,7 +1383,20 @@ function reviewMotionSequence(
 }
 
 export function motionReviewTravel(review: MotionReview) {
-  return review.sequence ? sequenceEnd : review.plan.mechanism.travel;
+  return review.testedTravel;
+}
+
+export function motionReviewTargets({ sequence, plan, testedTravel, linked, linkedTravel }: MotionReview) {
+  return sequence ?? [
+    { plan, travel: testedTravel },
+    ...(linked && linkedTravel !== undefined ? [{ plan: linked, travel: linkedTravel }] : []),
+  ];
+}
+
+export function motionReviewHasLimits(review: MotionReview) {
+  if (review.sequence) return review.sequence.some(({ plan, travel }) => travel < plan.mechanism.travel);
+  return review.testedTravel < review.plan.mechanism.travel ||
+    (review.linkedTravel !== undefined && !!review.linked && review.linkedTravel < review.linked.mechanism.travel);
 }
 
 /** Obtain a search for an active motion without assuming a required minimum. */
@@ -1438,7 +1466,11 @@ export function runMotionTest(
       const sequence = motionSequence(plan, linked, setup.openingOrder, setup.sequenceTargets);
       review = reviewMotionSequence(project, plan, sequence, held);
     } else {
-      review = reviewMotion(project, plan, held, linked);
+      review = reviewMotion(
+        project, plan, held, linked,
+        motionTestTravel(plan, setup?.sequenceTargets?.selected),
+        linked && motionTestTravel(linked, setup?.sequenceTargets?.companion),
+      );
     }
     if (setup?.clearance) {
       const requirement = setup.clearance;
@@ -1607,8 +1639,8 @@ function savedTestLines(project: Project, label: string, setup: MotionTestSetup,
       ...(sequence
         ? [`opens in order: ${sequence.map(({ plan }) => plan.label).join(" → ")}. Closing reverses the order.`]
         : linked ? [`moves with ${linked.label}`] : []),
-      ...(sequence && setup.sequenceTargets
-        ? [`Test targets · ${sequence.map(({ plan, travel }) => `${plan.label} ${motionTargetDistance(travel, plan.mechanism.kind)}`).join(", ")}.`]
+      ...(setup.sequenceTargets
+        ? [`Test targets · ${motionReviewTargets(result.review).map(({ plan, travel }) => `${plan.label} ${motionTargetDistance(travel, plan.mechanism.kind)}`).join(", ")}.`]
         : []),
       ...held.map(({ plan, travel }) => `${plan.label} held at ${motionDistance(travel, plan.mechanism.kind)}`),
     ].join(" · "),

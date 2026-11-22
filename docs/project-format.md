@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 134**. Yardwork reads valid formats 1–133 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 135**. Yardwork reads valid formats 1–134 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 135 expands the existing motion test target records to a single motion and two motions moving together. A target stores the selected mechanism kind and either an angle in degrees or slide travel in inches. Earlier tests keep their original targets, movement order and held parts. Tests saved before targets were entered still use the mechanism's full saved travel.
 
 Format 134 records a round duct sealing estimate with the measured joint circumference, added fitting seams, measured mesh length and usable tube coverage. The project tracks which duct layout those readings came from. A changed layout sends the estimate back for review before the shopping handoff includes it.
 

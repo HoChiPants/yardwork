@@ -23,7 +23,7 @@ import { formatPreciseInches } from "./measurement";
 import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
 import { ClosestMotionGap } from "./ClosestMotionGap";
 import { MeasuredHingePathFields } from "./MeasuredHingePathFields";
-import { MotionSequenceTargetsFields } from "./MotionSequenceTargetsFields";
+import { MotionTravelTargetsFields } from "./MotionTravelTargetsFields";
 import {
   GreenhouseDoorDetails,
   GreenhouseDoorEditor,
@@ -38,6 +38,7 @@ import {
   motionReviewDistance,
   motionGapSearch,
   motionReviewTravel,
+  motionReviewHasLimits,
   motionSetup,
   removeMotionTestScenario,
   runMotionTest,
@@ -542,12 +543,14 @@ function heldMotions(
 }
 
 function testSetupFrom(linkedId: string, positions: ReadonlyMap<string, number>, openingOrder?: MotionOpeningOrder, clearance?: MotionPairClearance, sequenceTargets?: MotionSequenceTargets): MotionTestSetup | undefined {
-  if (!linkedId && !positions.size && !clearance) return undefined;
+  const targets = linkedId ? sequenceTargets
+    : sequenceTargets?.selected ? { selected: sequenceTargets.selected } : undefined;
+  if (!linkedId && !positions.size && !clearance && !targets) return undefined;
   return {
     ...(linkedId && { linkedId }),
     ...(linkedId && openingOrder && { openingOrder }),
     ...(clearance && { clearance }),
-    ...(linkedId && openingOrder && sequenceTargets && { sequenceTargets }),
+    ...(targets && { sequenceTargets: targets }),
     held: [...positions].map(([motionId, percent]) => ({ motionId, percent })),
   };
 }
@@ -794,7 +797,8 @@ export function MotionPanel({
   function link(id: string, order: MotionOpeningOrder | null | undefined = openingOrder) {
     if (!selected) return;
     const nextOrder = id ? order ?? undefined : undefined;
-    const targets = id === linkedId && nextOrder ? sequenceTargets : undefined;
+    const targets = id && id === linkedId ? sequenceTargets
+      : sequenceTargets?.selected ? { selected: sequenceTargets.selected } : undefined;
     setSetupDraft({ motionId: selected.id, linkedId: id, positions: heldPositions, openingOrder: nextOrder, clearance, sequenceTargets: targets });
     if (preview)
       test(selected, project, openingOrder || nextOrder ? 0 : preview.travel, testSetupFrom(id, heldPositions, nextOrder, clearance, targets) ?? null);
@@ -976,10 +980,16 @@ export function MotionPanel({
             : <p className="small-note" role="status">This pair needs two modeled surfaces to measure its gap.</p>}
         </section>
       )}
-      {plans.length === 0 && editing === null &&
-        <a className="text-button" href={workshopAsset("/examples/hinges/fixed-stop-drawer.yardwork.json")} download>
-          Download cabinet practice plan
-        </a>}
+      {plans.length === 0 && editing === null && (
+        <div className="motion-actions">
+          <a className="text-button" href={workshopAsset("/examples/hinges/fixed-stop-drawer.yardwork.json")} download>
+            Download cabinet practice plan
+          </a>
+          <a className="text-button" href={workshopAsset("/examples/motion/limited-linked-travel.yardwork.json")} download>
+            Download shared travel practice plan
+          </a>
+        </div>
+      )}
       {plans.length > 0 && editing === null && (
         <label className="field">
           Saved motion
@@ -1047,12 +1057,13 @@ export function MotionPanel({
           </span>
         </label>
       )}
-      {selected && linked && openingOrder && editing === null && (
-        <MotionSequenceTargetsFields
-          key={JSON.stringify(["travel targets", selected.id, linked.id, sequenceTargets])}
+      {selected && editing === null && (
+        <MotionTravelTargetsFields
+          key={JSON.stringify(["travel targets", selected.id, linked?.id, sequenceTargets])}
           selected={selected}
           companion={linked}
           current={sequenceTargets}
+          sequential={!!openingOrder}
           onTest={(targets) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, clearance, targets), true)}
         />
       )}
@@ -1306,12 +1317,11 @@ export function MotionPanel({
           <label className="field">
             {sliderLabel} ·{" "}
             <output>{preview.positionText ?? distance(preview.travel)}</output>
-            {review.linked && (
+            {review.linked && review.linkedTravel !== undefined && !preview.positionText && (
               <span className="small-note">
                 {review.linked.label} ·{" "}
                 {motionDistance(
-                  (review.linked.mechanism.travel * preview.travel) /
-                    review.plan.mechanism.travel,
+                  (review.linkedTravel * preview.travel) / motionReviewTravel(review),
                   review.linked.mechanism.kind,
                 )}
               </span>
@@ -1322,7 +1332,7 @@ export function MotionPanel({
               type="range"
               min={0}
               max={motionReviewTravel(review)}
-              step={review.sequence || kind === "hinge" ? 0.25 : 0.01}
+              step={!review.sequence && motionReviewHasLimits(review) ? "any" : review.sequence || kind === "hinge" ? 0.25 : 0.01}
               value={preview.travel}
               onChange={(e) => show(e.target.valueAsNumber)}
             />
@@ -1356,7 +1366,7 @@ export function MotionPanel({
               className="text-button"
               onClick={() => show(motionReviewTravel(review))}
             >
-              {review.sequence?.some(({ plan, travel }) => travel < plan.mechanism.travel) ? "Inspect test endpoint" : "Inspect fully open"}
+              {motionReviewHasLimits(review) ? "Inspect test endpoint" : "Inspect fully open"}
             </button>
             {review.sequence && (
               <button type="button" className="text-button"

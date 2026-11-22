@@ -1,0 +1,1295 @@
+{
+  "schemaVersion": 135,
+  "id": "558f5922-2a34-47dd-a7d2-2b44290f3930",
+  "name": "Cabinet door and pull-out travel",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "plannedCutSources": [
+    {
+      "sourceId": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+      "fingerprint": "binding-v1-ba93b928f264d0bd",
+      "historyIds": [
+        "197cf620-2c95-41e4-9222-cce2bd2aecba",
+        "b8551e9b-807c-48b0-b701-62823f3c0347",
+        "8238adbe-683a-4d96-ba37-796bb5286b0b",
+        "6f65817e-9fa8-47e0-b450-14470c6857ef",
+        "76721bc8-3729-443f-958a-055fffe4766c",
+        "6fd5032e-2147-4ba7-bf4f-b0d805f6351a",
+        "503df9f4-d919-4c2d-ad9a-3fb21d3c577c",
+        "c382e258-a930-4496-a6bb-0370b89120da",
+        "273fbe2d-9efb-4926-b010-a4955293cd57",
+        "fd99f8fa-0463-4d93-bc80-a7c58118f02c",
+        "ffdc7ea4-a9d7-4979-97c9-1cdc6dd230fa",
+        "f3f2b441-dfb0-470e-b2a8-c51a3ee2d321",
+        "0d47f9cb-88fb-4a07-a361-c9a836906030",
+        "65fde7c4-0c0b-4927-ad20-abc71bf3b9a6",
+        "5fab979c-45c5-4195-a4dc-369bfc8d5901",
+        "25367dc6-093c-44c7-950b-7556005f2256",
+        "57acfb00-0e2b-4088-8c30-5e7c11376534",
+        "d101d581-0a7a-4342-9ea6-d23594f54912",
+        "2af556d7-126b-41bd-9c76-1b7a64a3c8aa",
+        "329a8ccb-0f15-4add-a1c1-0bb54e61041d"
+      ]
+    }
+  ],
+  "motionPlans": [
+    {
+      "label": "Cabinet door",
+      "memberIds": [
+        "40c83084-0982-49dc-a34c-c5199ad2d432"
+      ],
+      "mechanism": {
+        "kind": "hinge",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "pivot": [
+          -6,
+          0,
+          0.375
+        ],
+        "travel": 90
+      },
+      "id": "17c272c8-a07d-4b69-a92b-2658078849b5",
+      "testScenarios": [
+        {
+          "id": "67ce80a8-19c1-4466-9ca9-8d5bea4f2fc6",
+          "name": "Full travel together",
+          "setup": {
+            "linkedId": "cf8500ca-7674-4fea-9bb0-5297da72f2df",
+            "held": []
+          }
+        },
+        {
+          "id": "e4029197-5cd8-4fb5-98e7-39283432e81f",
+          "name": "Door 70° and tray 8.5 in",
+          "setup": {
+            "linkedId": "cf8500ca-7674-4fea-9bb0-5297da72f2df",
+            "sequenceTargets": {
+              "selected": {
+                "kind": "hinge",
+                "travel": 70
+              },
+              "companion": {
+                "kind": "slide",
+                "travel": 8.5
+              }
+            },
+            "held": []
+          }
+        },
+        {
+          "id": "fa6747c6-ff08-45df-8fd1-76b75f8074cf",
+          "name": "Door only to 70°",
+          "setup": {
+            "sequenceTargets": {
+              "selected": {
+                "kind": "hinge",
+                "travel": 70
+              }
+            },
+            "held": []
+          }
+        }
+      ]
+    },
+    {
+      "label": "Pull-out tray",
+      "memberIds": [
+        "50103573-335b-4048-9a13-b2749f2ec476",
+        "4047376d-6aaa-4efc-9327-cdcfefd11ebb",
+        "aabf5df4-8101-4533-81a6-00452cff0e35",
+        "26f8eeff-1a7f-4334-8d58-e69d2caf8281",
+        "03b345e5-065b-4240-844e-15ff55169cdf"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "travel": 18
+      },
+      "id": "cf8500ca-7674-4fea-9bb0-5297da72f2df"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "d77990bc-c9fe-4cd6-b604-faa145786c5e",
+      "label": "P001"
+    },
+    {
+      "partId": "78fdc157-fa3c-4131-b380-468f0f50dafa",
+      "label": "P002"
+    },
+    {
+      "partId": "0061d07c-57d3-452f-a430-17b7254a9d1c",
+      "label": "P003"
+    },
+    {
+      "partId": "2d37b4b9-cde2-40cb-8344-c5b6606e68fd",
+      "label": "P004"
+    },
+    {
+      "partId": "fcc5a61e-ee9d-481c-9747-a5df7d2ba9ca",
+      "label": "P005"
+    },
+    {
+      "partId": "40c83084-0982-49dc-a34c-c5199ad2d432",
+      "label": "P006"
+    },
+    {
+      "partId": "50103573-335b-4048-9a13-b2749f2ec476",
+      "label": "P007"
+    },
+    {
+      "partId": "4047376d-6aaa-4efc-9327-cdcfefd11ebb",
+      "label": "P008"
+    },
+    {
+      "partId": "aabf5df4-8101-4533-81a6-00452cff0e35",
+      "label": "P009"
+    },
+    {
+      "partId": "26f8eeff-1a7f-4334-8d58-e69d2caf8281",
+      "label": "P010"
+    },
+    {
+      "partId": "03b345e5-065b-4240-844e-15ff55169cdf",
+      "label": "P011"
+    },
+    {
+      "partId": "649b460c-9f59-4cb3-90ce-97342c0153e6",
+      "label": "O001"
+    },
+    {
+      "partId": "22497a60-2cde-4780-bbe6-74449a11770c",
+      "label": "O002"
+    },
+    {
+      "partId": "946eaa16-0630-4d5f-a787-a6dc7b291362",
+      "label": "O003"
+    },
+    {
+      "partId": "77fe25e2-3564-46ca-be86-e99f4afb4e04",
+      "label": "O004"
+    },
+    {
+      "partId": "bc4165a3-d052-4016-9929-6d03696e4ff2",
+      "label": "O005"
+    },
+    {
+      "partId": "9d8c27f7-5ea6-42a1-b502-d46813d97afc",
+      "label": "O006"
+    },
+    {
+      "partId": "6b47540a-d8c1-4f90-8bf4-5b2e13e03f7b",
+      "label": "O007"
+    },
+    {
+      "partId": "bc35c143-d3e9-4145-8387-fef803c3fd08",
+      "label": "O008"
+    },
+    {
+      "partId": "56586839-09e3-458e-af50-48262bb40caa",
+      "label": "O009"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T16:56:03.874Z",
+  "pieces": [
+    {
+      "id": "d77990bc-c9fe-4cd6-b604-faa145786c5e",
+      "name": "Left cabinet side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        16.5,
+        20
+      ],
+      "position": [
+        -6.375,
+        9,
+        -10.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9e5bc0b8-86d1-46c8-aab7-8e888b811466",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "78fdc157-fa3c-4131-b380-468f0f50dafa",
+      "name": "Right cabinet side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        16.5,
+        20
+      ],
+      "position": [
+        6.375,
+        9,
+        -10.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9e5bc0b8-86d1-46c8-aab7-8e888b811466",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          16.625,
+          0
+        ]
+      }
+    },
+    {
+      "id": "0061d07c-57d3-452f-a430-17b7254a9d1c",
+      "name": "Cabinet bottom",
+      "material": "plywood",
+      "size": [
+        13.5,
+        0.75,
+        20
+      ],
+      "position": [
+        0,
+        0.375,
+        -10.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9e5bc0b8-86d1-46c8-aab7-8e888b811466",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          48,
+          0.75,
+          96
+        ],
+        "offset": [
+          33.25,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "2d37b4b9-cde2-40cb-8344-c5b6606e68fd",
+      "name": "Cabinet top",
+      "material": "plywood",
+      "size": [
+        13.5,
+        0.75,
+        20
+      ],
+      "position": [
+        0,
+        17.625,
+        -10.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9e5bc0b8-86d1-46c8-aab7-8e888b811466",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          48,
+          0.75,
+          96
+        ],
+        "offset": [
+          0,
+          0,
+          20.125
+        ]
+      }
+    },
+    {
+      "id": "fcc5a61e-ee9d-481c-9747-a5df7d2ba9ca",
+      "name": "Cabinet back",
+      "material": "plywood",
+      "size": [
+        12,
+        16.5,
+        0.75
+      ],
+      "position": [
+        0,
+        9,
+        -20
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9e5bc0b8-86d1-46c8-aab7-8e888b811466",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          2,
+          0,
+          1
+        ],
+        "size": [
+          48,
+          96,
+          0.75
+        ],
+        "offset": [
+          13.625,
+          20.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "40c83084-0982-49dc-a34c-c5199ad2d432",
+      "name": "Cabinet door",
+      "material": "plywood",
+      "size": [
+        12,
+        16.5,
+        0.75
+      ],
+      "position": [
+        0,
+        9,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "f1048341-1080-473c-82ee-118ef6d640e2",
+      "assembly": "Door",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          2,
+          0,
+          1
+        ],
+        "size": [
+          48,
+          96,
+          0.75
+        ],
+        "offset": [
+          25.75,
+          20.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "50103573-335b-4048-9a13-b2749f2ec476",
+      "name": "Tray bottom",
+      "material": "plywood",
+      "size": [
+        8,
+        0.75,
+        11.75
+      ],
+      "position": [
+        0,
+        7.375,
+        -11.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5b6a8407-2257-44e4-b669-763db4d0c0c8",
+      "assembly": "Pull-out tray",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          48,
+          0.75,
+          96
+        ],
+        "offset": [
+          37.875,
+          0,
+          20.125
+        ]
+      }
+    },
+    {
+      "id": "4047376d-6aaa-4efc-9327-cdcfefd11ebb",
+      "name": "Tray left side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        3,
+        10.25
+      ],
+      "position": [
+        -3.625,
+        9.25,
+        -11.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5b6a8407-2257-44e4-b669-763db4d0c0c8",
+      "assembly": "Pull-out tray",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          0,
+          40.25
+        ]
+      }
+    },
+    {
+      "id": "aabf5df4-8101-4533-81a6-00452cff0e35",
+      "name": "Tray right side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        3,
+        10.25
+      ],
+      "position": [
+        3.625,
+        9.25,
+        -11.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5b6a8407-2257-44e4-b669-763db4d0c0c8",
+      "assembly": "Pull-out tray",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          3.125,
+          40.25
+        ]
+      }
+    },
+    {
+      "id": "26f8eeff-1a7f-4334-8d58-e69d2caf8281",
+      "name": "Tray front",
+      "material": "plywood",
+      "size": [
+        8,
+        3,
+        0.75
+      ],
+      "position": [
+        0,
+        9.25,
+        -6.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5b6a8407-2257-44e4-b669-763db4d0c0c8",
+      "assembly": "Pull-out tray",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.75
+        ],
+        "offset": [
+          40.25,
+          6.25,
+          0
+        ]
+      }
+    },
+    {
+      "id": "03b345e5-065b-4240-844e-15ff55169cdf",
+      "name": "Tray back",
+      "material": "plywood",
+      "size": [
+        8,
+        3,
+        0.75
+      ],
+      "position": [
+        0,
+        9.25,
+        -17.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5b6a8407-2257-44e4-b669-763db4d0c0c8",
+      "assembly": "Pull-out tray",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.75
+        ],
+        "offset": [
+          40.25,
+          9.375,
+          0
+        ]
+      }
+    },
+    {
+      "id": "649b460c-9f59-4cb3-90ce-97342c0153e6",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 1",
+      "material": "plywood",
+      "size": [
+        0.75,
+        1.125,
+        20
+      ],
+      "position": [
+        -6.375,
+        48.1875,
+        -10.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          46.875,
+          0
+        ]
+      }
+    },
+    {
+      "id": "22497a60-2cde-4780-bbe6-74449a11770c",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 2",
+      "material": "plywood",
+      "size": [
+        0.75,
+        12,
+        3.375
+      ],
+      "position": [
+        -6.375,
+        20.375,
+        18.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          13.625,
+          36.75
+        ]
+      }
+    },
+    {
+      "id": "946eaa16-0630-4d5f-a787-a6dc7b291362",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 3",
+      "material": "plywood",
+      "size": [
+        0.75,
+        12,
+        3.375
+      ],
+      "position": [
+        -6.375,
+        32.5,
+        18.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          25.75,
+          36.75
+        ]
+      }
+    },
+    {
+      "id": "77fe25e2-3564-46ca-be86-e99f4afb4e04",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 4",
+      "material": "plywood",
+      "size": [
+        0.75,
+        8,
+        8.125
+      ],
+      "position": [
+        -6.375,
+        42.625,
+        15.6875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          37.875,
+          32
+        ]
+      }
+    },
+    {
+      "id": "bc4165a3-d052-4016-9929-6d03696e4ff2",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 5",
+      "material": "plywood",
+      "size": [
+        0.75,
+        2,
+        20
+      ],
+      "position": [
+        -6.375,
+        47.75,
+        9.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          46,
+          20.125
+        ]
+      }
+    },
+    {
+      "id": "9d8c27f7-5ea6-42a1-b502-d46813d97afc",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 6",
+      "material": "plywood",
+      "size": [
+        0.75,
+        3,
+        2.125
+      ],
+      "position": [
+        -6.375,
+        8.5,
+        29.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          6.25,
+          48.375
+        ]
+      }
+    },
+    {
+      "id": "6b47540a-d8c1-4f90-8bf4-5b2e13e03f7b",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 7",
+      "material": "plywood",
+      "size": [
+        0.75,
+        3,
+        2.125
+      ],
+      "position": [
+        -6.375,
+        11.625,
+        29.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          9.375,
+          48.375
+        ]
+      }
+    },
+    {
+      "id": "bc35c143-d3e9-4145-8387-fef803c3fd08",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 8",
+      "material": "plywood",
+      "size": [
+        0.75,
+        35.5,
+        10.25
+      ],
+      "position": [
+        -6.375,
+        31,
+        25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          12.5,
+          40.25
+        ]
+      }
+    },
+    {
+      "id": "56586839-09e3-458e-af50-48262bb40caa",
+      "name": "Offcut · ¾ in exterior plywood · sheet remnant 9",
+      "material": "plywood",
+      "size": [
+        0.75,
+        48,
+        45.375
+      ],
+      "position": [
+        -6.375,
+        24.75,
+        52.9375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1c81862b-933b-4e3b-9dd2-bf3051304380",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          48,
+          96
+        ],
+        "offset": [
+          0,
+          0,
+          50.625
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "558f5922-2a34-47dd-a7d2-2b44290f3930",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-4b77cec8",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "9e5bc0b8-86d1-46c8-aab7-8e888b811466",
+      "title": "Assemble Cabinet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "558f5922-2a34-47dd-a7d2-2b44290f3930",
+        "stageKey": "assembly:Cabinet",
+        "memberIds": [
+          "0061d07c-57d3-452f-a430-17b7254a9d1c",
+          "2d37b4b9-cde2-40cb-8344-c5b6606e68fd",
+          "78fdc157-fa3c-4131-b380-468f0f50dafa",
+          "d77990bc-c9fe-4cd6-b604-faa145786c5e",
+          "fcc5a61e-ee9d-481c-9747-a5df7d2ba9ca"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-1d14750a",
+        "title": "Assemble Cabinet"
+      }
+    },
+    {
+      "id": "f1048341-1080-473c-82ee-118ef6d640e2",
+      "title": "Assemble Door",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "558f5922-2a34-47dd-a7d2-2b44290f3930",
+        "stageKey": "assembly:Door",
+        "memberIds": [
+          "40c83084-0982-49dc-a34c-c5199ad2d432"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-4fd2f35",
+        "title": "Assemble Door"
+      }
+    },
+    {
+      "id": "5b6a8407-2257-44e4-b669-763db4d0c0c8",
+      "title": "Assemble Pull-out tray",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "558f5922-2a34-47dd-a7d2-2b44290f3930",
+        "stageKey": "assembly:Pull-out tray",
+        "memberIds": [
+          "03b345e5-065b-4240-844e-15ff55169cdf",
+          "26f8eeff-1a7f-4334-8d58-e69d2caf8281",
+          "4047376d-6aaa-4efc-9327-cdcfefd11ebb",
+          "50103573-335b-4048-9a13-b2749f2ec476",
+          "aabf5df4-8101-4533-81a6-00452cff0e35"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-5fed9097",
+        "title": "Assemble Pull-out tray"
+      }
+    },
+    {
+      "id": "c2d1f988-b3d7-46f6-bb4e-76599da56cf4",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "558f5922-2a34-47dd-a7d2-2b44290f3930",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-bf71f8a4",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice checking a cabinet door and pull-out tray along a shared path. The cabinet, door and tray parts are editable. Compare the midpoint contact in the full-travel test with the limited test. Use a plywood offcut to test a finish or the pilot-hole setup before working on the finished pieces. Confirm delivered hinge and slide geometry, joinery and installation clearances for a physical build.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-cb65e5fd",
+  "history": [
+    {
+      "id": "197cf620-2c95-41e4-9222-cce2bd2aecba",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Recorded one ¾ in exterior plywood sheet for 11 parts starting with P001. Added 9 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "b8551e9b-807c-48b0-b701-62823f3c0347",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 1. Crosscut Strip 1 at 20 in from the current end of the sheet."
+    },
+    {
+      "id": "8238adbe-683a-4d96-ba37-796bb5286b0b",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 2. Rip 16.5 in from the current edge of Strip 1 for P001 · Left cabinet side."
+    },
+    {
+      "id": "6f65817e-9fa8-47e0-b450-14470c6857ef",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 3. Rip 16.5 in from the current edge of Strip 1 for P002 · Right cabinet side."
+    },
+    {
+      "id": "76721bc8-3729-443f-958a-055fffe4766c",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 4. Rip 13.5 in from the current edge of Strip 1 for P003 · Cabinet bottom."
+    },
+    {
+      "id": "6fd5032e-2147-4ba7-bf4f-b0d805f6351a",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 5. Crosscut Strip 2 at 20 in from the current end of the sheet."
+    },
+    {
+      "id": "503df9f4-d919-4c2d-ad9a-3fb21d3c577c",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 6. Rip 13.5 in from the current edge of Strip 2 for P004 · Cabinet top."
+    },
+    {
+      "id": "c382e258-a930-4496-a6bb-0370b89120da",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 7. Rip 1 ft from the current edge of Strip 2 for P005 · Cabinet back."
+    },
+    {
+      "id": "273fbe2d-9efb-4926-b010-a4955293cd57",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 8. Crosscut the P005 · Cabinet back blank to 16.5 in from its end."
+    },
+    {
+      "id": "fd99f8fa-0463-4d93-bc80-a7c58118f02c",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 9. Rip 1 ft from the current edge of Strip 2 for P006 · Cabinet door."
+    },
+    {
+      "id": "ffdc7ea4-a9d7-4979-97c9-1cdc6dd230fa",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 10. Crosscut the P006 · Cabinet door blank to 16.5 in from its end."
+    },
+    {
+      "id": "f3f2b441-dfb0-470e-b2a8-c51a3ee2d321",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 11. Rip 8 in from the current edge of Strip 2 for P007 · Tray bottom."
+    },
+    {
+      "id": "0d47f9cb-88fb-4a07-a361-c9a836906030",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 12. Crosscut the P007 · Tray bottom blank to 11.75 in from its end."
+    },
+    {
+      "id": "65fde7c4-0c0b-4927-ad20-abc71bf3b9a6",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 13. Crosscut Strip 3 at 10.25 in from the current end of the sheet."
+    },
+    {
+      "id": "5fab979c-45c5-4195-a4dc-369bfc8d5901",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 14. Rip 3 in from the current edge of Strip 3 for P008 · Tray left side."
+    },
+    {
+      "id": "25367dc6-093c-44c7-950b-7556005f2256",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 15. Rip 3 in from the current edge of Strip 3 for P009 · Tray right side."
+    },
+    {
+      "id": "57acfb00-0e2b-4088-8c30-5e7c11376534",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 16. Rip 3 in from the current edge of Strip 3 for P010 · Tray front."
+    },
+    {
+      "id": "d101d581-0a7a-4342-9ea6-d23594f54912",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 17. Crosscut the P010 · Tray front blank to 8 in from its end."
+    },
+    {
+      "id": "2af556d7-126b-41bd-9c76-1b7a64a3c8aa",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 18. Rip 3 in from the current edge of Strip 3 for P011 · Tray back."
+    },
+    {
+      "id": "329a8ccb-0f15-4add-a1c1-0bb54e61041d",
+      "at": "2026-11-22T16:56:03.907Z",
+      "stepId": "113d9e20-a785-4e2e-b52e-eda07ee2069b",
+      "message": "Stock cut order for P001 · 19. Crosscut the P011 · Tray back blank to 8 in from its end."
+    }
+  ]
+}

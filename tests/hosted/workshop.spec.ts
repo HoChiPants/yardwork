@@ -2118,3 +2118,69 @@ test("scoped hanging bay and rod edits preserve the outside closet dimensions in
   expect(guide).toContain("Clear hanging bays: 14 in left and 30 in right.");
   expect(guide).toContain("Rod center setting: 62 in above the floor.");
 });
+
+test("linked and single travel limits survive reopening and keep the original door and tray ranges", async ({ page }) => {
+  await page.goto("./");
+  const openMotion = () => page.getByRole("button", { name: "Test movement", exact: true }).click();
+  await openMotion();
+  const planDownload = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Download shared travel practice plan", exact: true }).click();
+  const planFile = await (await planDownload).path();
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "limited-linked-travel.yardwork.json", mimeType: "application/json", buffer: await readFile(planFile!),
+  });
+  await openMotion();
+  const panel = page.getByRole("region", { name: "Motion and clearance", exact: true });
+  const pose = page.getByTestId("motion-preview-label");
+  const tests = panel.getByRole("combobox", { name: "Clearance test", exact: true });
+  await tests.selectOption({ label: "Full travel together" });
+  await expect(panel.getByRole("button", { name: /Collision near/ }).first()).toBeVisible();
+  await panel.getByText("Set travel targets for this test", { exact: true }).click();
+  await panel.getByRole("spinbutton", { name: "Cabinet door target angle (degrees)", exact: true }).fill("70");
+  await panel.getByRole("spinbutton", { name: "Pull-out tray target extension", exact: true }).fill("8.5");
+  await panel.getByRole("button", { name: "Test these travel targets", exact: true }).click();
+  await expect(panel.getByText("No modeled interference found along this travel.", { exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "70");
+  await expect(pose).toContainText("Cabinet door 70° · Pull-out tray 8.5 in");
+  await panel.getByRole("button", { name: "Play closing", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "0");
+  await panel.getByLabel("Clearance test name", { exact: true }).fill("Limited shared access");
+  await panel.getByRole("button", { name: "Save named test", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const saved = await page.waitForFunction((key) => {
+    const draft = JSON.parse(localStorage.getItem(key) ?? "null");
+    return draft?.revision === 1 ? draft.project : null;
+  }, CURRENT_DRAFT_KEY);
+  const project = await saved.jsonValue() as Project;
+  expect(project.schemaVersion).toBe(PROJECT_FORMAT_VERSION);
+  expect(project.motionPlans?.map(({ mechanism }) => mechanism.travel)).toEqual([90, 18]);
+  const [door, tray] = project.motionPlans ?? [];
+  expect(door?.testScenarios?.find(({ name }) => name === "Limited shared access")?.setup).toMatchObject({
+    linkedId: tray?.id,
+    sequenceTargets: { selected: { kind: "hinge", travel: 70 }, companion: { kind: "slide", travel: 8.5 } },
+  });
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: "Cabinet door and pull-out travel" }).click();
+  await openMotion();
+  await tests.selectOption({ label: "Limited shared access" });
+  await panel.getByRole("button", { name: "Inspect test endpoint", exact: true }).click();
+  await expect(pose).toContainText("Cabinet door 70° · Pull-out tray 8.5 in");
+  await tests.selectOption({ label: "Door only to 70°" });
+  await expect(panel.getByRole("slider", { name: "Opening angle", exact: true })).toHaveAttribute("max", "70");
+  await panel.getByRole("button", { name: "Inspect test endpoint", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "70");
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Limited shared access · moves with Pull-out tray · Test targets · Cabinet door 70°, Pull-out tray 8.5 in.");
+  expect(guide).toContain("Door only to 70° · Test targets · Cabinet door 70°.");
+  expect(guide).toContain("Planned stock cuts");
+});

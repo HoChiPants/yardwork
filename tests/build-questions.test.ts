@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import { createBuildStudy } from "../src/buildFixtures";
 import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
-import { validate } from "../src/engine";
+import { guideMarkdown, validate } from "../src/engine";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
-import { blank, part } from "../src/model";
+import { blank, part, projectSchema } from "../src/model";
 import { saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
 import { planDedicatedBoardCuts } from "../src/recordStockCutLayout";
 
@@ -23,6 +24,23 @@ test("workspace questions leave layout and edit requests to the planner", () => 
     kind: "motion",
     subject: "the cabinet door",
   });
+});
+
+test("the editable cabinet practice plan reports the actual targets in build questions and its cut guide", () => {
+  const asset = (name: string) => readFileSync(new URL(`../public/examples/motion/${name}`, import.meta.url), "utf8");
+  const project = projectSchema.parse(JSON.parse(asset("limited-linked-travel.yardwork.json")));
+  const question = buildQuestion("Will the cabinet door hit anything?")!;
+  const { rows } = answerBuildQuestion(project, question, []);
+  const full = rows?.find(({ title }) => title === "Full travel together");
+  const limited = rows?.find(({ title }) => title === "Door 70° and tray 8.5 in");
+  const solo = rows?.find(({ title }) => title === "Door only to 70°");
+  assert.match(full?.detail ?? "", /Modeled interference.*Cabinet door 90° with Pull-out tray 18 in/);
+  assert.match(limited?.detail ?? "", /No modeled clearance findings.*Cabinet door 70° with Pull-out tray 8\.5 in/);
+  assert.match(solo?.detail ?? "", /No modeled clearance findings.*Travel tested · Cabinet door 70°\.$/);
+  assert.equal(limited?.link?.action.kind, "motion");
+  assert.equal(project.plannedCutSources?.length, 1);
+  assert.ok(project.pieces.some(({ offcut }) => offcut));
+  assert.equal(guideMarkdown(project), asset("limited-linked-travel-guide.md"));
 });
 
 test("a closest-gap question selects the saved linked path and keeps ambiguous paths explicit", () => {

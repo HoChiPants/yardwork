@@ -12,6 +12,8 @@ import { inspectLidTravel } from "./lidTravelFindings";
 import {
   canParkMotion,
   motionDistance,
+  motionReviewTargets,
+  motionTargetDistance,
   motionTestFindings,
   resolveMotionTestSetup,
   reviewMotionTests,
@@ -572,22 +574,11 @@ function motionRows(project: Project, plan: MotionPlan): ReviewRow[] {
     const findings = motionTestFindings(project, result, true);
     const first = findings[0];
     const { review } = result;
-    const travel =
-      review?.sequence
-        ?.map(
-          ({ plan: member, travel }) =>
-            `${member.label} at ${motionDistance(travel, member.mechanism.kind)}`,
-        )
-        .join(", then ") ??
-      [plan, review?.linked]
-        .flatMap((member) =>
-          member
-            ? [
-                `${member.label} ${motionDistance(member.mechanism.travel, member.mechanism.kind)}`,
-              ]
-            : [],
-        )
-        .join(" with ");
+    const travel = review && motionReviewTargets(review)
+      .map(({ plan: member, travel }) =>
+        `${member.label}${review.sequence ? " at" : ""} ${motionTargetDistance(travel, member.mechanism.kind)}`,
+      )
+      .join(review.sequence ? ", then " : " with ");
     const held = review
       ? resolveMotionTestSetup(project, setup).held.map(
           ({ plan: member, travel }) =>

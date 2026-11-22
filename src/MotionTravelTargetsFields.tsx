@@ -3,33 +3,35 @@ import { LengthInput } from "./LengthInput";
 import { motionDistance } from "./mechanismMotion";
 import type { MotionPlan, MotionSequenceTargets } from "./motionPlanSchema";
 
-export function MotionSequenceTargetsFields({
+export function MotionTravelTargetsFields({
   selected,
   companion,
   current,
+  sequential,
   onTest,
 }: {
   selected: MotionPlan;
-  companion: MotionPlan;
+  companion?: MotionPlan;
   current?: MotionSequenceTargets;
+  sequential: boolean;
   onTest: (targets?: MotionSequenceTargets) => void;
 }) {
   const [selectedTravel, setSelectedTravel] = useState(
     current?.selected?.travel ?? selected.mechanism.travel,
   );
   const [companionTravel, setCompanionTravel] = useState(
-    current?.companion?.travel ?? companion.mechanism.travel,
+    current?.companion?.travel ?? companion?.mechanism.travel ?? NaN,
   );
   const valid = (plan: MotionPlan, travel: number) =>
     Number.isFinite(travel) && travel > 0 && travel <= plan.mechanism.travel;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!valid(selected, selectedTravel) || !valid(companion, companionTravel))
+    if (!valid(selected, selectedTravel) || (companion && !valid(companion, companionTravel)))
       return;
     onTest({
       selected: { kind: selected.mechanism.kind, travel: selectedTravel },
-      companion: { kind: companion.mechanism.kind, travel: companionTravel },
+      ...(companion && { companion: { kind: companion.mechanism.kind, travel: companionTravel } }),
     });
   }
 
@@ -42,18 +44,18 @@ export function MotionSequenceTargetsFields({
           value={selectedTravel}
           onChange={setSelectedTravel}
         />
-        <TravelTarget
+        {companion && <TravelTarget
           plan={companion}
           value={companionTravel}
           onChange={setCompanionTravel}
-        />
+        />}
         <div className="motion-actions">
           <button
             type="submit"
             className="button secondary small"
             disabled={
               !valid(selected, selectedTravel) ||
-              !valid(companion, companionTravel)
+              (companion && !valid(companion, companionTravel))
             }
           >
             Test these travel targets
@@ -69,9 +71,11 @@ export function MotionSequenceTargetsFields({
           )}
         </div>
       </form>
-      <p className="small-note">
-        The first part stays at its target while the second moves.
-      </p>
+      {companion && <p className="small-note">
+        {sequential
+          ? "The first part stays at its target while the second moves."
+          : "Both parts reach their own targets at the same time."}
+      </p>}
     </details>
   );
 }

@@ -167,14 +167,16 @@ export const motionTestSetupSchema = z
       .max(49),
   })
   .refine(
-    ({ linkedId, held, openingOrder, clearance }) =>
+    ({ linkedId, held, openingOrder, clearance, sequenceTargets }) =>
       new Set(held.map(({ motionId }) => motionId)).size === held.length &&
-      (linkedId ? !held.some(({ motionId }) => motionId === linkedId) : !openingOrder && (held.length > 0 || !!clearance)),
-    "Choose distinct motions to move or hold, or enter a clearance between two parts.",
+      (linkedId
+        ? !held.some(({ motionId }) => motionId === linkedId)
+        : !openingOrder && (held.length > 0 || !!clearance || !!sequenceTargets?.selected)),
+    "Choose distinct motions, a travel target or a clearance between two parts.",
   )
   .refine(
-    ({ linkedId, openingOrder, sequenceTargets }) => !sequenceTargets || !!(linkedId && openingOrder),
-    { path: ["sequenceTargets"], message: "Choose two motions and an opening order before setting travel targets." },
+    ({ linkedId, sequenceTargets }) => !sequenceTargets?.companion || !!linkedId,
+    { path: ["sequenceTargets"], message: "Choose a second motion before setting its travel target." },
   );
 
 export const motionTestScenarioLimit = 8;

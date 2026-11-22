@@ -10,6 +10,14 @@ export const subfloorReference = {
   fieldSpacing: 12,
 } as const;
 
+export const subfloorJointReference = {
+  endGap: 0.125,
+  // Limit the review to nearby edges on the same plane.
+  maxModelGap: 1,
+  spacing: "https://apawood.org/buildertips/pages/M300.html",
+  airSeal: "https://basc.pnnl.gov/resource-guides/floor-above-unconditioned-basement-or-vented-crawlspace",
+} as const;
+
 export const subfloorNails = {
   id: "grip-rite-8c1",
   name: "Grip-Rite 8C1 8d common nails",

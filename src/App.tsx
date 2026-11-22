@@ -16,8 +16,8 @@ import { reviewSubfloorFastening, saveSubfloorFastening, subfloorFasteningReport
 import { reviewSubfloorJoists, saveSubfloorJoists, subfloorJoistReport } from "./subfloorJoists";
 import type { SubfloorJoistSpanInput } from "./subfloorSchema";
 import { floorJoistReference } from "./floorJoistReference";
-import { subfloorReport, subfloorReviews, trackSubfloorPanel } from "./subfloor";
-import { subfloorAdhesive, subfloorNails, subfloorReference } from "./subfloorReference";
+import { subfloorReport, subfloorReviews, trackSubfloorPanel, uniqueSubfloorJoints } from "./subfloor";
+import { subfloorAdhesive, subfloorJointReference, subfloorNails, subfloorReference } from "./subfloorReference";
 import { BottomPlateSealPanel } from "./BottomPlateSealPanel";
 import { TopPlateSealPanel } from "./TopPlateSealPanel";
 import { topPlateSealFieldGuide, topPlateSealGuide, topPlateSealReviews } from "./topPlateSeal";
@@ -645,7 +645,7 @@ export function App() {
   const [shownFoundationId, setShownFoundationId] = useState<string | null>(null);
   const [shownTrimSeam, setShownTrimSeam] = useState<{ project: Project; pair: string; marker: TrimSeamMarker } | null>(null);
   const [subfloorBlockDraft, setSubfloorBlockDraft] = useState<{ project: Project; fit: SubfloorBlockingPreview } | null>(null);
-  const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string; view: "support" | "adhesive" | "joists" | SubfloorNailSchedule; joists?: SubfloorJoistSpanInput | null } | null>(null);
+  const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string; view: "support" | "adhesive" | "joists" | "joint" | SubfloorNailSchedule; joists?: SubfloorJoistSpanInput | null; jointKey?: string } | null>(null);
   const [subfloorTarget, setSubfloorTarget] = useState<string>();
   const [shownPlateSeal, setShownPlateSeal] = useState<{ projectId: string; id: string; top?: boolean } | null>(null);
   const [bottomPlateTarget, setBottomPlateTarget] = useState<string>();
@@ -1041,6 +1041,11 @@ export function App() {
     inspectWorkspace();
   }
   function openWorkspaceFinding(finding: Finding, toggle = true) {
+    if (finding.id.startsWith("subfloor-joint-")) {
+      const joint = uniqueSubfloorJoints(subfloorReviews(project)).find(({ key }) => finding.id === `subfloor-joint-${key}`);
+      if (joint) showSubfloor(joint.panelId, "joint", undefined, joint.key);
+      return;
+    }
     if (finding.area) {
       if (toggle && shownCheckArea === finding.area) setShownAreaFinding(null);
       else showFindingArea(finding);
@@ -1910,10 +1915,15 @@ export function App() {
   }, [project, visibleSubfloor, shownSubfloor]);
   const visibleJoists = useMemo(() => shownSubfloor?.view === "joists" && visibleSubfloor
     ? reviewSubfloorJoists(project, visibleSubfloor, shownSubfloor.joists) : undefined, [project, visibleSubfloor, shownSubfloor]);
-  function showSubfloor(panelId: string, view: "support" | "adhesive" | "joists" | SubfloorNailSchedule = "support", joists?: SubfloorJoistSpanInput | null) {
+  const visibleSubfloorJoint = shownSubfloor?.view === "joint"
+    ? visibleSubfloor?.layout?.joints.find(({ key }) => key === shownSubfloor.jointKey) : undefined;
+  function showSubfloor(
+    panelId: string, view: "support" | "adhesive" | "joists" | "joint" | SubfloorNailSchedule = "support",
+    joists?: SubfloorJoistSpanInput | null, jointKey?: string,
+  ) {
     setSubfloorBlockDraft(null);
     if (guidePartFocus) exitGuidePartView();
-    setShownSubfloor({ projectId: project.id, panelId, view, joists });
+    setShownSubfloor({ projectId: project.id, panelId, view, joists, jointKey });
     setShownPlateSeal(null);
     setShownSillGasketId(null);
     setPlaying(false);
@@ -1924,6 +1934,7 @@ export function App() {
     setSectionMotionPreview(null);
     setPanel("sections");
     setModal(null);
+    if (view === "joint") setView((previous) => ({ preset: "top", nonce: previous.nonce + 1 }));
     inspectWorkspace();
   }
   const visibleBottomPlate = useMemo(() => shownPlateSeal?.projectId === project.id && panel === "sections" && !shownPlateSeal.top
@@ -3401,7 +3412,8 @@ export function App() {
               shownTrimSeam={panel === "connections" && shownTrimSeam?.project === project &&
                 shownTrimSeam.pair === liveConnectionContext?.scope.focusPair?.slice().sort().join("/")
                 ? shownTrimSeam.marker : undefined}
-              shownSubfloor={shownSubfloor?.view !== "adhesive" && shownSubfloor?.view !== "joists" ? visibleSubfloor?.layout : undefined}
+              shownSubfloor={shownSubfloor?.view !== "adhesive" && shownSubfloor?.view !== "joists" && shownSubfloor?.view !== "joint" ? visibleSubfloor?.layout : undefined}
+              shownSubfloorJoint={visibleSubfloorJoint}
               shownSubfloorAdhesive={visibleAdhesive}
               shownSubfloorFasteners={visibleNails}
               shownSubfloorJoists={visibleJoists}
@@ -4177,7 +4189,11 @@ export function App() {
                 setSubfloorTarget(shownSubfloor?.projectId === project.id ? shownSubfloor.panelId : selected ?? undefined);
                 setModal("subfloor-support");
               }}>Check subfloor support</button>
-              {visibleSubfloor && <button type="button" className="text-button" onClick={() => setShownSubfloor(null)}>{visibleAdhesive ? "Hide adhesive routes" : visibleNails ? "Hide nail marks" : visibleJoists ? "Hide joist bearing" : "Hide subfloor support"}</button>}
+              {visibleSubfloorJoint && <button type="button" className="button secondary full" onClick={() => {
+                openBuildPreparationItem({ kind: "part", id: visibleSubfloorJoint.panelId }, false);
+                inspectorFocus.expand();
+              }}>Edit this sheet</button>}
+              {visibleSubfloor && <button type="button" className="text-button" onClick={() => setShownSubfloor(null)}>{visibleAdhesive ? "Hide adhesive routes" : visibleNails ? "Hide nail marks" : visibleJoists ? "Hide joist bearing" : visibleSubfloorJoint ? "Hide panel joint" : "Hide subfloor support"}</button>}
               {visibleBottomPlate && <button type="button" className="text-button" onClick={() => setShownPlateSeal(null)}>Hide bottom plate seam</button>}
               {visibleTopPlate && <button type="button" className="text-button" onClick={() => setShownPlateSeal(null)}>Hide top plate seam</button>}
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
@@ -5684,7 +5700,7 @@ export function App() {
                 notify("Fitting removed. The pipe cuts stay in the plan.");
               })} />}
             {modal === "subfloor-support" && <SubfloorPanel project={project} initialId={subfloorTarget}
-              onShow={showSubfloor} onPreviewBlock={(fit) => {
+              onShow={showSubfloor} onShowJoint={(id, key) => showSubfloor(id, "joint", undefined, key)} onPreviewBlock={(fit) => {
                 showSubfloor(fit.panelId);
                 setSubfloorBlockDraft({ project, fit });
                 setView((previous) => ({ preset: "iso", nonce: previous.nonce + 1 }));
@@ -7263,7 +7279,8 @@ export function App() {
             <h2>Subfloor support and blocking</h2>
             <ul>{subfloorReport(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
             <p><a href={subfloorReference.specification}>APA Table 14 and Figure 1</a>{" · "}
-              <a href={subfloorReference.code}>2021 IRC floor table (Seattle edition)</a></p>
+              <a href={subfloorReference.code}>2021 IRC floor table (Seattle edition)</a>{" · "}
+              <a href={subfloorJointReference.spacing}>APA panel spacing</a></p>
           </section>
         )}
         {!!exportGuide.subfloorAdhesivePlans?.length && (

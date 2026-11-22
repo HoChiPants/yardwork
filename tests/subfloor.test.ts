@@ -30,6 +30,78 @@ function fixture() {
   return { project, panel, scrap, repaired };
 }
 
+function jointPractice() {
+  const project = projectSchema.parse(JSON.parse(readFileSync(new URL(
+    "../public/examples/flooring/subfloor-end-spacing.yardwork.json", import.meta.url,
+  ), "utf8")));
+  const [first, second] = project.subfloorChecks!.map((id) => project.pieces.find((piece) => piece.id === id)!);
+  return { project, first, second };
+}
+
+test("measure square ends and retain the planned sheet and offcut quantities after shifting a panel", () => {
+  const { project, first } = jointPractice();
+  const before = subfloorReviews(project)[0].layout!;
+  assert.deepEqual(before.issues, []);
+  assert.deepEqual(before.joints.map(({ gap, length, status, retainedLength }) => ({ gap, length, status, retainedLength })),
+    [{ gap: 0, length: 32, status: "tight", retainedLength: 39.875 }]);
+  assert.equal(validate(project).filter(({ id }) => id.startsWith("subfloor-joint-")).length, 1);
+  const guide = guideMarkdown(project);
+  assert.match(guide, /P014 far end to P015 start end · 0 in modeled gap along 32 in/);
+  assert.equal(guide, readFileSync(new URL("../public/examples/flooring/subfloor-end-spacing-guide.md", import.meta.url), "utf8"));
+  assert.ok(guideIsCurrent(project));
+
+  const floorStage = first.stepId;
+  const framingStage = project.pieces.find(({ id }) => id === before.supportIds[0])!.stepId;
+  const stages = project.steps.map(({ id }) => id);
+  assert.ok(stages.indexOf(framingStage) < stages.indexOf(floorStage));
+  const outOfOrder = { ...project, steps: [
+    project.steps.find(({ id }) => id === floorStage)!,
+    ...project.steps.filter(({ id }) => id !== floorStage),
+  ] };
+  assert.ok(reviewAssemblyOrder(outOfOrder).some(({ current, prerequisites }) =>
+    current.step.id === floorStage && prerequisites.some(({ step }) => step.id === framingStage)));
+
+  first.position[2] = 19.875;
+  const after = subfloorReviews(project)[0].layout!;
+  assert.deepEqual(after.issues, []);
+  assert.equal(after.joints[0].gap, 0.125);
+  assert.equal(after.joints[0].status, "spaced");
+  assert.match(guideMarkdown(project), /0\.125 in modeled gap along 32 in/);
+  assert.ok(!validate(project).some(({ id }) => id.startsWith("subfloor-joint-")));
+  assert.ok(inspectCutStock(project).valid.has(first.cutStock!.id));
+  const stock = homeDepotShoppingList(project).items.find(({ productId }) => productId === "203169027");
+  assert.equal(stock?.quantity, 1);
+  assert.equal(project.pieces.filter(({ offcut }) => offcut).length, 3);
+});
+
+test("an OSB joint stays measured after rotation and separates end spacing from a profile review", () => {
+  const { project, second } = jointPractice();
+  const yaw: V3 = [0, 0.377, 0];
+  const rotated = { ...project, pieces: project.pieces.map((piece) => ({
+    ...piece, position: rotate(piece.position, yaw),
+    rotation: [piece.rotation[0], piece.rotation[1] + yaw[1], piece.rotation[2]] as V3,
+  })) };
+  const joint = subfloorReviews(rotated)[0].layout!.joints[0];
+  assert.equal(joint.gap, 0);
+  assert.ok(Math.abs(joint.length - 32) < 1e-5);
+
+  second.position = [32, 7.6015, 20];
+  const long = subfloorReviews(project)[0].layout!.joints[0];
+  assert.equal(long.status, "profile");
+  assert.equal(long.gap, 0);
+  assert.equal(long.retainedLength, undefined);
+  second.position[0] = 31.875;
+  const profiledOverlap = subfloorReviews(project)[0].layout!.joints[0];
+  assert.equal(profiledOverlap.gap, -0.125);
+  assert.equal(profiledOverlap.status, "profile");
+  assert.ok(!validate(project).some(({ id }) => id.startsWith("subfloor-joint-")));
+  second.position = [0, 7.75, 60];
+  assert.equal(subfloorReviews(project)[0].layout!.joints.length, 0);
+  second.position = [0, 7.6015, 60];
+  second.rotation[1] = 0.001;
+  assert.equal(subfloorReviews(project)[0].layout!.joints.length, 0);
+});
+
 test("detect a missing bay, suggest the matching recorded scrap, and update the guide after reuse", () => {
   const { project, panel, scrap, repaired } = fixture();
   const before = subfloorReviews(project)[0].layout!;

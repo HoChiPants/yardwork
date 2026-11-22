@@ -9,7 +9,7 @@ import { pieceThroughOpenings } from "./throughOpenings";
 import { prepareCollisionSolid, solidOverlap } from "./solidCollision";
 import { rotate } from "./spatial";
 import { orientedStockSize, stockAxes } from "./stockAxes";
-import { subfloorNailing, subfloorReference as ref, subfloorScope } from "./subfloorReference";
+import { subfloorJointReference, subfloorNailing, subfloorReference as ref, subfloorScope } from "./subfloorReference";
 import { subfloorChecksSchema } from "./subfloorSchema";
 
 const tolerance = 0.00001;
@@ -42,6 +42,85 @@ export function isSubfloorPanel(piece: Piece) {
     Math.abs(stockDirection(piece, thickness).y) > 1 - tolerance;
 }
 
+const panelEdges = [
+  { name: "Start end", short: true, high: false }, { name: "Far end", short: true, high: true },
+  { name: "Long side A", short: false, high: false }, { name: "Long side B", short: false, high: true },
+] as const;
+
+function panelJointEdges(piece: Piece) {
+  const { length, width, thickness } = stockAxes(piece);
+  const along = stockDirection(piece, length), across = stockDirection(piece, width);
+  if (Math.abs(along.y) > tolerance || Math.abs(across.y) > tolerance) return [];
+  const center = new Vector3(...piece.position).setY(piece.position[1] + piece.size[thickness] / 2);
+  return panelEdges.map(({ name, short, high }) => {
+    const normal = (short ? along : across).clone().multiplyScalar(high ? 1 : -1);
+    const tangent = short ? across : along;
+    const midpoint = center.clone().addScaledVector(normal, piece.size[short ? length : width] / 2);
+    return { name, short, midpoint, normal, tangent, halfLength: piece.size[short ? width : length] / 2 };
+  });
+}
+
+export type SubfloorJoint = {
+  key: string;
+  panelId: string;
+  otherId: string;
+  edge: string;
+  otherEdge: string;
+  gap: number;
+  length: number;
+  seam: [V3, V3];
+  endpoints: [V3, V3];
+  status: "tight" | "spaced" | "wide" | "overlap" | "profile";
+  retainedLength?: number;
+};
+
+function subfloorJoints(panel: Piece, neighbors: readonly Piece[]): SubfloorJoint[] {
+  const edges = panelJointEdges(panel);
+  const panelLength = panel.size[stockAxes(panel).length];
+  return neighbors.flatMap((neighbor) => {
+    if (neighbor.id === panel.id ||
+        Math.abs(panel.position[1] - neighbor.position[1]) > tolerance) return [];
+    const otherEdges = panelJointEdges(neighbor);
+    return edges.flatMap((edge) => otherEdges.flatMap((other): SubfloorJoint[] => {
+      if (edge.normal.clone().add(other.normal).lengthSq() > tolerance * tolerance) return [];
+      const delta = other.midpoint.clone().sub(edge.midpoint);
+      const signed = delta.dot(edge.normal);
+      if (Math.abs(signed) > subfloorJointReference.maxModelGap) return [];
+      const offset = delta.dot(edge.tangent);
+      const start = Math.max(-edge.halfLength, offset - other.halfLength);
+      const end = Math.min(edge.halfLength, offset + other.halfLength);
+      if (end - start <= tolerance) return [];
+      const gap = Math.abs(signed) < tolerance ? 0 : signed;
+      const target = subfloorJointReference.endGap;
+      const status = !edge.short || !other.short ? "profile" : gap < 0 ? "overlap"
+        : gap < target - tolerance ? "tight" : gap > target + tolerance ? "wide" : "spaced";
+      const sample = edge.midpoint.clone().addScaledVector(edge.tangent, (start + end) / 2);
+      const middle = edge.midpoint.clone().addScaledVector(edge.normal, gap / 2);
+      return [{
+        key: [`${panel.id}/${edge.name}`, `${neighbor.id}/${other.name}`].sort().join("|"),
+        panelId: panel.id, otherId: neighbor.id, edge: edge.name, otherEdge: other.name,
+        gap, length: end - start, status,
+        seam: [middle.clone().addScaledVector(edge.tangent, start).toArray(), middle.addScaledVector(edge.tangent, end).toArray()],
+        endpoints: [sample.toArray(), sample.addScaledVector(edge.normal, gap).toArray()],
+        ...(status === "tight" && panelLength > target - gap ? { retainedLength: panelLength - (target - gap) } : {}),
+      }];
+    }));
+  });
+}
+
+export function subfloorJointLine(project: Project, joint: SubfloorJoint): string {
+  const lead = `${partLabel(project, joint.panelId)} ${joint.edge.toLowerCase()} to ${partLabel(project, joint.otherId)} ${joint.otherEdge.toLowerCase()}`;
+  const measured = joint.gap < 0 ? `${dim(-joint.gap)} modeled overlap` : `${dim(joint.gap)} modeled gap`;
+  const detail = {
+    tight: "Below the ⅛ in APA installation spacing reference for square ends.",
+    spaced: "Matches the ⅛ in APA installation spacing reference for square ends.",
+    wide: "Wider than the ⅛ in APA installation spacing reference. Review the delivered panel instructions and bearing.",
+    overlap: "Review the panel fit before fastening.",
+    profile: "Check the retained tongue-and-groove profile and the delivered panel's joint detail.",
+  }[joint.status];
+  return `${lead} · ${measured} along ${dim(joint.length)}. ${detail}`;
+}
+
 function uncovered(length: number, intervals: Interval[]) {
   const breaks: Interval[] = [];
   let covered = 0;
@@ -62,7 +141,7 @@ function nailPositions(length: number, spacing: number, required: number[] = [])
   })];
 }
 
-function reviewSurface(surface: Surface, pieces: Map<string, Piece>) {
+function reviewSurface(surface: Surface, pieces: Map<string, Piece>, panels: readonly Piece[]) {
   const { piece } = surface;
   const axes = stockAxes(piece);
   const width = piece.size[axes.width], length = piece.size[axes.length];
@@ -107,10 +186,7 @@ function reviewSurface(surface: Surface, pieces: Map<string, Piece>) {
   if (widest > ref.maxSpacing + tolerance)
     issues.push(`Widest spacing is ${dim(widest)} on center. The panel reference limit is ${dim(ref.maxSpacing)}.`);
   const edges: Edge[] = [], blocking: SubfloorBlockingBay[] = [];
-  const details = ([
-    { name: "Start end", short: true, high: false }, { name: "Far end", short: true, high: true },
-    { name: "Long side A", short: false, high: false }, { name: "Long side B", short: false, high: true },
-  ]).map(({ name, short, high }) => {
+  const details = panelEdges.map(({ name, short, high }) => {
     const full = short ? width : length, other = short ? length : width;
     const edge = high ? other : 0;
     const at = (value: number) => short ? toWorld(edge, value) : toWorld(value, edge);
@@ -173,7 +249,7 @@ function reviewSurface(surface: Surface, pieces: Map<string, Piece>) {
   });
   return { piece, supportIds: [...new Set(contacts.map(({ piece }) => piece.id))], bearingStrips,
     joistIds: [...new Set(joists.map(({ piece }) => piece.id))], joistCount: joists.length, widest, issues, edges, spans, details, blocking, nails: [...points.values()],
-    center: toWorld(length / 2, width / 2) };
+    center: toWorld(length / 2, width / 2), joints: subfloorJoints(piece, panels) };
 }
 
 type Layout = ReturnType<typeof reviewSurface>;
@@ -183,15 +259,24 @@ export function subfloorReviews(project: Project, ids = project.subfloorChecks ?
   if (!ids.length) return [];
   const wanted = new Set(ids);
   const pieces = new Map(project.pieces.map((piece) => [piece.id, piece]));
-  const eligible = new Set(project.pieces.filter((piece) => wanted.has(piece.id) && isSubfloorPanel(piece)).map(({ id }) => id));
+  const panels = project.pieces.filter(isSubfloorPanel);
+  const eligible = new Set(panels.filter(({ id }) => wanted.has(id)).map(({ id }) => id));
   const surfaces = new Map(woodBearingSurfaces(project, eligible).map((surface) => [surface.piece.id, surface]));
   return ids.map((panelId) => {
     const surface = surfaces.get(panelId);
-    if (surface) return { panelId, layout: reviewSurface(surface, pieces) };
+    if (surface) return { panelId, layout: reviewSurface(surface, pieces, panels) };
     return { panelId, problem: pieces.has(panelId)
       ? "Choose a horizontal, rectangular 23/32 in T&G OSB panel with its thickness intact. Through openings and profile cuts need a separate review."
       : "The tracked subfloor panel is missing. Remove this check or restore the panel." };
   });
+}
+
+export function uniqueSubfloorJoints(rows: readonly SubfloorReview[]) {
+  const joints = new Map<string, SubfloorJoint>();
+  for (const { layout } of rows)
+    for (const joint of layout?.joints ?? [])
+      if (!joints.has(joint.key)) joints.set(joint.key, joint);
+  return [...joints.values()];
 }
 
 export function trackSubfloorPanel(project: Project, panelId: string, enabled: boolean): Project {
@@ -223,9 +308,9 @@ export function subfloorBlockingLines(project: Project, rows: NonNullable<Subflo
   });
 }
 
-export function subfloorReport(project: Project) {
-  const rows = subfloorReviews(project);
+export function subfloorReport(project: Project, rows = subfloorReviews(project)) {
   if (!rows.length) return [];
+  const joints = uniqueSubfloorJoints(rows);
   return [subfloorScope, ...rows.flatMap(({ panelId, problem, layout }) => {
     const label = layout?.piece.name ?? project.pieces.find(({ id }) => id === panelId)?.name ?? "Missing subfloor panel";
     return [`${partLabel(project, panelId)} · ${label}`, ...(problem ? [problem] : []), ...(layout ? [
@@ -233,5 +318,5 @@ export function subfloorReport(project: Project) {
       ...layout.issues, ...subfloorBlockingLines(project, layout.blocking),
       ...(layout.nails.length ? [`${layout.nails.length} estimated panel nailing locations. ${subfloorNailing}`] : []),
     ] : [])];
-  })];
+  }), ...joints.map((joint) => subfloorJointLine(project, joint))];
 }

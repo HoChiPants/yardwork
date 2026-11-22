@@ -1,4 +1,4 @@
-import { subfloorReviews } from "./subfloor";
+import { subfloorJointLine, subfloorReviews } from "./subfloor";
 import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorAdhesiveInstallation, subfloorNailSchedules } from "./subfloorReference";
 import { subfloorFasteningReviews } from "./subfloorFastening";
@@ -715,9 +715,12 @@ export function generateBuildGuide(input: Project): Project {
     );
   for (const { panelId, layout, problem } of subfloorReviews(project)) {
     const name = layout?.piece.name ?? "subfloor panel";
+    const joints = layout?.joints.map((joint) => subfloorJointLine(project, joint)) ?? [];
+    const support = problem || layout?.issues.join(" ") || "Confirm the delivered panel stamp, joint gaps and framing. Review the modeled bearing and fastening layout in the subfloor schedule before covering the deck.";
     addPhase(`Check ${name} support before covering`.slice(0, 120),
-      problem || layout?.issues.join(" ") || "Confirm the delivered panel stamp, joint gaps and framing. Review the modeled bearing and fastening layout in the subfloor schedule before covering the deck.",
-      { kind: "subfloor-support-review", planId: panelId }, { problem, issues: layout?.issues, nails: layout?.nails, supports: layout?.supportIds });
+      joints.length ? `${support} Dry-fit the adjacent panels and check the marked joints before fastening. See the subfloor schedule for the measured gaps.` : support,
+      { kind: "subfloor-support-review", planId: panelId },
+      { problem, issues: layout?.issues, nails: layout?.nails, supports: layout?.supportIds, ...(joints.length && { joints }) });
   }
   for (const review of bottomPlateSealReviews(project)) {
     addPhase(`Air-seal ${review.title}`.slice(0, 120),

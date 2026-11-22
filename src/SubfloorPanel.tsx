@@ -2,18 +2,19 @@ import { useMemo, useState } from "react";
 import { formatPreciseInches } from "./measurement";
 import type { Project } from "./model";
 import { partLabel } from "./partLabels";
-import { isSubfloorPanel, subfloorBlockingLines, subfloorReviews } from "./subfloor";
+import { isSubfloorPanel, subfloorBlockingLines, subfloorJointLine, subfloorReviews } from "./subfloor";
 import { reviewSubfloorAdhesive } from "./subfloorAdhesive";
 import { SubfloorFastenerPlan } from "./SubfloorFastenerPlan";
 import { SubfloorJoistPanel } from "./SubfloorJoistPanel";
 import { previewSubfloorBlocking, type SubfloorBlockingPreview } from "./subfloorBlocking";
 import { workshopAsset } from "./workshopTransport";
-import { subfloorAdhesive, subfloorAdhesiveScope, subfloorNailing, subfloorNails, subfloorReference, subfloorScope } from "./subfloorReference";
+import { subfloorAdhesive, subfloorAdhesiveScope, subfloorJointReference, subfloorNailing, subfloorNails, subfloorReference, subfloorScope } from "./subfloorReference";
 
 type Props = {
   project: Project;
   initialId?: string;
   onShow: (id: string, view?: "support" | "adhesive") => void;
+  onShowJoint: (id: string, jointKey: string) => void;
   onPreviewBlock: (preview: SubfloorBlockingPreview) => void;
   onTrack: (id: string, enabled: boolean) => void;
   onAdhesive: (id: string, signature: string | null) => void;
@@ -23,7 +24,7 @@ type Props = {
   onShowJoists: React.ComponentProps<typeof SubfloorJoistPanel>["onShow"];
 };
 
-export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTrack, onAdhesive, onFastening, onShowFastening, onJoists, onShowJoists }: Props) {
+export function SubfloorPanel({ project, initialId, onShow, onShowJoint, onPreviewBlock, onTrack, onAdhesive, onFastening, onShowFastening, onJoists, onShowJoists }: Props) {
   const saved = project.subfloorChecks ?? [];
   const panels = useMemo(() => project.pieces.filter((piece) =>
     isSubfloorPanel(piece) || project.subfloorChecks?.includes(piece.id)), [project]);
@@ -64,6 +65,7 @@ export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTr
     </label> : <>
       <p>Add a 23/32 in T&amp;G OSB subfloor sheet and model the solid wood joists beneath it.</p>
       <p><a href={workshopAsset("/examples/flooring/subfloor.yardwork.json")} download>Download the subfloor blocking study</a></p>
+      <p><a href={workshopAsset("/examples/flooring/subfloor-end-spacing.yardwork.json")} download>Download the panel-spacing practice plan</a></p>
     </>}
     {review?.problem && <p role="alert" className="form-error">{review.problem}</p>}
     {layout && <section className="field-section" aria-label="Subfloor support preview">
@@ -103,6 +105,21 @@ export function SubfloorPanel({ project, initialId, onShow, onPreviewBlock, onTr
         {!tracking && <button type="button" className="button primary" onClick={() => onTrack(id, true)}>Save check to guide</button>}
       </div>
     </section>}
+    {!!layout?.joints.length && <details className="field-section">
+      <summary>Subfloor panel joints</summary>
+      <p className="small-note">Check square-end spacing at installation. Review the delivered tongue-and-groove edges and planned air barrier separately.</p>
+      <ul aria-label="Modeled subfloor joints">
+        {layout.joints.map((joint) => <li key={joint.key}>
+          <p>{subfloorJointLine(project, joint)}</p>
+          {joint.retainedLength !== undefined && <p className="small-note">
+            If all spacing comes from this end, the retained length would be {formatPreciseInches(joint.retainedLength)}. Recheck edge bearing before cutting.
+          </p>}
+          <button type="button" className="text-button" onClick={() => onShowJoint(id, joint.key)}>Inspect joint in 3D</button>
+        </li>)}
+      </ul>
+      <p className="small-note"><a href={subfloorJointReference.spacing} target="_blank" rel="noreferrer">APA panel spacing</a>{" · "}
+        <a href={subfloorJointReference.airSeal} target="_blank" rel="noreferrer">PNNL subfloor air barrier</a></p>
+    </details>}
     {adhesive && <details className="field-section" open={adhesive.saved}>
       <summary>Subfloor adhesive</summary>
       {adhesive.problem && <p>{adhesive.problem}</p>}

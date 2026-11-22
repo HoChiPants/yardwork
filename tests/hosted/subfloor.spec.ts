@@ -157,3 +157,60 @@ test("joist bearing measures a long span over actual wood seats and saves the co
   expect(guide).toMatch(/Joist bearing and span[\s\S]*Clear span 118 in · reference limit 106 in/);
   await expect(page.locator(".print-guide .subfloor-joists-print")).toContainText("exceeds the reference by 1 ft");
 });
+
+test("inspect a square-end joint and correct its modeled gap while keeping one stock sheet", async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const dialog = page.getByRole("dialog");
+  async function openSupport() {
+    await page.getByRole("button", { name: "Sections", exact: true }).click();
+    await page.getByRole("button", { name: "Check subfloor support", exact: true }).click();
+  }
+  await openSupport();
+  const practice = dialog.getByRole("link", { name: "Download the panel-spacing practice plan", exact: true });
+  const response = await page.request.get((await practice.getAttribute("href"))!);
+  expect(response.ok()).toBe(true);
+  const sample = await response.body();
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "subfloor-end-spacing.yardwork.json",
+    mimeType: "application/json",
+    buffer: sample,
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("Review subfloor joint spacing");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Check subfloor support", exact: true });
+  await answer.getByRole("button", { name: "Review this subfloor sheet", exact: true }).first().click();
+  const joints = dialog.getByRole("list", { name: "Modeled subfloor joints" });
+  await dialog.getByText("Subfloor panel joints", { exact: true }).click();
+  await expect(joints).toContainText("0 in modeled gap along 32 in");
+  await expect(joints).toContainText("retained length would be 39.875 in");
+  await joints.getByRole("button", { name: "Inspect joint in 3D", exact: true }).click();
+  const ruler = page.getByTestId("subfloor-joint-marker");
+  await expect(ruler).toHaveText("0 in modeled gap");
+  await page.getByRole("button", { name: "Edit this sheet", exact: true }).click();
+  const position = page.getByRole("spinbutton", { name: "Z", exact: true });
+  await expect(position).toHaveValue("20");
+  await position.fill("19.875");
+  await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
+  await openSupport();
+  await expect(dialog.getByRole("region", { name: "Subfloor support preview" })).toContainText("All four edges have modeled backing");
+  await dialog.getByText("Subfloor panel joints", { exact: true }).click();
+  await expect(joints).toContainText("0.125 in modeled gap along 32 in");
+  await expect(joints).toContainText("Matches the ⅛ in APA installation spacing reference");
+  await joints.getByRole("button", { name: "Inspect joint in 3D", exact: true }).click();
+  await expect(ruler).toHaveText("0.125 in modeled gap");
+  await ruler.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: info.outputPath("subfloor-joint-spacing.png") });
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator('.bom-row[data-stock-material="hd-osb-subfloor-486701"]')).toContainText("1 sheet");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const markdown = await readFile((await (await download).path())!, "utf8");
+  expect(markdown).toContain("P014 far end to P015 start end · 0.125 in modeled gap along 32 in");
+  expect(markdown).toContain("47.875 in × 0.703 in × 15.625 in");
+});

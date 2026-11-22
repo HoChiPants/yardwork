@@ -1,5 +1,5 @@
 import { libertyBarPull } from "./cabinetPullReference";
-import type { SubfloorReview } from "./subfloor";
+import type { SubfloorJoint, SubfloorReview } from "./subfloor";
 import type { SubfloorAdhesiveReview } from "./subfloorAdhesive";
 import type { SubfloorFasteningReview } from "./subfloorFastening";
 import type { SubfloorJoistReview } from "./subfloorJoists";
@@ -89,6 +89,7 @@ export type SceneProps = {
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
   shownTrimSeam?: TrimSeamMarker;
   shownSubfloor?: SubfloorReview["layout"];
+  shownSubfloorJoint?: SubfloorJoint;
   shownSubfloorAdhesive?: SubfloorAdhesiveReview;
   shownSubfloorFasteners?: SubfloorFasteningReview;
   shownSubfloorJoists?: SubfloorJoistReview;
@@ -1446,16 +1447,16 @@ function WorkZone({ project }: { project: Project }) {
 }
 function Measurement({
   measurement,
-  isMotionGap = false,
+  gapMarker,
 }: {
   measurement: SceneProps["measurement"];
-  isMotionGap?: boolean;
+  gapMarker?: { testId: string; label?: string };
 }) {
   const a = measurement?.a,
     b = measurement?.b;
   if (!a) return null;
   const distance = b ? measureBetween(a, b).distance : 0;
-  const radius = isMotionGap ? Math.min(0.045, distance / 48) : 0.045;
+  const radius = gapMarker ? Math.min(0.045, distance / 48) : 0.045;
   const first = a.map((v) => v / 12) as V3;
   const second = b?.map((v) => v / 12) as V3;
   const midpoint = second
@@ -1473,7 +1474,7 @@ function Measurement({
         <Line
           points={[first, second]}
           color="#287c9b"
-          lineWidth={isMotionGap ? 3 : 2}
+          lineWidth={gapMarker ? 3 : 2}
           depthTest={false}
           renderOrder={1000}
           raycast={() => null}
@@ -1481,10 +1482,10 @@ function Measurement({
       )}
       <Html
         center
-        position={isMotionGap ? midpoint : [midpoint[0], midpoint[1] + 0.18, midpoint[2]]}
+        position={gapMarker ? midpoint : [midpoint[0], midpoint[1] + 0.18, midpoint[2]]}
         style={{
           pointerEvents: "none",
-          ...(isMotionGap && { transform: "translate(-50%, calc(-100% - 8px))" }),
+          ...(gapMarker && { transform: "translate(-50%, calc(-100% - 8px))" }),
           whiteSpace: "nowrap",
           color: "#145c76",
           fontSize: 12,
@@ -1495,8 +1496,8 @@ function Measurement({
           padding: "5px 8px",
         }}
       >
-        <span data-testid={isMotionGap ? "motion-gap-label" : "measurement-label"}>
-          {isMotionGap ? `${formatPreciseInches(distance)} gap`
+        <span data-testid={gapMarker?.testId ?? "measurement-label"}>
+          {gapMarker ? (gapMarker.label ?? `${formatPreciseInches(distance)} gap`)
             : b ? formatMeasurement(distance) : "Start point · choose end point"}
         </span>
       </Html>
@@ -1640,6 +1641,9 @@ function World(props: SceneProps) {
       )}
       {!isolated && props.shownSubfloor && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <SubfloorMarkers layout={props.shownSubfloor} fastening={props.shownSubfloorFasteners} />
+      )}
+      {!isolated && props.shownSubfloorJoint && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <SubfloorJointMarker joint={props.shownSubfloorJoint} />
       )}
       {!isolated && props.shownSubfloorAdhesive?.layout && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <SubfloorAdhesiveMarkers layout={props.shownSubfloorAdhesive.layout} />
@@ -1875,7 +1879,7 @@ function World(props: SceneProps) {
         <Measurement measurement={props.measurement} />
       )}
       {props.focusedMotion && props.motionPreview?.gapEndpoints && (
-        <Measurement isMotionGap measurement={{
+        <Measurement gapMarker={{ testId: "motion-gap-label" }} measurement={{
           a: props.motionPreview.gapEndpoints[0],
           b: props.motionPreview.gapEndpoints[1],
         }} />
@@ -2024,6 +2028,18 @@ function SubfloorJoistMarkers({ review, center }: { review: SubfloorJoistReview;
           : `Joists · ${review.rows.length} bearing lines`}
       </span>
     </Html>
+  </group>;
+}
+
+function SubfloorJointMarker({ joint }: { joint: SubfloorJoint }) {
+  const [a, b] = joint.endpoints;
+  const shifted = ([x, y, z]: V3): V3 => [x, y + 0.02, z];
+  const feet = (point: V3) => shifted(point).map((value) => value / 12) as V3;
+  const measured = `${formatPreciseInches(Math.abs(joint.gap))} modeled ${joint.gap < 0 ? "overlap" : "gap"}`;
+  return <group>
+    <Line points={joint.seam.map(feet)} color={joint.status === "spaced" ? "#206575" : "#bd481d"}
+      lineWidth={4} depthTest={false} raycast={() => null} />
+    <Measurement gapMarker={{ testId: "subfloor-joint-marker", label: measured }} measurement={{ a: shifted(a), b: shifted(b) }} />
   </group>;
 }
 

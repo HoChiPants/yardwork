@@ -1,9 +1,9 @@
-import { subfloorReport, subfloorReviews } from "./subfloor";
+import { subfloorJointLine, subfloorReport, subfloorReviews, uniqueSubfloorJoints } from "./subfloor";
 import { subfloorAdhesiveReport, subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReport, subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorJoistReport, subfloorJoistReviews } from "./subfloorJoists";
 import { floorJoistReference } from "./floorJoistReference";
-import { subfloorAdhesive, subfloorNails, subfloorReference } from "./subfloorReference";
+import { subfloorAdhesive, subfloorJointReference, subfloorNails, subfloorReference } from "./subfloorReference";
 import { bottomPlateSealGuide, bottomPlateSealReviews } from "./bottomPlateSeal";
 import { topPlateSealFieldGuide, topPlateSealGuide, topPlateSealReviews } from "./topPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
@@ -869,11 +869,18 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       detail: review.problem, ...(p.pieces.some(({ id }) => id === stop.pieceId) && { pieceId: stop.pieceId }),
     });
   }
-  for (const { panelId, layout, problem } of subfloorReviews(p)) {
+  const floorReviews = subfloorReviews(p);
+  for (const { panelId, layout, problem } of floorReviews) {
     const detail = problem || layout?.issues.join(" ");
     if (detail) findings.push({ id: `subfloor-${panelId}`, severity: "warning",
       title: `Review subfloor support${layout ? ` · ${layout.piece.name}` : ""}`, detail,
       ...(p.pieces.some(({ id }) => id === panelId) && { pieceId: panelId }),
+    });
+  }
+  for (const joint of uniqueSubfloorJoints(floorReviews)) {
+    if (joint.status !== "spaced" && joint.status !== "profile") findings.push({
+      id: `subfloor-joint-${joint.key}`, severity: "warning", title: "Review subfloor joint spacing",
+      detail: subfloorJointLine(p, joint), pieceId: joint.panelId,
     });
   }
   for (const { panelId, problem } of subfloorAdhesiveReviews(p)) {
@@ -2067,6 +2074,7 @@ export function guideMarkdown(p: Project) {
   const rimAirSeals = rimAirSealGuideLines(rimSealReview);
   const roofValleys = roofValleyGuideLines(p);
   const roofVentFlashings = roofVentFlashingGuideLines(p);
+  const floorReviews = subfloorReviews(p);
   const floorHangers = floorHangerGuideLines(p, connections.intents);
   const doorKits = new Set((p.motionPlans ?? []).flatMap((plan) => {
     const kit = plan.mechanism.kind === "hinge" ? plan.mechanism.greenhouseDoor?.kitId : null;
@@ -2316,9 +2324,10 @@ export function guideMarkdown(p: Project) {
       waterSupportGuideLines(waterSupportNetwork(p)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[PEX support guidance](${pexInstallation}) · [IRC piping support](${waterSupportReference.code}) · [HoldRite installation](${waterSupportReference.instructions})\n` : "") +
-    (p.subfloorChecks?.length ? "\n\n## Subfloor support and blocking\n\n" +
-      subfloorReport(p).map((line) => "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
-      `\n\n[APA Table 14 and Figure 1](${subfloorReference.specification}) · [2021 IRC floor table (Seattle edition)](${subfloorReference.code}) · [8d common nail example](${subfloorNails.listing})\n` : "") +
+    (floorReviews.length ? "\n\n## Subfloor support and blocking\n\n" +
+      subfloorReport(p, floorReviews).map((line) => "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[APA Table 14 and Figure 1](${subfloorReference.specification}) · [2021 IRC floor table (Seattle edition)](${subfloorReference.code}) · [8d common nail example](${subfloorNails.listing})` +
+      (floorReviews.some(({ layout }) => layout?.joints.length) ? ` · [APA panel spacing](${subfloorJointReference.spacing}) · [PNNL subfloor air barrier](${subfloorJointReference.airSeal})` : "") + "\n" : "") +
     (p.subfloorAdhesivePlans?.length ? "\n\n## Subfloor adhesive\n\n" +
       subfloorAdhesiveReport(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

@@ -141,7 +141,10 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
     requireBefore(byOwner.get(drain.id)?.get(sinkDrainStageKey), finish);
   for (const { panelId, layout } of subfloorReviews(project)) {
     const check = reviewSteps.get(reviewKey("subfloor-support-review", panelId));
-    for (const id of [panelId, ...(layout?.supportIds ?? [])]) requireBefore(stageByMember.get(id), check);
+    for (const id of [panelId, ...(layout?.supportIds ?? []), ...(layout?.joints.map(({ otherId }) => otherId) ?? [])])
+      requireBefore(stageByMember.get(id), check);
+    if (layout?.joints.length)
+      for (const id of layout.supportIds) requireBefore(stageByMember.get(id), stageByMember.get(panelId));
     requireBefore(check, finish);
   }
   for (const { panelId, layout } of subfloorAdhesiveReviews(project)) {

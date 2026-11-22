@@ -10,11 +10,13 @@ Select a section and choose **Move section in 3D** or **Lift** to move all its m
 
 Use **Copy object / Paste object**, **⌘/Ctrl+C / V**, or **⌘/Ctrl+D** to duplicate. Text fields keep normal text shortcuts. Copies appear beside the build, get fresh part identities and can be moved independently. Whole-section copies retain a selectable group. Physical cut-source allocations and connection plans stay with their original parts; a copied shape does not create another reusable offcut.
 
-The materials palette has one card per stock family, with length/source options inside that card. For example, the 2 × 4 framing card includes its 8/10/12 ft examples and its exact referenced product. Each option retains its own actual dimensions, price/source status and product identity. Treated uses and different material types remain distinct.
+The materials palette has one tile per stock family. Drag the tile into the build or use its add button, then choose an available size. The 2 × 4 framing tile offers 8, 10 and 12 ft at placement. Each length retains its actual dimensions and product reference. Treated stock has its own tile.
 
 **Cut part** starts whole-foot dimensions in feet; other dimensions start in inches. Cut descriptions and the pool follow the same rule, so 72 in becomes 6 ft while 23.875 in remains inches. Choosing a unit manually remains possible. Stored dimensions keep their canonical inch values.
 
 Open **Cut pool** in the materials sidebar to see reusable offcuts or used cut pieces. **Inspect** selects the actual part; **Reuse** returns the same offcut to the build and preserves its original stock source. The model never creates a second copy of that physical scrap merely by reusing it.
+
+**Review offcut reuse** compares cutting longer and shorter parts from a board first against the whole project’s purchase quantities. In the [board-saving practice plan](../public/examples/cut-pool/save-a-board.yardwork.json), cutting two shorter parts from the 76 in offcut reduces the new 2 × 4 stock from four boards to three. The guide preserves the two cuts in order and records the 12¾ in remnant.
 
 If you change a part after planning its cuts, open **Guide → Review build preparation → Stock and cuts** to see outdated assignments. **Return uncut offcut** restores the starting piece to the Cut pool with its original label and size. The preview lists every affected part, including parts that used remnants from that cut, and shows changes to the shopping list. Use it while the starting piece is still uncut. You can also open the same preview from the part’s stock cut plan.
 

@@ -64,9 +64,14 @@ export function CutPool({
         </p>
       )}
       {view === "scrap" && scrap.length === 0 && (
-        <a className="text-button" href={workshopAsset("/examples/cut-pool/crosscut-practice.yardwork.json")} download>
-          Download crosscut practice plan
-        </a>
+        <div className="button-row">
+          <a className="text-button" href={workshopAsset("/examples/cut-pool/crosscut-practice.yardwork.json")} download>
+            Download crosscut practice plan
+          </a>
+          <a className="text-button" href={workshopAsset("/examples/cut-pool/save-a-board.yardwork.json")} download>
+            Download board-saving practice plan
+          </a>
+        </div>
       )}
       {pieces.map((piece) => (
         <div

@@ -35,6 +35,9 @@ export function OffcutReusePlanDetails({ plan, fromCut = false }: {
             {plan.assignments.length === 1 ? "part fits" : "parts fit"}{" "}
             {fromCut ? "an offcut from this trim." : "stock in the Cut pool."}
           </p>
+          {plan.shorterFirst && <p className="small-note">
+            Cutting shorter parts from the offcuts first reduces the number of new boards to buy.
+          </p>}
           <ol
             aria-label="Proposed cuts in order"
             style={{ overflowWrap: "anywhere" }}

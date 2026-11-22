@@ -632,6 +632,38 @@ test("batch reuse follows fresh remnants in order and updates net purchasing wit
   assert.deepEqual(planOffcutReuse(plan.project).assignments, []);
 });
 
+test("batch reuse compares whole-board purchases before cutting smaller parts from a shared scrap", () => {
+  const id = "stud";
+  const lengths = [29, 36, 37, 34, 51, 51, 77];
+  const project = cutProject(id, ...lengths.map((length): V3 => [1.5, length, 3.5]));
+  const stocked = addMeasuredOffcut(project, project.steps[0].id, id, [76, 3.5, 1.5], "Saved board");
+  const original = JSON.stringify(stocked);
+  const plan = planOffcutReuse(stocked);
+  assert.equal(plan.shorterFirst, true);
+  assert.deepEqual(plan.assignments.map(({ partId }) => partId), [project.pieces[0].id, project.pieces[3].id]);
+  assert.deepEqual(plan.purchases.map(({ id: stockId, before, after }) => [stockId, before, after]), [[id, 4, 3]]);
+  assert.deepEqual(plan.remnants.map(({ label, size }) => [label, size[2]]), [["O003", 12.75]]);
+  assert.equal(plan.assignments[1].fromEarlierCut, true);
+  const claimed = plan.project.pieces.filter(({ cutStock, offcut }) => cutStock && !offcut);
+  assert.equal(new Set(claimed.map(({ cutStock }) => cutStock!.id)).size, 1);
+  assert.ok(inspectCutStock(plan.project).valid.has(claimed[0].cutStock!.id));
+  assert.equal(JSON.stringify(stocked), original);
+});
+
+test("the purchase comparison keeps the original cut order for other stock with tied quantities", () => {
+  let project = cutProject("stud", ...[29, 36, 37, 34, 51, 51, 77].map((length): V3 => [1.5, length, 3.5]));
+  const [long, short] = [43, 20].map((length) => part("Shelf support", "two-six", [1.5, length, 5.5], [0, length / 2, 0], project.steps[0].id, ""));
+  project.pieces.push(long, short);
+  project = addMeasuredOffcut(project, project.steps[0].id, "stud", [76, 3.5, 1.5]);
+  project = addMeasuredOffcut(project, project.steps[0].id, "two-six", [65, 5.5, 1.5]);
+  const plan = planOffcutReuse(project);
+  assert.equal(plan.shorterFirst, true);
+  assert.deepEqual(plan.assignments.filter(({ partId }) => partId === long.id || partId === short.id)
+    .map(({ partId }) => partId), [long.id, short.id]);
+  assert.equal(bom(plan.project).find(({ id }) => id === "stud")?.quantity, 3);
+  assert.equal(bom(plan.project).find(({ id }) => id === "two-six")?.quantity, 0);
+});
+
 test("the shop cut order follows remnant dependencies in a regenerated and reopened guide", () => {
   const id = "plytanium-703";
   const project = cutProject(id, [15, 0.703, 22], [15, 0.703, 36]);

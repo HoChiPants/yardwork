@@ -126,6 +126,8 @@ const scrapQuestion =
   /^(?:what (?:could|can|should) i (?:use|reuse) ([op]\d{1,6}) for|(?:show|find|suggest) (?:uses|reuse options) for (?:offcut |scrap )?([op]\d{1,6})|(?:can|could) i reuse (?:offcut |scrap )?([op]\d{1,6}))$/i;
 const offcutQuestion =
   /^(?:(?:what|which) (?:offcuts|scraps|leftovers) (?:could|can|should) i (?:use|reuse)|(?:can|could) i reuse (?:any |my |the )?(?:offcuts|scraps|leftovers)|(?:review|show|plan|find) (?:the )?(?:offcut reuse|scrap reuse|uses for (?:my |the )?(?:scraps|offcuts)))$/i;
+const offcutSavingsQuestion =
+  /^(?:(?:can|could) i )?(?:buy fewer boards|save (?:a|one) board|use less new lumber) (?:with|using) (?:my |the )?(?:offcuts|scraps|leftovers)$/i;
 const namedBoardOffcutQuestion =
   /^(?:can|could) i (?:make|cut|get) (?:a |one )?(.+) from (?:offcut |scrap |leftover )?(o\d{1,6})$/i;
 const boardOffcutQuestion =
@@ -181,7 +183,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
         ...(namedStock ? { offcutLabel: labelKey(namedStock[2]) } : {}),
       };
   }
-  if (offcutQuestion.test(text)) return { kind: "offcuts" };
+  if (offcutQuestion.test(text) || offcutSavingsQuestion.test(text)) return { kind: "offcuts" };
   if (doorSealQuestion.test(text)) return { kind: "greenhouse-weatherseal" };
   const flashing = openingFlashingQuestion.exec(text);
   if (flashing) return { kind: "opening-flashing", ...(flashing[1] && { sillLabel: labelKey(flashing[1]) }) };
@@ -296,7 +298,7 @@ function answerOffcuts(project: Project, label?: string): BuildQuestionAnswer {
     };
   return {
     title,
-    detail: `${plan.assignments.length} planned ${plan.assignments.length === 1 ? "part fits" : "parts fit"} ${label ? `stock from ${label}` : "stock in the Cut pool"}. Review the cut order before applying.`,
+    detail: `${plan.assignments.length} planned ${plan.assignments.length === 1 ? "part fits" : "parts fit"} ${label ? `stock from ${label}` : "stock in the Cut pool"}. ${plan.shorterFirst ? "Cutting shorter parts from the offcuts first reduces the number of new boards to buy." : "Review the cut order before applying."}`,
     rows: plan.assignments
       .slice(0, 3)
       .map(({ partId, target, from, operations }) => ({

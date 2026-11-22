@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 121,
+  "id": "924d3eaf-9e8d-4d27-ab55-7c9f10071d0b",
+  "name": "Save a board with one offcut",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "5572a5c4-9f59-48e5-8134-768ac307d095"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T01:33:41.347Z",
+  "pieces": [
+    {
+      "id": "b2b3b612-8acb-4d13-8922-8fa97611b389",
+      "name": "Practice rail 1",
+      "material": "stud",
+      "size": [
+        1.5,
+        29,
+        3.5
+      ],
+      "position": [
+        -24,
+        14.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "assembly": "Practice rack",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "62aaff31-baa3-4c2d-9721-750ce8fe680f",
+      "name": "Practice rail 2",
+      "material": "stud",
+      "size": [
+        1.5,
+        36,
+        3.5
+      ],
+      "position": [
+        -16,
+        18,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "assembly": "Practice rack",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b0f256ba-f0d9-4cc1-8b1c-f8aa3bf5250b",
+      "name": "Practice rail 3",
+      "material": "stud",
+      "size": [
+        1.5,
+        37,
+        3.5
+      ],
+      "position": [
+        -8,
+        18.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "assembly": "Practice rack",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8b4b1008-e3a5-4d10-b55d-8b5b258b4f71",
+      "name": "Practice rail 4",
+      "material": "stud",
+      "size": [
+        1.5,
+        34,
+        3.5
+      ],
+      "position": [
+        0,
+        17,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "assembly": "Practice rack",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e23c226e-29a4-49ed-a75b-a8e649b01f4a",
+      "name": "Practice rail 5",
+      "material": "stud",
+      "size": [
+        1.5,
+        51,
+        3.5
+      ],
+      "position": [
+        8,
+        25.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "assembly": "Practice rack",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "fb2753e6-f555-4021-a21a-e54a3e7c5524",
+      "name": "Practice rail 6",
+      "material": "stud",
+      "size": [
+        1.5,
+        51,
+        3.5
+      ],
+      "position": [
+        16,
+        25.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "assembly": "Practice rack",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e8562ab4-37ae-4e0d-8775-3af87e2c149c",
+      "name": "Practice rail 7",
+      "material": "stud",
+      "size": [
+        1.5,
+        77,
+        3.5
+      ],
+      "position": [
+        24,
+        38.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "assembly": "Practice rack",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "57dc3f45-be85-4323-8159-ae0f1c6f3339",
+      "name": "Offcut · Measured 76 in board",
+      "material": "stud",
+      "size": [
+        3.5,
+        1.5,
+        76
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "5572a5c4-9f59-48e5-8134-768ac307d095",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3.5,
+          1.5,
+          76
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "0375fb7c-69b5-4b54-87cf-58425e56f2b2",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice comparing two cut orders. The 76 in offcut can supply a 29 in and a 34 in part, reducing the project from four new 8 ft boards to three. Open the Cut pool and review offcut reuse.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

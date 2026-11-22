@@ -1,4 +1,5 @@
 import { bottomPlateSealReviews, bottomPlateSealTakeoff } from "./bottomPlateSeal";
+import { wallPlateSealTakeoff } from "./topPlateSeal";
 import { subfloorAdhesiveTakeoff } from "./subfloorAdhesive";
 import { subfloorAdhesive, subfloorNails } from "./subfloorReference";
 import { subfloorCommonNailTakeoff } from "./subfloorFastening";
@@ -186,7 +187,11 @@ export function homeDepotPurchaseNeeds(
       marks === null ? "Subfloor fastening plans" : `${marks} planned subfloor nails · about ${subfloorNails.estimatedBoxCount} per 1-lb box`,
       required, required === null ? "Review changed or incomplete nail paths to finish the box estimate." : undefined);
   }
-  if (project.bottomPlateSeals?.length) {
+  if (project.topPlateSeals?.length) {
+    const { required, needsReview } = wallPlateSealTakeoff(project);
+    include(bottomPlateSealant.id, "Wall plate bead runs by work session", required || null,
+      needsReview ? "Review changed or interrupted seams to finish the cartridge estimate." : undefined);
+  } else if (project.bottomPlateSeals?.length) {
     const seals = bottomPlateSealReviews(project);
     const { required } = bottomPlateSealTakeoff(project, seals);
     include(bottomPlateSealant.id, "Clear bottom plate bead runs by work session", required || null,

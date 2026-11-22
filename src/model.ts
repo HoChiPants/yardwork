@@ -29,6 +29,7 @@ import { subfloorPanel } from "./bottomPlateSealReference";
 import { drywallStock } from "./drywallReference";
 import { subfloorAdhesivePlansSchema, subfloorChecksSchema, subfloorJoistPlansSchema, subfloorNailPlansSchema } from "./subfloorSchema";
 import { bottomPlateSealsSchema } from "./bottomPlateSealSchema";
+import { topPlateSealsSchema } from "./topPlateSealSchema";
 import { sinkDrainsSchema } from "./sinkDrainSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
@@ -268,6 +269,7 @@ export const stepSchema = z.object({
           "project-finish",
           "water-pressure-review",
           "bottom-plate-air-seal",
+          "top-plate-air-seal",
           "subfloor-support-review",
         ]),
         planId: id,
@@ -526,6 +528,7 @@ export const currentProjectSchema = z
     waterStops: waterStopsSchema.optional(),
     sinkDrains: sinkDrainsSchema.optional(),
     bottomPlateSeals: bottomPlateSealsSchema.optional(),
+    topPlateSeals: topPlateSealsSchema.optional(),
     subfloorChecks: subfloorChecksSchema.optional(),
     subfloorAdhesivePlans: subfloorAdhesivePlansSchema.optional(),
     subfloorNailPlans: subfloorNailPlansSchema.optional(),

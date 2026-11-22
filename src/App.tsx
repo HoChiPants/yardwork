@@ -19,6 +19,8 @@ import { floorJoistReference } from "./floorJoistReference";
 import { subfloorReport, subfloorReviews, trackSubfloorPanel } from "./subfloor";
 import { subfloorAdhesive, subfloorNails, subfloorReference } from "./subfloorReference";
 import { BottomPlateSealPanel } from "./BottomPlateSealPanel";
+import { TopPlateSealPanel } from "./TopPlateSealPanel";
+import { topPlateSealFieldGuide, topPlateSealGuide, topPlateSealReviews } from "./topPlateSeal";
 import { bottomPlateSealGuide, bottomPlateSealReviews, removeBottomPlateSeal } from "./bottomPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { SillGasketPanel } from "./SillGasketPanel";
@@ -404,6 +406,7 @@ type Modal =
   | "sink-drain"
   | "subfloor-support"
   | "bottom-plate-seal"
+  | "top-plate-seal"
   | "rim-air-seal"
   | "roof-valley"
   | "roof-vent-flashing"
@@ -641,8 +644,9 @@ export function App() {
   const [subfloorBlockDraft, setSubfloorBlockDraft] = useState<{ project: Project; fit: SubfloorBlockingPreview } | null>(null);
   const [shownSubfloor, setShownSubfloor] = useState<{ projectId: string; panelId: string; view: "support" | "adhesive" | "joists" | SubfloorNailSchedule; joists?: SubfloorJoistSpanInput | null } | null>(null);
   const [subfloorTarget, setSubfloorTarget] = useState<string>();
-  const [shownBottomPlate, setShownBottomPlate] = useState<{ projectId: string; id: string } | null>(null);
+  const [shownPlateSeal, setShownPlateSeal] = useState<{ projectId: string; id: string; top?: boolean } | null>(null);
   const [bottomPlateTarget, setBottomPlateTarget] = useState<string>();
+  const [topPlateTarget, setTopPlateTarget] = useState<string>();
   const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
   const [shownRimSeal, setShownRimSeal] = useState<{ projectId: string; key: string }>();
   const [shownRoofValley, setShownRoofValley] = useState<{ projectId: string; id: string }>();
@@ -1444,6 +1448,10 @@ export function App() {
         setBottomPlateTarget(action.planId);
         setModal("bottom-plate-seal");
         return;
+      case "top-plate-seal":
+        setTopPlateTarget(action.planId);
+        setModal("top-plate-seal");
+        return;
       case "rim-air-seal":
         setRimSealTarget(action);
         setModal("rim-air-seal");
@@ -1878,7 +1886,7 @@ export function App() {
     setSubfloorBlockDraft(null);
     if (guidePartFocus) exitGuidePartView();
     setShownSubfloor({ projectId: project.id, panelId, view, joists });
-    setShownBottomPlate(null);
+    setShownPlateSeal(null);
     setShownSillGasketId(null);
     setPlaying(false);
     setStage(null);
@@ -1890,13 +1898,17 @@ export function App() {
     setModal(null);
     inspectWorkspace();
   }
-  const visibleBottomPlate = useMemo(() => shownBottomPlate?.projectId === project.id && panel === "sections"
-    ? bottomPlateSealReviews(project).find(({ record }) => record.id === shownBottomPlate.id) : undefined,
-    [panel, project, shownBottomPlate]);
-  function showBottomPlate(id: string) {
+  const visibleBottomPlate = useMemo(() => shownPlateSeal?.projectId === project.id && panel === "sections" && !shownPlateSeal.top
+    ? bottomPlateSealReviews(project).find(({ record }) => record.id === shownPlateSeal.id) : undefined,
+    [panel, project, shownPlateSeal]);
+  const visibleTopPlate = useMemo(() => shownPlateSeal?.projectId === project.id && panel === "sections" && shownPlateSeal.top
+    ? topPlateSealReviews(project).find(({ record }) => record.id === shownPlateSeal.id) : undefined,
+    [panel, project, shownPlateSeal]);
+  const visiblePlateSeal = visibleTopPlate ?? visibleBottomPlate;
+  function showPlateSeal(id: string, top = false) {
     if (guidePartFocus) exitGuidePartView();
     setShownSubfloor(null);
-    setShownBottomPlate({ projectId: project.id, id });
+    setShownPlateSeal({ projectId: project.id, id, top });
     setShownSillGasketId(null);
     setPlaying(false);
     setStage(null);
@@ -3210,9 +3222,10 @@ export function App() {
               shownSubfloorAdhesive={visibleAdhesive}
               shownSubfloorFasteners={visibleNails}
               shownSubfloorJoists={visibleJoists}
-              shownBottomPlate={visibleBottomPlate?.layout ? {
-                start: visibleBottomPlate.layout.ends[0], outdated: !!visibleBottomPlate.outdated,
-                runs: visibleBottomPlate.layout.runs,
+              shownPlateSeal={visiblePlateSeal?.layout ? {
+                top: !!visibleTopPlate,
+                start: visiblePlateSeal.layout.ends[0], outdated: !!visiblePlateSeal.outdated,
+                runs: visiblePlateSeal.layout.runs,
               } : undefined}
               shownSillGasket={panel === "sections" && shownSillGasket?.outline
                 ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
@@ -4104,9 +4117,14 @@ export function App() {
               <button type="button" className="button secondary full" onClick={() => configureWindowWall()}>Plan a window wall</button>
               <button type="button" className="button secondary full" onClick={() => openOpeningFlashing()}>Plan opening flashing</button>
               <button type="button" className="button secondary full" onClick={() => {
-                setBottomPlateTarget(shownBottomPlate?.projectId === project.id ? shownBottomPlate.id : undefined);
+                setBottomPlateTarget(shownPlateSeal?.projectId === project.id && !shownPlateSeal.top ? shownPlateSeal.id : undefined);
                 setModal("bottom-plate-seal");
               }}>Seal a bottom plate</button>
+              {(project.topPlateSeals?.length || project.pieces.some((part) => !part.offcut && isDrywall(part.material))) &&
+                <button type="button" className="button secondary full" onClick={() => {
+                  setTopPlateTarget(shownPlateSeal?.projectId === project.id && shownPlateSeal.top ? shownPlateSeal.id : undefined);
+                  setModal("top-plate-seal");
+                }}>Seal a top plate to drywall</button>}
               {(project.sections.some(({ generator }) => generator?.type === "foundation") || !!project.rimAirSeals?.length) &&
                 <button type="button" className="button secondary full" onClick={() => {
                   setRimSealTarget(undefined);
@@ -4118,7 +4136,8 @@ export function App() {
                 setModal("subfloor-support");
               }}>Check subfloor support</button>
               {visibleSubfloor && <button type="button" className="text-button" onClick={() => setShownSubfloor(null)}>{visibleAdhesive ? "Hide adhesive routes" : visibleNails ? "Hide nail marks" : visibleJoists ? "Hide joist bearing" : "Hide subfloor support"}</button>}
-              {visibleBottomPlate && <button type="button" className="text-button" onClick={() => setShownBottomPlate(null)}>Hide bottom plate seam</button>}
+              {visibleBottomPlate && <button type="button" className="text-button" onClick={() => setShownPlateSeal(null)}>Hide bottom plate seam</button>}
+              {visibleTopPlate && <button type="button" className="text-button" onClick={() => setShownPlateSeal(null)}>Hide top plate seam</button>}
               <SillGasketPanel key={`sill-gaskets-${project.id}`} project={project} review={sillGasketReview}
                 shownId={shownSillGasketId} onChange={change} onShow={(id) => {
                   setShownSillGasketId(id);
@@ -5736,15 +5755,29 @@ export function App() {
               onSave={(draft) => safe(() => {
                 if (current.current !== project) throw Error("The workspace changed. Preview the seam again.");
                 change(draft.project);
-                showBottomPlate(draft.record.id);
+                showPlateSeal(draft.record.id);
                 notify("Bottom plate air seal saved.");
               })}
-              onShow={showBottomPlate}
+              onShow={showPlateSeal}
               onRemove={(id) => safe(() => {
                 change((live) => removeBottomPlateSeal(live, id));
-                setShownBottomPlate(null);
+                setShownPlateSeal(null);
                 setModal(null);
                 notify("Bottom plate air seal removed.");
+              })} />}
+            {modal === "top-plate-seal" && <TopPlateSealPanel project={project} selectedPart={selected} initialId={topPlateTarget}
+              onSave={(draft) => safe(() => {
+                if (current.current !== project) throw Error("The workspace changed. Preview the seam again.");
+                change(draft.project);
+                showPlateSeal(draft.record.id, true);
+                notify("Top plate air seal saved.");
+              })}
+              onShow={(id) => showPlateSeal(id, true)}
+              onRemove={(id) => safe(() => {
+                change((live) => ({ ...live, topPlateSeals: live.topPlateSeals?.filter((record) => record.id !== id), guideFingerprint: null }));
+                setShownPlateSeal(null);
+                setModal(null);
+                notify("Top plate air seal removed.");
               })} />}
             {modal === "sink-drain" && <SinkDrainPanel project={project} measurement={measurement} initialDrain={sinkDrainTarget}
               onApply={(draft) => safe(() => {
@@ -7249,6 +7282,14 @@ export function App() {
             <h2>Bottom plate air seals</h2>
             <ul>{bottomPlateSealGuide(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
             <p><a href={bottomPlateSealant.fieldGuide}>PNNL bottom plate guidance</a>{" · "}
+              <a href={bottomPlateSealant.specification}>OSI instructions</a></p>
+          </section>
+        )}
+        {!!exportGuide.topPlateSeals?.length && (
+          <section className="top-plate-seal-print">
+            <h2>Top plate air seals</h2>
+            <ul>{topPlateSealGuide(exportGuide).map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={topPlateSealFieldGuide}>PNNL drywall-to-top-plate guidance</a>{" · "}
               <a href={bottomPlateSealant.specification}>OSI instructions</a></p>
           </section>
         )}

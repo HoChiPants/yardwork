@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 123,
+  "id": "c66aa19f-3366-4e39-be5a-49b4fdb1d1e1",
+  "name": "Drywall-to-top-plate practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "dada725b-1887-476a-82f5-c8391e91a5db",
+      "label": "P001"
+    },
+    {
+      "partId": "e080d848-e128-4992-b600-4bb1fc5749b9",
+      "label": "P002"
+    },
+    {
+      "partId": "877f715a-17f6-4cac-a2bd-e0e1535bb511",
+      "label": "P003"
+    },
+    {
+      "partId": "b5c36d46-0dd7-4ba0-816a-3b2e2ec04b95",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T02:45:28.181Z",
+  "pieces": [
+    {
+      "id": "dada725b-1887-476a-82f5-c8391e91a5db",
+      "name": "Wall top plate",
+      "material": "stud",
+      "size": [
+        1.5,
+        96,
+        3.5
+      ],
+      "position": [
+        0,
+        95.25,
+        0
+      ],
+      "stepId": "ec6f8998-2765-4369-94da-88b9b64ee1d1",
+      "assembly": "Wall",
+      "rotation": [
+        0,
+        0,
+        -1.5707963267948966
+      ],
+      "stockLengthAxis": null,
+      "offcut": false,
+      "cutStock": null,
+      "cutPlanes": []
+    },
+    {
+      "id": "e080d848-e128-4992-b600-4bb1fc5749b9",
+      "name": "Drywall panel 1",
+      "material": "hd-usg-drywall-half-8",
+      "size": [
+        48,
+        0.5,
+        96
+      ],
+      "position": [
+        -24,
+        48,
+        2.0625
+      ],
+      "stepId": "ec6f8998-2765-4369-94da-88b9b64ee1d1",
+      "assembly": "Wall",
+      "rotation": [
+        1.5707963267948966,
+        0,
+        0
+      ],
+      "stockLengthAxis": null,
+      "offcut": false,
+      "cutStock": null,
+      "cutPlanes": []
+    },
+    {
+      "id": "877f715a-17f6-4cac-a2bd-e0e1535bb511",
+      "name": "Drywall panel 2",
+      "material": "hd-usg-drywall-half-8",
+      "size": [
+        48,
+        0.5,
+        96
+      ],
+      "position": [
+        24,
+        48,
+        2.0625
+      ],
+      "stepId": "ec6f8998-2765-4369-94da-88b9b64ee1d1",
+      "assembly": "Wall",
+      "rotation": [
+        1.5707963267948966,
+        0,
+        0
+      ],
+      "stockLengthAxis": null,
+      "offcut": false,
+      "cutStock": null,
+      "cutPlanes": []
+    },
+    {
+      "id": "b5c36d46-0dd7-4ba0-816a-3b2e2ec04b95",
+      "name": "Offcut · Spare drywall for the trial bead",
+      "material": "hd-usg-drywall-half-8",
+      "size": [
+        8,
+        0.5,
+        12
+      ],
+      "position": [
+        0,
+        0.25,
+        0
+      ],
+      "stepId": "ec6f8998-2765-4369-94da-88b9b64ee1d1",
+      "assembly": "",
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stockLengthAxis": 2,
+      "offcut": true,
+      "cutStock": {
+        "id": "5701242b-3955-408d-8943-af6575a3659f",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          8,
+          0.5,
+          12
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "cutPlanes": []
+    }
+  ],
+  "steps": [
+    {
+      "id": "ec6f8998-2765-4369-94da-88b9b64ee1d1",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "history": [],
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "onHandCutSources": [
+    "5701242b-3955-408d-8943-af6575a3659f"
+  ]
+}

@@ -5,6 +5,7 @@ import { subfloorJoistReport, subfloorJoistReviews } from "./subfloorJoists";
 import { floorJoistReference } from "./floorJoistReference";
 import { subfloorAdhesive, subfloorNails, subfloorReference } from "./subfloorReference";
 import { bottomPlateSealGuide, bottomPlateSealReviews } from "./bottomPlateSeal";
+import { topPlateSealFieldGuide, topPlateSealGuide, topPlateSealReviews } from "./topPlateSeal";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { drawingReferenceDescription } from "./drawingReference";
 import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
@@ -905,6 +906,16 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       title: `Review bottom plate air seal · ${title}`, detail,
       ...(layout && { pieceId: record.plateId }),
     });
+  }
+  for (const { record, title, layout, problem } of topPlateSealReviews(p)) {
+    if (problem) {
+      const interruption = layout?.runs.find((run) => run.problem)?.problem;
+      findings.push({ id: `top-plate-${record.id}`, severity: "warning",
+        title: `Review top plate air seal · ${title}`,
+        detail: [problem, interruption].filter(Boolean).join(" "),
+        ...(layout && { pieceId: record.plateId }),
+      });
+    }
   }
   for (const drain of p.sinkDrains ?? []) {
     const review = reviewSinkDrain(p, drain);
@@ -2322,6 +2333,10 @@ export function guideMarkdown(p: Project) {
       bottomPlateSealGuide(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[PNNL bottom plate guidance](${bottomPlateSealant.fieldGuide}) · [OSI instructions](${bottomPlateSealant.specification})\n` : "") +
+    (p.topPlateSeals?.length ? "\n\n## Top plate air seals\n\n" +
+      topPlateSealGuide(p).map((line) =>
+        "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[PNNL drywall-to-top-plate guidance](${topPlateSealFieldGuide}) · [OSI instructions](${bottomPlateSealant.specification})\n` : "") +
     (p.sinkDrains?.length ? "\n\n## Sink drains and wall-tube cuts\n\n" +
       p.sinkDrains.flatMap((record) => sinkDrainGuide(p, record)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

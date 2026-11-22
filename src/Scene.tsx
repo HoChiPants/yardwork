@@ -91,7 +91,7 @@ export type SceneProps = {
   shownSubfloorAdhesive?: SubfloorAdhesiveReview;
   shownSubfloorFasteners?: SubfloorFasteningReview;
   shownSubfloorJoists?: SubfloorJoistReview;
-  shownBottomPlate?: { start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
+  shownPlateSeal?: { top?: boolean; start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[] }>;
   shownRoofValley?: [V3, V3];
@@ -1605,14 +1605,16 @@ function World(props: SceneProps) {
       {!isolated && props.shownSubfloorJoists?.center && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <SubfloorJoistMarkers review={props.shownSubfloorJoists} center={props.shownSubfloorJoists.center} />
       )}
-      {!isolated && props.shownBottomPlate && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+      {!isolated && props.shownPlateSeal && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <group>
-          {props.shownBottomPlate.runs.map(({ points, problem }, index) =>
+          {props.shownPlateSeal.runs.map(({ points, problem }, index) =>
             <Line key={index} points={points.map((point) => point.map((n) => n / 12) as V3)}
-              color={problem || props.shownBottomPlate?.outdated ? "#ba4c2b" : "#35748c"} lineWidth={4} depthTest={false} raycast={() => null} />)}
-          <Html center position={props.shownBottomPlate.start.map((n, i) => (n + (i === 1 ? 1 : 0)) / 12) as V3}
+              color={problem || props.shownPlateSeal?.outdated ? "#ba4c2b" : "#35748c"} lineWidth={4} depthTest={false} raycast={() => null} />)}
+          <Html center position={props.shownPlateSeal.start.map((n, i) => (n + (i === 1 ? 1 : 0)) / 12) as V3}
             zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
-            <span className="site-clearance-marker" data-testid="bottom-plate-seam-start">Bead start · {props.shownBottomPlate.outdated ? "Review changed seam" : "Bottom plate air seal"}</span>
+            <span className="site-clearance-marker" data-testid={props.shownPlateSeal.top ? "top-plate-seam-start" : "bottom-plate-seam-start"}>
+              Bead start · {props.shownPlateSeal.outdated ? "Review changed seam" : props.shownPlateSeal.top ? "Top plate air seal" : "Bottom plate air seal"}
+            </span>
           </Html>
         </group>
       )}

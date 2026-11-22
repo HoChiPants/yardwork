@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 122**. Yardwork reads valid formats 1–121 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 123**. Yardwork reads valid formats 1–122 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 123 can store `topPlateSeals` for a modeled drywall-to-top-plate joint. Each record keeps the plate, side, measured gap and fill depth, bead, work session and reviewed geometry signature. Earlier projects open with their original cut and seal plans.
 
 Format 122 adds exact 8 ft and 12 ft Sheetrock UltraLight material IDs. Straight score-and-snap cuts use the existing source coordinates, retain the ½ in panel thickness and model zero cutting loss. Earlier projects preserve their original material IDs and kerfs.
 

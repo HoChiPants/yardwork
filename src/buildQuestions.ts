@@ -1,5 +1,6 @@
 import { isSubfloorPanel, subfloorReviews } from "./subfloor";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
+import { topPlateSealReviews, topPlateSealScope } from "./topPlateSeal";
 import { openingAirSealSummary } from "./openingAirSeal";
 import type { BuildPreparationAction } from "./buildPreparation";
 import { inspectCutStock, type Finding } from "./engine";
@@ -52,6 +53,7 @@ export type BuildQuestion =
   | { kind: "sink-drain" }
   | { kind: "subfloor-support"; panelLabel?: string }
   | { kind: "bottom-plate-seal" }
+  | { kind: "top-plate-seal" }
   | { kind: "rim-air-seal" }
   | { kind: "roof-valley" }
   | { kind: "roof-vent-flashing" }
@@ -77,6 +79,7 @@ export type BuildQuestionAction =
   | { kind: "sink-drain"; drainId?: string }
   | { kind: "subfloor-support"; panelId?: string }
   | { kind: "bottom-plate-seal"; planId?: string }
+  | { kind: "top-plate-seal"; planId?: string }
   | { kind: "rim-air-seal"; sectionId?: string; side?: RimSide }
   | { kind: "roof-valley" }
   | { kind: "roof-vent-flashing" }
@@ -197,6 +200,8 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (namedSubfloor) return { kind: "subfloor-support", panelLabel: labelKey(namedSubfloor[1]) };
   if (subfloorQuestion.test(text)) return { kind: "subfloor-support" };
   if (bottomPlateQuestion.test(text)) return { kind: "bottom-plate-seal" };
+  if (/^(?:(?:how (?:can|do|should) i |plan |check |review )?(?:air[ -])?seal (?:the |a |my )?top plate(?: to (?:the )?drywall)?|(?:how (?:can|do|should) i )?seal (?:the )?drywall to (?:the |a )?top plate)$/i.test(text))
+    return { kind: "top-plate-seal" };
   if (rimAirSealQuestion.test(text)) return { kind: "rim-air-seal" };
   if (roofValleyQuestion.test(text)) return { kind: "roof-valley" };
   if (roofVentFlashingQuestion.test(text)) return { kind: "roof-vent-flashing" };
@@ -643,6 +648,18 @@ export function answerBuildQuestion(
           link: { label: "Review this bottom plate seam", action: { kind: "bottom-plate-seal", planId: record.id } },
         })),
         link: { label: "Open bottom plate air seal", action: { kind: "bottom-plate-seal" } },
+      };
+    case "top-plate-seal":
+      return {
+        title: "Seal a top plate to drywall",
+        detail: "Check the marked drywall backing and the bead route before hanging the panel.",
+        scope: topPlateSealScope,
+        rows: topPlateSealReviews(project).map(({ record, title, layout, problem }) => ({
+          id: record.id, title,
+          detail: problem || `${formatStockLength(layout!.clearLength)} of modeled bead path.`,
+          link: { label: "Review this top plate seam", action: { kind: "top-plate-seal", planId: record.id } },
+        })),
+        link: { label: "Open top plate air seal", action: { kind: "top-plate-seal" } },
       };
     case "roof-vent-flashing":
       return {

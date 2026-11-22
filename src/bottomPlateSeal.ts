@@ -55,12 +55,21 @@ export function bottomPlateSealReviews(project: Project) {
 }
 
 export function bottomPlateSealTakeoff(project: Project, rows = bottomPlateSealReviews(project)) {
+  return plateSealTakeoff(rows.flatMap(({ record, layout, problem }) =>
+    !problem && layout?.clearLength ? [{ session: record.session, bead: record.bead, length: layout.clearLength }] : [],
+  ));
+}
+
+export function plateSealTakeoff(runs: readonly {
+  session: string;
+  bead: "1/4" | "3/8";
+  length: number;
+}[]) {
   const sessions = new Map<string, { name: string; use: number }>();
-  for (const { record, layout, problem } of rows) {
-    if (problem || !layout?.clearLength) continue;
-    const key = record.session.toLowerCase();
-    const session = sessions.get(key) ?? { name: record.session, use: 0 };
-    session.use += layout.clearLength / (12 * bottomPlateSealant.coverageFeet[record.bead]);
+  for (const run of runs) {
+    const key = run.session.toLowerCase();
+    const session = sessions.get(key) ?? { name: run.session, use: 0 };
+    session.use += run.length / (12 * bottomPlateSealant.coverageFeet[run.bead]);
     sessions.set(key, session);
   }
   const batches = [...sessions.values()].map((row) => ({

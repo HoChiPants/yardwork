@@ -8,6 +8,7 @@ import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorJoistReviews } from "./subfloorJoists";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
+import { topPlateSealReviews } from "./topPlateSeal";
 import { sinkDrainStageKey } from "./sinkDrain";
 import { waterFittingPorts } from "./waterFittingSchema";
 
@@ -164,6 +165,13 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
       requireBefore(stageByMember.get(id), seal);
       requireBefore(reviewSteps.get(reviewKey("subfloor-support-review", id)), seal);
     }
+    requireBefore(seal, finish);
+  }
+  for (const { record, layout } of topPlateSealReviews(project)) {
+    const seal = reviewSteps.get(reviewKey("top-plate-air-seal", record.id));
+    requireBefore(stageByMember.get(record.plateId), seal);
+    const panels = new Set(layout?.runs.flatMap(({ panelId }) => panelId ? [panelId] : []));
+    for (const id of panels) requireBefore(seal, stageByMember.get(id));
     requireBefore(seal, finish);
   }
   for (const plan of project.restraintPlans) {

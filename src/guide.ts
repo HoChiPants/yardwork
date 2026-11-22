@@ -4,6 +4,7 @@ import { subfloorAdhesiveInstallation, subfloorNailSchedules } from "./subfloorR
 import { subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorJoistReviews } from "./subfloorJoists";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
+import { topPlateSealReviews } from "./topPlateSeal";
 import {
   projectSchema,
   step,
@@ -84,6 +85,7 @@ function preparationScope(project: Project) {
     ...(project.subfloorNailPlans?.length ? { subfloorNailPlans: project.subfloorNailPlans } : {}),
     ...(project.subfloorJoistPlans?.length ? { subfloorJoistPlans: project.subfloorJoistPlans } : {}),
     ...(project.bottomPlateSeals?.length ? { bottomPlateSeals: project.bottomPlateSeals } : {}),
+    ...(project.topPlateSeals?.length ? { topPlateSeals: project.topPlateSeals } : {}),
     ...(project.rimAirSeals?.length ? { rimAirSeals: project.rimAirSeals } : {}),
     ...(project.roofValleys?.length ? { roofValleys: project.roofValleys } : {}),
     ...(project.roofVentFlashings?.length ? { roofVentFlashings: project.roofVentFlashings } : {}),
@@ -472,6 +474,10 @@ export function generateBuildGuide(input: Project): Project {
     pieceSteps = new Map<string, string>(),
     historyRemap = new Map<string, string>(),
     oldById = new Map(project.steps.map((s) => [s.id, s]));
+  const topPlateReviews = topPlateSealReviews(project);
+  const drywallIds = new Set(topPlateReviews.flatMap(({ layout }) =>
+    layout?.runs.flatMap(({ panelId }) => panelId ? [panelId] : []) ?? [],
+  ));
   type Meta = NonNullable<Step["generated"]>;
   function addPhase(
     title: string,
@@ -612,7 +618,11 @@ export function generateBuildGuide(input: Project): Project {
   const adhesiveByPanel = new Map(subfloorAdhesiveReviews(project).map((review) => [review.panelId, review]));
   const fasteningByPanel = new Map(subfloorFasteningReviews(project).map((review) => [review.panelId, review]));
   const joistsById = new Map(subfloorJoistReviews(project).flatMap(({ rows }) => rows.map((row) => [row.id, row] as const)));
-  for (const stage of stages) {
+  for (const original of stages) {
+    const stage = drywallIds.size
+      ? { ...original, memberIds: original.memberIds.filter((id) => !drywallIds.has(id)) }
+      : original;
+    if (!stage.memberIds.length) continue;
     // Typed storage stages place shell/frame before the actual lid. Legacy
     // combined stages retain an explicit dry-fit instruction in the hinge phase.
     for (const review of hingeReviewCache)
@@ -663,11 +673,24 @@ export function generateBuildGuide(input: Project): Project {
         throw Error("The assembly guide assigned a part more than once.");
       pieceSteps.set(id, phase.id);
     }
-    if (stage === lastWaterStage) addWaterPhase();
+    if (original === lastWaterStage) addWaterPhase();
   }
   for (const review of hingeReviewCache)
     if (!addedHinges.has(review.plan.id)) addHingePhase(review);
   if (!lastWaterStage && project.waterRuns?.length) addWaterPhase();
+  for (const review of topPlateReviews) {
+    addPhase(`Air-seal ${review.title}`.slice(0, 120),
+      review.problem || "Apply the bead on the marked plate face. Keep it continuous as you hang the adjoining drywall.",
+      { kind: "top-plate-air-seal", planId: review.record.id }, { plan: review.record, layout: review.layout?.signature });
+  }
+  if (drywallIds.size) {
+    const memberIds = [...drywallIds];
+    const phase = addPhase("Hang drywall at the top plates",
+      "Check that the marked beads are intact as the panels are fitted. Verify panel orientation, supported seams and fastening in the field.",
+      { kind: "assembly-stage", planId: project.id, stageKey: "drywall-after-top-plate-sealing", memberIds },
+      memberIds);
+    for (const id of drywallIds) pieceSteps.set(id, phase.id);
+  }
   const active = project.pieces.filter((p) => !p.offcut);
   if (
     pieceSteps.size !== active.length ||

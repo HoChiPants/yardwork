@@ -3,6 +3,7 @@ import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorAdhesive } from "./subfloorReference";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
+import { topPlateSealReviews } from "./topPlateSeal";
 import { bottomPlateSealant, quartCartridgeGun } from "./bottomPlateSealReference";
 import { openingSilicone } from "./openingAirSealReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
@@ -479,7 +480,7 @@ export function toolChecklist(
   }
   for (const id of subfloorHandNails)
     add("drive-nail", { kind: "piece", id, reason: "Hand-drive the reviewed 8C1 common nails during sheet installation." });
-  for (const { record, problem, title } of bottomPlateSealReviews(project)) {
+  for (const { record, problem, title } of [...bottomPlateSealReviews(project), ...topPlateSealReviews(project)]) {
     if (!problem) add("apply-quart-sealant", { kind: "piece", id: record.plateId, reason: title });
   }
   for (const { panelId, planCurrent } of subfloorAdhesiveReviews(project)) {

@@ -7,3 +7,7 @@ This optional demo contains invented measurement inputs for testing the software
 ## Cabinet drawer and door-stop practice
 
 Import the [editable cabinet](fixed-stop-drawer.yardwork.json) and open **Test movement**. Ask **“Can my drawer extend 12.5 in with the door at 35°?”** to see where the door blocks the drawer. At that stop, the modeled route clears 5⅜ in in both directions. The 90° test shows the door reaching the example's measured aisle edge. The build guide also carries the 18 in crosscut and 2 in rip that turn a plywood offcut into the left mounting spacer.
+
+## Drawer slide spacer practice
+
+Import the [cabinet with the spacer redesign](drawer-slide-spacers.yardwork.json). Two layers on the left shift the drawer away from the door while keeping the slide gaps at the fixed mounting faces. Play the saved test on **Inset drawer**. Its guide includes the verified 35° door stop, the 5 in drawer extension and the cut order for the spacer made from an on-hand scrap.

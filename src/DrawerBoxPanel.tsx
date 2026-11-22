@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { DrawerBoxDoorTrial } from "./DrawerBoxDoorTrial";
 import {
   defaultDrawerSideGap,
   drawerBoxOpening,
@@ -6,13 +7,14 @@ import {
   drawerBoxStock,
   drawerCabinetPanels,
   previewDrawerBox,
+  type DrawerSpacerLayers,
 } from "./drawerBoxes";
 import { drawerSlideProducts, type DrawerSlideProductId } from "./drawerSlideReference";
 import { LengthInput } from "./LengthInput";
 import { formatPreciseInches, formatStockLength } from "./measurement";
-import type { MotionPreview } from "./mechanismMotion";
+import { saveMotionTestSetup, type MotionPreview } from "./mechanismMotion";
 import { material, type MaterialId, type Project } from "./model";
-import type { MotionPlan } from "./motionPlanSchema";
+import type { MotionPlan, MotionTestSetup } from "./motionPlanSchema";
 import { OffcutReusePlanDetails } from "./OffcutReuseReview";
 import { partLabel } from "./partLabels";
 import { previewProposalStock } from "./proposalStock";
@@ -25,9 +27,10 @@ const describeDirection = (direction: [number, number, number]) =>
       : direction[2] > 0 ? "+Z" : "−Z"
     : `X ${Number(direction[0].toFixed(2))}, Z ${Number(direction[2].toFixed(2))}`;
 
-export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCancel }: {
+export function DrawerBoxPanel({ project, initialPanels, initialSpacers, onPreview, onSave, onCancel }: {
   project: Project;
   initialPanels: readonly string[];
+  initialSpacers?: DrawerSpacerLayers;
   onPreview: (pose: MotionPreview | null) => void;
   onSave: (project: Project, plan: MotionPlan) => void;
   onCancel: () => void;
@@ -42,6 +45,8 @@ export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCa
   const [bottomOffset, setBottomOffset] = useState(0.25);
   const [height, setHeight] = useState(4);
   const [sideGap, setSideGap] = useState(defaultDrawerSideGap);
+  const [leftLayers, setLeftLayers] = useState(initialSpacers?.left ?? 0);
+  const [rightLayers, setRightLayers] = useState(initialSpacers?.right ?? 0);
   const [frontInset, setFrontInset] = useState(0);
   const [rearGap, setRearGap] = useState(0.125);
   const [finishFront, setFinishFront] = useState(false);
@@ -50,6 +55,7 @@ export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCa
   const [depth, setDepth] = useState<number | null>(null);
   const [preview, setPreview] = useState<{ source: Project; value: ReturnType<typeof previewDrawerBox> }>();
   const [reuse, setReuse] = useState<ReturnType<typeof previewProposalStock>>();
+  const [doorSetup, setDoorSetup] = useState<MotionTestSetup>();
   const [error, setError] = useState("");
   const value = preview?.source === project ? preview.value : undefined;
   const mount = (() => {
@@ -71,12 +77,13 @@ export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCa
   function resetPreview() {
     setPreview(undefined);
     setReuse(undefined);
+    setDoorSetup(undefined);
     setError("");
     onPreview(null);
   }
 
-  function show(pose: MotionPreview) {
-    onPreview({ ...pose, label: `${pose.label} preview`, draftGeometry: true });
+  function show(pose: MotionPreview, spacers = value?.spacers ?? []) {
+    onPreview({ ...pose, pieces: [...pose.pieces, ...spacers], label: `${pose.label} preview`, draftGeometry: true });
   }
 
   function reviewBox(event: FormEvent<HTMLFormElement>) {
@@ -87,9 +94,10 @@ export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCa
       const box = previewDrawerBox(project, {
         panelIds: [first, second], reverse, label, stockId, bottomOffset, height, sideGap,
         frontInset, rearGap, finishFront, reveal, slideId: slide.productId, depth: fittedDepth,
+        spacers: { left: leftLayers, right: rightLayers },
       });
       setPreview({ source: project, value: box });
-      show(box.closed);
+      show(box.closed, box.spacers);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not preview the drawer.");
     }
@@ -146,6 +154,16 @@ export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCa
               </label>
               {finishFront && <LengthInput label="Finished front side reveal" min={0} value={reveal} onChange={setReveal} />}
             </details>
+            <details className="field-section">
+              <summary>Drawer slide spacers</summary>
+              <p className="small-note">Each fixed layer uses {formatPreciseInches(Math.min(...material(stockId).size))} plywood. Add layers to either cabinet side to shift the drawer opening.</p>
+              <label className="field">Left spacer layers
+                <input type="number" min={0} step={1} value={leftLayers} onChange={(e) => setLeftLayers(Number(e.target.value))} />
+              </label>
+              <label className="field">Right spacer layers
+                <input type="number" min={0} step={1} value={rightLayers} onChange={(e) => setRightLayers(Number(e.target.value))} />
+              </label>
+            </details>
             <label className="field">Slide pair
               <select value={slideId} onChange={(e) => {
                 setSlideId(e.target.value as typeof slideId);
@@ -177,6 +195,12 @@ export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCa
               <li key={piece.id}>{piece.name} · {orientedStockSize(piece).map(formatStockLength).join(" × ")}</li>
             ))}
           </ul>
+          {value.spacers.length > 0 && <>
+            <h4>Slide spacer cuts</h4>
+            <p className="small-note">{formatPreciseInches(value.railWidth)} between the fixed mounting faces.</p>
+            <ul>{value.spacers.map((piece) =>
+              <li key={piece.id}>{piece.name} · {orientedStockSize(piece).map(formatStockLength).join(" × ")}</li>)}</ul>
+          </>}
           {blockedClosed ? (
             <p role="alert" className="form-error">The closed drawer overlaps modeled parts or exceeds a recorded clearance. Adjust the setup before adding it.</p>
           ) : (
@@ -193,6 +217,11 @@ export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCa
               </button>
             )}
           </div>
+          {!blockedClosed && <DrawerBoxDoorTrial key={value.plan.id} project={value.project} drawer={value.plan}
+            onPreview={show} onSetup={(setup) => {
+              setDoorSetup(setup);
+              if (!setup) show(value.closed);
+            }} />}
           {project.pieces.some(({ offcut }) => offcut) && !blockedClosed && (
             <label className="checkbox-field">
               <input type="checkbox" checked={!!reuse} onChange={(e) => {
@@ -202,13 +231,15 @@ export function DrawerBoxPanel({ project, initialPanels, onPreview, onSave, onCa
                 } catch (cause) {
                   setError(cause instanceof Error ? cause.message : "Could not check the drawer scraps.");
                 }
-              }} /> Use matching scraps for drawer panels
+              }} /> Use matching scraps for drawer panels{value.spacers.length > 0 && " and spacers"}
             </label>
           )}
           {reuse?.plan && <OffcutReusePlanDetails plan={reuse.plan} />}
           <button type="button" className="button primary" disabled={blockedClosed} onClick={() => {
             try {
-              onSave(reuse?.project ?? value.project, value.plan);
+              const candidate = reuse?.project ?? value.project;
+              const prepared = doorSetup ? saveMotionTestSetup(candidate, value.plan.id, doorSetup) : candidate;
+              onSave(prepared, prepared.motionPlans!.find(({ id }) => id === value.plan.id)!);
             } catch (cause) {
               setError(cause instanceof Error ? cause.message : "Could not add the drawer.");
             }

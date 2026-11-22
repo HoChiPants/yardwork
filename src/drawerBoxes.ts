@@ -1,10 +1,13 @@
 import { drawerSlideProducts, drawerSlideReference, type DrawerSlideProductId } from "./drawerSlideReference";
 import { rectangularDrawerPanelBounds, reviewDrawerSlide } from "./drawerSlides";
+import { bounds } from "./engine";
 import { pureBondCasework } from "./homeDepotCaseworkReference";
 import { formatPreciseInches } from "./measurement";
-import { material, part, step, type MaterialId, type Piece, type Project, type V3 } from "./model";
+import { isHardware, material, maxProjectPieces, part, step, type MaterialId, type Piece, type Project, type V3 } from "./model";
 import { reviewMotion, saveMotionPlan } from "./mechanismMotion";
 import { createSection } from "./sections";
+import { gapToSiteFace, siteClearanceFacesByPart, siteClearanceTolerance, worldClearanceShape } from "./siteClearance";
+import { pieceOverlap } from "./solidCollision";
 import { rotate } from "./spatial";
 
 const epsilon = 1e-7;
@@ -81,6 +84,8 @@ export function drawerBoxSlideChoices(opening: Opening, frontInset: number, rear
   };
 }
 
+export type DrawerSpacerLayers = { left: number; right: number };
+
 export type DrawerBoxInput = {
   panelIds: [string, string];
   reverse: boolean;
@@ -95,7 +100,35 @@ export type DrawerBoxInput = {
   reveal: number;
   depth: number;
   slideId: DrawerSlideProductId;
+  spacers?: DrawerSpacerLayers;
 };
+
+function checkSpacerPlacement(project: Project, spacers: readonly Piece[]) {
+  if (!spacers.length) return;
+  const fixed = project.pieces.filter((piece) => !piece.offcut && !isHardware(piece.material))
+    .map((piece) => ({ piece, box: bounds(piece) }));
+  const site = siteClearanceFacesByPart({ ...project, pieces: [...project.pieces, ...spacers] });
+  const zone = project.workZone;
+  const contactTolerance = 0.01;
+  for (const spacer of spacers) {
+    const box = bounds(spacer);
+    const obstacle = fixed.find((other) =>
+      box.min.every((low, axis) => Math.min(box.max[axis], other.box.max[axis]) -
+        Math.max(low, other.box.min[axis]) > contactTolerance) &&
+      pieceOverlap(spacer, other.piece, contactTolerance) !== false);
+    if (obstacle) throw Error(`${spacer.name} conflicts with ${obstacle.piece.name}.`);
+    if (zone && (box.min[0] < -zone.width / 2 - contactTolerance || box.max[0] > zone.width / 2 + contactTolerance ||
+      box.min[1] < -contactTolerance || box.max[1] > zone.height + contactTolerance ||
+      box.min[2] < -zone.depth / 2 - contactTolerance || box.max[2] > zone.depth / 2 + contactTolerance))
+      throw Error(`${spacer.name} extends outside the work zone.`);
+    const shape = worldClearanceShape(spacer);
+    for (const face of site.get(spacer.id) ?? []) {
+      const gap = gapToSiteFace(shape, face);
+      if (gap !== null && gap < face.minimum - siteClearanceTolerance)
+        throw Error(`${spacer.name} conflicts with ${face.label}.`);
+    }
+  }
+}
 
 export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   const {
@@ -115,10 +148,19 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   const t = Math.min(...material(stockId).size);
   if (height - t < reference.height - epsilon)
     throw Error(`Allow ${formatPreciseInches(reference.height)} of vertical mounting space above the drawer bottom.`);
-  const width = opening.width - 2 * sideGap;
+  const { left: leftLayers, right: rightLayers } = input.spacers ?? { left: 0, right: 0 };
+  if (![leftLayers, rightLayers].every((count) => Number.isSafeInteger(count) && count >= 0))
+    throw Error("Enter whole spacer layers of zero or more on each side.");
+  const leftSpacer = leftLayers * t;
+  const rightSpacer = rightLayers * t;
+  const railWidth = opening.width - leftSpacer - rightSpacer;
+  const railCenter = opening.center + (leftSpacer - rightSpacer) / 2;
+  const width = railWidth - 2 * sideGap;
   if (width > reference.maxDrawerWidth + epsilon)
     throw Error(`This slide reference covers drawer boxes up to ${reference.maxDrawerWidth} in wide. Check the chosen opening or use another documented slide setup.`);
-  if (width <= 2 * t + epsilon) throw Error("The opening is too narrow for these drawer walls and slide gaps.");
+  if (width <= 2 * t + epsilon) throw Error("The opening is too narrow for the spacers, drawer walls and slide gaps.");
+  if (project.pieces.length + leftLayers + rightLayers + (finishFront ? 6 : 5) > maxProjectPieces)
+    throw Error("The drawer and spacers would exceed the project part limit.");
   const choices = drawerBoxSlideChoices(opening, frontInset, rearGap, finishFront ? t : 0);
   if (depth > choices.depth + epsilon)
     throw Error(`This cabinet leaves ${formatPreciseInches(choices.depth)} of box depth at the entered front and rear clearances.`);
@@ -127,7 +169,7 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   const low = opening.bottom + bottomOffset;
   if (low + height > opening.top + epsilon)
     throw Error("The drawer exceeds the selected cabinet panels' common height at this elevation.");
-  if (finishFront && opening.width <= 2 * reveal + epsilon)
+  if (finishFront && railWidth <= 2 * reveal + epsilon)
     throw Error("The two finished-front reveals leave no panel width.");
 
   const cabinetFront = opening.front - frontInset;
@@ -154,19 +196,33 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
     ...part(`${label} · ${role}`, stockId, size, position(x, y, z), buildStep.id, label, rotation),
     stockLengthAxis: grain,
   });
-  const boxLeft = add("left side", [t, height - t, depth], opening.center - (width - t) / 2, midY, midZ, 2);
-  const boxRight = add("right side", [t, height - t, depth], opening.center + (width - t) / 2, midY, midZ, 2);
+  const boxLeft = add("left side", [t, height - t, depth], railCenter - (width - t) / 2, midY, midZ, 2);
+  const boxRight = add("right side", [t, height - t, depth], railCenter + (width - t) / 2, midY, midZ, 2);
   const pieces = [
     boxLeft, boxRight,
-    add("box front", [inner, height - t, t], opening.center, midY, boxFront - t / 2, 0),
-    add("box back", [inner, height - t, t], opening.center, midY, boxBack + t / 2, 0),
-    add("bottom", [width, t, depth], opening.center, low + t / 2, midZ, 2),
-    ...(finishFront ? [add("finished front", [opening.width - 2 * reveal, height, t],
-      opening.center, low + height / 2, cabinetFront - t / 2, 0)] : []),
+    add("box front", [inner, height - t, t], railCenter, midY, boxFront - t / 2, 0),
+    add("box back", [inner, height - t, t], railCenter, midY, boxBack + t / 2, 0),
+    add("bottom", [width, t, depth], railCenter, low + t / 2, midZ, 2),
+    ...(finishFront ? [add("finished front", [railWidth - 2 * reveal, height, t],
+      railCenter, low + height / 2, cabinetFront - t / 2, 0)] : []),
   ];
+  const spacerStep = step(`${label} · Cut and fit drawer slide spacers`,
+    "Dry-fit the fixed plywood layers flat against the cabinet sides before mounting the slides. Check support and fastener reach at both inner mounting faces.");
+  const spacerHeight = Math.max(reference.height, Math.min(2, height - t));
+  const makeSpacers = (side: "left" | "right", count: number, sign: 1 | -1) =>
+    Array.from({ length: count }, (_, index) => ({
+      ...add(`${side} spacer ${index + 1}`, [t, spacerHeight, depth],
+        opening.center + sign * ((index + 0.5) * t - opening.width / 2), midY, midZ, 2),
+      stepId: spacerStep.id,
+    }));
+  const leftSpacers = makeSpacers("left", leftLayers, 1);
+  const rightSpacers = makeSpacers("right", rightLayers, -1);
+  const spacers = [...leftSpacers, ...rightSpacers];
+  checkSpacerPlacement(project, spacers);
   const memberIds = pieces.map(({ id }) => id);
   const section = createSection({
-    ...project, pieces: [...project.pieces, ...pieces], steps: [...project.steps, buildStep], guideFingerprint: null,
+    ...project, pieces: [...project.pieces, ...spacers, ...pieces],
+    steps: [...project.steps, ...(spacers.length ? [spacerStep] : []), buildStep], guideFingerprint: null,
   }, memberIds, label);
   const candidate = saveMotionPlan(section.project, {
     label,
@@ -174,8 +230,8 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
     mechanism: {
       kind: "slide", axis: opening.frontAxis, travel: reference.travel,
       drawerSlide: {
-        productId: slideId, cabinetLeft: opening.panelIds[0], drawerLeft: boxLeft.id,
-        drawerRight: boxRight.id, cabinetRight: opening.panelIds[1],
+        productId: slideId, cabinetLeft: leftSpacers.at(-1)?.id ?? opening.panelIds[0], drawerLeft: boxLeft.id,
+        drawerRight: boxRight.id, cabinetRight: rightSpacers.at(-1)?.id ?? opening.panelIds[1],
       },
     },
   });
@@ -183,7 +239,7 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   if (!fit?.ready) throw Error(fit?.rows.find(({ matches }) => !matches)?.detail ?? "The selected slide does not fit this box.");
   const review = reviewMotion(candidate.project, candidate.plan);
   return {
-    ...candidate, width, height, depth, pieces, reference, review,
+    ...candidate, width, height, depth, railWidth, pieces, spacers, reference, review,
     closed: review.preview(0),
   };
 }

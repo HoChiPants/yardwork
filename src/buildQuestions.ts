@@ -4,7 +4,7 @@ import { topPlateSealReviews, topPlateSealScope } from "./topPlateSeal";
 import { openingAirSealSummary } from "./openingAirSeal";
 import type { BuildPreparationAction } from "./buildPreparation";
 import { inspectCutStock, type Finding } from "./engine";
-import { drawerBoxOpening } from "./drawerBoxes";
+import { drawerBoxOpening, type DrawerSpacerLayers } from "./drawerBoxes";
 import { parseDrawerStopAngles, type DrawerStopRequest } from "./drawerOpening";
 import { checkGreenhouseDoorSeal, reviewGreenhouseDoorSeal } from "./greenhouseDoorSeal";
 import { formatPreciseInches, formatStockLength } from "./measurement";
@@ -60,7 +60,7 @@ export type BuildQuestion =
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
-  | { kind: "drawer-box"; labels: [string, string] }
+  | { kind: "drawer-box"; labels: [string, string]; spacers?: DrawerSpacerLayers }
   | { kind: "board-offcut"; length: number; nominal: string; treated: boolean; offcutLabel?: string }
   | { kind: "offcuts"; label?: string };
 
@@ -85,7 +85,7 @@ export type BuildQuestionAction =
   | { kind: "roof-valley" }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
-  | { kind: "drawer-box"; panelIds: [string, string] }
+  | { kind: "drawer-box"; panelIds: [string, string]; spacers?: DrawerSpacerLayers }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
   | { kind: "board-placement"; groupId: string; length: number; offcutId?: string }
@@ -140,7 +140,7 @@ const boardOffcutSize =
   /^(.+?)\s+(?:(pressure[- ]treated|treated)\s+)?(\d{1,2})\s*(?:[x×]|by)\s*(\d{1,2})(?:\s+(?:board|post|framing lumber))?$/i;
 const boardFeet = /^(\d+(?:\.\d+)?)\s*(?:feet|foot|ft|['′])(?:\s*(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″]))?$/i;
 const boardInches = /^(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″])$/i;
-const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (p\d{1,6}) and (p\d{1,6})$/i;
+const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (?<first>p\d{1,6}) and (?<second>p\d{1,6})(?: with (?:(?<left>\d+) left spacer layers?(?: and (?<bothRight>\d+) right spacer layers?)?|(?<right>\d+) right spacer layers?))?$/i;
 const drawerOpeningQuestion = /^(?:how (?:far|wide) (?:do|should|can|must) i open (?:the |my )?(?:cabinet )?door (?:before (?:opening|pulling out|extending) (?:the |my )?drawer|(?:for|to clear) (?:the |my )?drawer)|(?:find|check|test) (?:a |the )?door opening (?:for|to clear) (?:the |my )?drawer)$/i;
 const drawerStopQuestion = /^will (?:an? |the )?(?<angle>\d+(?:\.\d+)?)\s*(?:°|degrees?)[ -](?:cabinet )?door stop (?:let|allow) (?:the |my )?drawer (?:open|extend)(?: (?:to )?(?<length>.+))?$/i;
 const drawerTravelAtStopQuestion = /^(?:can|will) (?:the |my )?(?:cabinet )?drawer (?:open|extend)(?: (?:to )?(?<length>.+?))? (?:with|if) (?:the |my )?(?:cabinet )?door (?:is )?(?:at|stops at|limited to) (?<angle>\d+(?:\.\d+)?)\s*(?:°|degrees?)$/i;
@@ -192,8 +192,12 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
     if (extension === undefined || (Number.isFinite(extension) && extension > 0))
       return { kind: "drawer-opening", stop: { angle: Number(stop.angle), ...(extension !== undefined && { extension }) } };
   }
-  const drawer = drawerQuestion.exec(text);
-  if (drawer) return { kind: "drawer-box", labels: [labelKey(drawer[1]), labelKey(drawer[2])] };
+  const drawer = drawerQuestion.exec(stopText)?.groups;
+  if (drawer) {
+    const right = drawer.bothRight ?? drawer.right;
+    return { kind: "drawer-box", labels: [labelKey(drawer.first), labelKey(drawer.second)],
+      ...((drawer.left || right) && { spacers: { left: Number(drawer.left ?? 0), right: Number(right ?? 0) } }) };
+  }
   const scrap = scrapQuestion.exec(text);
   if (scrap)
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
@@ -851,7 +855,9 @@ export function answerBuildQuestion(
         return {
           title,
           detail: `${question.labels.join(" and ")} give a ${formatPreciseInches(opening.width)} wide opening with ${formatPreciseInches(opening.front - opening.back)} of common depth.`,
-          link: { label: "Open drawer setup", action: { kind: "drawer-box", panelIds } },
+          link: { label: "Open drawer setup", action: {
+            kind: "drawer-box", panelIds, ...(question.spacers && { spacers: question.spacers }),
+          } },
         };
       } catch (issue) {
         return { title, detail: issue instanceof Error ? issue.message : "Review both cabinet sides." };

@@ -1,0 +1,796 @@
+{
+  "schemaVersion": 123,
+  "id": "57f65eb6-e598-443e-96ae-061e35b15fc4",
+  "name": "Cabinet drawer with left slide spacers",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "68809edf-daa7-41d2-935a-55ccc8221814"
+  ],
+  "motionPlans": [
+    {
+      "label": "Cabinet door",
+      "memberIds": [
+        "06625167-9420-428f-a2b8-129276db5ce6"
+      ],
+      "mechanism": {
+        "kind": "hinge",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "pivot": [
+          -8.125,
+          0,
+          0
+        ],
+        "travel": 90
+      },
+      "id": "efc78824-93b8-441a-a682-9bbdedf2b381"
+    },
+    {
+      "label": "Inset drawer",
+      "memberIds": [
+        "28c3f8bc-7019-4cfd-94a8-25cf8fdff04a",
+        "3ffd692e-f5ca-45e7-ac44-9b755643b4a5",
+        "a2566bc4-ec28-473a-b8ae-3750e2e3a310",
+        "3d26ec22-e3bf-4013-9f73-72f8f5de43ad",
+        "1960e412-6691-4a45-b006-4618a767c523"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "travel": 18,
+        "drawerSlide": {
+          "productId": "accuride-t46322g18",
+          "cabinetLeft": "91b1926c-7cce-450f-92f4-639369b0a8b1",
+          "drawerLeft": "28c3f8bc-7019-4cfd-94a8-25cf8fdff04a",
+          "drawerRight": "3ffd692e-f5ca-45e7-ac44-9b755643b4a5",
+          "cabinetRight": "87561df1-d3ef-4b88-9ebb-bc5cff42ec7b"
+        }
+      },
+      "id": "c27b8689-efb9-4978-8cae-8639e19670c4",
+      "testSetup": {
+        "linkedId": "efc78824-93b8-441a-a682-9bbdedf2b381",
+        "openingOrder": "companion-first",
+        "sequenceTargets": {
+          "selected": {
+            "kind": "slide",
+            "travel": 5
+          },
+          "companion": {
+            "kind": "hinge",
+            "travel": 35
+          }
+        },
+        "held": []
+      }
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "eab836cf-ee77-4ef2-b53d-e6b25ab7b8b8",
+      "label": "P001"
+    },
+    {
+      "partId": "87561df1-d3ef-4b88-9ebb-bc5cff42ec7b",
+      "label": "P002"
+    },
+    {
+      "partId": "06625167-9420-428f-a2b8-129276db5ce6",
+      "label": "P003"
+    },
+    {
+      "partId": "5a4ef264-b884-4f95-9ee8-3fe7bc01e407",
+      "label": "P004"
+    },
+    {
+      "partId": "93daddb7-ad2a-4c36-a6aa-8de640b7e10f",
+      "label": "P005"
+    },
+    {
+      "partId": "4a401bdd-6706-49d6-9379-f37ed72f091d",
+      "label": "P006"
+    },
+    {
+      "partId": "16b37853-a339-461d-9426-8f3568e7d642",
+      "label": "O001"
+    },
+    {
+      "partId": "4d344b5b-4597-43cf-b05c-32097e30c52f",
+      "label": "P007"
+    },
+    {
+      "partId": "91b1926c-7cce-450f-92f4-639369b0a8b1",
+      "label": "P008"
+    },
+    {
+      "partId": "28c3f8bc-7019-4cfd-94a8-25cf8fdff04a",
+      "label": "P009"
+    },
+    {
+      "partId": "3ffd692e-f5ca-45e7-ac44-9b755643b4a5",
+      "label": "P010"
+    },
+    {
+      "partId": "a2566bc4-ec28-473a-b8ae-3750e2e3a310",
+      "label": "P011"
+    },
+    {
+      "partId": "3d26ec22-e3bf-4013-9f73-72f8f5de43ad",
+      "label": "P012"
+    },
+    {
+      "partId": "1960e412-6691-4a45-b006-4618a767c523",
+      "label": "P013"
+    },
+    {
+      "partId": "d43fa20d-5101-40bf-94d9-9c326962ab6f",
+      "label": "O002"
+    },
+    {
+      "partId": "48f2245c-bac3-45a7-ac77-2e2bfd5dad51",
+      "label": "O003"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T04:34:12.049Z",
+  "pieces": [
+    {
+      "id": "eab836cf-ee77-4ef2-b53d-e6b25ab7b8b8",
+      "name": "Left cabinet wall",
+      "material": "plywood",
+      "size": [
+        0.75,
+        30,
+        24
+      ],
+      "position": [
+        -8.375,
+        15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113b0ab2-b958-4112-bce3-bff914edc11a",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "87561df1-d3ef-4b88-9ebb-bc5cff42ec7b",
+      "name": "Right cabinet wall",
+      "material": "plywood",
+      "size": [
+        0.75,
+        30,
+        24
+      ],
+      "position": [
+        8.375,
+        15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113b0ab2-b958-4112-bce3-bff914edc11a",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "06625167-9420-428f-a2b8-129276db5ce6",
+      "name": "Cabinet door",
+      "material": "plywood",
+      "size": [
+        16.25,
+        28,
+        0.75
+      ],
+      "position": [
+        0,
+        15,
+        12.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113b0ab2-b958-4112-bce3-bff914edc11a",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "5a4ef264-b884-4f95-9ee8-3fe7bc01e407",
+      "name": "Cabinet bottom",
+      "material": "plywood",
+      "size": [
+        16,
+        0.75,
+        24
+      ],
+      "position": [
+        0,
+        0.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113b0ab2-b958-4112-bce3-bff914edc11a",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "93daddb7-ad2a-4c36-a6aa-8de640b7e10f",
+      "name": "Cabinet top",
+      "material": "plywood",
+      "size": [
+        16,
+        0.75,
+        24
+      ],
+      "position": [
+        0,
+        29.625,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113b0ab2-b958-4112-bce3-bff914edc11a",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4a401bdd-6706-49d6-9379-f37ed72f091d",
+      "name": "Cabinet back",
+      "material": "plywood-half",
+      "size": [
+        16,
+        28.5,
+        0.46875
+      ],
+      "position": [
+        0,
+        15,
+        -11.765625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "113b0ab2-b958-4112-bce3-bff914edc11a",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4d344b5b-4597-43cf-b05c-32097e30c52f",
+      "name": "Inset drawer · left spacer 1",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        2,
+        18
+      ],
+      "position": [
+        -7.6485,
+        7.3515,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "21dacb27-2e91-4d84-8668-828cf568f7dd",
+      "assembly": "Inset drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "68809edf-daa7-41d2-935a-55ccc8221814",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.703,
+          3,
+          22
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "91b1926c-7cce-450f-92f4-639369b0a8b1",
+      "name": "Inset drawer · left spacer 2",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        2,
+        18
+      ],
+      "position": [
+        -6.9455,
+        7.3515,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "21dacb27-2e91-4d84-8668-828cf568f7dd",
+      "assembly": "Inset drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "28c3f8bc-7019-4cfd-94a8-25cf8fdff04a",
+      "name": "Inset drawer · left side",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        3.297,
+        18
+      ],
+      "position": [
+        -5.726875,
+        7.3515,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "792b92a7-9d80-4d14-97ee-f3e35d594be8",
+      "assembly": "Inset drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "3ffd692e-f5ca-45e7-ac44-9b755643b4a5",
+      "name": "Inset drawer · right side",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        3.297,
+        18
+      ],
+      "position": [
+        7.132875,
+        7.3515,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "792b92a7-9d80-4d14-97ee-f3e35d594be8",
+      "assembly": "Inset drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "a2566bc4-ec28-473a-b8ae-3750e2e3a310",
+      "name": "Inset drawer · box front",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        12.156749999999999,
+        3.297,
+        0.703
+      ],
+      "position": [
+        0.703,
+        7.3515,
+        7.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "792b92a7-9d80-4d14-97ee-f3e35d594be8",
+      "assembly": "Inset drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "3d26ec22-e3bf-4013-9f73-72f8f5de43ad",
+      "name": "Inset drawer · box back",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        12.156749999999999,
+        3.297,
+        0.703
+      ],
+      "position": [
+        0.703,
+        7.3515,
+        -9.6485
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "792b92a7-9d80-4d14-97ee-f3e35d594be8",
+      "assembly": "Inset drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "1960e412-6691-4a45-b006-4618a767c523",
+      "name": "Inset drawer · bottom",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        13.56275,
+        0.703,
+        18
+      ],
+      "position": [
+        0.703,
+        5.3515,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "792b92a7-9d80-4d14-97ee-f3e35d594be8",
+      "assembly": "Inset drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "d43fa20d-5101-40bf-94d9-9c326962ab6f",
+      "name": "Offcut · On-hand spacer strip",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        3,
+        0.703,
+        3.875
+      ],
+      "position": [
+        0,
+        0.3515,
+        9.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9dc0ff55-1546-4455-9a8d-68ea9a97feb3",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "68809edf-daa7-41d2-935a-55ccc8221814",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3,
+          0.703,
+          22
+        ],
+        "offset": [
+          0,
+          0,
+          18.125
+        ]
+      }
+    },
+    {
+      "id": "48f2245c-bac3-45a7-ac77-2e2bfd5dad51",
+      "name": "Offcut · On-hand spacer strip",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.875,
+        0.703,
+        18
+      ],
+      "position": [
+        1.0625,
+        0.3515,
+        -2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9dc0ff55-1546-4455-9a8d-68ea9a97feb3",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "68809edf-daa7-41d2-935a-55ccc8221814",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3,
+          0.703,
+          22
+        ],
+        "offset": [
+          2.125,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "9dc0ff55-1546-4455-9a8d-68ea9a97feb3",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "57f65eb6-e598-443e-96ae-061e35b15fc4",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-d3467f11",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "8f6859f4-66a6-448b-bda0-82ad3e5d265b",
+      "title": "Inset drawer · Cut and fit",
+      "notes": "Dry-fit the five panels square with the front and back between the sides and the bottom under the walls. Confirm the 0.51563 in side gap on each side against the delivered slides. Check mounting faces, screw length and bottom attachment before drilling. Check the installed rail positions, drawer load, and opening and closing clearance with the handle and surrounding trim.",
+      "complete": false
+    },
+    {
+      "id": "792b92a7-9d80-4d14-97ee-f3e35d594be8",
+      "title": "Assemble Inset drawer",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "1f8cd6ea-78e9-4ce2-916b-a34618e732a1",
+        "stageKey": "section",
+        "memberIds": [
+          "1960e412-6691-4a45-b006-4618a767c523",
+          "28c3f8bc-7019-4cfd-94a8-25cf8fdff04a",
+          "3d26ec22-e3bf-4013-9f73-72f8f5de43ad",
+          "3ffd692e-f5ca-45e7-ac44-9b755643b4a5",
+          "a2566bc4-ec28-473a-b8ae-3750e2e3a310"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-ae436bbd",
+        "title": "Assemble Inset drawer"
+      }
+    },
+    {
+      "id": "113b0ab2-b958-4112-bce3-bff914edc11a",
+      "title": "Assemble Cabinet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "57f65eb6-e598-443e-96ae-061e35b15fc4",
+        "stageKey": "assembly:Cabinet",
+        "memberIds": [
+          "06625167-9420-428f-a2b8-129276db5ce6",
+          "4a401bdd-6706-49d6-9379-f37ed72f091d",
+          "5a4ef264-b884-4f95-9ee8-3fe7bc01e407",
+          "87561df1-d3ef-4b88-9ebb-bc5cff42ec7b",
+          "93daddb7-ad2a-4c36-a6aa-8de640b7e10f",
+          "eab836cf-ee77-4ef2-b53d-e6b25ab7b8b8"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-6c0d3d0",
+        "title": "Assemble Cabinet"
+      }
+    },
+    {
+      "id": "50631b27-4c55-4713-ad16-72467eb6564e",
+      "title": "Inset drawer · Cut and fit drawer slide spacers",
+      "notes": "Dry-fit the fixed plywood layers flat against the cabinet sides before mounting the slides. Check support and fastener reach at both inner mounting faces.",
+      "complete": false
+    },
+    {
+      "id": "21dacb27-2e91-4d84-8668-828cf568f7dd",
+      "title": "Assemble Inset drawer",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "57f65eb6-e598-443e-96ae-061e35b15fc4",
+        "stageKey": "assembly:Inset drawer",
+        "memberIds": [
+          "4d344b5b-4597-43cf-b05c-32097e30c52f",
+          "91b1926c-7cce-450f-92f4-639369b0a8b1"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-88c19682",
+        "title": "Assemble Inset drawer"
+      }
+    },
+    {
+      "id": "f242788b-a891-49a4-9ff3-cc9bf7fd6b68",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "57f65eb6-e598-443e-96ae-061e35b15fc4",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-b7de14a1",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [
+    {
+      "id": "1f8cd6ea-78e9-4ce2-916b-a34618e732a1",
+      "name": "Inset drawer",
+      "pieceIds": [
+        "28c3f8bc-7019-4cfd-94a8-25cf8fdff04a",
+        "3ffd692e-f5ca-45e7-ac44-9b755643b4a5",
+        "a2566bc4-ec28-473a-b8ae-3750e2e3a310",
+        "3d26ec22-e3bf-4013-9f73-72f8f5de43ad",
+        "1960e412-6691-4a45-b006-4618a767c523"
+      ],
+      "origin": [
+        0.7030000000000003,
+        7,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-aa3a2dca",
+  "history": [
+    {
+      "id": "da964060-113c-4cac-81b7-2fa309fbb55a",
+      "at": "2026-11-22T04:34:12.076Z",
+      "stepId": "50631b27-4c55-4713-ad16-72467eb6564e",
+      "message": "Assigned O001 · Offcut · On-hand spacer strip to P007 · Inset drawer · left spacer 1.",
+      "offcutCut": {
+        "sourceId": "68809edf-daa7-41d2-935a-55ccc8221814",
+        "inputId": "16b37853-a339-461d-9426-8f3568e7d642",
+        "targetId": "4d344b5b-4597-43cf-b05c-32097e30c52f",
+        "inputSize": [
+          0.703,
+          3,
+          22
+        ],
+        "result": {
+          "size": [
+            0.703,
+            2,
+            18
+          ],
+          "sourceSize": [
+            0.703,
+            3,
+            22
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "inputName": "Offcut · On-hand spacer strip",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 18
+          },
+          {
+            "kind": "rip",
+            "size": 2
+          }
+        ],
+        "remnants": [
+          {
+            "id": "d43fa20d-5101-40bf-94d9-9c326962ab6f",
+            "size": [
+              0.703,
+              3,
+              3.875
+            ]
+          },
+          {
+            "id": "48f2245c-bac3-45a7-ac77-2e2bfd5dad51",
+            "size": [
+              0.703,
+              0.875,
+              18
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

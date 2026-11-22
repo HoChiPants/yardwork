@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
 import { defaultDrawerSideGap, drawerBoxOpening, drawerBoxSlideChoices, previewDrawerBox, type DrawerBoxInput } from "../src/drawerBoxes";
-import { drawerSlideDemand } from "../src/drawerSlides";
+import { drawerSlideDemand, reviewDrawerSlide } from "../src/drawerSlides";
 import { guideMarkdown } from "../src/engine";
-import { generateBuildGuide } from "../src/guide";
+import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
-import { motionSetup } from "../src/mechanismMotion";
+import { motionSetup, runMotionTest } from "../src/mechanismMotion";
 import { blank, part, projectSchema, type V3 } from "../src/model";
 import { previewProposalStock } from "../src/proposalStock";
 import { rotate } from "../src/spatial";
@@ -91,4 +92,57 @@ test("a workspace question selects the exact modeled sides and the drawer can re
   assert.ok(reuse.plan?.assignments.every(({ partId }) => box.plan.memberIds.includes(partId)));
   assert.deepEqual(reuse.project.motionPlans, box.project.motionPlans);
   assert.match(guideMarkdown(reuse.project), /Recorded offcut cut order[\s\S]+Kitchen drawer/);
+});
+
+test("asymmetric spacer layers shift the drawer and provide fixed, stock-sized mounting faces", () => {
+  const { base, input, turn, left, right } = fixture(Math.PI / 3);
+  const withScrap = addMeasuredOffcut(base, base.steps[0].id, input.stockId, [22, 2.25, 0.703], "Narrow plywood strip");
+  const asked = buildQuestion("Plan a drawer between P001 and P002 with two left spacer layers and one right spacer layer")!;
+  assert.deepEqual(answerBuildQuestion(withScrap, asked, []).link?.action, {
+    kind: "drawer-box", panelIds: input.panelIds, spacers: { left: 2, right: 1 },
+  });
+  const candidate = previewDrawerBox(withScrap, { ...input, spacers: { left: 2, right: 1 } });
+  assert.ok(Math.abs(candidate.width - 12.85975) < 1e-7);
+  assert.deepEqual(candidate.spacers.map(({ size }) => size), Array.from({ length: 3 }, () => [0.703, 2, 18]));
+  assert.equal(candidate.plan.memberIds.length, 5);
+  const railFit = reviewDrawerSlide(candidate.project, candidate.plan);
+  assert.equal(railFit?.ready, true);
+  assert.equal(railFit.setup.cabinetLeft, candidate.spacers[1].id);
+  assert.equal(railFit.setup.cabinetRight, candidate.spacers[2].id);
+  const baseline = previewDrawerBox(withScrap, input);
+  const shift = candidate.pieces[4].position.map((n, i) => n - baseline.pieces[4].position[i]);
+  assert.ok(Math.hypot(...shift.map((n, i) => n - rotate([0.3515, 0, 0], turn)[i])) < 1e-7);
+  assert.deepEqual(candidate.closed.interferenceIds, []);
+  assert.deepEqual(withScrap.pieces.slice(0, 2), [left, right]);
+  const reuse = previewProposalStock(withScrap, candidate.project, []);
+  const applied = reuse.plan?.assignments[0];
+  assert.ok(applied && candidate.spacers.some(({ id }) => id === applied.partId));
+  const saved = projectSchema.parse(JSON.parse(JSON.stringify(reuse.project)));
+  const guide = guideMarkdown(generateBuildGuide(saved));
+  assert.match(guide, /Cut and fit drawer slide spacers/);
+  assert.match(guide, /Recorded offcut cut order[\s\S]*spacer/);
+  assert.equal(reviewDrawerSlide(saved, candidate.plan)?.ready, true);
+});
+
+test("spacer blocked by fixed wood or too many layers cannot be added", () => {
+  const { base, input } = fixture();
+  const block = part("Cabinet stop block", "plywood", [0.75, 3, 1], [-7.5, 2.5, 0], base.steps[0].id, "Cabinet");
+  assert.throws(() => previewDrawerBox({ ...base, pieces: [...base.pieces, block] }, {
+    ...input, spacers: { left: 1, right: 0 },
+  }), /spacer 1.*Cabinet stop block/i);
+  assert.throws(() => previewDrawerBox(base, { ...input, spacers: { left: 20, right: 5 } }), /too narrow/i);
+  assert.throws(() => previewDrawerBox(base, { ...input, spacers: { left: 0.5, right: 0 } }), /whole spacer layers/i);
+});
+
+test("the spacer practice plan carries its checked stop and retained scrap dimensions", () => {
+  const example = new URL("../public/examples/hinges/drawer-slide-spacers.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(readFileSync(example, "utf8")));
+  assert.equal(guideIsCurrent(project), true);
+  const drawer = project.motionPlans!.find(({ mechanism }) => mechanism.kind === "slide")!;
+  assert.equal(reviewDrawerSlide(project, drawer)?.ready, true);
+  const { review } = runMotionTest(project, drawer, drawer.testSetup);
+  assert.deepEqual(review?.playbackLimit(0, 100), { travel: 100 });
+  assert.deepEqual(review?.playbackLimit(100, 0), { travel: 0 });
+  assert.equal(project.pieces.filter(({ offcut }) => offcut).length, 2);
+  assert.match(guideMarkdown(project), /Crosscut to 18 in · Rip to 2 in/);
 });

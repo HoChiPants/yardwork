@@ -709,7 +709,11 @@ export function App() {
   const [lidTravelInspection, setLidTravelInspection] = useState<(LidTravelInspection & { project: Project }) | null>(null);
   const [sectionMotionPreview, setSectionMotionPreview] = useState<{ project: Project; value: MotionPreview; target: "bench" | "casework" } | null>(null);
   const [motionPreview, setMotionPreview] = useState<{ project: Project; value: MotionPreview } | null>(null);
-  const [drawerBoxRequest, setDrawerBoxRequest] = useState<{ projectId: string; panelIds: [string, string] } | null>(null);
+  const [drawerBoxRequest, setDrawerBoxRequest] = useState<{
+    projectId: string;
+    panelIds: [string, string];
+    spacers?: Extract<BuildQuestionAction, { kind: "drawer-box" }>["spacers"];
+  } | null>(null);
   const [motionTestSelection, setMotionTestSelection] = useState<(MotionTestSelection & { project: Project }) | null>(null);
   const [clearanceRetest, setClearanceRetest] = useState<{
     projectId: string;
@@ -1388,7 +1392,7 @@ export function App() {
         break;
       }
       case "drawer-box":
-        setDrawerBoxRequest({ projectId: project.id, panelIds: action.panelIds });
+        setDrawerBoxRequest({ projectId: project.id, panelIds: action.panelIds, spacers: action.spacers });
         setRemovalTarget(null);
         setMotionPreview(null);
         setMotionTestSelection(null);

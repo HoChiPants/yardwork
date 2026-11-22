@@ -92,6 +92,7 @@ export const vec = z.tuple([
 ]);
 const id = z.string().uuid();
 export const maxPartDimension = 240;
+export const maxProjectPieces = 2000;
 export const pieceSchema = z
   .object({
     id,
@@ -611,7 +612,7 @@ export const currentProjectSchema = z
     zip: z.string().regex(/^\d{5}$/),
     store: z.string().max(80),
     updatedAt: z.iso.datetime(),
-    pieces: z.array(pieceSchema).max(2000),
+    pieces: z.array(pieceSchema).max(maxProjectPieces),
     steps: z.array(stepSchema).min(1).max(500),
     joints: z.array(jointSchema).max(5000),
     inventory: z.array(storedInventorySchema).max(100),

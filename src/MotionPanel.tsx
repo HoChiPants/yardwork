@@ -3,7 +3,7 @@ import { clearDrawerSlideMount } from "./drawerSlideMounts";
 import { DrawerBoxPanel } from "./DrawerBoxPanel";
 import { DrawerOpeningPanel } from "./DrawerOpeningPanel";
 import { doorAndDrawer } from "./drawerOpening";
-import { drawerCabinetPanels } from "./drawerBoxes";
+import { drawerCabinetPanels, type DrawerSpacerLayers } from "./drawerBoxes";
 import { workshopAsset } from "./workshopTransport";
 import { clearGreenhouseLatch } from "./greenhouseLatch";
 import { GreenhouseLatchPanel } from "./GreenhouseLatchPanel";
@@ -574,7 +574,7 @@ export function MotionPanel({
   selectedIds: string[];
   preview: MotionPreview | null;
   initialTest?: MotionTestSelection;
-  drawerRequest?: { panelIds: [string, string] };
+  drawerRequest?: { panelIds: [string, string]; spacers?: DrawerSpacerLayers };
   onDrawerRequestHandled?: () => void;
   onEditDoorway: (sectionId: string) => void;
   onPreview: (preview: MotionPreview | null, source?: Project) => void;
@@ -588,6 +588,7 @@ export function MotionPanel({
 }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [drawerPanels, setDrawerPanels] = useState<string[]>([]);
+  const [drawerSpacers, setDrawerSpacers] = useState<DrawerSpacerLayers>();
   const [selectedPlanId, setSelectedPlanId] = useState(initialTest?.plan.id ?? "");
   const [scenarioId, setScenarioId] = useState(initialTest?.scenarioId ?? "");
   const [scenarioName, setScenarioName] = useState(() =>
@@ -829,6 +830,7 @@ export function MotionPanel({
   useEffect(() => {
     if (drawerRequest) {
       setDrawerPanels(drawerRequest.panelIds);
+      setDrawerSpacers(drawerRequest.spacers);
       edit("drawer-box-new");
       onDrawerRequestHandled?.();
     }
@@ -865,7 +867,7 @@ export function MotionPanel({
     setScenarioName("");
     setSetupDraft(null);
     setEditing(null);
-    test(plan, saved, 0, null);
+    test(plan, saved, 0, plan.testSetup ?? null);
   }
 
   function saveDraft(draft: MotionPlanInput) {
@@ -1137,7 +1139,8 @@ export function MotionPanel({
         </details>
       )}
       {editing === "drawer-box-new" ? (
-        <DrawerBoxPanel project={project} initialPanels={drawerPanels} onPreview={onPreview}
+        <DrawerBoxPanel key={JSON.stringify([drawerPanels, drawerSpacers])} project={project}
+          initialPanels={drawerPanels} initialSpacers={drawerSpacers} onPreview={onPreview}
           onSave={addDrawer} onCancel={() => edit(null)} />
       ) : saunaEditor ? (
         <SaunaDoorEditor
@@ -1182,6 +1185,7 @@ export function MotionPanel({
           {drawerCabinetPanels(project).length >= 2 && (
             <button type="button" className="button secondary" onClick={() => {
               setDrawerPanels(selectedIds);
+              setDrawerSpacers(undefined);
               edit("drawer-box-new");
             }}>Fit a drawer box</button>
           )}

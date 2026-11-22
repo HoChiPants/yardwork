@@ -70,3 +70,43 @@ test("preview a register conflict and save the clear opening and seal plan on a 
   expect(guide).toContain("https://www.homedepot.com/p/100197347");
   await expect(page.locator(".print-guide")).toContainText("28.5 in modeled perimeter");
 });
+
+test("ask how to reuse a register cutout and record the measured piece in the Cut pool", async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "floor-register.yardwork.json",
+    mimeType: "application/json",
+    buffer: await readFile(new URL("../../public/examples/hvac/floor-register.yardwork.json", import.meta.url)),
+  });
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("What can I do with the floor register cutout?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await expect(dialog).toContainText("scrap backing for a future cut");
+  await dialog.getByRole("button", { name: "Open saved floor register", exact: true }).click();
+  await dialog.getByText("Record recovered cutout", { exact: true }).click();
+  const record = dialog.getByRole("button", { name: "Add cutout to Cut pool" });
+  await expect(record).toBeDisabled();
+  await dialog.getByRole("spinbutton", { name: "Usable cutout along X" }).fill("9.75");
+  await dialog.getByRole("spinbutton", { name: "Usable cutout along Z" }).fill("3.875");
+  await dialog.getByRole("spinbutton", { name: "Cutout thickness" }).fill("0.703");
+  await page.screenshot({ path: info.outputPath("floor-register-cutout-phone.png") });
+  await record.click();
+  const pool = page.getByRole("region", { name: "Cut pool", exact: true });
+  await expect(pool).toContainText("O001 · Reusable offcut");
+  await expect(pool).toContainText("Floor register cutout");
+
+  await page.getByRole("button", { name: "Plan floor register", exact: true }).click();
+  await expect(dialog).toContainText("Recorded cutout · 9.75 in × 3.875 in × 0.703 in");
+  await expect(dialog.getByText("Record recovered cutout", { exact: true })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Recorded cutout · 9.75 in × 3.875 in × 0.703 in. See O001 in the Cut pool.");
+});

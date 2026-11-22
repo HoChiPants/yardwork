@@ -154,6 +154,7 @@ Measure the delivered throat, boot and outlet envelope. Check the boot supports,
 
 - P001 · 10.25 in × 4.25 in opening. Start 10 in from the low X edge and 21 in from the low Z edge.
 - Dry-fit the measured boot and secure it to framing. Then seal the 28.5 in modeled perimeter. Review a compatible bead of sealant or mastic along all four sides.
+- Keep an intact cutout for a tool test or as scrap backing for a future cut. Measure the usable rectangle after cutting, then record it in the Cut pool.
 
 [Master Flow boot instructions](https://www.gaf.com/en-us/building-materials/residential-building-materials/ductwork/master-flow-register-box-end) · [Home Depot reference](https://www.homedepot.com/p/100197347) · [PNNL duct-boot air sealing](https://basc.pnnl.gov/resource-guides/sealing-duct-boots-floor-or-drywall)
 

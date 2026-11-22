@@ -29,7 +29,7 @@ import { RoofValleyPanel } from "./RoofValleyPanel";
 import { modeledRoofValleys, removeRoofValley, roofValleyGuideLines, saveRoofValley } from "./roofValleys";
 import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
 import { FloorRegisterPanel } from "./FloorRegisterPanel";
-import { floorRegisterGuideLines, floorRegisterReviews, isFloorRegisterPanel, removeFloorRegister,
+import { floorRegisterGuideLines, floorRegisterReviews, isFloorRegisterPanel, recordFloorRegisterCutout, removeFloorRegister,
   saveFloorRegister, type FloorRegisterPreview } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
@@ -1552,6 +1552,7 @@ export function App() {
         setExplode(false);
         setPlaying(false);
         setPanel("checks");
+        if (action.planId) setShownFloorRegister({ projectId: project.id, id: action.planId });
         setModal("floor-register");
         break;
       case "roof-vent-flashing":
@@ -5834,6 +5835,12 @@ export function App() {
                 change((live) => removeFloorRegister(live, id));
                 setFloorRegisterDraft(undefined);
                 if (shownFloorRegister?.id === id) setShownFloorRegister(undefined);
+              })}
+              onCutout={(id, dimensions) => safe(() => {
+                change((live) => recordFloorRegisterCutout(live, id, activeStepId, dimensions));
+                setLibrary("cuts");
+                setModal(null);
+                notify("Measured register cutout added to the Cut pool.");
               })}
               onShow={(id) => {
                 setShownFloorRegister({ projectId: project.id, id });

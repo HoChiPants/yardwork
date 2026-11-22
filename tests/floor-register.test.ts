@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { blank, part, projectSchema } from "../src/model";
 import { floorRegisterGuideLines, floorRegisterReviews, floorRegisterSealMethod,
-  previewFloorRegister, removeFloorRegister, saveFloorRegister } from "../src/floorRegister";
-import { guideMarkdown, validate } from "../src/engine";
+  previewFloorRegister, recordFloorRegisterCutout, removeFloorRegister, saveFloorRegister } from "../src/floorRegister";
+import { bom, guideMarkdown, validate } from "../src/engine";
+import { assignOffcutToPart } from "../src/offcutAssignment";
+import { orientedStockSize } from "../src/stockAxes";
 import { rectangularOpeningMarks, editThroughOpening } from "../src/throughOpeningCuts";
 import type { FloorRegisterMeasurements } from "../src/floorRegisterSchema";
 
@@ -70,4 +72,31 @@ test("the 3/8 in gap boundary switches from bead to mesh and stays local to a tu
   assert.ok(Math.abs(Math.abs(a[2] - b[2]) - 10.25) < 1e-8);
   assert.match(previewFloorRegister(turned, { ...input, fromLeft: 0 }).issue!, /inside the sheet edges/);
   assert.match(previewFloorRegister(turned, { ...input, openingWidth: 3.75 }).issue!, /throat is wider/);
+});
+
+test("one measured register cutout keeps the source grain and supplies a later panel without a purchase", () => {
+  const { project, panel, input } = floor();
+  panel.size[0] = 46;
+  panel.stockLengthAxis = 2;
+  const step = project.steps[0].id;
+  const saved = saveFloorRegister(project, input);
+  const [plan] = saved.floorRegisterPlans!;
+  const sample = part("Shop test blank", panel.material, [8, 0.703, 3], [75, 1, 75], step, "Workshop");
+  sample.stockLengthAxis = 2;
+  const withSample = { ...saved, pieces: [...saved.pieces, sample] };
+  assert.throws(() => recordFloorRegisterCutout(withSample, plan.id, step, [10, 5, 0.703]), /within the saved opening/);
+
+  const withScrap = recordFloorRegisterCutout(withSample, plan.id, step, [9.75, 3.875, 0.703]);
+  const scrap = withScrap.pieces.at(-1)!;
+  assert.equal(scrap.offcut, true);
+  assert.deepEqual(orientedStockSize(scrap), [0.703, 9.75, 3.875]);
+  assert.deepEqual(withScrap, projectSchema.parse(JSON.parse(JSON.stringify(withScrap))));
+  assert.throws(() => recordFloorRegisterCutout(withScrap, plan.id, step, [9, 3, 0.703]), /already recorded/);
+  assert.match(guideMarkdown(withScrap), /Recorded cutout · 9\.75 in × 3\.875 in × 0\.703 in\. See O001 in the Cut pool/);
+
+  const reused = assignOffcutToPart(withScrap, sample.id, scrap.id);
+  assert.equal(reused.pieces.find(({ id }) => id === sample.id)?.cutStock?.id, scrap.cutStock?.id);
+  assert.equal(bom(reused).find(({ id }) => id === panel.material)?.quantity, 1);
+  const removed = removeFloorRegister(reused, plan.id);
+  assert.equal(removed.pieces.find(({ id }) => id === sample.id)?.cutStock?.id, scrap.cutStock?.id);
 });

@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from "react";
 import {
-  floorRegisterReviews, floorRegisterSealMethod, isFloorRegisterPanel,
+  floorRegisterCutoutLabel, floorRegisterCutoutUse, floorRegisterReviews, floorRegisterSealMethod, isFloorRegisterPanel,
   previewFloorRegister, type FloorRegisterPreview,
 } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import type { FloorRegisterMeasurements } from "./floorRegisterSchema";
 import { LengthInput } from "./LengthInput";
 import { formatStockLength } from "./measurement";
-import type { Project } from "./model";
+import type { Project, V3 } from "./model";
 import { partLabel } from "./partLabels";
 
 const fields = [
@@ -24,7 +24,7 @@ const fields = [
   ["bodyOffsetZ", "Body center offset along Z", -24, 24],
 ] as const;
 
-export function FloorRegisterPanel({ project, panelId, initialId, onPreview, onSave, onRemove, onShow }: {
+export function FloorRegisterPanel({ project, panelId, initialId, onPreview, onSave, onRemove, onShow, onCutout }: {
   project: Project;
   panelId?: string;
   initialId?: string;
@@ -32,6 +32,7 @@ export function FloorRegisterPanel({ project, panelId, initialId, onPreview, onS
   onSave: (input: FloorRegisterMeasurements, id?: string) => void;
   onRemove: (id: string) => void;
   onShow: (id: string) => void;
+  onCutout: (id: string, dimensions: V3) => void;
 }) {
   const [activeId, setActiveId] = useState(initialId ?? "");
   const reviews = floorRegisterReviews(project);
@@ -58,6 +59,10 @@ export function FloorRegisterPanel({ project, panelId, initialId, onPreview, onS
         Remove register plan and its opening
       </button>
     </div>}
+    {active?.plan.recoveredCutout ? <p className="small-note">{floorRegisterCutoutLabel(project, active.plan)}</p>
+      : active && !active.issue && active.layout && <RegisterCutoutFields key={activeId}
+        limits={[active.plan.input.openingLength, active.plan.input.openingWidth, active.layout.panel.size[1]]}
+        onRecord={(dimensions) => onCutout(active.plan.id, dimensions)} />}
     {initialPanel ? <RegisterMeasurements key={activeId} project={project} panels={panels}
       existing={active?.plan} initialPanelId={initialPanel.id} onPreview={onPreview}
       onSave={(input) => onSave(input, active?.plan.id)} /> : <p role="status">Add a horizontal wood subfloor panel first.</p>}
@@ -66,6 +71,26 @@ export function FloorRegisterPanel({ project, panelId, initialId, onPreview, onS
       <a href={floorRegisterBoot.airSeal} target="_blank" rel="noreferrer">PNNL duct-boot sealing</a>
     </p>
   </>;
+}
+
+function RegisterCutoutFields({ limits, onRecord }: { limits: V3; onRecord: (dimensions: V3) => void }) {
+  const [dimensions, setDimensions] = useState<V3>([NaN, NaN, NaN]);
+  return <details className="field-section">
+    <summary>Record recovered cutout</summary>
+    <form className="valley-plan" onSubmit={(event) => { event.preventDefault(); onRecord(dimensions); }}>
+      <p className="small-note">{floorRegisterCutoutUse} After cutting, measure the clear rectangle inside the saw kerf, starter holes and any damaged edges.</p>
+      <div className="valley-fields">
+        {(["Usable cutout along X", "Usable cutout along Z", "Cutout thickness"] as const).map((label, axis) => (
+          <LengthInput key={label} label={label} required min={0} max={limits[axis]} value={dimensions[axis]} onChange={(value) => {
+            setDimensions((previous) => previous.map((dimension, index) => index === axis ? value : dimension) as V3);
+          }} />
+        ))}
+      </div>
+      <button type="submit" className="button secondary" disabled={dimensions.some((value) => !Number.isFinite(value) || value <= 0)}>
+        Add cutout to Cut pool
+      </button>
+    </form>
+  </details>;
 }
 
 function RegisterMeasurements({ project, panels, existing, initialPanelId, onPreview, onSave }: {

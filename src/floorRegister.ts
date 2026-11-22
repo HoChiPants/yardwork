@@ -1,14 +1,17 @@
 import { floorRegisterMeasurementsSchema, type FloorRegisterMeasurements } from "./floorRegisterSchema";
 import { floorRegisterBoot } from "./floorRegisterReference";
 import { formatStockLength } from "./measurement";
+import { addMeasuredOffcut } from "./measuredOffcuts";
 import { material, pieceSchema, projectSchema, uid, type Piece, type Project, type V3 } from "./model";
 import { partLabel } from "./partLabels";
 import { prepareCollisionBox, prepareCollisionSolid, solidOverlap } from "./solidCollision";
 import { rotate } from "./spatial";
+import { stockAxes } from "./stockAxes";
 import { editThroughOpening, type RectangularOpeningMarks } from "./throughOpeningCuts";
 
 const epsilon = 1e-6;
 const bladeBelowPanel = 0.125;
+export const floorRegisterCutoutUse = "Keep an intact cutout for a tool test or as scrap backing for a future cut.";
 type Envelope = Pick<Piece, "size" | "position" | "rotation">;
 type Plan = NonNullable<Project["floorRegisterPlans"]>[number];
 
@@ -114,9 +117,39 @@ export function saveFloorRegister(project: Project, input: FloorRegisterMeasurem
   });
   return projectSchema.parse({
     ...layout.openingProject, pieces,
-    floorRegisterPlans: [...(project.floorRegisterPlans ?? []).filter((plan) => plan.id !== id), { id, input }],
+    floorRegisterPlans: [...(project.floorRegisterPlans ?? []).filter((plan) => plan.id !== id), { ...prior, id, input }],
     guideFingerprint: null,
   });
+}
+
+export function recordFloorRegisterCutout(project: Project, id: string, stepId: string, dimensions: V3): Project {
+  const review = floorRegisterReviews(project).find(({ plan }) => plan.id === id);
+  if (!review) throw Error("Choose a saved floor register opening.");
+  if (review.plan.recoveredCutout) throw Error("This register cutout was already recorded.");
+  if (review.issue || !review.layout) throw Error(review.issue ?? "Review the opening before recording its cutout.");
+  const { panel } = review.layout;
+  const { openingLength, openingWidth } = review.plan.input;
+  const limits = [openingLength, openingWidth, panel.size[1]];
+  if (dimensions.some((value, axis) => !Number.isFinite(value) || value <= 0 || value > limits[axis]))
+    throw Error("Enter the usable rectangle within the saved opening and panel thickness.");
+  const [x, z, thickness] = dimensions;
+  const oriented: V3 = stockAxes(panel).length === 2 ? [z, x, thickness] : [x, z, thickness];
+  const next = addMeasuredOffcut(project, stepId, panel.material, oriented, `Floor register cutout from ${partLabel(project, panel.id)}`);
+  const recoveredCutout = { sourceId: next.pieces.at(-1)!.cutStock!.id, dimensions };
+  return projectSchema.parse({
+    ...next,
+    floorRegisterPlans: project.floorRegisterPlans!.map((plan) => plan.id === id ? { ...plan, recoveredCutout } : plan),
+    guideFingerprint: null,
+  });
+}
+
+export function floorRegisterCutoutLabel(project: Project, plan: Plan) {
+  if (!plan.recoveredCutout) return "";
+  const { dimensions, sourceId } = plan.recoveredCutout;
+  const onHand = project.pieces.filter((piece) => piece.offcut && piece.cutStock?.id === sourceId);
+  return `Recorded cutout · ${dimensions.map(formatStockLength).join(" × ")}. ${onHand.length
+    ? `See ${onHand.map(({ id }) => partLabel(project, id)).join(", ")} in the Cut pool.`
+    : "Its recorded source has no remaining offcut in the Cut pool."}`;
 }
 
 export function removeFloorRegister(project: Project, id: string): Project {
@@ -150,11 +183,13 @@ export function floorRegisterSealMethod(layout: FloorRegisterPreview) {
 export function floorRegisterGuideLines(project: Project) {
   return floorRegisterReviews(project).flatMap(({ plan, issue, layout }) => {
     const label = partLabel(project, plan.input.panelId);
-    if (issue || !layout) return [`${label} · Review floor register fit. ${issue ?? "The modeled opening is unavailable."}`];
+    const cutout = floorRegisterCutoutLabel(project, plan);
+    if (issue || !layout) return [`${label} · Review floor register fit. ${issue ?? "The modeled opening is unavailable."}`, ...(cutout ? [cutout] : [])];
     const dimensions = [plan.input.openingLength, plan.input.openingWidth].map(formatStockLength).join(" × ");
     return [
       `${label} · ${dimensions} opening. Start ${formatStockLength(plan.input.fromLeft)} from the low X edge and ${formatStockLength(plan.input.fromFront)} from the low Z edge.`,
       `Dry-fit the measured boot and secure it to framing. Then seal the ${formatStockLength(layout.sealRun)} modeled perimeter. ${floorRegisterSealMethod(layout)}`,
+      cutout || `${floorRegisterCutoutUse} Measure the usable rectangle after cutting, then record it in the Cut pool.`,
     ];
   });
 }

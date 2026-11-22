@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { Plus } from "lucide-react";
 import { groupedMaterials, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 
 type Point = { x: number; y: number };
 type Drag = { pointer: number; start: Point; group: MaterialGroup; stock: MaterialGroup["variants"][number]; active: boolean };
+const dragDistance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   category: string;
@@ -16,6 +17,11 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     group, stock: materialPlacementOptions(group).preferred,
   })), [category, search]);
   const drag = useRef<Drag | null>(null);
+  const preview = useRef(onPreview);
+  preview.current = onPreview;
+  useEffect(() => () => {
+    if (drag.current?.active) preview.current(null);
+  }, []);
   const [ghost, setGhost] = useState<{ drag: Drag; point: Point; overCanvas: boolean } | null>(null);
   const pointOf = (event: PointerEvent) => ({ x: event.clientX, y: event.clientY });
   function start(event: PointerEvent<HTMLDivElement>, group: MaterialGroup, stock: Drag["stock"]) {
@@ -28,7 +34,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     const active = drag.current;
     if (!active || active.pointer !== event.pointerId) return;
     const point = pointOf(event);
-    if (!active.active && Math.hypot(point.x - active.start.x, point.y - active.start.y) < 6) return;
+    if (!active.active && dragDistance(point, active.start) < 6) return;
     active.active = true;
     setGhost({ drag: active, point, overCanvas: onPreview(point) });
   }
@@ -42,12 +48,14 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     if (!active || active.pointer !== event.pointerId) return;
     drag.current = null;
     setGhost(null);
-    if (active.active) {
-      onPreview(null);
-      if (place) onPlace(active.group, pointOf(event));
+    const point = pointOf(event);
+    if (active.active) onPreview(null);
+    if (!place) return;
+    if (active.active || dragDistance(point, active.start) >= 6) {
+      onPlace(active.group, point);
       return;
     }
-    if (place && event.currentTarget.contains(document.elementFromPoint(event.clientX, event.clientY))) {
+    if (event.currentTarget.contains(document.elementFromPoint(point.x, point.y))) {
       onPlace(active.group);
     }
   }
@@ -69,6 +77,8 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       {!groups.length && <p className="small-note">No matching materials.</p>}
     </div>
     {ghost && createPortal(<div className={`material-drag-preview${ghost.overCanvas ? " can-drop" : ""}`} aria-hidden="true"
+      data-left={ghost.point.x > window.innerWidth / 2 || undefined}
+      data-above={ghost.point.y > window.innerHeight - 85 || undefined}
       style={{ left: ghost.point.x, top: ghost.point.y }}>
       {art(ghost.drag.stock)}
       <strong>{ghost.drag.group.name}</strong>

@@ -60,7 +60,7 @@ export type BuildQuestion =
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
-  | { kind: "drawer-box"; labels: [string, string]; spacers?: DrawerSpacerLayers }
+  | { kind: "drawer-box"; labels: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
   | { kind: "board-offcut"; length: number; nominal: string; treated: boolean; offcutLabel?: string }
   | { kind: "offcuts"; label?: string };
 
@@ -85,7 +85,7 @@ export type BuildQuestionAction =
   | { kind: "roof-valley" }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
-  | { kind: "drawer-box"; panelIds: [string, string]; spacers?: DrawerSpacerLayers }
+  | { kind: "drawer-box"; panelIds: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
   | { kind: "board-placement"; groupId: string; length: number; offcutId?: string }
@@ -192,11 +192,13 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
     if (extension === undefined || (Number.isFinite(extension) && extension > 0))
       return { kind: "drawer-opening", stop: { angle: Number(stop.angle), ...(extension !== undefined && { extension }) } };
   }
-  const drawer = drawerQuestion.exec(stopText)?.groups;
+  const pullRequest = /(?: with| and) (?:a |the )?(?:cabinet |bar )?(?:pull|handle)$/i.exec(stopText);
+  const drawer = drawerQuestion.exec(pullRequest ? stopText.slice(0, pullRequest.index) : stopText)?.groups;
   if (drawer) {
     const right = drawer.bothRight ?? drawer.right;
     return { kind: "drawer-box", labels: [labelKey(drawer.first), labelKey(drawer.second)],
-      ...((drawer.left || right) && { spacers: { left: Number(drawer.left ?? 0), right: Number(right ?? 0) } }) };
+      ...((drawer.left || right) && { spacers: { left: Number(drawer.left ?? 0), right: Number(right ?? 0) } }),
+      ...(pullRequest && { barPull: true }) };
   }
   const scrap = scrapQuestion.exec(text);
   if (scrap)
@@ -865,9 +867,10 @@ export function answerBuildQuestion(
         const opening = drawerBoxOpening(project, panelIds);
         return {
           title,
-          detail: `${question.labels.join(" and ")} give a ${formatPreciseInches(opening.width)} wide opening with ${formatPreciseInches(opening.front - opening.back)} of common depth.`,
+          detail: `${question.labels.join(" and ")} give a ${formatPreciseInches(opening.width)} wide opening with ${formatPreciseInches(opening.front - opening.back)} of common depth.${question.barPull ? " The drawer setup includes the pull in its motion preview." : ""}`,
           link: { label: "Open drawer setup", action: {
             kind: "drawer-box", panelIds, ...(question.spacers && { spacers: question.spacers }),
+            ...(question.barPull && { barPull: true }),
           } },
         };
       } catch (issue) {

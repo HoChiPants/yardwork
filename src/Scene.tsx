@@ -1,3 +1,4 @@
+import { libertyBarPull } from "./cabinetPullReference";
 import type { SubfloorReview } from "./subfloor";
 import type { SubfloorAdhesiveReview } from "./subfloorAdhesive";
 import type { SubfloorFasteningReview } from "./subfloorFastening";
@@ -570,6 +571,22 @@ function PartMesh({
                   {metal}
                 </mesh>
               ))}
+          </group>
+        ) : piece.material === libertyBarPull.id ? (
+          <group>
+            <mesh position={[0, 0, (size[2] - size[1]) / 2]} rotation={[0, 0, Math.PI / 2]} castShadow>
+              <cylinderGeometry args={[size[1] / 2, size[1] / 2, size[0], 16]} />
+              {metal}
+            </mesh>
+            {[-1, 1].map((side) => <mesh key={side} castShadow
+              position={[side * libertyBarPull.mountingSpacingMm / (25.4 * 24), 0, -size[1] / 4]}
+              rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[
+                libertyBarPull.postDiameterMm / (25.4 * 24), libertyBarPull.postDiameterMm / (25.4 * 24),
+                size[2] - size[1] / 2, 12,
+              ]} />
+              {metal}
+            </mesh>)}
           </group>
         ) : m.stockKind === "connector" ? (
           <group>

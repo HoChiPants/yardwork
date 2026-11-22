@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 125,
+  "id": "216f6061-5a40-4d9d-ab38-122ab35bcfc9",
+  "name": "Drawer pull clearance practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "motionPlans": [
+    {
+      "label": "Drawer with pull",
+      "memberIds": [
+        "e5250ae8-0b81-4081-ac9d-d26465af4092",
+        "5f39ac92-84b7-4c36-9a0e-4ac86732d213",
+        "01ccd8ac-66f6-4cd4-afd3-8c508db30571",
+        "5e1f04ff-3d1b-47cf-8afd-2c2e5d5defd9",
+        "9ab06d5f-6aa1-4448-be96-ae556526bcc4",
+        "42ab0321-8517-4edf-9934-6979f0f6a94c"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "travel": 18,
+        "drawerSlide": {
+          "productId": "accuride-t46322g18",
+          "cabinetLeft": "09f4aa02-7b8c-4896-8d09-c1dfcfd63f01",
+          "drawerLeft": "e5250ae8-0b81-4081-ac9d-d26465af4092",
+          "drawerRight": "5f39ac92-84b7-4c36-9a0e-4ac86732d213",
+          "cabinetRight": "b5e489b5-cae8-430c-8cfd-d59ca0c02e1d"
+        }
+      },
+      "id": "ea5b1bfe-5014-40db-98a8-033a9a7ab04b"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "09f4aa02-7b8c-4896-8d09-c1dfcfd63f01",
+      "label": "P001"
+    },
+    {
+      "partId": "b5e489b5-cae8-430c-8cfd-d59ca0c02e1d",
+      "label": "P002"
+    },
+    {
+      "partId": "22bbb51d-743d-400e-9c84-f1185980190c",
+      "label": "P003"
+    },
+    {
+      "partId": "e5250ae8-0b81-4081-ac9d-d26465af4092",
+      "label": "P004"
+    },
+    {
+      "partId": "5f39ac92-84b7-4c36-9a0e-4ac86732d213",
+      "label": "P005"
+    },
+    {
+      "partId": "01ccd8ac-66f6-4cd4-afd3-8c508db30571",
+      "label": "P006"
+    },
+    {
+      "partId": "5e1f04ff-3d1b-47cf-8afd-2c2e5d5defd9",
+      "label": "P007"
+    },
+    {
+      "partId": "9ab06d5f-6aa1-4448-be96-ae556526bcc4",
+      "label": "P008"
+    },
+    {
+      "partId": "42ab0321-8517-4edf-9934-6979f0f6a94c",
+      "label": "P009"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T05:45:24.398Z",
+  "pieces": [
+    {
+      "id": "09f4aa02-7b8c-4896-8d09-c1dfcfd63f01",
+      "name": "Left cabinet wall",
+      "material": "plywood",
+      "size": [
+        0.75,
+        10,
+        18.25
+      ],
+      "position": [
+        -8.375,
+        5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a6a55a81-a099-470d-8be4-d2b2ffedaf9a",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b5e489b5-cae8-430c-8cfd-d59ca0c02e1d",
+      "name": "Right cabinet wall",
+      "material": "plywood",
+      "size": [
+        0.75,
+        10,
+        18.25
+      ],
+      "position": [
+        8.375,
+        5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a6a55a81-a099-470d-8be4-d2b2ffedaf9a",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "22bbb51d-743d-400e-9c84-f1185980190c",
+      "name": "Opposing cabinet face",
+      "material": "plywood",
+      "size": [
+        20,
+        8,
+        0.75
+      ],
+      "position": [
+        0,
+        4,
+        15.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "3beb2a78-822b-480c-ae21-03c11720465d",
+      "assembly": "Opposing cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "e5250ae8-0b81-4081-ac9d-d26465af4092",
+      "name": "Drawer with pull · left side",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        3.297,
+        18
+      ],
+      "position": [
+        -7.132875,
+        2.6015,
+        0.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5932b7ac-5d54-46a0-ab0f-223e998edb4e",
+      "assembly": "Drawer with pull",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "5f39ac92-84b7-4c36-9a0e-4ac86732d213",
+      "name": "Drawer with pull · right side",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        3.297,
+        18
+      ],
+      "position": [
+        7.132875,
+        2.6015,
+        0.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5932b7ac-5d54-46a0-ab0f-223e998edb4e",
+      "assembly": "Drawer with pull",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "01ccd8ac-66f6-4cd4-afd3-8c508db30571",
+      "name": "Drawer with pull · box front",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        13.56275,
+        3.297,
+        0.703
+      ],
+      "position": [
+        0,
+        2.6015,
+        8.7735
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5932b7ac-5d54-46a0-ab0f-223e998edb4e",
+      "assembly": "Drawer with pull",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "5e1f04ff-3d1b-47cf-8afd-2c2e5d5defd9",
+      "name": "Drawer with pull · box back",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        13.56275,
+        3.297,
+        0.703
+      ],
+      "position": [
+        0,
+        2.6015,
+        -8.5235
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5932b7ac-5d54-46a0-ab0f-223e998edb4e",
+      "assembly": "Drawer with pull",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "9ab06d5f-6aa1-4448-be96-ae556526bcc4",
+      "name": "Drawer with pull · bottom",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        14.96875,
+        0.703,
+        18
+      ],
+      "position": [
+        0,
+        0.6014999999999999,
+        0.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5932b7ac-5d54-46a0-ab0f-223e998edb4e",
+      "assembly": "Drawer with pull",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "42ab0321-8517-4edf-9934-6979f0f6a94c",
+      "name": "Drawer with pull · bar pull",
+      "material": "hd-liberty-p01012-pc-c",
+      "size": [
+        5.32,
+        0.4724,
+        1.3
+      ],
+      "position": [
+        0,
+        2.6015,
+        9.775
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5932b7ac-5d54-46a0-ab0f-223e998edb4e",
+      "assembly": "Drawer with pull",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "d1747754-7a6e-4ae1-bbeb-6fe1658356b4",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "216f6061-5a40-4d9d-ab38-122ab35bcfc9",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-145d0943",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "c51efa3a-4634-4c2d-afa6-3a5414d614e9",
+      "title": "Drawer with pull · Cut and fit",
+      "notes": "Dry-fit the five panels square with the front and back between the sides and the bottom under the walls. Confirm the 0.51563 in side gap on each side against the delivered slides. Check mounting faces, screw length and bottom attachment before drilling. Center the 96 mm Liberty bar pull on the box front. Mark the holes with the delivered pull or its template, and verify screw reach through every front layer before drilling. The motion check includes the pull's full clearance envelope. Check the installed pull, hand access and surrounding trim.",
+      "complete": false
+    },
+    {
+      "id": "5932b7ac-5d54-46a0-ab0f-223e998edb4e",
+      "title": "Assemble Drawer with pull",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "806ff9fd-2d28-4a9f-b8ee-3cc5aa5947fe",
+        "stageKey": "section",
+        "memberIds": [
+          "01ccd8ac-66f6-4cd4-afd3-8c508db30571",
+          "42ab0321-8517-4edf-9934-6979f0f6a94c",
+          "5e1f04ff-3d1b-47cf-8afd-2c2e5d5defd9",
+          "5f39ac92-84b7-4c36-9a0e-4ac86732d213",
+          "9ab06d5f-6aa1-4448-be96-ae556526bcc4",
+          "e5250ae8-0b81-4081-ac9d-d26465af4092"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-8e07050",
+        "title": "Assemble Drawer with pull"
+      }
+    },
+    {
+      "id": "a6a55a81-a099-470d-8be4-d2b2ffedaf9a",
+      "title": "Assemble Cabinet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "216f6061-5a40-4d9d-ab38-122ab35bcfc9",
+        "stageKey": "assembly:Cabinet",
+        "memberIds": [
+          "09f4aa02-7b8c-4896-8d09-c1dfcfd63f01",
+          "b5e489b5-cae8-430c-8cfd-d59ca0c02e1d"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-552b23a5",
+        "title": "Assemble Cabinet"
+      }
+    },
+    {
+      "id": "3beb2a78-822b-480c-ae21-03c11720465d",
+      "title": "Assemble Opposing cabinet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "216f6061-5a40-4d9d-ab38-122ab35bcfc9",
+        "stageKey": "assembly:Opposing cabinet",
+        "memberIds": [
+          "22bbb51d-743d-400e-9c84-f1185980190c"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-92e85fcb",
+        "title": "Assemble Opposing cabinet"
+      }
+    },
+    {
+      "id": "ee9c4e5b-37e6-4409-b310-e4f857ebd125",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "216f6061-5a40-4d9d-ab38-122ab35bcfc9",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-d7b6f6ac",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice dimensions illustrate how a cabinet pull affects travel toward an opposing face. Verify the delivered pull, hand access and mounting before using the example.",
+  "sections": [
+    {
+      "id": "806ff9fd-2d28-4a9f-b8ee-3cc5aa5947fe",
+      "name": "Drawer with pull",
+      "pieceIds": [
+        "e5250ae8-0b81-4081-ac9d-d26465af4092",
+        "5f39ac92-84b7-4c36-9a0e-4ac86732d213",
+        "01ccd8ac-66f6-4cd4-afd3-8c508db30571",
+        "5e1f04ff-3d1b-47cf-8afd-2c2e5d5defd9",
+        "9ab06d5f-6aa1-4448-be96-ae556526bcc4",
+        "42ab0321-8517-4edf-9934-6979f0f6a94c"
+      ],
+      "origin": [
+        0,
+        2.25,
+        0.7750000000000004
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-fae85f1f",
+  "history": []
+}

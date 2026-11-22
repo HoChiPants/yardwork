@@ -9,6 +9,7 @@ import { rimEdgeSealant, rimFoam } from "../src/rimAirSealReference";
 import type { RimAirSealInput, RimSide } from "../src/rimAirSealSchema";
 import { reviewRimAirSeals, rimAirSealFrame, rimEdgeSealEstimate, saveRimAirSeal } from "../src/rimAirSeals";
 import { transformSection } from "../src/sections";
+import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { addSupply } from "../src/supplies";
 
 function floor() {
@@ -162,7 +163,7 @@ test("old rim plans retain their cuts and measured seal estimates stay in the pr
   const input = measurements(project, "back");
   const old = { ...saveRimAirSeal(project, input), schemaVersion: 123 };
   const reopened = projectSchema.parse(old);
-  assert.equal(reopened.schemaVersion, 124);
+  assert.equal(reopened.schemaVersion, PROJECT_FORMAT_VERSION);
   assert.deepEqual(reopened.rimAirSeals, old.rimAirSeals);
   assert.equal(reviewRimAirSeals(reopened).edgeSealant, null);
   assert.equal(reviewRimAirSeals(reopened).rows[0].cuts[0].edgeOutline, undefined);

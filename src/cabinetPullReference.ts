@@ -1,0 +1,15 @@
+export const libertyBarPull = {
+  id: "hd-liberty-p01012-pc-c",
+  name: "Liberty Solid Bar cabinet pull",
+  model: "P01012-PC-C",
+  internet: "204331182",
+  sku: "1000016907",
+  size: [5.32, 0.4724, 1.3],
+  mountingSpacingMm: 96,
+  includedScrewLength: 1,
+  postDiameterMm: 10,
+  listing: "https://www.homedepot.com/p/204331182",
+  product: "https://www.libertyhardware.com/products/liberty-solid-bar-pull",
+  installation: "https://www.libertyhardware.com/cdn/shop/files/CP4474.pdf?v=14578238542477775481",
+  reviewedAt: "2026-11-22T05:40:00Z",
+} as const;

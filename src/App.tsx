@@ -713,6 +713,7 @@ export function App() {
     projectId: string;
     panelIds: [string, string];
     spacers?: Extract<BuildQuestionAction, { kind: "drawer-box" }>["spacers"];
+    barPull?: boolean;
   } | null>(null);
   const [motionTestSelection, setMotionTestSelection] = useState<(MotionTestSelection & { project: Project }) | null>(null);
   const [clearanceRetest, setClearanceRetest] = useState<{
@@ -1392,7 +1393,7 @@ export function App() {
         break;
       }
       case "drawer-box":
-        setDrawerBoxRequest({ projectId: project.id, panelIds: action.panelIds, spacers: action.spacers });
+        setDrawerBoxRequest({ projectId: project.id, panelIds: action.panelIds, spacers: action.spacers, barPull: action.barPull });
         setRemovalTarget(null);
         setMotionPreview(null);
         setMotionTestSelection(null);

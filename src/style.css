@@ -2989,6 +2989,29 @@ small {
 .material-art > div {
   margin: auto;
 }
+.material-art.hd-liberty-p01012-pc-c > div {
+  width: 70%;
+  height: 6px;
+  border-color: #8a939a;
+  border-radius: 4px;
+  left: 50%;
+  top: 50%;
+  background: linear-gradient(#f1f4f7, #9da8b0, #6f7b84);
+  box-shadow: 0 2px 2px #48525b35;
+  transform: translate(-50%, -50%) rotate(-24deg);
+}
+.material-art.hd-liberty-p01012-pc-c > div::before,
+.material-art.hd-liberty-p01012-pc-c > div::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  width: 5px;
+  height: 9px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, #89959e, #b7c1c9, #78858e);
+}
+.material-art.hd-liberty-p01012-pc-c > div::before { left: 12%; }
+.material-art.hd-liberty-p01012-pc-c > div::after { right: 12%; }
 .material-art.linear > div {
   width: var(--board-width, 14px);
   left: 50%;

@@ -39,3 +39,10 @@ Open **Guide → Review build preparation → Motion and clearance** to inspect 
 Each built-in storage lid also appears in that checklist when its swing has an obstruction, a measured clearance issue or an incomplete check. A row opens the affected seat at the relevant angle when one is available. Folding stay findings use the entered reach and arm dimensions.
 
 With measured widths and thicknesses, Yardwork checks the two pin-to-pin arm rectangles throughout opening and closing. It uses the linkage's range of angles and pin positions to rule out intersections over each interval. Playback stops before a confirmed overlap or at the first interval that needs review. **Inspect arm clearance** shows uncertain parts and the affected stay in amber. Inspect the actual hardware for bracket, pivot, pinch and locking clearances. [Example folding stay installation drawing](https://images.thdstatic.com/catalog/pdfImages/ed/ed462be6-b1b6-4270-98f7-03390f006131.pdf)
+
+
+## Check drawer travel with a fitted pull
+
+In **Fit a drawer box**, turn on **Add a centered cabinet pull**. The Liberty P01012-PC-C uses the 96 mm mounting spacing and extends 1.3 in from either the box front or the optional finished front. Its clearance envelope travels with the drawer in the slide-only and combined door tests. The guide keeps it with the assembly hardware and panel cuts, and the Home Depot list counts one pull per placed part. If a fixed face or a cabinet door limits travel, preview the contact pose and adjust the fit before cutting. Check the actual pull, screw reach through any finished front, and room to grip the handle. [Liberty specifications](https://www.libertyhardware.com/products/liberty-solid-bar-pull) · [Home Depot product dimensions](https://www.homedepot.com/p/204331182)
+
+You can also ask **“Plan a drawer between P001 and P002 with a cabinet pull.”** Use the labels of your modeled cabinet sides. Import the [drawer pull clearance practice project](../public/examples/hinges/drawer-bar-pull.yardwork.json) to see the pull approach the opposing cabinet.

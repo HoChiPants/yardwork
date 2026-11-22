@@ -1,3 +1,4 @@
+import { libertyBarPull } from "./cabinetPullReference";
 import { drawerSlideProducts, drawerSlideReference, type DrawerSlideProductId } from "./drawerSlideReference";
 import { rectangularDrawerPanelBounds, reviewDrawerSlide } from "./drawerSlides";
 import { bounds } from "./engine";
@@ -101,6 +102,7 @@ export type DrawerBoxInput = {
   depth: number;
   slideId: DrawerSlideProductId;
   spacers?: DrawerSpacerLayers;
+  barPull?: boolean;
 };
 
 function checkSpacerPlacement(project: Project, spacers: readonly Piece[]) {
@@ -133,7 +135,7 @@ function checkSpacerPlacement(project: Project, spacers: readonly Piece[]) {
 export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   const {
     panelIds, reverse, stockId, bottomOffset, height, depth, sideGap,
-    frontInset, rearGap, finishFront, reveal, slideId,
+    frontInset, rearGap, finishFront, reveal, slideId, barPull,
   } = input;
   const label = input.label.trim() || "Drawer box";
   const opening = drawerBoxOpening(project, panelIds, reverse);
@@ -159,7 +161,7 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   if (width > reference.maxDrawerWidth + epsilon)
     throw Error(`This slide reference covers drawer boxes up to ${reference.maxDrawerWidth} in wide. Check the chosen opening or use another documented slide setup.`);
   if (width <= 2 * t + epsilon) throw Error("The opening is too narrow for the spacers, drawer walls and slide gaps.");
-  if (project.pieces.length + leftLayers + rightLayers + (finishFront ? 6 : 5) > maxProjectPieces)
+  if (project.pieces.length + leftLayers + rightLayers + 5 + Number(finishFront) + Number(!!barPull) > maxProjectPieces)
     throw Error("The drawer and spacers would exceed the project part limit.");
   const choices = drawerBoxSlideChoices(opening, frontInset, rearGap, finishFront ? t : 0);
   if (depth > choices.depth + epsilon)
@@ -178,12 +180,24 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   const midZ = (boxFront + boxBack) / 2;
   const midY = low + (height + t) / 2;
   const inner = width - 2 * t;
+  const frontWidth = finishFront ? railWidth - 2 * reveal : inner;
+  const frontHeight = finishFront ? height : height - t;
+  const pullFrontStack = finishFront ? 2 * t : t;
+  const pullScrewReview = barPull && pullFrontStack >= libertyBarPull.includedScrewLength - epsilon
+    ? `The front stack measures ${formatPreciseInches(pullFrontStack)}. The supplied ${formatPreciseInches(libertyBarPull.includedScrewLength)} screws cannot reach through it. Confirm the thread and required reach before choosing longer screws.`
+    : undefined;
+  if (barPull && (frontWidth < libertyBarPull.size[0] - epsilon || frontHeight < libertyBarPull.size[1] - epsilon))
+    throw Error("The chosen bar pull needs a wider or taller drawer front.");
   const stepTitle = `${label} · Cut and fit`;
   const notes = [
     "Dry-fit the five panels square with the front and back between the sides and the bottom under the walls.",
     `Confirm the ${formatPreciseInches(sideGap)} side gap on each side against the delivered slides. Check mounting faces, screw length and bottom attachment before drilling.`,
     ...(finishFront ? [`Fit the finished front after the drawer is on its slides. Check the ${formatPreciseInches(reveal)} side reveals in the actual opening.`] : []),
-    "Check the installed rail positions, drawer load, and opening and closing clearance with the handle and surrounding trim.",
+    ...(barPull ? [
+      `Center the ${libertyBarPull.mountingSpacingMm} mm Liberty bar pull on the ${finishFront ? "finished" : "box"} front. Mark the holes with the delivered pull or its template, and verify screw reach through every front layer before drilling.`,
+      "The motion check includes the pull's full clearance envelope. Check the installed pull, hand access and surrounding trim.",
+      ...(pullScrewReview ? [pullScrewReview] : []),
+    ] : ["Check the installed rail positions, drawer load, and opening and closing clearance with the handle and surrounding trim."]),
   ].join(" ");
   const buildStep = step(stepTitle, notes);
   const rotation: V3 = [0, Math.atan2(opening.frontAxis[0], opening.frontAxis[2]), 0];
@@ -198,14 +212,20 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   });
   const boxLeft = add("left side", [t, height - t, depth], railCenter - (width - t) / 2, midY, midZ, 2);
   const boxRight = add("right side", [t, height - t, depth], railCenter + (width - t) / 2, midY, midZ, 2);
-  const pieces = [
+  const panels = [
     boxLeft, boxRight,
     add("box front", [inner, height - t, t], railCenter, midY, boxFront - t / 2, 0),
     add("box back", [inner, height - t, t], railCenter, midY, boxBack + t / 2, 0),
     add("bottom", [width, t, depth], railCenter, low + t / 2, midZ, 2),
-    ...(finishFront ? [add("finished front", [railWidth - 2 * reveal, height, t],
+    ...(finishFront ? [add("finished front", [frontWidth, height, t],
       railCenter, low + height / 2, cabinetFront - t / 2, 0)] : []),
   ];
+  const pull = barPull ? part(
+    `${label} · bar pull`, libertyBarPull.id, [...libertyBarPull.size],
+    position(railCenter, finishFront ? low + height / 2 : midY, cabinetFront + libertyBarPull.size[2] / 2),
+    buildStep.id, label, rotation,
+  ) : undefined;
+  const pieces = pull ? [...panels, pull] : panels;
   const spacerStep = step(`${label} · Cut and fit drawer slide spacers`,
     "Dry-fit the fixed plywood layers flat against the cabinet sides before mounting the slides. Check support and fastener reach at both inner mounting faces.");
   const spacerHeight = Math.max(reference.height, Math.min(2, height - t));
@@ -239,7 +259,7 @@ export function previewDrawerBox(project: Project, input: DrawerBoxInput) {
   if (!fit?.ready) throw Error(fit?.rows.find(({ matches }) => !matches)?.detail ?? "The selected slide does not fit this box.");
   const review = reviewMotion(candidate.project, candidate.plan);
   return {
-    ...candidate, width, height, depth, railWidth, pieces, spacers, reference, review,
+    ...candidate, width, height, depth, railWidth, pieces, panels, pull, pullScrewReview, spacers, reference, review,
     closed: review.preview(0),
   };
 }

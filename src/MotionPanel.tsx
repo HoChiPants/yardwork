@@ -574,7 +574,7 @@ export function MotionPanel({
   selectedIds: string[];
   preview: MotionPreview | null;
   initialTest?: MotionTestSelection;
-  drawerRequest?: { panelIds: [string, string]; spacers?: DrawerSpacerLayers };
+  drawerRequest?: { panelIds: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean };
   onDrawerRequestHandled?: () => void;
   onEditDoorway: (sectionId: string) => void;
   onPreview: (preview: MotionPreview | null, source?: Project) => void;
@@ -589,6 +589,7 @@ export function MotionPanel({
   const [editing, setEditing] = useState<string | null>(null);
   const [drawerPanels, setDrawerPanels] = useState<string[]>([]);
   const [drawerSpacers, setDrawerSpacers] = useState<DrawerSpacerLayers>();
+  const [drawerBarPull, setDrawerBarPull] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(initialTest?.plan.id ?? "");
   const [scenarioId, setScenarioId] = useState(initialTest?.scenarioId ?? "");
   const [scenarioName, setScenarioName] = useState(() =>
@@ -831,6 +832,7 @@ export function MotionPanel({
     if (drawerRequest) {
       setDrawerPanels(drawerRequest.panelIds);
       setDrawerSpacers(drawerRequest.spacers);
+      setDrawerBarPull(!!drawerRequest.barPull);
       edit("drawer-box-new");
       onDrawerRequestHandled?.();
     }
@@ -1139,8 +1141,8 @@ export function MotionPanel({
         </details>
       )}
       {editing === "drawer-box-new" ? (
-        <DrawerBoxPanel key={JSON.stringify([drawerPanels, drawerSpacers])} project={project}
-          initialPanels={drawerPanels} initialSpacers={drawerSpacers} onPreview={onPreview}
+        <DrawerBoxPanel key={JSON.stringify([drawerPanels, drawerSpacers, drawerBarPull])} project={project}
+          initialPanels={drawerPanels} initialSpacers={drawerSpacers} initialBarPull={drawerBarPull} onPreview={onPreview}
           onSave={addDrawer} onCancel={() => edit(null)} />
       ) : saunaEditor ? (
         <SaunaDoorEditor
@@ -1186,6 +1188,7 @@ export function MotionPanel({
             <button type="button" className="button secondary" onClick={() => {
               setDrawerPanels(selectedIds);
               setDrawerSpacers(undefined);
+              setDrawerBarPull(false);
               edit("drawer-box-new");
             }}>Fit a drawer box</button>
           )}

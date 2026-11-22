@@ -1,3 +1,4 @@
+import { libertyBarPull } from "./cabinetPullReference";
 import { useState, type FormEvent } from "react";
 import { DrawerBoxDoorTrial } from "./DrawerBoxDoorTrial";
 import {
@@ -27,10 +28,11 @@ const describeDirection = (direction: [number, number, number]) =>
       : direction[2] > 0 ? "+Z" : "−Z"
     : `X ${Number(direction[0].toFixed(2))}, Z ${Number(direction[2].toFixed(2))}`;
 
-export function DrawerBoxPanel({ project, initialPanels, initialSpacers, onPreview, onSave, onCancel }: {
+export function DrawerBoxPanel({ project, initialPanels, initialSpacers, initialBarPull, onPreview, onSave, onCancel }: {
   project: Project;
   initialPanels: readonly string[];
   initialSpacers?: DrawerSpacerLayers;
+  initialBarPull?: boolean;
   onPreview: (pose: MotionPreview | null) => void;
   onSave: (project: Project, plan: MotionPlan) => void;
   onCancel: () => void;
@@ -50,6 +52,7 @@ export function DrawerBoxPanel({ project, initialPanels, initialSpacers, onPrevi
   const [frontInset, setFrontInset] = useState(0);
   const [rearGap, setRearGap] = useState(0.125);
   const [finishFront, setFinishFront] = useState(false);
+  const [barPull, setBarPull] = useState(!!initialBarPull);
   const [reveal, setReveal] = useState(0.125);
   const [slideId, setSlideId] = useState<DrawerSlideProductId | "">("");
   const [depth, setDepth] = useState<number | null>(null);
@@ -94,7 +97,7 @@ export function DrawerBoxPanel({ project, initialPanels, initialSpacers, onPrevi
       const box = previewDrawerBox(project, {
         panelIds: [first, second], reverse, label, stockId, bottomOffset, height, sideGap,
         frontInset, rearGap, finishFront, reveal, slideId: slide.productId, depth: fittedDepth,
-        spacers: { left: leftLayers, right: rightLayers },
+        spacers: { left: leftLayers, right: rightLayers }, barPull,
       });
       setPreview({ source: project, value: box });
       show(box.closed, box.spacers);
@@ -154,6 +157,11 @@ export function DrawerBoxPanel({ project, initialPanels, initialSpacers, onPrevi
               </label>
               {finishFront && <LengthInput label="Finished front side reveal" min={0} value={reveal} onChange={setReveal} />}
             </details>
+            <label className="checkbox-field">
+              <input type="checkbox" checked={barPull} onChange={(e) => setBarPull(e.target.checked)} />
+              Add a centered cabinet pull
+            </label>
+            {barPull && <p className="small-note">Liberty 96 mm bar pull · 1.3 in added to the front clearance.</p>}
             <details className="field-section">
               <summary>Drawer slide spacers</summary>
               <p className="small-note">Each fixed layer uses {formatPreciseInches(Math.min(...material(stockId).size))} plywood. Add layers to either cabinet side to shift the drawer opening.</p>
@@ -191,7 +199,7 @@ export function DrawerBoxPanel({ project, initialPanels, initialSpacers, onPrevi
           </p>
           <p className="small-note">Thickness × width × length along the grain</p>
           <ul>
-            {value.pieces.map((piece) => (
+            {value.panels.map((piece) => (
               <li key={piece.id}>{piece.name} · {orientedStockSize(piece).map(formatStockLength).join(" × ")}</li>
             ))}
           </ul>
@@ -201,6 +209,11 @@ export function DrawerBoxPanel({ project, initialPanels, initialSpacers, onPrevi
             <ul>{value.spacers.map((piece) =>
               <li key={piece.id}>{piece.name} · {orientedStockSize(piece).map(formatStockLength).join(" × ")}</li>)}</ul>
           </>}
+          {value.pull && <p className="small-note">
+            One Liberty 96 mm bar pull · 1.3 in projection included in the opening check.{" "}
+            <a href={libertyBarPull.installation} target="_blank" rel="noreferrer">Mounting instructions</a>
+          </p>}
+          {value.pullScrewReview && <p role="status" className="small-note">{value.pullScrewReview}</p>}
           {blockedClosed ? (
             <p role="alert" className="form-error">The closed drawer overlaps modeled parts or exceeds a recorded clearance. Adjust the setup before adding it.</p>
           ) : (

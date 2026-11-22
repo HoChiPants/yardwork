@@ -1,3 +1,4 @@
+import { libertyBarPull } from "./cabinetPullReference";
 import { drawingReferenceSchema } from "./drawingReference";
 import { caseworkTipUpSchema } from "./caseworkTipUpSchema";
 import { pureBondCasework } from "./homeDepotCaseworkReference";
@@ -1711,6 +1712,16 @@ export const catalog: Material[] = [
     unit: "sheet",
     search: `gypsum plasterboard sheetrock ultralight wall ceiling ${model} ${internet}`,
   })),
+  {
+    id: libertyBarPull.id,
+    name: libertyBarPull.name,
+    subtitle: "96 mm mounting centers · polished chrome",
+    category: "Hardware", stockKind: "equipment", cuttable: false, wood: false, packCount: 1,
+    productReference: libertyBarPull.id, placementOnly: true,
+    size: [...libertyBarPull.size], color: "#a9b2ba",
+    price: 0, priceKind: "unpriced", unit: "each",
+    search: "handle drawer cabinet pull 96 mm liberty solid bar P01012-PC-C",
+  },
 ];
 export const material = (id: MaterialId) => catalog.find((m) => m.id === id)!;
 export function canPlanWoodKerf(id: MaterialId) {

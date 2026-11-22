@@ -1,3 +1,4 @@
+import { libertyBarPull } from "./cabinetPullReference";
 import { subfloorAdhesive, subfloorNails } from "./subfloorReference";
 import { openingFoam, openingSealMaterials, openingAirSealReviewedAt } from "./openingAirSealReference";
 import { sdwsFramingName, sdwsFramingPacks, sdwsFramingReview, sdwsFramingSources } from "./sdwsFramingReference";
@@ -63,6 +64,7 @@ const sourceHosts = new Set([
   "hdsupplysolutions.com",
   "homedepot.com",
   "www.homedepot.com",
+  "www.libertyhardware.com",
   "www.masonite.com",
   "www.sharkbite.com",
   "www.holdrite.com",
@@ -4497,6 +4499,25 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: rimFoam.manufacturer, verifiedAt: rimFoam.reviewedAt, note: "Product specification and manufacturer technical bulletins for XPS applications and compatible adhesives." },
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [rimFoam.listing, rimFoam.manufacturer] },
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: libertyBarPull.id,
+    name: libertyBarPull.name,
+    manufacturer: "Liberty Hardware",
+    manufacturerPartNumber: libertyBarPull.model,
+    category: "equipment",
+    status: "reviewed-specs",
+    verifiedAt: libertyBarPull.reviewedAt,
+    profile: profile("equipment", [...libertyBarPull.size], 1, { materialFamily: "solid steel bar pull with chrome finish" }),
+    offers: [hd(libertyBarPull.internet, libertyBarPull.model, libertyBarPull.sku)],
+    sources: [
+      { url: libertyBarPull.product, verifiedAt: libertyBarPull.reviewedAt, note: "Liberty lists 96 mm mounting centers, 0.4724 in height, and two supplied 1 in screws." },
+      { url: libertyBarPull.listing, verifiedAt: libertyBarPull.reviewedAt, note: "One polished chrome P01012-PC-C. The 5.32 in length and 1.3 in projection round up the corresponding 5.31 in and 1.2992 in Liberty specifications for clearance planning." },
+      { url: libertyBarPull.installation, verifiedAt: libertyBarPull.reviewedAt, note: "Use the delivered pull and Liberty instructions when locating and sizing the holes." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [libertyBarPull.listing, libertyBarPull.product] },
     discrepancies: [],
     capabilities: [],
   },

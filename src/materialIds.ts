@@ -1,3 +1,4 @@
+import { libertyBarPull } from "./cabinetPullReference";
 import { waterFittingIds } from "./waterFittingReference";
 import { waterSupportIds } from "./waterSupportReference";
 import { waterStop } from "./waterStopReference";
@@ -81,4 +82,5 @@ export const materialIds = [
   "hd-treated-2x8-10",
   subfloorPanel.id,
   ...drywallStock.map(({ id }) => id),
+  libertyBarPull.id,
 ] as const;

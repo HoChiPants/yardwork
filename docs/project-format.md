@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 124**. Yardwork reads valid formats 1–123 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 125**. Yardwork reads valid formats 1–124 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 125 adds the fixed-dimension Liberty bar-pull material. It can be an ordinary member of a saved drawer motion group. Earlier drawers and their cut and motion records retain their original parts.
 
 Format 124 adds optional `edgeSeal` measurements to saved floor rim plans. It records the seal depth, usable cured run measured per can, and work session. Earlier rim plans open with their original cut lists.
 

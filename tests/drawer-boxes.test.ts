@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
 import { defaultDrawerSideGap, drawerBoxOpening, drawerBoxSlideChoices, previewDrawerBox, type DrawerBoxInput } from "../src/drawerBoxes";
+import { libertyBarPull } from "../src/cabinetPullReference";
+import { homeDepotShoppingList } from "../src/handoff";
 import { drawerSlideDemand, reviewDrawerSlide } from "../src/drawerSlides";
 import { guideMarkdown } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
@@ -145,4 +147,55 @@ test("the spacer practice plan carries its checked stop and retained scrap dimen
   assert.deepEqual(review?.playbackLimit(100, 0), { travel: 0 });
   assert.equal(project.pieces.filter(({ offcut }) => offcut).length, 2);
   assert.match(guideMarkdown(project), /Crosscut to 18 in · Rip to 2 in/);
+});
+
+test("a cabinet pull moves with the drawer, reserves its projection, and purchases one exact unit", () => {
+  const { base, input, turn } = fixture(Math.PI / 3);
+  const obstacle = part("Opposite cabinet face", "plywood", [20, 8, 0.75], rotate([0, 4, 15.875], turn),
+    base.steps[0].id, "Opposite cabinet", turn);
+  const project = { ...base, pieces: [...base.pieces, obstacle] };
+  const without = previewDrawerBox(project, input);
+  const candidate = previewDrawerBox(project, { ...input, barPull: true });
+  assert.ok(candidate.pull && candidate.plan.memberIds.includes(candidate.pull.id));
+  assert.equal(candidate.panels.length, 5);
+  assert.equal(candidate.pieces.length, 6);
+  assert.deepEqual(candidate.pull.size, [...libertyBarPull.size]);
+  assert.deepEqual(candidate.closed.interferenceIds, []);
+  const emptyTravel = without.review.playbackLimit(0, 18).travel;
+  const fittedTravel = candidate.review.playbackLimit(0, 18).travel;
+  assert.ok(Math.abs(emptyTravel - fittedTravel - 1.3) < 0.05, `${emptyTravel} to ${fittedTravel}`);
+  assert.ok(candidate.review.hits.some(({ obstacleId }) => obstacleId === obstacle.id));
+  const previewedPull = candidate.review.preview(2).pieces.find(({ id }) => id === candidate.pull?.id)!;
+  assert.ok(Math.hypot(...previewedPull.position.map((v, axis) =>
+    v - candidate.pull!.position[axis] - rotate([0, 0, 2], turn)[axis])) < 1e-6);
+
+  const saved = projectSchema.parse(JSON.parse(JSON.stringify(candidate.project)));
+  const [purchase] = homeDepotShoppingList(saved).items.filter(({ productId }) => productId === libertyBarPull.internet);
+  assert.equal(purchase?.quantity, 1);
+  const guide = guideMarkdown(generateBuildGuide(saved));
+  assert.match(guide, /96 mm Liberty bar pull/);
+  assert.match(guide, /pull's full clearance envelope/);
+  assert.match(guide, /bar pull[\s\S]*Opposite cabinet face/);
+  const requested = buildQuestion("Plan a drawer between P001 and P002 with two left spacer layers and a cabinet pull")!;
+  const answer = answerBuildQuestion(base, requested, []);
+  assert.deepEqual(answer.link?.action, {
+    kind: "drawer-box", panelIds: input.panelIds, spacers: { left: 2, right: 0 }, barPull: true,
+  });
+});
+
+test("a modeled pull fits either visible front and remains out of the panel cuts", () => {
+  const { base, input } = fixture();
+  const back = previewDrawerBox(base, {
+    ...input, reverse: true, finishFront: true, barPull: true,
+    depth: 16, slideId: "accuride-t46322g16",
+  });
+  assert.equal(back.panels.length, 6);
+  assert.match(back.pullScrewReview ?? "", /front stack measures 1.406 in.*supplied 1 in screws/);
+  assert.ok(back.pull);
+  assert.ok(Math.abs(back.pull.position[2] + 9.125 + 1.3 / 2) < 1e-7);
+  assert.deepEqual(back.closed.interferenceIds, []);
+  const narrow = { ...base, pieces: base.pieces.map((piece) => ({
+    ...piece, position: [piece.position[0] * 0.39, ...piece.position.slice(1)] as V3,
+  })) };
+  assert.throws(() => previewDrawerBox(narrow, { ...input, barPull: true }), /wider or taller drawer front/);
 });

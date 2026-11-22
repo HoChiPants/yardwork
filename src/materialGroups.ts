@@ -48,13 +48,13 @@ const families: {
     id: "treated-4x4",
     name: "4 × 4 treated post",
     ids: ["post", "lowes-treated-post-4x4-8", "hd-treated-4x4-8", "hd-treated-4x4-12"],
-    preferred: "post",
+    preferred: "hd-treated-4x4-8",
   },
   {
     id: "board-1x4",
     name: "1 × 4 board",
     ids: ["one-four", "hd-pine-1x4", "lowes-pine-1x4"],
-    preferred: "one-four",
+    preferred: "hd-pine-1x4",
   },
   {
     id: "board-1x6",

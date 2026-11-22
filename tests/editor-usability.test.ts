@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { blank, part, projectSchema, type V3 } from "../src/model";
-import { bom, bounds, cutPiece, guideMarkdown, recordChanges } from "../src/engine";
+import { addMaterial, bom, bounds, cutPiece, guideMarkdown, recordChanges } from "../src/engine";
 import {
   partStockOptions, previewGroupStockReplacement, previewPartStockReplacement, stockReplacementGroup,
 } from "../src/partStockReplacement";
@@ -323,6 +323,19 @@ test("whole feet display as feet while non-whole feet and exact product dimensio
   assert.equal(formatStockLength(95.938), "95.938 in");
   assert.equal(preferredLengthUnit(0), "in");
   assert.equal(preferredLengthUnit(47.938), "in");
+});
+
+test("plain 8 ft post and pine board tiles retain exact products in the Home Depot handoff", () => {
+  const lumber = groupedMaterials("Lumber");
+  const project = blank("Lumber handoff");
+  const withMaterials = ["treated-4x4", "board-1x4"].reduce((current, id, index) => {
+    const { preferred } = materialPlacementOptions(lumber.find((group) => group.id === id)!);
+    return addMaterial(current, preferred.id, [index * 12, 0, 0], current.steps[0].id);
+  }, project);
+  assert.deepEqual(
+    homeDepotShoppingList(withMaterials).items.map(({ productId, quantity }) => [productId, quantity]).sort(),
+    [["205220341", 1], ["301993221", 1]],
+  );
 });
 
 test("a longer matching blank replaces an oversized estimate while preserving the actual part and source records", () => {

@@ -75,6 +75,22 @@ test("a drawer draft clears its door after adding fixed spacers and exports the 
   await motion.getByRole("button", { name: "Play closing", exact: true }).click();
   await expect(pose).toHaveAttribute("data-pose", "0");
 
+  await motion.getByText("Check a minimum gap", { exact: true }).click();
+  const moving = motion.getByRole("combobox", { name: "Moving part for gap", exact: true });
+  const leftSide = moving.getByRole("option", { name: /left side$/ });
+  await moving.selectOption((await leftSide.getAttribute("value"))!);
+  await motion.getByRole("combobox", { name: "Part to clear", exact: true }).selectOption(door.id);
+  await motion.getByRole("spinbutton", { name: "Required minimum gap", exact: true }).fill("0.0625");
+  await motion.getByRole("button", { name: "Check gap through travel", exact: true }).click();
+  const gap = motion.getByRole("region", { name: "Minimum gap result", exact: true });
+  await expect(gap).toContainText("Met throughout the modeled travel.");
+  await gap.getByRole("button", { name: "Find closest gap", exact: true }).click();
+  await expect(gap).toContainText("Closest checked gap 0.38932 in at Cabinet drawer · 5 in.");
+  await gap.getByRole("button", { name: "Inspect closest pose", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "100");
+  await expect(pose).toContainText("Cabinet drawer · 5 in");
+  await expect(pose).toContainText("Focused on");
+
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const downloaded = page.waitForEvent("download");
   await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();

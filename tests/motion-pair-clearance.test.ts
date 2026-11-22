@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { guideMarkdown } from "../src/engine";
 import { blank, part, projectSchema } from "../src/model";
 import { motionReviewLines, runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
+import { findClosestPairGap } from "../src/motionPairClearance";
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { prepareCollisionSolid, solidGap } from "../src/solidCollision";
 
@@ -30,7 +31,7 @@ test("sliding through a tight gap flags a mid-path shortfall without a collision
   assert.deepEqual(pass.clearance?.result, { status: "met" });
 });
 
-test("a swinging door checks the gap at an interior pose in a sequential test", () => {
+test("a swinging door finds the closest pose during the second leg of a sequence", async () => {
   const project = blank("Swinging door");
   const step = project.steps[0].id;
   const door = part("Door", "plywood", [10, 2, 1], [5, 4, 0], step, "Cabinet");
@@ -52,6 +53,63 @@ test("a swinging door checks the gap at an interior pose in a sequential test", 
   assert.deepEqual(result.hits, []);
   assert.equal(result.clearance?.phase, 1);
   assert.deepEqual(result.clearance?.result, { status: "short", gap: 0.0625, at: 75 });
+  const gap = await result.clearance!.findClosest!();
+  assert.equal(gap.phase, 1);
+  assert.equal(gap.at, 75);
+  assert.equal(gap.gap, 0.0625);
+  assert.ok(gap.lowerBound <= 0.0625 && gap.gap - gap.lowerBound <= 1 / 256);
+});
+
+test("a passing slide finds the gap away from the endpoints and first midpoint", async () => {
+  const { project, plan, clearance, lip } = drawerScene();
+  lip.position[2] = 3;
+  const drawer = project.pieces.find(({ id }) => id === clearance.movingId)!;
+  drawer.size[2] = 0.5;
+  lip.size[2] = 0.5;
+  const review = runMotionTest(project, plan, { held: [], clearance: { ...clearance, minimum: 0.05 } }).review!;
+  assert.deepEqual(review.clearance?.result, { status: "met" });
+  const closest = await review.clearance!.findClosest!();
+  assert.equal(closest.at, 3);
+  assert.equal(closest.gap, 0.0625);
+  assert.ok(closest.lowerBound <= 0.0625 && closest.gap - closest.lowerBound <= 1 / 256);
+});
+
+test("a hinge finds a narrow interior pass while keeping the minimum bounded", async () => {
+  const project = blank("Hinge corner");
+  const step = project.steps[0].id;
+  const door = part("Door", "plywood", [10, 2, 1], [5, 4, 0], step, "Cabinet");
+  const radians = 35 * Math.PI / 180;
+  const lip = part("Lip", "plywood", [0.5, 2, 0.5], [10 * Math.cos(radians), 6.0625, 10 * Math.sin(radians)], step, "Cabinet");
+  const { project: saved, plan } = saveMotionPlan({ ...project, pieces: [door, lip] }, {
+    label: "Door", memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: [0, 4, 0], travel: 90 },
+  });
+  const clearance = { movingId: door.id, otherId: lip.id, minimum: 0.05 };
+  const review = runMotionTest(saved, plan, { held: [], clearance }).review!;
+  assert.deepEqual(review.clearance?.result, { status: "met" });
+  const gap = await review.clearance!.findClosest!();
+  assert.ok(gap.at > 30 && gap.at < 40);
+  // The overlap in plan near 35° leaves the constant Y separation as the gap.
+  assert.equal(gap.gap, 0.0625);
+  assert.ok(gap.lowerBound <= 0.0625 && gap.gap - gap.lowerBound <= 1 / 256);
+});
+
+test("the gap search retains a lower bound when its pose budget runs out", async () => {
+  const project = blank();
+  const a = part("A", "plywood", [2, 2, 2], [0, 0, 0], project.steps[0].id, "Test");
+  const b = part("B", "plywood", [2, 2, 2], [0, 3, 0], project.steps[0].id, "Test");
+  const pair = [prepareCollisionSolid(a)!, prepareCollisionSolid(b)!] as const;
+  let checked = 0;
+  const gap = await findClosestPairGap(90, () => {
+    checked++;
+    return [...pair];
+  }, () => 100_000);
+  assert.equal(checked, 511);
+  assert.deepEqual(gap, { at: 0, gap: 1, lowerBound: 0 });
+  const signal = AbortSignal.abort();
+  await assert.rejects(findClosestPairGap(90, () => {
+    assert.fail("An aborted search should skip geometry work.");
+  }, () => 100_000, signal), { name: "AbortError" });
 });
 
 test("saved gap checks export the observed result and review removed parts on reopen", () => {

@@ -11,7 +11,7 @@ import { reviewSiteSweepBand, sweepLidSiteFaces } from "./lidSiteClearance";
 import { formatPreciseInches } from "./measurement";
 import { hingeComponentExtrema, hingeOffsetAt, hingeOffsetSegments, hingeOffsetSpeed } from "./measuredHingePath";
 import { sectionParts, uid, type Piece, type Project, type V3 } from "./model";
-import { sweepPairClearance, type PairClearanceResult } from "./motionPairClearance";
+import { findClosestPairGap, sweepPairClearance, type ClosestPairGap, type PairClearanceResult } from "./motionPairClearance";
 import {
   motionPlanInputSchema,
   motionPlanSchema,
@@ -216,7 +216,13 @@ type MovingShape = Shape & {
   extrema: ReturnType<typeof sweptExtrema>;
 };
 type ContactShape = MovingShape | (Shape & { motion?: undefined });
-type PairClearanceFinding = { requirement: MotionPairClearance; result: PairClearanceResult; phase?: MotionPhase };
+type PairClearanceFinding = {
+  requirement: MotionPairClearance;
+  result: PairClearanceResult;
+  phase?: MotionPhase;
+  findClosest?: (signal?: AbortSignal) => Promise<ClosestMotionGap>;
+};
+export type ClosestMotionGap = ClosestPairGap & { phase?: MotionPhase };
 
 type SiteMotionRow = { row: MovingShape; plane: SiteClearance };
 export type MotionPhase = 0 | 1;
@@ -1012,12 +1018,13 @@ export function reviewMotionPath(
         return { requirement, result: { status: "needs-review", reason: "A selected part is missing or has no usable geometry." } };
       if (first.solid.kind === "envelope" || second.solid.kind === "envelope")
         return { requirement, result: { status: "needs-review", reason: "A selected part has an exterior envelope only. Measure the actual gap." } };
+      const posePair = (at: number): [CollisionSolid, CollisionSolid] => [motionSolid(first, at), motionSolid(second, at)];
+      const speedBound = (axis?: V3) => separationSpeed(first, second, axis);
       try {
         return {
           requirement,
-          result: sweepPairClearance(requirement.minimum, mechanism.travel,
-            (at) => [motionSolid(first, at), motionSolid(second, at)],
-            (axis) => separationSpeed(first, second, axis)),
+          result: sweepPairClearance(requirement.minimum, mechanism.travel, posePair, speedBound),
+          findClosest: (signal) => findClosestPairGap(mechanism.travel, posePair, speedBound, signal),
         };
       } catch {
         return { requirement, result: { status: "needs-review", reason: "The modeled profiles could not be measured. Verify the gap on site." } };
@@ -1260,12 +1267,26 @@ function reviewMotionSequence(
     unresolvedIds: [...new Set(phases.flatMap(({ unresolvedIds }) => unresolvedIds))],
     pairClearance(requirement) {
       const checks = phases.map((motion) => motion.pairClearance(requirement));
+      const [firstSearch, secondSearch] = checks.map(({ findClosest }) => findClosest);
+      const findClosest: PairClearanceFinding["findClosest"] = firstSearch && secondSearch
+        ? async (signal) => {
+            const firstGap = await firstSearch(signal);
+            const secondGap = await secondSearch(signal);
+            const phase = firstGap.gap <= secondGap.gap ? 0 : 1;
+            const closest = phase === 0 ? firstGap : secondGap;
+            return {
+              ...closest, phase, at: asProgress(phase, closest.at),
+              lowerBound: Math.min(firstGap.lowerBound, secondGap.lowerBound),
+            };
+          }
+        : undefined;
       for (const phase of phaseIndices) {
         const { result } = checks[phase];
         if (result.status === "short")
-          return { requirement, phase, result: { ...result, at: asProgress(phase, result.at) } };
+          return { requirement, phase, result: { ...result, at: asProgress(phase, result.at) }, findClosest };
       }
-      return checks.find(({ result }) => result.status === "needs-review") ?? checks[0];
+      const finding = checks.find(({ result }) => result.status === "needs-review") ?? checks[0];
+      return { ...finding, findClosest };
     },
     playbackLimit(requestedFrom, requestedTo) {
       const from = motionPosition(requestedFrom, sequenceEnd);

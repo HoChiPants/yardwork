@@ -865,6 +865,24 @@ test("a drawer can pass without touching and still fail a saved minimum gap test
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("Named clearance test · Drawer lip check");
   expect(guide).toContain("Shortfall. Observed 0.0625 in near 6 in.");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  const required = panel.getByRole("spinbutton", { name: "Required minimum gap", exact: true });
+  if (!(await required.isVisible())) await panel.getByText("Check a minimum gap", { exact: true }).click();
+  await required.fill("0.05");
+  await panel.getByRole("button", { name: "Check gap through travel", exact: true }).click();
+  await expect(result).toContainText("Met throughout the modeled travel");
+  await result.getByRole("button", { name: "Find closest gap", exact: true }).click();
+  await expect(result).toContainText("Closest checked gap 0.0625 in at 6 in.");
+  await expect(result).toContainText(/Modeled minimum between 0\.0\d+ in and 0\.063 in/);
+  await panel.getByRole("button", { name: "Inspect fully open", exact: true }).click();
+  await expect(page.getByTestId("motion-preview-label")).toHaveAttribute("data-pose", "12");
+  await result.getByRole("button", { name: "Inspect closest pose", exact: true }).click();
+  await expect(page.getByTestId("motion-preview-label")).toHaveAttribute("data-pose", "6");
+  await expect(page.getByTestId("motion-preview-label")).toContainText("Focused on P001 and P002");
+  await required.fill("0.04");
+  await panel.getByRole("button", { name: "Check gap through travel", exact: true }).click();
+  await expect(result.getByRole("button", { name: "Find closest gap", exact: true })).toBeVisible();
+  await expect(result.getByText(/Closest checked gap/)).toHaveCount(0);
 });
 
 test("a door can stop short of a wall while a drawer opens to a saved target", async ({ page }) => {

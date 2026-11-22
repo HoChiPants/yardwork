@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { formatPreciseInches } from "./measurement";
 import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
+import { ClosestMotionGap } from "./ClosestMotionGap";
 import { MeasuredHingePathFields } from "./MeasuredHingePathFields";
 import { MotionSequenceTargetsFields } from "./MotionSequenceTargetsFields";
 import {
@@ -1341,6 +1342,10 @@ export function MotionPanel({
                   </button>
                 );
               })()}
+              <ClosestMotionGap review={review} onInspect={({ at, phase }) => {
+                const requirement = review.clearance?.requirement;
+                if (requirement) show(at, undefined, phase, [requirement.movingId, requirement.otherId]);
+              }} />
             </section>
           )}
           {!review.hits.length &&

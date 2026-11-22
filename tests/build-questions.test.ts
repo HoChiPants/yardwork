@@ -6,6 +6,7 @@ import { validate } from "../src/engine";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
 import { blank, part } from "../src/model";
 import { saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
+import { planDedicatedBoardCuts } from "../src/recordStockCutLayout";
 
 test("workspace questions leave layout and edit requests to the planner", () => {
   assert.equal(buildQuestion("Add a cabinet door that opens outward"), null);
@@ -247,4 +248,42 @@ test("mixed cut lists accept a factory end and reject a last trim thinner than t
   assert.match(exact.detail, /2 pieces from 1 board · 8 ft/);
   const thin = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 48 in and 47.8 in")!, []);
   assert.match(thin.detail, /2 pieces from 1 board · 10 ft/);
+});
+
+test("a named existing offcut can supply several pieces before new stock is chosen", () => {
+  const blankProject = blank("Cut list with existing stock");
+  const project = addMeasuredOffcut(blankProject, blankProject.steps[0].id, "hd-kdht-2x4-8", [80, 3.5, 1.5], "Stored 2 × 4");
+  const request = buildQuestion("Plan 2x4 cuts of 48 in, 30 in, 44 in and 42 in using O001")!;
+  assert.deepEqual(request, { kind: "board-cut-list", nominal: "2 × 4", treated: false,
+    lengths: [48, 30, 44, 42], offcutLabel: "O001" });
+  const result = answerBuildQuestion(project, request, []);
+  assert.match(result.detail, /4 pieces using O001 · 1 board to buy/);
+  const action = result.link?.action;
+  assert.equal(action?.kind, "board-cut-list");
+  if (action?.kind !== "board-cut-list") throw Error("Expected the Cut pool review.");
+  assert.deepEqual(action.plan.boards.map(({ length, cuts, offcut, source }) => [length, cuts, offcut, source?.label]),
+    [[80, [48, 30], 1.75, "O001"], [96, [44, 42], 9.75, undefined]]);
+  assert.equal(action.plan.purchaseLength, 96);
+  const exactTail = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 41 in and 38.875 in from offcut O001")!, []);
+  assert.match(exactTail.detail, /0 boards to buy/);
+  const thinTrim = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 41 in and 38.75 in using O001")!, []);
+  assert.match(thinTrim.detail, /1 board to buy/);
+  const unavailable = answerBuildQuestion(project, buildQuestion("Plan treated 2x4 cuts of 48 in using O001")!, []);
+  assert.equal(unavailable.link, undefined);
+});
+
+
+test("a named cut list keeps the original planned board as a prerequisite", () => {
+  const draft = blank("Expected board offcut");
+  const blankPart = part("Rail", "stud", [1.5, 72, 3.5], [0, 36, 0], draft.steps[0].id, "Rail");
+  draft.pieces = [blankPart];
+  const project = planDedicatedBoardCuts(draft, [blankPart.id]);
+  const request = buildQuestion("Plan 2x4 cuts of 10 in and 12 in using O001")!;
+  const answer = answerBuildQuestion(project, request, []);
+  assert.match(answer.detail, /0 boards to buy/);
+  const action = answer.link?.action;
+  assert.equal(action?.kind, "board-cut-list");
+  if (action?.kind !== "board-cut-list") throw Error("Expected the named stock review.");
+  assert.deepEqual(action.plan.boards.map(({ source, cuts, offcut }) => [source?.pending, cuts, offcut]),
+    [[true, [10, 12], 1.625]]);
 });

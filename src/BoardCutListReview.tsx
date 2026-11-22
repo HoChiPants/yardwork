@@ -9,14 +9,15 @@ export function BoardCutListReview({ name, plan, onApply }: {
   const partCount = plan.boards.reduce((total, { cuts }) => total + cuts.length, 0);
   return <>
     <h2 id="modal-title">Review lumber cut list</h2>
-    <p>{name} · {formatStockLength(plan.purchaseLength)} total stock</p>
+    <p>{name} · {plan.purchaseLength ? `${formatStockLength(plan.purchaseLength)} to buy` : "0 boards to buy"}</p>
     <ol className="board-cut-review" aria-label="Stock cut order">
-      {plan.boards.map(({ length, cuts, kerf, offcut }, index) => (
+      {plan.boards.map(({ length, cuts, kerf, offcut, source }, index) => (
         <li key={index}>
-          <strong>{formatStockLength(length)} board</strong>
+          <strong>{source ? `${source.label} · ${formatStockLength(length)} from Cut pool` : `${formatStockLength(length)} board`}</strong>
           <p>{cuts.map(formatStockLength).join(" + ")}</p>
           <small>{formatStockLength(kerf)} blade allowance
             {offcut > 1e-8 && ` · ${formatStockLength(offcut)} offcut`}</small>
+          {source?.pending && <p className="small-note">Complete the source stock cut order first.</p>}
         </li>
       ))}
     </ol>

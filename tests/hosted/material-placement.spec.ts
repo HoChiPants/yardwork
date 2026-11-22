@@ -614,3 +614,47 @@ test("a mixed cut list previews, cancels and places both stock sizes before reus
   expect(guide.indexOf("## Planned stock cuts")).toBeLessThan(guide.indexOf("## Recorded offcut cut order"));
   expect(guide).toContain("Crosscut to 16 in");
 });
+
+test("a mixed cut list uses a named offcut twice and keeps only the additional board in shopping", async ({ page }) => {
+  const base = blank("Stored rail blank");
+  const existing = addMeasuredOffcut(base, base.steps[0].id, "hd-kdht-2x4-8", [80, 3.5, 1.5], "Stored 2 × 4");
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "existing-offcut.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(existing)),
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" })
+    .fill("Plan 2x4 cuts of 48 in, 30 in, 44 in and 42 in using O001");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Lumber cut list", exact: true });
+  await expect(answer).toContainText("4 pieces using O001 · 1 board to buy");
+  await answer.getByRole("button", { name: "Preview cut list in 3D", exact: true }).click();
+  await expect(dialog).toContainText("O001 · 80 in from Cut pool");
+  await expect(dialog).toContainText("1.75 in offcut");
+  await dialog.getByRole("button", { name: "Plan and place 4 pieces", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cut pool (2)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator(".inspector-scroll .bom-row")).toContainText("1 board to buy · 4 parts · 2 offcuts");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  let downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Editable project/ }).click();
+  const model = projectSchema.parse(JSON.parse(await readFile((await (await downloaded).path())!, "utf8")));
+  const [oldSource] = existing.onHandCutSources!;
+  const kept = model.pieces.filter(({ offcut }) => !offcut);
+  expect(kept.filter(({ cutStock }) => cutStock?.id === oldSource).map(({ size }) => size[1])).toEqual([48, 30]);
+  expect(model.plannedCutSources).toHaveLength(1);
+  expect(model.plannedCutSources![0].sourceId).not.toBe(oldSource);
+  const offcutHistory = model.history.filter(({ offcutCut }) => !!offcutCut);
+  expect(offcutHistory[1].offcutCut?.inputId).toBe(offcutHistory[0].offcutCut?.remnants[0]?.id);
+  if (!await dialog.isVisible()) await page.getByRole("button", { name: "Export", exact: true }).click();
+  downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await downloaded).path())!, "utf8");
+  expect(guide).toContain("O001 → P001");
+  expect(guide).toContain("O002 → P002");
+  expect(guide).toContain("Crosscut 44 in from the current end for P003");
+});

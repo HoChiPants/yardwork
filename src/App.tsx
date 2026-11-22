@@ -1405,19 +1405,30 @@ export function App() {
         setLibrary("cuts");
         break;
       case "board-cut-list": {
-        const requests = action.plan.boards.flatMap(({ stock, cuts }) =>
-          cuts.map((length) => ({ id: stock, length })));
+        const requests = action.plan.boards.flatMap(({ stock, cuts, source }) =>
+          cuts.map((length) => ({ id: stock, length, stockLengthAxis: source?.axis })));
         const { next, parts } = prepareMaterialPieces(requests, [0, 0, 0]);
         requests.forEach(({ length }, index) => {
           parts[index].name = `${action.name} · ${formatStockLength(length)}`;
         });
         let start = 0;
-        const boards = action.plan.boards.map(({ cuts }) => {
+        let staged = next;
+        const purchases: string[][] = [];
+        for (const { cuts, source } of action.plan.boards) {
           const ids = parts.slice(start, start + cuts.length).map(({ id }) => id);
           start += cuts.length;
-          return ids;
-        });
-        setBoardCutDraft({ source: project, next: planBoardCutGroups(next, boards),
+          if (!source) {
+            purchases.push(ids);
+            continue;
+          }
+          let offcut: string | undefined = source.id;
+          for (const id of ids) {
+            if (!offcut) throw Error("The current offcut cannot supply all the selected pieces.");
+            staged = assignOffcutToPart(staged, id, offcut);
+            offcut = staged.history.at(-1)?.offcutCut?.remnants[0]?.id;
+          }
+        }
+        setBoardCutDraft({ source: project, next: purchases.length ? planBoardCutGroups(staged, purchases) : staged,
           name: action.name, plan: action.plan, parts });
         setPlaying(false);
         setStage(null);

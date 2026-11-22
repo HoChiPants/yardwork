@@ -45,6 +45,9 @@ test("preview a register conflict and save the clear opening and seal plan on a 
   const save = dialog.getByRole("button", { name: "Save opening and seal plan", exact: true });
   await expect(save).toBeDisabled();
   await dialog.getByRole("checkbox", { name: /I measured the delivered throat/ }).check();
+  const purchase = dialog.getByRole("checkbox", { name: /The measured boot is Master Flow ERB10X4X6/ });
+  await expect(purchase).not.toBeChecked();
+  await purchase.check();
   await page.screenshot({ path: info.outputPath("floor-register-preview-phone.png") });
   await save.click();
   await expect(dialog).toHaveCount(0);
@@ -69,6 +72,11 @@ test("preview a register conflict and save the clear opening and seal plan on a 
   expect(guide).toContain("28.5 in modeled perimeter");
   expect(guide).toContain("https://www.homedepot.com/p/100197347");
   await expect(page.locator(".print-guide")).toContainText("28.5 in modeled perimeter");
+  if (await dialog.isVisible()) await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await dialog.getByRole("button", { name: /^Add 1 box of Master Flow/ }).click();
+  await expect(dialog.getByRole("list", { name: "Home Depot purchase review" })).toContainText("#100197347");
 });
 
 test("ask how to reuse a register cutout and record the measured piece in the Cut pool", async ({ page }, info) => {

@@ -5824,8 +5824,8 @@ export function App() {
             {modal === "floor-register" && <FloorRegisterPanel key={project.id} project={project} panelId={selected ?? undefined}
               initialId={shownFloorRegister?.projectId === project.id ? shownFloorRegister.id : undefined}
               onPreview={setFloorRegisterDraft}
-              onSave={(input, id) => safe(() => {
-                const next = change((live) => saveFloorRegister(live, input, id));
+              onSave={(input, id, useReferenceBoot) => safe(() => {
+                const next = change((live) => saveFloorRegister(live, input, id, useReferenceBoot));
                 const saved = next.floorRegisterPlans?.at(-1);
                 if (saved) setShownFloorRegister({ projectId: project.id, id: saved.id });
                 setModal(null);

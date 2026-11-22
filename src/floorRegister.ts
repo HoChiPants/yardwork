@@ -103,12 +103,15 @@ function withoutFloorRegisterOpening(project: Project, plan: Plan): Project {
   }) };
 }
 
-export function saveFloorRegister(project: Project, input: FloorRegisterMeasurements, planId?: string): Project {
+export function saveFloorRegister(project: Project, input: FloorRegisterMeasurements, planId?: string, useReferenceBoot = false): Project {
   const prior = project.floorRegisterPlans?.find(({ id }) => id === planId);
   if (planId && !prior) throw Error("This register plan changed. Open it again.");
   const { layout, issue } = previewFloorRegister(project, input, prior);
   if (issue || !layout?.openingProject) throw Error(issue ?? "Preview a clear floor register opening.");
   const id = planId ?? uid();
+  const plan: Plan = { id, input };
+  if (prior?.recoveredCutout) plan.recoveredCutout = prior.recoveredCutout;
+  if (useReferenceBoot) plan.purchaseModel = floorRegisterBoot.model;
   const pieces = layout.openingProject.pieces.map((piece) => {
     if (piece.id !== input.panelId) return piece;
     const openings = [...piece.rectangularOpenings!];
@@ -117,7 +120,7 @@ export function saveFloorRegister(project: Project, input: FloorRegisterMeasurem
   });
   return projectSchema.parse({
     ...layout.openingProject, pieces,
-    floorRegisterPlans: [...(project.floorRegisterPlans ?? []).filter((plan) => plan.id !== id), { ...prior, id, input }],
+    floorRegisterPlans: [...(project.floorRegisterPlans ?? []).filter((plan) => plan.id !== id), plan],
     guideFingerprint: null,
   });
 }
@@ -180,6 +183,11 @@ export function floorRegisterSealMethod(layout: FloorRegisterPreview) {
     : "Review fiberglass mesh tape and mastic for the wider gap.";
 }
 
+export function floorRegisterBootCount(project: Project) {
+  const selected = floorRegisterReviews(project).filter(({ plan }) => plan.purchaseModel === floorRegisterBoot.model);
+  return selected.some(({ issue }) => !!issue) ? null : selected.length;
+}
+
 export function floorRegisterGuideLines(project: Project) {
   return floorRegisterReviews(project).flatMap(({ plan, issue, layout }) => {
     const label = partLabel(project, plan.input.panelId);
@@ -188,6 +196,7 @@ export function floorRegisterGuideLines(project: Project) {
     const dimensions = [plan.input.openingLength, plan.input.openingWidth].map(formatStockLength).join(" × ");
     return [
       `${label} · ${dimensions} opening. Start ${formatStockLength(plan.input.fromLeft)} from the low X edge and ${formatStockLength(plan.input.fromFront)} from the low Z edge.`,
+      ...(plan.purchaseModel ? [`Selected boot · ${floorRegisterBoot.model} · Home Depot Internet #${floorRegisterBoot.internet}.`] : []),
       `Dry-fit the measured boot and secure it to framing. Then seal the ${formatStockLength(layout.sealRun)} modeled perimeter. ${floorRegisterSealMethod(layout)}`,
       cutout || `${floorRegisterCutoutUse} Measure the usable rectangle after cutting, then record it in the Cut pool.`,
     ];

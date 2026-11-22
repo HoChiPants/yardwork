@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { floorRegisterBoot } from "./floorRegisterReference";
 
 const span = z.number().finite().min(0.125).max(48);
 const edge = z.number().finite().min(0).max(240);
@@ -25,6 +26,7 @@ export type FloorRegisterMeasurements = z.infer<typeof floorRegisterMeasurements
 export const floorRegisterPlansSchema = z.array(z.strictObject({
   id: z.uuid(),
   input: floorRegisterMeasurementsSchema,
+  purchaseModel: z.literal(floorRegisterBoot.model).optional(),
   recoveredCutout: z.strictObject({
     sourceId: z.uuid(),
     dimensions: z.tuple([recoveredSpan, recoveredSpan, z.number().finite().positive()]),

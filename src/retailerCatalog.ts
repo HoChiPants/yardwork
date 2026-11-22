@@ -47,6 +47,7 @@ import { drywallInstallation, drywallReviewedAt, drywallSpecification, drywallSt
 import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 import { weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot } from "./roofVentFlashingReference";
+import { floorRegisterBoot } from "./floorRegisterReference";
 import { trimSealant } from "./trimSealantReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
@@ -4462,6 +4463,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: weatherWatch.evaluation, verifiedAt: weatherWatch.reviewedAt, note: "ICC-ES ESR-1322 covers the listed membrane and installation conditions." },
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [weatherWatch.listing, weatherWatch.specification] },
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: floorRegisterBoot.id,
+    name: floorRegisterBoot.label,
+    manufacturer: "Master Flow",
+    manufacturerPartNumber: floorRegisterBoot.model,
+    category: "equipment",
+    status: "reviewed-specs",
+    verifiedAt: floorRegisterBoot.reviewedAt,
+    profile: profile("equipment", null, 1, { materialFamily: "galvanized end register box" }),
+    offers: [hd(floorRegisterBoot.internet, floorRegisterBoot.model, floorRegisterBoot.sku)],
+    sources: [
+      { url: floorRegisterBoot.listing, verifiedAt: floorRegisterBoot.reviewedAt, note: "One galvanized end register box for a 10 × 4 in grille and 6 in round duct." },
+      { url: floorRegisterBoot.specification, verifiedAt: floorRegisterBoot.reviewedAt, note: "GAF identifies ERB10X4X6 as a 6 in diameter right-angle end box for an opening parallel to floor joists and header." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [floorRegisterBoot.listing, floorRegisterBoot.specification] },
     discrepancies: [],
     capabilities: [],
   },

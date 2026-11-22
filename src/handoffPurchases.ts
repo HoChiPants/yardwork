@@ -9,6 +9,8 @@ import { reviewRimAirSeals } from "./rimAirSeals";
 import { valleyPurchasePurpose, weatherWatch } from "./roofValleyReference";
 import { reviewRoofValleys } from "./roofValleys";
 import { oateyRoofVentBoot, roofVentPurchasePurpose } from "./roofVentFlashingReference";
+import { floorRegisterBoot, floorRegisterPurchasePurpose } from "./floorRegisterReference";
+import { floorRegisterBootCount } from "./floorRegister";
 import { roofVentFlashingCount } from "./roofVentFlashing";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
@@ -212,6 +214,11 @@ export function homeDepotPurchaseNeeds(
     const count = roofVentFlashingCount(project);
     include(oateyRoofVentBoot.id, roofVentPurchasePurpose, count,
       count === null ? "Review changed deck geometry and overlapping flashing footprints before choosing a quantity." : undefined);
+  }
+  if (project.floorRegisterPlans?.some(({ purchaseModel }) => purchaseModel === floorRegisterBoot.model)) {
+    const count = floorRegisterBootCount(project);
+    include(floorRegisterBoot.id, floorRegisterPurchasePurpose, count,
+      count === null ? "Recheck the selected floor register cut and boot clearance before ordering." : undefined);
   }
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);

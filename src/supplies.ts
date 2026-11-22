@@ -19,6 +19,7 @@ import { bottomPlateScope, bottomPlateSealant } from "./bottomPlateSealReference
 import { rimEdgeSealant, rimFoam, rimSealScope } from "./rimAirSealReference";
 import { valleyScope, weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
+import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
 import { trimSealant } from "./trimSealantReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
@@ -413,6 +414,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "piece",
     contents: [{ name: "18 in × 18 in thermoplastic flashing and vent collar", quantity: 1 }],
     requirements: [roofVentFlashingScope],
+  },
+  [floorRegisterBoot.id]: {
+    purchaseUnit: "box",
+    contents: [{ name: "10 × 4 in to 6 in galvanized end register box", quantity: 1 }],
+    requirements: [floorRegisterScope],
   },
   [rimFoam.id]: {
     purchaseUnit: "sheet",

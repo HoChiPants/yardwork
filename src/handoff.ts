@@ -18,6 +18,8 @@ import { valleyPurchasePurpose, weatherWatch } from "./roofValleyReference";
 import { reviewRoofValleys } from "./roofValleys";
 import { oateyRoofVentBoot, roofVentPurchasePurpose } from "./roofVentFlashingReference";
 import { roofVentFlashingCount } from "./roofVentFlashing";
+import { floorRegisterBoot, floorRegisterPurchasePurpose } from "./floorRegisterReference";
+import { floorRegisterBootCount } from "./floorRegister";
 
 const linkedPurchasePlans: Partial<Record<string, { purpose: string; units: (project: Project) => number }>> = {
   [rimFoam.id]: {
@@ -42,12 +44,31 @@ const linkedPurchasePlans: Partial<Record<string, { purpose: string; units: (pro
     purpose: roofVentPurchasePurpose,
     units: (project) => roofVentFlashingCount(project) ?? 0,
   },
+  [floorRegisterBoot.id]: {
+    purpose: floorRegisterPurchasePurpose,
+    units: (project) => floorRegisterBootCount(project) ?? 0,
+  },
 };
 const clean = (value: string) => value.replace(/[\r\n\t]+/g, " ").trim();
 const ventPurchaseReview = {
   name: "Sauna ventilation",
   reason: "Confirm compatible ducts, grilles, the adjustable intake valve and termination after reviewing the wall marks and route.",
 };
+
+function linkedSupplyHold(project: Project, supply: ReturnType<typeof supplyRows>[number]) {
+  const linked = linkedPurchasePlans[supply.productId];
+  if (!linked) return;
+  const selected = supply.selections.filter(({ purpose }) => purpose === linked.purpose)
+    .reduce((total, { quantity }) => total + quantity, 0);
+  if (!selected) return;
+  const withheld = selected - linked.units(project);
+  if (withheld > 0) return {
+    purpose: linked.purpose,
+    withheld,
+    name: supply.name,
+    reason: `Review ${withheld} previously selected ${purchaseUnitLabel(supply.purchaseUnit, withheld)} against the current cut plan.`,
+  };
+}
 
 export type HomeDepotPurchaseItem = {
   name: string;
@@ -72,8 +93,25 @@ function placedAndRecorded(project: Project, id: string) {
 
 /** Detailed checklist for the builder, including items outside the retailer list. */
 function formatHandoff(project: Project): string {
+  const recordedSupplies = supplyRows(project);
+  const holds = project.retailer === "lowes" ? [] : recordedSupplies.flatMap((supply) => {
+    const hold = linkedSupplyHold(project, supply);
+    return hold ? [[supply.productId, hold] as const] : [];
+  });
+  const remainingHolds = new Map(holds.map(([id, hold]) => [id, { ...hold }]));
+  const purchaseProject = holds.length ? {
+    ...project,
+    supplies: project.supplies.flatMap((selection) => {
+      const hold = remainingHolds.get(selection.productId);
+      if (!hold || hold.purpose !== selection.purpose || hold.withheld <= 0) return [selection];
+      const removed = Math.min(selection.quantity, hold.withheld);
+      hold.withheld -= removed;
+      const quantity = selection.quantity - removed;
+      return quantity ? [{ ...selection, quantity }] : [];
+    }),
+  } : project;
   const rows = bom(project),
-    supplies = supplyRows(project),
+    supplies = holds.length ? supplyRows(purchaseProject) : recordedSupplies,
     onHand = stockOnHand(rows),
     pricing = projectPricingCoverage(project, rows, supplies),
     oversized = rows.flatMap((r) => r.oversizedParts),
@@ -98,7 +136,7 @@ function formatHandoff(project: Project): string {
     unresolvedHardware.length ||
     possibleDuplicates.length ||
     cutSources.length ||
-    supplyQuestions || plannedNeeds.length || ventLayout || assemblyReview?.incomplete || pricing.status === "partial"
+    supplyQuestions || holds.length || plannedNeeds.length || ventLayout || assemblyReview?.incomplete || pricing.status === "partial"
       ? "INCOMPLETE MATERIAL LIST — resolve the part, hardware, price and quantity questions below before ordering."
       : "MATERIAL LIST FOR REVIEW",
     "",
@@ -214,7 +252,9 @@ function formatHandoff(project: Project): string {
         `- ${material(item.materialId).name}: ${item.physicalUnits} placed item(s) + ${item.recordedUnits} item(s) specified by connections. Current purchase total includes both; no automatic deduction has been made.`,
       );
   }
-  if (project.supplies.length) lines.push(suppliesMarkdown(project));
+  if (purchaseProject.supplies.length) lines.push(suppliesMarkdown(purchaseProject));
+  if (holds.length) lines.push("", "LINKED PURCHASES TO REVIEW",
+    ...holds.map(([, { name, reason }]) => `- ${clean(name)} · ${reason}`));
   if (plannedNeeds.length) {
     lines.push("", "PURCHASES STILL TO SELECT FROM THE PLAN");
     for (const need of plannedNeeds) {
@@ -359,19 +399,9 @@ export function homeDepotShoppingList(project: Project, rows = bom(project), sup
   }
 
   for (const supply of supplies) {
-    let quantity = supply.quantity;
-    const linked = linkedPurchasePlans[supply.productId];
-    if (linked) {
-      const selectedForPlan = supply.selections.filter(({ purpose }) => purpose === linked.purpose)
-        .reduce((total, row) => total + row.quantity, 0);
-      if (selectedForPlan) {
-        const withheld = selectedForPlan - linked.units(project);
-        if (withheld > 0) {
-          quantity -= withheld;
-          reviews.push({ name: supply.name, reason: `Review ${withheld} previously selected ${purchaseUnitLabel(supply.purchaseUnit, withheld)} against the current cut plan.` });
-        }
-      }
-    }
+    const hold = linkedSupplyHold(project, supply);
+    const quantity = supply.quantity - (hold?.withheld ?? 0);
+    if (hold) reviews.push({ name: hold.name, reason: hold.reason });
     if (!quantity) continue;
     if (supply.unresolved || !supply.offer || !supply.storeSnapshotEligible) {
       reviews.push({

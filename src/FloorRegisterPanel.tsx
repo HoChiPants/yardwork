@@ -29,7 +29,7 @@ export function FloorRegisterPanel({ project, panelId, initialId, onPreview, onS
   panelId?: string;
   initialId?: string;
   onPreview: (layout?: FloorRegisterPreview) => void;
-  onSave: (input: FloorRegisterMeasurements, id?: string) => void;
+  onSave: (input: FloorRegisterMeasurements, id: string | undefined, useReferenceBoot: boolean) => void;
   onRemove: (id: string) => void;
   onShow: (id: string) => void;
   onCutout: (id: string, dimensions: V3) => void;
@@ -65,7 +65,7 @@ export function FloorRegisterPanel({ project, panelId, initialId, onPreview, onS
         onRecord={(dimensions) => onCutout(active.plan.id, dimensions)} />}
     {initialPanel ? <RegisterMeasurements key={activeId} project={project} panels={panels}
       existing={active?.plan} initialPanelId={initialPanel.id} onPreview={onPreview}
-      onSave={(input) => onSave(input, active?.plan.id)} /> : <p role="status">Add a horizontal wood subfloor panel first.</p>}
+      onSave={(input, useReferenceBoot) => onSave(input, active?.plan.id, useReferenceBoot)} /> : <p role="status">Add a horizontal wood subfloor panel first.</p>}
     <p className="small-note">
       <a href={floorRegisterBoot.listing} target="_blank" rel="noreferrer">Master Flow end register box</a>{" · "}
       <a href={floorRegisterBoot.airSeal} target="_blank" rel="noreferrer">PNNL duct-boot sealing</a>
@@ -99,7 +99,7 @@ function RegisterMeasurements({ project, panels, existing, initialPanelId, onPre
   existing?: NonNullable<Project["floorRegisterPlans"]>[number];
   initialPanelId: string;
   onPreview: (layout?: FloorRegisterPreview) => void;
-  onSave: (input: FloorRegisterMeasurements) => void;
+  onSave: (input: FloorRegisterMeasurements, useReferenceBoot: boolean) => void;
 }) {
   const [input, setInput] = useState<FloorRegisterMeasurements>(() => existing?.input ?? {
     panelId: initialPanelId, fromLeft: NaN, fromFront: NaN, openingLength: NaN, openingWidth: NaN,
@@ -107,12 +107,14 @@ function RegisterMeasurements({ project, panels, existing, initialPanelId, onPre
     bodyOffsetX: 0, bodyOffsetZ: 0,
   });
   const [confirmed, setConfirmed] = useState(false);
+  const [useReferenceBoot, setUseReferenceBoot] = useState(existing?.purchaseModel === floorRegisterBoot.model);
   const [editing, setEditing] = useState(true);
   const [preview, setPreview] = useState<ReturnType<typeof previewFloorRegister> & { source: Project }>();
   const checked = preview?.source === project ? preview : undefined;
   function update(patch: Partial<FloorRegisterMeasurements>) {
     setInput((current) => ({ ...current, ...patch }));
     setConfirmed(false);
+    setUseReferenceBoot(false);
     setPreview(undefined);
     onPreview();
   }
@@ -154,7 +156,11 @@ function RegisterMeasurements({ project, panels, existing, initialPanelId, onPre
             <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
             <span>I measured the delivered throat, the body and the outlet, and checked the surrounding framing.</span>
           </label>
-          <button type="button" className="button primary" disabled={!confirmed} onClick={() => onSave(input)}>
+          <label className="valley-check">
+            <input type="checkbox" checked={useReferenceBoot} onChange={(event) => setUseReferenceBoot(event.target.checked)} />
+            <span>The measured boot is Master Flow {floorRegisterBoot.model} with a 10 × 4 in grille and 6 in outlet. Include it in shopping review.</span>
+          </label>
+          <button type="button" className="button primary" disabled={!confirmed} onClick={() => onSave(input, useReferenceBoot)}>
             Save opening and seal plan
           </button>
         </>}

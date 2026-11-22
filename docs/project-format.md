@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 129**. Yardwork reads valid formats 1–128 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 130**. Yardwork reads valid formats 1–129 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 130 can record the explicitly chosen floor register boot model. Shopping review counts selected boots from clear register plans and checks existing linked purchases against the current geometry.
 
 Format 129 can record the measured rectangle recovered after cutting a floor register opening. It links the saved register to a single physical Cut pool source. Older register plans can record their cutout from the planner.
 

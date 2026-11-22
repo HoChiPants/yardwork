@@ -6,6 +6,10 @@ import { floorRegisterGuideLines, floorRegisterReviews, floorRegisterSealMethod,
 import { bom, guideMarkdown, validate } from "../src/engine";
 import { assignOffcutToPart } from "../src/offcutAssignment";
 import { orientedStockSize } from "../src/stockAxes";
+import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
+import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
+import { floorRegisterBoot } from "../src/floorRegisterReference";
+import { addSupply } from "../src/supplies";
 import { rectangularOpeningMarks, editThroughOpening } from "../src/throughOpeningCuts";
 import type { FloorRegisterMeasurements } from "../src/floorRegisterSchema";
 
@@ -99,4 +103,31 @@ test("one measured register cutout keeps the source grain and supplies a later p
   assert.equal(bom(reused).find(({ id }) => id === panel.material)?.quantity, 1);
   const removed = removeFloorRegister(reused, plan.id);
   assert.equal(removed.pieces.find(({ id }) => id === sample.id)?.cutStock?.id, scrap.cutStock?.id);
+});
+
+test("only explicitly selected clear register plans contribute the exact end box to shopping review", () => {
+  const { project, joist, input } = floor();
+  const unselected = saveFloorRegister(project, input);
+  const findNeed = (p: typeof project) => homeDepotPurchaseNeeds(p).find(({ id }) => id === floorRegisterBoot.id);
+  assert.equal(findNeed(unselected), undefined);
+  const chosen = saveFloorRegister(unselected, input, unselected.floorRegisterPlans![0].id, true);
+  assert.deepEqual(chosen, projectSchema.parse(JSON.parse(JSON.stringify(chosen))));
+  assert.equal(findNeed(chosen)?.missing, 1);
+  assert.match(guideMarkdown(chosen), /Selected boot · ERB10X4X6 · Home Depot Internet #100197347/);
+  const ordered = addHomeDepotPurchaseNeed(chosen, floorRegisterBoot.id);
+  const list = homeDepotShoppingList(ordered);
+  assert.equal(list.items.find(({ productId }) => productId === floorRegisterBoot.internet)?.quantity, 1);
+
+  const blocked = { ...ordered, pieces: ordered.pieces.map((piece) => piece.id === joist.id
+    ? { ...piece, position: [0, joist.position[1], 7] as typeof piece.position } : piece) };
+  assert.equal(homeDepotShoppingList(blocked).items.some(({ productId }) => productId === floorRegisterBoot.internet), false);
+  assert.doesNotMatch(homeDepotHandoff(blocked), /- 1 × box: Master Flow/);
+  assert.match(homeDepotHandoff(blocked), /LINKED PURCHASES TO REVIEW[\s\S]*Master Flow/);
+  assert.match(guideMarkdown(blocked), /Review floor register fit/);
+  assert.equal(findNeed(blocked)?.required, null);
+  const withManual = addSupply(blocked, floorRegisterBoot.id, 1, "Separate repair");
+  const manualChecklist = homeDepotHandoff(withManual);
+  assert.match(manualChecklist, /- 1 × box: Master Flow/);
+  assert.match(manualChecklist, /Purpose: Separate repair/);
+  assert.doesNotMatch(manualChecklist, /Purpose: Measured floor register plans/);
 });

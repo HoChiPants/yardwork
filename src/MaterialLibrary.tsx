@@ -27,9 +27,14 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   })), [category, search]);
   const list = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
+  const previewFrame = useRef<number | null>(null);
   const preview = useRef(onPreview);
   preview.current = onPreview;
   const [ghost, setGhost] = useState<{ drag: Drag; point: Point; overCanvas: boolean } | null>(null);
+  function stopPreviewFrame() {
+    if (previewFrame.current !== null) cancelAnimationFrame(previewFrame.current);
+    previewFrame.current = null;
+  }
   useEffect(() => {
     function cancel(event: KeyboardEvent) {
       const active = drag.current;
@@ -37,6 +42,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       event.preventDefault();
       event.stopPropagation();
       drag.current = null;
+      stopPreviewFrame();
       if (active.tile.hasPointerCapture(active.pointer)) active.tile.releasePointerCapture(active.pointer);
       setGhost(null);
       preview.current(null);
@@ -44,6 +50,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     window.addEventListener("keydown", cancel, true);
     return () => {
       window.removeEventListener("keydown", cancel, true);
+      stopPreviewFrame();
       if (drag.current?.action === "place") preview.current(null);
     };
   }, []);
@@ -75,7 +82,11 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       rail?.scrollTo(active.scrollLeft - dx, active.scrollTop - dy);
       return;
     }
-    setGhost({ drag: active, point, overCanvas: onPreview(point, active.stock.id) });
+    stopPreviewFrame();
+    previewFrame.current = requestAnimationFrame(() => {
+      previewFrame.current = null;
+      setGhost({ drag: active, point, overCanvas: preview.current(point, active.stock.id) });
+    });
   }
   function art(stock: Drag["stock"]) {
     const profile = stock.wood && stock.stockKind === "linear" ? stock.size.slice().sort((a, b) => a - b)[1] : null;
@@ -86,6 +97,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     const active = drag.current;
     if (!active || active.pointer !== event.pointerId) return;
     drag.current = null;
+    stopPreviewFrame();
     setGhost(null);
     const point = pointOf(event);
     if (active.action === "place") onPreview(null);
@@ -98,19 +110,27 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       onPlace(active.group);
     }
   }
+  function placementEvents(group: MaterialGroup, stock: Drag["stock"]) {
+    return {
+      onClick: (event: React.MouseEvent<HTMLButtonElement>) => { if (event.detail === 0) onPlace(group); },
+      onPointerDown: (event: PointerEvent<HTMLButtonElement>) => start(event, group, stock),
+      onPointerMove: move,
+      onDragStart: (event: React.DragEvent<HTMLButtonElement>) => event.preventDefault(),
+      onPointerUp: (event: PointerEvent<HTMLButtonElement>) => finish(event, true),
+      onPointerCancel: (event: PointerEvent<HTMLButtonElement>) => finish(event, false),
+      onLostPointerCapture: (event: PointerEvent<HTMLButtonElement>) => finish(event, false),
+    };
+  }
   return <>
     <div className="material-list" ref={list}>
       {groups.map(({ group, stock }) => <div key={group.id} className="material-card" data-material-family={group.id}>
           <button type="button" className="material-grip" title="Drag into the workspace or click to add at the center"
-            onClick={(event) => { if (event.detail === 0) onPlace(group); }}
-            onPointerDown={(event) => start(event, group, stock)} onPointerMove={move}
-            onDragStart={(event) => event.preventDefault()}
-            onPointerUp={(event) => finish(event, true)} onPointerCancel={(event) => finish(event, false)}
-            onLostPointerCapture={(event) => finish(event, false)}>
+            {...placementEvents(group, stock)}>
             {art(stock)}
             <strong>{group.name}</strong>
           </button>
-          <button type="button" className="material-add" aria-label={`Add ${group.name}`} title="Add at the center" onClick={() => onPlace(group)}><Plus size={16} /></button>
+          <button type="button" className="material-add" aria-label={`Add ${group.name}`} title="Add at the center"
+            {...placementEvents(group, stock)}><Plus size={16} /></button>
         </div>
       )}
       {!groups.length && <p className="small-note">No matching materials.</p>}

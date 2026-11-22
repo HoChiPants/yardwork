@@ -312,6 +312,9 @@ test("one palette card per family retains every exact catalog variant and separa
   assert.deepEqual(materialPlacementOptions(filteredFraming[0]).options.map(({ id, label }) => [id, label]), [
     ["stud", "8 ft"], ["stud-10", "10 ft"], ["stud-12", "12 ft"],
   ]);
+  const byLength = groupedMaterials("Lumber", "2x4 12 feet framing");
+  assert.deepEqual(byLength.map(({ name }) => name), ["2 × 4 framing lumber"]);
+  assert.deepEqual(materialPlacementOptions(byLength[0]).options.map(({ label }) => label), ["8 ft", "10 ft", "12 ft"]);
   assert.equal(materialStockDisplayName("stud"), "2 × 4 framing lumber · 8 ft");
   assert.equal(materialStockDisplayName("hd-spf-2x4-10"), "2 × 4 framing lumber · 10 ft");
   assert.equal(materialStockDisplayName("hd-treated-4x4-12"), "4 × 4 treated post · 12 ft");

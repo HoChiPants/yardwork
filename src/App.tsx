@@ -326,7 +326,7 @@ import { snapPlacement, surfacePlacement } from "./editing";
 import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSlideStopLabel } from "./placement";
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
-import { MaterialPlacement, type BoardPlacement } from "./MaterialPlacement";
+import { MaterialPlacement, type BoardPlacement, type MaterialOrientation } from "./MaterialPlacement";
 import { maxRepeatedBoards } from "./repeatedBoardCuts";
 import { BoardCutListReview } from "./BoardCutListReview";
 import type { BoardCutPlan } from "./mixedBoardCuts";
@@ -365,7 +365,6 @@ import {
   bounds,
   connect,
   distance,
-  guideHomeDepotStock,
   guideMarkdown,
   inspectCutStock,
   pieceCutKerf,
@@ -2114,7 +2113,6 @@ export function App() {
     ...assemblyOrderPreparation(reviewAssemblyOrder(exportGuide)),
     ...preparation.filter(({ id }) => id !== "order"),
   ], [exportGuide, preparation, project]);
-  const printStockReferences = useMemo(() => new Map(guideHomeDepotStock(exportGuide, rows).map(({ id, offer }) => [id, offer])), [exportGuide, rows]);
   function printPartLabels(source: Project, stepId?: string) {
     const labels = assemblyPartLabels(source).filter((row) => !stepId || row.stepId === stepId);
     if (!labels.length) return;
@@ -2464,7 +2462,7 @@ export function App() {
   }
   const prepareMaterialPieces = useCallback((requests: readonly {
     id: MaterialId; length?: number; stockLengthAxis?: Piece["stockLengthAxis"];
-  }[], position: V3) => {
+  }[], position: V3, orientation: MaterialOrientation = "upright") => {
     let next = project;
     const parts: Piece[] = [];
     for (const [index, { id, length, stockLengthAxis }] of requests.entries()) {
@@ -2472,8 +2470,10 @@ export function App() {
       if (length !== undefined && !blank) throw Error("Enter a finished board length.");
       const ground: V3 = [...position];
       if (index && blank) {
-        ground[0] += (index % 6) * (blank.size[0] + 2);
-        ground[2] += Math.floor(index / 6) * (blank.size[2] + 2);
+        const column = index % 6;
+        const row = Math.floor(index / 6);
+        ground[0] += orientation === "flat" ? row * (blank.size[1] + 2) : column * (blank.size[0] + 2);
+        ground[2] += (orientation === "flat" ? column : row) * (blank.size[2] + 2);
         ground[1] = surfacePlacement(project, [ground[0], ground[1] + 0.0001, ground[2]], [0, -1, 0])?.[1] ?? 0;
       }
       next = addMaterial(next, id, ground, activeStepId);
@@ -2483,6 +2483,11 @@ export function App() {
         added.stockLengthAxis = stockLengthAxis === undefined ? blank.stockLengthAxis : stockLengthAxis;
         added.position[1] = ground[1] + blank.size[1] / 2;
       }
+      if (orientation === "flat") {
+        // Keep the stock's local cut axes and rest its broad face on the picked surface.
+        added.rotation = [0, 0, Math.PI / 2];
+        added.position[1] = ground[1] + added.size[0] / 2;
+      }
       if (snap) added.position = snapPlacement(next, added, added.position, added.rotation).position;
       const clear = placeWood(next, added, added.position, added.rotation);
       if (clear.blocked) throw Error("No clear position was found for this stock.");
@@ -2491,38 +2496,38 @@ export function App() {
     }
     return { next, parts };
   }, [project, activeStepId, snap]);
-  const prepareMaterial = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
+  const prepareMaterial = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement, orientation?: MaterialOrientation) => {
     const quantity = placement?.kind === "stock-cut" ? placement.quantity ?? 1 : 1;
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > maxRepeatedBoards)
       throw Error(`Choose 1 to ${maxRepeatedBoards} whole pieces.`);
     return prepareMaterialPieces(Array.from({ length: quantity }, () => ({
       id, length: placement?.length,
       ...(placement?.kind === "offcut" ? { stockLengthAxis: placement.stockLengthAxis } : {}),
-    })), position);
+    })), position, orientation);
   }, [prepareMaterialPieces]);
   useEffect(() => {
     if (modal !== "board-cut-list" || !boardCutDraft || boardCutDraft.source !== project) return;
     materialDropMarker.current?.([0, 0, 0], boardCutDraft.parts);
     return () => materialDropMarker.current?.(null);
   }, [modal, boardCutDraft, project]);
-  const showMaterialPreview = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
+  const showMaterialPreview = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement, orientation?: MaterialOrientation) => {
     try {
-      const { parts } = prepareMaterial(id, position, placement);
+      const { parts } = prepareMaterial(id, position, placement, orientation);
       materialDropMarker.current?.(position, parts);
     } catch {
       materialDropMarker.current?.(position);
     }
   }, [prepareMaterial]);
-  const previewMaterial = useCallback((id: MaterialId | null, placement?: BoardPlacement) => {
+  const previewMaterial = useCallback((id: MaterialId | null, placement?: BoardPlacement, orientation?: MaterialOrientation) => {
     if (!id || pendingMaterial?.projectId !== project.id) {
       materialDropMarker.current?.(null);
       return;
     }
-    showMaterialPreview(id, pendingMaterial.position ?? [0, 0, 0], placement);
+    showMaterialPreview(id, pendingMaterial.position ?? [0, 0, 0], placement, orientation);
   }, [pendingMaterial, project.id, showMaterialPreview]);
-  function add(id: MaterialId, name: string, position: V3 = [0, 0, 0], placement?: BoardPlacement) {
+  function add(id: MaterialId, name: string, position: V3 = [0, 0, 0], placement?: BoardPlacement, orientation?: MaterialOrientation) {
     safe(() => {
-      const { next, parts } = prepareMaterial(id, position, placement);
+      const { next, parts } = prepareMaterial(id, position, placement, orientation);
       for (const part of parts) part.name = name;
       const [added] = parts;
       if (placement?.kind === "offcut") change(assignOffcutToPart(next, added.id, placement.id));
@@ -3760,6 +3765,7 @@ export function App() {
               <strong>{piece.name}</strong>
               <button type="button" aria-controls="workshop-inspector" onClick={() => {
                 setPanel("part");
+                inspectorFocus.scrollRef.current?.scrollTo(0, 0);
                 inspectorFocus.inspectorRef.current?.focus({ preventScroll: true });
                 inspectorFocus.inspectorRef.current?.scrollIntoView({ block: "nearest" });
               }}>
@@ -5715,6 +5721,7 @@ export function App() {
           <section
             key={modal}
             className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "bottom-plate-seal" || modal === "rim-air-seal" || modal === "roof-valley" || modal === "roof-vent-flashing" || modal === "subfloor-support" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            data-material-placement={modal === "place-material" || undefined}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5729,8 +5736,8 @@ export function App() {
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
               <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
                 position={pendingMaterial.position} finishedLength={pendingMaterial.finishedLength} measuredLength={pendingMaterial.measuredLength}
-                offcutId={pendingMaterial.offcutId} initialQuantity={pendingMaterial.quantity} initialStock={pendingMaterial.stock} onPreview={previewMaterial} onPlace={(id, placement) => {
-                add(id, pendingMaterial.group.name, pendingMaterial.position, placement);
+                offcutId={pendingMaterial.offcutId} initialQuantity={pendingMaterial.quantity} initialStock={pendingMaterial.stock} onPreview={previewMaterial} onPlace={(id, placement, orientation) => {
+                add(id, pendingMaterial.group.name, pendingMaterial.position, placement, orientation);
               }} />
             )}
             {modal === "idea" && (
@@ -7314,24 +7321,15 @@ export function App() {
         <h2>Shopping list</h2>
         <PricingSummary coverage={pricing} printable />
         <ul>
-          {rows.map((r) => {
-            const offer = printStockReferences.get(r.id);
-            return (
+          {rows.map((r) => (
               <li key={r.id}>
-                {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)} × {materialStockDisplayName(r.id)} ·{" "}
-                {r.quantity === 0 && r.onHandStockUnits > 0 ? "stock on hand" : r.verified
-                  ? `${r.inventory!.available} stock units reported · ${r.inventory!.available >= r.quantity ? "quantity covered by snapshot" : "snapshot quantity short"}`
-                  : r.supplier ? (
-                    <a href={r.supplier.url}>{r.supplier.seller} {r.supplier.productCode} · quote needed</a>
-                  ) : "stock unverified"}
-                {offer && <>{" · "}<a href={offer.url}>Internet #{offer.productId}</a></>}
+                {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)} × {materialStockDisplayName(r.id)}
                 {r.onHandStockUnits > 0 && ` · ${r.onHandStockUnits} ${r.onHandStockUnits === 1 ? "source" : "sources"} on hand`}
                 {r.packCount > 1
                   ? ` · ${r.physicalStockUnits} individual items needed; ${r.packCount} per purchase unit; ${r.surplusStockUnits} spare`
                   : ""}
               </li>
-            );
-          })}
+          ))}
         </ul>
         {rows.map((row) => (
           <SheetLayouts

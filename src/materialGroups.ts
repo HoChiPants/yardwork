@@ -116,7 +116,9 @@ export function materialFamilyVariants(id: MaterialId): readonly MaterialId[] {
   return families.find(({ ids }) => ids.includes(id))?.ids ?? [id];
 }
 
-const paletteSearch = (text: string) => text.toLowerCase().replace(/(\d)\s*(?:[×x]|by)\s*(?=\d)/g, "$1x");
+const paletteSearch = (text: string) => text.toLowerCase()
+  .replace(/(\d)\s*(?:[×x]|by)\s*(?=\d)/g, "$1x")
+  .replace(/(\d)\s*(?:feet|foot|ft)\b/g, "$1 ft");
 
 /** Palette grouping only. Each exact stock/product ID and its physical/source facts remain distinct. */
 export function groupedMaterials(
@@ -124,7 +126,7 @@ export function groupedMaterials(
   search = "",
 ): MaterialGroup[] {
   const result: MaterialGroup[] = [];
-  const query = paletteSearch(search.trim());
+  const terms = paletteSearch(search.trim()).match(/\d+(?:\.\d+)? ft\b|[^\s·,]+/g) ?? [];
   for (const item of catalog) {
     if (item.includedComponent) continue;
     const family = families.find((f) => f.ids.includes(item.id));
@@ -133,12 +135,11 @@ export function groupedMaterials(
     const all = family
       ? catalog.filter((m) => family.ids.includes(m.id))
       : [item];
-    const variants = all.filter(
-      (m) =>
-        (category === "All" || m.category === category) &&
-        (!query ||
-          paletteSearch(`${family?.name ?? ""} ${paletteStockName(m.name)} ${m.name} ${m.subtitle} ${m.search}`).includes(query)),
-    );
+    const variants = all.filter((m) => {
+      if (category !== "All" && m.category !== category) return false;
+      const keywords = paletteSearch(`${family?.name ?? ""} ${m.name} ${m.subtitle} ${m.search}`);
+      return terms.every((term) => keywords.includes(term));
+    });
     if (variants.length)
       result.push({
         id,
@@ -153,7 +154,7 @@ export function groupedMaterials(
 
 
 export function materialDisplayName(name: string) {
-  return name.replace(/^(?:The )?(?:Home Depot|Lowe[’']s)\s+/i, "")
+  return name.replace(/^(?:The )?(?:Home Depot|Lowe[’']s)(?:\s*[:·–—-]\s*|\s+)/i, "")
     .replace(/\s*·\s*(?:The )?(?:Home Depot|Lowe[’']s)(?: reference)?(?=\s*·|\s*$)/gi, "")
     .trim();
 }

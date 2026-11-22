@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { addFramingLumber, confirmMaterialPlacement } from "../helpers/materialPlacement";
 import { blank, part, projectSchema } from "../../src/model";
-import { bom } from "../../src/engine";
+import { bom, bounds } from "../../src/engine";
 import { planStockCutLayouts } from "../../src/recordStockCutLayout";
 import { stockCutSequences } from "../../src/stockCutSequence";
 import { addMeasuredOffcut } from "../../src/measuredOffcuts";
@@ -122,7 +122,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   const printShopping = page.locator(".print-guide .pricing-summary-print + ul");
   await expect(printShopping).toContainText(group);
-  await expect(printShopping).not.toContainText(/Unpriced|\$/i);
+  await expect(printShopping).not.toContainText(/Unpriced|\$|Internet #|stock unverified/i);
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toHaveCount(0);
   await page.getByText("Project cost estimate", { exact: true }).click();
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toBeVisible();
@@ -186,7 +186,7 @@ test("use the work zone clearance to choose and cut the shortest listed board", 
   expect(exported.pieces.some(({ offcut }) => offcut)).toBe(true);
 });
 
-test("an existing surface receives a dropped board and single-stock boards can be cut before placement", async ({ page }) => {
+test("drag from the plus and lay a cut board flat on an existing surface", async ({ page }) => {
   const project = blank("Landing on the work surface");
   project.pieces = [part("Work surface", "plywood", [36, 0.75, 36], [0, 12, 0], project.steps[0].id, "Bench")];
   await page.goto("./");
@@ -203,10 +203,9 @@ test("an existing surface receives a dropped board and single-stock boards can b
   await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
   await page.getByRole("textbox", { name: "Find a material" }).fill("1x2 board");
   const add = page.getByRole("button", { name: "Add 1 × 2 board", exact: true });
-  const image = page.locator(".material-card").filter({ has: add }).locator(".material-art");
-  const art = (await image.boundingBox())!;
+  const button = (await add.boundingBox())!;
   const view = (await canvas.boundingBox())!;
-  await page.mouse.move(art.x + art.width / 2, art.y + art.height / 2);
+  await page.mouse.move(button.x + button.width / 2, button.y + button.height / 2);
   await page.mouse.down();
   await page.mouse.move(view.x + view.width / 2, view.y + view.height / 2, { steps: 8 });
   await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
@@ -221,9 +220,19 @@ test("an existing surface receives a dropped board and single-stock boards can b
   await finished.fill("120");
   await expect(dialog.getByRole("button", { name: "Place material", exact: true })).toBeDisabled();
   await finished.fill("24");
+  await dialog.getByRole("button", { name: "Lay flat", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Lay flat", exact: true })).toHaveAttribute("aria-pressed", "true");
   await dialog.getByRole("button", { name: "Plan cut and place", exact: true }).click();
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("24");
-  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("24.375");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("12.75");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Editable project/ }).click();
+  const saved = projectSchema.parse(JSON.parse(await readFile((await (await download).path())!, "utf8")));
+  const board = saved.pieces.find((piece) => !piece.offcut && piece.name === "1 × 2 board")!;
+  expect(board.rotation[2]).toBeCloseTo(Math.PI / 2);
+  expect(bounds(board).min[1]).toBeCloseTo(surface);
+  expect(saved.pieces.filter((piece) => !piece.offcut)).toHaveLength(2);
 });
 
 test("front-view drops stay at the framed depth and ignore controls", async ({ page }) => {
@@ -486,7 +495,9 @@ test.describe("phone material placement", () => {
     await swipe(start, end);
     await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
     await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await expect(page.getByRole("dialog")).toHaveAccessibleName("4 × 4 treated post");
+    const dialog = page.getByRole("dialog", { name: "4 × 4 treated post" });
+    await expect(dialog).toBeVisible();
+    expect((await dialog.boundingBox())!.y).toBeGreaterThan(end.y);
     await confirmMaterialPlacement(page, "8 ft");
     await expect(page.getByRole("status").filter({ hasText: "4 × 4 treated post added." })).toHaveCSS("pointer-events", "none");
     await page.getByRole("button", { name: "Part details" }).click();

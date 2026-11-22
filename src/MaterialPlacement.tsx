@@ -12,6 +12,7 @@ import { compareRepeatedBoardCuts, maxRepeatedBoards } from "./repeatedBoardCuts
 export type BoardPlacement =
   | { kind: "offcut"; id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] }
   | { kind: "stock-cut"; length: number; quantity?: number };
+export type MaterialOrientation = "upright" | "flat";
 
 export function MaterialPlacement({ group, project, inspection, position = [0, 0, 0], finishedLength, measuredLength, offcutId, initialQuantity = 1, initialStock, onPreview, onPlace }: {
   group: MaterialGroup;
@@ -23,20 +24,22 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   offcutId?: string;
   initialQuantity?: number;
   initialStock?: MaterialId;
-  onPreview: (id: MaterialId | null, placement?: BoardPlacement) => void;
-  onPlace: (id: MaterialId, placement?: BoardPlacement) => void;
+  onPreview: (id: MaterialId | null, placement?: BoardPlacement, orientation?: MaterialOrientation) => void;
+  onPlace: (id: MaterialId, placement?: BoardPlacement, orientation?: MaterialOrientation) => void;
 }) {
   const { preferred, canCutToLength, label, options } = materialPlacementOptions(group);
   const [selected, select] = useState(initialStock ?? preferred.id);
   const [needed, setNeeded] = useState(finishedLength ?? NaN);
   const [count, setCount] = useState(String(initialQuantity));
   const [selectedOffcut, selectOffcut] = useState(offcutId);
+  const [orientation, setOrientation] = useState<MaterialOrientation>("upright");
   const choice = options.find(({ id }) => id === selected)!;
   const zone = project.workZone;
   const [x, y, z] = position;
   const zoneClearance = zone && Math.abs(x) <= zone.width / 2 && Math.abs(z) <= zone.depth / 2
     ? zone.height - y : 0;
-  const canUseZoneClearance = zoneClearance >= 0.125 && preferred.size[1] === Math.max(...preferred.size);
+  const canChooseOrientation = canCutToLength && preferred.size[1] === Math.max(...preferred.size);
+  const canUseZoneClearance = orientation === "upright" && canChooseOrientation && zoneClearance >= 0.125;
   const kerf = plannedCutKerf(project, choice.id);
   const fits = (length: number, id: MaterialId, finished: number) => {
     const state = stockSplitState(length, finished, plannedCutKerf(project, id));
@@ -73,18 +76,26 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
     const placement = previewOffcut && previewAxis !== undefined
       ? { kind: "offcut", id: previewOffcut, length: needed, stockLengthAxis: previewAxis } as const
       : planCut ? { kind: "stock-cut", length: needed, quantity } as const : undefined;
-    onPreview(validQuantity ? previewStock : null, placement);
+    onPreview(validQuantity ? previewStock : null, placement, orientation);
     return () => onPreview(null);
-  }, [needed, onPreview, planCut, previewAxis, previewOffcut, previewStock, quantity, validQuantity]);
+  }, [needed, onPreview, orientation, planCut, previewAxis, previewOffcut, previewStock, quantity, validQuantity]);
+  const place = (id: MaterialId, placement?: BoardPlacement) => onPlace(id, placement, orientation);
   return <>
     <h2 id="modal-title">{group.name}</h2>
-    {options.length > 1 ? <fieldset className="stock-size-options">
-      <legend>{label}</legend>
-      {options.map((option) => <label key={option.id}>
-        <input type="radio" name="placement-stock-size" value={option.id} checked={selected === option.id}
-          onChange={() => select(option.id)} /><span>{option.label}</span>
-      </label>)}
-    </fieldset> : <p className="single-stock-size">{choice.label} stock</p>}
+    <div className="placement-options">
+      {options.length > 1 ? <fieldset className="stock-size-options">
+        <legend>{label}</legend>
+        {options.map((option) => <label key={option.id}>
+          <input type="radio" name="placement-stock-size" value={option.id} checked={selected === option.id}
+            onChange={() => select(option.id)} /><span>{option.label}</span>
+        </label>)}
+      </fieldset> : <p className="single-stock-size">{choice.label} stock</p>}
+      {canChooseOrientation && <fieldset className="stock-size-options stock-orientation">
+        <legend>Position</legend>
+        <button type="button" aria-pressed={orientation === "upright"} onClick={() => setOrientation("upright")}>Stand up</button>
+        <button type="button" aria-pressed={orientation === "flat"} onClick={() => setOrientation("flat")}>Lay flat</button>
+      </fieldset>}
+    </div>
     {canCutToLength && <div className="stock-length-check">
       <LengthInput label="Finished length (optional)" ariaLabel="Needed finished length" value={needed}
         defaultUnit={preferredLengthUnit(finishedLength ?? measuredLength ?? zoneClearance)} onChange={setNeeded} />
@@ -139,7 +150,7 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
           {remnant.sourceCutPending && <p>Complete the source stock cut order first.</p>}
           {!!remnant.operations.length && <p>{remnant.operations.map(({ text }) => text).join(" · ")}</p>}
           <button type="button" className="button primary"
-            onClick={() => onPlace(remnant.piece.material, {
+            onClick={() => place(remnant.piece.material, {
               kind: "offcut",
               id: remnant.piece.id,
               length: needed,
@@ -158,7 +169,7 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
           : "The plan uses each board up."}
       </p>
       <button type="button" className="button primary"
-        onClick={() => onPlace(choice.id, { kind: "stock-cut", length: needed, quantity })}>
+        onClick={() => place(choice.id, { kind: "stock-cut", length: needed, quantity })}>
         Plan and place {quantity} pieces
       </button>
     </div>}
@@ -168,12 +179,12 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
         {leftover > 1e-8 ? ` Expected offcut · ${formatStockLength(leftover)}.` : " The blade uses the remaining length."}
       </p>
       <button type="button" className={`button ${remnant ? "secondary" : "primary"}`}
-        onClick={() => onPlace(choice.id, { kind: "stock-cut", length: needed })}>
+        onClick={() => place(choice.id, { kind: "stock-cut", length: needed })}>
         {remnant ? "Plan cut from new stock" : "Plan cut and place"}
       </button>
     </div>}
     {!planCut && <button type="button" disabled={!enough || repeated} className={`button ${remnant ? "secondary" : "primary"}`}
-      onClick={() => onPlace(choice.id)}>
+      onClick={() => place(choice.id)}>
       {remnant ? "Place new stock" : "Place material"}
     </button>}
   </>;

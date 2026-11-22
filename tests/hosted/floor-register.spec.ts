@@ -68,5 +68,5 @@ test("preview a register conflict and save the clear opening and seal plan on a 
   expect(guide).toContain("## Floor register cutting and sealing");
   expect(guide).toContain("28.5 in modeled perimeter");
   expect(guide).toContain("https://www.homedepot.com/p/100197347");
-  expect(page.locator(".print-guide")).toContainText("28.5 in modeled perimeter");
+  await expect(page.locator(".print-guide")).toContainText("28.5 in modeled perimeter");
 });

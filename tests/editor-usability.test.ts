@@ -18,7 +18,7 @@ import { pieceOverlap } from "../src/solidCollision";
 import { snapPlacement } from "../src/editing";
 import { copyObjects, pasteObjects } from "../src/editorClipboard";
 import { catalog } from "../src/model";
-import { groupedMaterials, materialPlacementOptions } from "../src/materialGroups";
+import { groupedMaterials, materialPlacementOptions, materialStockDisplayName } from "../src/materialGroups";
 import { formatStockLength, preferredLengthUnit } from "../src/measurement";
 import { liftDistanceInches } from "../src/editorMotion";
 
@@ -312,6 +312,9 @@ test("one palette card per family retains every exact catalog variant and separa
   assert.deepEqual(materialPlacementOptions(filteredFraming[0]).options.map(({ id, label }) => [id, label]), [
     ["stud", "8 ft"], ["stud-10", "10 ft"], ["stud-12", "12 ft"],
   ]);
+  assert.equal(materialStockDisplayName("stud"), "2 × 4 framing lumber · 8 ft");
+  assert.equal(materialStockDisplayName("hd-spf-2x4-10"), "2 × 4 framing lumber · 10 ft");
+  assert.equal(materialStockDisplayName("hd-treated-4x4-12"), "4 × 4 treated post · 12 ft");
   const rods = groupedMaterials("Rods");
   assert.deepEqual(rods.map(({ name }) => name), ["Closet rod"]);
   assert.deepEqual(materialPlacementOptions(rods[0]).options.map(({ id }) => id), ["closet-rod-72", "hd-everbilt-closet-rod-96"]);

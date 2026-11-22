@@ -91,6 +91,15 @@ test("one material tile supports drop, length choice and a separate selected-par
       const expand = (await page.getByRole("button", { name: "Expand inspector", exact: true }).boundingBox())!;
       expect(expand.y + expand.height).toBeLessThanOrEqual(ground.y + 1);
     }
+    if (width <= 600) {
+      const actions = await partTools.getByRole("button").all();
+      for (const action of actions) {
+        const box = (await action.boundingBox())!;
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(width);
+        expect(box.y).toBeGreaterThanOrEqual(ground.y + ground.height - 1);
+      }
+    }
   }
   await page.screenshot({ path: info.outputPath("material-placement-phone.png"), fullPage: false });
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -104,6 +113,8 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("spinbutton", { name: "X", exact: true })).toHaveValue("0");
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("0");
   await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator(".bom-row").getByText(`${group} · 8 ft`, { exact: true })).toBeVisible();
+  await expect(page.locator(".bom-row").getByText(`${group} · 10 ft`, { exact: true })).toBeVisible();
   await expect(page.locator(".bom-row").first()).not.toContainText(/Unpriced|\$/);
   await expect(page.locator(".bom-row").filter({ hasText: /Home Depot|Store details|Availability unverified/ })).toHaveCount(0);
   await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
@@ -441,10 +452,27 @@ test("a named scrap stays selected when comparing other compatible offcuts", asy
 test.describe("phone material placement", () => {
   test.use({ viewport: { width: 390, height: 667 }, isMobile: true, hasTouch: true });
 
-  test("touch-drag a treated post from a short screen and edit it in the docked inspector", async ({ page, context }) => {
+  test("browse by swipe, drag a treated post diagonally and edit it in the docked inspector", async ({ page, context }) => {
     await page.goto("./");
     const canvas = page.locator("canvas").first();
     await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
+    const materialRail = page.locator(".material-list");
+    const firstTitle = (await materialRail.locator(".material-grip strong").first().boundingBox())!;
+    const touch = await context.newCDPSession(page);
+    async function swipe(start: { x: number; y: number }, end: { x: number; y: number }) {
+      await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [start] });
+      for (let i = 1; i <= 8; i++) {
+        await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{
+          x: start.x + (end.x - start.x) * i / 8,
+          y: start.y + (end.y - start.y) * i / 8,
+        }] });
+      }
+    }
+    const swipeStart = { x: firstTitle.x + firstTitle.width / 2, y: firstTitle.y + firstTitle.height / 2 };
+    await swipe(swipeStart, { x: swipeStart.x - 72, y: swipeStart.y });
+    await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect.poll(() => materialRail.evaluate((rail) => rail.scrollLeft)).toBeGreaterThan(50);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.getByRole("textbox", { name: "Find a material" }).fill("4x4 treated post");
     const add = page.getByRole("button", { name: "Add 4 × 4 treated post", exact: true });
     const tile = page.locator(".material-card").filter({ has: add });
@@ -452,21 +480,15 @@ test.describe("phone material placement", () => {
     const source = (await tile.getByText("4 × 4 treated post", { exact: true }).boundingBox())!;
     const view = (await canvas.boundingBox())!;
     const start = { x: source.x + source.width / 2, y: source.y + source.height / 2 };
-    const end = { x: Math.min(start.x, view.x + view.width * 0.68), y: view.y + view.height * 0.7 };
+    const end = { x: view.x + view.width * 0.67, y: view.y + view.height * 0.7 };
     expect(start.y).toBeLessThan(page.viewportSize()!.height);
     expect(end.y).toBeGreaterThan(0);
-    const touch = await context.newCDPSession(page);
-    await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [start] });
-    for (let i = 1; i <= 8; i++) {
-      await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{
-        x: start.x + (end.x - start.x) * i / 8,
-        y: start.y + (end.y - start.y) * i / 8,
-      }] });
-    }
+    await swipe(start, end);
     await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
     await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     await expect(page.getByRole("dialog")).toHaveAccessibleName("4 × 4 treated post");
     await confirmMaterialPlacement(page, "8 ft");
+    await expect(page.getByRole("status").filter({ hasText: "4 × 4 treated post added." })).toHaveCSS("pointer-events", "none");
     await page.getByRole("button", { name: "Part details" }).click();
     const details = page.locator("#workshop-inspector");
     await expect(details).toHaveAttribute("data-inspector-focused", "false");

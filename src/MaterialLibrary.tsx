@@ -4,7 +4,16 @@ import { Plus } from "lucide-react";
 import { groupedMaterials, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 
 type Point = { x: number; y: number };
-type Drag = { pointer: number; start: Point; tile: HTMLButtonElement; group: MaterialGroup; stock: MaterialGroup["variants"][number]; active: boolean };
+type Drag = {
+  pointer: number;
+  start: Point;
+  tile: HTMLButtonElement;
+  group: MaterialGroup;
+  stock: MaterialGroup["variants"][number];
+  action: "pending" | "place" | "scroll";
+  scrollLeft: number;
+  scrollTop: number;
+};
 const dragDistance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export function MaterialLibrary({ category, search, onPreview, onPlace }: {
@@ -16,6 +25,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   const groups = useMemo(() => groupedMaterials(category, search).map((group) => ({
     group, stock: materialPlacementOptions(group).preferred,
   })), [category, search]);
+  const list = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const preview = useRef(onPreview);
   preview.current = onPreview;
@@ -23,7 +33,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   useEffect(() => {
     function cancel(event: KeyboardEvent) {
       const active = drag.current;
-      if (event.key !== "Escape" || !active?.active) return;
+      if (event.key !== "Escape" || active?.action !== "place") return;
       event.preventDefault();
       event.stopPropagation();
       drag.current = null;
@@ -34,21 +44,37 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     window.addEventListener("keydown", cancel, true);
     return () => {
       window.removeEventListener("keydown", cancel, true);
-      if (drag.current?.active) preview.current(null);
+      if (drag.current?.action === "place") preview.current(null);
     };
   }, []);
   const pointOf = (event: PointerEvent) => ({ x: event.clientX, y: event.clientY });
   function start(event: PointerEvent<HTMLButtonElement>, group: MaterialGroup, stock: Drag["stock"]) {
     if (drag.current || event.button !== 0 || !event.isPrimary) return;
-    drag.current = { pointer: event.pointerId, start: pointOf(event), tile: event.currentTarget, group, stock, active: false };
+    drag.current = {
+      pointer: event.pointerId, start: pointOf(event), tile: event.currentTarget, group, stock,
+      action: "pending", scrollLeft: list.current?.scrollLeft ?? 0, scrollTop: list.current?.scrollTop ?? 0,
+    };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
   function move(event: PointerEvent<HTMLButtonElement>) {
     const active = drag.current;
     if (!active || active.pointer !== event.pointerId) return;
     const point = pointOf(event);
-    if (!active.active && dragDistance(point, active.start) < 6) return;
-    active.active = true;
+    const rail = list.current;
+    const dx = point.x - active.start.x, dy = point.y - active.start.y;
+    if (active.action === "pending") {
+      if (dragDistance(point, active.start) < 6) return;
+      // A swipe along the rail browses materials. A crosswise pull brings the tile into the scene.
+      const alongRail = rail && event.pointerType === "touch" && (
+        (rail.scrollWidth > rail.clientWidth && Math.abs(dx) > 2 * Math.abs(dy)) ||
+        (rail.scrollHeight > rail.clientHeight && Math.abs(dy) > 2 * Math.abs(dx))
+      );
+      active.action = alongRail ? "scroll" : "place";
+    }
+    if (active.action === "scroll") {
+      rail?.scrollTo(active.scrollLeft - dx, active.scrollTop - dy);
+      return;
+    }
     setGhost({ drag: active, point, overCanvas: onPreview(point, active.stock.id) });
   }
   function art(stock: Drag["stock"]) {
@@ -62,9 +88,9 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     drag.current = null;
     setGhost(null);
     const point = pointOf(event);
-    if (active.active) onPreview(null);
-    if (!place) return;
-    if (active.active || dragDistance(point, active.start) >= 6) {
+    if (active.action === "place") onPreview(null);
+    if (!place || active.action === "scroll") return;
+    if (active.action === "place" || dragDistance(point, active.start) >= 6) {
       onPlace(active.group, point);
       return;
     }
@@ -73,7 +99,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     }
   }
   return <>
-    <div className="material-list">
+    <div className="material-list" ref={list}>
       {groups.map(({ group, stock }) => <div key={group.id} className="material-card" data-material-family={group.id}>
           <button type="button" className="material-grip" title="Drag into the workspace or click to add at the center"
             onClick={(event) => { if (event.detail === 0) onPlace(group); }}

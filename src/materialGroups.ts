@@ -158,6 +158,14 @@ export function materialDisplayName(name: string) {
     .trim();
 }
 
+export function materialStockDisplayName(id: MaterialId) {
+  const stock = material(id);
+  if (stock.category !== "Lumber" || stock.stockKind !== "linear") return materialDisplayName(stock.name);
+  const family = families.find(({ ids }) => ids.includes(id));
+  const length = Math.max(...(stock.stockSize ?? stock.size));
+  return `${family?.name ?? paletteStockName(stock.name)} · ${formatStockLength(length)}`;
+}
+
 function paletteStockName(name: string) {
   return materialDisplayName(name)
     .replace(/\s*·\s*\d+(?:\.\d+)? ft\s*$/i, "")

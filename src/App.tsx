@@ -110,6 +110,7 @@ import {
   Magnet,
   MousePointer2,
   Move3D,
+  MoveVertical,
   Package,
   Plus,
   Redo2,
@@ -322,7 +323,7 @@ import { MaterialPlacement, type BoardPlacement } from "./MaterialPlacement";
 import { maxRepeatedBoards } from "./repeatedBoardCuts";
 import { BoardCutListReview } from "./BoardCutListReview";
 import type { BoardCutPlan } from "./mixedBoardCuts";
-import { groupedMaterials, materialDisplayName, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
+import { groupedMaterials, materialStockDisplayName, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
 import { addMeasuredOffcut } from "./measuredOffcuts";
@@ -2499,8 +2500,8 @@ export function App() {
       notify(
         placement?.kind === "offcut" ? `${name} added from the Cut pool. The cut is in the build guide.`
           : parts.length > 1 ? `${parts.length} pieces placed. Review the stock and cut order in the build guide.`
-          : placement?.kind === "stock-cut" ? `${name} placed at its finished length. See Planned stock cuts in the build guide.`
-          : `${name} added. Drag to move, or Shift-drag to rotate.`,
+          : placement?.kind === "stock-cut" ? `${name} placed at ${formatStockLength(placement.length)}.`
+          : `${name} added.`,
       );
     });
   }
@@ -3722,30 +3723,30 @@ export function App() {
                 inspectorFocus.inspectorRef.current?.focus({ preventScroll: true });
                 inspectorFocus.inspectorRef.current?.scrollIntoView({ block: "nearest" });
               }}>
-                <Settings2 size={15} /> Part details
+                <Settings2 size={15} /> <span>Part details</span>
               </button>
               {(material(piece.material).cuttable || canEditThroughOpenings(piece)) && (
                 <button data-cut-part onClick={() => setModal("cut")}>
                   <Scissors size={15} />
-                  Cut part
+                  <span>Cut part</span>
                 </button>
               )}
-              <button aria-pressed={mode === "move"} onClick={() => setMode("move")}><Move3D size={15} /> Move XYZ</button>
-              <button aria-pressed={mode==="lift"} onClick={()=>setMode("lift")}>↕ Lift</button>
-              <button onClick={copySelection}><Copy size={15}/>Copy</button>
+              <button aria-pressed={mode === "move"} onClick={() => setMode("move")}><Move3D size={15} /> <span>Move XYZ</span></button>
+              <button aria-pressed={mode==="lift"} onClick={()=>setMode("lift")}><MoveVertical size={15} /> <span>Lift</span></button>
+              <button onClick={copySelection}><Copy size={15}/><span>Copy</span></button>
               <button
                 title="Turn around Y by 90 degrees"
                 onClick={() => rotatePart([0, Math.PI / 2, 0])}
               >
                 <RotateCw size={15} />
-                Turn 90°
+                <span>Turn 90°</span>
               </button>
               <button
                 title="Lay down or tip up around Z"
                 onClick={() => rotatePart([0, 0, Math.PI / 2])}
               >
                 <RotateCcw size={15} />
-                Tip 90°
+                <span>Tip 90°</span>
               </button>
             </div>
           )}
@@ -5162,7 +5163,7 @@ export function App() {
               {rows.map((r) => (
                 <div className="bom-row" key={r.id} data-stock-material={r.id} tabIndex={-1}>
                   <div>
-                    <strong>{materialDisplayName(material(r.id).name)}</strong>
+                    <strong>{materialStockDisplayName(r.id)}</strong>
                     <span>
                       {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)}{r.onHandStockUnits > 0 && " to buy"}{" "}
                       · {r.pieces} {r.pieces === 1 ? "part" : "parts"}
@@ -7223,7 +7224,7 @@ export function App() {
             const offer = printStockReferences.get(r.id);
             return (
               <li key={r.id}>
-                {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)} × {materialDisplayName(material(r.id).name)} ·{" "}
+                {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)} × {materialStockDisplayName(r.id)} ·{" "}
                 {r.quantity === 0 && r.onHandStockUnits > 0 ? "stock on hand" : r.verified
                   ? `${r.inventory!.available} stock units reported · ${r.inventory!.available >= r.quantity ? "quantity covered by snapshot" : "snapshot quantity short"}`
                   : r.supplier ? (

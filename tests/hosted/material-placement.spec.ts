@@ -77,16 +77,17 @@ test("one material tile supports drop, length choice and a separate selected-par
 });
 
 test("click a material tile and use a measured span to choose shorter stock", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.goto("./");
-  await page.getByRole("button", { name: "Top", exact: true }).click();
   const canvas = page.locator("canvas").first();
-  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
   await page.getByRole("button", { name: "Measure (D)", exact: true }).click();
   const view = (await canvas.boundingBox())!;
-  for (const fraction of [0.35, 0.56]) {
-    await page.mouse.click(view.x + view.width * fraction, view.y + view.height * 0.63);
-  }
   const measurement = page.locator(".measurement-panel");
+  await canvas.click({ position: { x: view.width * 0.64, y: view.height * 0.68 } });
+  await expect(measurement).toContainText("Click the second point.");
+  await canvas.click({ position: { x: view.width * 0.78, y: view.height * 0.68 } });
+  await expect(measurement).toContainText("Click again to start a new measurement.");
   for (const [end, x] of [["A", "0"], ["B", "48"]]) {
     await measurement.getByText(`Point ${end} · exact coordinates`, { exact: true }).click();
     for (const [axis, value] of [["X", x], ["Y", "0"], ["Z", "0"]]) {

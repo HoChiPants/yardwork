@@ -395,6 +395,8 @@ OLLAMA_URL=http://127.0.0.1:11434 OLLAMA_MODEL=qwen2.5:3b npm run dev
 
 The model must already be installed in your Ollama instance. In Docker Desktop, use a host reachable by the container, commonly `http://host.docker.internal:11434`; Podman commonly uses `host.containers.internal`. Configure the environment in compose. Do not use `127.0.0.1` to reach a host service from inside a container.
 
+Open **Plan an idea** to check whether the configured Ollama model is installed. After starting the service or pulling the model, use **Check model again** in the same planner. Your description stays in place, and **Built-in layout** remains available. For dimensioned wall and floor plans, use **Use built-in template**. The check reads the model list without loading weights or sending the project. [Ollama model-list API](https://docs.ollama.com/api/tags)
+
 For a Docker-managed local model, use the optional overlay:
 
 ```sh

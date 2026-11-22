@@ -31,6 +31,7 @@ import { bounds, type Finding } from "./engine";
 import { Scene } from "./Scene";
 import { LengthInput } from "./LengthInput";
 import { PricingSummary } from "./PricingSummary";
+import { PlannerConnection } from "./PlannerConnection";
 import { ConnectionQuestionResult, type ConnectionQuestionAction } from "./ConnectionQuestionResult";
 import { answerConnectionQuestion, connectionQuestion, type ConnectionQuestion } from "./connectionQuestions";
 import { BuildQuestionResult } from "./BuildQuestionResult";
@@ -595,14 +596,17 @@ export default function IdeaPlanner({
           </div>
         </details>
       )}
-      {connectedPlanner && <label className="field">
-        Planner
-        <select value={plannerChoice} disabled={busy}
-          onChange={(event) => setPlannerChoice(event.target.value === "built-in" ? "built-in" : "server")}>
-          <option value="server">Connected model</option>
-          <option value="built-in">Built-in layout</option>
-        </select>
-      </label>}
+      {connectedPlanner && <>
+        <label className="field">
+          Planner
+          <select value={plannerChoice} disabled={busy}
+            onChange={(event) => setPlannerChoice(event.target.value === "built-in" ? "built-in" : "server")}>
+            <option value="server">Ollama model</option>
+            <option value="built-in">Built-in layout</option>
+          </select>
+        </label>
+        <PlannerConnection />
+      </>}
       <button
         className="button primary full"
         disabled={busy || !prompt.trim()}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { toOllamaSchema } from "./ollamaSchema";
 import { generateIntentPlan } from "./intentPlanner";
 import { ollamaTimeoutMs } from "./ollamaTimeout";
+import { defaultOllamaModel } from "./plannerConnection";
 import {
   completedOllamaJson,
   type OllamaTimingReceipt,
@@ -94,7 +95,7 @@ async function plannerResponse(
       AbortSignal.timeout(ollamaTimeoutMs()),
     ]),
     body: JSON.stringify({
-      model: process.env.OLLAMA_MODEL ?? "qwen2.5:3b",
+      model: process.env.OLLAMA_MODEL ?? defaultOllamaModel,
       stream: false,
       format: schema,
       options: { temperature: 0, seed: 0, num_ctx: 16384, num_predict: 4096 },

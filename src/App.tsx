@@ -135,6 +135,7 @@ import * as THREE from "three";
 import { Scene, type MaterialDropMarkerHandle } from "./Scene";
 import { useInspectorFocus } from "./useInspectorFocus";
 import IdeaPlanner from "./IdeaPlanner";
+import { PlannerConnection } from "./PlannerConnection";
 import type { ConnectionQuestionAction } from "./ConnectionQuestionResult";
 import type { BuildQuestionAction } from "./buildQuestions";
 import { AppliedDesignsPanel } from "./AppliedDesignsPanel";
@@ -2511,7 +2512,7 @@ export function App() {
       if (earlierSaveRequest.current === controller) earlierSaveRequest.current = null;
     }
   }
-  async function generate() {
+  async function generate(builtIn = false) {
     setBusy(true);
     setProposal(null);
     try {
@@ -2520,6 +2521,7 @@ export function App() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           prompt,
+          ...(builtIn && { builtIn }),
           context: project.sections.find((s) => s.id === assistantTarget)
             ? sectionContext(
                 project.sections.find((s) => s.id === assistantTarget)!,
@@ -5952,12 +5954,10 @@ export function App() {
                   Revise a wall or base using dimensions. For furniture and
                   broader ideas, use Plan an idea.
                 </p>
-                <div className="provider-pill">
+                {health?.ai === "ollama" ? <PlannerConnection /> : <div className="provider-pill">
                   <span className="green-dot" />
-                  {health?.ai === "ollama"
-                    ? "AI configured · Ollama"
-                    : "Local dimensioned templates · no AI model connected"}
-                </div>
+                  Local dimensioned templates
+                </div>}
                 <label className="field target-section-field">
                   Apply to
                   <select
@@ -6028,7 +6028,7 @@ export function App() {
                 <button
                   className="button primary full"
                   disabled={busy || !prompt.trim()}
-                  onClick={generate}
+                  onClick={() => void generate()}
                 >
                   {busy ? (
                     <Loader2 size={16} className="spin" />
@@ -6037,6 +6037,10 @@ export function App() {
                   )}
                   Preview proposal
                 </button>
+                {health?.ai === "ollama" && <button type="button" className="text-button"
+                  disabled={busy || !prompt.trim()} onClick={() => void generate(true)}>
+                  Use built-in template
+                </button>}
                 </>}
                 {proposal && (
                   <div className="proposal">

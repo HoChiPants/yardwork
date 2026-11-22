@@ -32,6 +32,14 @@ jobs:
         run: |
           docker compose -f compose.yaml -f compose.ai.yaml exec -T ollama ollama --version
           docker compose -f compose.yaml -f compose.ai.yaml exec -T ollama ollama list
+      - name: Verify the app can find the selected model
+        run: |
+          node --input-type=module -e '
+            import assert from "node:assert/strict";
+            const response = await fetch("http://127.0.0.1:4173/api/planner/connection");
+            assert.equal(response.status, 200);
+            assert.deepEqual(await response.json(), { state: "installed", model: process.env.YARDWORK_AI_MODEL });
+          '
       - name: Qualify natural language, section editing, and saved geometry
         run: node --import tsx scripts/ai-smoke.ts
       - name: Qualify a general module-based banquette proposal

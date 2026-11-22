@@ -186,8 +186,14 @@ test("planner uses disclosed local presets, validates model plans, and never fal
 test("HTTP planner route returns local questions, bounded AI modules, and errors without mutating stored projects", async () => {
   let responseMode: "valid" | "unknown-material" | "malformed" | "truncated" | "failure" =
     "valid";
+  let installedModel = false;
   const requests: any[] = [];
   const mock = createServer(async (req, res) => {
+    if (req.method === "GET" && req.url === "/api/tags") {
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ models: installedModel ? [{ name: "http-planner-fixture:latest" }] : [] }));
+      return;
+    }
     let input = "";
     for await (const chunk of req) input += chunk;
     requests.push(JSON.parse(input));
@@ -289,6 +295,22 @@ test("HTTP planner route returns local questions, bounded AI modules, and errors
     }
     const actual = await start(true);
     try {
+      const connection = () => fetch(actual.base + "/api/planner/connection").then((response) => response.json());
+      assert.deepEqual(await connection(), { state: "missing-model", model: "http-planner-fixture" });
+      installedModel = true;
+      assert.deepEqual(await connection(), { state: "installed", model: "http-planner-fixture" });
+      assert.equal(requests.length, 0);
+      const builtIn = await fetch(actual.base + "/api/assistant", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ prompt: "Build a wall 8 ft wide and 6 ft tall", builtIn: true }),
+      });
+      assert.equal(builtIn.status, 200);
+      const builtInResult = await builtIn.json() as { command: { width: number; height: number }; provider: string };
+      assert.equal(builtInResult.provider, "Local command parser");
+      assert.equal(builtInResult.command.width, 96);
+      assert.equal(builtInResult.command.height, 72);
+      assert.equal(requests.length, 0);
       const response = await post(actual.base, "A bench for my kitchenette");
       assert.equal(response.status, 200);
       const proposal = (await response.json()) as any;

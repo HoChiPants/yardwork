@@ -104,6 +104,7 @@ export async function browserWorkshopRequest(url: string, options?: RequestInit)
     const method = options?.method ?? "GET";
     const body = () => JSON.parse(typeof options?.body === "string" ? options.body : "null");
     if (path === "/api/health") return Response.json({ ok: true, ai: "local-commands", catalog: false, projectFormatVersion: PROJECT_FORMAT_VERSION });
+    if (path === "/api/planner/connection" && method === "GET") return Response.json({ state: "built-in" });
     if (path === "/api/projects" && method === "GET") return Response.json(await summary());
     if (path === "/api/workshop-backup" && method === "GET") return await workshopArchive();
     if (path === "/api/planner" && method === "POST") {

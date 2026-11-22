@@ -6,6 +6,8 @@ import { localIdeaPlan } from "../../src/planning";
 async function advertiseConnectedPlanner(page: Page) {
   await page.route("**/api/health", (route) =>
     route.fulfill({ json: { ok: true, ai: "ollama", catalog: false } }));
+  await page.route("**/api/planner/connection", (route) =>
+    route.fulfill({ json: { state: "installed", model: "qwen2.5:3b" } }));
 }
 
 test("canceling a pending plan retains the edited proposal and ignores a late result", async ({
@@ -72,15 +74,11 @@ test("canceling a pending plan retains the edited proposal and ignores a late re
   await expect(
     page.getByRole("button", { name: "Cancel planning", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".idea-planner").getByRole("status")).toContainText(
-    "up to three minutes",
-  );
+  await expect(page.locator(".idea-planner").getByRole("status").filter({ hasText: "up to three minutes" })).toBeVisible();
   await page
     .getByRole("button", { name: "Cancel planning", exact: true })
     .click();
-  await expect(page.locator(".idea-planner").getByRole("status")).toContainText(
-    "Planning canceled",
-  );
+  await expect(page.locator(".idea-planner").getByRole("status").filter({ hasText: "Planning canceled" })).toBeVisible();
   await expect(
     page.getByRole("spinbutton", {
       name: "Overall seating run width",
@@ -168,7 +166,7 @@ test("a running connected request can switch to the built-in layout without losi
   await explore.click();
   await expect.poll(() => calls.length).toBe(2);
   await description.fill("Make seats 23 inches high");
-  await expect(dialog.getByRole("status")).toContainText("Switching uses the idea already submitted");
+  await expect(dialog.getByRole("status").filter({ hasText: "Switching uses the idea already submitted" })).toBeVisible();
   await dialog.getByRole("button", { name: "Use built-in layout", exact: true }).click();
   await expect(options).toHaveValue("built-in");
   await expect(description).toHaveValue("Make seats 23 inches high");

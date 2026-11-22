@@ -14,6 +14,7 @@ import { ConflictError, ProjectReadError, ProjectStore, SavedRevisionError } fro
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { retailerSchema } from "../src/retailers";
 import { plannerHandler } from "./planner";
+import { defaultOllamaModel, plannerConnectionStatus } from "./plannerConnection";
 import { completedOllamaJson } from "./ollamaResponse";
 import { ollamaTimeoutMs } from "./ollamaTimeout";
 import { toOllamaSchema } from "./ollamaSchema";
@@ -52,6 +53,17 @@ app.get("/api/health", (_req, res) =>
     projectFormatVersion: PROJECT_FORMAT_VERSION,
   }),
 );
+app.get("/api/planner/connection", async (_req, res) => {
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  res.once("close", cancel);
+  try {
+    const status = await plannerConnectionStatus(controller.signal);
+    if (!controller.signal.aborted) res.json(status);
+  } finally {
+    res.off("close", cancel);
+  }
+});
 app.get("/api/projects", async (_req, res) => res.json(await store.list()));
 app.get("/api/workshop-backup", async (_req, res) => {
   const directory = await mkdtemp(path.join(tmpdir(), "yardwork-backup-"));
@@ -112,9 +124,10 @@ app.put("/api/projects/:id", async (req, res) => {
 });
 app.post("/api/planner", plannerHandler);
 app.post("/api/assistant", async (req, res) => {
-  const { prompt, context } = z
+  const { prompt, context, builtIn } = z
     .object({
       prompt: z.string().min(1).max(2000),
+      builtIn: z.boolean().optional(),
       context: z
         .object({
           sectionId: z.uuid(),
@@ -137,7 +150,7 @@ app.post("/api/assistant", async (req, res) => {
       throw Error("A targeted command must keep the selected section type.");
     return command;
   };
-  if (!process.env.OLLAMA_URL || /\b(?:windows?|doorway|door opening)\b/i.test(prompt)) {
+  if (builtIn || !process.env.OLLAMA_URL || /\b(?:windows?|doorway|door opening)\b/i.test(prompt)) {
     try {
       return res.json({
         command: validateTarget(parsePrompt(prompt, context?.command)),
@@ -158,7 +171,7 @@ app.post("/api/assistant", async (req, res) => {
     headers: { "content-type": "application/json" },
     signal: AbortSignal.timeout(ollamaTimeoutMs()),
     body: JSON.stringify({
-      model: process.env.OLLAMA_MODEL ?? "qwen2.5:3b",
+      model: process.env.OLLAMA_MODEL ?? defaultOllamaModel,
       stream: false,
       format: toOllamaSchema(commandSchema.toJSONSchema()),
       options: { temperature: 0, seed: 0, num_ctx: 2048, num_predict: 256 },

@@ -4,6 +4,7 @@ import { material, materialIds } from "../src/model";
 import { prepareIntentEdits, applyIntentEdits } from "./intentEdits";
 import { reconcileNarrative } from "./intentNarrative";
 import { toOllamaSchema } from "./ollamaSchema";
+import { defaultOllamaModel } from "./plannerConnection";
 import { assessUnsupportedIntent } from "./unsupportedIntent";
 import {
   completedOllamaJson,
@@ -489,7 +490,7 @@ export async function generateIntentPlan(
       headers: { "content-type": "application/json" },
       signal,
       body: JSON.stringify({
-        model: process.env.OLLAMA_MODEL ?? "qwen2.5:3b",
+        model: process.env.OLLAMA_MODEL ?? defaultOllamaModel,
         stream: false,
         format: toOllamaSchema(intentWireSchema.toJSONSchema()),
         options: { temperature: 0, seed: 0, num_ctx: 4096, num_predict: 512 },

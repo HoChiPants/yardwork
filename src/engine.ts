@@ -128,7 +128,8 @@ import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReferen
 import { floorRegisterGuideLines, floorRegisterReviews } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { roundDuctGuideLines, roundDuctTakeoff } from "./roundDuct";
-import { roundDuctScope, roundDuctStock } from "./roundDuctReference";
+import { roundDuctElbowGuideLines, roundDuctElbowReviews } from "./roundDuctElbow";
+import { roundDuctElbowScope, roundDuctElbowStock, roundDuctScope, roundDuctStock } from "./roundDuctReference";
 import { roofVentFlashingGuideLines, roofVentFlashingReviews } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { floorHangerGuideLines } from "./floorHangerPlans";
@@ -736,6 +737,11 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
   for (const [id, detail] of roundDuctReview.stale) {
     const label = p.roundDuctOffcuts?.find((offcut) => offcut.id === id)?.label;
     findings.push({ id: `duct-offcut-${id}`, title: `Review duct offcut · ${label ?? "Cut pool"}`, severity: "warning", detail });
+  }
+  for (const { id, issues } of roundDuctElbowReviews(p)) {
+    if (issues.length) findings.push({
+      id: `round-duct-elbow-${id}`, title: "Review measured duct elbow", severity: "warning", detail: issues.join(" "),
+    });
   }
   for (const row of reviewOpeningFlashings(p).rows) {
     if (row.issues.length) findings.push({
@@ -2099,6 +2105,7 @@ export function guideMarkdown(p: Project) {
   const roofVentFlashings = roofVentFlashingGuideLines(p);
   const floorRegisters = floorRegisterGuideLines(p);
   const roundDucts = roundDuctGuideLines(p);
+  const roundDuctElbows = roundDuctElbowGuideLines(p);
   const floorReviews = subfloorReviews(p);
   const floorHangers = floorHangerGuideLines(p, connections.intents);
   const doorKits = new Set((p.motionPlans ?? []).flatMap((plan) => {
@@ -2345,6 +2352,9 @@ export function guideMarkdown(p: Project) {
     (roundDucts.length ? `\n\n## Round duct cutting and sealing\n\n${roundDuctScope}\n\n` +
       roundDucts.map((line) => "- " + line).join("\n") +
       `\n\n[Master Flow pipe reference](${roundDuctStock.listing}) · [PNNL metal duct sealing](${roundDuctStock.sealing})\n` : "") +
+    (roundDuctElbows.length ? `\n\n## Round duct elbows\n\n${roundDuctElbowScope}\n\n` +
+      roundDuctElbows.map((line) => "- " + line).join("\n") +
+      `\n\n[Master Flow elbow reference](${roundDuctElbowStock.listing}) · [PNNL metal duct sealing](${roundDuctStock.sealing})\n` : "") +
     (p.waterRuns?.length ? "\n\n## Wall water-line schedule\n\n" +
       p.waterRuns.flatMap((run) => waterRunGuide(p, run)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[Stud boring](${studBoreSource}) · [Pipe protection](${pipeProtectionSource}) · [SharkBite installation](${pexInstallation})\n` : "") +

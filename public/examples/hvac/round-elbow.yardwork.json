@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 133,
+  "roundDuctRuns": [
+    {
+      "id": "daf7144f-9b3b-4b7c-b057-7ad8ef267b5e",
+      "input": {
+        "name": "Supply through bay",
+        "start": [
+          -44,
+          10,
+          0
+        ],
+        "end": [
+          -6,
+          10,
+          0
+        ],
+        "envelopeWidth": 8,
+        "stockLength": 60,
+        "startEngagement": 1,
+        "endEngagement": 1,
+        "jointOverlap": 1,
+        "cutLoss": 0.125
+      }
+    },
+    {
+      "id": "edab2a13-c37a-4c68-8aa8-1203a857c9f2",
+      "input": {
+        "name": "Cross branch",
+        "start": [
+          0,
+          10,
+          6
+        ],
+        "end": [
+          0,
+          10,
+          44
+        ],
+        "envelopeWidth": 8,
+        "stockLength": 60,
+        "startEngagement": 1,
+        "endEngagement": 1,
+        "jointOverlap": 1,
+        "cutLoss": 0.125
+      }
+    }
+  ],
+  "id": "37217501-eaee-4b67-8e1b-b752de3e8a70",
+  "name": "Measured 90-degree duct elbow",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T14:01:28.092Z",
+  "pieces": [
+    {
+      "id": "9c97c4e0-b4a4-4954-b640-d27e371d3fce",
+      "name": "Nearby joist",
+      "material": "hd-spf-2x6-8",
+      "size": [
+        1.5,
+        5.5,
+        48
+      ],
+      "position": [
+        12,
+        18,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "bbb63f36-a170-4b26-973f-5f7d0bb08745",
+      "assembly": "Floor",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "bbb63f36-a170-4b26-973f-5f7d0bb08745",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

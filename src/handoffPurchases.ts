@@ -12,7 +12,8 @@ import { oateyRoofVentBoot, roofVentPurchasePurpose } from "./roofVentFlashingRe
 import { floorRegisterBoot, floorRegisterPurchasePurpose } from "./floorRegisterReference";
 import { floorRegisterBootCount } from "./floorRegister";
 import { roundDuctPurchaseCount } from "./roundDuct";
-import { roundDuctPurchasePurpose, roundDuctStock } from "./roundDuctReference";
+import { roundDuctElbowCount } from "./roundDuctElbow";
+import { roundDuctElbowPurchasePurpose, roundDuctElbowStock, roundDuctPurchasePurpose, roundDuctStock } from "./roundDuctReference";
 import { roofVentFlashingCount } from "./roofVentFlashing";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
@@ -226,6 +227,11 @@ export function homeDepotPurchaseNeeds(
     const count = roundDuctPurchaseCount(project);
     include(roundDuctStock.id, roundDuctPurchasePurpose, count,
       count === null ? "Recheck clearance, cut lengths and offcut reservations on the saved straight runs." : undefined);
+  }
+  if (project.roundDuctElbows?.length) {
+    const count = roundDuctElbowCount(project);
+    include(roundDuctElbowStock.id, roundDuctElbowPurchasePurpose, count,
+      count === null ? "Recheck elbow endpoints, mates and clearances before ordering." : undefined);
   }
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);

@@ -20,7 +20,7 @@ import { rimEdgeSealant, rimFoam, rimSealScope } from "./rimAirSealReference";
 import { valleyScope, weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
-import { roundDuctScope, roundDuctStock } from "./roundDuctReference";
+import { roundDuctElbowScope, roundDuctElbowStock, roundDuctScope, roundDuctStock } from "./roundDuctReference";
 import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
 import { trimSealant } from "./trimSealantReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
@@ -425,6 +425,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "pipe",
     contents: [{ name: "6 in × 5 ft galvanized snap-lock duct", quantity: 1 }],
     requirements: [roundDuctScope],
+  },
+  [roundDuctElbowStock.id]: {
+    purchaseUnit: "elbow",
+    contents: [{ name: "6 in adjustable galvanized elbow with one crimped end", quantity: 1 }],
+    requirements: [roundDuctElbowScope],
   },
   [rimFoam.id]: {
     purchaseUnit: "sheet",

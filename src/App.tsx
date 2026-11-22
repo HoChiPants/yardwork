@@ -33,8 +33,10 @@ import { floorRegisterGuideLines, floorRegisterReviews, isFloorRegisterPanel, re
   saveFloorRegister, type FloorRegisterPreview } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { RoundDuctPanel } from "./RoundDuctPanel";
+import { RoundDuctElbowPanel } from "./RoundDuctElbowPanel";
 import { availableRoundDuctOffcuts, previewRoundDuct, removeRoundDuct, roundDuctGuideLines, saveRoundDuct } from "./roundDuct";
-import { roundDuctScope, roundDuctStock } from "./roundDuctReference";
+import { previewRoundDuctElbow, roundDuctElbowGuideLines, saveRoundDuctElbow } from "./roundDuctElbow";
+import { roundDuctElbowScope, roundDuctElbowStock, roundDuctScope, roundDuctStock } from "./roundDuctReference";
 import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
 import { removeRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
@@ -425,6 +427,7 @@ type Modal =
   | "roof-valley"
   | "floor-register"
   | "round-duct"
+  | "round-duct-elbow"
   | "roof-vent-flashing"
   | "water-support"
   | "export"
@@ -672,6 +675,8 @@ export function App() {
   const [floorRegisterDraft, setFloorRegisterDraft] = useState<FloorRegisterPreview>();
   const [roundDuctDraft, setRoundDuctDraft] = useState<ReturnType<typeof previewRoundDuct>>();
   const [shownRoundDuct, setShownRoundDuct] = useState<{ projectId: string; id: string }>();
+  const [ductElbowDraft, setDuctElbowDraft] = useState<ReturnType<typeof previewRoundDuctElbow>>();
+  const [shownDuctElbow, setShownDuctElbow] = useState<{ projectId: string; id: string }>();
   const [shownFloorRegister, setShownFloorRegister] = useState<{ projectId: string; id: string }>();
   const [shownRoofVent, setShownRoofVent] = useState<{ projectId: string; id: string }>();
   const [rimSealTarget, setRimSealTarget] = useState<{ sectionId?: string; side?: RimSide }>();
@@ -1019,6 +1024,7 @@ export function App() {
     if (next !== "board-cut-list") setBoardCutDraft(null);
     if (next !== "floor-register") setFloorRegisterDraft(undefined);
     if (next !== "round-duct") setRoundDuctDraft(undefined);
+    if (next !== "round-duct-elbow") setDuctElbowDraft(undefined);
     if (next !== "offcut-release") setOffcutReleasePreview(null);
     if (next !== "inventory") setInventoryTarget(undefined);
     if (next !== null) inspectorFocus.suspend();
@@ -1566,6 +1572,9 @@ export function App() {
         if (action.runId) setShownRoundDuct({ projectId: project.id, id: action.runId });
         setModal("round-duct");
         return;
+      case "round-duct-elbow":
+        setStage(null); setPlaying(false); setExplode(false); setPanel("checks"); setModal("round-duct-elbow");
+        return;
       case "roof-vent-flashing":
         setPanel("checks");
         setModal("roof-vent-flashing");
@@ -2047,6 +2056,11 @@ export function App() {
     const run = project.roundDuctRuns?.find(({ id }) => id === shownRoundDuct.id);
     return run ? previewRoundDuct(project, run.input, run.id) : undefined;
   }, [project, shownRoundDuct]);
+  const ductElbowMarker = useMemo(() => {
+    if (shownDuctElbow?.projectId !== project.id) return undefined;
+    const saved = project.roundDuctElbows?.find(({ id }) => id === shownDuctElbow.id);
+    return saved ? previewRoundDuctElbow(project, saved.input, saved.id) : undefined;
+  }, [project, shownDuctElbow]);
   const roofVentMarker = useMemo(() => shownRoofVent?.projectId === project.id
     ? roofVentFlashingReviews(project).find(({ plan, issue }) => plan.id === shownRoofVent.id && !issue)?.geometry : undefined,
   [project, shownRoofVent]);
@@ -2203,6 +2217,7 @@ export function App() {
   const printRoofValleys = useMemo(() => roofValleyGuideLines(exportGuide), [exportGuide]);
   const printFloorRegisters = useMemo(() => floorRegisterGuideLines(exportGuide), [exportGuide]);
   const printRoundDuct = useMemo(() => roundDuctGuideLines(exportGuide), [exportGuide]);
+  const printDuctElbows = useMemo(() => roundDuctElbowGuideLines(exportGuide), [exportGuide]);
   const printRoofVents = useMemo(() => roofVentFlashingGuideLines(exportGuide), [exportGuide]);
   const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
   const printWindowWalls = useMemo(() => reviewGeneratedWindowWalls(exportGuide), [exportGuide]);
@@ -3547,6 +3562,7 @@ export function App() {
               shownRoofValley={panel === "checks" && roofValleyMarker ? [roofValleyMarker.start, roofValleyMarker.end] : undefined}
               floorRegister={modal === "floor-register" ? floorRegisterDraft : panel === "checks" ? floorRegisterMarker : undefined}
               roundDuct={modal === "round-duct" ? roundDuctDraft : panel === "checks" ? roundDuctMarker : undefined}
+              ductElbow={modal === "round-duct-elbow" ? ductElbowDraft : panel === "checks" ? ductElbowMarker : undefined}
               shownRoofVent={panel === "checks" ? roofVentMarker : undefined}
               shownOpeningFlashing={panel === "opening-flashing" && openingFlashingPreview?.project === project
                 ? openingFlashingPreview.value : undefined}
@@ -4454,6 +4470,12 @@ export function App() {
                 setStage(null); setExplode(false); setPlaying(false); setModal("round-duct");
               }}>Plan round duct run</button>
               {roundDuctMarker && <button type="button" className="text-button" onClick={() => setShownRoundDuct(undefined)}>Hide duct run</button>}
+              {((project.roundDuctRuns?.length ?? 0) >= 2 || !!project.roundDuctElbows?.length) &&
+                <button className="button secondary" type="button" onClick={() => {
+                  setStage(null); setExplode(false); setPlaying(false); setModal("round-duct-elbow");
+                }}>Fit round duct elbow</button>}
+              {ductElbowMarker && <button type="button" className="text-button"
+                onClick={() => setShownDuctElbow(undefined)}>Hide duct elbow</button>}
               {(project.projectCode?.trades.includes("roofing") || !!project.roofValleys?.length) &&
                 <button type="button" className="button secondary full" onClick={() => setModal("roof-valley")}>Plan roof valley lining</button>}
               {roofValleyMarker && <button type="button" className="text-button" onClick={() => setShownRoofValley(undefined)}>Hide valley centerline</button>}
@@ -5713,7 +5735,7 @@ export function App() {
       )}
       {modal && (
         <div
-          className={modal === "place-material" || modal === "board-cut-list" || modal === "floor-register" || modal === "round-duct" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
+          className={modal === "place-material" || modal === "board-cut-list" || modal === "floor-register" || modal === "round-duct" || modal === "round-duct-elbow" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setModal(null);
           }}
@@ -5894,6 +5916,22 @@ export function App() {
                 setShownRoundDuct({ projectId: project.id, id });
                 setStage(null); setPlaying(false); setExplode(false); setPanel("checks"); setModal(null);
               }} />}
+            {modal === "round-duct-elbow" && <RoundDuctElbowPanel key={project.id} project={project}
+              onPreview={setDuctElbowDraft}
+              onSave={(input, id) => safe(() => {
+                const next = change((live) => saveRoundDuctElbow(live, input, id));
+                const elbow = next.roundDuctElbows?.at(-1);
+                if (elbow) setShownDuctElbow({ projectId: project.id, id: elbow.id });
+                setShownRoundDuct(undefined);
+                setModal(null);
+                notify("Measured elbow saved. Review both connections in the build guide.");
+              })}
+              onRemove={(id) => safe(() => {
+                change((live) => ({ ...live, guideFingerprint: null,
+                  roundDuctElbows: live.roundDuctElbows?.filter((elbow) => elbow.id !== id),
+                }));
+                if (shownDuctElbow?.id === id) setShownDuctElbow(undefined);
+              })} />}
             {modal === "roof-vent-flashing" && <RoofVentFlashingPanel key={project.id} project={project}
               initialId={shownRoofVent?.projectId === project.id ? shownRoofVent.id : undefined}
               measuredPoint={measurement.a}
@@ -7421,6 +7459,12 @@ export function App() {
           <ul>{printRoundDuct.map((line, index) => <li key={index}>{line}</li>)}</ul>
           <p><a href={roundDuctStock.listing}>Master Flow pipe reference</a>{" · "}
             <a href={roundDuctStock.sealing}>PNNL metal duct sealing</a></p>
+        </section>}
+        {printDuctElbows.length > 0 && <section>
+          <h2>Round duct elbows</h2>
+          <p>{roundDuctElbowScope}</p>
+          <ul>{printDuctElbows.map((line) => <li key={line}>{line}</li>)}</ul>
+          <p><a href={roundDuctElbowStock.listing}>Master Flow elbow reference</a></p>
         </section>}
         {printRoofVents.length > 0 && (
           <section className="roof-vent-flashing-print">

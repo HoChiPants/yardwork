@@ -1,5 +1,6 @@
 import type { FloorRegisterPreview } from "./floorRegister";
 import type { previewRoundDuct } from "./roundDuct";
+import type { previewRoundDuctElbow } from "./roundDuctElbow";
 import { roundDuctStock } from "./roundDuctReference";
 import { maxRepeatedBoards } from "./repeatedBoardCuts";
 import { libertyBarPull } from "./cabinetPullReference";
@@ -103,6 +104,7 @@ export type SceneProps = {
   shownRoofValley?: [V3, V3];
   floorRegister?: FloorRegisterPreview;
   roundDuct?: ReturnType<typeof previewRoundDuct>;
+  ductElbow?: ReturnType<typeof previewRoundDuctElbow>;
   shownRoofVent?: { center: V3; flange: V3[]; layout: V3[] };
   shownOpeningFlashing?: OpeningFlashingPreview;
   shownPlumbingVentLayout?: PlumbingVentLayout;
@@ -1347,6 +1349,41 @@ export type MaterialDropMarkerHandle = (
   previews?: readonly Pick<Piece, "position" | "size" | "rotation">[],
 ) => void;
 
+function RoundDuctElbowMarker({ geometry, blocked }: {
+  geometry: NonNullable<ReturnType<typeof previewRoundDuctElbow>["geometry"]>;
+  blocked: boolean;
+}) {
+  const points = geometry.points;
+  const curve = useMemo(() => new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(...points[0]).multiplyScalar(1 / 12),
+    new THREE.Vector3(...points[1]).multiplyScalar(1 / 12),
+    new THREE.Vector3(...points[2]).multiplyScalar(1 / 12),
+  ), [points]);
+  const radius = roundDuctStock.diameter / 24;
+  const color = blocked ? "#c25636" : "#426f80";
+  return <group>
+    {geometry.approaches.map((pipe, index) => <mesh key={index}
+      position={pipe.center.map((value) => value / 12) as V3} rotation={pipe.rotation} raycast={() => null}>
+      <cylinderGeometry args={[radius, radius, pipe.length / 12, 24]} />
+      <meshBasicMaterial color="#426f80" transparent opacity={0.26} depthWrite={false} />
+    </mesh>)}
+    <mesh raycast={() => null}>
+      <tubeGeometry args={[curve, 24, radius, 16, false]} />
+      <meshBasicMaterial color={color} transparent opacity={0.45} depthWrite={false} />
+    </mesh>
+    <mesh position={geometry.center.map((value) => value / 12) as V3} rotation={geometry.rotation} raycast={() => null}>
+      <boxGeometry args={geometry.size.map((value) => value / 12) as V3} />
+      <meshBasicMaterial visible={false} />
+      <Edges color={color} />
+    </mesh>
+    <Html position={points[1].map((value) => value / 12) as V3} style={{ pointerEvents: "none" }} center>
+      <span className="site-clearance-marker" data-testid="round-duct-elbow-marker">
+        {blocked ? "Review elbow fit" : "90° elbow clearance"}
+      </span>
+    </Html>
+  </group>;
+}
+
 function MaterialDropMarker({ marker }: { marker: NonNullable<SceneProps["materialDropMarker"]> }) {
   const group = useRef<THREE.Group>(null);
   const ghost = useRef<THREE.Mesh>(null);
@@ -1720,6 +1757,9 @@ function World(props: SceneProps) {
             <span className="site-clearance-marker" data-testid="round-duct-marker">{props.roundDuct.issues.length ? "Review duct clearance" : "6 in round duct"}</span>
           </Html>
         </group>
+      )}
+      {!isolated && props.ductElbow?.geometry && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <RoundDuctElbowMarker geometry={props.ductElbow.geometry} blocked={props.ductElbow.issues.length > 0} />
       )}
       {!isolated && props.floorRegister && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
         <group>

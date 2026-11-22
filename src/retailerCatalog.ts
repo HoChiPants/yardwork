@@ -48,7 +48,7 @@ import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 import { weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot } from "./roofVentFlashingReference";
 import { floorRegisterBoot } from "./floorRegisterReference";
-import { roundDuctStock } from "./roundDuctReference";
+import { roundDuctElbowStock, roundDuctStock } from "./roundDuctReference";
 import { trimSealant } from "./trimSealantReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
@@ -4482,6 +4482,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: roundDuctStock.specification, verifiedAt: roundDuctStock.reviewedAt, note: "GAF lists CP6X60 among its standard round metal pipe models." },
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [roundDuctStock.listing, roundDuctStock.specification] },
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: roundDuctElbowStock.id,
+    name: roundDuctElbowStock.label,
+    manufacturer: "Master Flow",
+    manufacturerPartNumber: roundDuctElbowStock.model,
+    category: "equipment",
+    status: "reviewed-specs",
+    verifiedAt: roundDuctElbowStock.reviewedAt,
+    profile: profile("equipment", null, 1, { materialFamily: "30-gauge galvanized round duct" }),
+    offers: [hd(roundDuctElbowStock.internet, roundDuctElbowStock.model, roundDuctElbowStock.sku)],
+    sources: [
+      { url: roundDuctElbowStock.listing, verifiedAt: roundDuctElbowStock.reviewedAt, note: "6 in galvanized adjustable elbow with one crimped end." },
+      { url: roundDuctElbowStock.specification, verifiedAt: roundDuctElbowStock.reviewedAt, note: "GAF lists B90E6 among the rounded elbows adjustable through 90 degrees." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [roundDuctElbowStock.listing, roundDuctElbowStock.specification] },
     discrepancies: [],
     capabilities: [],
   },

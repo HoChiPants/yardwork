@@ -3,9 +3,10 @@ import { floorRegisterReviews } from "./floorRegister";
 import { formatStockLength } from "./measurement";
 import { projectSchema, uid, type Project } from "./model";
 import { partLabel } from "./partLabels";
+import { ductTipKey, requiredElbowPipeEnd } from "./roundDuctElbowSchema";
 import { ductLengthTolerance as tolerance, fitRoundDuctOffcut } from "./roundDuctEndFit";
 import { roundDuctSealNote, roundDuctStock } from "./roundDuctReference";
-import { roundDuctInputSchema, roundDuctRecoveryKey, roundDuctSlotKey, type RoundDuctEnds, type RoundDuctInput, type RoundDuctOffcut } from "./roundDuctSchema";
+import { roundDuctInputSchema, roundDuctRecoveryKey, roundDuctSlotKey, type RoundDuctEnd, type RoundDuctEnds, type RoundDuctInput, type RoundDuctOffcut } from "./roundDuctSchema";
 import { ductRunSignature, reviewRoundDuctStock } from "./roundDuctStock";
 import { prepareCollisionBox, solidOverlap } from "./solidCollision";
 
@@ -103,11 +104,21 @@ export function roundDuctTakeoff(project: Project) {
   const stock = reviewRoundDuctStock(reviews, records);
   const pending = new Set(records.flatMap(({ id, assignment }) =>
     assignment && stock.stale.has(id) ? [roundDuctSlotKey(assignment.runId, assignment.index)] : []));
+  const requiredTips = new Map<string, RoundDuctEnd>();
+  for (const { input } of project.roundDuctElbows ?? []) {
+    requiredTips.set(ductTipKey(input.first), requiredElbowPipeEnd(input, "first"));
+    requiredTips.set(ductTipKey(input.second), requiredElbowPipeEnd(input, "second"));
+  }
   const targets = reviews.flatMap((run) => {
     if (run.issues.length) return [];
     const signature = ductRunSignature(run.input);
-    return (run.cuts ?? []).map((cut, index) => ({
+    const cuts = run.cuts ?? [];
+    return cuts.map((cut, index) => ({
       run, cut, index, signature, key: roundDuctSlotKey(run.id, index), revisionKey: roundDuctRecoveryKey(run.id, index, signature),
+      requiredEnds: [
+        index === 0 ? requiredTips.get(ductTipKey({ runId: run.id, tip: "start" })) : undefined,
+        index === cuts.length - 1 ? requiredTips.get(ductTipKey({ runId: run.id, tip: "end" })) : undefined,
+      ] as const,
     }));
   }).filter(({ key }) => !stock.credits.has(key) && !stock.assigned.has(key) && !pending.has(key));
   const usedTails = new Set(records.flatMap(({ source }) =>
@@ -142,6 +153,8 @@ export function reserveRoundDuctOffcut(project: Project, id: string, key: string
   if (!offcut || offcut.retired || offcut.assignment) throw Error("Choose an available duct offcut.");
   const target = roundDuctTakeoff(project).targets.find(({ revisionKey }) => revisionKey === key);
   if (!target) throw Error("Choose an available pipe section from a clear duct run.");
+  if (target.requiredEnds.some((form, index) => form && form !== ends[index]))
+    throw Error("This reserved cut must use the mating end entered by the saved elbow.");
   if (!fitRoundDuctOffcut(offcut, target.cut.length, ends, target.run.input.cutLoss))
     throw Error("This offcut does not match the required length and mating ends with the entered cutting loss.");
   const assignment = { runId: target.run.id, index: target.index, signature: target.signature, ends };

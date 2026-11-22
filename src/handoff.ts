@@ -21,7 +21,8 @@ import { roofVentFlashingCount } from "./roofVentFlashing";
 import { floorRegisterBoot, floorRegisterPurchasePurpose } from "./floorRegisterReference";
 import { floorRegisterBootCount } from "./floorRegister";
 import { roundDuctPurchaseCount } from "./roundDuct";
-import { roundDuctPurchasePurpose, roundDuctStock } from "./roundDuctReference";
+import { roundDuctElbowCount } from "./roundDuctElbow";
+import { roundDuctElbowPurchasePurpose, roundDuctElbowStock, roundDuctPurchasePurpose, roundDuctStock } from "./roundDuctReference";
 
 const linkedPurchasePlans: Partial<Record<string, { purpose: string; units: (project: Project) => number }>> = {
   [rimFoam.id]: {
@@ -53,6 +54,10 @@ const linkedPurchasePlans: Partial<Record<string, { purpose: string; units: (pro
   [roundDuctStock.id]: {
     purpose: roundDuctPurchasePurpose,
     units: (project) => roundDuctPurchaseCount(project) ?? 0,
+  },
+  [roundDuctElbowStock.id]: {
+    purpose: roundDuctElbowPurchasePurpose,
+    units: (project) => roundDuctElbowCount(project) ?? 0,
   },
 };
 const clean = (value: string) => value.replace(/[\r\n\t]+/g, " ").trim();

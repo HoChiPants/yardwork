@@ -9,9 +9,11 @@ import { roundDuctSlotKey, type RoundDuctEnd, type RoundDuctEnds, type RoundDuct
 type Update = (update: (project: Project) => Project) => void;
 type DraftEnd = RoundDuctEnd | "";
 
-function EndSelect({ label, value, onChange }: { label: string; value: DraftEnd; onChange: (value: DraftEnd) => void }) {
+function EndSelect({ label, value, onChange, fixed }: {
+  label: string; value: DraftEnd; onChange: (value: DraftEnd) => void; fixed?: RoundDuctEnd;
+}) {
   return <label className="field">{label}
-    <select value={value} onChange={(event) => onChange(event.target.value as DraftEnd)}>
+    <select value={fixed ?? value} disabled={!!fixed} onChange={(event) => onChange(event.target.value as DraftEnd)}>
       <option value="">Choose end form</option>
       <option value="plain">Plain</option>
       <option value="crimped">Crimped</option>
@@ -165,10 +167,12 @@ function ReserveDuctOffcut({ offcut, targets, onReserve, onCancel }: {
   const [start, setStart] = useState<DraftEnd>("");
   const [end, setEnd] = useState<DraftEnd>("");
   const target = targets.find(({ revisionKey }) => revisionKey === key);
-  const fit = target && start && end ? fitRoundDuctOffcut(offcut, target.cut.length, [start, end], target.run.input.cutLoss) : undefined;
+  const first = target?.requiredEnds[0] ?? start;
+  const last = target?.requiredEnds[1] ?? end;
+  const fit = target && first && last ? fitRoundDuctOffcut(offcut, target.cut.length, [first, last], target.run.input.cutLoss) : undefined;
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (fit && start && end) onReserve(key, [start, end]);
+    if (fit && first && last) onReserve(key, [first, last]);
   }
   return <form onSubmit={submit}>
     <p className="small-note">Choose the end forms this pipe section needs to mate with the collars or neighboring pipe.</p>
@@ -180,8 +184,9 @@ function ReserveDuctOffcut({ offcut, targets, onReserve, onCancel }: {
         </option>)}
       </select>
     </label>
-    <EndSelect label="Required form at start" value={start} onChange={setStart} />
-    <EndSelect label="Required form at finish" value={end} onChange={setEnd} />
+    <EndSelect label="Required form at start" value={start} onChange={setStart} fixed={target?.requiredEnds[0]} />
+    <EndSelect label="Required form at finish" value={end} onChange={setEnd} fixed={target?.requiredEnds[1]} />
+    {target?.requiredEnds.some(Boolean) && <p className="small-note">The saved elbow sets the matching pipe end.</p>}
     {fit === null && <p role="status">This piece cannot produce both mating ends at the requested length with the entered cutting loss.</p>}
     {fit && <p className="small-note">{fit.reversed ? "Reverse the recorded ends. " : ""}{fit.trim ? `Trim at the ${fit.trim} of the installed section.` : "Keep both measured ends."}</p>}
     <div className="button-row">

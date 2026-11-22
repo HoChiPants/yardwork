@@ -43,7 +43,7 @@ import { valleyScope } from "./roofValleyReference";
 import { floorRegisterScope } from "./floorRegisterReference";
 import { floorRegisterCutoutLabel, floorRegisterCutoutUse, floorRegisterReviews } from "./floorRegister";
 import { availableRoundDuctOffcuts, roundDuctReviews } from "./roundDuct";
-import { roundDuctScope } from "./roundDuctReference";
+import { roundDuctElbowScope, roundDuctScope } from "./roundDuctReference";
 import { roofVentFlashingScope } from "./roofVentFlashingReference";
 import type { RimSide } from "./rimAirSealSchema";
 
@@ -67,6 +67,7 @@ export type BuildQuestion =
   | { kind: "roof-valley" }
   | { kind: "floor-register"; reuse?: true }
   | { kind: "round-duct" }
+  | { kind: "round-duct-elbow" }
   | { kind: "round-duct-offcuts" }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
@@ -99,6 +100,7 @@ export type BuildQuestionAction =
   | { kind: "roof-valley" }
   | { kind: "floor-register"; planId?: string }
   | { kind: "round-duct"; runId?: string }
+  | { kind: "round-duct-elbow" }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
@@ -182,6 +184,7 @@ const roofValleyQuestion = /^(?:(?:how (?:do|can|should) i )?(?:line|seal|waterp
 const floorRegisterQuestion = /^(?:(?:plan|fit|check|review|show) (?:a |the |my )?floor (?:register|duct boot)|how (?:do|can|should) i (?:air[- ]seal|seal) (?:a |the |my )?floor (?:register|duct boot))$/i;
 const floorRegisterCutoutQuestion = /^(?:(?:(?:how (?:do|can|should) i )?(?:record|keep|reuse|save)|what can i do with) (?:a |the |my )?floor (?:register|duct boot) (?:cutout|offcut|scrap))$/i;
 const roundDuctQuestion = /^(?:how (?:do|can|should) i )?(?:plan|lay out|check|review|show) (?:a |the |my )?(?:straight )?(?:6 in(?:ch)? )?(?:round |metal |supply )?duct (?:runs?|cuts?)$/i;
+const roundDuctElbowQuestion = /^(?:how (?:do|can|should) i )?(?:fit|plan|check|add) (?:a |the |my )?(?:90(?:°|[- ]degree) )?(?:round )?duct elbow$/i;
 const roundDuctOffcutsQuestion = /^(?:(?:how|where) (?:do|can|should) i )?(?:reuse|use|record|check|show) (?:the |my |a )?(?:round |metal )?duct (?:offcuts?|tails?|scrap)$/i;
 const roofVentFlashingQuestion = /^(?:how (?:do|can|should) i (?:flash|seal) (?:the |a |my )?(?:(?:plumbing )?vent(?: pipe)? through (?:the |a |my )?roof|roof vent(?: pipe)?)|(?:plan|review|check|show) (?:the |my )?roof vent flashing)$/i;
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
@@ -303,6 +306,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (floorRegisterCutoutQuestion.test(text)) return { kind: "floor-register", reuse: true };
   if (floorRegisterQuestion.test(text)) return { kind: "floor-register" };
   if (roundDuctQuestion.test(text)) return { kind: "round-duct" };
+  if (roundDuctElbowQuestion.test(text)) return { kind: "round-duct-elbow" };
   if (roundDuctOffcutsQuestion.test(text)) return { kind: "round-duct-offcuts" };
   if (roofVentFlashingQuestion.test(text)) return { kind: "roof-vent-flashing" };
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
@@ -911,6 +915,13 @@ export function answerBuildQuestion(
         detail: "Check a measured floor opening and boot against the surrounding framing before cutting.",
         scope: floorRegisterScope,
         link: { label: "Plan floor register", action: { kind: "floor-register" } },
+      };
+    case "round-duct-elbow":
+      return {
+        title: "Connect two round duct runs with a measured elbow",
+        detail: "Select two saved pipe ends, enter the actual elbow setbacks and identify the crimped port.",
+        scope: roundDuctElbowScope,
+        link: { label: "Fit round duct elbow", action: { kind: "round-duct-elbow" } },
       };
     case "round-duct-offcuts":
       return {

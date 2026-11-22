@@ -171,9 +171,14 @@ Mark the measured collar tips and enter the actual end engagement and pipe overl
 - Seal 3 round joints, including the two collars. Dry-fit and support the run. Preserve the factory crimp where it mates with the next pipe and check the cut end at its collar. Secure the joints with screws, clean the surfaces and seal the snap seams and joints with compatible duct mastic. Review fiberglass mesh at seams over ⅛ in and leave room for the required insulation.
 - Utility branch · 2 ft between collar tips. X/Y/Z 1 ft / 7.1485 in / 30 in to 3 ft / 7.1485 in / 30 in.
 - Stock · 0 × CP6X60 to buy. Cut lengths include collar engagement and 1 in at each internal joint.
-- Pipe 1 · Use measured offcut Branch tail at 26 in. Reverse its recorded ends. Trim at the start of the installed section.
+- Pipe 1 · Already supplied by measured offcut Branch tail at 26 in. Reversed its recorded ends. Trimmed at the start of the installed section.
 - Seal 2 round joints, including the two collars. Dry-fit and support the run. Preserve the factory crimp where it mates with the next pipe and check the cut end at its collar. Secure the joints with screws, clean the surfaces and seal the snap seams and joints with compatible duct mastic. Review fiberglass mesh at seams over ⅛ in and leave room for the required insulation.
-- Cut pool · Branch tail · 34.75 in · crimped / plain ends. Recovered from Straight supply branch · Pipe 2. Reserved for a pipe section.
+- Connector stub · 6 in between collar tips. X/Y/Z 1 ft / 7.1485 in / 4 ft to 18 in / 7.1485 in / 4 ft.
+- Stock · 0 × CP6X60 to buy. Cut lengths include collar engagement and 1 in at each internal joint.
+- Pipe 1 · Use measured offcut Utility remnant at 8 in. Trim at the start of the installed section. Estimated remnant 0.375 in with plain / plain ends. Measure it after trimming.
+- Seal 2 round joints, including the two collars. Dry-fit and support the run. Preserve the factory crimp where it mates with the next pipe and check the cut end at its collar. Secure the joints with screws, clean the surfaces and seal the snap seams and joints with compatible duct mastic. Review fiberglass mesh at seams over ⅛ in and leave room for the required insulation.
+- Cut pool · Branch tail · 34.75 in · crimped / plain ends. Recovered from Straight supply branch · Pipe 2. Used for Utility branch · Pipe 1.
+- Cut pool · Utility remnant · 8.5 in · plain / plain ends. Trimmed from Branch tail. Reserved for a pipe section.
 
 [Master Flow pipe reference](https://www.homedepot.com/p/100125106) · [PNNL metal duct sealing](https://basc.pnnl.gov/resource-guides/sealed-and-insulated-metal-ducts)
 

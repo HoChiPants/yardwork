@@ -2,7 +2,7 @@
 
 New exports use **format 132**. Yardwork reads valid formats 1–131 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
 
-Format 132 stores measured 6 in duct offcuts with a physical label and two end forms. A tail can identify a completed pipe cut and reserve one later pipe section. Yardwork rechecks that reservation after routing or joint measurements change.
+Format 132 stores measured 6 in duct offcuts with a physical label and two end forms. A tail can identify a completed pipe cut and reserve one later pipe section. Recording its use keeps the installed cut in the history and can register one measured remnant linked to that trim. Yardwork rechecks coverage after routing or joint measurements change.
 
 Format 131 adds measured straight round duct runs. A run records two collar tips, a clearance envelope, stock length, joint engagement, and cutting loss. Clearance, cut lengths, and linked purchase quantities are recalculated from the current model.
 

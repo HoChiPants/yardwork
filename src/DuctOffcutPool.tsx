@@ -2,9 +2,9 @@ import { useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { formatStockLength } from "./measurement";
 import type { Project } from "./model";
-import { addRoundDuctOffcut, releaseRoundDuctOffcut, removeRoundDuctOffcut, reserveRoundDuctOffcut, roundDuctTakeoff } from "./roundDuct";
+import { addRoundDuctOffcut, recordRoundDuctOffcutUse, releaseRoundDuctOffcut, removeRoundDuctOffcut, reserveRoundDuctOffcut, roundDuctTakeoff } from "./roundDuct";
+import { ductLengthTolerance, fitRoundDuctOffcut } from "./roundDuctEndFit";
 import { roundDuctSlotKey, type RoundDuctEnd, type RoundDuctEnds, type RoundDuctOffcut } from "./roundDuctSchema";
-import { fitRoundDuctOffcut } from "./roundDuctStock";
 
 type Update = (update: (project: Project) => Project) => void;
 type DraftEnd = RoundDuctEnd | "";
@@ -22,11 +22,12 @@ function EndSelect({ label, value, onChange }: { label: string; value: DraftEnd;
 export function DuctOffcutPool({ project, onChange }: { project: Project; onChange: Update }) {
   const [adding, setAdding] = useState(false);
   const [reserving, setReserving] = useState<string>();
+  const [recording, setRecording] = useState<string>();
   const [error, setError] = useState("");
   const takeoff = roundDuctTakeoff(project);
   const records = project.roundDuctOffcuts ?? [];
   const visible = records.filter(({ retired }) => !retired);
-  const retired = records.filter((record) => record.retired && record.source);
+  const retired = records.filter((record) => record.retired);
   function update(operation: Parameters<Update>[0]) {
     try {
       onChange(operation);
@@ -42,20 +43,35 @@ export function DuctOffcutPool({ project, onChange }: { project: Project; onChan
     {visible.map((offcut) => {
       const run = offcut.assignment && takeoff.reviews.find(({ id }) => id === offcut.assignment?.runId);
       const key = offcut.assignment && roundDuctSlotKey(offcut.assignment.runId, offcut.assignment.index);
-      const fit = key && takeoff.assigned.get(key)?.fit;
+      const match = key && takeoff.assigned.get(key);
+      const fit = match && match.offcut.id === offcut.id ? match.fit : undefined;
+      const parent = records.find(({ id }) => id === offcut.trimmedFrom);
       return <article className="cut-pool-row" key={offcut.id} aria-label={offcut.label}>
         <strong>{offcut.label}</strong>
         <p>{formatStockLength(offcut.length)} · {offcut.ends.join(" / ")} ends</p>
         {offcut.source && <p className="small-note">Recovered from {offcut.source.name} · Pipe {offcut.source.index + 1}</p>}
+        {parent && <p className="small-note">Trimmed from {parent.label}</p>}
         {offcut.assignment ? <>
           <p>{takeoff.stale.get(offcut.id) ?? `Reserved for ${run?.input.name} · Pipe ${offcut.assignment.index + 1}.`}</p>
           {fit && <p className="small-note">{fit.reversed ? "Reverse the recorded ends. " : ""}{fit.trim ? `Trim at the ${fit.trim} of the installed section.` : "Keep both measured ends."}</p>}
-          <button type="button" className="text-button" onClick={() => update((live) => releaseRoundDuctOffcut(live, offcut.id))}>Release duct offcut</button>
+          {fit && recording === offcut.id ? <RecordDuctUse remnant={fit.remnant}
+            onCancel={() => { setRecording(undefined); setError(""); }}
+            onSave={(measured) => {
+              if (update((live) => recordRoundDuctOffcutUse(live, offcut.id, measured))) setRecording(undefined);
+            }} /> : <div className="button-row">
+            {fit && <button type="button" className="button secondary small" onClick={() => {
+              setRecording(offcut.id);
+              setError("");
+            }}>Record duct offcut use</button>}
+            <button type="button" className="text-button" onClick={() => {
+              if (update((live) => releaseRoundDuctOffcut(live, offcut.id))) setRecording(undefined);
+            }}>Release duct offcut</button>
+          </div>}
         </> : reserving === offcut.id ? <ReserveDuctOffcut offcut={offcut} targets={takeoff.targets}
           onCancel={() => { setReserving(undefined); setError(""); }} onReserve={(target, ends) => {
             if (update((live) => reserveRoundDuctOffcut(live, offcut.id, target, ends))) setReserving(undefined);
           }} /> : <div className="button-row">
-          {takeoff.targets.some(({ cut }) => cut.length <= offcut.length + 1e-7) && <button type="button" className="button secondary small"
+          {takeoff.targets.some(({ cut }) => cut.length <= offcut.length + ductLengthTolerance) && <button type="button" className="button secondary small"
             onClick={() => { setError(""); setReserving(offcut.id); }}>Match to a duct cut</button>}
           <button type="button" className="text-button" onClick={() => update((live) => removeRoundDuctOffcut(live, offcut.id))}>Remove from available stock</button>
         </div>}
@@ -65,11 +81,43 @@ export function DuctOffcutPool({ project, onChange }: { project: Project; onChan
       onSave={(input) => { if (update((live) => addRoundDuctOffcut(live, input))) setAdding(false); }} /> :
       <button type="button" className="text-button" onClick={() => { setAdding(true); setError(""); }}>Add measured duct offcut</button>}
     {!!retired.length && <details>
-      <summary>Retired duct tails ({retired.length})</summary>
-      <ul>{retired.map(({ id, label, source }) => <li key={id}>{label} · {source?.name} Pipe {(source?.index ?? 0) + 1}</li>)}</ul>
+      <summary>Duct offcut history ({retired.length})</summary>
+      <ul>{retired.map(({ id, label, used, source }) => <li key={id}>{label}
+        {used ? ` · Used for ${used.name}, Pipe ${used.index + 1}` : " · Removed from available stock"}
+        {source && ` · Recovered from ${source.name}, Pipe ${source.index + 1}`}
+      </li>)}</ul>
     </details>}
     {error && <p role="alert" className="form-error">{error}</p>}
   </details>;
+}
+
+function RecordDuctUse({ remnant, onSave, onCancel }: {
+  remnant?: { length: number; ends: RoundDuctEnds };
+  onSave: (measured?: { length: number; label: string }) => void;
+  onCancel: () => void;
+}) {
+  const [length, setLength] = useState(NaN);
+  const [label, setLabel] = useState("");
+  const measured = !Number.isNaN(length);
+  const valid = !measured || (remnant && length > 0 && length <= remnant.length + ductLengthTolerance);
+  return <form onSubmit={(event) => {
+    event.preventDefault();
+    if (valid) onSave(measured ? { length, label } : undefined);
+  }}>
+    <p className="small-note">Record this when the reserved piece has been used.</p>
+    {remnant && <>
+      <p className="small-note">Expected remnant · {formatStockLength(remnant.length)} · {remnant.ends.join(" / ")} ends.
+        Confirm the ends and measure the usable length before keeping it.</p>
+      <LengthInput label="Measured remnant length (optional)" value={length} min={0} max={remnant.length} onChange={setLength} />
+      {measured && <label className="field">Duct remnant label
+        <input value={label} onChange={(event) => setLabel(event.target.value)} maxLength={100} />
+      </label>}
+    </>}
+    <div className="button-row">
+      <button type="submit" className="button primary" disabled={!valid}>Save completed duct use</button>
+      <button type="button" className="text-button" onClick={onCancel}>Cancel</button>
+    </div>
+  </form>;
 }
 
 function AddDuctOffcut({ tails, onSave, onCancel }: {
@@ -117,7 +165,7 @@ function ReserveDuctOffcut({ offcut, targets, onReserve, onCancel }: {
   const [start, setStart] = useState<DraftEnd>("");
   const [end, setEnd] = useState<DraftEnd>("");
   const target = targets.find(({ revisionKey }) => revisionKey === key);
-  const fit = target && start && end ? fitRoundDuctOffcut(offcut, target.cut.length, [start, end]) : undefined;
+  const fit = target && start && end ? fitRoundDuctOffcut(offcut, target.cut.length, [start, end], target.run.input.cutLoss) : undefined;
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (fit && start && end) onReserve(key, [start, end]);
@@ -127,14 +175,14 @@ function ReserveDuctOffcut({ offcut, targets, onReserve, onCancel }: {
     <label className="field">Receiving duct cut
       <select value={key} onChange={(event) => { setKey(event.target.value); setStart(""); setEnd(""); }}>
         <option value="">Choose a pipe section</option>
-        {targets.filter(({ cut }) => cut.length <= offcut.length + 1e-7).map(({ run, cut, index, revisionKey }) => <option key={revisionKey} value={revisionKey}>
+        {targets.filter(({ cut }) => cut.length <= offcut.length + ductLengthTolerance).map(({ run, cut, index, revisionKey }) => <option key={revisionKey} value={revisionKey}>
           {run.input.name} · Pipe {index + 1} · {formatStockLength(cut.length)}
         </option>)}
       </select>
     </label>
     <EndSelect label="Required form at start" value={start} onChange={setStart} />
     <EndSelect label="Required form at finish" value={end} onChange={setEnd} />
-    {fit === null && <p role="status">This piece cannot produce both mating ends at the requested length.</p>}
+    {fit === null && <p role="status">This piece cannot produce both mating ends at the requested length with the entered cutting loss.</p>}
     {fit && <p className="small-note">{fit.reversed ? "Reverse the recorded ends. " : ""}{fit.trim ? `Trim at the ${fit.trim} of the installed section.` : "Keep both measured ends."}</p>}
     <div className="button-row">
       <button type="submit" className="button primary" disabled={!fit}>Reserve duct offcut</button>

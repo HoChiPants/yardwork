@@ -915,7 +915,7 @@ export function answerBuildQuestion(
     case "round-duct-offcuts":
       return {
         title: "Reuse measured round duct offcuts",
-        detail: "Add a measured piece with both end forms. In the Cut pool, match its length and mating ends to a saved duct cut.",
+        detail: "Match a measured piece to a saved cut in the Cut pool. After using it, record the completed cut and measure any remnant before using it again.",
         rows: availableRoundDuctOffcuts(project).map((offcut) => ({ id: offcut.id, title: offcut.label,
           detail: `${formatStockLength(offcut.length)} · ${offcut.ends.join(" / ")} ends.` })),
         link: { label: "Open Cut pool", action: { kind: "cut-pool" } },

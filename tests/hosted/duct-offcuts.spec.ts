@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
-test("record a finished duct tail and reverse it to supply a second run", async ({ page }, info) => {
+test("record a duct tail and reuse its measured remnant in a third run", async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("./");
   const dialog = page.getByRole("dialog");
@@ -38,6 +38,26 @@ test("record a finished duct tail and reverse it to supply a second run", async 
   await page.screenshot({ path: info.outputPath("duct-offcut-match-phone.png") });
   await reserve.click();
   await expect(tail).toContainText("Reserved for Utility branch · Pipe 1");
+  await tail.getByRole("button", { name: "Record duct offcut use", exact: true }).click();
+  await expect(tail).toContainText("Expected remnant · 8.625 in · plain / plain ends");
+  const measured = tail.getByRole("spinbutton", { name: "Measured remnant length (optional)", exact: true });
+  await measured.fill("8.75");
+  const saveUse = tail.getByRole("button", { name: "Save completed duct use", exact: true });
+  await expect(saveUse).toBeDisabled();
+  await measured.fill("8.5");
+  await tail.getByRole("textbox", { name: "Duct remnant label", exact: true }).fill("Utility remnant");
+  await saveUse.click();
+  await expect(tail).toHaveCount(0);
+  const remnant = pool.getByRole("article", { name: "Utility remnant", exact: true });
+  await expect(remnant).toContainText("Trimmed from Branch tail");
+  await remnant.getByRole("button", { name: "Match to a duct cut", exact: true }).click();
+  await remnant.getByRole("combobox", { name: "Receiving duct cut", exact: true }).selectOption({ label: "Connector stub · Pipe 1 · 8 in" });
+  await remnant.getByRole("combobox", { name: "Required form at start", exact: true }).selectOption("plain");
+  await remnant.getByRole("combobox", { name: "Required form at finish", exact: true }).selectOption("plain");
+  await remnant.getByRole("button", { name: "Reserve duct offcut", exact: true }).click();
+  await expect(remnant).toContainText("Reserved for Connector stub · Pipe 1");
+  await pool.getByText("Duct offcut history (1)", { exact: true }).click();
+  await expect(pool.getByText(/Branch tail · Used for Utility branch, Pipe 1/)).toBeVisible();
 
   await page.getByRole("button", { name: "List", exact: true }).click();
   await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
@@ -49,5 +69,6 @@ test("record a finished duct tail and reverse it to supply a second run", async 
   await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("Pipe 2 · Already cut to 25 in");
-  expect(guide).toContain("Use measured offcut Branch tail at 26 in. Reverse its recorded ends");
+  expect(guide).toContain("Already supplied by measured offcut Branch tail at 26 in");
+  expect(guide).toContain("Use measured offcut Utility remnant at 8 in");
 });

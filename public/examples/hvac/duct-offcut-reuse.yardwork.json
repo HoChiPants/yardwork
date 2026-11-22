@@ -63,6 +63,20 @@
         "jointOverlap": 1,
         "cutLoss": 0.125
       }
+    },
+    {
+      "id": "efde96ff-a0b8-45dc-aac0-44a033b5ed4c",
+      "input": {
+        "name": "Connector stub",
+        "start": [12, 7.1485, 48],
+        "end": [18, 7.1485, 48],
+        "envelopeWidth": 8,
+        "stockLength": 60,
+        "startEngagement": 1,
+        "endEngagement": 1,
+        "jointOverlap": 1,
+        "cutLoss": 0.125
+      }
     }
   ],
   "id": "b8d5f869-884e-4d56-8129-537e10a98a9f",

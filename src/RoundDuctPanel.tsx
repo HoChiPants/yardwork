@@ -105,9 +105,12 @@ function RoundDuctMeasurements({ project, existing, measurement, onPreview, onSa
           {checked.cuts.map(({ length, whole, tail }, index) => {
             const key = existing && roundDuctSlotKey(existing.id, index);
             const reservation = key && stock?.assigned.get(key);
+            const completed = key && stock?.completedUses.get(key);
             const onHand = key && stock?.credits.has(key);
             return <li key={index}>
-              {reservation ? `Use ${reservation.offcut.label} at` : onHand ? "Already cut to" : whole ? "Keep whole" : "Cut to"} {formatStockLength(length)}.
+              {completed ? `Supplied by ${completed.offcut.label} at` : reservation ? `Use ${reservation.offcut.label} at` :
+                onHand ? "Already cut to" : whole ? "Keep whole" : "Cut to"} {formatStockLength(length)}.
+              {reservation && reservation.fit.remnant && ` Estimated remnant ${formatStockLength(reservation.fit.remnant.length)}.`}
               {!reservation && !onHand && tail > 1e-7 && ` Estimated tail ${formatStockLength(tail)}.`}
             </li>;
           })}

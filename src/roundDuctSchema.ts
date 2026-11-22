@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ductLengthTolerance, fitRoundDuctOffcut } from "./roundDuctEndFit";
 import { roundDuctStock } from "./roundDuctReference";
 
 const coordinate = z.number().finite().min(-12000).max(12000);
@@ -26,33 +27,58 @@ export type RoundDuctEnds = z.infer<typeof roundDuctEndsSchema>;
 
 const roundDuctSlot = { runId: z.uuid(), index: z.number().int().min(0).max(127) };
 const signature = z.string().min(1).max(512);
+const usableLength = z.number().finite().positive().max(roundDuctStock.length);
+const reservation = { ...roundDuctSlot, signature, ends: roundDuctEndsSchema };
 export const roundDuctOffcutsSchema = z.array(z.strictObject({
   id: z.uuid(),
   label: z.string().trim().min(1).max(100),
-  length: z.number().finite().positive().max(roundDuctStock.length),
+  length: usableLength,
   ends: roundDuctEndsSchema,
   retired: z.literal(true).optional(),
   source: z.strictObject({ ...roundDuctSlot, signature,
-    cutLength: z.number().finite().positive().max(roundDuctStock.length),
-    stockLength: z.number().finite().positive().max(roundDuctStock.length),
+    cutLength: usableLength,
+    stockLength: usableLength,
     name: z.string().min(1).max(100),
   }).optional(),
-  assignment: z.strictObject({ ...roundDuctSlot, signature, ends: roundDuctEndsSchema }).optional(),
+  assignment: z.strictObject(reservation).optional(),
+  used: z.strictObject({ ...reservation, name: z.string().min(1).max(100),
+    cutLength: usableLength, cutLoss: engagement,
+  }).optional(),
+  trimmedFrom: z.uuid().optional(),
 })).max(128).superRefine((records, context) => {
+  const byId = new Map(records.map((record) => [record.id, record]));
   const identity = new Set<string>();
-  const sources = new Set<string>();
+  const completions = new Set<string>();
   const assignments = new Set<string>();
+  const trimmed = new Set<string>();
   records.forEach((record, index) => {
-    const source = record.source && roundDuctRecoveryKey(record.source.runId, record.source.index, record.source.signature);
     const assigned = record.assignment && roundDuctSlotKey(record.assignment.runId, record.assignment.index);
-    if (identity.has(record.id) || (source && sources.has(source)) || (assigned && assignments.has(assigned)))
+    if (identity.has(record.id) || (assigned && assignments.has(assigned)))
       context.addIssue({ code: "custom", path: [index], message: "Use each duct offcut, recovered tail and receiving section once." });
     if (record.retired && record.assignment)
       context.addIssue({ code: "custom", path: [index, "assignment"], message: "Retired duct offcuts cannot be reserved." });
-    if (record.source && record.source.cutLength + record.length > record.source.stockLength + 1e-7)
+    if (record.source && record.source.cutLength + record.length > record.source.stockLength + ductLengthTolerance)
       context.addIssue({ code: "custom", path: [index, "length"], message: "The measured tail and completed section exceed their source pipe." });
+    if (record.used && (!record.retired || !fitRoundDuctOffcut(record, record.used.cutLength, record.used.ends, record.used.cutLoss)))
+      context.addIssue({ code: "custom", path: [index, "used"], message: "A completed duct cut must fit the recorded offcut and its end forms." });
+    for (const completion of [record.source, record.used]) {
+      if (!completion) continue;
+      const key = roundDuctRecoveryKey(completion.runId, completion.index, completion.signature);
+      if (completions.has(key))
+        context.addIssue({ code: "custom", path: [index], message: "Record each completed duct cut once." });
+      completions.add(key);
+    }
+    if (record.trimmedFrom) {
+      const parent = byId.get(record.trimmedFrom);
+      const used = parent?.used;
+      const remnant = parent && used && fitRoundDuctOffcut(parent, used.cutLength, used.ends, used.cutLoss)?.remnant;
+      if (!identity.has(record.trimmedFrom) || !remnant || record.length > remnant.length + ductLengthTolerance ||
+          record.ends[0] !== remnant.ends[0] || record.ends[1] !== remnant.ends[1] ||
+          record.source || trimmed.has(record.trimmedFrom))
+        context.addIssue({ code: "custom", path: [index, "trimmedFrom"], message: "Record one measured duct remnant within its completed source trim." });
+      trimmed.add(record.trimmedFrom);
+    }
     identity.add(record.id);
-    if (source) sources.add(source);
     if (assigned) assignments.add(assigned);
   });
 });

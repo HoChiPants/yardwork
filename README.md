@@ -26,6 +26,8 @@ Open **Joist bearing and span** to trace the joists under the sheet to their dir
 
 Under **Checks → Project code references**, a through-wall plumbing vent can use measured wall, terminal, lot-line and grade points. These positions appear in 3D and the project guide. Enter the build jurisdiction, code path and date for the Utah review.
 
+Use **Checks → Plan round duct run** to check measured collar positions against framing and calculate cuts and seal joints. Use **Cut pool → Round duct offcuts** to match a saved cut to a measured piece. After using it, record the finished section and measure any usable remnant. Import the [duct offcut practice plan](public/examples/hvac/duct-offcut-reuse.yardwork.json) and compare the [worked build guide](public/examples/hvac/duct-offcut-reuse-guide.md).
+
 For a closet with sourced Everbilt rods, open **Sections → Fit closet rods → End socket backplates** after saving the rod fit. Measure each delivered backplate from the rod center. Yardwork shows where the measured envelope crosses a retained panel edge or cutout, and exports the marks with the build guide.
 
 **Plan it. Piece by piece.** An independent, self-hosted 3D workshop for planning DIY projects with editable materials, cuts, connections, shopping lists, and build guides.

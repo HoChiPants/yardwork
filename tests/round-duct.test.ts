@@ -6,9 +6,11 @@ import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
 import { blank, part, projectSchema, type V3 } from "../src/model";
 import {
-  addRoundDuctOffcut, previewRoundDuct, releaseRoundDuctOffcut, removeRoundDuctOffcut,
-  reserveRoundDuctOffcut, roundDuctPurchaseCount, roundDuctReviews, roundDuctTakeoff, saveRoundDuct,
+  addRoundDuctOffcut, availableRoundDuctOffcuts, previewRoundDuct, recordRoundDuctOffcutUse,
+  releaseRoundDuctOffcut, removeRoundDuctOffcut, reserveRoundDuctOffcut,
+  roundDuctPurchaseCount, roundDuctReviews, roundDuctTakeoff, saveRoundDuct,
 } from "../src/roundDuct";
+import { fitRoundDuctOffcut } from "../src/roundDuctEndFit";
 import { roundDuctStock } from "../src/roundDuctReference";
 import type { RoundDuctInput } from "../src/roundDuctSchema";
 
@@ -82,24 +84,56 @@ function ductReusePractice() {
   return projectSchema.parse(JSON.parse(readFileSync(new URL("../public/examples/hvac/duct-offcut-reuse.yardwork.json", import.meta.url), "utf8")));
 }
 
-test("a measured tail credits the finished cut and supplies a second run at the correct mating ends", () => {
+test("a measured tail and its measured remnant supply two later cuts while preserving their completed source", () => {
   const sample = ductReusePractice();
   const tail = roundDuctTakeoff(sample).tails.find(({ run }) => run.input.name === "Straight supply branch")!;
-  assert.equal(roundDuctPurchaseCount(sample), 3);
+  assert.equal(roundDuctPurchaseCount(sample), 4);
   const measured = addRoundDuctOffcut(sample, { label: "Branch tail", length: 34.75, ends: ["crimped", "plain"], tailKey: tail.revisionKey });
-  assert.equal(roundDuctPurchaseCount(measured), 2);
+  assert.equal(roundDuctPurchaseCount(measured), 3);
   const target = roundDuctTakeoff(measured).targets.find(({ run }) => run.input.name === "Utility branch")!;
   const [offcut] = measured.roundDuctOffcuts!;
   assert.throws(() => reserveRoundDuctOffcut(measured, offcut.id, target.revisionKey, ["crimped", "crimped"]), /mating ends/);
   const assigned = reserveRoundDuctOffcut(measured, offcut.id, target.revisionKey, ["plain", "crimped"]);
   assert.deepEqual(assigned, projectSchema.parse(JSON.parse(JSON.stringify(assigned))));
-  assert.equal(roundDuctPurchaseCount(assigned), 1);
-  assert.deepEqual(roundDuctTakeoff(assigned).assigned.get(target.key)?.fit, { reversed: true, trim: "start" });
+  assert.equal(roundDuctPurchaseCount(assigned), 2);
+  assert.deepEqual(roundDuctTakeoff(assigned).assigned.get(target.key)?.fit, {
+    reversed: true, trim: "start", remnant: { length: 8.625, ends: ["plain", "plain"] },
+  });
   assert.match(guideMarkdown(assigned), /Already cut to 25 in/);
   assert.match(guideMarkdown(assigned), /Use measured offcut Branch tail at 26 in. Reverse its recorded ends. Trim at the start/);
   assert.match(guideMarkdown(assigned), /Cut pool · Branch tail · 34\.75 in · crimped \/ plain ends. Recovered from Straight supply branch · Pipe 2. Reserved/);
-  const purchased = addHomeDepotPurchaseNeed(assigned, roundDuctStock.id);
+  assert.throws(() => recordRoundDuctOffcutUse(assigned, offcut.id, { label: "Trim", length: 8.75 }), /after cutting loss/);
+  const completed = recordRoundDuctOffcutUse(assigned, offcut.id, { label: "Utility remnant", length: 8.5 });
+  assert.equal(roundDuctPurchaseCount(completed), 2);
+  assert.deepEqual(completed, projectSchema.parse(JSON.parse(JSON.stringify(completed))));
+  const [remnant] = availableRoundDuctOffcuts(completed);
+  assert.equal(remnant.trimmedFrom, offcut.id);
+  assert.deepEqual(remnant.ends, ["plain", "plain"]);
+  assert.throws(() => recordRoundDuctOffcutUse(completed, offcut.id), /reserved duct offcut/);
+  assert.equal(projectSchema.safeParse({
+    ...completed, roundDuctOffcuts: [completed.roundDuctOffcuts![0], { ...remnant, length: 8.75 }],
+  }).success, false);
+  const stub = roundDuctTakeoff(completed).targets.find(({ run }) => run.input.name === "Connector stub")!;
+  const stubStock = reserveRoundDuctOffcut(completed, remnant.id, stub.revisionKey, ["plain", "plain"]);
+  assert.match(guideMarkdown(stubStock), /Already supplied by measured offcut Branch tail at 26 in. Reversed its recorded ends. Trimmed at the start/);
+  assert.match(guideMarkdown(stubStock), /Use measured offcut Utility remnant at 8 in/);
+  assert.match(guideMarkdown(stubStock), /Utility remnant.*Trimmed from Branch tail/);
+  const purchased = addHomeDepotPurchaseNeed(stubStock, roundDuctStock.id);
   assert.equal(homeDepotShoppingList(purchased).items.find(({ productId }) => productId === roundDuctStock.internet)?.quantity, 1);
+  const changed = saveRoundDuct(stubStock, { ...target.run.input, end: [37, 7.1485, 30] }, target.run.id);
+  assert.equal(roundDuctPurchaseCount(changed), 2);
+  assert.equal(changed.roundDuctOffcuts?.[0].retired, true);
+  assert.equal(changed.roundDuctOffcuts?.[1].assignment?.runId, stub.run.id);
+  assert.doesNotMatch(guideMarkdown(changed), /Already supplied by measured offcut Branch tail/);
+});
+
+test("reusing a retained measured piece checks trim loss while an exact fit preserves both ends", () => {
+  const ends = ["plain", "crimped"] as const;
+  assert.equal(fitRoundDuctOffcut({ length: 26.0625, ends: [...ends] }, 26, [...ends], 0.125), null);
+  assert.deepEqual(fitRoundDuctOffcut({ length: 26, ends: [...ends] }, 26, [...ends], 0.125),
+    { reversed: false, trim: null });
+  assert.deepEqual(fitRoundDuctOffcut({ length: 26.125, ends: [...ends] }, 26, [...ends], 0.125),
+    { reversed: false, trim: "start" });
 });
 
 test("moving the source run keeps the measured tail while reviewing new stock for the edited route", () => {
@@ -107,7 +141,7 @@ test("moving the source run keeps the measured tail while reviewing new stock fo
   const tail = roundDuctTakeoff(sample).tails.find(({ run }) => run.input.name === "Straight supply branch")!;
   const measured = addRoundDuctOffcut(sample, { label: "Branch tail", length: 34, ends: ["plain", "crimped"], tailKey: tail.revisionKey });
   const changed = saveRoundDuct(measured, { ...tail.run.input, start: [1.625, 7.1485, 7.125], end: [81.625, 7.1485, 7.125] }, tail.run.id);
-  assert.equal(roundDuctPurchaseCount(changed), 3);
+  assert.equal(roundDuctPurchaseCount(changed), 4);
   assert.equal(changed.roundDuctOffcuts?.[0].length, 34);
   assert.match(guideMarkdown(changed), /Branch tail.*Available in the Cut pool/);
 });
@@ -123,9 +157,9 @@ test("an endpoint edit holds a stale reservation and retiring a tail preserves i
   assert.equal(roundDuctPurchaseCount(edited), null);
   assert.ok(validate(edited).some(({ title }) => title === "Review duct offcut · Branch tail"));
   const released = releaseRoundDuctOffcut(edited, offcut.id);
-  assert.equal(roundDuctPurchaseCount(released), 2);
+  assert.equal(roundDuctPurchaseCount(released), 3);
   const retired = removeRoundDuctOffcut(released, offcut.id);
   assert.equal(retired.roundDuctOffcuts?.[0].retired, true);
-  assert.equal(roundDuctPurchaseCount(retired), 2);
+  assert.equal(roundDuctPurchaseCount(retired), 3);
   assert.throws(() => addRoundDuctOffcut(retired, { label: "Duplicate tail", length: 25, ends: ["plain", "plain"], tailKey: tail.revisionKey }), /already recorded/);
 });

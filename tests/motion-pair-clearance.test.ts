@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
-import { guideMarkdown } from "../src/engine";
+import { bom, guideMarkdown } from "../src/engine";
 import { blank, part, projectSchema } from "../src/model";
 import { motionGapSearch, motionReviewLines, runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
 import { findClosestPairGap } from "../src/motionPairClearance";
@@ -22,13 +23,43 @@ function drawerScene() {
 
 test("sliding through a tight gap flags a mid-path shortfall without a collision", () => {
   const { project, plan, clearance } = drawerScene();
+  const base = runMotionTest(project, plan).review!;
+  assert.equal(base.playbackLimit(0, 12).travel, 12);
   const review = runMotionTest(project, plan, { held: [], clearance }).review!;
   assert.deepEqual(review.hits, []);
   assert.deepEqual(review.clearance?.result, { status: "short", gap: 0.0625, at: 6 });
-  assert.equal(review.playbackLimit(0, 12).travel, 12);
-  assert.equal(review.playbackLimit(0, 12).inspectAt, undefined);
+  const first = 4.5 - Math.sqrt(clearance.minimum ** 2 - 0.0625 ** 2);
+  const last = 12 - first;
+  const opening = review.playbackLimit(0, 12);
+  const closing = review.playbackLimit(12, 0);
+  assert.ok(opening.travel <= first && opening.travel > first - 0.001, `Opened to ${opening.travel}`);
+  assert.ok(closing.travel >= last && closing.travel < last + 0.001, `Closed to ${closing.travel}`);
+  assert.equal(opening.clearanceStop?.gap, 0.0625);
+  assert.equal(closing.clearanceStop?.gap, 0.0625);
+  assert.deepEqual(review.playbackLimit(opening.travel, 0), { travel: 0, inspectAt: undefined });
+  assert.equal(review.playbackLimit(closing.travel, 12).travel, 12);
+  assert.equal(review.playbackLimit(6, 0).travel, 6);
+  assert.equal(review.playbackLimit(6, 0).clearanceStop?.gap, 0.0625);
+  assert.equal(review.playbackLimit(2, 4).clearanceStop, undefined);
+  assert.equal(review.preview(6).interferenceIds.length, 0);
   const pass = runMotionTest(project, plan, { held: [], clearance: { ...clearance, minimum: 0.0625 } }).review!;
   assert.deepEqual(pass.clearance?.result, { status: "met" });
+  assert.equal(pass.playbackLimit(0, 12).travel, 12);
+  assert.equal(pass.playbackLimit(12, 0).travel, 0);
+});
+
+test("pair clearance and solid contact stop at whichever limit playback would reach first", () => {
+  const { project, plan, clearance } = drawerScene();
+  const obstacle = part("Solid stop", "plywood", [2, 2, 1], [0, 4, 3.5], project.steps[0].id, "Cabinet");
+  const review = runMotionTest({ ...project, pieces: [...project.pieces, obstacle] }, plan, { held: [], clearance }).review!;
+  const opening = review.playbackLimit(0, 12);
+  assert.ok(opening.travel < 3.5);
+  assert.equal(opening.clearanceStop, undefined);
+  assert.deepEqual(review.preview(opening.travel, opening.inspectAt).obstacleNames, ["Solid stop"]);
+  const closing = review.playbackLimit(12, 0);
+  assert.ok(closing.travel > 7);
+  assert.equal(closing.clearanceStop?.requirement, clearance);
+  assert.deepEqual(review.preview(closing.travel, closing.inspectAt).obstacleNames, []);
 });
 
 test("a swinging door finds the closest pose during the second leg of a sequence", async () => {
@@ -53,6 +84,14 @@ test("a swinging door finds the closest pose during the second leg of a sequence
   assert.deepEqual(result.hits, []);
   assert.equal(result.clearance?.phase, 1);
   assert.deepEqual(result.clearance?.result, { status: "short", gap: 0.0625, at: 75 });
+  const opening = result.playbackLimit(0, 100);
+  const closing = result.playbackLimit(100, 0);
+  assert.equal(opening.phase, 1);
+  assert.equal(closing.phase, 1);
+  assert.ok(opening.travel > 50 && opening.travel < 75);
+  assert.ok(closing.travel > 75 && closing.travel < 100);
+  assert.equal(result.playbackLimit(0, 50).travel, 50);
+  assert.equal(result.playbackLimit(50, 0).travel, 0);
   const gap = await result.clearance!.findClosest!();
   assert.equal(gap.phase, 1);
   assert.equal(gap.at, 75);
@@ -136,6 +175,25 @@ test("saved gap checks export the observed result and review removed parts on re
   assert.match(guideMarkdown(roundTrip), /0\.125 in minimum gap · P001 and P002 · Shortfall\. Observed 0\.0625 in near 6 in/);
   roundTrip.pieces = roundTrip.pieces.filter(({ id }) => id !== lip.id);
   assert.match(motionReviewLines(roundTrip).join("\n"), /Needs review\. A selected part is missing/);
+  const review = runMotionTest(roundTrip, roundTrip.motionPlans![0], roundTrip.motionPlans![0].testScenarios![0].setup).review!;
+  assert.equal(review.playbackLimit(3, 12).travel, 3);
+  assert.match(review.playbackLimit(3, 12).clearanceStop?.reason ?? "", /selected part is missing/);
+  assert.equal(review.preview(12).travel, 12);
+});
+
+test("the editable drawer practice plan keeps its paired clearance and shared offcut", async () => {
+  const fixture = new URL("../public/examples/motion/drawer-lip-gap.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(await readFile(fixture, "utf8")));
+  const plan = project.motionPlans![0];
+  const review = runMotionTest(project, plan, plan.testScenarios![0].setup).review!;
+  assert.equal(review.playbackLimit(0, 12).clearanceStop?.gap, 0.0625);
+  assert.equal(review.playbackLimit(12, 0).clearanceStop?.gap, 0.0625);
+  const row = bom(project).find(({ id }) => id === "plywood")!;
+  assert.equal(row.quantity, 0);
+  assert.equal(row.onHandStockUnits, 1);
+  assert.equal(project.pieces.filter(({ offcut }) => offcut).length, 3);
+  const guide = new URL("drawer-lip-gap-guide.md", fixture);
+  assert.equal(guideMarkdown(project).trimEnd(), (await readFile(guide, "utf8")).trimEnd());
 });
 
 test("solid distance measures a Euclidean diagonal between separated retained parts", () => {

@@ -808,13 +808,19 @@ export function MotionPanel({
     if (!review || !preview) return;
     const end = motionReviewTravel(review);
     const from = preview.travel;
+    const destination = opening ? end : 0;
+    if (from === destination) {
+      cancel();
+      return;
+    }
     const {
       travel: target,
       inspectAt,
       uncertain,
       siteFaceId,
       phase,
-    } = review.playbackLimit(from, opening ? end : 0);
+      clearanceStop,
+    } = review.playbackLimit(from, destination);
     animate(from, target, end, (value, stopped) =>
       onPreview({
         ...review.preview(
@@ -824,6 +830,7 @@ export function MotionPanel({
           stopped ? phase : undefined,
         ),
         uncertainLimit: stopped && uncertain,
+        clearanceStop: stopped ? clearanceStop : undefined,
       }),
     );
   }

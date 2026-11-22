@@ -11,7 +11,7 @@ import { reviewSiteSweepBand, sweepLidSiteFaces } from "./lidSiteClearance";
 import { formatPreciseInches } from "./measurement";
 import { hingeComponentExtrema, hingeOffsetAt, hingeOffsetSegments, hingeOffsetSpeed } from "./measuredHingePath";
 import { sectionParts, uid, type Piece, type Project, type V3 } from "./model";
-import { findClosestPairGap, sweepPairClearance, type ClosestPairGap, type PairClearanceResult } from "./motionPairClearance";
+import { findClosestPairGap, firstPairClearanceStop, sweepPairClearance, type ClosestPairGap, type PairClearanceResult } from "./motionPairClearance";
 import {
   motionPlanInputSchema,
   motionPlanSchema,
@@ -229,12 +229,15 @@ export type MotionGapSearch = (signal?: AbortSignal) => Promise<ClosestMotionGap
 
 type SiteMotionRow = { row: MovingShape; plane: SiteClearance };
 export type MotionPhase = 0 | 1;
+type ClearanceGuard = { requirement: MotionPairClearance; reason?: string };
+type ClearanceStop = ClearanceGuard & { gap?: number };
 export type MotionPlaybackLimit = {
   travel: number;
   inspectAt?: number;
   uncertain?: boolean;
   siteFaceId?: string;
   phase?: MotionPhase;
+  clearanceStop?: ClearanceStop;
 };
 
 function sweepSiteFace(
@@ -1050,6 +1053,7 @@ export function reviewMotionPath(
     playbackLimit(
       requestedFrom: number,
       requestedTo: number,
+      clearance?: ClearanceGuard,
     ): MotionPlaybackLimit {
       const from = motionPosition(requestedFrom, mechanism.travel);
       const to = motionPosition(requestedTo, mechanism.travel);
@@ -1159,6 +1163,27 @@ export function reviewMotionPath(
           witness === null,
           siteRow.plane.id,
         );
+      }
+      if (clearance && target > 0) {
+        const { requirement } = clearance;
+        const geometry = clearance.reason ?? gapGeometry(requirement);
+        if (typeof geometry === "string") return {
+          travel: from, inspectAt: from, clearanceStop: { requirement, reason: geometry },
+        };
+        try {
+          const limit = firstPairClearanceStop(
+            requirement.minimum, target, (distance) => geometry.posePair(from + direction * distance),
+            geometry.speedBound, precision,
+          );
+          if (limit && (inspection === undefined || limit.distance < target)) {
+            const travel = from + direction * limit.distance;
+            return { travel, inspectAt: travel, clearanceStop: { requirement, gap: limit.observedGap } };
+          }
+        } catch {
+          return {
+            travel: from, inspectAt: from, clearanceStop: { requirement, reason: "The modeled profiles could not be measured." },
+          };
+        }
       }
       return {
         travel: inspection === undefined ? to : from + direction * target,
@@ -1304,7 +1329,7 @@ function reviewMotionSequence(
       const finding = checks.find(({ result }) => result.status === "needs-review") ?? checks[0];
       return { ...finding, findClosest };
     },
-    playbackLimit(requestedFrom, requestedTo) {
+    playbackLimit(requestedFrom, requestedTo, clearance) {
       const from = motionPosition(requestedFrom, sequenceEnd);
       const to = motionPosition(requestedTo, sequenceEnd);
       const forward = to > from;
@@ -1316,7 +1341,7 @@ function reviewMotionSequence(
         if (low >= high) continue;
         const localLow = phaseTravel(phase, sequence[phase].travel, low);
         const localHigh = phaseTravel(phase, sequence[phase].travel, high);
-        const limit = phases[phase].playbackLimit(forward ? localLow : localHigh, forward ? localHigh : localLow);
+        const limit = phases[phase].playbackLimit(forward ? localLow : localHigh, forward ? localHigh : localLow, clearance);
         if (limit.inspectAt !== undefined)
           return {
             ...limit,
@@ -1368,6 +1393,7 @@ export type MotionPreview = ReturnType<MotionReview["preview"]> & {
   hiddenPieceIds?: readonly string[];
   clearanceCeiling?: { center: V3; size: V3 };
   uncertainLimit?: boolean;
+  clearanceStop?: ClearanceStop;
 };
 
 export function motionTargetDistance(
@@ -1414,10 +1440,17 @@ export function runMotionTest(
     } else {
       review = reviewMotion(project, plan, held, linked);
     }
-    if (setup?.clearance)
-      review.clearance = hasClearanceMovingPart(plan, linked, setup.clearance)
-        ? review.pairClearance(setup.clearance)
-        : { requirement: setup.clearance, result: { status: "needs-review", reason: "The selected part no longer moves in this test." } };
+    if (setup?.clearance) {
+      const requirement = setup.clearance;
+      const reason = hasClearanceMovingPart(plan, linked, requirement) ? undefined : "The selected part no longer moves in this test.";
+      review.clearance = reason
+        ? { requirement, result: { status: "needs-review", reason } }
+        : review.pairClearance(requirement);
+      if (review.clearance.result.status !== "met") {
+        const pathLimit = review.playbackLimit;
+        review.playbackLimit = (from, to) => pathLimit(from, to, { requirement, reason });
+      }
+    }
     return { review };
   } catch (problem) {
     return { error: problem instanceof Error ? problem.message : "Confirm the current moving parts." };
@@ -1538,7 +1571,15 @@ export function motionTestFindings(project: Project, result: MotionTestResult, i
   return findings;
 }
 
-function motionClearanceLines(project: Project, review: MotionReview) {
+function motionClearanceLines(project: Project, review: MotionReview, includeStops = false) {
+  const stops: string[] = [];
+  if (includeStops && review.clearance && review.clearance.result.status !== "met") {
+    const end = motionReviewTravel(review);
+    const opening = review.playbackLimit(0, end);
+    const closing = review.playbackLimit(end, 0);
+    if (opening.clearanceStop) stops.push(`Opening pauses near ${motionReviewDistance(review, opening.travel, opening.phase)} for the minimum gap.`);
+    if (closing.clearanceStop) stops.push(`Closing pauses near ${motionReviewDistance(review, closing.travel, closing.phase)} for the minimum gap.`);
+  }
   return [
     ...review.hits.map((hit) => motionHitLine(project, review, hit)),
     ...(review.unresolvedIds.length
@@ -1552,10 +1593,11 @@ function motionClearanceLines(project: Project, review: MotionReview) {
       : []),
     ...review.site.map((entry) => motionSiteLine(project, review, entry)),
     ...(review.clearance ? [motionPairClearanceLine(project, review)] : []),
+    ...stops,
   ];
 }
 
-function savedTestLines(project: Project, label: string, setup: MotionTestSetup, result: MotionTestResult, unavailableLabel = label) {
+function savedTestLines(project: Project, label: string, setup: MotionTestSetup, result: MotionTestResult, includeStops: boolean, unavailableLabel = label) {
   if (!result.review) return [`${unavailableLabel} · Needs review. ${result.error}`];
   const { held, linked } = resolveMotionTestSetup(project, setup);
   const { sequence } = result.review;
@@ -1570,11 +1612,11 @@ function savedTestLines(project: Project, label: string, setup: MotionTestSetup,
         : []),
       ...held.map(({ plan, travel }) => `${plan.label} held at ${motionDistance(travel, plan.mechanism.kind)}`),
     ].join(" · "),
-    ...motionClearanceLines(project, result.review),
+    ...motionClearanceLines(project, result.review, includeStops),
   ];
 }
 
-export function motionReviewLines(project: Project, reviews = projectMotionReviews(project)) {
+export function motionReviewLines(project: Project, reviews = projectMotionReviews(project), includeStops = true) {
   const slideConflicts = new Set(drawerSlidePurchaseReview(project).conflicts.map(({ key }) => key));
   return reviews.flatMap(({ plan, baseline, saved, scenarios }) => {
     const door = boundMotionReview(project, plan);
@@ -1610,8 +1652,8 @@ export function motionReviewLines(project: Project, reviews = projectMotionRevie
             ...motionClearanceLines(project, baseline.review),
           ]
         : [`${plan.label} · Motion needs review. Confirm the moving parts and current geometry.`]),
-      ...(saved && plan.testSetup ? savedTestLines(project, `Saved clearance test · ${plan.label}`, plan.testSetup, saved, "Saved clearance test") : []),
-      ...scenarios.flatMap(({ name, setup, result }) => savedTestLines(project, `Named clearance test · ${name}`, setup, result)),
+      ...(saved && plan.testSetup ? savedTestLines(project, `Saved clearance test · ${plan.label}`, plan.testSetup, saved, includeStops, "Saved clearance test") : []),
+      ...scenarios.flatMap(({ name, setup, result }) => savedTestLines(project, `Named clearance test · ${name}`, setup, result, includeStops)),
       ...slideLines,
       ...(slideConflict
         ? (project.drawerSlideMounts?.some(({ motionId }) => motionId === plan.id)

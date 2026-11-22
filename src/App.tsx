@@ -1976,7 +1976,11 @@ export function App() {
     () => reviewLids ? projectLidTravelChecks(project) : [],
     [project, reviewLids],
   );
-  const printMotions = useMemo(() => motionReviewLines(project, motionReviews), [project, motionReviews]);
+  const preparingMotionExport = modal === "export" || printingGuide;
+  const printMotions = useMemo(
+    () => motionReviewLines(project, motionReviews, preparingMotionExport),
+    [project, motionReviews, preparingMotionExport],
+  );
   const printGreenhouseLatch = useMemo(() => greenhouseLatchGuideLines(project), [project]);
   const printDoorStops = useMemo(() => greenhouseDoorStopGuideLines(project), [project]);
   const printDoorSeals = useMemo(() => greenhouseDoorSealGuideLines(project), [project]);
@@ -3290,6 +3294,13 @@ export function App() {
                 {activeMotionPreview.outsideZoneFaces.length > 0 && ` · ${activeMotionPreview.atLimit ? "Reached" : "Outside"} ${activeMotionPreview.outsideZoneFaces.join(", ")} work-zone limit`}
                 {activeMotionPreview.siteFaceNames.length > 0 && ` · ${activeMotionPreview.atLimit ? "Reached measured clearance limit" : "Measured clearance shortfall"} · ${activeMotionPreview.siteFaceNames.join(", ")}`}
                 {activeMotionPreview.uncertainLimit && " · Stopped where clearance needs review"}
+                {activeMotionPreview.clearanceStop && (
+                  <>
+                    {activeMotionPreview.clearanceStop.gap === undefined ? " · Stopped where the minimum gap needs review" : " · Stopped for minimum gap"}
+                    {" · "}{formatPreciseInches(activeMotionPreview.clearanceStop.requirement.minimum)} required
+                    {activeMotionPreview.clearanceStop.reason && ` · ${activeMotionPreview.clearanceStop.reason}`}
+                  </>
+                )}
                 {activeMotionPreview.focusPair && ` · Focused on ${activeMotionPreview.focusPair.map((id) => partLabel(project, id)).join(" and ")}`}
               </span>
               {activeMotionPreview.focusPair && (

@@ -48,7 +48,7 @@ import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 import { weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot } from "./roofVentFlashingReference";
 import { floorRegisterBoot } from "./floorRegisterReference";
-import { roundDuctElbowStock, roundDuctStock } from "./roundDuctReference";
+import { roundDuctElbowStock, roundDuctMastic, roundDuctStock } from "./roundDuctReference";
 import { trimSealant } from "./trimSealantReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
@@ -4500,6 +4500,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: roundDuctElbowStock.specification, verifiedAt: roundDuctElbowStock.reviewedAt, note: "GAF lists B90E6 among the rounded elbows adjustable through 90 degrees." },
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [roundDuctElbowStock.listing, roundDuctElbowStock.specification] },
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: roundDuctMastic.id,
+    name: roundDuctMastic.label,
+    manufacturer: "Master Flow",
+    manufacturerPartNumber: roundDuctMastic.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: roundDuctMastic.reviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "water-based sheet-metal duct mastic" }),
+    offers: [hd(roundDuctMastic.internet, roundDuctMastic.model, roundDuctMastic.sku)],
+    sources: [
+      { url: roundDuctMastic.listing, verifiedAt: roundDuctMastic.reviewedAt, note: "WBA10.5 duct sealant in one 10.5 oz tube." },
+      { url: roundDuctMastic.specification, verifiedAt: roundDuctMastic.reviewedAt, note: "GAF lists applications on sheet metal duct seams and elbows." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [roundDuctMastic.listing, roundDuctMastic.specification] },
     discrepancies: [],
     capabilities: [],
   },

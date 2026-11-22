@@ -106,6 +106,7 @@ function preparationScope(project: Project) {
     ...(project.roundDuctRuns?.length ? { roundDuctRuns: project.roundDuctRuns } : {}),
     ...(project.roundDuctOffcuts?.length ? { roundDuctOffcuts: project.roundDuctOffcuts } : {}),
     ...(project.roundDuctElbows?.length ? { roundDuctElbows: project.roundDuctElbows } : {}),
+    ...(project.roundDuctSeal ? { roundDuctSeal: project.roundDuctSeal } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),

@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 133**. Yardwork reads valid formats 1–132 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 134**. Yardwork reads valid formats 1–133 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 134 records a round duct sealing estimate with the measured joint circumference, added fitting seams, measured mesh length and usable tube coverage. The project tracks which duct layout those readings came from. A changed layout sends the estimate back for review before the shopping handoff includes it.
 
 Format 133 records a measured right-angle elbow between two saved round duct tips. The record stores the measured setbacks to the centerline turn, clearance width and the crimped port. Each connected run can also keep the measured factory crimp length so a trim can be checked for complete removal. The guide and linked shopping entries use the current run geometry and the recorded mating ends.
 

@@ -34,9 +34,11 @@ import { floorRegisterGuideLines, floorRegisterReviews, isFloorRegisterPanel, re
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { RoundDuctPanel } from "./RoundDuctPanel";
 import { RoundDuctElbowPanel } from "./RoundDuctElbowPanel";
+import { RoundDuctSealPanel } from "./RoundDuctSealPanel";
 import { availableRoundDuctOffcuts, previewRoundDuct, removeRoundDuct, roundDuctGuideLines, saveRoundDuct } from "./roundDuct";
 import { previewRoundDuctElbow, roundDuctElbowGuideLines, saveRoundDuctElbow } from "./roundDuctElbow";
-import { roundDuctElbowScope, roundDuctElbowStock, roundDuctScope, roundDuctStock } from "./roundDuctReference";
+import { roundDuctSealGuidance, saveRoundDuctSeal } from "./roundDuctSeal";
+import { roundDuctElbowScope, roundDuctElbowStock, roundDuctMastic, roundDuctScope, roundDuctSealScope, roundDuctStock } from "./roundDuctReference";
 import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
 import { removeRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
@@ -428,6 +430,7 @@ type Modal =
   | "floor-register"
   | "round-duct"
   | "round-duct-elbow"
+  | "round-duct-seal"
   | "roof-vent-flashing"
   | "water-support"
   | "export"
@@ -1575,6 +1578,10 @@ export function App() {
       case "round-duct-elbow":
         setStage(null); setPlaying(false); setExplode(false); setPanel("checks"); setModal("round-duct-elbow");
         return;
+      case "round-duct-seal":
+        setPanel("checks");
+        setModal("round-duct-seal");
+        return;
       case "roof-vent-flashing":
         setPanel("checks");
         setModal("roof-vent-flashing");
@@ -2218,6 +2225,7 @@ export function App() {
   const printFloorRegisters = useMemo(() => floorRegisterGuideLines(exportGuide), [exportGuide]);
   const printRoundDuct = useMemo(() => roundDuctGuideLines(exportGuide), [exportGuide]);
   const printDuctElbows = useMemo(() => roundDuctElbowGuideLines(exportGuide), [exportGuide]);
+  const printDuctSeal = useMemo(() => roundDuctSealGuidance(exportGuide), [exportGuide]);
   const printRoofVents = useMemo(() => roofVentFlashingGuideLines(exportGuide), [exportGuide]);
   const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
   const printWindowWalls = useMemo(() => reviewGeneratedWindowWalls(exportGuide), [exportGuide]);
@@ -4476,6 +4484,8 @@ export function App() {
                 }}>Fit round duct elbow</button>}
               {ductElbowMarker && <button type="button" className="text-button"
                 onClick={() => setShownDuctElbow(undefined)}>Hide duct elbow</button>}
+              {!!project.roundDuctRuns?.length && <button type="button" className="button secondary"
+                onClick={() => setModal("round-duct-seal")}>Plan duct sealing</button>}
               {(project.projectCode?.trades.includes("roofing") || !!project.roofValleys?.length) &&
                 <button type="button" className="button secondary full" onClick={() => setModal("roof-valley")}>Plan roof valley lining</button>}
               {roofValleyMarker && <button type="button" className="text-button" onClick={() => setShownRoofValley(undefined)}>Hide valley centerline</button>}
@@ -5931,6 +5941,12 @@ export function App() {
                   roundDuctElbows: live.roundDuctElbows?.filter((elbow) => elbow.id !== id),
                 }));
                 if (shownDuctElbow?.id === id) setShownDuctElbow(undefined);
+              })} />}
+            {modal === "round-duct-seal" && <RoundDuctSealPanel key={project.id} project={project}
+              onSave={(input) => safe(() => {
+                change((live) => saveRoundDuctSeal(live, input));
+                setModal(null);
+                notify("Duct sealant estimate added to the build guide.");
               })} />}
             {modal === "roof-vent-flashing" && <RoofVentFlashingPanel key={project.id} project={project}
               initialId={shownRoofVent?.projectId === project.id ? shownRoofVent.id : undefined}
@@ -7465,6 +7481,12 @@ export function App() {
           <p>{roundDuctElbowScope}</p>
           <ul>{printDuctElbows.map((line) => <li key={line}>{line}</li>)}</ul>
           <p><a href={roundDuctElbowStock.listing}>Master Flow elbow reference</a></p>
+        </section>}
+        {printDuctSeal.length > 0 && <section>
+          <h2>Round duct sealant estimate</h2>
+          <p>{roundDuctSealScope}</p>
+          <ul>{printDuctSeal.map((line) => <li key={line}>{line}</li>)}</ul>
+          <p><a href={roundDuctMastic.listing}>Master Flow sealant reference</a></p>
         </section>}
         {printRoofVents.length > 0 && (
           <section className="roof-vent-flashing-print">

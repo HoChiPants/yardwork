@@ -129,7 +129,8 @@ import { floorRegisterGuideLines, floorRegisterReviews } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { roundDuctGuideLines, roundDuctTakeoff } from "./roundDuct";
 import { roundDuctElbowGuideLines, roundDuctElbowReviews } from "./roundDuctElbow";
-import { roundDuctElbowScope, roundDuctElbowStock, roundDuctScope, roundDuctStock } from "./roundDuctReference";
+import { reviewRoundDuctSeal, roundDuctSealGuidance } from "./roundDuctSeal";
+import { roundDuctElbowScope, roundDuctElbowStock, roundDuctMastic, roundDuctScope, roundDuctSealScope, roundDuctStock } from "./roundDuctReference";
 import { roofVentFlashingGuideLines, roofVentFlashingReviews } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { floorHangerGuideLines } from "./floorHangerPlans";
@@ -747,6 +748,10 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       id: `round-duct-elbow-${id}`, title: "Review measured duct elbow", severity: "warning", detail: issues.join(" "),
     });
   }
+  const ductSealIssue = reviewRoundDuctSeal(p)?.issue;
+  if (ductSealIssue) findings.push({
+    id: "round-duct-seal", title: "Review round duct sealing", severity: "warning", detail: ductSealIssue,
+  });
   for (const row of reviewOpeningFlashings(p).rows) {
     if (row.issues.length) findings.push({
       id: `opening-flashing-${row.plan.members.sill}`,
@@ -2110,6 +2115,7 @@ export function guideMarkdown(p: Project) {
   const floorRegisters = floorRegisterGuideLines(p);
   const roundDucts = roundDuctGuideLines(p);
   const roundDuctElbows = roundDuctElbowGuideLines(p);
+  const ductSeal = roundDuctSealGuidance(p);
   const floorReviews = subfloorReviews(p);
   const floorHangers = floorHangerGuideLines(p, connections.intents);
   const doorKits = new Set((p.motionPlans ?? []).flatMap((plan) => {
@@ -2359,6 +2365,9 @@ export function guideMarkdown(p: Project) {
     (roundDuctElbows.length ? `\n\n## Round duct elbows\n\n${roundDuctElbowScope}\n\n` +
       roundDuctElbows.map((line) => "- " + line).join("\n") +
       `\n\n[Master Flow elbow reference](${roundDuctElbowStock.listing}) · [PNNL metal duct sealing](${roundDuctStock.sealing})\n` : "") +
+    (ductSeal.length ? `\n\n## Round duct sealant estimate\n\n${roundDuctSealScope}\n\n` +
+      ductSeal.map((line) => "- " + line).join("\n") +
+      `\n\n[Master Flow duct sealant](${roundDuctMastic.listing}) · [PNNL metal duct sealing](${roundDuctStock.sealing})\n` : "") +
     (p.waterRuns?.length ? "\n\n## Wall water-line schedule\n\n" +
       p.waterRuns.flatMap((run) => waterRunGuide(p, run)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[Stud boring](${studBoreSource}) · [Pipe protection](${pipeProtectionSource}) · [SharkBite installation](${pexInstallation})\n` : "") +

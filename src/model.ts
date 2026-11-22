@@ -10,6 +10,7 @@ import { roofValleysSchema } from "./roofValleySchema";
 import { floorRegisterPlansSchema } from "./floorRegisterSchema";
 import { roundDuctOffcutsSchema, roundDuctRunsSchema } from "./roundDuctSchema";
 import { roundDuctElbowsSchema } from "./roundDuctElbowSchema";
+import { roundDuctSealSchema } from "./roundDuctSealSchema";
 import { roofVentFlashingsSchema } from "./roofVentFlashingSchema";
 import { greenhouseFoundationSchema } from "./greenhouseFoundationSchema";
 import { siteClearanceSchema } from "./siteClearanceSchema";
@@ -492,6 +493,7 @@ export const currentProjectSchema = z
     roundDuctRuns: roundDuctRunsSchema.optional(),
     roundDuctOffcuts: roundDuctOffcutsSchema.optional(),
     roundDuctElbows: roundDuctElbowsSchema.optional(),
+    roundDuctSeal: roundDuctSealSchema.optional(),
     id,
     name: z.string().min(1).max(120),
     kind: z.enum(["coop", "wall", "custom", "bathroom", "pool"]),

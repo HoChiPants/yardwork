@@ -13,7 +13,8 @@ import { floorRegisterBoot, floorRegisterPurchasePurpose } from "./floorRegister
 import { floorRegisterBootCount } from "./floorRegister";
 import { roundDuctPurchaseCount } from "./roundDuct";
 import { roundDuctElbowCount } from "./roundDuctElbow";
-import { roundDuctElbowPurchasePurpose, roundDuctElbowStock, roundDuctPurchasePurpose, roundDuctStock } from "./roundDuctReference";
+import { reviewRoundDuctSeal } from "./roundDuctSeal";
+import { roundDuctElbowPurchasePurpose, roundDuctElbowStock, roundDuctMastic, roundDuctMasticPurchasePurpose, roundDuctPurchasePurpose, roundDuctStock } from "./roundDuctReference";
 import { roofVentFlashingCount } from "./roofVentFlashing";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
@@ -233,6 +234,8 @@ export function homeDepotPurchaseNeeds(
     include(roundDuctElbowStock.id, roundDuctElbowPurchasePurpose, count,
       count === null ? "Recheck elbow endpoints, mates and clearances before ordering." : undefined);
   }
+  const ductSeal = reviewRoundDuctSeal(project);
+  if (ductSeal) include(roundDuctMastic.id, roundDuctMasticPurchasePurpose, ductSeal.tubes ?? null, ductSeal.issue);
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);
     const trim = trimSeamPurchaseSummary(project, details);

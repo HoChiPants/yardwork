@@ -19,6 +19,16 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.locator(".material-list")).not.toContainText(/Home Depot|Lowe’s|SPF|\$/);
   const canvas = page.locator("canvas").first();
   await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
+  await expect.poll(() => canvas.evaluate((ground: HTMLCanvasElement) => {
+    const sample = document.createElement("canvas");
+    sample.width = 80;
+    sample.height = 24;
+    const context = sample.getContext("2d")!;
+    context.drawImage(ground, ground.width * 0.2, ground.height * 0.65, ground.width * 0.6, ground.height * 0.2,
+      0, 0, sample.width, sample.height);
+    const pixels = context.getImageData(0, 0, sample.width, sample.height).data;
+    return new Set(pixels.filter((_, index) => index % 4 === 0)).size;
+  })).toBeGreaterThan(5);
   const art = (await tile.locator(".material-art").boundingBox())!;
   const groundHint = (await page.getByText("Drag a material onto the grid.", { exact: true }).boundingBox())!;
   async function dragToGround() {

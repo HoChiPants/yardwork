@@ -1546,7 +1546,8 @@ function World(props: SceneProps) {
       {drawing && <DrawingReferenceMesh drawing={drawing} />}
       <Grid
         position={[0, -0.01, 0]}
-        args={[200, 200]}
+        // Match the rendered floor. Oversized infinite-grid triangles can disappear on some renderers.
+        args={[400, 400]}
         cellSize={1}
         cellThickness={0.55}
         cellColor="#cccfbf"
@@ -1555,7 +1556,6 @@ function World(props: SceneProps) {
         sectionColor="#b6bba7"
         fadeDistance={38}
         fadeStrength={1.5}
-        infiniteGrid
       />
       {(props.mode === "measure" || props.mode === "trace-wall") && (
         <mesh

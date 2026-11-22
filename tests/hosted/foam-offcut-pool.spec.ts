@@ -46,7 +46,14 @@ test("two measured Cut pool foam offcuts cover a rim without buying a new sheet"
   const preview = dialog.getByRole("region", { name: "Rim seal cut preview", exact: true });
   await expect(preview).toContainText("0 new sheets for the reviewed plans · 2 measured offcuts used");
   await expect(preview).toContainText("1 can estimated");
-  await preview.getByText(/^Offcut Foam B ·/).click();
+  await preview.locator("summary").filter({ hasText: /^Offcut Foam B ·/ }).click();
+  const map = preview.getByRole("img", { name: "Offcut Foam B cut map", exact: true });
+  await expect(map).toBeVisible();
+  await expect(map.locator('[data-foam-region="B1"] rect')).toHaveAttribute("width", "14.25");
+  await expect(map.locator('[data-foam-region="R1"] rect')).toHaveAttribute("y", "4.875");
+  await expect(map.locator('[data-foam-region="R1"] rect')).toHaveAttribute("height", "1.125");
+  await expect(preview.getByRole("list", { name: "Offcut Foam B blanks and remnants", exact: true }))
+    .toContainText("R1 · Expected remnant · 14.25 in × 1.125 in · 0 in right, 4.875 in down");
   await expect(preview.getByText(/^Keep reusable foam/).first()).toBeVisible();
   await preview.getByRole("button", { name: "Save rim seal plan", exact: true }).click();
 
@@ -66,6 +73,15 @@ test("two measured Cut pool foam offcuts cover a rim without buying a new sheet"
   await page.getByRole("button", { name: "Cut pool (2)", exact: true }).click();
   await pool.getByText("Foam board offcuts (2)", { exact: true }).click();
   await expect(pool.locator("article").filter({ hasText: "Foam A" })).toContainText("1 planned cut");
+  await pool.getByRole("button", { name: "Plan rim cuts", exact: true }).click();
+  await dialog.getByText("Saved foam cut maps", { exact: true }).click();
+  await expect(dialog.getByRole("img", { name: "Offcut Foam B cut map", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("list", { name: "Offcut Foam B cut order", exact: true })).toContainText(/B1 · .*Bay 2/);
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.emulateMedia({ media: "print" });
+  await expect(page.locator(".rim-air-seal-print").getByRole("img", { name: "Offcut Foam A cut map" })).toBeVisible();
+  await expect(page.locator(".rim-air-seal-print").getByRole("img", { name: "Offcut Foam B cut map" })).toBeVisible();
+  await page.emulateMedia({ media: "screen" });
   await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
   await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Can I reuse my foam offcuts for the rim?");
   await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
@@ -76,6 +92,7 @@ test("two measured Cut pool foam offcuts cover a rim without buying a new sheet"
   await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
   const guide = await readFile((await (await downloaded).path())!, "utf8");
   expect(guide).toMatch(/Offcut Foam A[\s\S]*Offcut Foam B[\s\S]*Keep reusable foam/);
+  expect(guide).toMatch(/B1 · .*Bay 2[\s\S]*Keep reusable foam 14\.25 in × 1\.125 in · R1/);
   await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
   await page.getByRole("button", { name: "List", exact: true }).click();
   await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();

@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
+import { RimFoamCutMap } from "./RimFoamCutMap";
 import { formatStockLength } from "./measurement";
 import type { Project } from "./model";
 import { rimEdgeSealant, rimFoam, rimSealEdges, rimSealGuide, rimSealScope } from "./rimAirSealReference";
@@ -30,6 +31,9 @@ export function RimAirSealPanel({ project, initialSectionId, initialSide, ...act
   const key = rimAirSealKey(target);
   const saved = useMemo(() => reviewRimAirSeals(project), [project]);
   const record = saved.rows.find(({ plan }) => rimAirSealKey(plan.input) === key);
+  const bayIds = new Set(record?.issues.length ? [] : record?.cuts.map(({ id }) => id));
+  const sources = [...saved.scraps, ...saved.sheets].filter(({ stock }) =>
+    stock.placements.some(({ id }) => bayIds.has(id)));
   return <>
     <h2 id="modal-title">Plan rim air sealing</h2>
     <p className="small-note">Measure the closed openings at the rim and review the foam cuts before buying. {rimSealScope}</p>
@@ -63,6 +67,10 @@ export function RimAirSealPanel({ project, initialSectionId, initialSide, ...act
             {!record.issues.length && <button type="button" className="button secondary" onClick={() => actions.onShow(target)}>Show saved foam cuts in 3D</button>}
             <button type="button" className="text-button" onClick={() => actions.onRemove(target)}>Remove saved seal plan</button>
           </div>
+          {sources.length > 0 && <details>
+            <summary>Saved foam cut maps</summary>
+            {sources.map((source) => <RimFoamCutMap key={source.label} source={source} showOrder />)}
+          </details>}
         </div>
       </div>}
       <RimSealMeasurements key={key} project={project} target={target} original={record?.plan.input} onSave={actions.onSave} />
@@ -231,10 +239,9 @@ function RimSealMeasurements({ project, target, original, onSave }: {
       {livePreview.result.needsReview && <p>Other plans need review before ordering foam for the project.</p>}
       <RimEdgeSealSummary row={planPreview} review={livePreview.result} />
       {livePreview.result.unusedOffcuts.map((label) => <p key={label}>Keep offcut {label} for a different cut.</p>)}
-      {[...livePreview.result.scraps, ...livePreview.result.sheets].map(({ label, order, kerf }) => <details key={label}>
-        <summary>{label} · {formatStockLength(kerf)} cutting loss</summary>
-        <ol>{order.steps.filter(Boolean).map((text, index) => <li key={index}>{text}</li>)}</ol>
-        {order.remnants.map((size, index) => <p key={index}>Keep reusable foam {size}.</p>)}
+      {[...livePreview.result.scraps, ...livePreview.result.sheets].map((source) => <details key={source.label}>
+        <summary>{source.label} · {formatStockLength(source.kerf)} cutting loss</summary>
+        <RimFoamCutMap source={source} showOrder />
       </details>)}
       <button type="button" className="button primary" onClick={() => onSave(livePreview.input)}>Save rim seal plan</button>
     </section>}

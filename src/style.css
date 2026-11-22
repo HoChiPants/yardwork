@@ -3866,6 +3866,32 @@ small {
 .rim-seal-results { display: grid; gap: 7px; padding: 12px; border: 1px solid #dce4d4; border-radius: 8px; }
 .rim-seal-results ul, .rim-seal-results ol { padding-left: 20px; margin-block: 5px; }
 .rim-seal-results summary { cursor: pointer; }
+.rim-foam-cut-map {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #dce4d4;
+  border-radius: 6px;
+  background: #fffefa;
+  color: #34432d;
+  font-size: 11px;
+  line-height: 1.45;
+  break-inside: avoid;
+}
+.rim-foam-cut-map .small-note { color: #57634f; }
+.rim-foam-cut-map svg {
+  display: block;
+  width: min(100%, 300px);
+  max-height: 270px;
+  margin: 6px auto;
+}
+.foam-map-stock { fill: #f4ede0; stroke: #817864; }
+.foam-map-blank { fill: #c3d9b5; stroke: #4e6a43; }
+.foam-map-remnant { fill: #f8f8f3; stroke: #676e60; stroke-dasharray: 4 2; }
+.foam-map-origin { fill: #334733; }
+.rim-foam-cut-map text { fill: #273c26; font-weight: 650; }
+@media print {
+  .rim-foam-cut-map svg { max-height: 200px; print-color-adjust: exact; }
+}
 .rim-seal-results button, .rim-seal-form > button { justify-self: start; }
 .rim-seal-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .valley-plan { display: grid; gap: 10px; margin-top: 12px; }

@@ -182,7 +182,8 @@ function sheetSequence(
         sequence.review = `The part positions in ${strip} need review before cutting this sheet.`;
         break;
       }
-      const name = describePart(id) + (rotated ? " (turned on the sheet)" : "");
+      const blankLabel = kind === "foam" ? `B${sequence.layout.kept.length + 1} · ` : "";
+      const name = blankLabel + describePart(id) + (rotated ? " (turned on the sheet)" : "");
       sequence.layout.kept.push({
         id,
         x,

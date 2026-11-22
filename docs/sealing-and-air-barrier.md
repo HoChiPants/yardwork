@@ -59,6 +59,8 @@ Open **Cut pool → Foam board offcuts** and record each matching 2 in piece by 
 
 Ask **“Can I reuse my foam offcuts for the rim?”** to open the planner and check the measured pool or the saved allocations. The [two-offcut practice plan](../public/examples/air-sealing/rim-cut-pool.yardwork.json) covers two rim bays using two measured scraps. The guide records both cuts and the sealant estimate with zero new foam sheets.
 
+Open a source in the cut preview or choose **Saved foam cut maps** to see the marked corner, offsets, labeled blanks, and expected leftovers for that sheet or offcut. The same labels appear in the cut order and printable build guide. Mark a square corner on the physical stock, confirm the cut allowance, then measure and label the leftovers before logging them in Cut pool.
+
 ## Wood bottom plate on subfloor
 
 Open **Sections → Seal a bottom plate**, then choose the actual long side. Measure its gap and fill depth and confirm the exposed dry wood before previewing a bead. Blue marks show modeled backing and bead space. Orange marks show interruptions to review in the field. Leave required subfloor joint spacing and review how the air barrier crosses the joint. Seal and inspect before finishes cover the work. [PNNL bottom plates](https://basc.pnnl.gov/diy-guides/air-seal-bottom-plates) · [APA flooring and spacing](https://www.apawood.org/buildertips/pdfs/Q300.pdf)

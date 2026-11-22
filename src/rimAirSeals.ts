@@ -375,7 +375,7 @@ export function rimAirSealGuideLines(review: ReturnType<typeof reviewRimAirSeals
     ...[...review.scraps, ...review.sheets].flatMap(({ label, stock, order, kerf }) => [
       `${label} · ${foamBlankSize(stock.width, stock.length)} · ${formatStockLength(kerf)} measured cutting loss.`,
       ...order.steps.filter(Boolean).map((text, index) => `${index + 1}. ${text}`),
-      ...order.remnants.map((size) => `Keep reusable foam ${size} if the edges remain sound. Measure and label it after cutting.`),
+      ...order.remnants.map((size, index) => `Keep reusable foam ${size} · R${index + 1}. Measure and label it after cutting if the edges remain sound.`),
     ]),
     ...(review.edgeSealant ? [
       ...review.edgeSealant.sessions.map(({ name, required }) =>

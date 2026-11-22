@@ -32,6 +32,7 @@ import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
 import { removeRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey, removeRimAirSeal, saveRimAirSeal } from "./rimAirSeals";
+import { RimFoamCutMap } from "./RimFoamCutMap";
 import { rimEdgeSealant, rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import type { RimSide } from "./rimAirSealSchema";
 import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
@@ -2085,7 +2086,8 @@ export function App() {
   const exportWoodJointDetails = useMemo(() => woodJointDecisionEntries(exportGuide), [exportGuide]);
   const printTrimBacking = useMemo(() => trimBackerRodCutPlan(exportGuide, exportWoodJointDetails), [exportGuide, exportWoodJointDetails]);
   const printSillGaskets = useMemo(() => sillGasketGuideLines(reviewSillGaskets(exportGuide)), [exportGuide]);
-  const printRimSeals = useMemo(() => rimAirSealGuideLines(reviewRimAirSeals(exportGuide)), [exportGuide]);
+  const printRimSealReview = useMemo(() => reviewRimAirSeals(exportGuide), [exportGuide]);
+  const printRimSeals = useMemo(() => rimAirSealGuideLines(printRimSealReview), [printRimSealReview]);
   const printRoofValleys = useMemo(() => roofValleyGuideLines(exportGuide), [exportGuide]);
   const printRoofVents = useMemo(() => roofVentFlashingGuideLines(exportGuide), [exportGuide]);
   const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
@@ -7216,6 +7218,8 @@ export function App() {
             <h2>Floor rim foam and air seals</h2>
             <p>{rimSealScope}</p>
             <ul>{printRimSeals.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            {[...printRimSealReview.scraps, ...printRimSealReview.sheets].map((source) =>
+              <RimFoamCutMap key={source.label} source={source} />)}
             <p><a href={rimSealGuide}>PNNL field guide</a>{" · "}<a href={rimFoam.manufacturer}>Owens Corning instructions</a>
               {exportGuide.rimAirSeals?.some(({ input }) => input.edgeSeal) && <>{" · "}
                 <a href={rimEdgeSealant.instructions}>DuPont sealant instructions</a></>}</p>

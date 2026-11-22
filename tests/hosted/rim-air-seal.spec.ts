@@ -50,7 +50,8 @@ test("measure floor rim bays, reuse foam and prepare an exact sheet and sealant 
   await expect(preview).toContainText("14.25 in × 4.75 in");
   await expect(preview).toContainText("75.5 in along all four edges");
   await expect(preview).toContainText("1 can estimated · Bench trial");
-  await preview.getByText(/^New sheet 1 ·/).click();
+  await preview.locator("summary").filter({ hasText: /^New sheet 1 ·/ }).click();
+  await expect(preview.getByRole("img", { name: "New sheet 1 cut map", exact: true })).toBeVisible();
   await expect(preview.getByText(/^Keep reusable foam/).first()).toBeVisible();
   await preview.getByRole("button", { name: "Save rim seal plan", exact: true }).click();
   await dialog.getByRole("button", { name: "Show saved foam cuts in 3D", exact: true }).click();

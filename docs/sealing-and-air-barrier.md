@@ -53,6 +53,12 @@ Enable **Estimate edge sealant** to include 12 oz Great Stuff Gaps & Cracks Smar
 
 Import the [rim foam and edge seal practice project](../public/examples/air-sealing/rim-edges.yardwork.json) to see a saved plan with two measured bays, an offcut, and a simulated trial length.
 
+### Use several foam offcuts
+
+Open **Cut pool → Foam board offcuts** and record each matching 2 in piece by its physical label, width, and length. Select the pieces under **Plan rim cuts**. Yardwork tries the smaller rectangles first, checks the entered cutting loss, and gives each source its own cut order and reusable remnants. Other rim plans show the selected stock as reserved. Before cutting, review the current order and confirm the labels on the actual pieces. After cutting, measure and label the reusable leftovers before adding them to a later plan. [PNNL rim insulation guidance](https://basc.pnnl.gov/resource-guides/rigid-foam-board-insulation-existing-band-joists) · [Owens Corning foam-board specifications](https://www.owenscorning.com/en-us/insulation/products/foamular-250)
+
+Ask **“Can I reuse my foam offcuts for the rim?”** to open the planner and check the measured pool or the saved allocations. The [two-offcut practice plan](../public/examples/air-sealing/rim-cut-pool.yardwork.json) covers two rim bays using two measured scraps. The guide records both cuts and the sealant estimate with zero new foam sheets.
+
 ## Wood bottom plate on subfloor
 
 Open **Sections → Seal a bottom plate**, then choose the actual long side. Measure its gap and fill depth and confirm the exposed dry wood before previewing a bead. Blue marks show modeled backing and bead space. Orange marks show interruptions to review in the field. Leave required subfloor joint spacing and review how the air barrier crosses the joint. Seal and inspect before finishes cover the work. [PNNL bottom plates](https://basc.pnnl.gov/diy-guides/air-seal-bottom-plates) · [APA flooring and spacing](https://www.apawood.org/buildertips/pdfs/Q300.pdf)

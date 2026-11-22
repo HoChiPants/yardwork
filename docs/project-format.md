@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 125**. Yardwork reads valid formats 1–124 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 126**. Yardwork reads valid formats 1–125 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 126 adds a project-level `rimFoamOffcuts` pool of labeled, measured 2 in foam rectangles. Rim plans can reserve several of these sources by ID. Earlier inline offcut measurements remain attached to their original plans.
 
 Format 125 adds the fixed-dimension Liberty bar-pull material. It can be an ordinary member of a saved drawer motion group. Earlier drawers and their cut and motion records retain their original parts.
 

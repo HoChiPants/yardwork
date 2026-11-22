@@ -9,8 +9,8 @@ import { foamSheetCutOrder } from "./stockCutSequence";
 import { maxSupplyQuantity } from "./supplySchema";
 import { pieceThroughOpenings } from "./throughOpenings";
 import {
-  rimAirSealInputSchema, rimAirSealPlansSchema,
-  type RimAirSealInput, type RimAirSealPlan, type RimSide,
+  rimAirSealInputSchema, rimAirSealPlansSchema, rimFoamLabelKey,
+  type RimAirSealInput, type RimAirSealPlan, type RimFoamOffcut, type RimSide,
 } from "./rimAirSealSchema";
 import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 
@@ -21,7 +21,6 @@ const bayKey = (left: string, right: string) => left + "/" + right;
 const sideName = (side: RimSide) => side === "back" ? "Back" : "Front";
 export const rimMeasurementsTolerance = 0.25;
 export const rimAirSealKey = ({ sectionId, side }: Pick<RimAirSealInput, "sectionId" | "side">) => sectionId + "/" + side;
-const sameLabel = (label: string) => label.trim().toLowerCase();
 
 type Bay = {
   id: string;
@@ -193,8 +192,9 @@ type FoamSheet = {
   kerf: number;
   stock: StockPlan;
   order: ReturnType<typeof foamSheetCutOrder>;
+  poolOffcutId?: string;
 };
-type ReviewedRimSeal = RimSealRow & { plan: RimAirSealPlan };
+type ReviewedRimSeal = RimSealRow & { plan: RimAirSealPlan; pooledOffcuts: RimFoamOffcut[] };
 
 function splitFoamStock(cuts: RimSealCut[], width: number, length: number, kerf: number) {
   return packRectangles(cuts, width, length, { kerf, checkEdgeCuts: true });
@@ -215,14 +215,18 @@ function foamCuts(rows: ReviewedRimSeal[]) {
     if (row.issues.length) continue;
     const { kerf, offcut } = row.plan.input;
     let remaining = row.cuts;
-    if (offcut) {
-      const { plans } = splitFoamStock(remaining, offcut.width, offcut.length, kerf);
-      const candidate = plans[0] && createSheet(`Offcut ${offcut.label}`, plans[0], kerf, names);
+    const available = [
+      ...(offcut ? [{ ...offcut, id: undefined }] : []),
+      ...row.pooledOffcuts,
+    ].sort((a, b) => a.width * a.length - b.width * b.length || a.label.localeCompare(b.label, "en-US"));
+    for (const source of available) {
+      const { plans } = splitFoamStock(remaining, source.width, source.length, kerf);
+      const candidate = plans[0] && createSheet(`Offcut ${source.label}`, plans[0], kerf, names);
       if (candidate && !candidate.order.review) {
-        scraps.push(candidate);
+        scraps.push({ ...candidate, ...(source.id && { poolOffcutId: source.id }) });
         const used = new Set(candidate.stock.placements.map(({ id }) => id));
         remaining = remaining.filter(({ id }) => !used.has(id));
-      } else unusedOffcuts.push(offcut.label);
+      } else unusedOffcuts.push(source.label);
     }
     if (remaining.length) newStock.set(kerf, [...(newStock.get(kerf) ?? []), ...remaining]);
   }
@@ -258,7 +262,7 @@ function rimEdgeSealTakeoff(rows: ReviewedRimSeal[]) {
   for (const row of configured) {
     const estimate = rimEdgeSealEstimate(row);
     if (!estimate) continue;
-    const key = sameLabel(estimate.session);
+    const key = estimate.session.trim().toLowerCase();
     const session = sessions.get(key) ?? { name: estimate.session, run: 0, cans: 0 };
     session.run += estimate.run;
     session.cans += estimate.cans;
@@ -277,18 +281,42 @@ function rimEdgeSealTakeoff(rows: ReviewedRimSeal[]) {
 
 export function reviewRimAirSeals(project: Project) {
   const plans = project.rimAirSeals ?? [];
+  const pool = new Map((project.rimFoamOffcuts ?? []).map((offcut) => [offcut.id, offcut]));
+  const poolLabels = new Set([...pool.values()].map(({ label }) => rimFoamLabelKey(label)));
   const labels = new Map<string, number>();
-  for (const { input: { offcut } } of plans) {
-    if (offcut) labels.set(sameLabel(offcut.label), (labels.get(sameLabel(offcut.label)) ?? 0) + 1);
+  const reservations = new Map<string, number>();
+  for (const { input } of plans) {
+    if (input.offcut) {
+      const label = rimFoamLabelKey(input.offcut.label);
+      labels.set(label, (labels.get(label) ?? 0) + 1);
+    }
+    for (const id of input.poolOffcutIds ?? []) reservations.set(id, (reservations.get(id) ?? 0) + 1);
   }
   const rows: ReviewedRimSeal[] = plans.map((plan) => {
     const row = checkRimAirSeal(project, plan.input);
     if (!row.issues.length && row.signature !== plan.frame)
       row.issues.push("The modeled opening moved or changed. Remeasure before cutting or ordering stock.");
-    const { offcut } = plan.input;
-    if (offcut && (labels.get(sameLabel(offcut.label)) ?? 0) > 1)
-      row.issues.push(`Offcut ${offcut.label} is assigned twice. Use a different measured offcut.`);
-    return { ...row, plan };
+    const { offcut, poolOffcutIds } = plan.input;
+    if (offcut) {
+      const label = rimFoamLabelKey(offcut.label);
+      if ((labels.get(label) ?? 0) > 1)
+        row.issues.push(`Offcut ${offcut.label} is assigned twice. Use a different measured offcut.`);
+      if (poolLabels.has(label))
+        row.issues.push(`Offcut ${offcut.label} is also in Cut pool. Use its pool record instead of entering it again.`);
+    }
+    const pooledOffcuts = (poolOffcutIds ?? []).flatMap((id) => {
+      const source = pool.get(id);
+      if (!source) {
+        row.issues.push("A selected foam offcut is missing from Cut pool. Review its reservation before cutting.");
+        return [];
+      }
+      if ((reservations.get(id) ?? 0) > 1)
+        row.issues.push(`Foam offcut ${source.label} is reserved for more than one rim. Review its use before cutting.`);
+      if (labels.has(rimFoamLabelKey(source.label)))
+        row.issues.push(`Foam offcut ${source.label} also has a separately entered reservation. Review its use before cutting.`);
+      return [source];
+    });
+    return { ...row, plan, pooledOffcuts };
   });
   const first = foamCuts(rows);
   if (!first.gaps.length) return {
@@ -354,6 +382,6 @@ export function rimAirSealGuideLines(review: ReturnType<typeof reviewRimAirSeals
         `${name} · ${required} ${required === 1 ? "can" : "cans"} of ${rimEdgeSealant.name} estimated from the matching trial joints.`),
       ...(review.edgeSealant.issue ? [review.edgeSealant.issue] : []),
     ] : []),
-    ...review.unusedOffcuts.map((label) => `Keep offcut ${label} for a different cut. This plan uses new stock instead.`),
+    ...review.unusedOffcuts.map((label) => `Keep offcut ${label} for a different cut.`),
   ];
 }

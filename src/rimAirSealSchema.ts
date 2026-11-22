@@ -9,6 +9,20 @@ export const rimBayMeasurementSchema = z.strictObject({
   width: z.number().positive().max(600),
   height: z.number().positive().max(48),
 });
+export const rimFoamDimensionsSchema = z.strictObject({
+  label: z.string().trim().min(1).max(60),
+  width: z.number().positive().max(rimFoam.width),
+  length: z.number().positive().max(rimFoam.length),
+});
+export type RimFoamDimensions = z.infer<typeof rimFoamDimensionsSchema>;
+export const rimFoamOffcutSchema = rimFoamDimensionsSchema.extend({ id: z.uuid() });
+export type RimFoamOffcut = z.infer<typeof rimFoamOffcutSchema>;
+export const rimFoamLabelKey = (label: string) => label.trim().toLowerCase();
+export const rimFoamOffcutPoolSchema = z.array(rimFoamOffcutSchema).max(200).refine((rows) =>
+  new Set(rows.map(({ id }) => id)).size === rows.length &&
+  new Set(rows.map(({ label }) => rimFoamLabelKey(label))).size === rows.length,
+  "Use a unique label for each physical foam offcut.");
+
 export const rimAirSealInputSchema = z.strictObject({
   sectionId: z.uuid(),
   side: rimSideSchema,
@@ -17,11 +31,9 @@ export const rimAirSealInputSchema = z.strictObject({
   kerf: z.number().min(0).max(1),
   confirmedBacking: z.literal(true),
   bays: z.array(rimBayMeasurementSchema).min(1).max(200),
-  offcut: z.strictObject({
-    label: z.string().trim().min(1).max(60),
-    width: z.number().positive().max(rimFoam.width),
-    length: z.number().positive().max(rimFoam.length),
-  }).optional(),
+  offcut: rimFoamDimensionsSchema.optional(),
+  poolOffcutIds: z.array(z.uuid()).max(200).refine((ids) => new Set(ids).size === ids.length,
+    "Select each physical foam offcut once.").optional(),
   edgeSeal: z.strictObject({
     depth: z.number().positive().max(rimFoam.thickness),
     trialLengthPerCan: z.number().min(0.125),

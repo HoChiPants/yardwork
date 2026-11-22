@@ -1,0 +1,358 @@
+{
+  "schemaVersion": 126,
+  "rimAirSeals": [
+    {
+      "input": {
+        "sectionId": "1bd226ae-10ca-4142-8b8a-37a35788fa17",
+        "side": "back",
+        "topInset": 0.25,
+        "gap": 0.125,
+        "kerf": 0.125,
+        "confirmedBacking": true,
+        "bays": [
+          {
+            "left": "b9caef15-50fa-4596-b916-f2beb94c2ad9",
+            "right": "8f7b06c0-4d72-4bfb-9a8f-44ab7efe8abf",
+            "width": 13.75,
+            "height": 5
+          },
+          {
+            "left": "8f7b06c0-4d72-4bfb-9a8f-44ab7efe8abf",
+            "right": "71a876c3-c8c2-44f2-8aee-2579df41d989",
+            "width": 14.5,
+            "height": 5
+          }
+        ],
+        "poolOffcutIds": [
+          "fb80aa05-eb51-4606-911e-efffd35b0912",
+          "f35816a0-86d6-426f-a6a9-49820e13c32c"
+        ],
+        "edgeSeal": {
+          "depth": 0.5,
+          "trialLengthPerCan": 120,
+          "session": "Practice room"
+        }
+      },
+      "frame": "[\"9ab656b6-e6ed-4428-b471-b766095d161d\",\"treated\",-22.5,[[\"b9caef15-50fa-4596-b916-f2beb94c2ad9/8f7b06c0-4d72-4bfb-9a8f-44ab7efe8abf\",[\"treated\",\"treated\"],-15.625,13.75,5.5,0],[\"8f7b06c0-4d72-4bfb-9a8f-44ab7efe8abf/71a876c3-c8c2-44f2-8aee-2579df41d989\",[\"treated\",\"treated\"],0,14.5,5.5,0]]]"
+    }
+  ],
+  "rimFoamOffcuts": [
+    {
+      "label": "Foam A",
+      "width": 13.5,
+      "length": 4.75,
+      "id": "fb80aa05-eb51-4606-911e-efffd35b0912"
+    },
+    {
+      "label": "Foam B",
+      "width": 14.25,
+      "length": 6,
+      "id": "f35816a0-86d6-426f-a6a9-49820e13c32c"
+    }
+  ],
+  "id": "33678298-534d-4999-a80f-b658a424bf34",
+  "name": "Two-offcut rim practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "9ab656b6-e6ed-4428-b471-b766095d161d",
+      "label": "P001"
+    },
+    {
+      "partId": "1338d62e-1755-492a-9ec6-ffd67b539083",
+      "label": "P002"
+    },
+    {
+      "partId": "b9caef15-50fa-4596-b916-f2beb94c2ad9",
+      "label": "P003"
+    },
+    {
+      "partId": "8f7b06c0-4d72-4bfb-9a8f-44ab7efe8abf",
+      "label": "P004"
+    },
+    {
+      "partId": "71a876c3-c8c2-44f2-8aee-2579df41d989",
+      "label": "P005"
+    },
+    {
+      "partId": "da6ae613-741b-434e-a458-49486c191ba3",
+      "label": "P006"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T06:10:31.153Z",
+  "pieces": [
+    {
+      "id": "9ab656b6-e6ed-4428-b471-b766095d161d",
+      "name": "Base 1 · rim",
+      "material": "treated",
+      "size": [
+        48,
+        5.5,
+        1.5
+      ],
+      "position": [
+        0,
+        2.75,
+        -23.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2bbeaa95-58c9-4743-833a-03d107c269dd",
+      "assembly": "Base 1",
+      "designRole": "floor-base-back-rim",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1338d62e-1755-492a-9ec6-ffd67b539083",
+      "name": "Base 1 · rim",
+      "material": "treated",
+      "size": [
+        48,
+        5.5,
+        1.5
+      ],
+      "position": [
+        0,
+        2.75,
+        23.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2bbeaa95-58c9-4743-833a-03d107c269dd",
+      "assembly": "Base 1",
+      "designRole": "floor-base-front-rim",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b9caef15-50fa-4596-b916-f2beb94c2ad9",
+      "name": "Base 1 · joist",
+      "material": "treated",
+      "size": [
+        1.5,
+        5.5,
+        45
+      ],
+      "position": [
+        -23.25,
+        2.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2bbeaa95-58c9-4743-833a-03d107c269dd",
+      "assembly": "Base 1",
+      "designRole": "floor-base-joist",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8f7b06c0-4d72-4bfb-9a8f-44ab7efe8abf",
+      "name": "Base 1 · joist",
+      "material": "treated",
+      "size": [
+        1.5,
+        5.5,
+        45
+      ],
+      "position": [
+        -8,
+        2.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2bbeaa95-58c9-4743-833a-03d107c269dd",
+      "assembly": "Base 1",
+      "designRole": "floor-base-joist",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "71a876c3-c8c2-44f2-8aee-2579df41d989",
+      "name": "Base 1 · joist",
+      "material": "treated",
+      "size": [
+        1.5,
+        5.5,
+        45
+      ],
+      "position": [
+        8,
+        2.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2bbeaa95-58c9-4743-833a-03d107c269dd",
+      "assembly": "Base 1",
+      "designRole": "floor-base-joist",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "da6ae613-741b-434e-a458-49486c191ba3",
+      "name": "Base 1 · joist",
+      "material": "treated",
+      "size": [
+        1.5,
+        5.5,
+        45
+      ],
+      "position": [
+        23.25,
+        2.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2bbeaa95-58c9-4743-833a-03d107c269dd",
+      "assembly": "Base 1",
+      "designRole": "floor-base-joist",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "7f1e46cd-e94f-486c-9b25-fa133c804ecf",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "33678298-534d-4999-a80f-b658a424bf34",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-eaa70787",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "6c2a0d9b-ac08-491b-a992-c4d5eea86012",
+      "title": "Lay a 4′ × 4′ base",
+      "notes": "Generated concept. Review connections, support, bracing, and stock dimensions.",
+      "complete": false
+    },
+    {
+      "id": "2bbeaa95-58c9-4743-833a-03d107c269dd",
+      "title": "Assemble Base 1",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "1bd226ae-10ca-4142-8b8a-37a35788fa17",
+        "stageKey": "section",
+        "memberIds": [
+          "1338d62e-1755-492a-9ec6-ffd67b539083",
+          "71a876c3-c8c2-44f2-8aee-2579df41d989",
+          "8f7b06c0-4d72-4bfb-9a8f-44ab7efe8abf",
+          "9ab656b6-e6ed-4428-b471-b766095d161d",
+          "b9caef15-50fa-4596-b916-f2beb94c2ad9",
+          "da6ae613-741b-434e-a458-49486c191ba3"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-6b79ff94",
+        "title": "Assemble Base 1"
+      }
+    },
+    {
+      "id": "260bc05e-1c10-4861-ad13-4f16b323ee58",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "33678298-534d-4999-a80f-b658a424bf34",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-c56587dd",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice plan with simulated measurements. Verify the actual bays and available matching rigid foam before cutting.",
+  "sections": [
+    {
+      "id": "1bd226ae-10ca-4142-8b8a-37a35788fa17",
+      "name": "Base 1",
+      "pieceIds": [
+        "9ab656b6-e6ed-4428-b471-b766095d161d",
+        "1338d62e-1755-492a-9ec6-ffd67b539083",
+        "b9caef15-50fa-4596-b916-f2beb94c2ad9",
+        "8f7b06c0-4d72-4bfb-9a8f-44ab7efe8abf",
+        "71a876c3-c8c2-44f2-8aee-2579df41d989",
+        "da6ae613-741b-434e-a458-49486c191ba3"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": {
+        "type": "foundation",
+        "width": 48,
+        "height": 12,
+        "depth": 48,
+        "spacing": 16
+      },
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-8d20b77d",
+  "history": []
+}

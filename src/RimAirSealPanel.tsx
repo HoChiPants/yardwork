@@ -96,6 +96,7 @@ function RimSealMeasurements({ project, target, original, onSave }: {
   const [gap, setGap] = useState(original?.gap ?? NaN);
   const [kerf, setKerf] = useState(original?.kerf ?? NaN);
   const [offcut, setOffcut] = useState(original?.offcut);
+  const [poolOffcutIds, setPoolOffcutIds] = useState(original?.poolOffcutIds ?? []);
   const [edgeSeal, setEdgeSeal] = useState(original?.edgeSeal);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState("");
@@ -116,6 +117,7 @@ function RimSealMeasurements({ project, target, original, onSave }: {
     if (!selected.length) { setError("Choose at least one clear bay and enter its measured width and height."); return; }
     const parsed = rimAirSealInputSchema.safeParse({
       ...target, topInset, gap, kerf, bays: selected, ...(offcut && { offcut }),
+      ...(poolOffcutIds.length > 0 && { poolOffcutIds }),
       ...(edgeSeal && { edgeSeal }), confirmedBacking: confirmed,
     });
     if (!parsed.success) {
@@ -164,11 +166,11 @@ function RimSealMeasurements({ project, target, original, onSave }: {
         </div>;
       })}
     </fieldset>
-    <label className="rim-seal-check">
+    {(offcut || !project.rimFoamOffcuts?.length) && <label className="rim-seal-check">
       <input type="checkbox" checked={!!offcut} onChange={(event) =>
         setOffcut(event.target.checked ? { label: "", width: NaN, length: NaN } : undefined)} />
       <span>Try a measured 2 in foam offcut first</span>
-    </label>
+    </label>}
     {offcut && <div className="rim-seal-fields">
       <label className="field">Offcut label
         <input value={offcut.label} maxLength={60} onChange={(event) => setOffcut({ ...offcut, label: event.target.value })} />
@@ -176,6 +178,25 @@ function RimSealMeasurements({ project, target, original, onSave }: {
       <LengthInput label="Offcut width" value={offcut.width} max={rimFoam.width} onChange={(width) => setOffcut({ ...offcut, width })} />
       <LengthInput label="Offcut length" value={offcut.length} max={rimFoam.length} onChange={(length) => setOffcut({ ...offcut, length })} />
     </div>}
+    {((project.rimFoamOffcuts?.length ?? 0) > 0 || poolOffcutIds.length > 0) && <fieldset>
+      <legend>Foam offcuts from Cut pool</legend>
+      {(project.rimFoamOffcuts ?? []).map(({ id, label, width, length }) => {
+        const checked = poolOffcutIds.includes(id);
+        const reserved = project.rimAirSeals?.some(({ input }) =>
+          rimAirSealKey(input) !== rimAirSealKey(target) && input.poolOffcutIds?.includes(id));
+        return <label className="rim-seal-check" key={id}>
+          <input type="checkbox" aria-label={`Include foam offcut ${label}`} checked={checked}
+            disabled={reserved && !checked} onChange={(event) => setPoolOffcutIds(event.target.checked
+              ? [...poolOffcutIds, id] : poolOffcutIds.filter((entry) => entry !== id))} />
+          <span>{label} · {foamBlankSize(width, length)}{reserved && " · reserved for another rim"}</span>
+        </label>;
+      })}
+      {poolOffcutIds.filter((id) => !project.rimFoamOffcuts?.some((source) => source.id === id)).map((id) =>
+        <label className="rim-seal-check" key={id}>
+          <input type="checkbox" checked onChange={() => setPoolOffcutIds(poolOffcutIds.filter((entry) => entry !== id))} />
+          <span>Missing offcut · {id.slice(0, 8)}</span>
+        </label>)}
+    </fieldset>}
     <label className="rim-seal-check">
       <input type="checkbox" checked={!!edgeSeal} onChange={(event) =>
         setEdgeSeal(event.target.checked ? { depth: NaN, trialLengthPerCan: NaN, session: "Rim sealing" } : undefined)} />

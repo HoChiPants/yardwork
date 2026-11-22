@@ -62,6 +62,15 @@ function hingeStockInputs(project: Project) {
     return { id: source.id, physicalFingerprint: sourceFingerprint(source), state: review.state, issues: review.issues.map(({ code, severity, cutIds }) => ({ code, severity, cutIds })) };
   });
 }
+function rimFoamGuideScope(project: Project) {
+  const plans = project.rimAirSeals?.filter(({ input }) => input.poolOffcutIds?.length);
+  if (!plans?.length) return {};
+  const ids = new Set(plans.flatMap(({ input }) => input.poolOffcutIds ?? []));
+  return {
+    rimFoamPlans: plans,
+    rimFoamOffcuts: (project.rimFoamOffcuts ?? []).filter(({ id }) => ids.has(id)),
+  };
+}
 function preparationScope(project: Project) {
   return {
     ...(project.siteClearances?.length ? { siteClearances: project.siteClearances } : {}),
@@ -87,6 +96,7 @@ function preparationScope(project: Project) {
     ...(project.bottomPlateSeals?.length ? { bottomPlateSeals: project.bottomPlateSeals } : {}),
     ...(project.topPlateSeals?.length ? { topPlateSeals: project.topPlateSeals } : {}),
     ...(project.rimAirSeals?.length ? { rimAirSeals: project.rimAirSeals } : {}),
+    ...rimFoamGuideScope(project),
     ...(project.roofValleys?.length ? { roofValleys: project.roofValleys } : {}),
     ...(project.roofVentFlashings?.length ? { roofVentFlashings: project.roofVentFlashings } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
@@ -191,6 +201,7 @@ function bindingDesign(project: Project) {
 }
 function designInputs(project: Project) {
   return {
+    ...rimFoamGuideScope(project),
     pieces: project.pieces.map(physical),
     joints: project.joints.map(connection),
     sections: project.sections.map((s) => ({ ...s, recipe: s.recipe ?? null })),

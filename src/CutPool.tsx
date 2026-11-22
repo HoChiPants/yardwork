@@ -6,18 +6,26 @@ import { pieceThroughOpenings } from "./throughOpenings";
 import { orientedStockSize } from "./stockAxes";
 import { workshopAsset } from "./workshopTransport";
 import { isDrywall } from "./drywallReference";
+import { FoamOffcutPool } from "./FoamOffcutPool";
+import type { reviewRimAirSeals } from "./rimAirSeals";
 export function CutPool({
   project,
   onInspect,
   onReuse,
   onAdd,
   onReviewReuse,
+  rimReview,
+  onFoamChange,
+  onPlanRim,
 }: {
   project: Project;
   onInspect: (id: string) => void;
   onReuse: (id: string) => void;
   onAdd: () => void;
   onReviewReuse: () => void;
+  rimReview: ReturnType<typeof reviewRimAirSeals>;
+  onFoamChange: (update: (project: Project) => Project) => void;
+  onPlanRim?: () => void;
 }) {
   const [view, setView] = useState<"scrap" | "used">("scrap");
   const scrap = project.pieces.filter((piece) => piece.offcut),
@@ -29,6 +37,7 @@ export function CutPool({
           pieceThroughOpenings(piece).length),
     );
   const pieces = view === "scrap" ? scrap : used;
+  const reusableCount = scrap.length + (project.rimFoamOffcuts?.length ?? 0);
   const planned = new Set(project.plannedCutSources?.map(({ sourceId }) => sourceId));
   return (
     <section className="cut-pool" aria-label="Cut pool">
@@ -37,7 +46,7 @@ export function CutPool({
           className={view === "scrap" ? "active" : ""}
           onClick={() => setView("scrap")}
         >
-          Reusable offcuts ({scrap.length})
+          Reusable offcuts ({reusableCount})
         </button>
         <button
           className={view === "used" ? "active" : ""}
@@ -59,14 +68,14 @@ export function CutPool({
           Review offcut reuse
         </button>
       )}
-      {!pieces.length && (
+      {!pieces.length && (view === "used" || reusableCount === 0) && (
         <p className="small-note">
           {view === "scrap"
             ? "Measure scrap you already have or collect offcuts as you cut parts."
             : "Parts with recorded cuts appear here."}
         </p>
       )}
-      {view === "scrap" && scrap.length === 0 && (
+      {view === "scrap" && reusableCount === 0 && (
         <div className="button-row">
           <a className="text-button" href={workshopAsset("/examples/cut-pool/crosscut-practice.yardwork.json")} download>
             Download crosscut practice plan
@@ -76,6 +85,7 @@ export function CutPool({
           </a>
         </div>
       )}
+      {view === "scrap" && <FoamOffcutPool project={project} review={rimReview} onChange={onFoamChange} onPlan={onPlanRim} />}
       {pieces.map((piece) => (
         <div
           key={piece.id}

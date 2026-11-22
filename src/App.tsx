@@ -2868,9 +2868,14 @@ export function App() {
             <Layers3 size={14} />
             Assemblies
           </button>
-          <button className={library === "cuts" ? "active" : ""} onClick={() => setLibrary("cuts")}><Scissors size={14}/>Cut pool ({offcutCount})</button>
+          <button className={library === "cuts" ? "active" : ""} onClick={() => setLibrary("cuts")}><Scissors size={14}/>Cut pool ({offcutCount + (project.rimFoamOffcuts?.length ?? 0)})</button>
         </div>
         {library === "cuts" ? <CutPool project={project} onInspect={inspectStock} onReuse={reuseOffcut}
+          rimReview={rimSealReview} onFoamChange={change}
+          onPlanRim={(project.sections.some(({ generator }) => generator?.type === "foundation") || !!project.rimAirSeals?.length) ? () => {
+            setRimSealTarget(undefined);
+            setModal("rim-air-seal");
+          } : undefined}
           onAdd={() => setModal("measured-offcut")}
           onReviewReuse={() => safe(() => {
             const plan = planOffcutReuse(current.current);

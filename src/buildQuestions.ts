@@ -231,7 +231,8 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (/^(?:(?:how (?:can|do|should) i |plan |check |review )?(?:air[ -])?seal (?:the |a |my )?top plate(?: to (?:the )?drywall)?|(?:how (?:can|do|should) i )?seal (?:the )?drywall to (?:the |a )?top plate)$/i.test(text))
     return { kind: "top-plate-seal" };
   if (rimAirSealQuestion.test(text) ||
-      /^how much (?:edge )?(?:sealant|spray foam)(?: do i need)? for (?:the |my )?(?:rim[- ]joists?|band[- ]joists?|floor rims?)$/i.test(text))
+      /^how much (?:edge )?(?:sealant|spray foam)(?: do i need)? for (?:the |my )?(?:rim[- ]joists?|band[- ]joists?|floor rims?)$/i.test(text) ||
+      /^(?:can|could|should) i (?:use|reuse) (?:my |the |any )?(?:foam|rigid foam|xps) (?:offcuts|scraps) (?:for|at|on) (?:the |my )?(?:rim|rim[- ]joists?|band[- ]joists?|floor rims?)$/i.test(text))
     return { kind: "rim-air-seal" };
   if (roofValleyQuestion.test(text)) return { kind: "roof-valley" };
   if (roofVentFlashingQuestion.test(text)) return { kind: "roof-vent-flashing" };
@@ -719,10 +720,17 @@ export function answerBuildQuestion(
       const takeoff = review.edgeSealant;
       const quantities = takeoff?.issue ?? (takeoff?.required ? `The saved trial coverage estimates ${takeoff.required} ${takeoff.required === 1 ? "can" : "cans"} of edge sealant.`
         : "Enter matching trial coverage to estimate the sealant.");
+      const pooled = review.scraps.filter(({ poolOffcutId }) => poolOffcutId).length;
+      const pooledStock = project.rimFoamOffcuts?.length ?? 0;
+      const foamReuse = pooled && !review.needsReview
+        ? ` The saved layouts use ${pooled} Cut pool ${pooled === 1 ? "offcut" : "offcuts"} and ${review.sheets.length} new foam ${review.sheets.length === 1 ? "sheet" : "sheets"}.`
+        : pooledStock
+          ? ` Cut pool has ${pooledStock} measured foam ${pooledStock === 1 ? "offcut" : "offcuts"}. Select the pieces in the rim planner to check which cuts fit.`
+          : "";
       return {
         title: "Air-seal the floor rim",
         detail: floor
-          ? `Select the rim and measure the openings with continuous backing. Check the foam fit, then review the shared sheet cuts and any reusable offcuts. ${quantities}`
+          ? `Select the rim and measure the openings with continuous backing. Check the foam fit, then review the shared sheet cuts and any reusable offcuts. ${quantities}${foamReuse}`
           : "Add a Floor & foundation assembly so Yardwork can identify the actual rims and joist bays.",
         rows: review.rows.map((row) => {
           const { plan, name, issues, cuts } = row;

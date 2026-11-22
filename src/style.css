@@ -3842,6 +3842,18 @@ small {
 .pricing-summary { padding-block: 12px 0; }
 .pricing-summary-compact { padding-block: 4px 0; }
 .pricing-summary-print { padding-block: 0; }
+.foam-offcut-pool {
+  margin: 10px 0;
+  padding: 9px 0 3px;
+  border-top: 1px solid var(--line);
+}
+.foam-offcut-pool > summary { cursor: pointer; font-size: 11px; font-weight: 650; }
+.foam-offcut-pool .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
 .rim-seal-form { display: grid; gap: 12px; margin-top: 12px; }
 .rim-seal-form fieldset { margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; }
 .rim-seal-form legend { font-weight: 600; }

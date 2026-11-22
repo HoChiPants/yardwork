@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
+import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import { guideMarkdown, validate } from "../src/engine";
 import { homeDepotShoppingList } from "../src/handoff";
 import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
@@ -10,6 +11,7 @@ import type { RimAirSealInput, RimSide } from "../src/rimAirSealSchema";
 import { reviewRimAirSeals, rimAirSealFrame, rimEdgeSealEstimate, saveRimAirSeal } from "../src/rimAirSeals";
 import { transformSection } from "../src/sections";
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
+import { addRimFoamOffcut, removeRimFoamOffcut } from "../src/rimFoamOffcuts";
 import { addSupply } from "../src/supplies";
 
 function floor() {
@@ -171,4 +173,63 @@ test("old rim plans retain their cuts and measured seal estimates stay in the pr
   assert.throws(() => saveRimAirSeal(project, { ...input, gap: 1.125, edgeSeal }), /gaps up to 1 in/);
   assert.throws(() => saveRimAirSeal(project, { ...input, edgeSeal: { ...edgeSeal, depth: 2.125 } }));
   assert.throws(() => saveRimAirSeal(project, { ...input, edgeSeal: { ...edgeSeal, trialLengthPerCan: 0 } }));
+});
+
+test("several measured Cut pool pieces can replace the entire rim sheet", () => {
+  let project = floor();
+  project = addRimFoamOffcut(project, { label: "Foam A", width: 13.5, length: 4.75 });
+  project = addRimFoamOffcut(project, { label: "Foam B", width: 14.25, length: 6 });
+  project = addRimFoamOffcut(project, { label: "Test strip", width: 2, length: 3 });
+  const [a, b, trial] = project.rimFoamOffcuts!;
+  const back = measurements(project, "back");
+  const purchasedEstimate = addHomeDepotPurchaseNeed(saveRimAirSeal(project, back), rimFoam.id);
+  assert.match(homeDepotShoppingList(purchasedEstimate).text, /1 sheet.*345181221/);
+  const withPlan = saveRimAirSeal(purchasedEstimate, {
+    ...back,
+    poolOffcutIds: [b.id, a.id, trial.id],
+    edgeSeal: { depth: 0.5, trialLengthPerCan: 120, session: "Foam trial" },
+  });
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(withPlan)));
+  const review = reviewRimAirSeals(reopened);
+  assert.equal(review.sheets.length, 0);
+  assert.deepEqual(review.scraps.map(({ poolOffcutId }) => poolOffcutId), [a.id, b.id]);
+  assert.ok(review.scraps.every(({ stock }) => stock.placements.length === 1));
+  assert.ok(review.scraps[1].order.remnants.length > 0);
+  assert.deepEqual(review.unusedOffcuts, ["Test strip"]);
+  assert.equal(review.edgeSealant?.required, 1);
+  assert.equal(homeDepotPurchaseNeeds(reopened).some(({ id }) => id === rimFoam.id), false);
+  const shopping = homeDepotShoppingList(reopened);
+  assert.doesNotMatch(shopping.text, /345181221/);
+  assert.ok(shopping.reviews.some(({ reason }) => reason.includes("Review 1 previously selected sheet")));
+  assert.deepEqual(reopened.supplies, purchasedEstimate.supplies);
+  const asked = buildQuestion("Can I reuse my foam offcuts for the rim?")!;
+  assert.deepEqual(asked, { kind: "rim-air-seal" });
+  assert.match(answerBuildQuestion(reopened, asked, []).detail, /2 Cut pool offcuts and 0 new foam sheets/);
+  assert.match(guideMarkdown(reopened), /Offcut Foam A[\s\S]+Offcut Foam B[\s\S]+Keep reusable foam/);
+
+  const withGuide = generateBuildGuide(reopened);
+  assert.equal(guideIsCurrent(withGuide), true);
+  assert.equal(guideIsCurrent(addRimFoamOffcut(withGuide, { label: "New spare", width: 15, length: 5 })), true);
+  const missing = { ...withGuide, rimFoamOffcuts: withGuide.rimFoamOffcuts!.filter(({ id }) => id !== a.id) };
+  assert.equal(guideIsCurrent(missing), false);
+  assert.match(reviewRimAirSeals(missing).rows[0].issues[0], /missing from Cut pool/);
+  assert.equal(homeDepotPurchaseNeeds(missing).find(({ id }) => id === rimFoam.id)?.required, null);
+});
+
+test("foam stock reservations survive reopening and block duplicate physical sources", () => {
+  const base = addRimFoamOffcut(floor(), { label: "Foam 01", width: 14.25, length: 4.75 });
+  const offcut = base.rimFoamOffcuts![0];
+  const allocated = saveRimAirSeal(base, { ...measurements(base, "back", [1]), poolOffcutIds: [offcut.id] });
+  assert.throws(() => removeRimFoamOffcut(allocated, offcut.id), /Release this foam offcut/);
+  assert.throws(() => addRimFoamOffcut(base, { ...offcut, label: " foam 01 " }), /already recorded/);
+  assert.throws(() => saveRimAirSeal(allocated, {
+    ...measurements(base, "front", [1]), poolOffcutIds: [offcut.id],
+  }), /reserved for more than one rim/);
+  assert.throws(() => saveRimAirSeal(allocated, {
+    ...measurements(base, "front", [1]), offcut: { label: offcut.label, width: offcut.width, length: offcut.length },
+  }), /also in Cut pool/);
+  const freed = saveRimAirSeal(allocated, measurements(base, "back", [1]));
+  const removed = removeRimFoamOffcut(freed, offcut.id);
+  assert.equal(removed.rimFoamOffcuts, undefined);
+  assert.equal(reviewRimAirSeals(removed).sheets.length, 1);
 });

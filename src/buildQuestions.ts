@@ -34,6 +34,7 @@ import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./tre
 import { groupedMaterials, materialFamilyVariants, materialPlacementOptions } from "./materialGroups";
 import { fittingBoardOffcuts } from "./offcutAssignment";
 import { compareRepeatedBoardCuts, maxRepeatedBoards } from "./repeatedBoardCuts";
+import { maxMixedBoardCuts, mixedBoardStockOptions, planMixedBoardCuts, type BoardCutPlan } from "./mixedBoardCuts";
 import { normalizeIdeaText } from "./ideaEdits";
 import { reviewRimAirSeals, rimAirSealKey, rimEdgeSealEstimate, uncutRimFoamOffcuts } from "./rimAirSeals";
 import { rimSealScope } from "./rimAirSealReference";
@@ -64,6 +65,7 @@ export type BuildQuestion =
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
+  | { kind: "board-cut-list"; nominal: string; treated: boolean; lengths: number[]; issue?: string }
   | { kind: "board-stock"; length: number; nominal: string; treated: boolean; quantity: number }
   | { kind: "board-offcut"; length: number; nominal: string; treated: boolean; offcutLabel?: string }
   | { kind: "offcuts"; label?: string };
@@ -92,6 +94,7 @@ export type BuildQuestionAction =
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
   | { kind: "treated-wood" }
+  | { kind: "board-cut-list"; name: string; plan: BoardCutPlan }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
   | { kind: "board-placement"; groupId: string; length: number; offcutId?: string; quantity?: number; stock?: MaterialId }
   | Extract<BuildPreparationAction, { kind: "motion" | "lid" | "part" | "offcut" }>;
@@ -143,6 +146,8 @@ const boardOffcutQuestion =
   /^(?:(?:can|could) i (?:make|cut|get) (?:a |one )?(.+) from (?:an? |my |the |any )?(?:offcuts?|scraps?|leftovers?|cut pool)|do i have (?:any |an? )?(?:offcuts?|scraps?|leftovers?) for (?:a |one )?(.+))$/i;
 const boardPurchaseQuestion =
   /^(?:(?:what|which) (?:stock|board) lengths? should i buy|compare (?:stock|board) lengths?) for (?:an? )?(.+)$/i;
+const mixedBoardQuestion =
+  /^(?:plan|compare|show) (?:the )?(?:(pressure[- ]treated|treated) )?(\d{1,2})\s*(?:[x×]|by)\s*(\d{1,2}) (?:cuts|cut list)(?:\s*(?:of\s+|for\s+|:\s*)(.*))?$/i;
 const boardOffcutSize =
   /^(.+?)\s+(?:(pressure[- ]treated|treated)\s+)?(\d{1,2})\s*(?:[x×]|by)\s*(\d{1,2})s?(?:\s+(?:boards?|posts?|framing lumber))?$/i;
 const boardFeet = /^(\d+(?:\.\d+)?)\s*(?:feet|foot|ft|['′])(?:\s*(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″]))?$/i;
@@ -186,6 +191,29 @@ function boardSize(text: string) {
   return { length, nominal: `${Number(size[3])} × ${Number(size[4])}`, treated: !!size[2] };
 }
 
+function readBoardCutList(text: string): Extract<BuildQuestion, { kind: "board-cut-list" }> | null {
+  const match = mixedBoardQuestion.exec(text);
+  if (!match) return null;
+  const [, treatment, width, depth, entries = ""] = match;
+  const result = { kind: "board-cut-list" as const, nominal: `${Number(width)} × ${Number(depth)}`,
+    treated: !!treatment, lengths: [] as number[] };
+  for (const entry of entries.split(/\s*,\s*(?:and\s+)?|\s+and\s+/)) {
+    const value = entry.trim();
+    const explicitCount = /^(\d+)\s*[x×]\s*(.+)$/.exec(value);
+    const implicitCount = /^(\d+)\s+(\d.+)$/.exec(value);
+    const single = inchesFromLength(value);
+    const count = explicitCount ?? implicitCount;
+    const quantity = Number.isFinite(single) ? 1 : Number(count?.[1] ?? 1);
+    const length = Number.isFinite(single) ? single : inchesFromLength(count?.[2] ?? value);
+    if (!Number.isFinite(length) || length < 0.125)
+      return { ...result, issue: "Enter each finished length with a unit, for example 60 in, 4 ft, and 2 × 46 in." };
+    if (quantity < 1 || result.lengths.length + quantity > maxMixedBoardCuts)
+      return { ...result, issue: `Choose 1 to ${maxMixedBoardCuts} pieces per cut list.` };
+    for (let index = 0; index < quantity; index++) result.lengths.push(length);
+  }
+  return result;
+}
+
 export function buildQuestion(prompt: string): BuildQuestion | null {
   const text = clean(prompt).replace(
     /^(?:please\s+)?(?:(?:can|could|would) you\s+)?(?:please\s+)?/i,
@@ -219,6 +247,8 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   const scrap = scrapQuestion.exec(text);
   if (scrap)
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
+  const mixedBoard = readBoardCutList(stopText);
+  if (mixedBoard) return mixedBoard;
   const purchase = boardPurchaseQuestion.exec(stopText);
   if (purchase) {
     const count = /^(\d+)\s+(.+)$/.exec(purchase[1]);
@@ -379,6 +409,29 @@ function boardMaterialGroup(nominal: string, treated: boolean) {
   return groupedMaterials("Lumber").find(({ name, id }) =>
     treated ? name.includes(nominal) && id.startsWith("treated-") :
       name.startsWith(`${nominal} `) && !id.startsWith("treated-"));
+}
+
+function answerBoardCutList(
+  project: Project,
+  { nominal, treated, lengths, issue }: Extract<BuildQuestion, { kind: "board-cut-list" }>,
+): BuildQuestionAnswer {
+  const title = "Lumber cut list";
+  if (issue) return { title, detail: issue };
+  const group = boardMaterialGroup(nominal, treated);
+  if (!group) return { title, detail: `No ${treated ? "treated " : ""}${nominal} board matches the material shelf.` };
+  const plan = planMixedBoardCuts(project, mixedBoardStockOptions(project, group), lengths);
+  if (!plan) return { title, detail: `The cut list does not fit the listed ${group.name} stock with the planned blade allowance.` };
+  return {
+    title,
+    detail: `${lengths.length} ${lengths.length === 1 ? "piece" : "pieces"} from ${plan.boards.length} ${plan.boards.length === 1 ? "board" : "boards"} · ${formatStockLength(plan.purchaseLength)} of ${group.name} to buy.`,
+    scope: "Uses the shortest total length of listed new stock, with the blade allowance for each board.",
+    rows: plan.boards.map(({ length, cuts, offcut }, index) => ({
+      id: String(index),
+      title: `Board ${index + 1} · ${formatStockLength(length)}`,
+      detail: `${cuts.map(formatStockLength).join(" + ")}${offcut > 1e-8 ? ` · ${formatStockLength(offcut)} offcut` : ""}`,
+    })),
+    link: { label: "Preview cut list in 3D", action: { kind: "board-cut-list", name: group.name, plan } },
+  };
 }
 
 function answerBoardStock(
@@ -722,6 +775,8 @@ export function answerBuildQuestion(
           { link: { label: "Open movement tests", action: { kind: "motion-setup" } } }),
       };
     }
+    case "board-cut-list":
+      return answerBoardCutList(project, question);
     case "board-stock":
       return answerBoardStock(project, question);
     case "board-offcut":

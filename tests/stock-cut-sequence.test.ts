@@ -21,7 +21,7 @@ import {
   type V3,
 } from "../src/model";
 import { stockCutSequences } from "../src/stockCutSequence";
-import { planDedicatedBoardCuts, planStockCutLayouts, recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
+import { planBoardCutGroups, planDedicatedBoardCuts, planStockCutLayouts, recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
 import { inspectCutStock, pieceCutKerf, setCutSourceOnHand, setPlannedWoodKerf } from "../src/cutStock";
 import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import { reviewedOfferForMaterial } from "../src/retailerCatalog";
@@ -908,4 +908,31 @@ test("the shareable rail practice guide follows the saved purchase and later off
   assert.deepEqual([row.id, row.quantity, row.pieces, row.offcuts], ["stud-10", 1, 3, 1]);
   assert.equal(inspectCutStock(project).valid.size, 1);
   assert.equal(guideMarkdown(project), readFileSync(guideUrl, "utf8"));
+});
+
+
+test("different cut lengths retain the specified new sources and older parts", () => {
+  const project = cutProject("stud", [1.5, 24, 3.5], [1.5, 48, 3.5], [1.5, 46, 3.5]);
+  const [existing, short, mid] = project.pieces;
+  const longer = part("Rail", "stud-10", [1.5, 60, 3.5], [12, 30, 0], project.steps[0].id, "Rails");
+  const support = part("Stile", "stud-10", [1.5, 40, 3.5], [24, 20, 0], project.steps[0].id, "Rails");
+  project.pieces.push(longer, support);
+  const next = planBoardCutGroups(project, [[longer.id, support.id], [short.id, mid.id]]);
+  assert.deepEqual(next.pieces[0], existing);
+  assert.equal(inspectCutStock(next).valid.size, 2);
+  assert.deepEqual(bom(next).map(({ id, quantity }) => [id, quantity]), [["stud", 2], ["stud-10", 1]]);
+  assert.deepEqual(next.pieces.filter(({ offcut }) => offcut).map((piece) => cutSourceRegion(piece).size[2]), [19.75, 1.75]);
+  assert.throws(() => planBoardCutGroups(project, [[longer.id, short.id]]), /one wood stock size/);
+  assert.throws(() => planBoardCutGroups(project, [[short.id, mid.id, existing.id]]), /exceeds the/);
+});
+
+
+test("the mixed rail practice keeps exact board purchases and its saved offcut guide", () => {
+  const planUrl = new URL("../public/examples/wood-stock/mixed-rail-cuts.yardwork.json", import.meta.url);
+  const guideUrl = new URL("../public/examples/wood-stock/mixed-rail-cuts-guide.md", import.meta.url);
+  const practice = projectSchema.parse(JSON.parse(readFileSync(planUrl, "utf8")));
+  assert.deepEqual(bom(practice).map(({ id, quantity }) => [id, quantity]).sort(),
+    [["hd-kdht-2x4-8", 1], ["hd-spf-2x4-10", 1]]);
+  assert.equal(inspectCutStock(practice).valid.size, 2);
+  assert.equal(guideMarkdown(practice), readFileSync(guideUrl, "utf8"));
 });

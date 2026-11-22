@@ -273,10 +273,44 @@ function saveStockCutLayouts(
   return saved;
 }
 
-/** Reserve new stock for equal crosscuts, independently of older unassigned parts. */
-export function planDedicatedBoardCuts(project: Project, pieceIds: readonly string[]): Project {
+/** Reserve the stated parts on each board in order, without repacking older parts. */
+export function planBoardCutGroups(project: Project, boards: readonly (readonly string[])[]): Project {
   const labeled = ensurePartLabels(project);
   const byId = new Map(labeled.pieces.map((piece) => [piece.id, piece]));
+  const ids = boards.flat();
+  if (!boards.length || new Set(ids).size !== ids.length)
+    throw Error("Choose unassigned boards for these cuts.");
+  const groups = boards.map((ids) => {
+    const pieces = ids.map((id) => byId.get(id));
+    if (!pieces.length || !pieces.every((piece): piece is Piece => !!piece && !piece.offcut && !piece.cutStock))
+      throw Error("Choose unassigned boards for these cuts.");
+    const stock = material(pieces[0].material);
+    if (!stock.wood || !stock.cuttable || stock.stockKind !== "linear" ||
+        pieces.some(({ material }) => material !== stock.id))
+      throw Error("Choose one wood stock size for each board.");
+    return { stock, pieces };
+  });
+  const batch = { ...labeled, pieces: groups.flatMap(({ pieces }) => pieces) };
+  const rows = new Map(bom(batch).map((row) => [row.id, row]));
+  const sequences = groups.map(({ stock, pieces }) => {
+    const cuts = pieces.map((piece) => ({
+      id: piece.id, name: piece.name, length: orientedStockSize(piece)[2],
+    }));
+    const row = rows.get(stock.id)!;
+    const [sequence] = stockCutSequences(
+      { ...batch, pieces },
+      [{ ...row, bins: [{ cuts, remaining: 0 }] }],
+    ).get(stock.id) ?? [];
+    if (!sequence || sequence.review || sequence.layout.kept.length !== pieces.length)
+      throw Error(sequence?.review ?? "Review the stock cut order for these parts.");
+    return sequence;
+  });
+  return saveReviewedStockCuts(labeled, sequences, { onHand: false, planned: true }).project;
+}
+
+/** Reserve new stock for equal crosscuts. */
+export function planDedicatedBoardCuts(project: Project, pieceIds: readonly string[]): Project {
+  const byId = new Map(project.pieces.map((piece) => [piece.id, piece]));
   const pieces = pieceIds.map((id) => byId.get(id));
   if (!pieces.length || new Set(pieceIds).size !== pieceIds.length ||
       !pieces.every((piece): piece is Piece => !!piece && !piece.offcut && !piece.cutStock))
@@ -289,23 +323,16 @@ export function planDedicatedBoardCuts(project: Project, pieceIds: readonly stri
   if (pieces.some((piece) => piece.material !== first.material || orientedStockSize(piece)[2] !== length))
     throw Error("Choose boards of the same stock and finished length.");
   const stockLength = Math.max(...(stock.stockSize ?? stock.size));
-  const kerf = plannedCutKerf(labeled, stock.id);
+  const kerf = plannedCutKerf(project, stock.id);
   const plan = repeatedBoardCuts(stockLength, length, pieces.length, kerf);
   if (!plan) throw Error("The finished parts do not fit this board stock.");
-  if (stockSplitState(stockLength, length, kerf) === "whole") return labeled;
-  const batch = { ...labeled, pieces };
-  const row = bom(batch).find(({ id }) => id === stock.id)!;
+  if (stockSplitState(stockLength, length, kerf) === "whole") return ensurePartLabels(project);
   let start = 0;
-  const bins = plan.boards.map(({ count, remaining }) => {
-    const cuts = pieces.slice(start, start + count).map(({ id, name }) => ({ id, name, length }));
+  return planBoardCutGroups(project, plan.boards.map(({ count }) => {
+    const group = pieceIds.slice(start, start + count);
     start += count;
-    return { cuts, remaining };
-  });
-  const sequences = stockCutSequences(batch, [{ ...row, bins }]).get(stock.id) ?? [];
-  const problem = sequences.find(({ review }) => review)?.review;
-  if (problem || sequences.flatMap(({ layout }) => layout.kept).length !== pieces.length)
-    throw Error(problem ?? "Review the stock cut order for these parts.");
-  return saveReviewedStockCuts(labeled, sequences, { onHand: false, planned: true }).project;
+    return group;
+  }));
 }
 
 /** Commit an exact set of reviewed cuts as one change, with no intermediate repacking. */

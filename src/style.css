@@ -3885,3 +3885,14 @@ small {
 .stock-remnant { color: #3c4d32; }
 .stock-remnant p + p { margin-top: 4px; }
 .stock-remnant .button { margin-top: 10px; }
+
+
+.board-cut-review {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 20px;
+  padding-left: 20px;
+}
+.board-cut-review li { padding-left: 4px; }
+.board-cut-review p { margin: 3px 0; }
+.board-cut-review small { color: var(--muted); }

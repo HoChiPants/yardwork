@@ -161,7 +161,7 @@ import { assemblyPartForOffcut } from "./sceneVisibility";
 import { rekeyGuidePlacements } from "./guidePlacement";
 import { GuidePlacementEditor } from "./GuidePlacementEditor";
 import { copySavedRevision } from "./recoverSavedRevision";
-import { planDedicatedBoardCuts, recordStockCutLayouts, saveTubeCutLoss } from "./recordStockCutLayout";
+import { planBoardCutGroups, planDedicatedBoardCuts, recordStockCutLayouts, saveTubeCutLoss } from "./recordStockCutLayout";
 import { GuidePartLabels, PrintAssemblyPartLabels } from "./GuidePartLabels";
 import { assemblyPartLabels, type AssemblyPartLabel } from "./assemblyPartLabels";
 import { ConnectionReviewPanel } from "./ConnectionReviewPanel";
@@ -320,6 +320,8 @@ import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboa
 import { MaterialLibrary } from "./MaterialLibrary";
 import { MaterialPlacement, type BoardPlacement } from "./MaterialPlacement";
 import { maxRepeatedBoards } from "./repeatedBoardCuts";
+import { BoardCutListReview } from "./BoardCutListReview";
+import type { BoardCutPlan } from "./mixedBoardCuts";
 import { groupedMaterials, materialDisplayName, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
@@ -393,6 +395,7 @@ type Modal =
   | "place-material"
   | "measured-offcut"
   | "offcut-reuse"
+  | "board-cut-list"
   | "offcut-release"
   | "catalog"
   | "studies"
@@ -637,6 +640,9 @@ export function App() {
   const [reviewFinishPanel, setReviewFinishPanel] = useState<"sunlite-tape-plan" | "edge-banding-plan" | null>(null);
   const [bandingMark, setBandingMark] = useState<{ project: Project; edge: BandingEdge } | null>(null);
   const [offcutReusePlan, setOffcutReusePlan] = useState<OffcutReusePlan | null>(null);
+  const [boardCutDraft, setBoardCutDraft] = useState<{
+    source: Project; next: Project; name: string; plan: BoardCutPlan; parts: Piece[];
+  } | null>(null);
   const [offcutReleasePreview, setOffcutReleasePreview] = useState<OffcutReleasePreview | null>(null);
   const [returnToPreparation, setReturnToPreparation] = useState(false);
   const [sunliteMountPanelId, setSunliteMountPanelId] = useState("");
@@ -997,6 +1003,7 @@ export function App() {
     if (next !== null && !["export", "help", "projects", "import"].includes(next) && !canLeaveWorkingDraft()) return;
     if (next !== "projects") earlierSaveRequest.current?.abort();
     if (next !== "offcut-reuse") setOffcutReusePlan(null);
+    if (next !== "board-cut-list") setBoardCutDraft(null);
     if (next !== "offcut-release") setOffcutReleasePreview(null);
     if (next !== "inventory") setInventoryTarget(undefined);
     if (next !== null) inspectorFocus.suspend();
@@ -1397,6 +1404,29 @@ export function App() {
       case "cut-pool":
         setLibrary("cuts");
         break;
+      case "board-cut-list": {
+        const requests = action.plan.boards.flatMap(({ stock, cuts }) =>
+          cuts.map((length) => ({ id: stock, length })));
+        const { next, parts } = prepareMaterialPieces(requests, [0, 0, 0]);
+        requests.forEach(({ length }, index) => {
+          parts[index].name = `${action.name} · ${formatStockLength(length)}`;
+        });
+        let start = 0;
+        const boards = action.plan.boards.map(({ cuts }) => {
+          const ids = parts.slice(start, start + cuts.length).map(({ id }) => id);
+          start += cuts.length;
+          return ids;
+        });
+        setBoardCutDraft({ source: project, next: planBoardCutGroups(next, boards),
+          name: action.name, plan: action.plan, parts });
+        setPlaying(false);
+        setStage(null);
+        setExplode(false);
+        setMode("select");
+        setPanel("part");
+        setModal("board-cut-list");
+        break;
+      }
       case "board-placement": {
         const group = groupedMaterials("Lumber").find(({ id }) => id === action.groupId);
         if (!group) throw Error("This material changed. Explore the question again.");
@@ -2382,15 +2412,14 @@ export function App() {
     setSelected(id);
     setPanel("part");
   }
-  const prepareMaterial = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
-    const quantity = placement?.kind === "stock-cut" ? placement.quantity ?? 1 : 1;
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > maxRepeatedBoards)
-      throw Error(`Choose 1 to ${maxRepeatedBoards} whole pieces.`);
-    const blank = placement ? boardBlankAtLength(id, placement.length) : null;
-    if (placement && !blank) throw Error("Enter a finished board length.");
+  const prepareMaterialPieces = useCallback((requests: readonly {
+    id: MaterialId; length?: number; stockLengthAxis?: Piece["stockLengthAxis"];
+  }[], position: V3) => {
     let next = project;
     const parts: Piece[] = [];
-    for (let index = 0; index < quantity; index++) {
+    for (const [index, { id, length, stockLengthAxis }] of requests.entries()) {
+      const blank = length === undefined ? null : boardBlankAtLength(id, length);
+      if (length !== undefined && !blank) throw Error("Enter a finished board length.");
       const ground: V3 = [...position];
       if (index && blank) {
         ground[0] += (index % 6) * (blank.size[0] + 2);
@@ -2401,7 +2430,7 @@ export function App() {
       const added = next.pieces.at(-1)!;
       if (blank) {
         added.size = [...blank.size];
-        added.stockLengthAxis = placement?.kind === "offcut" ? placement.stockLengthAxis : blank.stockLengthAxis;
+        added.stockLengthAxis = stockLengthAxis === undefined ? blank.stockLengthAxis : stockLengthAxis;
         added.position[1] = ground[1] + blank.size[1] / 2;
       }
       if (snap) added.position = snapPlacement(next, added, added.position, added.rotation).position;
@@ -2412,6 +2441,20 @@ export function App() {
     }
     return { next, parts };
   }, [project, activeStepId, snap]);
+  const prepareMaterial = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
+    const quantity = placement?.kind === "stock-cut" ? placement.quantity ?? 1 : 1;
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > maxRepeatedBoards)
+      throw Error(`Choose 1 to ${maxRepeatedBoards} whole pieces.`);
+    return prepareMaterialPieces(Array.from({ length: quantity }, () => ({
+      id, length: placement?.length,
+      ...(placement?.kind === "offcut" ? { stockLengthAxis: placement.stockLengthAxis } : {}),
+    })), position);
+  }, [prepareMaterialPieces]);
+  useEffect(() => {
+    if (modal !== "board-cut-list" || !boardCutDraft || boardCutDraft.source !== project) return;
+    materialDropMarker.current?.([0, 0, 0], boardCutDraft.parts);
+    return () => materialDropMarker.current?.(null);
+  }, [modal, boardCutDraft, project]);
   const showMaterialPreview = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
     try {
       const { parts } = prepareMaterial(id, position, placement);
@@ -5601,7 +5644,7 @@ export function App() {
       )}
       {modal && (
         <div
-          className={modal === "place-material" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
+          className={modal === "place-material" || modal === "board-cut-list" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setModal(null);
           }}
@@ -5941,6 +5984,18 @@ export function App() {
                 setModal(null);
                 notify("Measured stock added to the Cut pool.");
               }} />
+            )}
+            {modal === "board-cut-list" && boardCutDraft && (
+              <BoardCutListReview plan={boardCutDraft.plan} name={boardCutDraft.name} onApply={() => safe(() => {
+                if (current.current !== boardCutDraft.source)
+                  throw Error("The project changed. Preview the cut list again.");
+                change(boardCutDraft.next);
+                setSelectionScope("part");
+                setSelectedSectionId(null);
+                setSelected(boardCutDraft.parts[0].id);
+                setModal(null);
+                notify("Pieces placed. The build guide and shopping list now include the cuts and offcuts.");
+              })} />
             )}
             {modal === "offcut-reuse" && offcutReusePlan && (
               <OffcutReuseReview plan={offcutReusePlan} onApply={() => safe(() => {

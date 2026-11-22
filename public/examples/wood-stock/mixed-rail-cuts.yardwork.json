@@ -1,0 +1,483 @@
+{
+  "schemaVersion": 127,
+  "id": "bee8a8f3-5867-4778-8783-38d5c72b7117",
+  "name": "Mixed rail and spacer cut practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "plannedCutSources": [
+    {
+      "sourceId": "2e557ba7-c5b1-4f7c-a033-d359b4bc9487",
+      "fingerprint": "binding-v1-7d79bea402c9b6f0",
+      "historyIds": [
+        "bc5922de-fe1f-4988-8d18-02e1059afa3e",
+        "c39e73a0-d8c6-4557-a55c-78d93f14265f",
+        "be273736-eab5-418e-b9f1-ca8d12911b17"
+      ]
+    },
+    {
+      "sourceId": "2a1c5d19-7b22-4d3d-9011-1dedc176c911",
+      "fingerprint": "binding-v1-94bb583da2adcb9d",
+      "historyIds": [
+        "7ac08d4f-06f8-428d-89a8-5099d55df252",
+        "6677774d-1dc1-44f1-b1b4-77a71190cb63",
+        "493962d5-c107-4506-a44c-2bb46bd187d4"
+      ]
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "8b3570e4-6ff4-4ad2-b331-4a8773b80618",
+      "label": "P001"
+    },
+    {
+      "partId": "dc83a02f-0754-4814-9f2e-540f77ff1003",
+      "label": "P002"
+    },
+    {
+      "partId": "196660f6-86c3-4230-afd3-0807266e5ca4",
+      "label": "P003"
+    },
+    {
+      "partId": "a813f7b2-1a52-44a8-b4ff-d6427e7334f9",
+      "label": "P004"
+    },
+    {
+      "partId": "93878df9-4641-4f3e-862f-986df724bc32",
+      "label": "O001"
+    },
+    {
+      "partId": "cb9b2416-2433-4af1-a3cc-24c8e8bd980a",
+      "label": "O002"
+    },
+    {
+      "partId": "4f2478b4-4a7f-42e2-af10-e23630d52187",
+      "label": "P005"
+    },
+    {
+      "partId": "19db5731-bbcb-48ad-afa5-7d8975b91435",
+      "label": "O003"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T10:51:22.626Z",
+  "pieces": [
+    {
+      "id": "8b3570e4-6ff4-4ad2-b331-4a8773b80618",
+      "name": "60 in rail",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        60,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        -12
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "assembly": "Cut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "2e557ba7-c5b1-4f7c-a033-d359b4bc9487",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          120,
+          3.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "dc83a02f-0754-4814-9f2e-540f77ff1003",
+      "name": "40 in rail",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        40,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        -4
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "assembly": "Cut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "2e557ba7-c5b1-4f7c-a033-d359b4bc9487",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          120,
+          3.5
+        ],
+        "offset": [
+          0,
+          60.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "196660f6-86c3-4230-afd3-0807266e5ca4",
+      "name": "48 in side",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        48,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        4
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "assembly": "Cut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "2a1c5d19-7b22-4d3d-9011-1dedc176c911",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          96,
+          3.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "a813f7b2-1a52-44a8-b4ff-d6427e7334f9",
+      "name": "46 in brace",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        46,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "assembly": "Cut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "2a1c5d19-7b22-4d3d-9011-1dedc176c911",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          96,
+          3.5
+        ],
+        "offset": [
+          0,
+          48.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "cb9b2416-2433-4af1-a3cc-24c8e8bd980a",
+      "name": "Offcut · #2 KD-HT 2 × 4 · Home Depot · 8 ft · board remnant 1",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        1.5,
+        1.75,
+        3.5
+      ],
+      "position": [
+        -71.125,
+        0.75,
+        4
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "2a1c5d19-7b22-4d3d-9011-1dedc176c911",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          96,
+          3.5
+        ],
+        "offset": [
+          0,
+          94.25,
+          0
+        ]
+      }
+    },
+    {
+      "id": "4f2478b4-4a7f-42e2-af10-e23630d52187",
+      "name": "16 in setup spacer",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        16,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        20
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "assembly": "Cut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "2e557ba7-c5b1-4f7c-a033-d359b4bc9487",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          120,
+          3.5
+        ],
+        "offset": [
+          0,
+          100.25,
+          0
+        ]
+      }
+    },
+    {
+      "id": "19db5731-bbcb-48ad-afa5-7d8975b91435",
+      "name": "Offcut · SPF 2 × 4 · Home Depot · 10 ft · board remnant 1",
+      "material": "hd-spf-2x4-10",
+      "size": [
+        1.5,
+        3.625,
+        3.5
+      ],
+      "position": [
+        -88.1875,
+        0.75,
+        -12
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "2e557ba7-c5b1-4f7c-a033-d359b4bc9487",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          120,
+          3.5
+        ],
+        "offset": [
+          0,
+          116.375,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": [
+    {
+      "id": "bc5922de-fe1f-4988-8d18-02e1059afa3e",
+      "at": "2026-11-22T10:51:22.643Z",
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "message": "Recorded one SPF 2 × 4 · Home Depot · 10 ft board for 2 parts starting with P001. Added 1 rectangular offcut to the Cut pool."
+    },
+    {
+      "id": "c39e73a0-d8c6-4557-a55c-78d93f14265f",
+      "at": "2026-11-22T10:51:22.643Z",
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "message": "Stock cut order for P001 · 1. Crosscut 5 ft from the current end for P001 · 60 in rail."
+    },
+    {
+      "id": "be273736-eab5-418e-b9f1-ca8d12911b17",
+      "at": "2026-11-22T10:51:22.643Z",
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "message": "Stock cut order for P001 · 2. Crosscut 40 in from the current end for P002 · 40 in rail."
+    },
+    {
+      "id": "7ac08d4f-06f8-428d-89a8-5099d55df252",
+      "at": "2026-11-22T10:51:22.643Z",
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "message": "Recorded one #2 KD-HT 2 × 4 · Home Depot · 8 ft board for 2 parts starting with P003. Added 1 rectangular offcut to the Cut pool."
+    },
+    {
+      "id": "6677774d-1dc1-44f1-b1b4-77a71190cb63",
+      "at": "2026-11-22T10:51:22.643Z",
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "message": "Stock cut order for P003 · 1. Crosscut 4 ft from the current end for P003 · 48 in side."
+    },
+    {
+      "id": "493962d5-c107-4506-a44c-2bb46bd187d4",
+      "at": "2026-11-22T10:51:22.643Z",
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "message": "Stock cut order for P003 · 2. Crosscut 46 in from the current end for P004 · 46 in brace."
+    },
+    {
+      "id": "118d8d01-b6d6-4898-8d56-5abcf8c86a8d",
+      "at": "2026-11-22T10:51:22.667Z",
+      "stepId": "d36571e3-191f-4463-ac62-0ccf90b660b1",
+      "message": "Assigned O001 · Offcut · SPF 2 × 4 · Home Depot · 10 ft · board remnant 1 to P005 · 16 in setup spacer.",
+      "offcutCut": {
+        "sourceId": "2e557ba7-c5b1-4f7c-a033-d359b4bc9487",
+        "inputId": "93878df9-4641-4f3e-862f-986df724bc32",
+        "targetId": "4f2478b4-4a7f-42e2-af10-e23630d52187",
+        "inputSize": [
+          1.5,
+          3.5,
+          19.75
+        ],
+        "result": {
+          "size": [
+            1.5,
+            3.5,
+            16
+          ],
+          "sourceSize": [
+            1.5,
+            3.5,
+            120
+          ],
+          "offset": [
+            0,
+            0,
+            100.25
+          ]
+        },
+        "inputName": "Offcut · SPF 2 × 4 · Home Depot · 10 ft · board remnant 1",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 16
+          }
+        ],
+        "remnants": [
+          {
+            "id": "19db5731-bbcb-48ad-afa5-7d8975b91435",
+            "size": [
+              1.5,
+              3.5,
+              3.625
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

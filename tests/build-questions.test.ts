@@ -215,3 +215,36 @@ test("a stock question accounts for both crosscuts before recommending a shorter
   assert.equal(tooMany.rows, undefined);
   assert.match(tooMany.detail, /1 to 24 pieces/);
 });
+
+test("a mixed cut list finds the least total stock and keeps a usable tail", () => {
+  const project = blank("Mixed length board cuts");
+  const request = buildQuestion("Plan 2x4 cuts of 60 in, 48 in, 46 in, and 40 in.")!;
+  assert.deepEqual(request, { kind: "board-cut-list", nominal: "2 × 4", treated: false, lengths: [60, 48, 46, 40] });
+  const answer = answerBuildQuestion(project, request, []);
+  assert.match(answer.detail, /4 pieces from 2 boards · 18 ft/);
+  const action = answer.link?.action;
+  assert.equal(action?.kind, "board-cut-list");
+  if (action?.kind !== "board-cut-list") throw Error("Expected the cut review.");
+  assert.deepEqual(action.plan.boards.map(({ stock, cuts, offcut }) => ({ stock, cuts, offcut })), [
+    { stock: "hd-spf-2x4-10", cuts: [60, 40], offcut: 19.75 },
+    { stock: "hd-kdht-2x4-8", cuts: [48, 46], offcut: 1.75 },
+  ]);
+  const measured = answerBuildQuestion({ ...project, woodKerfs: { stud: 0.09375 } }, request, []);
+  assert.equal(measured.link?.action.kind, "board-cut-list");
+  if (measured.link?.action.kind !== "board-cut-list") throw Error("Expected the measured cut review.");
+  assert.deepEqual(measured.link.action.plan.boards.find(({ length }) => length === 96),
+    { stock: "stud", length: 96, kerf: 0.09375, cuts: [48, 46], offcut: 1.8125 });
+  const treated = buildQuestion("Plan treated two by four cut list: two 4 ft, 18 in")!;
+  assert.deepEqual(treated, { kind: "board-cut-list", nominal: "2 × 4", treated: true, lengths: [48, 48, 18] });
+  assert.match(answerBuildQuestion(project, treated, []).detail, /10 ft of Ground-contact 2 × 4/);
+  for (const prompt of ["Plan 2x4 cuts of 0 in, 48 in", "Plan 2x4 cuts of 13 × 46 in", "Plan 2x4 cuts of 200 in, 14 in"])
+    assert.equal(answerBuildQuestion(project, buildQuestion(prompt)!, []).link, undefined);
+});
+
+test("mixed cut lists accept a factory end and reject a last trim thinner than the blade", () => {
+  const project = blank("Factory end vs edge trim");
+  const exact = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 48 in and 47.875 in")!, []);
+  assert.match(exact.detail, /2 pieces from 1 board · 8 ft/);
+  const thin = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 48 in and 47.8 in")!, []);
+  assert.match(thin.detail, /2 pieces from 1 board · 10 ft/);
+});

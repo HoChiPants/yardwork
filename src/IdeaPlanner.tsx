@@ -576,6 +576,7 @@ export default function IdeaPlanner({
         <div className="prompt-examples">
           {[
             ["Compare board lengths", "What stock length should I buy for two 4 ft 2x4s?"],
+            ["Plan a cut list", "Plan 2x4 cuts of 60 in, 48 in, 46 in, and 40 in."],
             ...(project.pieces.length ? [["Review weak spots", "What looks weak in this build?"]] : []),
             ...(sampleWood ? [["Review a joint", `Review screw joints for ${partLabel(project, sampleWood.id)}`]] : []),
             ...((project.motionPlans?.length || project.sections.some((section) => section.recipe?.openingLid))

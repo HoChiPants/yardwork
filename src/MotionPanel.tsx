@@ -50,6 +50,7 @@ import {
   type MotionReferenceFrame,
   type MotionReview,
   type MotionTestSelection,
+  type MotionGapPair,
 } from "./mechanismMotion";
 import type { Project, V3 } from "./model";
 import {
@@ -777,15 +778,16 @@ export function MotionPanel({
     value: number,
     siteFaceId?: string,
     phase?: MotionPhase,
-    focusPair?: MotionCollisionFocus,
-    gapEndpoints?: MotionPreview["gapEndpoints"],
+    focus?: { pair: MotionCollisionFocus; endpoints?: MotionPreview["gapEndpoints"]; gapPair?: MotionGapPair },
   ) {
     cancel();
     if (review) onPreview({
       ...review.preview(value, undefined, siteFaceId, phase),
-      focusPair,
-      gapEndpoints,
-      focusTest: focusPair ? { planId: review.plan.id, setup: activeReview?.setup, scenarioId: selectedScenario?.id } : undefined,
+      focusPair: focus?.pair,
+      gapEndpoints: focus?.endpoints,
+      focusTest: focus ? {
+        planId: review.plan.id, setup: activeReview?.setup, scenarioId: selectedScenario?.id, gapPair: focus.gapPair,
+      } : undefined,
     });
   }
 
@@ -961,7 +963,9 @@ export function MotionPanel({
           <p className="small-note">{describe(requestedGap.movingId)} and {describe(requestedGap.otherId)}</p>
           {requestedSearch
             ? <ClosestMotionGap review={review} search={requestedSearch} autoStart
-                onInspect={({ at, phase, endpoints }) => show(at, undefined, phase, [requestedGap.movingId, requestedGap.otherId], endpoints)} />
+                onInspect={({ at, phase, endpoints }) => show(at, undefined, phase, {
+                  pair: [requestedGap.movingId, requestedGap.otherId], endpoints, gapPair: requestedGap,
+                })} />
             : <p className="small-note" role="status">This pair needs two modeled surfaces to measure its gap.</p>}
         </section>
       )}
@@ -1361,14 +1365,14 @@ export function MotionPanel({
                 const { requirement, result, phase } = review.clearance;
                 return (
                   <button type="button" className="text-button"
-                    onClick={() => show(result.at, undefined, phase, [requirement.movingId, requirement.otherId])}>
+                    onClick={() => show(result.at, undefined, phase, { pair: [requirement.movingId, requirement.otherId] })}>
                     Inspect the gap
                   </button>
                 );
               })()}
               <ClosestMotionGap review={review} search={review.clearance.findClosest} onInspect={({ at, phase, endpoints }) => {
                 const requirement = review.clearance?.requirement;
-                if (requirement) show(at, undefined, phase, [requirement.movingId, requirement.otherId], endpoints);
+                if (requirement) show(at, undefined, phase, { pair: [requirement.movingId, requirement.otherId], endpoints });
               }} />
             </section>
           )}
@@ -1415,7 +1419,7 @@ export function MotionPanel({
                     aria-label={`Focus these parts for ${describe(hit.movingId)} against ${describe(hit.obstacleId)}`}
                     onClick={() => show(
                       preview.travel === hit.closingAt ? hit.closingAt : hit.inspectAt,
-                      undefined, hit.phase, [hit.movingId, hit.obstacleId],
+                      undefined, hit.phase, { pair: [hit.movingId, hit.obstacleId] },
                     )}>
                     Focus these parts
                   </button>

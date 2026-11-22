@@ -1103,9 +1103,10 @@ export function App() {
       }
       const result = runMotionTest(project, plan, target.setup);
       setPanel("motion");
-      setMotionTestSelection({ project, plan, setup: target.setup, scenarioId: target.scenarioId, result });
+      setMotionTestSelection({ project, plan, setup: target.setup, scenarioId: target.scenarioId, gapPair: target.gapPair, result });
       setMotionPreview(result.review ? { project, value: result.review.preview(0) } : null);
-      if (result.review) inspectWorkspace();
+      if (target.gapPair) inspectorFocus.expand();
+      else if (result.review) inspectWorkspace();
     } else {
       if (!project.sections.some((section) => section.id === target.sectionId && section.recipe?.openingLid)) {
         notify("The original lid is no longer in the project.", true);

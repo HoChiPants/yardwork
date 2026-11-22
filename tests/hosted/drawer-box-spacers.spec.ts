@@ -139,4 +139,14 @@ test("a build question measures two parts through a named motion and refreshes t
   await dialog.getByRole("button", { name: /^Editable project/ }).click();
   const exported = projectSchema.parse(JSON.parse(await readFile((await (await downloading).path())!, "utf8")));
   expect(exported.motionPlans).toEqual(prepared.motionPlans);
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Edit obstruction", exact: true }).click();
+  const depth = page.getByRole("spinbutton", { name: "Z", exact: true });
+  await expect(depth).toHaveValue("12.5");
+  await depth.fill("13");
+  await page.getByRole("button", { name: "Retest clearance", exact: true }).click();
+  const retest = page.getByRole("region", { name: "Requested gap measurement", exact: true });
+  await expect(retest).toContainText("Closest checked gap 1.20212 in at Inset drawer · 5 in.");
+  await retest.getByRole("button", { name: "Inspect closest pose", exact: true }).click();
+  await expect(page.getByTestId("motion-gap-label")).toHaveText("1.20212 in gap");
 });

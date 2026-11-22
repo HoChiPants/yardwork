@@ -1362,7 +1362,7 @@ export type MotionPreview = ReturnType<MotionReview["preview"]> & {
   draftGeometry?: true;
   focusPair?: MotionCollisionFocus;
   gapEndpoints?: ClosestPairGap["endpoints"];
-  focusTest?: { planId: string; setup?: MotionTestSetup; scenarioId?: string };
+  focusTest?: { planId: string; setup?: MotionTestSetup; scenarioId?: string; gapPair?: MotionGapPair };
   obstaclePieces?: readonly Piece[];
   hiddenPieceIds?: readonly string[];
   clearanceCeiling?: { center: V3; size: V3 };

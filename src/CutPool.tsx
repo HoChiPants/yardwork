@@ -7,6 +7,8 @@ import { orientedStockSize } from "./stockAxes";
 import { workshopAsset } from "./workshopTransport";
 import { isDrywall } from "./drywallReference";
 import { FoamOffcutPool } from "./FoamOffcutPool";
+import { DuctOffcutPool } from "./DuctOffcutPool";
+import { availableRoundDuctOffcuts } from "./roundDuct";
 import { uncutRimFoamOffcuts, type reviewRimAirSeals } from "./rimAirSeals";
 export function CutPool({
   project,
@@ -15,7 +17,7 @@ export function CutPool({
   onAdd,
   onReviewReuse,
   rimReview,
-  onFoamChange,
+  onStockChange,
   onPlanRim,
 }: {
   project: Project;
@@ -24,7 +26,7 @@ export function CutPool({
   onAdd: () => void;
   onReviewReuse: () => void;
   rimReview: ReturnType<typeof reviewRimAirSeals>;
-  onFoamChange: (update: (project: Project) => Project) => void;
+  onStockChange: (update: (project: Project) => Project) => void;
   onPlanRim?: () => void;
 }) {
   const [view, setView] = useState<"scrap" | "used">("scrap");
@@ -37,7 +39,7 @@ export function CutPool({
           pieceThroughOpenings(piece).length),
     );
   const pieces = view === "scrap" ? scrap : used;
-  const reusableCount = scrap.length + uncutRimFoamOffcuts(project).length;
+  const reusableCount = scrap.length + uncutRimFoamOffcuts(project).length + availableRoundDuctOffcuts(project).length;
   const planned = new Set(project.plannedCutSources?.map(({ sourceId }) => sourceId));
   return (
     <section className="cut-pool" aria-label="Cut pool">
@@ -85,7 +87,10 @@ export function CutPool({
           </a>
         </div>
       )}
-      {view === "scrap" && <FoamOffcutPool project={project} review={rimReview} onChange={onFoamChange} onPlan={onPlanRim} />}
+      {view === "scrap" && <>
+        <FoamOffcutPool project={project} review={rimReview} onChange={onStockChange} onPlan={onPlanRim} />
+        <DuctOffcutPool project={project} onChange={onStockChange} />
+      </>}
       {pieces.map((piece) => (
         <div
           key={piece.id}

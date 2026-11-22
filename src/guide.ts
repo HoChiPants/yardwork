@@ -104,6 +104,7 @@ function preparationScope(project: Project) {
     ...(project.roofVentFlashings?.length ? { roofVentFlashings: project.roofVentFlashings } : {}),
     ...(project.floorRegisterPlans?.length ? { floorRegisterPlans: project.floorRegisterPlans } : {}),
     ...(project.roundDuctRuns?.length ? { roundDuctRuns: project.roundDuctRuns } : {}),
+    ...(project.roundDuctOffcuts?.length ? { roundDuctOffcuts: project.roundDuctOffcuts } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),

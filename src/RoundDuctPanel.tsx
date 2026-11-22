@@ -2,9 +2,10 @@ import { useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { formatStockLength } from "./measurement";
 import type { Project, V3 } from "./model";
-import { previewRoundDuct } from "./roundDuct";
+import { previewRoundDuct, roundDuctTakeoff } from "./roundDuct";
 import { roundDuctStock } from "./roundDuctReference";
-import type { RoundDuctInput } from "./roundDuctSchema";
+import { roundDuctSlotKey, type RoundDuctInput } from "./roundDuctSchema";
+import { ductRunSignature } from "./roundDuctStock";
 
 const axes = ["X", "Y", "Z"] as const;
 const fields = [
@@ -61,6 +62,8 @@ function RoundDuctMeasurements({ project, existing, measurement, onPreview, onSa
   const [preview, setPreview] = useState<ReturnType<typeof previewRoundDuct> & { source: Project }>();
   const [editing, setEditing] = useState(true);
   const checked = preview?.source === project ? preview : undefined;
+  const stock = checked?.cuts && existing && ductRunSignature(existing.input) === ductRunSignature(input)
+    ? roundDuctTakeoff(project) : undefined;
   function update(patch: Partial<RoundDuctInput>) {
     setInput((current) => ({ ...current, ...patch }));
     setPreview(undefined);
@@ -97,13 +100,19 @@ function RoundDuctMeasurements({ project, existing, measurement, onPreview, onSa
       {checked.issues.length > 0 && <p role="alert">{checked.issues.join(" ")}</p>}
       {checked.geometry && <p>{formatStockLength(checked.geometry.length)} between collar tips.</p>}
       {!checked.issues.length && checked.cuts && <>
-        <p>{checked.cuts.length} × {roundDuctStock.model} · {checked.jointCount} joints to seal.</p>
+        <p>{stock ? `${checked.cuts.length} pipe sections` : `${checked.cuts.length} × ${roundDuctStock.model}`} · {checked.jointCount} joints to seal.</p>
         <ol>
-          {checked.cuts.map(({ length, whole, tail }, index) => <li key={index}>
-            {whole ? "Keep whole" : "Cut to"} {formatStockLength(length)}.
-            {tail > 1e-7 && ` Estimated tail ${formatStockLength(tail)}.`}
-          </li>)}
+          {checked.cuts.map(({ length, whole, tail }, index) => {
+            const key = existing && roundDuctSlotKey(existing.id, index);
+            const reservation = key && stock?.assigned.get(key);
+            const onHand = key && stock?.credits.has(key);
+            return <li key={index}>
+              {reservation ? `Use ${reservation.offcut.label} at` : onHand ? "Already cut to" : whole ? "Keep whole" : "Cut to"} {formatStockLength(length)}.
+              {!reservation && !onHand && tail > 1e-7 && ` Estimated tail ${formatStockLength(tail)}.`}
+            </li>;
+          })}
         </ol>
+        {!!stock?.stale.size && <p className="small-note">Review changed duct reservations in the Cut pool.</p>}
         <p className="small-note">Dry-fit and fasten the joints, then seal them before insulating. See the build guide for the cut-end checks.</p>
         <button type="button" className="button primary" onClick={() => onSave(input)}>Save duct run and cut list</button>
       </>}

@@ -225,7 +225,7 @@ export function homeDepotPurchaseNeeds(
   if (project.roundDuctRuns?.length) {
     const count = roundDuctPurchaseCount(project);
     include(roundDuctStock.id, roundDuctPurchasePurpose, count,
-      count === null ? "Recheck the clearance and cut lengths on the saved straight runs." : undefined);
+      count === null ? "Recheck clearance, cut lengths and offcut reservations on the saved straight runs." : undefined);
   }
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);

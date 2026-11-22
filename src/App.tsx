@@ -33,7 +33,7 @@ import { floorRegisterGuideLines, floorRegisterReviews, isFloorRegisterPanel, re
   saveFloorRegister, type FloorRegisterPreview } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { RoundDuctPanel } from "./RoundDuctPanel";
-import { previewRoundDuct, removeRoundDuct, roundDuctGuideLines, saveRoundDuct } from "./roundDuct";
+import { availableRoundDuctOffcuts, previewRoundDuct, removeRoundDuct, roundDuctGuideLines, saveRoundDuct } from "./roundDuct";
 import { roundDuctScope, roundDuctStock } from "./roundDuctReference";
 import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
 import { removeRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
@@ -3021,10 +3021,10 @@ export function App() {
             <Layers3 size={14} />
             Assemblies
           </button>
-          <button className={library === "cuts" ? "active" : ""} onClick={() => setLibrary("cuts")}><Scissors size={14}/>Cut pool ({offcutCount + uncutRimFoamOffcuts(project).length})</button>
+          <button className={library === "cuts" ? "active" : ""} onClick={() => setLibrary("cuts")}><Scissors size={14}/>Cut pool ({offcutCount + uncutRimFoamOffcuts(project).length + availableRoundDuctOffcuts(project).length})</button>
         </div>
         {library === "cuts" ? <CutPool project={project} onInspect={inspectStock} onReuse={reuseOffcut}
-          rimReview={rimSealReview} onFoamChange={change}
+          rimReview={rimSealReview} onStockChange={change}
           onPlanRim={(project.sections.some(({ generator }) => generator?.type === "foundation") || !!project.rimAirSeals?.length) ? () => {
             setRimSealTarget(undefined);
             setModal("rim-air-seal");

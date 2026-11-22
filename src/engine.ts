@@ -127,7 +127,7 @@ import { valleyKey } from "./roofValleySchema";
 import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
 import { floorRegisterGuideLines, floorRegisterReviews } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
-import { roundDuctGuideLines, roundDuctReviews } from "./roundDuct";
+import { roundDuctGuideLines, roundDuctTakeoff } from "./roundDuct";
 import { roundDuctScope, roundDuctStock } from "./roundDuctReference";
 import { roofVentFlashingGuideLines, roofVentFlashingReviews } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
@@ -727,10 +727,15 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       severity: "warning", detail: issue, pieceId: plan.input.panelId,
     });
   }
-  for (const { id, input, issues } of roundDuctReviews(p)) {
+  const roundDuctReview = roundDuctTakeoff(p);
+  for (const { id, input, issues } of roundDuctReview.reviews) {
     if (issues.length) findings.push({
       id: `round-duct-${id}`, title: `Review duct route · ${input.name}`, severity: "warning", detail: issues.join(" "),
     });
+  }
+  for (const [id, detail] of roundDuctReview.stale) {
+    const label = p.roundDuctOffcuts?.find((offcut) => offcut.id === id)?.label;
+    findings.push({ id: `duct-offcut-${id}`, title: `Review duct offcut · ${label ?? "Cut pool"}`, severity: "warning", detail });
   }
   for (const row of reviewOpeningFlashings(p).rows) {
     if (row.issues.length) findings.push({

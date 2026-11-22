@@ -42,7 +42,7 @@ import { modeledRoofValleys } from "./roofValleys";
 import { valleyScope } from "./roofValleyReference";
 import { floorRegisterScope } from "./floorRegisterReference";
 import { floorRegisterCutoutLabel, floorRegisterCutoutUse, floorRegisterReviews } from "./floorRegister";
-import { roundDuctReviews } from "./roundDuct";
+import { availableRoundDuctOffcuts, roundDuctReviews } from "./roundDuct";
 import { roundDuctScope } from "./roundDuctReference";
 import { roofVentFlashingScope } from "./roofVentFlashingReference";
 import type { RimSide } from "./rimAirSealSchema";
@@ -67,6 +67,7 @@ export type BuildQuestion =
   | { kind: "roof-valley" }
   | { kind: "floor-register"; reuse?: true }
   | { kind: "round-duct" }
+  | { kind: "round-duct-offcuts" }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
@@ -181,6 +182,7 @@ const roofValleyQuestion = /^(?:(?:how (?:do|can|should) i )?(?:line|seal|waterp
 const floorRegisterQuestion = /^(?:(?:plan|fit|check|review|show) (?:a |the |my )?floor (?:register|duct boot)|how (?:do|can|should) i (?:air[- ]seal|seal) (?:a |the |my )?floor (?:register|duct boot))$/i;
 const floorRegisterCutoutQuestion = /^(?:(?:(?:how (?:do|can|should) i )?(?:record|keep|reuse|save)|what can i do with) (?:a |the |my )?floor (?:register|duct boot) (?:cutout|offcut|scrap))$/i;
 const roundDuctQuestion = /^(?:how (?:do|can|should) i )?(?:plan|lay out|check|review|show) (?:a |the |my )?(?:straight )?(?:6 in(?:ch)? )?(?:round |metal |supply )?duct (?:runs?|cuts?)$/i;
+const roundDuctOffcutsQuestion = /^(?:(?:how|where) (?:do|can|should) i )?(?:reuse|use|record|check|show) (?:the |my |a )?(?:round |metal )?duct (?:offcuts?|tails?|scrap)$/i;
 const roofVentFlashingQuestion = /^(?:how (?:do|can|should) i (?:flash|seal) (?:the |a |my )?(?:(?:plumbing )?vent(?: pipe)? through (?:the |a |my )?roof|roof vent(?: pipe)?)|(?:plan|review|check|show) (?:the |my )?roof vent flashing)$/i;
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
@@ -301,6 +303,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (floorRegisterCutoutQuestion.test(text)) return { kind: "floor-register", reuse: true };
   if (floorRegisterQuestion.test(text)) return { kind: "floor-register" };
   if (roundDuctQuestion.test(text)) return { kind: "round-duct" };
+  if (roundDuctOffcutsQuestion.test(text)) return { kind: "round-duct-offcuts" };
   if (roofVentFlashingQuestion.test(text)) return { kind: "roof-vent-flashing" };
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
@@ -909,13 +912,21 @@ export function answerBuildQuestion(
         scope: floorRegisterScope,
         link: { label: "Plan floor register", action: { kind: "floor-register" } },
       };
+    case "round-duct-offcuts":
+      return {
+        title: "Reuse measured round duct offcuts",
+        detail: "Add a measured piece with both end forms. In the Cut pool, match its length and mating ends to a saved duct cut.",
+        rows: availableRoundDuctOffcuts(project).map((offcut) => ({ id: offcut.id, title: offcut.label,
+          detail: `${formatStockLength(offcut.length)} · ${offcut.ends.join(" / ")} ends.` })),
+        link: { label: "Open Cut pool", action: { kind: "cut-pool" } },
+      };
     case "round-duct":
       return {
         title: "Cut and fit a straight round duct run",
         detail: "Use measured collar tips and pipe overlap to check the clearance, cut lengths, and seal joints.",
         scope: roundDuctScope,
         rows: roundDuctReviews(project).map(({ id, input, issues, cuts }) => ({
-          id, title: input.name, detail: issues.length ? issues.join(" ") : `${cuts?.length ?? 0} stock pieces in the current cut list.`,
+          id, title: input.name, detail: issues.length ? issues.join(" ") : `${cuts?.length ?? 0} pipe sections in the current cut list.`,
           link: { label: "Open saved duct run", action: { kind: "round-duct", runId: id } },
         })),
         link: { label: "Plan round duct run", action: { kind: "round-duct" } },

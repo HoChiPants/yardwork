@@ -28,7 +28,7 @@ import { reviewedOfferForMaterial } from "../src/retailerCatalog";
 import { cutStockLayout } from "../src/cutStockLayout";
 import { owensCorningWallBatt } from "../src/saunaWallReference";
 import { saunaWallCoverage } from "../src/saunaWallCoverage";
-import { stockAxes } from "../src/stockAxes";
+import { orientedStockSize, stockAxes } from "../src/stockAxes";
 import { toolChecklist } from "../src/tools";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
 import { assignOffcutToPart, boardBlankAtLength, fittingBoardOffcuts, fittingOffcuts } from "../src/offcutAssignment";
@@ -706,6 +706,48 @@ test("the purchase comparison keeps the original cut order for other stock with 
     .map(({ partId }) => partId), [long.id, short.id]);
   assert.equal(bom(plan.project).find(({ id }) => id === "stud")?.quantity, 3);
   assert.equal(bom(plan.project).find(({ id }) => id === "two-six")?.quantity, 0);
+});
+
+test("an exact blade-width tail can finish a second cleat while leaving no leftover to track", () => {
+  const base = cutProject("stud", [24, 1.5, 3.5], [3.5, 1.5, 20]);
+  const project = addMeasuredOffcut(base, base.steps[0].id, "stud", [44.25, 3.5, 1.5], "Cleat stock");
+  const [back, side, stock] = project.pieces;
+  const original = JSON.stringify(project);
+  const justTooLong = { ...back, size: [44.2, 1.5, 3.5] as V3 };
+  assert.deepEqual(fittingOffcuts(project, justTooLong), []);
+  const plan = planOffcutReuse(project);
+  assert.deepEqual(plan.assignments.map(({ partId }) => partId), [back.id, side.id]);
+  assert.match(plan.assignments[1].operations[0], /Crosscut to 20 in · Blade uses the remaining 0.125 in/);
+  assert.equal(plan.remnants.length, 0);
+  assert.equal(bom(project).find(({ id }) => id === "stud")?.quantity, 1);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(plan.project)));
+  assert.deepEqual(reopened.pieces.map((piece) => piece.cutStock?.id), [stock.cutStock!.id, stock.cutStock!.id]);
+  assert.ok(inspectCutStock(reopened).valid.has(stock.cutStock!.id));
+  assert.equal(bom(reopened).find(({ id }) => id === "stud")?.quantity, 0);
+  assert.deepEqual(homeDepotShoppingList(reopened).items, []);
+  const rows = offcutCutRows(reopened);
+  assert.equal(rows[1].prior, 1);
+  assert.deepEqual(rows[1].remnants, []);
+  assert.match(guideMarkdown(reopened), /Crosscut to 20 in · Blade uses the remaining 0.125 in/);
+  const release = planOffcutRelease(reopened, rows[0].id);
+  const restored = release.project.pieces.filter(({ offcut }) => offcut);
+  assert.deepEqual(restored.map((part) => [part.id, orientedStockSize(part)]), [[stock.id, orientedStockSize(stock)]]);
+  assert.equal(bom(release.project).find(({ id }) => id === "stud")?.quantity, 1);
+  assert.equal(JSON.stringify(project), original);
+});
+
+test("a straight trim can record a full blade pass without an offcut and rejects a smaller allowance", () => {
+  const project = cutProject("stud", [1.5, 24.09375, 3.5]);
+  const source = project.pieces[0];
+  const trim = makeLabeledCutPreview(project, source.id, 24, 3.5, "crosscut-first", 0.09375);
+  assert.equal(trim.changed, true);
+  assert.deepEqual(trim.offcutIds, []);
+  assert.equal(trim.project.pieces[0].size[1], 24);
+  assert.ok(inspectCutStock(trim.project).valid.has(trim.project.pieces[0].cutStock!.id));
+  const [row] = offcutCutRows(trim.project);
+  assert.deepEqual(row.issues, []);
+  assert.match(row.cuts[0], /Crosscut to 2 ft · Blade uses the remaining/);
+  assert.throws(() => makeLabeledCutPreview(project, source.id, 24.01, 3.5, "crosscut-first", 0.09375), /Allow at least/);
 });
 
 test("the shop cut order follows remnant dependencies in a regenerated and reopened guide", () => {

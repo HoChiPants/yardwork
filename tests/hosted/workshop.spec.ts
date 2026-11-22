@@ -2037,3 +2037,45 @@ test("a fitted greenhouse door saves a checked weatherseal and exports the strip
   await expect(dialog.getByText("1 weatherseal pack · #100081207", { exact: true })).toBeVisible();
   await expect(dialog.getByRole("link", { name: doorSeal.name })).toHaveAttribute("href", doorSeal.listing);
 });
+
+test("the idea planner uses one measured scrap for both cleats and exports the blade-width finish", async ({ page }) => {
+  await page.goto("./");
+  const example = await readFile("public/examples/cut-pool/closet-cleats.yardwork.json");
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "closet-cleats.yardwork.json",
+    mimeType: "application/json",
+    buffer: example,
+  });
+  await expect(page.getByRole("button", { name: "Cut pool (1)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Can I reuse my offcuts?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await expect(dialog).toContainText("2 planned parts fit stock in the Cut pool");
+  await dialog.getByRole("button", { name: "Review cuts and stock to buy", exact: true }).click();
+  const cuts = dialog.getByRole("list", { name: "Proposed cuts in order", exact: true });
+  await expect(cuts.getByRole("listitem")).toHaveCount(2);
+  await expect(cuts.getByRole("listitem").nth(0)).toContainText("Crosscut to 2 ft");
+  await expect(cuts.getByRole("listitem").nth(1)).toContainText("O002");
+  await expect(cuts.getByRole("listitem").nth(1)).toContainText("Crosscut to 20 in · Blade uses the remaining 0.125 in");
+  await expect(dialog.getByRole("list", { name: "Purchase changes" })).toContainText("1 → 0 boards");
+  await expect(dialog.getByRole("heading", { name: "Scraps to keep" })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Apply offcut plan", exact: true }).click();
+  const emptyPool = page.getByRole("button", { name: "Cut pool (0)", exact: true });
+  await expect(emptyPool).toBeVisible();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cut pool (1)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(emptyPool).toBeVisible();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Keep O002 · 20.125 in × 3.5 in × 1.5 in.");
+  expect(guide).toContain("O002 → P002 · Side cleat");
+  expect(guide).toContain("Crosscut to 20 in · Blade uses the remaining 0.125 in.");
+  expect(guide).not.toContain("O003");
+});

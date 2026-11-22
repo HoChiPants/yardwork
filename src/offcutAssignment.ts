@@ -19,6 +19,7 @@ import {
 import { ensurePartLabels, partLabel } from "./partLabels";
 import { stockAxes } from "./stockAxes";
 import { isDrywall } from "./drywallReference";
+import { cutConsumesTail, stockSplitState } from "./packing";
 
 const epsilon = 1e-7;
 type OffcutTarget = Pick<Piece, "material" | "size" | "stockLengthAxis"> &
@@ -82,11 +83,12 @@ export function fittingOffcuts(
       const kerf = pieceCutKerf(piece);
       if (
         Math.abs(excess[0]) > epsilon ||
-        excess
-          .slice(1)
-          .some((value) => Math.abs(value) > epsilon && value <= kerf + epsilon)
+        ([1, 2] as const).some((axis) =>
+          Math.abs(excess[axis]) > epsilon && stockSplitState(available[axis], desired[axis], kerf) !== "cut")
       )
         return [];
+      const tailNote = (axis: 1 | 2) => cutConsumesTail(available[axis], desired[axis], kerf)
+        ? ` · Blade uses the remaining ${formatStockLength(kerf)}` : "";
       const operations = [
         ...(excess[2] > epsilon
           ? [
@@ -94,7 +96,7 @@ export function fittingOffcuts(
                 axis: axes[2],
                 kind: "crosscut" as const,
                 size: desired[2],
-                text: `${isDrywall(target.material) ? "Score and snap length to" : "Crosscut to"} ${formatStockLength(desired[2])}`,
+                text: `${isDrywall(target.material) ? "Score and snap length to" : "Crosscut to"} ${formatStockLength(desired[2])}${tailNote(2)}`,
               },
             ]
           : []),
@@ -104,7 +106,7 @@ export function fittingOffcuts(
                 axis: axes[1],
                 kind: "rip" as const,
                 size: desired[1],
-                text: `${isDrywall(target.material) ? "Score and snap width to" : "Rip to"} ${formatStockLength(desired[1])}`,
+                text: `${isDrywall(target.material) ? "Score and snap width to" : "Rip to"} ${formatStockLength(desired[1])}${tailNote(1)}`,
               },
             ]
           : []),
@@ -177,7 +179,7 @@ export function assignOffcutToPart(
       "This offcut no longer fits the planned part. Choose matching stock and allow room for the saw cut.",
     );
   const prepared = candidate.operations.reduce(
-    (next, cut) => cutPiece(next, offcutId, cut.size, cut.axis),
+    (next, cut) => cutPiece(next, offcutId, cut.size, cut.axis, { allowConsumedTail: true }),
     project,
   );
   const trimmed = prepared.pieces.find(({ id }) => id === offcutId)!;

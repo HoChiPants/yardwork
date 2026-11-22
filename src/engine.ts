@@ -55,7 +55,7 @@ import {
 } from "./model";
 import { retailerSearch } from "./retailers";
 import { reviewedOfferForMaterial, reviewedSupplierForMaterial, shoppingOfferForMaterial } from "./retailerCatalog";
-import { balanceBoardCutEnds, packRectangles, stockSplitState, type StockPlan } from "./packing";
+import { balanceBoardCutEnds, cutConsumesTail, packRectangles, stockSplitState, type StockPlan } from "./packing";
 import { everbiltClosetRod } from "./closetRodReference";
 import { foilBlankSize, foilReturnText, saunaFoilLayoutChanges } from "./saunaFoil";
 import { cedarbrookFoil } from "./saunaFoilReference";
@@ -215,6 +215,7 @@ export function cutPiece(
   id: string,
   length: number,
   requestedAxis?: number,
+  { allowConsumedTail = false } = {},
 ): Project {
   const source = p.pieces.find((x) => x.id === id);
   if (!source) throw Error("Choose a part to cut.");
@@ -240,7 +241,8 @@ export function cutPiece(
     throw Error("Trim a batt to width or length. Choose stock of the correct thickness for the cavity.");
   if (isDrywall(source.material) && axis === stockAxes(source).thickness)
     throw Error("Score and snap the panel to width or length. The sheet thickness stays fixed.");
-  if (!Number.isFinite(length) || length <= 0 || length + kerf >= original)
+  const consumedTail = allowConsumedTail && cutConsumesTail(original, length, kerf);
+  if (!Number.isFinite(length) || length <= 0 || (!consumedTail && length + kerf >= original))
     throw Error(
       `Cut must be greater than zero and below ${format(original - kerf)} to leave an offcut.`,
     );
@@ -259,66 +261,71 @@ export function cutPiece(
   a.position = a.position.map(
     (v, i) => v + (world[i] * (length - original)) / 2,
   ) as V3;
-  const spare = structuredClone(source);
-  spare.id = uid();
-  spare.name = `Offcut · ${source.name.replace(/^Offcut · /, "")}`.slice(0, 120);
-  spare.offcut = true;
-  delete spare.guidePlacement;
-  spare.cutStock = structuredClone(lineage);
-  spare.cutStock.offset[axis] += length + kerf;
-  spare.size[axis] = original - length - kerf;
-  spare.position = spare.position.map(
-    (v, i) => v + (world[i] * (length + kerf)) / 2,
-  ) as V3;
+  const spare = consumedTail ? null : structuredClone(source);
+  if (spare) {
+    spare.id = uid();
+    spare.name = `Offcut · ${source.name.replace(/^Offcut · /, "")}`.slice(0, 120);
+    spare.offcut = true;
+    delete spare.guidePlacement;
+    spare.cutStock = structuredClone(lineage);
+    spare.cutStock.offset[axis] += length + kerf;
+    spare.size[axis] = original - length - kerf;
+    spare.position = spare.position.map(
+      (v, i) => v + (world[i] * (length + kerf)) / 2,
+    ) as V3;
+  }
   if (source.roundOpenings?.length || source.rectangularOpenings?.length) {
     const keptShift = (length - original) / 2;
-    const spareShift = (length + kerf) / 2;
     const keptRound = shiftedThroughOpenings(source.roundOpenings ?? [], a.size, axis, keptShift);
-    const spareRound = shiftedThroughOpenings(source.roundOpenings ?? [], spare.size, axis, spareShift)
-      .map(({ source: _obligation, ...opening }) => opening);
     const keptRectangular = shiftedThroughOpenings(source.rectangularOpenings ?? [], a.size, axis, keptShift);
-    const spareRectangular = shiftedThroughOpenings(source.rectangularOpenings ?? [], spare.size, axis, spareShift);
     const retainedProblem = throughOpeningProblem(a.size, [...keptRound, ...keptRectangular]);
     if (retainedProblem) throw Error(retainedProblem);
     if (keptRound.length) a.roundOpenings = keptRound;
     else delete a.roundOpenings;
     if (keptRectangular.length) a.rectangularOpenings = keptRectangular;
     else delete a.rectangularOpenings;
-    const remnantProblem = throughOpeningProblem(spare.size, [...spareRound, ...spareRectangular]);
-    if (remnantProblem === "The openings would remove the whole blank.") return next;
-    if (remnantProblem) throw Error(remnantProblem);
-    if (spareRound.length) spare.roundOpenings = spareRound;
-    else delete spare.roundOpenings;
-    if (spareRectangular.length) spare.rectangularOpenings = spareRectangular;
-    else delete spare.rectangularOpenings;
+    if (spare) {
+      const spareShift = (length + kerf) / 2;
+      const spareRound = shiftedThroughOpenings(source.roundOpenings ?? [], spare.size, axis, spareShift)
+        .map(({ source: _obligation, ...opening }) => opening);
+      const spareRectangular = shiftedThroughOpenings(source.rectangularOpenings ?? [], spare.size, axis, spareShift);
+      const remnantProblem = throughOpeningProblem(spare.size, [...spareRound, ...spareRectangular]);
+      if (remnantProblem === "The openings would remove the whole blank.") return next;
+      if (remnantProblem) throw Error(remnantProblem);
+      if (spareRound.length) spare.roundOpenings = spareRound;
+      else delete spare.roundOpenings;
+      if (spareRectangular.length) spare.rectangularOpenings = spareRectangular;
+      else delete spare.rectangularOpenings;
+    }
   }
   if (source.cutPlanes?.length) {
     const keptShift = (length - original) / 2;
-    const spareShift = (length + kerf) / 2;
     a.cutPlanes = source.cutPlanes.map((plane) => ({
       normal: [...plane.normal] as V3,
       constant: plane.constant - plane.normal[axis] * keptShift,
     }));
-    spare.cutPlanes = source.cutPlanes.map((plane) => ({
-      normal: [...plane.normal] as V3,
-      constant: plane.constant - plane.normal[axis] * spareShift,
-    }));
-    // Work entirely on the cloned project. Invalid/empty retained solids reject
-    // the operation; an empty offcut represents waste, not a phantom wood part.
     clipBox(a.size, a.cutPlanes);
-    try {
-      clipBox(spare.size, spare.cutPlanes);
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        (error.message.startsWith("Cut planes remove the stock") ||
-          error.message.startsWith("Cut planes leave empty"))
-      )
-        return next;
-      throw error;
+    if (spare) {
+      const spareShift = (length + kerf) / 2;
+      spare.cutPlanes = source.cutPlanes.map((plane) => ({
+        normal: [...plane.normal] as V3,
+        constant: plane.constant - plane.normal[axis] * spareShift,
+      }));
+      // An empty clipped offcut is waste; the retained solid must still be valid.
+      try {
+        clipBox(spare.size, spare.cutPlanes);
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          (error.message.startsWith("Cut planes remove the stock") ||
+            error.message.startsWith("Cut planes leave empty"))
+        )
+          return next;
+        throw error;
+      }
     }
   }
-  next.pieces.push(spare);
+  if (spare) next.pieces.push(spare);
   return next;
 }
 export function addMaterial(

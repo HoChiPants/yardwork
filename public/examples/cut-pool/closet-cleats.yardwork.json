@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 134,
+  "id": "247ae0e4-7143-49b6-b00e-f796c799a93a",
+  "name": "Closet cleat cut practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "b180a652-8ac9-4c2a-be5f-ac54950e097f"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "c0772f0f-36f8-499e-b5f7-1b86577dc0ed",
+      "label": "P001"
+    },
+    {
+      "partId": "d6c6ee0e-e332-41fe-815f-439d78327e0f",
+      "label": "P002"
+    },
+    {
+      "partId": "eeb1d20f-980c-4220-81a3-9541f0ac498e",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T16:08:10.283Z",
+  "pieces": [
+    {
+      "id": "c0772f0f-36f8-499e-b5f7-1b86577dc0ed",
+      "name": "Back cleat",
+      "material": "stud",
+      "size": [
+        24,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        -5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "56a0225d-2a40-401f-beea-416cc3c2dd9b",
+      "assembly": "Cleat blanks",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "d6c6ee0e-e332-41fe-815f-439d78327e0f",
+      "name": "Side cleat",
+      "material": "stud",
+      "size": [
+        3.5,
+        1.5,
+        20
+      ],
+      "position": [
+        -14,
+        0.75,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "56a0225d-2a40-401f-beea-416cc3c2dd9b",
+      "assembly": "Cleat blanks",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "eeb1d20f-980c-4220-81a3-9541f0ac498e",
+      "name": "Offcut · Saved cleat stock",
+      "material": "stud",
+      "size": [
+        3.5,
+        1.5,
+        44.25
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "56a0225d-2a40-401f-beea-416cc3c2dd9b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "b180a652-8ac9-4c2a-be5f-ac54950e097f",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "woodKerf": 0.125,
+        "size": [
+          3.5,
+          1.5,
+          44.25
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "56a0225d-2a40-401f-beea-416cc3c2dd9b",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Cut practice for two closet shelf cleats from one measured scrap. The two blanks are laid out on the shop floor for identification. Confirm the shelf's actual dimensions, wall backing and fastening plan before installation.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

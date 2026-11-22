@@ -10,6 +10,7 @@ import {
   type TrimOrder,
 } from "./cutPlan";
 import { pieceCutKerf } from "./cutStock";
+import { cutConsumesTail } from "./packing";
 import { cutDiagram, type Point2 } from "./cutDiagram";
 import { isBatt, material, type Project } from "./model";
 import { ensurePartLabels, partLabel } from "./partLabels";
@@ -59,7 +60,8 @@ export function CutStudio({
   const [kerfDraft, setKerfDraft] = useState(() => project.woodKerfs?.[source.material]?.toString() ?? "");
   const canSetKerf = canRecordWoodKerf(project, source);
   const woodKerf = canSetKerf && kerfDraft !== "" ? Number(kerfDraft) : undefined;
-  const displayedKerf = formatPreciseInches(woodKerf ?? pieceCutKerf(source));
+  const kerf = woodKerf ?? pieceCutKerf(source);
+  const displayedKerf = formatPreciseInches(kerf);
   const [reuseReview, setReuseReview] = useState<{
     source: Project;
     plan?: OffcutReusePlan;
@@ -608,7 +610,9 @@ export function CutStudio({
                 ? dimensions(retained.size)
                 : `${formatPreciseInches(length)} × ${formatPreciseInches(width)}`}{" "}
               · {preview.project.pieces.length - project.pieces.length} new
-              offcut(s). Connections are kept for review and flagged if the
+              offcut(s). {changed && !angled && (cutConsumesTail(source.size[long], length, kerf) ||
+                cutConsumesTail(source.size[wide], width, kerf)) && `Blade uses the remaining ${displayedKerf}. `}
+              Connections are kept for review and flagged if the
               trimmed parts no longer touch.
             </p>
           )}

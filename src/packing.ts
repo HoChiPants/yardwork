@@ -26,6 +26,12 @@ export function stockSplitState(available: number, keep: number, kerf: number) {
   return remaining < kerf - EPS ? "thin-trim" : "cut";
 }
 
+/** A full blade pass can use the tail without leaving another piece. */
+export function cutConsumesTail(available: number, keep: number, kerf: number) {
+  const remainder = available - keep;
+  return remainder > EPS && kerf > 0 && Math.abs(remainder - kerf) <= EPS;
+}
+
 type BoardBin = {
   remaining: number;
   cuts: { id: string; length: number; name: string }[];

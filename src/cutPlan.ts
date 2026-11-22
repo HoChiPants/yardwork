@@ -11,6 +11,7 @@ import {
   type V3,
 } from "./model";
 import { rotate } from "./spatial";
+import { cutConsumesTail } from "./packing";
 import { stockAxes } from "./stockAxes";
 import { isDrywall } from "./drywallReference";
 export function cuttingAxes(piece: Piece) {
@@ -225,10 +226,10 @@ export function resizeByCuts(
         "A cut cannot make stock larger. Choose larger stock or reduce the retained size.",
       );
     if (Math.abs(target - original) < 0.001) continue;
-    if (target + kerf >= original)
+    if (target + kerf >= original && !cutConsumesTail(original, target, kerf))
       throw Error(
         kerf
-          ? `Leave more than ${formatStockLength(kerf)} for cutting loss and an offcut, or keep this dimension unchanged.`
+          ? `Allow at least ${formatStockLength(kerf)} for the blade, or keep this dimension unchanged.`
           : "Leave enough material for an offcut, or keep this dimension unchanged.",
       );
     if (next === project && measuredSource)
@@ -236,7 +237,7 @@ export function resizeByCuts(
         ...project,
         pieces: project.pieces.map((piece) => piece.id === id ? { ...piece, cutStock: measuredSource } : piece),
       };
-    next = cutPiece(next, id, target, axis);
+    next = cutPiece(next, id, target, axis, { allowConsumedTail: true });
   }
   return next;
 }

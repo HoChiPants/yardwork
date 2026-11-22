@@ -1,5 +1,6 @@
 import { cutSourceRegion } from "./cutSourceAxes";
-import { inspectCutStock } from "./cutStock";
+import { inspectCutStock, pieceCutKerf } from "./cutStock";
+import { cutConsumesTail } from "./packing";
 import { formatStockLength } from "./measurement";
 import type { Project } from "./model";
 import { partLabel } from "./partLabels";
@@ -95,6 +96,7 @@ export function offcutCutRows(
       );
     if (issues.length) invalid.add(index);
     const woodKerf = part?.cutStock?.woodKerf;
+    const kerf = part ? pieceCutKerf(part) : 0;
     const input = partLabel(project, record.inputId);
     const target = partLabel(project, record.targetId);
     return {
@@ -114,10 +116,15 @@ export function offcutCutRows(
         ? `Recorded blade kerf ${formatStockLength(woodKerf)} per cut.`
         : undefined,
       cuts: record.cuts.map(
-        ({ kind, size }) =>
-          `${part && isDrywall(part.material)
+        ({ kind, size }) => {
+          const label = part && isDrywall(part.material)
             ? kind === "crosscut" ? "Score and snap length" : "Score and snap width"
-            : kind === "crosscut" ? "Crosscut" : "Rip"} to ${formatStockLength(size)}`,
+            : kind === "crosscut" ? "Crosscut" : "Rip";
+          const original = record.inputSize[kind === "crosscut" ? 2 : 1];
+          const tail = cutConsumesTail(original, size, kerf)
+            ? ` · Blade uses the remaining ${formatStockLength(kerf)}` : "";
+          return `${label} to ${formatStockLength(size)}${tail}`;
+        },
       ),
       remnants: record.remnants.map(
         ({ id, size }) =>

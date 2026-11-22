@@ -315,12 +315,33 @@ test("one palette card per family retains every exact catalog variant and separa
   const byLength = groupedMaterials("Lumber", "2x4 12 feet framing");
   assert.deepEqual(byLength.map(({ name }) => name), ["2 × 4 framing lumber"]);
   assert.deepEqual(materialPlacementOptions(byLength[0]).options.map(({ label }) => label), ["8 ft", "10 ft", "12 ft"]);
+  assert.equal(materialPlacementOptions(byLength[0]).preferred.id, "stud-12");
   assert.equal(materialStockDisplayName("stud"), "2 × 4 framing lumber · 8 ft");
   assert.equal(materialStockDisplayName("hd-spf-2x4-10"), "2 × 4 framing lumber · 10 ft");
   assert.equal(materialStockDisplayName("hd-treated-4x4-12"), "4 × 4 treated post · 12 ft");
   const rods = groupedMaterials("Rods");
   assert.deepEqual(rods.map(({ name }) => name), ["Closet rod"]);
   assert.deepEqual(materialPlacementOptions(rods[0]).options.map(({ id }) => id), ["closet-rod-72", "hd-everbilt-closet-rod-96"]);
+});
+test("common fittings group by purpose and use nominal pipe diameters for exact stock choices", () => {
+  const groups = groupedMaterials();
+  for (const [family, ids] of [
+    ["push-coupling", ["hd-sharkbite-ur008a", "hd-sharkbite-ur016a"]],
+    ["push-elbow", ["hd-sharkbite-ur248a", "hd-sharkbite-ur256a"]],
+    ["push-tee", ["hd-sharkbite-ur362a", "hd-sharkbite-ur370a"]],
+    ["pipe-isolator", ["hd-holdrite-161j15", "hd-holdrite-162j15"]],
+  ] as const) {
+    const choices = materialPlacementOptions(groups.find(({ id }) => id === family)!);
+    assert.equal(choices.label, "Pipe size");
+    assert.deepEqual(choices.options.map(({ id, label }) => [id, label]), [[ids[0], "½ in"], [ids[1], "¾ in"]]);
+  }
+  const reducer = materialPlacementOptions(groups.find(({ id }) => id === "push-reducing-tee")!);
+  assert.deepEqual(reducer.options.map(({ label }) => label), ["¾ in run × ½ in branch"]);
+  for (const search of ["¾ in elbow", "3/4 in elbow", "0.75 in elbow"]) {
+    const match = groupedMaterials("All", search);
+    assert.deepEqual(match.map(({ id }) => id), ["push-elbow"]);
+    assert.equal(materialPlacementOptions(match[0]).preferred.id, "hd-sharkbite-ur256a");
+  }
 });
 test("whole feet display as feet while non-whole feet and exact product dimensions stay in inches", () => {
   assert.equal(formatStockLength(96), "8 ft");

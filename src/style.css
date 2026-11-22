@@ -3962,3 +3962,60 @@ small {
 .board-cut-review li { padding-left: 4px; }
 .board-cut-review p { margin: 3px 0; }
 .board-cut-review small { color: var(--muted); }
+
+/* Pipe fittings keep their silhouettes at every shelf size. */
+.material-art:is(.push-coupling, .push-elbow, .push-tee, .push-reducing-tee, .pipe-isolator) > span {
+  transform: translate(-50%, -50%);
+  left: 50%;
+  top: 50%;
+  width: 27px;
+  height: 12px;
+  border: 1px solid #947848;
+  border-radius: 4px;
+  background: linear-gradient(#e7cc85, #b58a46);
+  box-shadow: 1px 2px 0 #7d66293d;
+}
+.material-art:is(.push-coupling, .push-tee, .push-reducing-tee) > span::before {
+  content: "";
+  position: absolute;
+  inset: 0 2px;
+  border-inline: 3px solid #f5e2b3;
+}
+.material-art.push-elbow > span {
+  width: 23px;
+  height: 23px;
+  background: none;
+  border: 0;
+  box-shadow: inset 0 9px #caa460, inset 9px 0 #caa460;
+  border-radius: 11px 2px 2px 2px;
+  border-right: 3px solid #ead6a6;
+  border-bottom: 3px solid #ead6a6;
+}
+.material-art:is(.push-tee, .push-reducing-tee) > span::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translateX(-50%);
+  background: #bb9552;
+  border-bottom: 3px solid #ead6a6;
+  border-radius: 0 0 2px 2px;
+}
+.material-art.push-reducing-tee > span::after { width: 6px; }
+.material-art.pipe-isolator > span {
+  width: 21px;
+  height: 25px;
+  border: 1px solid #637979;
+  border-radius: 4px;
+  background: radial-gradient(ellipse at center, #e9e9dc 0 30%, #3b4b4a 34% 47%, #889b95 51%);
+}
+.part-quick-tools {
+  border-top: 1px solid #dfe2d5;
+  background: #fafbf6;
+}
+@media (min-width: 601px) and (max-width: 900px) {
+  .material-placement-backdrop { justify-content: flex-end; }
+  .material-placement-backdrop .modal { width: min(360px, 55vw); }
+}

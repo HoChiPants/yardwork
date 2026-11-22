@@ -137,6 +137,31 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toBeVisible();
 });
 
+test("a sized fitting search still leaves one tile and the chosen size keeps its exact purchase match", async ({ page }) => {
+  await page.goto("./");
+  const search = page.getByRole("textbox", { name: "Find a material" });
+  await search.fill("PEX elbow");
+  const tile = page.locator(".material-card");
+  await expect(tile).toHaveCount(1);
+  await expect(tile).toHaveText("90° push-to-connect elbow");
+  await search.fill("¾ in elbow");
+  await expect(tile).toHaveCount(1);
+  await tile.getByRole("button", { name: "Add 90° push-to-connect elbow", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "90° push-to-connect elbow" });
+  await expect(dialog.getByRole("radio", { name: "¾ in", exact: true })).toBeChecked();
+  await expect(dialog.getByRole("radio", { name: "½ in", exact: true })).toBeVisible();
+  await expect(dialog).not.toContainText(/SharkBite|Home Depot|\$/);
+  await dialog.getByRole("button", { name: "Place material", exact: true }).click();
+  await expect(page.getByRole("toolbar", { name: "Selected part tools" })).toContainText("90° push-to-connect elbow · ¾ in");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator(".bom-row")).toContainText("90° push-to-connect elbow · ¾ in");
+  await expect(page.locator(".bom-row")).not.toContainText(/SharkBite|Home Depot|\$/);
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  const review = page.getByRole("list", { name: "Home Depot purchase review" });
+  await expect(review.locator('a[href*="325997298"]')).toBeVisible();
+  await expect(review.locator('a[href*="323676174"]')).toHaveCount(0);
+});
+
 test("activate a material tile by keyboard and use a measured span to choose shorter stock", async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto("./");
@@ -288,6 +313,11 @@ test("front-view drops stay at the framed depth and ignore controls", async ({ p
   const image = page.locator('[data-material-family="framing-2x4"] .material-art');
   await image.dragTo(page.getByRole("button", { name: "Fit project", exact: true }));
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Connect with screws", exact: true }).click();
+  await image.dragTo(page.getByText("Choose the first part to connect", { exact: true }));
+  await expect(page.getByRole("dialog", { name: group, exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Select (V)", exact: true }).click();
   const view = (await canvas.boundingBox())!;
   await image.dragTo(canvas, { targetPosition: { x: view.width * 0.72, y: view.height * 0.51 } });
   await confirmMaterialPlacement(page, "10 ft");
@@ -517,18 +547,31 @@ test.describe("phone material placement", () => {
     await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     await expect.poll(() => materialRail.evaluate((rail) => rail.scrollLeft)).toBeGreaterThan(50);
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await page.getByRole("textbox", { name: "Find a material" }).fill("4x4 treated post");
+    await page.getByRole("textbox", { name: "Find a material" }).fill("ground-contact");
     const add = page.getByRole("button", { name: "Add 4 × 4 treated post", exact: true });
     const tile = page.locator(".material-card").filter({ has: add });
     await expect(tile).toHaveText("4 × 4 treated post");
+    await tile.scrollIntoViewIfNeeded();
+    expect(await materialRail.evaluate((rail) => rail.scrollWidth)).toBeGreaterThan(390);
     const source = (await tile.getByText("4 × 4 treated post", { exact: true }).boundingBox())!;
     const view = (await canvas.boundingBox())!;
     const start = { x: source.x + source.width / 2, y: source.y + source.height / 2 };
     const end = { x: view.x + view.width * 0.67, y: view.y + view.height * 0.7 };
     expect(start.y).toBeLessThan(page.viewportSize()!.height);
     expect(end.y).toBeGreaterThan(0);
-    await swipe(start, end);
+    // Starting with a thumb swipe in the rail should still allow a pull into the grid.
+    const railScroll = await materialRail.evaluate((rail) => rail.scrollLeft);
+    await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [start] });
+    const turn = { x: start.x - 24, y: start.y };
+    await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [turn] });
+    for (let step = 1; step <= 8; step++) {
+      await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{
+        x: turn.x + (end.x - turn.x) * step / 8,
+        y: turn.y + (end.y - turn.y) * step / 8,
+      }] });
+    }
     await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
+    expect(await materialRail.evaluate((rail) => rail.scrollLeft)).toBe(railScroll);
     await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     const dialog = page.getByRole("dialog", { name: "4 × 4 treated post" });
     await expect(dialog).toBeVisible();

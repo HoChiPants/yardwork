@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { blank, part, type Piece } from "../src/model";
-import { snapPlacement, surfacePlacement } from "../src/editing";
+import { snapPlacement, snapSurfacePoint, surfacePlacement } from "../src/editing";
 import { bounds } from "../src/engine";
 import { endCutPlane } from "../src/cutProfiles";
 function block(
@@ -71,6 +71,16 @@ test("surface placement picks the nearest real top before the floor", () => {
     [0, 10, 0],
   );
   assert.equal(surfacePlacement(p, [0, 40, 0], [0, 1, 0]), null);
+  assert.equal(surfacePlacement(p, [20, 99.98765, 0], [0, -0.57, 0])?.[1], 0);
+});
+
+test("a grid snap near thin stock preserves whether the pointer hit its face or the floor", () => {
+  const p = blank();
+  p.pieces = [block([0, 0.375, 0], [11.5, 0.75, 10.5])];
+  assert.deepEqual(snapSurfacePoint(p, [5.7, 0.75, 0], 24), [5.7, 0.75, 0]);
+  assert.deepEqual(snapSurfacePoint(p, [0, 0, 5.3], 24), [0, 0, 5.3]);
+  assert.deepEqual(snapSurfacePoint(p, [1.3, 0.75, 0], 24), [1, 0.75, 0]);
+  assert.deepEqual(snapSurfacePoint(p, [0, 0, 6.3], 24), [0, 0, 6]);
 });
 
 test("profile placement intersects the actual sloped face instead of floating on its stock envelope", () => {

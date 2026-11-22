@@ -328,7 +328,7 @@ import {
   SAVED_PROJECT_NOTES_CONTEXT,
   SAVED_PROJECT_NOTES_TITLE,
 } from "./projectNotes";
-import { snapPlacement, surfacePlacement } from "./editing";
+import { snapPlacement, snapSurfacePoint, surfacePlacement } from "./editing";
 import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSlideStopLabel } from "./placement";
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
@@ -336,7 +336,7 @@ import { MaterialPlacement, type BoardPlacement, type MaterialOrientation } from
 import { maxRepeatedBoards } from "./repeatedBoardCuts";
 import { BoardCutListReview } from "./BoardCutListReview";
 import type { BoardCutPlan } from "./mixedBoardCuts";
-import { groupedMaterials, materialStockDisplayName, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
+import { groupedMaterials, materialStockDisplayName, materialPlacementName, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
 import { addMeasuredOffcut } from "./measuredOffcuts";
@@ -2874,8 +2874,13 @@ export function App() {
     }
   }
   function materialDropCanvas({ x, y }: { x: number; y: number }) {
-    const canvas = viewport.current?.querySelector("canvas");
-    return canvas && document.elementFromPoint(x, y) === canvas ? canvas : null;
+    const root = viewport.current;
+    const canvas = root?.querySelector("canvas");
+    const hit = document.elementFromPoint(x, y);
+    if (!root || !canvas || !hit || !root.contains(hit) ||
+      hit.closest("button, input, select, textarea, a, [role=button]")) return null;
+    const rect = canvas.getBoundingClientRect();
+    return x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom ? canvas : null;
   }
   const canDropMaterial = !workspaceReviewActive && !activeFastenerLayoutPreview && !activeConnectorPreview &&
     !baseRailPreview && panel !== "fit-stock" && stage === null && !explode;
@@ -2895,13 +2900,7 @@ export function App() {
     const point = surfacePlacement(project, origin, ray.ray.direction.toArray());
     const forward = activeCamera.getWorldDirection(new THREE.Vector3());
     const nearHorizon = Math.abs(forward.y) <= 0.08;
-    if (point && (point[1] > 0 || !nearHorizon)) {
-      if (!snap) return point;
-      const x = Math.round(point[0]), z = Math.round(point[2]);
-      const snapped = surfacePlacement(project, [x, Math.max(origin[1], point[1] + 1), z], [0, -1, 0]);
-      // A thin or sloped support can disappear under a one-inch grid snap.
-      return snapped && Math.abs(snapped[1] - point[1]) <= 0.8 ? snapped : point;
-    }
+    if (point && (point[1] > 0 || !nearHorizon)) return snap ? snapSurfacePoint(project, point, origin[1]) : point;
     // Above the floor or in a near-level view, fall back to the framed depth.
     // This keeps the drop in view instead of extending a shallow ray far past the project.
     const normal = forward.setY(0);
@@ -2925,9 +2924,9 @@ export function App() {
       }
       return;
     }
-    const { options, canCutToLength } = materialPlacementOptions(group);
-    if (options.length === 1 && !canCutToLength) {
-      add(options[0].id, group.name, position);
+    const { preferred, canCutToLength, chooseSize } = materialPlacementOptions(group);
+    if (!chooseSize && !canCutToLength) {
+      add(preferred.id, group.name, position);
       return;
     }
     const distance = measured?.distance;
@@ -3832,7 +3831,7 @@ export function App() {
                 setPanel("part");
                 inspectorFocus.scrollRef.current?.scrollTo(0, 0);
                 inspectorFocus.inspectorRef.current?.focus({ preventScroll: true });
-                inspectorFocus.inspectorRef.current?.scrollIntoView({ block: "nearest" });
+                if (inspectorFocus.compact) inspectorFocus.inspectorRef.current?.scrollIntoView({ block: "nearest" });
               }}>
                 <Settings2 size={15} /> <span>Part details</span>
               </button>
@@ -5792,7 +5791,11 @@ export function App() {
       )}
       {modal && (
         <div
-          className={modal === "place-material" || modal === "board-cut-list" || modal === "floor-register" || modal === "round-duct" || modal === "round-duct-elbow" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
+          className={[
+            "modal-backdrop",
+            ["place-material", "board-cut-list", "floor-register", "round-duct", "round-duct-elbow"].includes(modal) ? "placement-backdrop" : "",
+            modal === "place-material" ? "material-placement-backdrop" : "",
+          ].filter(Boolean).join(" ")}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setModal(null);
           }}
@@ -5816,7 +5819,7 @@ export function App() {
               <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
                 position={pendingMaterial.position} finishedLength={pendingMaterial.finishedLength} measuredLength={pendingMaterial.measuredLength}
                 offcutId={pendingMaterial.offcutId} initialQuantity={pendingMaterial.quantity} initialStock={pendingMaterial.stock} onPreview={previewMaterial} onPlace={(id, placement, orientation) => {
-                add(id, pendingMaterial.group.name, pendingMaterial.position, placement, orientation);
+                add(id, materialPlacementName(pendingMaterial.group, id), pendingMaterial.position, placement, orientation);
               }} />
             )}
             {modal === "idea" && (

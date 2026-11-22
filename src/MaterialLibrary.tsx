@@ -79,8 +79,14 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       active.action = alongRail ? "scroll" : "place";
     }
     if (active.action === "scroll") {
-      rail?.scrollTo(active.scrollLeft - dx, active.scrollTop - dy);
-      return;
+      // A thumb often starts sideways before pulling a tile into the model.
+      // Once that gesture reaches the workspace, restore the shelf and place the tile.
+      if (!rail || !preview.current(point, active.stock.id)) {
+        rail?.scrollTo(active.scrollLeft - dx, active.scrollTop - dy);
+        return;
+      }
+      rail.scrollTo(active.scrollLeft, active.scrollTop);
+      active.action = "place";
     }
     stopPreviewFrame();
     previewFrame.current = requestAnimationFrame(() => {
@@ -88,9 +94,9 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       setGhost({ drag: active, point, overCanvas: preview.current(point, active.stock.id) });
     });
   }
-  function art(stock: Drag["stock"]) {
+  function art(group: MaterialGroup, stock: Drag["stock"]) {
     const profile = stock.wood && stock.stockKind === "linear" ? stock.size.slice().sort((a, b) => a - b)[1] : null;
-    return <span className={`material-art ${stock.id} ${stock.stockKind}${stock.shape === "tube-envelope" ? " tube" : ""}`} aria-hidden="true"
+    return <span className={`material-art ${stock.id} ${stock.stockKind} ${group.id}${stock.shape === "tube-envelope" ? " tube" : ""}`} aria-hidden="true"
       style={{ "--material-color": stock.color, "--board-width": profile ? `${Math.min(27, 8 + profile * 1.8)}px` : undefined } as CSSProperties}><span /></span>;
   }
   function finish(event: PointerEvent<HTMLDivElement>, place: boolean) {
@@ -120,7 +126,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
           onDragStart={(event) => event.preventDefault()}>
           <button type="button" className="material-grip" title="Drag into the workspace or click to add at the center"
             onClick={(event) => { if (event.detail === 0) onPlace(group); }}>
-            {art(stock)}
+            {art(group, stock)}
             <strong>{group.name}</strong>
           </button>
           <button type="button" className="material-add" aria-label={`Add ${group.name}`} title="Add at the center"
@@ -133,7 +139,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       data-left={ghost.point.x > window.innerWidth / 2 || undefined}
       data-above={ghost.point.y > window.innerHeight - 85 || undefined}
       style={{ left: ghost.point.x, top: ghost.point.y }}>
-      {art(ghost.drag.stock)}
+      {art(ghost.drag.group, ghost.drag.stock)}
       <strong>{ghost.drag.group.name}</strong>
     </div>, document.body)}
   </>;

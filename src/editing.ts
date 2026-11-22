@@ -104,7 +104,7 @@ export function surfacePlacement(
   const inspect = (height: number, footprint?: ReturnType<typeof bounds>) => {
     const t = (height - origin[1]) / direction[1];
     if (t < 0 || t >= nearest) return;
-    const point = origin.map((v, i) => v + direction[i] * t) as V3;
+    const point: V3 = [origin[0] + direction[0] * t, height, origin[2] + direction[2] * t];
     if (
       footprint &&
       ![0, 2].every(
@@ -171,4 +171,13 @@ export function surfacePlacement(
     }
   }
   return result;
+}
+
+/** Round a picked point only while it remains on the floor or a nearby elevated face. */
+export function snapSurfacePoint(project: Project, point: V3, rayHeight: number): V3 {
+  const [x, y, z] = point;
+  const snapped = surfacePlacement(project, [Math.round(x), Math.max(rayHeight, y + 1), Math.round(z)], [0, -1, 0]);
+  const aboveFloor = (height: number) => height > 1e-8;
+  if (!snapped || aboveFloor(y) !== aboveFloor(snapped[1]) || Math.abs(snapped[1] - y) > 0.8) return point;
+  return snapped;
 }

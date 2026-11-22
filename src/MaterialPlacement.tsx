@@ -33,7 +33,7 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   const [count, setCount] = useState(String(initialQuantity));
   const [selectedOffcut, selectOffcut] = useState(offcutId);
   const [orientation, setOrientation] = useState<MaterialOrientation>("upright");
-  const choice = options.find(({ id }) => id === selected)!;
+  const choice = options.find(({ id }) => id === selected) ?? options.find(({ id }) => id === preferred.id)!;
   const zone = project.workZone;
   const [x, y, z] = position;
   const canChooseOrientation = canCutToLength && preferred.size[1] === Math.max(...preferred.size);
@@ -90,10 +90,10 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
       {options.length > 1 ? <fieldset className="stock-size-options">
         <legend>{label}</legend>
         {options.map((option) => <label key={option.id}>
-          <input type="radio" name="placement-stock-size" value={option.id} checked={selected === option.id}
+          <input type="radio" name="placement-stock-size" value={option.id} checked={choice.id === option.id}
             onChange={() => select(option.id)} /><span>{option.label}</span>
         </label>)}
-      </fieldset> : <p className="single-stock-size">{choice.label} stock</p>}
+      </fieldset> : <p className="single-stock-size">{choice.label}{label === "Stock length" ? " stock" : ""}</p>}
       {canChooseOrientation && <fieldset className="stock-size-options stock-orientation">
         <legend>Position</legend>
         <button type="button" aria-pressed={orientation === "upright"} onClick={() => setOrientation("upright")}>Stand up</button>

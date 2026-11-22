@@ -94,6 +94,7 @@ export type SceneProps = {
   shownBottomPlate?: { start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[] }>;
+  shownRoofValley?: [V3, V3];
   shownOpeningFlashing?: OpeningFlashingPreview;
   shownPlumbingVentLayout?: PlumbingVentLayout;
   shownDryerDuctLayout?: DryerDuctLayout;
@@ -1611,6 +1612,15 @@ function World(props: SceneProps) {
           <Html center position={props.shownBottomPlate.start.map((n, i) => (n + (i === 1 ? 1 : 0)) / 12) as V3}
             zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
             <span className="site-clearance-marker" data-testid="bottom-plate-seam-start">Bead start · {props.shownBottomPlate.outdated ? "Review changed seam" : "Bottom plate air seal"}</span>
+          </Html>
+        </group>
+      )}
+      {!isolated && props.shownRoofValley && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <group>
+          <Line points={props.shownRoofValley.map((point) => point.map((value) => value / 12) as V3)}
+            color="#28677d" lineWidth={4} depthTest={false} raycast={() => null} />
+          <Html position={props.shownRoofValley[0].map((value) => value / 12) as V3} style={{ pointerEvents: "none" }}>
+            <span className="site-clearance-marker" data-testid="roof-valley-marker">Valley centerline · eave</span>
           </Html>
         </group>
       )}

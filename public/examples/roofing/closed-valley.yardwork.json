@@ -1,0 +1,351 @@
+{
+  "schemaVersion": 120,
+  "id": "0a915485-3a4d-484b-b89d-410186efdc3a",
+  "name": "Closed roof valley study",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "projectCode": {
+    "region": "unconfirmed",
+    "projectDate": null,
+    "siteReference": "",
+    "buildingAuthority": "",
+    "fireAuthority": "",
+    "authorityBasis": "",
+    "permitNotes": "",
+    "codePath": "unknown",
+    "work": "unknown",
+    "trades": [
+      "roofing"
+    ],
+    "wallVent": {
+      "inScope": "unknown",
+      "projection": null,
+      "elbow": "unknown"
+    },
+    "shingleRoof": {
+      "productId": "gaf-0489180-charcoal",
+      "planes": [
+        {
+          "id": "ab3a701a-3a53-4957-ab54-7b87bcef6ac7",
+          "label": "Deck 1 left",
+          "basis": {
+            "kind": "panel",
+            "pieceId": "0ab053f2-2a74-4e40-8c01-eb7af4c6ff46"
+          },
+          "underlayment": "membrane"
+        },
+        {
+          "id": "66abb564-dbc8-40f2-a5bf-c36fdfdf0794",
+          "label": "Deck 1 right",
+          "basis": {
+            "kind": "panel",
+            "pieceId": "200cb939-09bd-45fa-950d-b5b70d9efb14"
+          },
+          "underlayment": "membrane"
+        },
+        {
+          "id": "a2f1bfbf-759f-455e-9cf8-4ccff44a2a11",
+          "label": "Deck 2 left",
+          "basis": {
+            "kind": "panel",
+            "pieceId": "1c206bdf-5467-4260-ad00-4e4e0cd4fac9"
+          },
+          "underlayment": "membrane"
+        },
+        {
+          "id": "9bd7ddc5-a931-4e56-9fbd-2d8cdc517125",
+          "label": "Deck 2 right",
+          "basis": {
+            "kind": "panel",
+            "pieceId": "9e4c6183-0e9c-465e-8a25-0e3441f71e74"
+          },
+          "underlayment": "membrane"
+        },
+        {
+          "id": "07b82632-c7e3-40ee-9815-816962ed8c88",
+          "label": "Deck 3 left",
+          "basis": {
+            "kind": "panel",
+            "pieceId": "200e1c71-1660-4ba5-bfbf-46a359f0bbe3"
+          },
+          "underlayment": "membrane"
+        },
+        {
+          "id": "c491d28f-b618-4ec6-bb1f-287d6b09e08e",
+          "label": "Deck 3 right",
+          "basis": {
+            "kind": "panel",
+            "pieceId": "6b686294-26c0-46be-afa4-ad2c7bbad298"
+          },
+          "underlayment": "membrane"
+        },
+        {
+          "id": "c396ab5f-8d36-4465-a4b3-08d83026ee77",
+          "label": "Deck 4 left",
+          "basis": {
+            "kind": "panel",
+            "pieceId": "0bea21e1-c81e-4483-aab1-f651361c6e6a"
+          },
+          "underlayment": "membrane"
+        },
+        {
+          "id": "a4fe65e1-9cbb-4de2-bc4d-3971610fb9f7",
+          "label": "Deck 4 right",
+          "basis": {
+            "kind": "panel",
+            "pieceId": "035e6b93-a02d-484a-96bd-1047c5f4ca3f"
+          },
+          "underlayment": "membrane"
+        }
+      ],
+      "coveragePerBundle": null,
+      "wastePercent": null,
+      "coverageBasis": ""
+    },
+    "fireSystem": "unknown",
+    "irrigationSupply": "unknown"
+  },
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T00:56:40.220Z",
+  "pieces": [
+    {
+      "id": "0ab053f2-2a74-4e40-8c01-eb7af4c6ff46",
+      "name": "Deck 1 left",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        78
+      ],
+      "position": [
+        -21.633957682310463,
+        81.71059815931656,
+        -116.02848908914571
+      ],
+      "rotation": [
+        -0.2449786631268642,
+        0,
+        -0.4636476090008061
+      ],
+      "stepId": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "assembly": "Roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "200cb939-09bd-45fa-950d-b5b70d9efb14",
+      "name": "Deck 1 right",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        78
+      ],
+      "position": [
+        21.633957682310463,
+        81.71059815931656,
+        -116.02848908914571
+      ],
+      "rotation": [
+        -0.2449786631268642,
+        0,
+        0.4636476090008061
+      ],
+      "stepId": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "assembly": "Roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1c206bdf-5467-4260-ad00-4e4e0cd4fac9",
+      "name": "Deck 2 left",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        78
+      ],
+      "position": [
+        -21.633957682310463,
+        100.62837691215053,
+        -40.35737407780982
+      ],
+      "rotation": [
+        -0.2449786631268642,
+        0,
+        -0.4636476090008061
+      ],
+      "stepId": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "assembly": "Roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9e4c6183-0e9c-465e-8a25-0e3441f71e74",
+      "name": "Deck 2 right",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        78
+      ],
+      "position": [
+        21.633957682310463,
+        100.62837691215053,
+        -40.35737407780982
+      ],
+      "rotation": [
+        -0.2449786631268642,
+        0,
+        0.4636476090008061
+      ],
+      "stepId": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "assembly": "Roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "200e1c71-1660-4ba5-bfbf-46a359f0bbe3",
+      "name": "Deck 3 left",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        78
+      ],
+      "position": [
+        -21.633957682310463,
+        119.5461556649845,
+        35.31374093352606
+      ],
+      "rotation": [
+        -0.2449786631268642,
+        0,
+        -0.4636476090008061
+      ],
+      "stepId": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "assembly": "Roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6b686294-26c0-46be-afa4-ad2c7bbad298",
+      "name": "Deck 3 right",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        78
+      ],
+      "position": [
+        21.633957682310463,
+        119.5461556649845,
+        35.31374093352606
+      ],
+      "rotation": [
+        -0.2449786631268642,
+        0,
+        0.4636476090008061
+      ],
+      "stepId": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "assembly": "Roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0bea21e1-c81e-4483-aab1-f651361c6e6a",
+      "name": "Deck 4 left",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        78
+      ],
+      "position": [
+        -21.633957682310463,
+        138.46393441781848,
+        110.98485594486196
+      ],
+      "rotation": [
+        -0.2449786631268642,
+        0,
+        -0.4636476090008061
+      ],
+      "stepId": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "assembly": "Roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "035e6b93-a02d-484a-96bd-1047c5f4ca3f",
+      "name": "Deck 4 right",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        78
+      ],
+      "position": [
+        21.633957682310463,
+        138.46393441781848,
+        110.98485594486196
+      ],
+      "rotation": [
+        -0.2449786631268642,
+        0,
+        0.4636476090008061
+      ],
+      "stepId": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "assembly": "Roof",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "1e2debe5-ebfb-4f9a-aba3-a06cf2a93915",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Eight deck panels model a 26 ft valley. Practice measurements are 26 ft for the run, 18 in past the peak and 6 in for the end lap. Try a 12 ft full-width WeatherWatch offcut. This synthetic model is for practicing the membrane cut and shopping workflow.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

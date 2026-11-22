@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 108**. Yardwork reads valid formats 1–107 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 120**. Yardwork reads valid formats 1–119 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 120 optionally stores measured weather-barrier layouts in `roofValleys`. Each entry keeps the model panel IDs, centerline signature, measured downhill length, peak extension, lap and optional measured offcut. Opening the guide checks the current panel geometry before calculating strip lengths and roll purchases. Earlier roof projects retain their saved decking and covering.
 
 Format 108 optionally saves `waterFittings` linking a distinct PEX run end on each side of a measured SharkBite Max elbow or coupling. The connection stores the exact material and fitted part ID and two center-to-socket distances in inches. Applying it updates both straight runs and their owned bores and hardware in one edit. Export recomputes clearances and the seating comparison against the retained model. Older straight runs remain editable and can extend beyond the panel ends to a measured service opening.
 

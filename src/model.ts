@@ -5,6 +5,7 @@ import { homeDepotFraming } from "./homeDepotFramingReference";
 import { baseBoardDepth, baseBoardIds, baseBoards, baseMemberLengths, baseMembers, floorBaseJoistCenters, floorBaseRoles, homeDepotTreatedLumber, treatedLumberProductId } from "./homeDepotTreatedLumber";
 import { floorHangerPlanSchema } from "./floorHangerSchema";
 import { rimAirSealPlansSchema } from "./rimAirSealSchema";
+import { roofValleysSchema } from "./roofValleySchema";
 import { greenhouseFoundationSchema } from "./greenhouseFoundationSchema";
 import { siteClearanceSchema } from "./siteClearanceSchema";
 import { z } from "zod";
@@ -474,6 +475,7 @@ export const currentProjectSchema = z
   .strictObject({
     schemaVersion: z.literal(PROJECT_FORMAT_VERSION),
     rimAirSeals: rimAirSealPlansSchema.optional(),
+    roofValleys: roofValleysSchema.optional(),
     id,
     name: z.string().min(1).max(120),
     kind: z.enum(["coop", "wall", "custom", "bathroom", "pool"]),

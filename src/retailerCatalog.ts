@@ -43,6 +43,7 @@ import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edge
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { bottomPlateSealant, subfloorPanel } from "./bottomPlateSealReference";
 import { rimFoam } from "./rimAirSealReference";
+import { weatherWatch } from "./roofValleyReference";
 import { trimSealant } from "./trimSealantReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
@@ -4419,6 +4420,26 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [bottomPlateSealant.listing, bottomPlateSealant.specification] },
     discrepancies: ["The retailer title uses ‘solvent’. The manufacturer identifies the base as synthetic latex rubber. Check the delivered label."],
+    capabilities: [],
+  },
+  {
+    id: weatherWatch.id,
+    name: weatherWatch.label,
+    manufacturer: "GAF",
+    manufacturerPartNumber: weatherWatch.model,
+    category: "panel",
+    status: "reviewed-specs",
+    verifiedAt: weatherWatch.reviewedAt,
+    profile: profile("roll", null, 1, { materialFamily: "self-adhering polymer-modified bitumen membrane" }),
+    offers: [hd(weatherWatch.internet, weatherWatch.model, weatherWatch.sku)],
+    sources: [
+      { url: weatherWatch.listing, verifiedAt: weatherWatch.reviewedAt, note: "One 36 in × 50 ft roll of mineral-surfaced WeatherWatch, model 0912000." },
+      { url: weatherWatch.specification, verifiedAt: weatherWatch.reviewedAt, note: "GAF identifies the 150 sq ft and 200 sq ft roll variants. Use the exact 150 sq ft listing for this cut plan." },
+      { url: weatherWatch.instructions, verifiedAt: weatherWatch.reviewedAt, note: "Valley application starts at the eave, uses 10–20 ft handling lengths and requires at least 6 in end laps." },
+      { url: weatherWatch.evaluation, verifiedAt: weatherWatch.reviewedAt, note: "ICC-ES ESR-1322 covers the listed membrane and installation conditions." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [weatherWatch.listing, weatherWatch.specification] },
+    discrepancies: [],
     capabilities: [],
   },
   {

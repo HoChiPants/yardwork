@@ -35,7 +35,7 @@ export const canReviewRoofPanel = (piece: Piece) => {
   return !piece.offcut && stock.wood && stock.stockKind === "sheet";
 };
 
-function reviewPlane(
+export function reviewShingleRoofPlane(
   project: Pick<Project, "pieces">,
   plane: ShingleRoofPlane,
 ) {
@@ -120,7 +120,7 @@ export function reviewShingleRoof(
   project: Pick<Project, "pieces" | "supplies">,
   plan: ShingleRoof,
 ) {
-  const planes = plan.planes.map((plane) => reviewPlane(project, plane));
+  const planes = plan.planes.map((plane) => reviewShingleRoofPlane(project, plane));
   const overlaps = planes.some((a, index) =>
     planes.slice(index + 1).some((b) =>
       a.faces.some((first) =>

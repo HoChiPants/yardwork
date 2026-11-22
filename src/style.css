@@ -3804,6 +3804,15 @@ small {
 .rim-seal-results summary { cursor: pointer; }
 .rim-seal-results button, .rim-seal-form > button { justify-self: start; }
 .rim-seal-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.valley-plan { display: grid; gap: 10px; margin-top: 12px; }
+.valley-fields { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr)); }
+.valley-fields .field, .valley-plan > .field { margin: 2px 0 8px; }
+.valley-check { display: flex; align-items: flex-start; gap: 8px; min-height: 32px; padding: 6px 0; }
+.valley-check input { width: auto; flex: none; margin: 2px 0 0; }
+.valley-results { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.valley-results ol, .valley-results ul { padding-left: 20px; margin-block: 6px; }
+.valley-results summary { cursor: pointer; }
+.valley-results button, .valley-plan > button { justify-self: start; }
 .stock-size-options label {
   display: inline-flex;
   align-items: center;

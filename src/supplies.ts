@@ -17,6 +17,7 @@ import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandin
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { bottomPlateScope, bottomPlateSealant } from "./bottomPlateSealReference";
 import { rimFoam, rimSealScope } from "./rimAirSealReference";
+import { valleyScope, weatherWatch } from "./roofValleyReference";
 import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
 import { trimSealant } from "./trimSealantReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
@@ -401,6 +402,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
       trimSealant.scope,
       "Use a compatible caulk gun. Dry-fit the trim and test the finish on a matching scrap before filling the seam.",
     ],
+  },
+  [weatherWatch.id]: {
+    purchaseUnit: "roll",
+    contents: [{ name: "36 in × 50 ft mineral-surfaced leak barrier", quantity: 1 }],
+    requirements: [valleyScope],
   },
   [rimFoam.id]: {
     purchaseUnit: "sheet",

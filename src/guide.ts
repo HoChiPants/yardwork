@@ -85,6 +85,7 @@ function preparationScope(project: Project) {
     ...(project.subfloorJoistPlans?.length ? { subfloorJoistPlans: project.subfloorJoistPlans } : {}),
     ...(project.bottomPlateSeals?.length ? { bottomPlateSeals: project.bottomPlateSeals } : {}),
     ...(project.rimAirSeals?.length ? { rimAirSeals: project.rimAirSeals } : {}),
+    ...(project.roofValleys?.length ? { roofValleys: project.roofValleys } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),

@@ -5,6 +5,8 @@ import { subfloorCommonNailTakeoff } from "./subfloorFastening";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
 import { reviewRimAirSeals } from "./rimAirSeals";
+import { valleyPurchasePurpose, weatherWatch } from "./roofValleyReference";
+import { reviewRoofValleys } from "./roofValleys";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { flexWrap } from "./openingFlashingReference";
@@ -192,6 +194,11 @@ export function homeDepotPurchaseNeeds(
     const { sheets, needsReview } = reviewRimAirSeals(project);
     include(rimFoam.id, rimFoamPurchasePurpose, needsReview ? null : sheets.length,
       needsReview ? "Remeasure changed or blocked bays before choosing the sheet quantity." : undefined);
+  }
+  if (project.roofValleys?.length) {
+    const { rolls, needsReview } = reviewRoofValleys(project);
+    include(weatherWatch.id, valleyPurchasePurpose, needsReview ? null : rolls.length,
+      needsReview ? "Review changed valley edges and measurements before choosing the roll quantity." : undefined);
   }
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);

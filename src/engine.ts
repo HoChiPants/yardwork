@@ -120,6 +120,9 @@ import { greenhouseBaseConnections, greenhouseBaseGuideLines, greenhouseBaseScop
 import { floorBaseConnections, floorBaseConnectionGuideLines, floorBaseConnectionScope } from "./floorBaseConnections";
 import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey } from "./rimAirSeals";
 import { rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
+import { reviewRoofValleys, roofValleyGuideLines } from "./roofValleys";
+import { valleyKey } from "./roofValleySchema";
+import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
 import { floorHangerGuideLines } from "./floorHangerPlans";
 import { floorHangerReport, floorHangerScope } from "./floorHangerReference";
 import { closetRods, reviewRodFit, rodFitMarkdown } from "./rodFits";
@@ -691,6 +694,12 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (issues.length) findings.push({
       id: `rim-air-seal-${rimAirSealKey(plan.input)}`, title: `Review rim air seal · ${name}`,
       severity: "warning", detail: issues.join(" "), pieceId: rimId,
+    });
+  }
+  for (const { plan, issue } of reviewRoofValleys(p).rows) {
+    if (issue) findings.push({
+      id: `roof-valley-${valleyKey(plan.input.panels)}`, title: `Review roof valley · ${plan.input.label}`,
+      severity: "warning", detail: issue,
     });
   }
   for (const row of reviewOpeningFlashings(p).rows) {
@@ -2033,6 +2042,7 @@ export function guideMarkdown(p: Project) {
   const baseConnections = greenhouseBaseGuideLines(p, greenhouseBaseConnections(p, connections.intents));
   const floorJoints = floorBaseConnectionGuideLines(p, floorBaseConnections(p, connections.intents));
   const rimAirSeals = rimAirSealGuideLines(reviewRimAirSeals(p));
+  const roofValleys = roofValleyGuideLines(p);
   const floorHangers = floorHangerGuideLines(p, connections.intents);
   const doorKits = new Set((p.motionPlans ?? []).flatMap((plan) => {
     const kit = plan.mechanism.kind === "hinge" ? plan.mechanism.greenhouseDoor?.kitId : null;
@@ -2267,6 +2277,8 @@ export function guideMarkdown(p: Project) {
     (saunaBenchTravel.length ? "\n\n## Sauna bench carry-in\n\n" +
       saunaBenchTravel.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     projectCodeMarkdown(p) +
+    (roofValleys.length ? `\n\n## Roof valley membrane cuts\n\n${valleyScope}\n\n[GAF installation instructions](${weatherWatch.instructions}) · [PNNL roof valley guidance](${valleyFieldGuide})\n\n` +
+      roofValleys.map((line) => "- " + line.replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     (p.waterRuns?.length ? "\n\n## Wall water-line schedule\n\n" +
       p.waterRuns.flatMap((run) => waterRunGuide(p, run)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[Stud boring](${studBoreSource}) · [Pipe protection](${pipeProtectionSource}) · [SharkBite installation](${pexInstallation})\n` : "") +

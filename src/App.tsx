@@ -23,6 +23,9 @@ import { bottomPlateSealGuide, bottomPlateSealReviews, removeBottomPlateSeal } f
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { SillGasketPanel } from "./SillGasketPanel";
 import { RimAirSealPanel } from "./RimAirSealPanel";
+import { RoofValleyPanel } from "./RoofValleyPanel";
+import { modeledRoofValleys, removeRoofValley, roofValleyGuideLines, saveRoofValley } from "./roofValleys";
+import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
 import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey, removeRimAirSeal, saveRimAirSeal } from "./rimAirSeals";
 import { rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import type { RimSide } from "./rimAirSealSchema";
@@ -398,6 +401,7 @@ type Modal =
   | "subfloor-support"
   | "bottom-plate-seal"
   | "rim-air-seal"
+  | "roof-valley"
   | "water-support"
   | "export"
   | "assistant"
@@ -636,6 +640,7 @@ export function App() {
   const [bottomPlateTarget, setBottomPlateTarget] = useState<string>();
   const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
   const [shownRimSeal, setShownRimSeal] = useState<{ projectId: string; key: string }>();
+  const [shownRoofValley, setShownRoofValley] = useState<{ projectId: string; id: string }>();
   const [rimSealTarget, setRimSealTarget] = useState<{ sectionId?: string; side?: RimSide }>();
   const [openingFlashingTarget, setOpeningFlashingTarget] = useState<{ projectId: string; sillId?: string } | null>(null);
   const [openingFlashingPreview, setOpeningFlashingPreview] = useState<{ project: Project; value: OpeningFlashingPreview } | null>(null);
@@ -1437,6 +1442,10 @@ export function App() {
         setRimSealTarget(action);
         setModal("rim-air-seal");
         return;
+      case "roof-valley":
+        setPanel("checks");
+        setModal("roof-valley");
+        return;
       case "sink-drain":
         setSinkDrainTarget(action.drainId);
         setModal("sink-drain");
@@ -1892,6 +1901,9 @@ export function App() {
   const rimSealReview = useMemo(() => reviewRimAirSeals(project), [project]);
   const visibleRimSeal = panel === "sections" && shownRimSeal?.projectId === project.id
     ? rimSealReview.rows.find(({ plan, issues }) => !issues.length && rimAirSealKey(plan.input) === shownRimSeal.key) : undefined;
+  const roofValleyMarker = useMemo(() => shownRoofValley?.projectId === project.id
+    ? modeledRoofValleys(project).find(({ id, issue }) => id === shownRoofValley.id && !issue) : undefined,
+  [project, shownRoofValley]);
   const bearingReview = useMemo(() => bearingConnections(project, woodSupport, connectionReview), [project, woodSupport, connectionReview]);
   const needsWoodContacts = panel === "prep" || modal === "export" || printingGuide ||
     (panel === "connections" && !!liveConnectionContext?.scope.modeledContactList);
@@ -2042,6 +2054,7 @@ export function App() {
   const printTrimBacking = useMemo(() => trimBackerRodCutPlan(exportGuide, exportWoodJointDetails), [exportGuide, exportWoodJointDetails]);
   const printSillGaskets = useMemo(() => sillGasketGuideLines(reviewSillGaskets(exportGuide)), [exportGuide]);
   const printRimSeals = useMemo(() => rimAirSealGuideLines(reviewRimAirSeals(exportGuide)), [exportGuide]);
+  const printRoofValleys = useMemo(() => roofValleyGuideLines(exportGuide), [exportGuide]);
   const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
   const printWindowWalls = useMemo(() => reviewGeneratedWindowWalls(exportGuide), [exportGuide]);
   const printCutSources = useMemo(
@@ -3193,6 +3206,7 @@ export function App() {
                 ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
                 : undefined}
               shownRimSeal={visibleRimSeal?.cuts}
+              shownRoofValley={panel === "checks" && roofValleyMarker ? [roofValleyMarker.start, roofValleyMarker.end] : undefined}
               shownOpeningFlashing={panel === "opening-flashing" && openingFlashingPreview?.project === project
                 ? openingFlashingPreview.value : undefined}
               shownPlumbingVentLayout={shownVentDatums}
@@ -4232,6 +4246,9 @@ export function App() {
                   }
                 }}
               />
+              {(project.projectCode?.trades.includes("roofing") || !!project.roofValleys?.length) &&
+                <button type="button" className="button secondary full" onClick={() => setModal("roof-valley")}>Plan roof valley lining</button>}
+              {roofValleyMarker && <button type="button" className="text-button" onClick={() => setShownRoofValley(undefined)}>Hide valley centerline</button>}
               <button type="button" className="button secondary full" onClick={() => openSiteClearances("checks")}>Measured site clearances</button>
               {!!project.waterRuns?.length &&
                 <button type="button" className="button secondary full" onClick={() => setModal("water-support")}>Review PEX support spacing</button>}
@@ -5525,7 +5542,7 @@ export function App() {
         >
           <section
             key={modal}
-            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "bottom-plate-seal" || modal === "rim-air-seal" || modal === "subfloor-support" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
+            className={`modal ${modal === "assistant" || modal === "idea" || modal === "drawing" || modal === "doorway" || modal === "wall-water" || modal === "water-fitting" || modal === "water-stop" || modal === "sink-drain" || modal === "bottom-plate-seal" || modal === "rim-air-seal" || modal === "roof-valley" || modal === "subfloor-support" || modal === "water-pressure" || modal === "water-support" || (modal === "import" && importKind === "drawing") || modal === "cut" || modal === "part-stock" || modal === "offcut-reuse" || modal === "offcut-release" || modal === "handoff" || modal === "studies" ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -5655,6 +5672,25 @@ export function App() {
                 change((live) => saveSubfloorJoists(live, id, selection));
                 notify(selection ? "Joist check saved." : "Joist check removed.");
               })} />}
+            {modal === "roof-valley" && <RoofValleyPanel key={project.id} project={project}
+              initialId={shownRoofValley?.projectId === project.id ? shownRoofValley.id : undefined}
+              onSave={(input) => safe(() => {
+                change((live) => saveRoofValley(live, input));
+                notify("Valley lining plan saved. The cuts are in the build guide.");
+              })}
+              onRemove={(id) => safe(() => change((live) => removeRoofValley(live, id)))}
+              onShow={(id) => {
+                setShownRoofValley({ projectId: project.id, id });
+                setPanel("checks");
+                setStage(null);
+                setPlaying(false);
+                setExplode(false);
+                setLidMotionPreview(null);
+                setMotionPreview(null);
+                setSectionMotionPreview(null);
+                setModal(null);
+                inspectWorkspace();
+              }} />}
             {modal === "rim-air-seal" && <RimAirSealPanel key={project.id} project={project}
               initialSectionId={rimSealTarget?.sectionId ?? selectedSectionId ?? undefined} initialSide={rimSealTarget?.side}
               onSave={(input) => safe(() => {
@@ -7098,6 +7134,15 @@ export function App() {
             <h2>Bearing joints</h2>
             <p>{bearingConnectionScope}</p>
             <ul>{printBearingConnections.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          </section>
+        )}
+        {printRoofValleys.length > 0 && (
+          <section className="roof-valley-print">
+            <h2>Roof valley membrane cuts</h2>
+            <p>{valleyScope}</p>
+            <ul>{printRoofValleys.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={weatherWatch.instructions}>GAF installation instructions</a>{" · "}
+              <a href={valleyFieldGuide}>PNNL valley detail</a></p>
           </section>
         )}
         {printRimSeals.length > 0 && (

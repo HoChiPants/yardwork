@@ -640,7 +640,7 @@ test("phone cuts imported exact 1x6 and 2x6 boards with matching one-board store
     expect(row.inventory?.internetNumber).toBe(definition.productId);
     expect(row.inventory?.retailer).toBe("lowes");
     await expect(
-      page.locator(".bom-row").filter({ hasText: stock.name }),
+      page.locator(`.bom-row[data-stock-material="${definition.id}"]`),
     ).toContainText("1 board");
     expect(recorded.ideaBindings).toEqual([]);
     expect(

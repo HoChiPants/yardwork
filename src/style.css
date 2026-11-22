@@ -1394,6 +1394,16 @@ small {
   font-size: 9px;
   color: #bf7756;
 }
+.stock-supplier-details > small {
+  display: block;
+  margin-block: 5px;
+}
+.stock-supplier-details > a {
+  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
 .materials-store-actions {
   display: flex;
   flex-wrap: wrap;

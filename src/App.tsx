@@ -5073,6 +5073,15 @@ export function App() {
                   {r.oversize > 0 && (
                     <em>{r.oversize} oversized · excluded from estimate</em>
                   )}
+                  {r.supplier && (r.quantity > 0 || !r.onHandStockUnits) && (
+                    <details className="stock-supplier-details" open>
+                      <summary>Supplier details</summary>
+                      <small>Confirm availability with supplier</small>
+                      <a href={r.supplier.url} target="_blank" rel="noreferrer">
+                        View at {r.supplier.seller} <ExternalLink size={11} />
+                      </a>
+                    </details>
+                  )}
                   {project.retailer === "home-depot" && r.pieces >= 2 && (
                     <StockGroupComparison
                       key={project.id}

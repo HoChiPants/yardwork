@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatPreciseInches } from "./measurement";
-import { motionReviewDistance, type ClosestMotionGap as Gap, type MotionReview } from "./mechanismMotion";
+import { motionReviewDistance, type ClosestMotionGap as Gap, type MotionGapSearch, type MotionReview } from "./mechanismMotion";
 
-export function ClosestMotionGap({ review, onInspect }: {
+export function ClosestMotionGap({ review, search, autoStart = false, onInspect }: {
   review: MotionReview;
+  search?: MotionGapSearch;
+  autoStart?: boolean;
   onInspect: (gap: Gap) => void;
 }) {
   const task = useRef<AbortController | null>(null);
@@ -11,18 +13,15 @@ export function ClosestMotionGap({ review, onInspect }: {
   const [outcome, setOutcome] = useState<{ source: MotionReview; gap?: Gap }>();
   const searching = pending === review;
   const current = outcome?.source === review ? outcome : undefined;
-  useEffect(() => () => task.current?.abort(), [review]);
-
-  async function find() {
-    const findClosest = review.clearance?.findClosest;
-    if (!findClosest) return;
+  const find = useCallback(async () => {
+    if (!search) return;
     const controller = new AbortController();
     task.current?.abort();
     task.current = controller;
     setOutcome(undefined);
     setPending(review);
     try {
-      const gap = await findClosest(controller.signal);
+      const gap = await search(controller.signal);
       if (!controller.signal.aborted) setOutcome({ source: review, gap });
     } catch {
       if (!controller.signal.aborted) setOutcome({ source: review });
@@ -32,14 +31,18 @@ export function ClosestMotionGap({ review, onInspect }: {
         setPending(null);
       }
     }
-  }
+  }, [review, search]);
+  useEffect(() => {
+    if (autoStart) void find();
+    return () => task.current?.abort();
+  }, [autoStart, find]);
 
   const gap = current?.gap;
   const range = gap && [
     Math.floor(gap.lowerBound * 1000) / 1000,
     Math.ceil(gap.gap * 1000) / 1000,
   ];
-  if (!review.clearance?.findClosest) return null;
+  if (!search) return null;
   return <div>
     {searching ? <div className="motion-actions">
       <span className="small-note" role="status">Checking gaps through travel…</span>

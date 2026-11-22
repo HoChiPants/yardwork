@@ -220,9 +220,11 @@ type PairClearanceFinding = {
   requirement: MotionPairClearance;
   result: PairClearanceResult;
   phase?: MotionPhase;
-  findClosest?: (signal?: AbortSignal) => Promise<ClosestMotionGap>;
+  findClosest?: MotionGapSearch;
 };
 export type ClosestMotionGap = ClosestPairGap & { phase?: MotionPhase };
+export type MotionGapPair = Pick<MotionPairClearance, "movingId" | "otherId">;
+export type MotionGapSearch = (signal?: AbortSignal) => Promise<ClosestMotionGap>;
 
 type SiteMotionRow = { row: MovingShape; plane: SiteClearance };
 export type MotionPhase = 0 | 1;
@@ -1000,6 +1002,21 @@ export function reviewMotionPath(
     };
   }
 
+  function gapGeometry({ movingId, otherId }: MotionGapPair) {
+    if (movingId === otherId) return "Choose two different parts.";
+    const get = (id: string) => moving.find(({ piece }) => piece.id === id) ??
+      fixed.find(({ piece }) => piece.id === id);
+    const first = get(movingId);
+    const second = get(otherId);
+    if (!first || !second) return "A selected part is missing or has no usable geometry.";
+    if (first.solid.kind === "envelope" || second.solid.kind === "envelope")
+      return "A selected part has an exterior envelope only. Measure the actual gap.";
+    const posePair = (at: number): [CollisionSolid, CollisionSolid] => [motionSolid(first, at), motionSolid(second, at)];
+    const speedBound = (axis?: V3) => separationSpeed(first, second, axis);
+    const findClosest: MotionGapSearch = (signal) => findClosestPairGap(mechanism.travel, posePair, speedBound, signal);
+    return { posePair, speedBound, findClosest };
+  }
+
   return {
     hits,
     zone,
@@ -1009,23 +1026,17 @@ export function reviewMotionPath(
     ),
     unresolvedIds,
     bounds: sweepBounds,
+    gapSearch(pair: MotionGapPair): MotionGapSearch | undefined {
+      const geometry = gapGeometry(pair);
+      return typeof geometry === "string" ? undefined : geometry.findClosest;
+    },
     pairClearance(requirement: MotionPairClearance): PairClearanceFinding {
-      const get = (id: string) => moving.find(({ piece }) => piece.id === id) ??
-        fixed.find(({ piece }) => piece.id === id);
-      const first = get(requirement.movingId);
-      const second = get(requirement.otherId);
-      if (!first || !second)
-        return { requirement, result: { status: "needs-review", reason: "A selected part is missing or has no usable geometry." } };
-      if (first.solid.kind === "envelope" || second.solid.kind === "envelope")
-        return { requirement, result: { status: "needs-review", reason: "A selected part has an exterior envelope only. Measure the actual gap." } };
-      const posePair = (at: number): [CollisionSolid, CollisionSolid] => [motionSolid(first, at), motionSolid(second, at)];
-      const speedBound = (axis?: V3) => separationSpeed(first, second, axis);
+      const geometry = gapGeometry(requirement);
+      if (typeof geometry === "string")
+        return { requirement, result: { status: "needs-review", reason: geometry } };
+      const { posePair, speedBound, findClosest } = geometry;
       try {
-        return {
-          requirement,
-          result: sweepPairClearance(requirement.minimum, mechanism.travel, posePair, speedBound),
-          findClosest: (signal) => findClosestPairGap(mechanism.travel, posePair, speedBound, signal),
-        };
+        return { requirement, result: sweepPairClearance(requirement.minimum, mechanism.travel, posePair, speedBound), findClosest };
       } catch {
         return { requirement, result: { status: "needs-review", reason: "The modeled profiles could not be measured. Verify the gap on site." } };
       }
@@ -1242,6 +1253,19 @@ function reviewMotionSequence(
   const phaseIndices: MotionPhase[] = [0, 1];
   const asProgress = (phase: MotionPhase, local: number) =>
     sequenceTravel(phase, sequence[phase].travel, local);
+  function sequenceGapSearch(firstSearch?: MotionGapSearch, secondSearch?: MotionGapSearch): MotionGapSearch | undefined {
+    if (!firstSearch || !secondSearch) return;
+    return async (signal) => {
+      const firstGap = await firstSearch(signal);
+      const secondGap = await secondSearch(signal);
+      const phase = firstGap.gap <= secondGap.gap ? 0 : 1;
+      const closest = phase === 0 ? firstGap : secondGap;
+      return {
+        ...closest, phase, at: asProgress(phase, closest.at),
+        lowerBound: Math.min(firstGap.lowerBound, secondGap.lowerBound),
+      };
+    };
+  }
   const site = phaseIndices.flatMap((phase) => phases[phase].site.map((row) => ({
     ...row, phase, inspectAt: row.inspectAt === null ? null : asProgress(phase, row.inspectAt),
   })));
@@ -1265,21 +1289,12 @@ function reviewMotionSequence(
     site,
     siteFindings: site.filter(({ status }) => status === "short" || status === "needs-review"),
     unresolvedIds: [...new Set(phases.flatMap(({ unresolvedIds }) => unresolvedIds))],
+    gapSearch(pair) {
+      return sequenceGapSearch(phases[0].gapSearch(pair), phases[1].gapSearch(pair));
+    },
     pairClearance(requirement) {
       const checks = phases.map((motion) => motion.pairClearance(requirement));
-      const [firstSearch, secondSearch] = checks.map(({ findClosest }) => findClosest);
-      const findClosest: PairClearanceFinding["findClosest"] = firstSearch && secondSearch
-        ? async (signal) => {
-            const firstGap = await firstSearch(signal);
-            const secondGap = await secondSearch(signal);
-            const phase = firstGap.gap <= secondGap.gap ? 0 : 1;
-            const closest = phase === 0 ? firstGap : secondGap;
-            return {
-              ...closest, phase, at: asProgress(phase, closest.at),
-              lowerBound: Math.min(firstGap.lowerBound, secondGap.lowerBound),
-            };
-          }
-        : undefined;
+      const findClosest = sequenceGapSearch(checks[0].findClosest, checks[1].findClosest);
       for (const phase of phaseIndices) {
         const { result } = checks[phase];
         if (result.status === "short")
@@ -1330,6 +1345,13 @@ export function motionReviewTravel(review: MotionReview) {
   return review.sequence ? sequenceEnd : review.plan.mechanism.travel;
 }
 
+/** Obtain a search for an active motion without assuming a required minimum. */
+export function motionGapSearch(review: MotionReview, pair: MotionGapPair) {
+  const plans = review.sequence?.map(({ plan }) => plan) ?? [review.plan, review.linked];
+  const moves = plans.some((plan) => plan?.memberIds.some((id) => id === pair.movingId || id === pair.otherId));
+  return moves ? review.gapSearch(pair) : undefined;
+}
+
 export function motionReviewDistance(review: MotionReview, travel: number, phase?: MotionPhase) {
   return review.sequence
     ? sequencePosition(review.sequence, travel, phase)
@@ -1372,6 +1394,7 @@ export type MotionTestSelection = {
   setup?: MotionTestSetup;
   scenarioId?: string;
   focusDrawerOpening?: boolean;
+  gapPair?: MotionGapPair;
   drawerStop?: DrawerStopRequest;
   result: MotionTestResult;
 };

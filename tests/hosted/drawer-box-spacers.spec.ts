@@ -2,8 +2,8 @@ import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { addMeasuredOffcut } from "../../src/measuredOffcuts";
 import { pureBondCasework } from "../../src/homeDepotCaseworkReference";
-import { saveMotionPlan } from "../../src/mechanismMotion";
-import { blank, part } from "../../src/model";
+import { saveMotionPlan, saveMotionTestScenario } from "../../src/mechanismMotion";
+import { blank, part, projectSchema } from "../../src/model";
 
 test("a drawer draft clears its door after adding fixed spacers and exports the checked route and scrap cuts", async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 900 });
@@ -99,4 +99,44 @@ test("a drawer draft clears its door after adding fixed spacers and exports the 
   const guide = await readFile((await (await downloaded).path())!, "utf8");
   expect(guide).toMatch(/Recorded offcut cut order[\s\S]*left spacer/);
   expect(guide).toContain("Test targets · Cabinet door 35°, Cabinet drawer 5 in");
+});
+
+test("a build question measures two parts through a named motion and refreshes the open inspector", async ({ page }) => {
+  const sample = new URL("../../public/examples/hinges/drawer-slide-spacers.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(await readFile(sample, "utf8")));
+  const drawer = project.motionPlans!.find(({ label }) => label === "Inset drawer")!;
+  const { project: prepared } = saveMotionTestScenario(project, drawer.id, "Spacer test", drawer.testSetup!);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "drawer-spacer-gap.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(prepared)),
+  });
+  const ask = async (pair: string, distance: string) => {
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(`How close do ${pair} get during "Spacer test"?`);
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+    const answer = dialog.getByRole("region", { name: "Closest gap through movement", exact: true });
+    await expect(answer).toContainText("Spacer test");
+    await answer.getByRole("button", { name: "Measure this gap", exact: true }).click();
+    const result = page.getByRole("region", { name: "Requested gap measurement", exact: true });
+    await expect(result).toContainText(`Closest checked gap ${distance} in at Inset drawer · 5 in.`);
+    const compact = page.viewportSize()!.width <= 900;
+    if (compact) await expect(page.locator("#workshop-inspector")).toHaveAttribute("data-inspector-focused", "true");
+    await result.getByRole("button", { name: "Inspect closest pose", exact: true }).click();
+    await expect(page.getByTestId("motion-gap-label")).toHaveText(`${distance} in gap`);
+    if (compact) await expect(page.locator("#workshop-inspector")).toHaveAttribute("data-inspector-focused", "false");
+    await expect(page.getByTestId("motion-preview-label")).toHaveAttribute("data-pose", "100");
+  };
+  await ask("P009 and P003", "0.38932");
+  await page.setViewportSize({ width: 390, height: 900 });
+  await ask("P011 and P003", "0.79254");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const downloading = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Editable project/ }).click();
+  const exported = projectSchema.parse(JSON.parse(await readFile((await (await downloading).path())!, "utf8")));
+  expect(exported.motionPlans).toEqual(prepared.motionPlans);
 });

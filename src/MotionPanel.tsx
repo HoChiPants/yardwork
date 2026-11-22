@@ -36,6 +36,7 @@ import {
   motionPairClearanceLine,
   motionPivotPreset,
   motionReviewDistance,
+  motionGapSearch,
   motionReviewTravel,
   motionSetup,
   removeMotionTestScenario,
@@ -680,15 +681,21 @@ export function MotionPanel({
     activeReview.value.plan.id === selected?.id
       ? activeReview.value
       : null;
+  const requestedGap = review && review === initialTest?.result.review ? initialTest?.gapPair : undefined;
+  const requestedSearch = useMemo(
+    () => review && requestedGap ? motionGapSearch(review, requestedGap) : undefined,
+    [review, requestedGap],
+  );
 
   function test(
     plan: MotionPlan,
     source = project,
     position = 0,
     setup: MotionTestSetup | null | undefined = testSetup,
+    prepared?: MotionTestSelection["result"],
   ) {
     cancel();
-    const { review: value, error } = runMotionTest(source, plan, setup ?? undefined);
+    const { review: value, error } = prepared ?? runMotionTest(source, plan, setup ?? undefined);
     setError(error ?? "");
     if (value) {
       setActiveReview({ project: source, value, setup: setup ?? undefined });
@@ -699,12 +706,12 @@ export function MotionPanel({
     }
   }
 
-  function loadTestSetup(plan: MotionPlan, setup?: MotionTestSetup, startClosed = false) {
+  function loadTestSetup(plan: MotionPlan, setup?: MotionTestSetup, startClosed = false, prepared?: MotionTestSelection["result"]) {
     const positions = heldPositionsFrom(setup);
     const companion = setup?.linkedId ?? "";
     setSetupDraft({ motionId: plan.id, linkedId: companion, positions, openingOrder: setup?.openingOrder, clearance: setup?.clearance, sequenceTargets: setup?.sequenceTargets });
     const restart = startClosed || openingOrder !== setup?.openingOrder || (openingOrder && linkedId !== companion);
-    test(plan, project, restart ? 0 : preview?.travel ?? 0, setup ?? null);
+    test(plan, project, restart ? 0 : preview?.travel ?? 0, setup ?? null, prepared);
   }
 
   function selectScenario(id: string) {
@@ -826,15 +833,15 @@ export function MotionPanel({
     setError("");
     onPreview(null);
   };
-  const openingRequest = useRef(initialTest);
+  const testRequest = useRef(initialTest);
   useEffect(() => {
-    if (!initialTest?.focusDrawerOpening || openingRequest.current === initialTest) return;
-    openingRequest.current = initialTest;
+    if ((!initialTest?.focusDrawerOpening && !initialTest?.gapPair) || testRequest.current === initialTest) return;
+    testRequest.current = initialTest;
     edit(null);
     setSelectedPlanId(initialTest.plan.id);
-    setScenarioId("");
-    setScenarioName("");
-    loadTestSetup(initialTest.plan, initialTest.setup, true);
+    setScenarioId(initialTest.scenarioId ?? "");
+    setScenarioName(initialTest.plan.testScenarios?.find(({ id }) => id === initialTest.scenarioId)?.name ?? "");
+    loadTestSetup(initialTest.plan, initialTest.setup, true, initialTest.result);
   }, [initialTest]);
   useEffect(() => {
     if (drawerRequest) {
@@ -948,6 +955,16 @@ export function MotionPanel({
         Use the closed position of a door, lid, drawer or panel. Pick every part
         that moves with it.
       </p>
+      {editing === null && preview && review && requestedGap && (
+        <section className="field-section" aria-label="Requested gap measurement">
+          <h3>Gap through movement</h3>
+          <p className="small-note">{describe(requestedGap.movingId)} and {describe(requestedGap.otherId)}</p>
+          {requestedSearch
+            ? <ClosestMotionGap review={review} search={requestedSearch} autoStart
+                onInspect={({ at, phase, endpoints }) => show(at, undefined, phase, [requestedGap.movingId, requestedGap.otherId], endpoints)} />
+            : <p className="small-note" role="status">This pair needs two modeled surfaces to measure its gap.</p>}
+        </section>
+      )}
       {plans.length === 0 && editing === null &&
         <a className="text-button" href={workshopAsset("/examples/hinges/fixed-stop-drawer.yardwork.json")} download>
           Download cabinet practice plan
@@ -1349,7 +1366,7 @@ export function MotionPanel({
                   </button>
                 );
               })()}
-              <ClosestMotionGap review={review} onInspect={({ at, phase, endpoints }) => {
+              <ClosestMotionGap review={review} search={review.clearance.findClosest} onInspect={({ at, phase, endpoints }) => {
                 const requirement = review.clearance?.requirement;
                 if (requirement) show(at, undefined, phase, [requirement.movingId, requirement.otherId], endpoints);
               }} />

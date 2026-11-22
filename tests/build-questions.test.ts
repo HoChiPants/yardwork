@@ -5,6 +5,7 @@ import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
 import { validate } from "../src/engine";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
 import { blank, part } from "../src/model";
+import { saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
 
 test("workspace questions leave layout and edit requests to the planner", () => {
   assert.equal(buildQuestion("Add a cabinet door that opens outward"), null);
@@ -21,6 +22,41 @@ test("workspace questions leave layout and edit requests to the planner", () => 
     kind: "motion",
     subject: "the cabinet door",
   });
+});
+
+test("a closest-gap question selects the saved linked path and keeps ambiguous paths explicit", () => {
+  const project = blank("Door and drawer");
+  const step = project.steps[0].id;
+  const door = part("Door", "plywood", [12, 20, 0.75], [0, 12, 6], step, "Cabinet");
+  const drawer = part("Drawer", "plywood", [8, 3, 8], [0, 6, 0], step, "Cabinet");
+  project.pieces = [door, drawer];
+  const hinge = saveMotionPlan(project, {
+    label: "Door", memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, 1, 0], pivot: [-6, 12, 6], travel: 90 },
+  });
+  const slide = saveMotionPlan(hinge.project, {
+    label: "Drawer", memberIds: [drawer.id], mechanism: { kind: "slide", axis: [0, 0, 1], travel: 10 },
+  });
+  const question = buildQuestion("What's the closest gap between P1 and p002?")!;
+  assert.deepEqual(question, { kind: "motion-gap", labels: ["P001", "P002"] });
+  assert.equal(answerBuildQuestion(slide.project, question, []).rows?.length, 2);
+  const saved = saveMotionTestScenario(slide.project, slide.plan.id, "Door first", {
+    held: [], linkedId: hinge.plan.id, openingOrder: "companion-first",
+    sequenceTargets: { selected: { kind: "slide", travel: 5 }, companion: { kind: "hinge", travel: 35 } },
+  });
+  const expected = {
+    kind: "motion-gap", planId: slide.plan.id, scenarioId: saved.scenario.id,
+    pair: { movingId: door.id, otherId: drawer.id },
+  };
+  const preferred = answerBuildQuestion(saved.project, question, []);
+  assert.deepEqual(preferred.rows?.[0].link?.action, expected);
+  assert.equal(preferred.rows?.length, 3);
+  const named = buildQuestion('How close do P1 and P2 get during "Door First"?')!;
+  assert.deepEqual(answerBuildQuestion(saved.project, named, []).rows?.[0].link?.action, expected);
+  const wrongName = buildQuestion("Find the closest gap between P1 and P2 in Missing test")!;
+  assert.equal(answerBuildQuestion(saved.project, wrongName, []).link?.action.kind, "motion-setup");
+  const missingPart = buildQuestion("Find the closest gap between P1 and P7")!;
+  assert.match(answerBuildQuestion(saved.project, missingPart, []).detail, /Choose two different part labels/);
 });
 
 test("an offcut question checks one finished board and links to prefilled placement", () => {

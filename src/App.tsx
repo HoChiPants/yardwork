@@ -1411,6 +1411,24 @@ export function App() {
         setMotionTestSelection(null);
         setPanel("motion");
         break;
+      case "motion-gap": {
+        const plan = project.motionPlans?.find(({ id }) => id === action.planId);
+        const scenario = plan?.testScenarios?.find(({ id }) => id === action.scenarioId);
+        if (!plan || (action.scenarioId && !scenario))
+          throw Error("This motion test has changed. Explore the question again.");
+        const setup = scenario?.setup ?? plan.testSetup;
+        const result = runMotionTest(project, plan, setup);
+        setMotionTestSelection({ project, plan, setup, scenarioId: scenario?.id, gapPair: action.pair, result });
+        setRemovalTarget(null);
+        setMotionPreview(result.review ? { project, value: result.review.preview(0) } : null);
+        setStage(null);
+        setPlaying(false);
+        setExplode(false);
+        setPanel("motion");
+        inspectorFocus.expand();
+        inspectorFocus.scrollRef.current?.scrollTo(0, 0);
+        break;
+      }
       case "drawer-opening": {
         const drawer = project.motionPlans?.find(({ id }) => id === action.drawerId);
         const door = project.motionPlans?.find(({ id }) => id === action.doorId);

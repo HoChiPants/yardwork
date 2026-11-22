@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { guideMarkdown } from "../src/engine";
 import { blank, part, projectSchema } from "../src/model";
-import { motionReviewLines, runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
+import { motionGapSearch, motionReviewLines, runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
 import { findClosestPairGap } from "../src/motionPairClearance";
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { prepareCollisionSolid, solidGap } from "../src/solidCollision";
@@ -72,6 +72,17 @@ test("a passing slide finds the gap away from the endpoints and first midpoint",
   assert.equal(closest.at, 3);
   assert.equal(closest.gap, 0.0625);
   assert.ok(closest.lowerBound <= 0.0625 && closest.gap - closest.lowerBound <= 1 / 256);
+});
+
+test("the gap search measures a moving pair without assigning a required minimum", async () => {
+  const { project, plan, clearance, lip } = drawerScene();
+  const review = runMotionTest(project, plan).review!;
+  assert.equal(review.clearance, undefined);
+  const search = motionGapSearch(review, clearance);
+  assert.ok(search);
+  assert.equal((await search()).gap, 0.0625);
+  assert.equal(motionGapSearch(review, { movingId: lip.id, otherId: lip.id }), undefined);
+  assert.equal(motionGapSearch(review, { movingId: clearance.movingId, otherId: "missing" }), undefined);
 });
 
 test("a hinge finds a narrow interior pass while keeping the minimum bounded", async () => {

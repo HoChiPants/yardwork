@@ -15,6 +15,7 @@ import {
   motionTestFindings,
   resolveMotionTestSetup,
   reviewMotionTests,
+  type MotionGapPair,
 } from "./mechanismMotion";
 import { parsePrompt, type Command, type Project } from "./model";
 import { windowWallScope } from "./windowWall";
@@ -43,6 +44,7 @@ import type { RimSide } from "./rimAirSealSchema";
 export type BuildQuestion =
   | { kind: "checks" }
   | { kind: "motion"; subject: string }
+  | { kind: "motion-gap"; labels: [string, string]; testName?: string }
   | { kind: "drawer-opening"; stop?: DrawerStopRequest }
   | { kind: "greenhouse-weatherseal" }
   | { kind: "opening-flashing"; sillLabel?: string }
@@ -69,6 +71,7 @@ export type BuildQuestionAction =
   | { kind: "checks" }
   | { kind: "cut-pool" }
   | { kind: "motion-setup" }
+  | { kind: "motion-gap"; planId: string; scenarioId?: string; pair: MotionGapPair }
   | { kind: "drawer-opening"; drawerId: string; doorId: string; stop?: DrawerStopRequest }
   | { kind: "greenhouse-weatherseal"; motionId: string }
   | { kind: "opening-flashing"; sillId?: string }
@@ -162,6 +165,7 @@ const roofVentFlashingQuestion = /^(?:how (?:do|can|should) i (?:flash|seal) (?:
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
 const waterSupportQuestion = /^(?:(?:how (?:do|can|should) i )support (?:the |my )?(?:pex|water) (?:runs?|lines?|pipes?)|(?:check|review|show|plan) (?:the |my )?(?:pex |water line )(?:supports?|support spacing))$/i;
+const closestGapQuestion = /^(?:(?:(?:find|show|measure|what is|what['’]s) (?:the )?(?:closest|smallest|tightest) gap between|how close (?:do|can|will)) (?<first>p\d{1,6}) and (?<second>p\d{1,6})(?: get)?(?: (?:in|during) (?<testName>.+))?)$/i;
 const motionQuestion =
   /^(?:(?:can|will|does) (.+?) (?:open|close|slide|swing|extend|clear)(?: fully| freely| all the way| without (?:hitting|touching)(?: anything)?)?|(?:can|could) i (?:open|close|extend) (.+?)|(?:will|does) (.+?) (?:hit|touch|bump)(?: anything)?|(?:check|review|test) (?:the )?(?:motion|travel|clearance) (?:of|for) (.+))$/i;
 
@@ -239,6 +243,12 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
   if (windowWallQuestion.test(text)) return { kind: "window-wall", prompt: text };
+  const closest = closestGapQuestion.exec(text)?.groups;
+  if (closest) return {
+    kind: "motion-gap",
+    labels: [labelKey(closest.first), labelKey(closest.second)],
+    ...(closest.testName && { testName: searchName(closest.testName) }),
+  };
   const motion = motionQuestion.exec(text);
   return motion
     ? { kind: "motion", subject: motion.slice(1).find(Boolean)! }
@@ -576,6 +586,64 @@ function answerMotion(project: Project, subject: string): BuildQuestionAnswer {
   };
 }
 
+function answerMotionGap(project: Project, { labels, testName }: Extract<BuildQuestion, { kind: "motion-gap" }>): BuildQuestionAnswer {
+  const title = "Closest gap through movement";
+  const labeled = ensurePartLabels(project);
+  const ids = new Map(labeled.partLabels.map(({ label, partId }) => [label, partId]));
+  const parts = labels.map((label) => labeled.pieces.find(({ id, offcut }) => !offcut && id === ids.get(label)));
+  const [first, second] = parts;
+  if (!first || !second || first.id === second.id)
+    return { title, detail: "Choose two different part labels from the current model, such as P003 and P009." };
+
+  const plans = project.motionPlans ?? [];
+  const options = plans.flatMap((plan) => {
+    const variants = [{ setup: plan.testSetup, name: plan.label, id: undefined }, ...(plan.testScenarios ?? [])];
+    return variants.flatMap((variant) => {
+      const linked = plans.find(({ id }) => id === variant.setup?.linkedId);
+      const active = new Set([...plan.memberIds, ...(linked?.memberIds ?? [])]);
+      const moving = active.has(first.id) ? first : active.has(second.id) ? second : undefined;
+      if (!moving) return [];
+      return [{
+        plan, linked, variant,
+        bothMove: active.has(first.id) && active.has(second.id),
+        pair: { movingId: moving.id, otherId: moving.id === first.id ? second.id : first.id },
+      }];
+    });
+  });
+  const nameMatches = options.filter(({ variant }) => testName && searchName(variant.name) === testName);
+  const candidates = testName
+    ? (nameMatches.length ? nameMatches : options.filter(({ plan }) => searchName(plan.label) === testName))
+    : options.sort((a, b) => Number(b.bothMove) - Number(a.bothMove));
+  if (!candidates.length)
+    return {
+      title,
+      detail: testName ? `No motion or named test matching “${testName}” moves either of these parts.`
+        : "Save a movement for one of these parts first.",
+      link: { label: "Open movement setup", action: { kind: "motion-setup" } },
+    };
+
+  const rows: ReviewRow[] = candidates.map(({ plan, linked, variant, pair }) => {
+    const order = variant.setup?.openingOrder;
+    const path = linked
+      ? order === "companion-first" ? `${linked.label}, then ${plan.label}`
+        : order === "selected-first" ? `${plan.label}, then ${linked.label}`
+        : `${plan.label} and ${linked.label} together`
+      : plan.label;
+    return {
+      id: variant.id ?? plan.id,
+      title: variant.id ? `${variant.name} · ${plan.label}` : path,
+      detail: variant.id ? `Uses the travel and held positions from this test. ${path}.`
+        : variant.setup ? "Uses the saved movement setup." : "Uses the full saved travel.",
+      link: { label: "Measure this gap", action: { kind: "motion-gap", planId: plan.id, scenarioId: variant.id, pair } },
+    };
+  });
+  return {
+    title,
+    detail: `Measure the gap between ${labels[0]} · ${first.name} and ${labels[1]} · ${second.name}.`,
+    rows: rows.slice(0, 12),
+  };
+}
+
 export function answerBuildQuestion(
   project: Project,
   question: BuildQuestion,
@@ -611,6 +679,8 @@ export function answerBuildQuestion(
       return answerBoardOffcut(project, question);
     case "motion":
       return answerMotion(project, question.subject);
+    case "motion-gap":
+      return answerMotionGap(project, question);
     case "greenhouse-weatherseal": {
       const title = "Greenhouse door weatherseal review";
       const motions = new Map<string, MotionPlan>();

@@ -4,6 +4,7 @@ import { DrawerBoxPanel } from "./DrawerBoxPanel";
 import { DrawerOpeningPanel } from "./DrawerOpeningPanel";
 import { doorAndDrawer } from "./drawerOpening";
 import { drawerCabinetPanels } from "./drawerBoxes";
+import { workshopAsset } from "./workshopTransport";
 import { clearGreenhouseLatch } from "./greenhouseLatch";
 import { GreenhouseLatchPanel } from "./GreenhouseLatchPanel";
 import { GreenhouseDoorSealPanel } from "./GreenhouseDoorSealPanel";
@@ -935,6 +936,10 @@ export function MotionPanel({
         Use the closed position of a door, lid, drawer or panel. Pick every part
         that moves with it.
       </p>
+      {plans.length === 0 && editing === null &&
+        <a className="text-button" href={workshopAsset("/examples/hinges/fixed-stop-drawer.yardwork.json")} download>
+          Download cabinet practice plan
+        </a>}
       {plans.length > 0 && editing === null && (
         <label className="field">
           Saved motion
@@ -1020,6 +1025,7 @@ export function MotionPanel({
           test={testSetup}
           initialExtension={requestedDrawerStop?.extension ?? drawerOpeningExtension ?? drawerOpeningPair.drawer.mechanism.travel}
           initialStop={requestedDrawerStop?.angle}
+          initialComparison={requestedDrawerStop?.angles}
           expanded={initialTest?.focusDrawerOpening}
           onChoose={(setup) => {
             setScenarioId("");

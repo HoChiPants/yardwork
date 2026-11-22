@@ -162,3 +162,52 @@ test("find a shorter extension with the door held at its fixed stop", async ({ p
   expect(guide).toContain("Measured aisle edge");
   expect(guide).toContain("Crosscut to 18 in · Rip to 2 in.");
 });
+
+test("compare three candidate door stops and export the chosen opening and closing route", async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Test movement", exact: true }).click();
+  const exampleDownload = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Download cabinet practice plan", exact: true }).click();
+  const example = await (await exampleDownload).path();
+  const project = projectSchema.parse(JSON.parse(await readFile(example!, "utf8")));
+  const dialog = await importCabinet(page, project);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Compare 35°, 55°, and 90° door stops for 12.5 in of drawer travel.");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await dialog.getByRole("button", { name: "Compare door stops", exact: true }).click();
+  const panel = page.getByRole("region", { name: "Motion and clearance", exact: true });
+  const angles = panel.getByRole("textbox", { name: "Stop angles (degrees)", exact: true });
+  await expect(angles).toHaveValue("35, 55, 90");
+  await panel.getByRole("button", { name: "Compare drawer travel", exact: true }).click();
+  const comparison = panel.getByRole("region", { name: "Door stop comparison", exact: true });
+  await expect(comparison.getByRole("status")).toContainText("6.625 in");
+  const rowFor = (angle: string) => comparison.getByRole("row").filter({
+    has: page.getByRole("rowheader", { name: angle, exact: true }),
+  });
+  await expect(rowFor("35°")).toContainText("5.375 in");
+  await expect(rowFor("90°")).toContainText("Measured aisle edge");
+  await expect(rowFor("90°").getByRole("button", { name: "Review 90° stop", exact: true })).toBeVisible();
+  const notification = page.getByRole("button", { name: "Dismiss notification", exact: true });
+  if (await notification.isVisible()) await notification.click();
+  await page.getByRole("button", { name: /Expand inspector|Return to inspector/ }).click();
+  await comparison.scrollIntoViewIfNeeded();
+  await comparison.screenshot({ path: info.outputPath("verified-travel-by-stop.png") });
+  await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
+  await comparison.getByRole("button", { name: "Use 6.625 in at 55°", exact: true }).click();
+  const pose = page.getByTestId("motion-preview-label");
+  await panel.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "100");
+  await expect(pose).toContainText("Pull-out drawer · 6.625 in");
+  await panel.getByRole("button", { name: "Play closing", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "0");
+  await panel.getByText("Keep this test under a name", { exact: true }).click();
+  await panel.getByRole("textbox", { name: "Clearance test name", exact: true }).fill("Compared stop at 55 degrees");
+  await panel.getByRole("button", { name: "Save named test", exact: true }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Named clearance test · Compared stop at 55 degrees");
+  expect(guide).toContain("Cabinet door 55°, Pull-out drawer 6.625 in");
+});

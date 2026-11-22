@@ -7,6 +7,8 @@ import type { MotionPlan, MotionTestSetup } from "./motionPlanSchema";
 import { partLabel } from "./partLabels";
 
 type SearchSetup = Pick<MotionTestSetup, "held" | "clearance">;
+export type DrawerStopRequest = { extension?: number } &
+  ({ angle: number; angles?: never } | { angles: number[]; angle?: never });
 
 export function doorAndDrawer(first: MotionPlan, second: MotionPlan) {
   if (first.mechanism.kind === second.mechanism.kind) return undefined;
@@ -28,7 +30,15 @@ type StopCheck = {
   findings: string[];
   canTryShorter: boolean;
 };
+type VerifiedDrawerTravel = { extension: number; setup: MotionTestSetup };
+type DrawerStopComparison = StopCheck & { verified?: VerifiedDrawerTravel };
 const drawerTravelIncrement = 0.125;
+
+export function parseDrawerStopAngles(text: string): number[] | undefined {
+  const entries = text.trim().split(/\s*(?:,\s*(?:and\s+)?|\band\b|\n)\s*/i);
+  const angles = entries.map((entry) => Number(/^(\d+(?:\.\d+)?)\s*(?:°|deg(?:rees?)?)?$/i.exec(entry)?.[1]));
+  return angles.every(Number.isFinite) ? [...new Set(angles)] : undefined;
+}
 
 function openingPair(selected: MotionPlan, companion: MotionPlan, drawerTravel: number) {
   const pair = doorAndDrawer(selected, companion);
@@ -118,14 +128,26 @@ export async function findShorterDrawerTravel(
   angle: number,
   test: SearchSetup,
   signal?: AbortSignal,
-): Promise<{ extension: number; setup: MotionTestSetup } | undefined> {
+): Promise<VerifiedDrawerTravel | undefined> {
   await yieldToPage();
   signal?.throwIfAborted();
   const { review } = runMotionTest(project, selected, stopSetup(selected, companion, drawerTravel, angle, test));
   if (!review || reviewPasses(review) || !canShortenDrawerTravel(review, drawerTravel)) return;
+  return searchShorterDrawerTravel(project, selected, companion, drawerTravel, angle, test, signal);
+}
+
+async function searchShorterDrawerTravel(
+  project: Project,
+  selected: MotionPlan,
+  companion: MotionPlan,
+  drawerTravel: number,
+  angle: number,
+  test: SearchSetup,
+  signal?: AbortSignal,
+) {
   let first = 1;
   let last = Math.ceil(drawerTravel / drawerTravelIncrement) - 1;
-  let verified: { extension: number; setup: MotionTestSetup } | undefined;
+  let verified: VerifiedDrawerTravel | undefined;
   let nextYield = performance.now() + 16;
   while (first <= last) {
     signal?.throwIfAborted();
@@ -146,6 +168,37 @@ export async function findShorterDrawerTravel(
   }
   signal?.throwIfAborted();
   return verified;
+}
+
+export async function compareDrawerStops(
+  project: Project,
+  selected: MotionPlan,
+  companion: MotionPlan,
+  drawerTravel: number,
+  angles: readonly number[],
+  test: SearchSetup,
+  options: { signal?: AbortSignal; onProgress?: (progress: SearchProgress) => void } = {},
+): Promise<DrawerStopComparison[]> {
+  const { door } = openingPair(selected, companion, drawerTravel);
+  const stops = [...new Set(angles)];
+  if (stops.length < 2) throw Error("Enter at least two different stop angles.");
+  if (stops.some((angle) => !Number.isFinite(angle) || angle < 0.01 || angle > door.mechanism.travel))
+    throw Error("Enter stop angles within the door's saved travel.");
+  const rows: DrawerStopComparison[] = [];
+  for (const angle of stops) {
+    await yieldToPage();
+    options.signal?.throwIfAborted();
+    const checked = checkDrawerStop(project, selected, companion, drawerTravel, angle, test);
+    const verified = checked.status === "clear"
+      ? { extension: drawerTravel, setup: checked.setup }
+      : checked.canTryShorter
+        ? await searchShorterDrawerTravel(project, selected, companion, drawerTravel, angle, test, options.signal)
+        : undefined;
+    rows.push({ ...checked, verified });
+    options.onProgress?.({ tried: rows.length, total: stops.length });
+  }
+  options.signal?.throwIfAborted();
+  return rows;
 }
 
 /** Try the whole-degree openings and the reachable endpoint. Clearance can

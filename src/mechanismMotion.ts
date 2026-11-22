@@ -1,5 +1,6 @@
 import { Quaternion, Vector3 } from "three";
 import { drawerSlideMountGuideLines } from "./drawerSlideMounts";
+import type { DrawerStopRequest } from "./drawerOpening";
 import { doorwayHinge, doorwayLeafRole, doorJambMaterial } from "./doorWall";
 import { drawerSlideKey, drawerSlidePurchaseReview, reviewDrawerSlide } from "./drawerSlides";
 import { greenhouseDoorReview } from "./greenhouseDoors";
@@ -1214,7 +1215,10 @@ function motionSequence(selected: MotionPlan, companion: MotionPlan, order: Moti
 
 function sequencePosition(sequence: MotionSequence, travel: number, phase = phaseAt(travel)) {
   const leg = sequence[phase];
-  return `${leg.plan.label} · ${motionDistance(phaseTravel(phase, leg.travel, travel), leg.plan.mechanism.kind)}`;
+  const atTarget = travel === phaseStart(phase) + phaseSize;
+  const distance = atTarget ? motionTargetDistance(leg.travel, leg.plan.mechanism.kind)
+    : motionDistance(phaseTravel(phase, leg.travel, travel), leg.plan.mechanism.kind);
+  return `${leg.plan.label} · ${distance}`;
 }
 
 function reviewMotionSequence(
@@ -1321,13 +1325,19 @@ export type MotionPreview = ReturnType<MotionReview["preview"]> & {
   uncertainLimit?: boolean;
 };
 
+export function motionTargetDistance(
+  value: number,
+  kind: MotionPlan["mechanism"]["kind"],
+) {
+  return kind === "hinge" ? `${value}°` : formatPreciseInches(value);
+}
+
 export function motionDistance(
   value: number,
   kind: MotionPlan["mechanism"]["kind"],
 ) {
-  return kind === "hinge"
-    ? `${Number(value.toFixed(2))}°`
-    : formatPreciseInches(Number.isInteger(value * 8) ? value : Number(value.toFixed(2)));
+  const rounded = kind === "slide" && Number.isInteger(value * 8) ? value : Number(value.toFixed(2));
+  return motionTargetDistance(rounded, kind);
 }
 
 export type MotionTestVariant = "baseline" | "saved";
@@ -1340,7 +1350,7 @@ export type MotionTestSelection = {
   setup?: MotionTestSetup;
   scenarioId?: string;
   focusDrawerOpening?: boolean;
-  drawerStop?: { angle: number; extension?: number };
+  drawerStop?: DrawerStopRequest;
   result: MotionTestResult;
 };
 
@@ -1510,7 +1520,7 @@ function savedTestLines(project: Project, label: string, setup: MotionTestSetup,
         ? [`opens in order: ${sequence.map(({ plan }) => plan.label).join(" → ")}. Closing reverses the order.`]
         : linked ? [`moves with ${linked.label}`] : []),
       ...(sequence && setup.sequenceTargets
-        ? [`Test targets · ${sequence.map(({ plan, travel }) => `${plan.label} ${motionDistance(travel, plan.mechanism.kind)}`).join(", ")}.`]
+        ? [`Test targets · ${sequence.map(({ plan, travel }) => `${plan.label} ${motionTargetDistance(travel, plan.mechanism.kind)}`).join(", ")}.`]
         : []),
       ...held.map(({ plan, travel }) => `${plan.label} held at ${motionDistance(travel, plan.mechanism.kind)}`),
     ].join(" · "),

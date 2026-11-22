@@ -5,6 +5,7 @@ import { openingAirSealSummary } from "./openingAirSeal";
 import type { BuildPreparationAction } from "./buildPreparation";
 import { inspectCutStock, type Finding } from "./engine";
 import { drawerBoxOpening } from "./drawerBoxes";
+import { parseDrawerStopAngles, type DrawerStopRequest } from "./drawerOpening";
 import { checkGreenhouseDoorSeal, reviewGreenhouseDoorSeal } from "./greenhouseDoorSeal";
 import { formatPreciseInches, formatStockLength } from "./measurement";
 import { inspectLidTravel } from "./lidTravelFindings";
@@ -42,7 +43,7 @@ import type { RimSide } from "./rimAirSealSchema";
 export type BuildQuestion =
   | { kind: "checks" }
   | { kind: "motion"; subject: string }
-  | { kind: "drawer-opening"; stop?: { angle: number; extension?: number } }
+  | { kind: "drawer-opening"; stop?: DrawerStopRequest }
   | { kind: "greenhouse-weatherseal" }
   | { kind: "opening-flashing"; sillLabel?: string }
   | { kind: "window-wall"; prompt: string }
@@ -68,7 +69,7 @@ export type BuildQuestionAction =
   | { kind: "checks" }
   | { kind: "cut-pool" }
   | { kind: "motion-setup" }
-  | { kind: "drawer-opening"; drawerId: string; doorId: string; stop?: { angle: number; extension?: number } }
+  | { kind: "drawer-opening"; drawerId: string; doorId: string; stop?: DrawerStopRequest }
   | { kind: "greenhouse-weatherseal"; motionId: string }
   | { kind: "opening-flashing"; sillId?: string }
   | { kind: "window-wall"; command?: Command }
@@ -143,6 +144,7 @@ const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?d
 const drawerOpeningQuestion = /^(?:how (?:far|wide) (?:do|should|can|must) i open (?:the |my )?(?:cabinet )?door (?:before (?:opening|pulling out|extending) (?:the |my )?drawer|(?:for|to clear) (?:the |my )?drawer)|(?:find|check|test) (?:a |the )?door opening (?:for|to clear) (?:the |my )?drawer)$/i;
 const drawerStopQuestion = /^will (?:an? |the )?(?<angle>\d+(?:\.\d+)?)\s*(?:°|degrees?)[ -](?:cabinet )?door stop (?:let|allow) (?:the |my )?drawer (?:open|extend)(?: (?:to )?(?<length>.+))?$/i;
 const drawerTravelAtStopQuestion = /^(?:can|will) (?:the |my )?(?:cabinet )?drawer (?:open|extend)(?: (?:to )?(?<length>.+?))? (?:with|if) (?:the |my )?(?:cabinet )?door (?:is )?(?:at|stops at|limited to) (?<angle>\d+(?:\.\d+)?)\s*(?:°|degrees?)$/i;
+const drawerStopComparisonQuestion = /^compare (?:(?:door stops? at )(?<after>.+?)|(?<before>.+?) door stops?)(?: for (?<length>.+?) (?:of )?drawer travel)?$/i;
 const doorSealQuestion =
   /^(?:how (?:can|do|should) i (?:weatherstrip|weatherseal|seal) (?:the |my )?greenhouse door|(?:check|review|plan|show) (?:the )?(?:weatherstrip|weatherseal|weatherstripping) (?:for|on) (?:the |my )?greenhouse door)$/i;
 const openingFlashingQuestion = /^(?:how (?:can|do|should) i (?:flash|air[ -]seal) (?:the |my )?(?:window|door) opening|(?:plan|review|check|show) (?:(?:(?:sill|opening|window|door|jamb and head) )?flashing|(?:the )?interior air[ -]seal))(?: (?:at|on|for) (p\d{1,6}))?$/i;
@@ -177,6 +179,13 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (treatmentQuestion.test(text)) return { kind: "treated-wood" };
   if (drawerOpeningQuestion.test(text)) return { kind: "drawer-opening" };
   const stopText = normalizeIdeaText(text);
+  const comparison = drawerStopComparisonQuestion.exec(stopText)?.groups;
+  if (comparison) {
+    const angles = parseDrawerStopAngles(comparison.after ?? comparison.before);
+    const extension = comparison.length === undefined ? undefined : inchesFromLength(comparison.length);
+    if (angles && angles.length > 1 && (extension === undefined || (Number.isFinite(extension) && extension > 0)))
+      return { kind: "drawer-opening", stop: { angles, ...(extension !== undefined && { extension }) } };
+  }
   const stop = (drawerStopQuestion.exec(stopText) ?? drawerTravelAtStopQuestion.exec(stopText))?.groups;
   if (stop) {
     const extension = stop.length === undefined ? undefined : inchesFromLength(stop.length);
@@ -569,18 +578,20 @@ export function answerBuildQuestion(
     case "drawer-opening": {
       const plans = project.motionPlans ?? [];
       const hinges = plans.filter(({ mechanism }) => mechanism.kind === "hinge");
+      const label = question.stop?.angles ? "Compare door stops" : question.stop ? "Check the door stop" : "Find a door opening";
       const pairs = plans.filter(({ mechanism }) => mechanism.kind === "slide").flatMap((drawer) =>
         hinges.filter((door) => canParkMotion(project, drawer, door) && canParkMotion(project, door, drawer))
           .map((door) => ({
             id: drawer.id + "/" + door.id,
             title: drawer.label + " behind " + door.label,
-            detail: "Check the door swing and find an opening for the requested drawer extension.",
-            link: { label: question.stop ? "Check the door stop" : "Find a door opening",
+            detail: question.stop?.angles ? "Compare verified drawer reach at each stop." : "Check the door swing and find an opening for the requested drawer extension.",
+            link: { label,
               action: { kind: "drawer-opening" as const, drawerId: drawer.id, doorId: door.id,
                 ...(question.stop && { stop: question.stop }) } },
           })));
       return {
-        title: question.stop ? "Check a fixed door stop" : "Find a door opening for the drawer",
+        title: question.stop?.angles ? "Compare drawer travel at different door stops" :
+          question.stop ? "Check a fixed door stop" : "Find a door opening for the drawer",
         detail: pairs.length ? "Choose the door and drawer to test. Other parts and recorded site clearances stay in the check."
           : "Use Test movement to save the door's hinge motion and the drawer's sliding motion. Then link them to check clearance.",
         ...(pairs.length === 1 ? { link: pairs[0].link } : pairs.length ? { rows: pairs.slice(0, 12) } :

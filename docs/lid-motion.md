@@ -24,6 +24,8 @@ If the door clears and the drawer cannot reach the requested extension, choose *
 
 Try this workflow with the [editable cabinet](../public/examples/hinges/fixed-stop-drawer.yardwork.json). It includes a measured aisle edge, three named motion tests, and a plywood mounting spacer with recorded cuts and two reusable remnants.
 
+Use **Compare door stops** to test candidate stop angles with the same requested extension and cabinet layout. The example verifies 5⅜ in of travel at 35° and 6⅝ in at 55°. At 90° the door reaches the measured aisle edge. Ask **“Compare 35°, 55°, and 90° door stops for 12.5 in of drawer travel”**, then choose a row to play its route or inspect the obstruction. Confirm the installed hinge path and the stops offered for the selected hardware. [Blum hinge planning and opening-angle stops](https://publications.blum.com/2026/catalogue/en/79/)
+
 To compare several arrangements, run the test and open **Keep this test under a name**. Give each arrangement a name, such as “Open door first” or “Both drawers open.” Switch between them with **Clearance test**. Enter a different name when you want to keep the original arrangement and save a variation. In **Guide → Review build preparation**, choose a named result to reopen its test at the reported pose. Named tests use the current model each time they run.
 
 Open **Guide → Review build preparation → Motion and clearance** to inspect a flagged test. Each row identifies the affected parts or measured site face and opens the relevant motion at the finding. A missing part or companion opens the setup with its error so you can revise it.

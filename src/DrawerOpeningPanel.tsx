@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
+import { DrawerStopComparison } from "./DrawerStopComparison";
 import { checkDrawerStop, doorAndDrawer, findDrawerOpening, findShorterDrawerTravel } from "./drawerOpening";
-import { motionDistance } from "./mechanismMotion";
+import { motionDistance, motionTargetDistance } from "./mechanismMotion";
 import { preferredLengthUnit } from "./measurement";
 import type { Project } from "./model";
 import type { MotionPlan, MotionTestSetup } from "./motionPlanSchema";
 
-export function DrawerOpeningPanel({ project, selected, linked, test, initialExtension, initialStop, expanded, onChoose }: {
+export function DrawerOpeningPanel({ project, selected, linked, test, initialExtension, initialStop, initialComparison, expanded, onChoose }: {
   project: Project;
   selected: MotionPlan;
   linked: MotionPlan;
   test: Pick<MotionTestSetup, "held" | "clearance">;
   initialExtension: number;
   initialStop?: number;
+  initialComparison?: readonly number[];
   expanded?: boolean;
   onChoose: (setup: MotionTestSetup) => void;
 }) {
@@ -150,8 +152,8 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
     {checkedStop && <section className="notice" aria-label="Door stop check">
       <div>
         <p role="status"><strong>{checkedStop.status === "clear"
-          ? `The ${motionDistance(checkedStop.angle, "hinge")} stop clears ${motionDistance(extension, "slide")} of drawer travel in the model.`
-          : `Review the ${motionDistance(checkedStop.angle, "hinge")} stop for ${motionDistance(extension, "slide")} of drawer travel.`}</strong></p>
+          ? `The ${motionTargetDistance(checkedStop.angle, "hinge")} stop clears ${motionTargetDistance(extension, "slide")} of drawer travel in the model.`
+          : `Review the ${motionTargetDistance(checkedStop.angle, "hinge")} stop for ${motionTargetDistance(extension, "slide")} of drawer travel.`}</strong></p>
         {!!checkedStop.findings.length && <ul>{checkedStop.findings.slice(0, 3).map((line, index) => <li key={index}>{line}</li>)}</ul>}
         <div className="motion-actions">
           <button type="button" className="button secondary small" onClick={() => onChoose(checkedStop.setup)}>
@@ -170,5 +172,8 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
         </>}
       </div>
     </section>}
+    <DrawerStopComparison key={extension} project={project} selected={selected} linked={linked} test={test}
+      extension={extension} maxAngle={pair.door.mechanism.travel} initialAngles={initialComparison}
+      disabled={!valid || !!progress} onChoose={onChoose} />
   </details>;
 }

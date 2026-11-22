@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { buildQuestion, answerBuildQuestion } from "../src/buildQuestions";
-import { checkDrawerStop, findDrawerOpening, findShorterDrawerTravel } from "../src/drawerOpening";
+import { checkDrawerStop, compareDrawerStops, findDrawerOpening, findShorterDrawerTravel } from "../src/drawerOpening";
 import { guideMarkdown } from "../src/engine";
 import { blank, part, projectSchema } from "../src/model";
 import { runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
@@ -190,4 +191,43 @@ test("a reachable stop can verify shorter drawer travel without changing the sav
   const controller = new AbortController();
   controller.abort();
   await assert.rejects(findShorterDrawerTravel(project, slide, swing, 12.5, 35, held, controller.signal), { name: "AbortError" });
+});
+
+test("compare exact stops using the same cabinet, requested travel and modeled aisle edge", async () => {
+  const example = new URL("../public/examples/hinges/fixed-stop-drawer.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(readFileSync(example, "utf8")));
+  const drawer = project.motionPlans!.find(({ mechanism }) => mechanism.kind === "slide")!;
+  const door = project.motionPlans!.find(({ mechanism }) => mechanism.kind === "hinge")!;
+  const before = JSON.stringify(project);
+  const question = buildQuestion("Compare 35°, 55°, and 90° door stops for 12.5 in of drawer travel.");
+  assert.deepEqual(question, { kind: "drawer-opening", stop: { angles: [35, 55, 90], extension: 12.5 } });
+  assert.deepEqual(answerBuildQuestion(project, question!, []).link?.action, {
+    kind: "drawer-opening", drawerId: drawer.id, doorId: door.id,
+    stop: { angles: [35, 55, 90], extension: 12.5 },
+  });
+  assert.deepEqual(buildQuestion("Compare door stops at thirty-five and fifty-five degrees."),
+    { kind: "drawer-opening", stop: { angles: [35, 55] } });
+  const rows = await compareDrawerStops(project, drawer, door, 12.5, [35, 55, 90, 55], { held: [] });
+  assert.deepEqual(rows.map(({ angle, verified }) => [angle, verified?.extension]), [[35, 5.375], [55, 6.625], [90, undefined]]);
+  assert.match(rows[2].findings.join("\n"), /Measured aisle edge/);
+  const blocked = runMotionTest(project, drawer, rows[2].setup).review!.playbackLimit(0, 100);
+  assert.equal(blocked.phase, 0);
+  assert.equal(blocked.siteFaceId, project.siteClearances![0].id);
+  assert.ok(blocked.travel < 50 && blocked.inspectAt !== undefined);
+  for (const row of rows.slice(0, 2)) {
+    const review = runMotionTest(project, drawer, row.verified!.setup).review!;
+    assert.deepEqual(review.playbackLimit(0, 100), { travel: 100 });
+    assert.deepEqual(review.playbackLimit(100, 0), { travel: 0 });
+  }
+  assert.equal(JSON.stringify(project), before);
+  const near = await compareDrawerStops(project, drawer, door, 5, [35, 55], { held: [] });
+  assert.deepEqual(near.map(({ verified }) => verified?.extension), [5, 5]);
+  const measured = await compareDrawerStops(project, drawer, door, 5, [55.001, 55.002], { held: [] });
+  const chosen = saveMotionTestScenario(project, drawer.id, "Measured 55.001 stop", measured[0].verified!.setup).project;
+  assert.match(guideMarkdown(chosen), /Cabinet door 55\.001°, Pull-out drawer 5 in/);
+  const controller = new AbortController();
+  await assert.rejects(compareDrawerStops(project, drawer, door, 12.5, [35, 90], { held: [] }, {
+    signal: controller.signal, onProgress: () => controller.abort(),
+  }), { name: "AbortError" });
+  await assert.rejects(compareDrawerStops(project, drawer, door, 12.5, [35, 90.01], { held: [] }), /door's saved travel/);
 });

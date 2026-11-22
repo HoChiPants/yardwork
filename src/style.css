@@ -743,6 +743,8 @@ small {
 .layout-preview .part-quick-tools { display: none; }
 .lid-motion-panel input[type="range"] { width: 100%; margin: 0; }
 .lid-motion-panel .motion-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.drawer-stop-table th:first-child { width: 64px; font-variant-numeric: tabular-nums; }
+.drawer-stop-table td .button { margin-top: 6px; min-height: 34px; }
 .lid-motion-panel .motion-findings { padding-left: 18px; }
 .lid-motion-panel .motion-findings button + button { margin-left: 6px; }
 .motion-held-row {

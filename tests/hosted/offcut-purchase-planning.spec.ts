@@ -1,5 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
+import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { inspectCutStock } from "../../src/cutStock";
+import { projectSchema } from "../../src/model";
 
 test("a practice offcut supplies two shorter parts and saves a new board on the shopping list", async ({ page }) => {
   test.setTimeout(90_000);
@@ -16,6 +19,9 @@ test("a practice offcut supplies two shorter parts and saves a new board on the 
     name: "save-a-board.yardwork.json", mimeType: "application/json", buffer: bytes,
   });
   await expect(dialog).toHaveCount(0);
+  const materials = page.locator(".inspector-scroll .bom-row");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(materials).toContainText("4 boards");
   await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
   await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("Can I buy fewer boards using my scraps?");
   await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
@@ -29,7 +35,25 @@ test("a practice offcut supplies two shorter parts and saves a new board on the 
   await expect(dialog.getByRole("list", { name: "Scraps to keep after these cuts" })).toContainText("12.75 in");
   await dialog.getByRole("button", { name: "Apply offcut plan", exact: true }).click();
   await page.getByRole("button", { name: "List", exact: true }).click();
-  await expect(page.locator(".inspector-scroll .bom-row")).toContainText("3 boards");
+  await expect(materials).toContainText("3 boards");
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(materials).toContainText("4 boards");
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(materials).toContainText("3 boards");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const saved = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await saved())?.revision).toBe(1);
+  const snapshot = projectSchema.parse((await saved()).project);
+  const allocation = snapshot.history.flatMap(({ offcutCut }) => offcutCut ? [offcutCut] : []);
+  expect(allocation).toHaveLength(2);
+  expect(allocation[1].inputId).toBe(allocation[0].remnants[0].id);
+  expect(inspectCutStock(snapshot).valid.has(allocation[0].sourceId)).toBe(true);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: snapshot.name }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(materials).toContainText("3 boards");
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const guide = page.waitForEvent("download");
   await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();

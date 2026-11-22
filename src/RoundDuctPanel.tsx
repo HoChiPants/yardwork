@@ -3,9 +3,9 @@ import { LengthInput } from "./LengthInput";
 import { formatStockLength } from "./measurement";
 import type { Project, V3 } from "./model";
 import { previewRoundDuct, roundDuctTakeoff } from "./roundDuct";
+import { roundDuctMatingInstruction } from "./roundDuctMating";
 import { roundDuctStock } from "./roundDuctReference";
 import { roundDuctSlotKey, type RoundDuctInput } from "./roundDuctSchema";
-import { ductRunSignature } from "./roundDuctStock";
 
 const axes = ["X", "Y", "Z"] as const;
 const fields = [
@@ -62,8 +62,10 @@ function RoundDuctMeasurements({ project, existing, measurement, onPreview, onSa
   const [preview, setPreview] = useState<ReturnType<typeof previewRoundDuct> & { source: Project }>();
   const [editing, setEditing] = useState(true);
   const checked = preview?.source === project ? preview : undefined;
-  const stock = checked?.cuts && existing && ductRunSignature(existing.input) === ductRunSignature(input)
-    ? roundDuctTakeoff(project) : undefined;
+  const stock = checked?.cuts && existing ? roundDuctTakeoff({
+    ...project, roundDuctRuns: project.roundDuctRuns?.map((run) => run.id === existing.id ? { ...run, input } : run),
+  }) : undefined;
+  const schedule = existing && stock?.endSchedules.get(existing.id);
   function update(patch: Partial<RoundDuctInput>) {
     setInput((current) => ({ ...current, ...patch }));
     setPreview(undefined);
@@ -92,6 +94,12 @@ function RoundDuctMeasurements({ project, existing, measurement, onPreview, onSa
         {fields.map(([key, label, min, max]) => <LengthInput key={key} label={label} value={input[key]} min={min} max={max}
           onChange={(value) => update({ [key]: value })} />)}
       </div>
+      <details>
+        <summary>Factory crimp measurement</summary>
+        <LengthInput label="Measured factory crimp length" value={input.factoryCrimpLength ?? NaN} min={0.125} max={60}
+          onChange={(value) => update({ factoryCrimpLength: Number.isFinite(value) ? value : undefined })} />
+        <p className="small-note">Enter the distance from the crimped tip to fully round stock if the cut needs to remove the crimp.</p>
+      </details>
       <button type="submit" className="button secondary">Check route and cuts</button>
     </> : <button type="button" className="button secondary" onClick={() => {
       setEditing(true); setPreview(undefined); onPreview();
@@ -101,17 +109,20 @@ function RoundDuctMeasurements({ project, existing, measurement, onPreview, onSa
       {checked.geometry && <p>{formatStockLength(checked.geometry.length)} between collar tips.</p>}
       {!checked.issues.length && checked.cuts && <>
         <p>{stock ? `${checked.cuts.length} pipe sections` : `${checked.cuts.length} × ${roundDuctStock.model}`} · {checked.jointCount} joints to seal.</p>
+        {schedule?.issue && <p role="status">{schedule.issue}</p>}
         <ol>
           {checked.cuts.map(({ length, whole, tail }, index) => {
             const key = existing && roundDuctSlotKey(existing.id, index);
             const reservation = key && stock?.assigned.get(key);
             const completed = key && stock?.completedUses.get(key);
             const onHand = key && stock?.credits.has(key);
+            const mating = schedule?.cuts[index];
             return <li key={index}>
               {completed ? `Supplied by ${completed.offcut.label} at` : reservation ? `Use ${reservation.offcut.label} at` :
                 onHand ? "Already cut to" : whole ? "Keep whole" : "Cut to"} {formatStockLength(length)}.
               {reservation && reservation.fit.remnant && ` Estimated remnant ${formatStockLength(reservation.fit.remnant.length)}.`}
               {!reservation && !onHand && tail > 1e-7 && ` Estimated tail ${formatStockLength(tail)}.`}
+              {mating && ` ${roundDuctMatingInstruction(mating)}`}
             </li>;
           })}
         </ol>

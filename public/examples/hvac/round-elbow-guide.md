@@ -102,11 +102,11 @@ Mark the measured collar tips and enter the actual end engagement and pipe overl
 
 - Supply through bay · 38 in between collar tips. X/Y/Z -44 in / 10 in / 0 in to -6 in / 10 in / 0 in.
 - Stock · 1 × CP6X60 to buy. Cut lengths include collar engagement and 1 in at each internal joint.
-- Pipe 1 · Cut to 40 in. Estimated tail 19.875 in. Keep an intact piece for a crimp or sealant trial.
+- Pipe 1 · Cut to 40 in. Start crimped · finish plain. Trim the plain end and keep the factory crimp. Estimated tail 19.875 in. Keep an intact piece for a crimp or sealant trial.
 - Seal 2 round joints, including the two collars. Dry-fit and support the run. Preserve the factory crimp where it mates with the next pipe and check the cut end at its collar. Secure the joints with screws, clean the surfaces and seal the snap seams and joints with compatible duct mastic. Review fiberglass mesh at seams over ⅛ in and leave room for the required insulation.
 - Cross branch · 38 in between collar tips. X/Y/Z 0 in / 10 in / 6 in to 0 in / 10 in / 44 in.
 - Stock · 1 × CP6X60 to buy. Cut lengths include collar engagement and 1 in at each internal joint.
-- Pipe 1 · Cut to 40 in. Estimated tail 19.875 in. Keep an intact piece for a crimp or sealant trial.
+- Pipe 1 · Cut to 40 in. Start crimped · finish plain. Trim the plain end and keep the factory crimp. Estimated tail 19.875 in. Keep an intact piece for a crimp or sealant trial.
 - Seal 2 round joints, including the two collars. Dry-fit and support the run. Preserve the factory crimp where it mates with the next pipe and check the cut end at its collar. Secure the joints with screws, clean the surfaces and seal the snap seams and joints with compatible duct mastic. Review fiberglass mesh at seams over ⅛ in and leave room for the required insulation.
 
 [Master Flow pipe reference](https://www.homedepot.com/p/100125106) · [PNNL metal duct sealing](https://basc.pnnl.gov/resource-guides/sealed-and-insulated-metal-ducts)

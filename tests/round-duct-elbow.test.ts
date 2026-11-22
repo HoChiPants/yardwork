@@ -5,7 +5,7 @@ import { guideMarkdown, validate } from "../src/engine";
 import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import { addHomeDepotPurchaseNeed } from "../src/handoffPurchases";
 import { part, projectSchema } from "../src/model";
-import { addRoundDuctOffcut, reserveRoundDuctOffcut, roundDuctTakeoff, saveRoundDuct } from "../src/roundDuct";
+import { addRoundDuctOffcut, reserveRoundDuctOffcut, roundDuctPurchaseCount, roundDuctTakeoff, saveRoundDuct } from "../src/roundDuct";
 import { previewRoundDuctElbow, roundDuctElbowCount, saveRoundDuctElbow } from "../src/roundDuctElbow";
 import type { RoundDuctElbowInput } from "../src/roundDuctElbowSchema";
 import { roundDuctElbowStock } from "../src/roundDuctReference";
@@ -59,4 +59,41 @@ test("changed axes and an incompatible reserved duct end send the elbow back to 
   const conflicting = { ...imported, roundDuctElbows: saved.roundDuctElbows };
   assert.equal(roundDuctElbowCount(conflicting), null);
   assert.match(guideMarkdown(conflicting), /needs a plain pipe end at the elbow/);
+});
+
+test("the cut schedule keeps one plain and one crimped end at an internal pipe lap", () => {
+  const { project, input, second } = practice();
+  const joined = saveRoundDuctElbow(saveRoundDuct(project, { ...second.input, end: [0, 10, 94] }, second.id), input);
+  const schedule = roundDuctTakeoff(joined).endSchedules.get(second.id)!;
+  assert.deepEqual(schedule.cuts.map(({ ends, trim }) => [ends, trim]), [
+    [["crimped", "plain"], undefined],
+    [["crimped", "plain"], "end"],
+  ]);
+  assert.match(guideMarkdown(joined), /Cut to 31 in\. Start crimped · finish plain\. Trim the plain end and keep the factory crimp/);
+  const measured = addRoundDuctOffcut(joined, {label: "Reversed lap", length: 31, ends: ["plain", "plain"]});
+  const cut = roundDuctTakeoff(measured).targets.find(({ run, index }) => run.id === second.id && index === 1)!;
+  assert.throws(() => reserveRoundDuctOffcut(measured, measured.roundDuctOffcuts![0].id, cut.revisionKey, ["plain", "plain"]),
+    /available pipe ends cannot mate/);
+});
+
+test("two elbows demanding matching forms hold purchases until the cut can supply both", () => {
+  const { project, input, second } = practice();
+  const thirdRun = saveRoundDuct(project, { ...second.input, name: "Third branch", start: [6, 10, 50], end: [44, 10, 50] });
+  const third = thirdRun.roundDuctRuns!.at(-1)!;
+  const last: RoundDuctElbowInput = {
+    ...input, first: { runId: second.id, tip: "end" }, second: { runId: third.id, tip: "start" },
+  };
+  const startCrimped = saveRoundDuctElbow(thirdRun, input);
+  assert.throws(() => saveRoundDuctElbow(startCrimped, { ...last, crimpedTip: "second" }), /available pipe ends cannot mate/);
+  const startPlain = saveRoundDuctElbow(thirdRun, { ...input, crimpedTip: "second" });
+  assert.throws(() => saveRoundDuctElbow(startPlain, last), /measured factory crimp length/);
+  const measured = saveRoundDuct(startPlain, { ...second.input, factoryCrimpLength: 2 }, second.id);
+  const both = saveRoundDuctElbow(measured, last);
+  assert.equal(roundDuctElbowCount(both), 2);
+  assert.equal(roundDuctPurchaseCount(both), 3);
+  assert.match(guideMarkdown(both), /Start plain · finish plain\. Trim off the measured factory crimp at the end/);
+  const lostMeasurement = saveRoundDuct(both, second.input, second.id);
+  assert.equal(roundDuctPurchaseCount(lostMeasurement), null);
+  assert.equal(roundDuctElbowCount(lostMeasurement), null);
+  assert.ok(validate(lostMeasurement).some(({ title }) => title === "Review duct mating ends · Cross branch"));
 });

@@ -2,7 +2,7 @@
 
 New exports use **format 133**. Yardwork reads valid formats 1–132 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
 
-Format 133 records a measured right-angle elbow between two saved round duct tips. The record stores the measured setbacks to the centerline turn, clearance width and the crimped port. The guide and elbow shopping line use the current run geometry and recorded mating ends.
+Format 133 records a measured right-angle elbow between two saved round duct tips. The record stores the measured setbacks to the centerline turn, clearance width and the crimped port. Each connected run can also keep the measured factory crimp length so a trim can be checked for complete removal. The guide and linked shopping entries use the current run geometry and the recorded mating ends.
 
 Format 132 stores measured 6 in duct offcuts with a physical label and two end forms. A tail can identify a completed pipe cut and reserve one later pipe section. Recording its use keeps the installed cut in the history and can register one measured remnant linked to that trim. Yardwork rechecks coverage after routing or joint measurements change.
 

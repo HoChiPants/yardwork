@@ -733,6 +733,10 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (issues.length) findings.push({
       id: `round-duct-${id}`, title: `Review duct route · ${input.name}`, severity: "warning", detail: issues.join(" "),
     });
+    const cutIssue = roundDuctReview.endSchedules.get(id)?.issue;
+    if (cutIssue) findings.push({
+      id: `round-duct-mates-${id}`, title: `Review duct mating ends · ${input.name}`, severity: "warning", detail: cutIssue,
+    });
   }
   for (const [id, detail] of roundDuctReview.stale) {
     const label = p.roundDuctOffcuts?.find((offcut) => offcut.id === id)?.label;

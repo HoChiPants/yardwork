@@ -16,6 +16,7 @@ export const roundDuctInputSchema = z.strictObject({
   endEngagement: engagement,
   jointOverlap: engagement,
   cutLoss: engagement,
+  factoryCrimpLength: z.number().finite().min(0.125).max(roundDuctStock.length).optional(),
 });
 
 export type RoundDuctInput = z.infer<typeof roundDuctInputSchema>;

@@ -6,6 +6,7 @@ import { formatStockLength } from "./measurement";
 import { partLabel } from "./partLabels";
 import { roundDuctTakeoff } from "./roundDuct";
 import { ductTipKey, requiredElbowPipeEnd, roundDuctElbowInputSchema, type RoundDuctElbowInput, type RoundDuctTip } from "./roundDuctElbowSchema";
+import { requiredRoundDuctEnds, roundDuctMatingSchedule, roundDuctRequiredTips } from "./roundDuctMating";
 import { roundDuctElbowStock } from "./roundDuctReference";
 import { roundDuctSlotKey } from "./roundDuctSchema";
 import { prepareCollisionBox, prepareCollisionSolid, solidOverlap } from "./solidCollision";
@@ -64,6 +65,7 @@ export function previewRoundDuctElbow(project: Project, values: RoundDuctElbowIn
   if (!geometry || !first || !second) return { issues };
   const endLabels = [first.run.input.name, second.run.input.name];
   const required = [requiredElbowPipeEnd(input, "first"), requiredElbowPipeEnd(input, "second")];
+  const proposedTips = roundDuctRequiredTips([...(project.roundDuctElbows ?? []).filter((elbow) => elbow.id !== id), { input }]);
   const tips = [input.first, input.second];
   for (const [index, tip] of tips.entries()) {
     const review = stock.reviews.find(({ id }) => id === tip.runId);
@@ -77,6 +79,10 @@ export function previewRoundDuctElbow(project: Project, values: RoundDuctElbowIn
     if (recordedEnd && recordedEnd !== required[index]) issues.push(
       `${endLabels[index]} needs a ${required[index]} pipe end at the elbow. Review the duct offcut in the Cut pool.`,
     );
+    else {
+      const { issue } = roundDuctMatingSchedule(review, stock, requiredRoundDuctEnds(proposedTips, tip.runId));
+      if (issue) issues.push(`${endLabels[index]} · ${issue}`);
+    }
   }
   const box = prepareCollisionBox(geometry.size, geometry.center, geometry.rotation);
   const zone = project.workZone;

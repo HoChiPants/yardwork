@@ -3,10 +3,10 @@ import { floorRegisterReviews } from "./floorRegister";
 import { formatStockLength } from "./measurement";
 import { projectSchema, uid, type Project } from "./model";
 import { partLabel } from "./partLabels";
-import { ductTipKey, requiredElbowPipeEnd } from "./roundDuctElbowSchema";
 import { ductLengthTolerance as tolerance, fitRoundDuctOffcut } from "./roundDuctEndFit";
+import { requiredRoundDuctEnds, roundDuctMatingInstruction, roundDuctMatingSchedule, roundDuctRequiredTips } from "./roundDuctMating";
 import { roundDuctSealNote, roundDuctStock } from "./roundDuctReference";
-import { roundDuctInputSchema, roundDuctRecoveryKey, roundDuctSlotKey, type RoundDuctEnd, type RoundDuctEnds, type RoundDuctInput, type RoundDuctOffcut } from "./roundDuctSchema";
+import { roundDuctInputSchema, roundDuctRecoveryKey, roundDuctSlotKey, type RoundDuctEnds, type RoundDuctInput, type RoundDuctOffcut } from "./roundDuctSchema";
 import { ductRunSignature, reviewRoundDuctStock } from "./roundDuctStock";
 import { prepareCollisionBox, solidOverlap } from "./solidCollision";
 
@@ -104,27 +104,26 @@ export function roundDuctTakeoff(project: Project) {
   const stock = reviewRoundDuctStock(reviews, records);
   const pending = new Set(records.flatMap(({ id, assignment }) =>
     assignment && stock.stale.has(id) ? [roundDuctSlotKey(assignment.runId, assignment.index)] : []));
-  const requiredTips = new Map<string, RoundDuctEnd>();
-  for (const { input } of project.roundDuctElbows ?? []) {
-    requiredTips.set(ductTipKey(input.first), requiredElbowPipeEnd(input, "first"));
-    requiredTips.set(ductTipKey(input.second), requiredElbowPipeEnd(input, "second"));
-  }
+  const requiredTips = roundDuctRequiredTips(project.roundDuctElbows ?? []);
+  const endSchedules = new Map<string, ReturnType<typeof roundDuctMatingSchedule>>();
   const targets = reviews.flatMap((run) => {
     if (run.issues.length) return [];
     const signature = ductRunSignature(run.input);
     const cuts = run.cuts ?? [];
+    const [startEnd, finishEnd] = requiredRoundDuctEnds(requiredTips, run.id);
+    if (startEnd || finishEnd) endSchedules.set(run.id, roundDuctMatingSchedule(run, stock, [startEnd, finishEnd]));
     return cuts.map((cut, index) => ({
       run, cut, index, signature, key: roundDuctSlotKey(run.id, index), revisionKey: roundDuctRecoveryKey(run.id, index, signature),
       requiredEnds: [
-        index === 0 ? requiredTips.get(ductTipKey({ runId: run.id, tip: "start" })) : undefined,
-        index === cuts.length - 1 ? requiredTips.get(ductTipKey({ runId: run.id, tip: "end" })) : undefined,
+        index === 0 ? startEnd : undefined,
+        index === cuts.length - 1 ? finishEnd : undefined,
       ] as const,
     }));
   }).filter(({ key }) => !stock.credits.has(key) && !stock.assigned.has(key) && !pending.has(key));
   const usedTails = new Set(records.flatMap(({ source }) =>
     source ? [roundDuctRecoveryKey(source.runId, source.index, source.signature)] : []));
   const tails = targets.filter(({ cut, revisionKey }) => cut.tail > tolerance && !usedTails.has(revisionKey));
-  return { reviews, ...stock, targets, tails };
+  return { reviews, ...stock, targets, tails, endSchedules };
 }
 
 function withDuctOffcuts(project: Project, records: RoundDuctOffcut[]): Project {
@@ -151,14 +150,19 @@ export function reserveRoundDuctOffcut(project: Project, id: string, key: string
   const records = project.roundDuctOffcuts ?? [];
   const offcut = records.find((record) => record.id === id);
   if (!offcut || offcut.retired || offcut.assignment) throw Error("Choose an available duct offcut.");
-  const target = roundDuctTakeoff(project).targets.find(({ revisionKey }) => revisionKey === key);
+  const takeoff = roundDuctTakeoff(project);
+  const target = takeoff.targets.find(({ revisionKey }) => revisionKey === key);
   if (!target) throw Error("Choose an available pipe section from a clear duct run.");
   if (target.requiredEnds.some((form, index) => form && form !== ends[index]))
     throw Error("This reserved cut must use the mating end entered by the saved elbow.");
   if (!fitRoundDuctOffcut(offcut, target.cut.length, ends, target.run.input.cutLoss))
     throw Error("This offcut does not match the required length and mating ends with the entered cutting loss.");
   const assignment = { runId: target.run.id, index: target.index, signature: target.signature, ends };
-  return withDuctOffcuts(project, records.map((record) => record.id === id ? { ...record, assignment } : record));
+  const reserved = withDuctOffcuts(project, records.map((record) => record.id === id ? { ...record, assignment } : record));
+  const issue = takeoff.endSchedules.has(target.run.id)
+    ? roundDuctTakeoff(reserved).endSchedules.get(target.run.id)?.issue : undefined;
+  if (issue) throw Error(issue);
+  return reserved;
 }
 
 function withoutDuctReservation(offcut: RoundDuctOffcut) {
@@ -175,12 +179,14 @@ export function recordRoundDuctOffcutUse(project: Project, id: string, measured?
   const offcut = records.find((record) => record.id === id);
   const assignment = offcut?.assignment;
   if (!offcut || !assignment) throw Error("Choose a reserved duct offcut.");
-  const { assigned, reviews } = roundDuctTakeoff(project);
+  const { assigned, reviews, endSchedules } = roundDuctTakeoff(project);
   const fit = assigned.get(roundDuctSlotKey(assignment.runId, assignment.index));
   const run = reviews.find((review) => review.id === assignment.runId);
   const cut = run?.cuts?.[assignment.index];
   if (fit?.offcut.id !== id || !run || !cut)
     throw Error("Recheck the receiving cut and mating ends before recording use.");
+  const issue = endSchedules.get(run.id)?.issue;
+  if (issue) throw Error(issue);
   const remnant = fit.fit.remnant;
   if (measured && (!remnant || !Number.isFinite(measured.length) || measured.length <= 0 ||
       measured.length > remnant.length + tolerance))
@@ -210,17 +216,20 @@ export const availableRoundDuctOffcuts = (project: Project) => (project.roundDuc
   .filter(({ retired, assignment }) => !retired && !assignment);
 
 export function roundDuctPurchaseCount(project: Project) {
-  const { reviews, stale, targets } = roundDuctTakeoff(project);
-  return reviews.some(({ issues }) => issues.length) || stale.size ? null : targets.length;
+  const { reviews, stale, targets, endSchedules } = roundDuctTakeoff(project);
+  return reviews.some(({ issues }) => issues.length) || stale.size || [...endSchedules.values()].some(({ issue }) => issue)
+    ? null : targets.length;
 }
 
 export function roundDuctGuideLines(project: Project) {
-  const { reviews, stale, credits, completedUses, assigned, targets } = roundDuctTakeoff(project);
+  const { reviews, stale, credits, completedUses, assigned, targets, endSchedules } = roundDuctTakeoff(project);
   const clean = (label: string) => label.replace(/[\r\n]+/g, " ");
   const records = project.roundDuctOffcuts ?? [];
   const routes = reviews.flatMap(({ id, input, geometry, issues, cuts, jointCount }) => {
     const name = clean(input.name);
     if (issues.length || !geometry || !cuts) return [`${name} · Recheck the run. ${issues.join(" ")}`];
+    const schedule = endSchedules.get(id);
+    if (schedule?.issue) return [`${name} · Recheck the cut list. ${schedule.issue}`];
     const point = (value: typeof input.start) => value.map(formatStockLength).join(" / ");
     return [
       `${name} · ${formatStockLength(geometry.length)} between collar tips. X/Y/Z ${point(input.start)} to ${point(input.end)}.`,
@@ -230,19 +239,21 @@ export function roundDuctGuideLines(project: Project) {
         const reservation = assigned.get(key);
         const completed = completedUses.get(key);
         const recorded = `Pipe ${index + 1} ·`;
+        const mating = schedule?.cuts[index];
+        const finish = mating ? ` ${roundDuctMatingInstruction(mating)}` : "";
         if (completed) {
           const { offcut, fit } = completed;
-          return `${recorded} Already supplied by measured offcut ${clean(offcut.label)} at ${formatStockLength(length)}.${fit.reversed ? " Reversed its recorded ends." : ""}${fit.trim ? ` Trimmed at the ${fit.trim} of the installed section.` : ""}`;
+          return `${recorded} Already supplied by measured offcut ${clean(offcut.label)} at ${formatStockLength(length)}.${fit.reversed ? " Reversed its recorded ends." : ""}${fit.trim ? ` Trimmed at the ${fit.trim} of the installed section.` : ""}${finish}`;
         }
-        if (credits.has(key)) return `${recorded} Already cut to ${formatStockLength(length)}. Its measured tail is in the Cut pool history.`;
+        if (credits.has(key)) return `${recorded} Already cut to ${formatStockLength(length)}. Its measured tail is in the Cut pool history.${finish}`;
         if (reservation) {
           const { offcut, fit } = reservation;
-          return `${recorded} Use measured offcut ${clean(offcut.label)} at ${formatStockLength(length)}.${fit.reversed ? " Reverse its recorded ends." : ""}${fit.trim ? ` Trim at the ${fit.trim} of the installed section.` : ""}${fit.remnant ? ` Estimated remnant ${formatStockLength(fit.remnant.length)} with ${fit.remnant.ends.join(" / ")} ends. Measure it after trimming.` : ""}`;
+          return `${recorded} Use measured offcut ${clean(offcut.label)} at ${formatStockLength(length)}.${fit.reversed ? " Reverse its recorded ends." : ""}${fit.trim ? ` Trim at the ${fit.trim} of the installed section.` : ""}${fit.remnant ? ` Estimated remnant ${formatStockLength(fit.remnant.length)} with ${fit.remnant.ends.join(" / ")} ends. Measure it after trimming.` : ""}${finish}`;
         }
         const needsReview = records.find((offcut) => offcut.assignment?.runId === id &&
           offcut.assignment.index === index && stale.has(offcut.id));
         if (needsReview) return `${recorded} Recheck reserved offcut ${clean(needsReview.label)}.`;
-        return `${recorded} ${whole ? "Keep whole" : "Cut to"} ${formatStockLength(length)}.${tail > tolerance ? ` Estimated tail ${formatStockLength(tail)}. Keep an intact piece for a crimp or sealant trial.` : ""}`;
+        return `${recorded} ${whole ? "Keep whole" : "Cut to"} ${formatStockLength(length)}.${finish}${tail > tolerance ? ` Estimated tail ${formatStockLength(tail)}. Keep an intact piece for a crimp or sealant trial.` : ""}`;
       }),
       `Seal ${jointCount} round joints, including the two collars. ${roundDuctSealNote}`,
     ];

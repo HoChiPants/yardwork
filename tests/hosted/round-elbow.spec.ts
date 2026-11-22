@@ -40,4 +40,18 @@ test("fit a measured duct elbow, show its clearance and carry the exact fitting 
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("Supply through bay (end) needs a plain pipe end");
   expect(guide).toContain("Cross branch (start) needs a crimped pipe end");
+  expect(guide).toContain("Start crimped · finish plain. Trim the plain end and keep the factory crimp.");
+
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: /^Checks/ }).click();
+  await page.getByRole("button", { name: "Plan round duct run", exact: true }).click();
+  await dialog.getByRole("combobox", { name: "Saved duct run", exact: true }).selectOption({ label: "Cross branch" });
+  await dialog.getByRole("spinbutton", { name: "End X", exact: true }).fill("4");
+  await dialog.getByRole("button", { name: "Check route and cuts", exact: true }).click();
+  await dialog.getByRole("button", { name: "Save duct run and cut list", exact: true }).click();
+  await expect(page.getByText("Review measured duct elbow", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await expect(dialog.getByRole("list", { name: "Home Depot purchase review" })).not.toContainText("#100062966");
+  await expect(dialog.getByText(/Recheck elbow endpoints, mates and clearances/)).toBeVisible();
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { LengthInput } from "./LengthInput";
 import { materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { plannedCutKerf, type inspectCutStock } from "./cutStock";
@@ -12,7 +12,7 @@ export type BoardPlacement =
   | { kind: "offcut"; id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] }
   | { kind: "stock-cut"; length: number };
 
-export function MaterialPlacement({ group, project, inspection, position = [0, 0, 0], finishedLength, measuredLength, offcutId, onPlace }: {
+export function MaterialPlacement({ group, project, inspection, position = [0, 0, 0], finishedLength, measuredLength, offcutId, onPreview, onPlace }: {
   group: MaterialGroup;
   project: Project;
   inspection: ReturnType<typeof inspectCutStock>;
@@ -20,6 +20,7 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   finishedLength?: number;
   measuredLength?: number;
   offcutId?: string;
+  onPreview: (id: MaterialId | null, placement?: BoardPlacement) => void;
   onPlace: (id: MaterialId, placement?: BoardPlacement) => void;
 }) {
   const { preferred, canCutToLength, label, options } = materialPlacementOptions(group);
@@ -54,6 +55,16 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   const changedOffcut = selectedOffcut && !remnant && validLength
     ? partLabel(project, selectedOffcut)
     : undefined;
+  const previewOffcut = remnant?.piece.id;
+  const previewStock = remnant?.piece.material ?? choice.id;
+  const previewAxis = remnant?.stockLengthAxis;
+  useLayoutEffect(() => {
+    const placement = previewOffcut && previewAxis !== undefined
+      ? { kind: "offcut", id: previewOffcut, length: needed, stockLengthAxis: previewAxis } as const
+      : planCut ? { kind: "stock-cut", length: needed } as const : undefined;
+    onPreview(previewStock, placement);
+    return () => onPreview(null);
+  }, [needed, onPreview, planCut, previewAxis, previewOffcut, previewStock]);
   return <>
     <h2 id="modal-title">{group.name}</h2>
     {options.length > 1 ? <fieldset className="stock-size-options">
@@ -122,8 +133,9 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
         {remnant ? "Plan cut from new stock" : "Plan cut and place"}
       </button>
     </div>}
-    <button type="button" disabled={!enough} className={`button ${remnant || planCut ? "secondary" : "primary"}`} onClick={() => onPlace(choice.id)}>
-      {planCut ? "Place full board" : remnant ? "Place new stock" : "Place material"}
-    </button>
+    {!planCut && <button type="button" disabled={!enough} className={`button ${remnant ? "secondary" : "primary"}`}
+      onClick={() => onPlace(choice.id)}>
+      {remnant ? "Place new stock" : "Place material"}
+    </button>}
   </>;
 }

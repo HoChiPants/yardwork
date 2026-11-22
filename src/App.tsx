@@ -130,7 +130,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import * as THREE from "three";
-import { Scene } from "./Scene";
+import { Scene, type MaterialDropMarkerHandle } from "./Scene";
 import { useInspectorFocus } from "./useInspectorFocus";
 import IdeaPlanner from "./IdeaPlanner";
 import type { ConnectionQuestionAction } from "./ConnectionQuestionResult";
@@ -951,15 +951,10 @@ export function App() {
   const viewport = useRef<HTMLDivElement>(null),
     workspaceCamera = useRef<{ camera: THREE.Camera; getTarget: () => THREE.Vector3 } | null>(null),
     file = useRef<HTMLInputElement>(null);
-  const materialDropMarker = useRef<((point: V3 | null) => void) | null>(null);
+  const materialDropMarker = useRef<MaterialDropMarkerHandle | null>(null);
   const onCamera = useCallback((camera: THREE.Camera, getTarget: () => THREE.Vector3) => {
     workspaceCamera.current = { camera, getTarget };
   }, []);
-  useEffect(() => {
-    if (modal !== "place-material" || pendingMaterial?.projectId !== project.id || !pendingMaterial.position) return;
-    materialDropMarker.current?.(pendingMaterial.position);
-    return () => materialDropMarker.current?.(null);
-  }, [modal, pendingMaterial, project.id]);
   const inspectWorkspace = useCallback(() => {
     inspectorFocus.suspend();
     requestAnimationFrame(() => viewport.current?.scrollIntoView({behavior:"smooth",block:"center"}));
@@ -2344,28 +2339,39 @@ export function App() {
     setSelected(id);
     setPanel("part");
   }
+  const prepareMaterial = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
+    const next = addMaterial(project, id, position, activeStepId);
+    const added = next.pieces.at(-1)!;
+    if (placement) {
+      const blank = boardBlankAtLength(id, placement.length);
+      if (!blank) throw Error("Enter a finished board length.");
+      added.size = blank.size;
+      added.stockLengthAxis = placement.kind === "offcut" ? placement.stockLengthAxis : blank.stockLengthAxis;
+      added.position[1] = position[1] + blank.size[1] / 2;
+    }
+    if (snap) added.position = snapPlacement(next, added, added.position, added.rotation).position;
+    const clear = placeWood(next, added, added.position, added.rotation);
+    if (clear.blocked) throw Error("No clear position was found for this stock.");
+    added.position = clear.position;
+    return { next, added };
+  }, [project, activeStepId, snap]);
+  const previewMaterial = useCallback((id: MaterialId | null, placement?: BoardPlacement) => {
+    if (!id || pendingMaterial?.projectId !== project.id) {
+      materialDropMarker.current?.(null);
+      return;
+    }
+    const position = pendingMaterial.position ?? [0, 0, 0];
+    try {
+      const { added } = prepareMaterial(id, position, placement);
+      materialDropMarker.current?.(position, added);
+    } catch {
+      materialDropMarker.current?.(position);
+    }
+  }, [pendingMaterial, prepareMaterial, project.id]);
   function add(id: MaterialId, name: string, position: V3 = [0, 0, 0], placement?: BoardPlacement) {
     safe(() => {
-      const next = addMaterial(project, id, position, activeStepId);
-      const added = next.pieces.at(-1)!;
+      const { next, added } = prepareMaterial(id, position, placement);
       added.name = name;
-      if (placement) {
-        const blank = boardBlankAtLength(id, placement.length);
-        if (!blank) throw Error("Enter a finished board length.");
-        added.size = blank.size;
-        added.stockLengthAxis = placement.kind === "offcut" ? placement.stockLengthAxis : blank.stockLengthAxis;
-        added.position[1] = position[1] + blank.size[1] / 2;
-      }
-      if (snap)
-        added.position = snapPlacement(
-          next,
-          added,
-          added.position,
-          added.rotation,
-        ).position;
-      const clear=placeWood(next,added,added.position,added.rotation);
-      if(clear.blocked)throw Error("No clear position was found for this stock.");
-      added.position=clear.position;
       if (placement?.kind === "offcut") change(assignOffcutToPart(next, added.id, placement.id));
       else if (placement?.kind === "stock-cut") change(planDedicatedBoardCut(next, added.id));
       else change(next);
@@ -2680,8 +2686,8 @@ export function App() {
       // A thin or sloped support can disappear under a one-inch grid snap.
       return snapped && Math.abs(snapped[1] - point[1]) <= 0.8 ? snapped : point;
     }
-    // Near the floor horizon, use the depth the user is framing, including after panning.
-    if (!nearHorizon) return;
+    // Above the floor or in a near-level view, fall back to the framed depth.
+    // This keeps the drop in view instead of extending a shallow ray far past the project.
     const normal = forward.setY(0);
     if (normal.lengthSq() < 1e-8) return;
     const hit = ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal.normalize(), getTarget()), new THREE.Vector3());
@@ -2830,10 +2836,7 @@ export function App() {
       </header>
       <aside className="library">
         <div className="library-heading">
-          <div>
-            <span className="eyebrow">THE GOOD STUFF</span>
-            <h2>Build your idea.</h2>
-          </div>
+          <h2>Library</h2>
           <button
             className="icon-button"
             aria-label="Import a plan"
@@ -3609,7 +3612,7 @@ export function App() {
                   Cut part
                 </button>
               )}
-              <button onClick={()=>setMode("move")}><Move3D size={15}/>Move XYZ</button>
+              <button aria-pressed={mode === "move"} onClick={() => setMode("move")}><Move3D size={15} /> Move XYZ</button>
               <button aria-pressed={mode==="lift"} onClick={()=>setMode("lift")}>↕ Lift</button>
               <button onClick={copySelection}><Copy size={15}/>Copy</button>
               <button
@@ -4823,7 +4826,7 @@ export function App() {
                 <summary>Project cost estimate</summary>
                 <PricingSummary coverage={pricing} />
                 {pricedTools.length > 0 && <p className="small-note">
-                  {money(pricedTools.reduce((total, row) => total + (row.total ?? 0), 0))} in observed tool purchases, displayed separately.
+                  {money(pricedTools.reduce((total, row) => total + (row.total ?? 0), 0))} estimated for tools.
                 </p>}
               </details>
               {project.fastenerPlans.length > 0 && (
@@ -5585,7 +5588,7 @@ export function App() {
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
               <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
                 position={pendingMaterial.position} finishedLength={pendingMaterial.finishedLength} measuredLength={pendingMaterial.measuredLength}
-                offcutId={pendingMaterial.offcutId} onPlace={(id, placement) => {
+                offcutId={pendingMaterial.offcutId} onPreview={previewMaterial} onPlace={(id, placement) => {
                 add(id, pendingMaterial.group.name, pendingMaterial.position, placement);
               }} />
             )}

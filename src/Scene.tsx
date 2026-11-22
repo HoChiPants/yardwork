@@ -154,7 +154,7 @@ export type SceneProps = {
   onSelectAttachmentPlan?: (id: string | null) => void;
   onSelectAttachmentPart?: (id: string) => void;
   onCamera: (camera: THREE.Camera, getTarget: () => THREE.Vector3) => void;
-  materialDropMarker?: RefObject<((point: V3 | null) => void) | null>;
+  materialDropMarker?: RefObject<MaterialDropMarkerHandle | null>;
 };
 function woodTexture() {
   const canvas = document.createElement("canvas");
@@ -1318,12 +1318,16 @@ function CameraRig({
     />
   );
 }
+export type MaterialDropMarkerHandle = (point: V3 | null, preview?: Pick<Piece, "position" | "size" | "rotation">) => void;
+
 function MaterialDropMarker({ marker }: { marker: NonNullable<SceneProps["materialDropMarker"]> }) {
   const group = useRef<THREE.Group>(null);
+  const ghost = useRef<THREE.Mesh>(null);
   const { invalidate, gl } = useThree();
   useLayoutEffect(() => {
     const node = group.current!;
-    marker.current = (point) => {
+    const part = ghost.current!;
+    marker.current = (point, preview) => {
       if (!point && !node.visible) return;
       if (point) {
         node.position.set(point[0] / 12, point[1] / 12 + 0.035, point[2] / 12);
@@ -1331,24 +1335,41 @@ function MaterialDropMarker({ marker }: { marker: NonNullable<SceneProps["materi
       } else {
         delete gl.domElement.dataset.materialDropPoint;
       }
+      if (preview) {
+        part.position.set(preview.position[0] / 12, preview.position[1] / 12, preview.position[2] / 12);
+        part.rotation.set(...preview.rotation);
+        part.scale.set(preview.size[0] / 12, preview.size[1] / 12, preview.size[2] / 12);
+        gl.domElement.dataset.materialPlacementPreview = JSON.stringify(preview.size);
+      } else {
+        delete gl.domElement.dataset.materialPlacementPreview;
+      }
+      part.visible = !!preview;
       node.visible = point !== null;
       invalidate();
     };
     return () => {
       marker.current = null;
       delete gl.domElement.dataset.materialDropPoint;
+      delete gl.domElement.dataset.materialPlacementPreview;
     };
   }, [gl, invalidate, marker]);
-  return <group ref={group} visible={false}>
-    <mesh rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
-      <ringGeometry args={[0.19, 0.25, 32]} />
-      <meshBasicMaterial color="#356c3d" />
+  return <>
+    <group ref={group} visible={false}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+        <ringGeometry args={[0.19, 0.25, 32]} />
+        <meshBasicMaterial color="#356c3d" />
+      </mesh>
+      <mesh position={[0, 0.09, 0]} raycast={() => null}>
+        <sphereGeometry args={[0.052, 12, 8]} />
+        <meshBasicMaterial color="#356c3d" />
+      </mesh>
+    </group>
+    <mesh ref={ghost} visible={false} raycast={() => null}>
+      <boxGeometry />
+      <meshBasicMaterial color="#719658" transparent opacity={0.36} depthWrite={false} />
+      <Edges color="#356c3d" />
     </mesh>
-    <mesh position={[0, 0.09, 0]} raycast={() => null}>
-      <sphereGeometry args={[0.052, 12, 8]} />
-      <meshBasicMaterial color="#356c3d" />
-    </mesh>
-  </group>;
+  </>;
 }
 function WorkZone({ project }: { project: Project }) {
   const zone = project.workZone;

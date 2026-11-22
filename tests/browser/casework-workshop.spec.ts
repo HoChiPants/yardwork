@@ -338,8 +338,7 @@ test("shelf-pin purchasing and jig review stay separate from installed supports"
     .filter({ hasText: findRetailerProduct("kreg-kma-5mpin")!.name });
   await expect(row).toContainText("20");
   await page.getByText("Project cost estimate", { exact: true }).click();
-  await expect(page.getByRole("region", { name: "Pricing coverage", exact: true })
-    .getByTestId("pricing-unpriced")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Pricing coverage", exact: true })).toHaveAttribute("data-pricing-status", "partial");
   const after = await draft(page);
   expect(after.pieces).toEqual(before.pieces);
   expect(after.joints).toEqual(before.joints);

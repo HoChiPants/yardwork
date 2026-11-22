@@ -54,16 +54,20 @@ test("one material tile supports drop, length choice and a separate selected-par
   expect((await placement.boundingBox())!.x).toBeGreaterThan(groundHint.x + groundHint.width);
   await expect(placement.getByRole("radio")).toHaveCount(3);
   await expect(placement.getByRole("radio", { name: "8 ft" })).toBeChecked();
+  await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,96,3.5]");
   await placement.getByRole("radio", { name: "12 ft" }).check();
+  await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,144,3.5]");
   await placement.getByLabel("Finished length (optional) units", { exact: true }).selectOption("ft");
   await placement.getByRole("spinbutton", { name: "Needed finished length", exact: true }).fill("4");
   await expect(placement).toContainText("8 ft stock fits this cut with 4 ft less length to buy.");
   await page.screenshot({ path: info.outputPath("stock-length-and-drop-point.png") });
   await placement.getByRole("button", { name: "Use 8 ft" }).click();
-  await placement.getByRole("button", { name: "Place full board", exact: true }).click();
+  await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,48,3.5]");
+  await placement.getByRole("button", { name: "Plan cut and place", exact: true }).click();
   await expect(canvas).not.toHaveAttribute("data-material-drop-point");
-  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("96");
-  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("48");
+  await expect(canvas).not.toHaveAttribute("data-material-placement-preview");
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("24");
   await expect(page.getByRole("spinbutton", { name: "X", exact: true })).toHaveValue(String(x));
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue(String(z));
   const workspaceTools = page.getByRole("toolbar", { name: "Model tools", exact: true });
@@ -87,6 +91,10 @@ test("one material tile supports drop, length choice and a separate selected-par
   }
   await page.screenshot({ path: info.outputPath("material-placement-phone.png"), fullPage: false });
   await page.setViewportSize({ width: 1440, height: 1000 });
+  await add.click();
+  await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,96,3.5]");
+  await page.keyboard.press("Escape");
+  await expect(canvas).not.toHaveAttribute("data-material-placement-preview");
   await add.click();
   await confirmMaterialPlacement(page, "10 ft");
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("120");
@@ -433,7 +441,7 @@ test.describe("phone material placement", () => {
     const add = page.getByRole("button", { name: "Add 4 × 4 treated post", exact: true });
     const tile = page.locator(".material-card").filter({ has: add });
     await expect(tile).toHaveText("4 × 4 treated post");
-    const source = (await tile.locator(".material-art").boundingBox())!;
+    const source = (await tile.getByText("4 × 4 treated post", { exact: true }).boundingBox())!;
     const view = (await canvas.boundingBox())!;
     const start = { x: source.x + source.width / 2, y: source.y + source.height / 2 };
     const end = { x: Math.min(start.x, view.x + view.width * 0.68), y: view.y + view.height * 0.7 };

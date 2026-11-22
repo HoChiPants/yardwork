@@ -116,7 +116,7 @@ export function materialFamilyVariants(id: MaterialId): readonly MaterialId[] {
   return families.find(({ ids }) => ids.includes(id))?.ids ?? [id];
 }
 
-const paletteSearch = (text: string) => text.toLowerCase().replace(/(\d)\s*[×x]\s*(?=\d)/g, "$1x");
+const paletteSearch = (text: string) => text.toLowerCase().replace(/(\d)\s*(?:[×x]|by)\s*(?=\d)/g, "$1x");
 
 /** Palette grouping only. Each exact stock/product ID and its physical/source facts remain distinct. */
 export function groupedMaterials(

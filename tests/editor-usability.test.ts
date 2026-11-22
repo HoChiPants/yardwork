@@ -307,7 +307,7 @@ test("one palette card per family retains every exact catalog variant and separa
       .every((m) => `${m.name} ${m.subtitle} ${m.search}`.includes("144")),
     true,
   );
-  const filteredFraming = groupedMaterials("Lumber", "2x4 framing lumber");
+  const filteredFraming = groupedMaterials("Lumber", "2 by 4 framing lumber");
   assert.deepEqual(filteredFraming.map(({ name }) => name), ["2 × 4 framing lumber"]);
   assert.deepEqual(materialPlacementOptions(filteredFraming[0]).options.map(({ id, label }) => [id, label]), [
     ["stud", "8 ft"], ["stud-10", "10 ft"], ["stud-12", "12 ft"],

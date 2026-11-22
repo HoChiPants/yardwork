@@ -263,23 +263,10 @@ test("partial pricing distinguishes four unpriced sheets, examples, exact counte
   await page.getByText("Project cost estimate", { exact: true }).click();
   const summary = page.locator(".pricing-summary:visible").first();
   await expect(summary).toHaveAttribute("data-pricing-status", "partial");
-  await expect(summary.locator(":scope > details")).toHaveJSProperty(
-    "open",
-    false,
-  );
-  await expect(
-    page.locator(".print-guide .pricing-summary-print > details"),
-  ).toHaveJSProperty("open", true);
-  await expect(summary).toHaveAttribute(
-    "data-priced-subtotal",
-    String(coverage.pricedSubtotal),
-  );
-  await expect(summary.getByTestId("pricing-unpriced")).toContainText(
-    "1 line · 4 sheets",
-  );
-  await expect(summary).toContainText("$30.00 from 2 observed lines");
-  await expect(summary).toContainText("example line");
-  await expect(summary).toContainText("not a complete-project quote");
+  await expect(summary).toHaveAttribute("data-priced-subtotal", String(coverage.pricedSubtotal));
+  await expect(summary).toContainText("partial estimate for materials and supplies");
+  await expect(summary).not.toContainText(/unpriced|observed line|example line/i);
+  await expect(page.locator(".print-guide .pricing-summary-print")).toContainText("partial estimate for materials and supplies");
   await expect(counted).not.toContainText(/\$|Unpriced/i);
   await expect(mass).not.toContainText(/\$|Unpriced/i);
   expect(observed.pieces).toEqual(before.pieces);
@@ -339,7 +326,7 @@ test("phone all-unpriced purchase stays unknown until a genuine zero per-box sna
   await expect(page.locator(".supply-row")).not.toContainText(/\$|Unpriced/i);
   await page.getByText("Project cost estimate", { exact: true }).click();
   await expect(page.locator(".pricing-summary:visible").first()).toContainText(
-    "No priced subtotal",
+    "Check your shopping list for current prices.",
   );
   const zero = await snapshot(page, sd, 0, "202071152");
   expect(projectPricingCoverage(zero).pricedSubtotal).toBe(0);
@@ -348,9 +335,8 @@ test("phone all-unpriced purchase stays unknown until a genuine zero per-box sna
   await expect(page.locator(".supply-row")).not.toContainText(/\$|Unpriced/i);
   const summary = page.locator(".pricing-summary:visible").first();
   await expect(summary).toHaveAttribute("data-pricing-status", "observed");
-  await expect(summary).toContainText("$0.00 priced subtotal");
-  await expect(summary).toContainText("1 observed line");
-  await expect(summary).toContainText("not a complete-project quote");
+  await expect(summary).toContainText("$0.00 estimate for materials and supplies");
+  await expect(summary).not.toContainText(/unpriced|observed line/i);
   expect(zero.pieces).toEqual([]);
   expect(zero.joints).toEqual([]);
   expect((await reopen(page, zero)).supplyInventory).toEqual(

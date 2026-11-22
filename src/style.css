@@ -390,6 +390,7 @@ small {
 }
 .material-card:active { cursor: grabbing; }
 .material-card .material-art { touch-action: none; }
+.material-card .material-info { touch-action: pan-y; min-width: 0; }
 .material-card:hover {
   background: #f8f7f0;
   border-radius: 7px;
@@ -3589,6 +3590,7 @@ small {
 .cut-pool .category-filter button { min-height: 44px; border: 1px solid var(--line); border-radius: 5px; background: #fffefa; padding: 6px; }
 .cut-pool .category-filter button.active { background: #e8eedf; }
 .part-quick-tools button { min-height: 40px; }
+.part-quick-tools button[aria-pressed="true"] { background: #e1e8d9; color: #304d28; }
 .placement-warning { background: #fff1e9; border-left: 3px solid #cf4d28; padding: 12px; font-size: 12px; }
 .placement-contact {
   display: block;
@@ -3801,6 +3803,9 @@ small {
 .stock-size-options { display: flex; flex-wrap: wrap; gap: 8px; border: 0; padding: 0; margin: 18px 0; }
 .stock-size-options legend { margin-bottom: 8px; font-weight: 600; }
 .single-stock-size { margin-block: 14px; font-weight: 600; }
+.pricing-summary { padding-block: 12px 0; }
+.pricing-summary-compact { padding-block: 4px 0; }
+.pricing-summary-print { padding-block: 0; }
 .rim-seal-form { display: grid; gap: 12px; margin-top: 12px; }
 .rim-seal-form fieldset { margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; }
 .rim-seal-form legend { font-weight: 600; }

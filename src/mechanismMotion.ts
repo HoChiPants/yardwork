@@ -1340,6 +1340,7 @@ export type MotionTestSelection = {
   setup?: MotionTestSetup;
   scenarioId?: string;
   focusDrawerOpening?: boolean;
+  drawerStop?: { angle: number; extension?: number };
   result: MotionTestResult;
 };
 
@@ -1402,8 +1403,8 @@ export function motionObstacleWarnings(project: Project, obstacleIds: ReadonlySe
 }
 
 
-function motionHitLine(project: Project, review: MotionReview, hit: MotionReview["hits"][number]) {
-  const parts = `${partLabel(project, hit.movingId)} against ${partLabel(project, hit.obstacleId)}`;
+function motionHitLine(project: Project, review: MotionReview, hit: MotionReview["hits"][number], describePart = partLabel) {
+  const parts = `${describePart(project, hit.movingId)} against ${describePart(project, hit.obstacleId)}`;
   const pairs = `${parts} near ${motionReviewDistance(review, hit.first, hit.phase)}`;
   if (hit.kind === "uncertain") return `Close pass needs review · ${pairs}.`;
   if (hit.kind === "envelope") return `Possible interference · ${pairs} based on the part envelope.`;
@@ -1445,13 +1446,13 @@ export type MotionTestFinding = {
   phase?: MotionPhase;
 };
 
-export function motionTestFindings(project: Project, result: MotionTestResult, includeClear = false): MotionTestFinding[] {
+export function motionTestFindings(project: Project, result: MotionTestResult, includeClear = false, describePart = partLabel): MotionTestFinding[] {
   if (!result.review) return [{ id: "setup", detail: result.error }];
   const review = result.review;
   const findings: MotionTestFinding[] = [
     ...review.hits.map((hit) => ({
       id: `contact/${hit.movingId}/${hit.obstacleId}${hit.phase === undefined ? "" : "/" + hit.phase}`,
-      detail: motionHitLine(project, review, hit),
+      detail: motionHitLine(project, review, hit, describePart),
       travel: hit.inspectAt,
       phase: hit.phase,
     })),

@@ -1,29 +1,34 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
-import { doorAndDrawer, findDrawerOpening } from "./drawerOpening";
+import { checkDrawerStop, doorAndDrawer, findDrawerOpening } from "./drawerOpening";
 import { motionDistance } from "./mechanismMotion";
 import { preferredLengthUnit } from "./measurement";
 import type { Project } from "./model";
 import type { MotionPlan, MotionTestSetup } from "./motionPlanSchema";
 
-export function DrawerOpeningPanel({ project, selected, linked, test, initialExtension, expanded, onChoose }: {
+export function DrawerOpeningPanel({ project, selected, linked, test, initialExtension, initialStop, expanded, onChoose }: {
   project: Project;
   selected: MotionPlan;
   linked: MotionPlan;
   test: Pick<MotionTestSetup, "held" | "clearance">;
   initialExtension: number;
+  initialStop?: number;
   expanded?: boolean;
   onChoose: (setup: MotionTestSetup) => void;
 }) {
   const pair = doorAndDrawer(selected, linked)!;
   const [extension, setExtension] = useState(initialExtension);
+  const [stop, setStop] = useState(initialStop ?? NaN);
   const [progress, setProgress] = useState<{ tried: number; total: number }>();
   const [outcome, setOutcome] = useState<{ source: Project; result: Awaited<ReturnType<typeof findDrawerOpening>> }>();
+  const [stopOutcome, setStopOutcome] = useState<{ source: Project; result: ReturnType<typeof checkDrawerStop> }>();
   const [error, setError] = useState("");
   const run = useRef<AbortController | null>(null);
   useEffect(() => () => run.current?.abort(), [project]);
   const result = outcome?.source === project ? outcome.result : undefined;
+  const checkedStop = stopOutcome?.source === project ? stopOutcome.result : undefined;
   const valid = Number.isFinite(extension) && extension > 0 && extension <= pair.drawer.mechanism.travel;
+  const validStop = Number.isFinite(stop) && stop >= 0.01 && stop <= pair.door.mechanism.travel;
 
   function cancel() {
     run.current?.abort();
@@ -36,6 +41,7 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
     if (!valid) return;
     cancel();
     setOutcome(undefined);
+    setStopOutcome(undefined);
     setError("");
     const task = new AbortController();
     run.current = task;
@@ -56,6 +62,19 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
     }
   }
 
+  function checkStop() {
+    if (!valid || !validStop) return;
+    setOutcome(undefined);
+    setStopOutcome(undefined);
+    setError("");
+    try {
+      const result = checkDrawerStop(project, selected, linked, extension, stop, test);
+      setStopOutcome({ source: project, result });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Review the selected door and drawer.");
+    }
+  }
+
   return <details className="field-section" open={expanded}>
     <summary>Find a door opening for the drawer</summary>
     <form onSubmit={search} noValidate>
@@ -63,6 +82,7 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
         defaultUnit={preferredLengthUnit(initialExtension)} onChange={(value) => {
           cancel();
           setOutcome(undefined);
+          setStopOutcome(undefined);
           setError("");
           setExtension(value);
         }} />
@@ -71,6 +91,17 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
         <button type="submit" className="button secondary small" disabled={!valid || !!progress}>Find an opening</button>
         {progress && <button type="button" className="text-button" onClick={cancel}>Cancel angle search</button>}
       </div>
+      <label className="field">
+        Door stop angle (degrees)
+        <input type="number" min={0.01} max={pair.door.mechanism.travel} step="any"
+          value={Number.isFinite(stop) ? stop : ""}
+          onChange={(event) => {
+            setStop(event.target.value === "" ? NaN : Number(event.target.value));
+            setStopOutcome(undefined);
+          }} />
+      </label>
+      <p className="small-note">Enter the measured stop or the stated angle for your exact hinge hardware. The saved door travel is {motionDistance(pair.door.mechanism.travel, "hinge")}.</p>
+      <button type="button" className="button secondary small" disabled={!valid || !validStop || !!progress} onClick={checkStop}>Check door stop</button>
     </form>
     {progress && <p role="status">{progress.total ? `Checked ${progress.tried} of ${progress.total} angles…` : "Checking the door swing…"}</p>}
     {error && <p role="alert" className="form-error">{error}</p>}
@@ -90,5 +121,16 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
         </button>
       </div>
     </div>}
+    {checkedStop && <section className="notice" aria-label="Door stop check">
+      <div>
+        <p role="status"><strong>{checkedStop.status === "clear"
+          ? `The ${motionDistance(checkedStop.angle, "hinge")} stop clears ${motionDistance(extension, "slide")} of drawer travel in the model.`
+          : `Review the ${motionDistance(checkedStop.angle, "hinge")} stop for ${motionDistance(extension, "slide")} of drawer travel.`}</strong></p>
+        {!!checkedStop.findings.length && <ul>{checkedStop.findings.slice(0, 3).map((line, index) => <li key={index}>{line}</li>)}</ul>}
+        <button type="button" className="button secondary small" onClick={() => onChoose(checkedStop.setup)}>
+          {checkedStop.status === "clear" ? "Use this stop sequence" : "Review this door-stop test"}
+        </button>
+      </div>
+    </section>}
   </details>;
 }

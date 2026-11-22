@@ -1416,6 +1416,7 @@ export function App() {
         const setup = { linkedId: door.id, held: [] };
         setMotionTestSelection({
           project, plan: drawer, setup, focusDrawerOpening: true,
+          drawerStop: action.stop,
           result: runMotionTest(project, drawer, setup),
         });
         setRemovalTarget(null);

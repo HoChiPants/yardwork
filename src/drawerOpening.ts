@@ -1,9 +1,10 @@
 import {
-  motionReviewTravel, resolveMotionTestSetup, reviewMotion, runMotionTest,
+  motionReviewTravel, motionTestFindings, resolveMotionTestSetup, reviewMotion, runMotionTest,
   type MotionReview,
 } from "./mechanismMotion";
 import type { Project } from "./model";
 import type { MotionPlan, MotionTestSetup } from "./motionPlanSchema";
+import { partLabel } from "./partLabels";
 
 type SearchSetup = Pick<MotionTestSetup, "held" | "clearance">;
 
@@ -20,6 +21,39 @@ type Recommendation = SearchProgress & {
   maximum: number;
   setup: MotionTestSetup;
 };
+type StopCheck = {
+  status: "clear" | "review";
+  angle: number;
+  setup: MotionTestSetup;
+  findings: string[];
+};
+
+function openingPair(selected: MotionPlan, companion: MotionPlan, drawerTravel: number) {
+  const pair = doorAndDrawer(selected, companion);
+  if (!pair) throw Error("Choose one hinged motion and one sliding motion.");
+  if (!Number.isFinite(drawerTravel) || drawerTravel <= 0 || drawerTravel > pair.drawer.mechanism.travel)
+    throw Error("Enter an extension within the drawer's saved travel.");
+  return pair;
+}
+
+function doorFirstSetup(
+  selected: MotionPlan,
+  companion: MotionPlan,
+  door: MotionPlan,
+  angle: number,
+  drawerTravel: number,
+  test: SearchSetup,
+): MotionTestSetup {
+  const hinge = { kind: "hinge", travel: angle } as const;
+  const slide = { kind: "slide", travel: drawerTravel } as const;
+  const selectedDoor = selected.id === door.id;
+  return {
+    ...test,
+    linkedId: companion.id,
+    openingOrder: selectedDoor ? "selected-first" : "companion-first",
+    sequenceTargets: selectedDoor ? { selected: hinge, companion: slide } : { selected: slide, companion: hinge },
+  };
+}
 
 function reviewPasses(review: MotionReview, end = motionReviewTravel(review)) {
   if (review.hits.length || review.zone.length || review.siteFindings.length ||
@@ -32,6 +66,33 @@ function reviewPasses(review: MotionReview, end = motionReviewTravel(review)) {
 
 const yieldToPage = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
+/** Test the exact installed stop, including the swing with the drawer shut and the reverse sequence. */
+export function checkDrawerStop(
+  project: Project,
+  selected: MotionPlan,
+  companion: MotionPlan,
+  drawerTravel: number,
+  angle: number,
+  test: SearchSetup,
+): StopCheck {
+  const { door } = openingPair(selected, companion, drawerTravel);
+  if (!Number.isFinite(angle) || angle < 0.01 || angle > door.mechanism.travel)
+    throw Error("Enter a stop angle within the door's saved travel.");
+  const setup = doorFirstSetup(selected, companion, door, angle, drawerTravel, test);
+  const result = runMotionTest(project, selected, setup);
+  if (result.review && reviewPasses(result.review)) return { status: "clear", angle, setup, findings: [] };
+  const describePart = (project: Project, id: string) => {
+    const label = partLabel(project, id);
+    const piece = project.pieces.find((row) => row.id === id);
+    return piece ? `${label} · ${piece.name}` : label;
+  };
+  const findings = motionTestFindings(project, result, false, describePart)
+    .filter(({ id }) => id !== "pair-clearance" || result.review?.clearance?.result.status !== "met")
+    .map(({ detail }) => detail);
+  if (!findings.length) findings.push("Playback could not verify the whole opening and closing sequence at this stop.");
+  return { status: "review", angle, setup, findings };
+}
+
 /** Try the whole-degree openings and the reachable endpoint. Clearance can
  * change in either direction with angle, so a failed angle never skips a band. */
 export async function findDrawerOpening(
@@ -42,24 +103,8 @@ export async function findDrawerOpening(
   test: SearchSetup,
   options: { signal?: AbortSignal; onProgress?: (progress: SearchProgress) => void } = {},
 ): Promise<Recommendation> {
-  const pair = doorAndDrawer(selected, companion);
-  if (!pair) throw Error("Choose one hinged motion and one sliding motion.");
-  const { door, drawer } = pair;
-  if (!Number.isFinite(drawerTravel) || drawerTravel <= 0 || drawerTravel > drawer.mechanism.travel)
-    throw Error("Enter an extension within the drawer's saved travel.");
-  const makeSetup = (doorAngle: number): MotionTestSetup => {
-    const doorTarget = { kind: "hinge", travel: doorAngle } as const;
-    const drawerTarget = { kind: "slide", travel: drawerTravel } as const;
-    const doorFirst = selected.id === door.id;
-    return {
-      ...test,
-      linkedId: companion.id,
-      openingOrder: doorFirst ? "selected-first" : "companion-first",
-      sequenceTargets: doorFirst
-        ? { selected: doorTarget, companion: drawerTarget }
-        : { selected: drawerTarget, companion: doorTarget },
-    };
-  };
+  const { door, drawer } = openingPair(selected, companion, drawerTravel);
+  const makeSetup = (angle: number) => doorFirstSetup(selected, companion, door, angle, drawerTravel, test);
   await yieldToPage();
   options.signal?.throwIfAborted();
   const { held } = resolveMotionTestSetup(project, makeSetup(door.mechanism.travel));

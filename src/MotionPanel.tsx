@@ -656,6 +656,8 @@ export function MotionPanel({
   const drawerOpeningPair = selected && linked && doorAndDrawer(selected, linked);
   const drawerOpeningExtension = drawerOpeningPair &&
     (selected.id === drawerOpeningPair.drawer.id ? sequenceTargets?.selected : sequenceTargets?.companion)?.travel;
+  const requestedDrawerStop = drawerOpeningPair && initialTest?.plan.id === drawerOpeningPair.drawer.id &&
+    initialTest.setup?.linkedId === drawerOpeningPair.door.id ? initialTest.drawerStop : undefined;
   const otherMotions = availableMotions.filter(
     (plan) =>
       plan.id !== linked?.id &&
@@ -1011,12 +1013,13 @@ export function MotionPanel({
       )}
       {selected && linked && testSetup && drawerOpeningPair && editing === null && (
         <DrawerOpeningPanel
-          key={JSON.stringify([selected.id, linked.id, testSetup.held, clearance, drawerOpeningExtension])}
+          key={JSON.stringify([selected.id, linked.id, testSetup.held, clearance, drawerOpeningExtension, requestedDrawerStop])}
           project={project}
           selected={selected}
           linked={linked}
           test={testSetup}
-          initialExtension={drawerOpeningExtension || drawerOpeningPair.drawer.mechanism.travel}
+          initialExtension={requestedDrawerStop?.extension ?? drawerOpeningExtension ?? drawerOpeningPair.drawer.mechanism.travel}
+          initialStop={requestedDrawerStop?.angle}
           expanded={initialTest?.focusDrawerOpening}
           onChoose={(setup) => {
             setScenarioId("");

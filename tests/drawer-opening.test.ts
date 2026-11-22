@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildQuestion, answerBuildQuestion } from "../src/buildQuestions";
-import { findDrawerOpening } from "../src/drawerOpening";
+import { checkDrawerStop, findDrawerOpening } from "../src/drawerOpening";
 import { guideMarkdown } from "../src/engine";
 import { blank, part, projectSchema } from "../src/model";
 import { runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
@@ -117,4 +117,46 @@ test("an idea question hands off the saved door and drawer without inventing geo
   });
   assert.equal(answerBuildQuestion(blank(), question!, []).link?.action.kind, "motion-setup");
   assert.equal(buildQuestion("Build a kitchenette with a door in front of a drawer"), null);
+});
+
+test("a measured door stop tests the exact angle and distinguishes drawer and wall interference", async () => {
+  const { project, slide, swing, drawer, door, wall } = cabinet();
+  const before = JSON.stringify(project);
+  const least = await findDrawerOpening(project, slide, swing, 12.5, { held: [] });
+  const exact = least.angle + 0.25;
+  const short = checkDrawerStop(project, slide, swing, 12.5, least.angle - 1, { held: [] });
+  const clear = checkDrawerStop(project, slide, swing, 12.5, exact, { held: [] });
+  const obstructed = checkDrawerStop(project, slide, swing, 12.5, 90, { held: [] });
+  assert.equal(short.status, "review");
+  assert.match(short.findings.join("\n"), new RegExp(door.name));
+  assert.match(short.findings.join("\n"), new RegExp(drawer.name));
+  assert.equal(obstructed.status, "review");
+  assert.match(obstructed.findings.join("\n"), new RegExp(wall.name));
+  assert.equal(clear.status, "clear");
+  assert.equal(clear.angle, exact);
+  assert.deepEqual(clear.setup.sequenceTargets, {
+    selected: { kind: "slide", travel: 12.5 }, companion: { kind: "hinge", travel: exact },
+  });
+  const review = runMotionTest(project, slide, clear.setup).review!;
+  assert.deepEqual(review.playbackLimit(0, 100), { travel: 100 });
+  assert.deepEqual(review.playbackLimit(100, 0), { travel: 0 });
+  assert.equal(JSON.stringify(project), before);
+  assert.throws(() => checkDrawerStop(project, slide, swing, 12.5, 91, { held: [] }), /door's saved travel/);
+  assert.throws(() => checkDrawerStop(project, slide, swing, 25, exact, { held: [] }), /drawer.*saved travel/);
+  const saved = saveMotionTestScenario(project, slide.id, "Exact installed door stop", clear.setup).project;
+  const restored = projectSchema.parse(JSON.parse(JSON.stringify(saved)));
+  assert.match(guideMarkdown(restored), new RegExp(`Cabinet door ${exact.toString().replace(".", "\\.")}°`));
+});
+
+test("an explicit door-stop question keeps its measured angle and drawer extension", () => {
+  const { project, slide, swing } = cabinet();
+  const question = buildQuestion("Will an 86.25 degree door stop let my drawer open 12.5 inches?");
+  assert.deepEqual(question, { kind: "drawer-opening", stop: { angle: 86.25, extension: 12.5 } });
+  assert.deepEqual(answerBuildQuestion(project, question!, []).link, {
+    label: "Check the door stop",
+    action: { kind: "drawer-opening", drawerId: slide.id, doorId: swing.id, stop: { angle: 86.25, extension: 12.5 } },
+  });
+  assert.deepEqual(buildQuestion("Will an 86° door stop let my drawer open?"), {
+    kind: "drawer-opening", stop: { angle: 86 },
+  });
 });

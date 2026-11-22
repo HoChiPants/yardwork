@@ -40,6 +40,7 @@ import { reviewRimAirSeals, rimAirSealKey, rimEdgeSealEstimate, uncutRimFoamOffc
 import { rimSealScope } from "./rimAirSealReference";
 import { modeledRoofValleys } from "./roofValleys";
 import { valleyScope } from "./roofValleyReference";
+import { floorRegisterScope } from "./floorRegisterReference";
 import { roofVentFlashingScope } from "./roofVentFlashingReference";
 import type { RimSide } from "./rimAirSealSchema";
 
@@ -61,6 +62,7 @@ export type BuildQuestion =
   | { kind: "top-plate-seal" }
   | { kind: "rim-air-seal" }
   | { kind: "roof-valley" }
+  | { kind: "floor-register" }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
@@ -90,6 +92,7 @@ export type BuildQuestionAction =
   | { kind: "top-plate-seal"; planId?: string }
   | { kind: "rim-air-seal"; sectionId?: string; side?: RimSide }
   | { kind: "roof-valley" }
+  | { kind: "floor-register" }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
@@ -170,6 +173,7 @@ const subfloorQuestion = /^(?:(?:check|review|show|plan) (?:the |my )?(?:subfloo
 const bottomPlateQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[ -]seal|seal|caulk) (?:the |a |my )?(?:wall )?(?:bottom|sole) plates?(?: to (?:the )?(?:wood )?subfloor)?|(?:plan|review|check|show) (?:the |a )?(?:bottom|sole) plate (?:air[ -]seals?|seals?))$/i;
 const rimAirSealQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[- ]seal|seal|insulate) (?:the |my )?(?:rim[- ]joists?|band[- ]joists?|floor rims?)|(?:plan|review|check|show) (?:the )?(?:rim(?:[- ]joist)?|band[- ]joist|floor rim) (?:air[- ]seal(?:ing)?|insulation|foam cuts))$/i;
 const roofValleyQuestion = /^(?:(?:how (?:do|can|should) i )?(?:line|seal|waterproof) (?:the |a |my )?roof valle(?:y|ys)|(?:plan|review|check|show) (?:the )?roof valley (?:lining|membrane|cuts))$/i;
+const floorRegisterQuestion = /^(?:(?:plan|fit|check|review|show) (?:a |the |my )?floor (?:register|duct boot)|how (?:do|can|should) i (?:air[- ]seal|seal) (?:a |the |my )?floor (?:register|duct boot))$/i;
 const roofVentFlashingQuestion = /^(?:how (?:do|can|should) i (?:flash|seal) (?:the |a |my )?(?:(?:plumbing )?vent(?: pipe)? through (?:the |a |my )?roof|roof vent(?: pipe)?)|(?:plan|review|check|show) (?:the |my )?roof vent flashing)$/i;
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
@@ -287,6 +291,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
       /^(?:can|could|should) i (?:use|reuse) (?:my |the |any )?(?:foam|rigid foam|xps) (?:offcuts|scraps) (?:for|at|on) (?:the |my )?(?:rim|rim[- ]joists?|band[- ]joists?|floor rims?)$/i.test(text))
     return { kind: "rim-air-seal" };
   if (roofValleyQuestion.test(text)) return { kind: "roof-valley" };
+  if (floorRegisterQuestion.test(text)) return { kind: "floor-register" };
   if (roofVentFlashingQuestion.test(text)) return { kind: "roof-vent-flashing" };
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
@@ -876,6 +881,13 @@ export function answerBuildQuestion(
           link: { label: "Review this top plate seam", action: { kind: "top-plate-seal", planId: record.id } },
         })),
         link: { label: "Open top plate air seal", action: { kind: "top-plate-seal" } },
+      };
+    case "floor-register":
+      return {
+        title: "Floor register fit and sealing",
+        detail: "Check a measured floor opening and boot against the surrounding framing before cutting.",
+        scope: floorRegisterScope,
+        link: { label: "Plan floor register", action: { kind: "floor-register" } },
       };
     case "roof-vent-flashing":
       return {

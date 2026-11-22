@@ -154,10 +154,10 @@ export function ThroughOpeningEditor({
           </select>
         </label>
       )}
-      {!rectangular &&
-        openings.some((opening) => "source" in opening && opening.source) && (
+      {openings.some((opening) => "source" in opening && opening.source) && (
           <p className="small-note">
-            Edit sauna vents and water-line bores in the planner that created them.
+            {rectangular ? "Edit a floor register opening in its floor register plan." :
+              "Edit sauna vents and water-line bores in the planner that created them."}
           </p>
         )}
       <p className="small-note">

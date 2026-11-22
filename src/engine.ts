@@ -125,6 +125,8 @@ import { rimEdgeSealant, rimFoam, rimSealGuide, rimSealScope } from "./rimAirSea
 import { reviewRoofValleys, roofValleyGuideLines } from "./roofValleys";
 import { valleyKey } from "./roofValleySchema";
 import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
+import { floorRegisterGuideLines, floorRegisterReviews } from "./floorRegister";
+import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { roofVentFlashingGuideLines, roofVentFlashingReviews } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { floorHangerGuideLines } from "./floorHangerPlans";
@@ -714,6 +716,12 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
   for (const { plan, issue } of roofVentFlashingReviews(p)) {
     if (issue) findings.push({
       id: `roof-vent-flashing-${plan.id}`, title: `Review roof vent flashing · ${plan.input.label}`,
+      severity: "warning", detail: issue, pieceId: plan.input.panelId,
+    });
+  }
+  for (const { plan, issue } of floorRegisterReviews(p)) {
+    if (issue) findings.push({
+      id: `floor-register-${plan.id}`, title: "Review floor register fit",
       severity: "warning", detail: issue, pieceId: plan.input.panelId,
     });
   }
@@ -2077,6 +2085,7 @@ export function guideMarkdown(p: Project) {
   const rimAirSeals = rimAirSealGuideLines(rimSealReview);
   const roofValleys = roofValleyGuideLines(p);
   const roofVentFlashings = roofVentFlashingGuideLines(p);
+  const floorRegisters = floorRegisterGuideLines(p);
   const floorReviews = subfloorReviews(p);
   const floorHangers = floorHangerGuideLines(p, connections.intents);
   const doorKits = new Set((p.motionPlans ?? []).flatMap((plan) => {
@@ -2317,6 +2326,9 @@ export function guideMarkdown(p: Project) {
       roofValleys.map((line) => "- " + line.replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     (roofVentFlashings.length ? `\n\n## Roof vent flashing\n\n${roofVentFlashingScope}\n\n[Oatey installation guidance](${oateyRoofVentBoot.installation}) · [PNNL roof penetration guidance](${oateyRoofVentBoot.integration})\n\n` +
       roofVentFlashings.map((line) => "- " + line.replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
+    (floorRegisters.length ? `\n\n## Floor register cutting and sealing\n\n${floorRegisterScope}\n\n` +
+      floorRegisters.map((line) => "- " + line).join("\n") +
+      `\n\n[Master Flow boot instructions](${floorRegisterBoot.specification}) · [Home Depot reference](${floorRegisterBoot.listing}) · [PNNL duct-boot air sealing](${floorRegisterBoot.airSeal})\n` : "") +
     (p.waterRuns?.length ? "\n\n## Wall water-line schedule\n\n" +
       p.waterRuns.flatMap((run) => waterRunGuide(p, run)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[Stud boring](${studBoreSource}) · [Pipe protection](${pipeProtectionSource}) · [SharkBite installation](${pexInstallation})\n` : "") +

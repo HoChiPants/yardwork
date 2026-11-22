@@ -56,6 +56,7 @@ export function pasteObjects(
     offcut: false,
     cutStock: null,
     ...(p.roundOpenings?.length ? { roundOpenings: p.roundOpenings.map(({ source: _source, ...opening }) => opening) } : {}),
+    ...(p.rectangularOpenings?.length ? { rectangularOpenings: p.rectangularOpenings.map(({ source: _source, ...opening }) => opening) } : {}),
     guidePlacement: undefined,
   }));
   const placement = separateWood(project, pieces);

@@ -1,3 +1,4 @@
+import { floorRegisterReviews } from "./floorRegister";
 import { subfloorReviews } from "./subfloor";
 import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReviews } from "./subfloorFastening";
@@ -870,6 +871,7 @@ export function toolChecklist(
     add("fixture-hose-wrench", { kind: "piece", id: stop.pieceId, reason: stop.name },
       "conditional", "When the selected supply-hose instructions call for wrench tightening.");
   }
+  const currentFloorRegisters = new Set(floorRegisterReviews(project).flatMap(({ plan, issue }) => issue ? [] : [plan.id]));
   for (const piece of project.pieces) {
     const m = material(piece.material);
     for (const opening of piece.offcut ? [] : (piece.roundOpenings ?? [])) {
@@ -890,6 +892,7 @@ export function toolChecklist(
         );
     }
     for (const opening of piece.offcut ? [] : (piece.rectangularOpenings ?? [])) {
+      if (opening.source && !currentFloorRegisters.has(opening.source.floorRegisterId)) continue;
       add("rectangular-cut-setup", {
         kind: "piece",
         id: piece.id,

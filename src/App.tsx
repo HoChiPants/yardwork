@@ -28,6 +28,10 @@ import { RimAirSealPanel } from "./RimAirSealPanel";
 import { RoofValleyPanel } from "./RoofValleyPanel";
 import { modeledRoofValleys, removeRoofValley, roofValleyGuideLines, saveRoofValley } from "./roofValleys";
 import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
+import { FloorRegisterPanel } from "./FloorRegisterPanel";
+import { floorRegisterGuideLines, floorRegisterReviews, isFloorRegisterPanel, removeFloorRegister,
+  saveFloorRegister, type FloorRegisterPreview } from "./floorRegister";
+import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
 import { removeRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
@@ -417,6 +421,7 @@ type Modal =
   | "top-plate-seal"
   | "rim-air-seal"
   | "roof-valley"
+  | "floor-register"
   | "roof-vent-flashing"
   | "water-support"
   | "export"
@@ -661,6 +666,8 @@ export function App() {
   const [shownSillGasketId, setShownSillGasketId] = useState<string | null>(null);
   const [shownRimSeal, setShownRimSeal] = useState<{ projectId: string; key: string }>();
   const [shownRoofValley, setShownRoofValley] = useState<{ projectId: string; id: string }>();
+  const [floorRegisterDraft, setFloorRegisterDraft] = useState<FloorRegisterPreview>();
+  const [shownFloorRegister, setShownFloorRegister] = useState<{ projectId: string; id: string }>();
   const [shownRoofVent, setShownRoofVent] = useState<{ projectId: string; id: string }>();
   const [rimSealTarget, setRimSealTarget] = useState<{ sectionId?: string; side?: RimSide }>();
   const [openingFlashingTarget, setOpeningFlashingTarget] = useState<{ projectId: string; sillId?: string } | null>(null);
@@ -1005,6 +1012,7 @@ export function App() {
     if (next !== "projects") earlierSaveRequest.current?.abort();
     if (next !== "offcut-reuse") setOffcutReusePlan(null);
     if (next !== "board-cut-list") setBoardCutDraft(null);
+    if (next !== "floor-register") setFloorRegisterDraft(undefined);
     if (next !== "offcut-release") setOffcutReleasePreview(null);
     if (next !== "inventory") setInventoryTarget(undefined);
     if (next !== null) inspectorFocus.suspend();
@@ -1539,6 +1547,13 @@ export function App() {
         setPanel("checks");
         setModal("roof-valley");
         return;
+      case "floor-register":
+        setStage(null);
+        setExplode(false);
+        setPlaying(false);
+        setPanel("checks");
+        setModal("floor-register");
+        break;
       case "roof-vent-flashing":
         setPanel("checks");
         setModal("roof-vent-flashing");
@@ -2012,6 +2027,9 @@ export function App() {
   const roofValleyMarker = useMemo(() => shownRoofValley?.projectId === project.id
     ? modeledRoofValleys(project).find(({ id, issue }) => id === shownRoofValley.id && !issue) : undefined,
   [project, shownRoofValley]);
+  const floorRegisterMarker = useMemo(() => shownFloorRegister?.projectId === project.id
+    ? floorRegisterReviews(project).find(({ plan, issue }) => plan.id === shownFloorRegister.id && !issue)?.layout
+    : undefined, [project, shownFloorRegister]);
   const roofVentMarker = useMemo(() => shownRoofVent?.projectId === project.id
     ? roofVentFlashingReviews(project).find(({ plan, issue }) => plan.id === shownRoofVent.id && !issue)?.geometry : undefined,
   [project, shownRoofVent]);
@@ -2167,6 +2185,7 @@ export function App() {
   const printRimSealReview = useMemo(() => reviewRimAirSeals(exportGuide), [exportGuide]);
   const printRimSeals = useMemo(() => rimAirSealGuideLines(printRimSealReview), [printRimSealReview]);
   const printRoofValleys = useMemo(() => roofValleyGuideLines(exportGuide), [exportGuide]);
+  const printFloorRegisters = useMemo(() => floorRegisterGuideLines(exportGuide), [exportGuide]);
   const printRoofVents = useMemo(() => roofVentFlashingGuideLines(exportGuide), [exportGuide]);
   const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
   const printWindowWalls = useMemo(() => reviewGeneratedWindowWalls(exportGuide), [exportGuide]);
@@ -3502,6 +3521,7 @@ export function App() {
                 : undefined}
               shownRimSeal={visibleRimSeal?.cuts}
               shownRoofValley={panel === "checks" && roofValleyMarker ? [roofValleyMarker.start, roofValleyMarker.end] : undefined}
+              floorRegister={modal === "floor-register" ? floorRegisterDraft : panel === "checks" ? floorRegisterMarker : undefined}
               shownRoofVent={panel === "checks" ? roofVentMarker : undefined}
               shownOpeningFlashing={panel === "opening-flashing" && openingFlashingPreview?.project === project
                 ? openingFlashingPreview.value : undefined}
@@ -4397,6 +4417,13 @@ export function App() {
                   }
                 }}
               />
+              {(project.pieces.some(isFloorRegisterPanel) || !!project.floorRegisterPlans?.length) &&
+                <button type="button" className="button secondary" onClick={() => {
+                  setStage(null); setExplode(false); setPlaying(false); setModal("floor-register");
+                }}>Plan floor register</button>}
+              {floorRegisterMarker && <button type="button" className="text-button" onClick={() => setShownFloorRegister(undefined)}>
+                Hide floor register layout
+              </button>}
               {(project.projectCode?.trades.includes("roofing") || !!project.roofValleys?.length) &&
                 <button type="button" className="button secondary full" onClick={() => setModal("roof-valley")}>Plan roof valley lining</button>}
               {roofValleyMarker && <button type="button" className="text-button" onClick={() => setShownRoofValley(undefined)}>Hide valley centerline</button>}
@@ -5656,7 +5683,7 @@ export function App() {
       )}
       {modal && (
         <div
-          className={modal === "place-material" || modal === "board-cut-list" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
+          className={modal === "place-material" || modal === "board-cut-list" || modal === "floor-register" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setModal(null);
           }}
@@ -5793,6 +5820,25 @@ export function App() {
                 change((live) => saveSubfloorJoists(live, id, selection));
                 notify(selection ? "Joist check saved." : "Joist check removed.");
               })} />}
+            {modal === "floor-register" && <FloorRegisterPanel key={project.id} project={project} panelId={selected ?? undefined}
+              initialId={shownFloorRegister?.projectId === project.id ? shownFloorRegister.id : undefined}
+              onPreview={setFloorRegisterDraft}
+              onSave={(input, id) => safe(() => {
+                const next = change((live) => saveFloorRegister(live, input, id));
+                const saved = next.floorRegisterPlans?.at(-1);
+                if (saved) setShownFloorRegister({ projectId: project.id, id: saved.id });
+                setModal(null);
+                notify("Floor register opening and seal plan saved.");
+              })}
+              onRemove={(id) => safe(() => {
+                change((live) => removeFloorRegister(live, id));
+                setFloorRegisterDraft(undefined);
+                if (shownFloorRegister?.id === id) setShownFloorRegister(undefined);
+              })}
+              onShow={(id) => {
+                setShownFloorRegister({ projectId: project.id, id });
+                setStage(null); setPlaying(false); setExplode(false); setPanel("checks"); setModal(null);
+              }} />}
             {modal === "roof-vent-flashing" && <RoofVentFlashingPanel key={project.id} project={project}
               initialId={shownRoofVent?.projectId === project.id ? shownRoofVent.id : undefined}
               measuredPoint={measurement.a}
@@ -7311,6 +7357,16 @@ export function App() {
             <ul>{printRoofValleys.map((line, index) => <li key={index}>{line}</li>)}</ul>
             <p><a href={weatherWatch.instructions}>GAF installation instructions</a>{" · "}
               <a href={valleyFieldGuide}>PNNL valley detail</a></p>
+          </section>
+        )}
+        {printFloorRegisters.length > 0 && (
+          <section>
+            <h2>Floor register cutting and sealing</h2>
+            <p>{floorRegisterScope}</p>
+            <ul>{printFloorRegisters.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={floorRegisterBoot.specification}>Master Flow boot instructions</a>{" · "}
+              <a href={floorRegisterBoot.listing}>Home Depot reference</a>{" · "}
+              <a href={floorRegisterBoot.airSeal}>PNNL duct-boot air sealing</a></p>
           </section>
         )}
         {printRoofVents.length > 0 && (

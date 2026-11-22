@@ -1,3 +1,4 @@
+import type { FloorRegisterPreview } from "./floorRegister";
 import { maxRepeatedBoards } from "./repeatedBoardCuts";
 import { libertyBarPull } from "./cabinetPullReference";
 import type { SubfloorJoint, SubfloorReview } from "./subfloor";
@@ -98,6 +99,7 @@ export type SceneProps = {
   shownSillGasket?: { points: V3[]; needsReview: boolean };
   shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[]; edgeOutline?: V3[] }>;
   shownRoofValley?: [V3, V3];
+  floorRegister?: FloorRegisterPreview;
   shownRoofVent?: { center: V3; flange: V3[]; layout: V3[] };
   shownOpeningFlashing?: OpeningFlashingPreview;
   shownPlumbingVentLayout?: PlumbingVentLayout;
@@ -1697,6 +1699,24 @@ function World(props: SceneProps) {
             color="#28677d" lineWidth={4} depthTest={false} raycast={() => null} />
           <Html position={props.shownRoofValley[0].map((value) => value / 12) as V3} style={{ pointerEvents: "none" }}>
             <span className="site-clearance-marker" data-testid="roof-valley-marker">Valley centerline · eave</span>
+          </Html>
+        </group>
+      )}
+      {!isolated && props.floorRegister && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <group>
+          <Line points={props.floorRegister.opening.map((point) => point.map((value) => value / 12) as V3)}
+            color={props.floorRegister.issue ? "#c25636" : "#27705c"} lineWidth={3} depthTest={false} raycast={() => null} />
+          <Line points={props.floorRegister.throat.map((point) => point.map((value) => (value + 0.01) / 12) as V3)}
+            color="#4c756c" lineWidth={2} depthTest={false} raycast={() => null} />
+          <mesh position={props.floorRegister.envelope.position.map((value) => value / 12) as V3}
+            rotation={props.floorRegister.envelope.rotation} raycast={() => null}>
+            <boxGeometry args={props.floorRegister.envelope.size.map((value) => value / 12) as V3} />
+            <meshBasicMaterial color={props.floorRegister.issue ? "#c25636" : "#27705c"} transparent opacity={0.16} depthWrite={false} depthTest={false} />
+            <Edges color={props.floorRegister.issue ? "#c25636" : "#27705c"} />
+          </mesh>
+          <Html position={props.floorRegister.opening[0].map((value) => value / 12) as V3}
+            style={{ pointerEvents: "none" }}>
+            <span className="site-clearance-marker" data-testid="floor-register-marker">{props.floorRegister.issue ? "Review register fit" : "Floor register opening"}</span>
           </Html>
         </group>
       )}

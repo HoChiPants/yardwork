@@ -21,6 +21,7 @@ const span = z.number().finite().min(0.125).max(480);
 export const rectangularOpeningSchema = z.strictObject({
   ...location,
   spans: z.tuple([span, span]),
+  source: z.strictObject({ floorRegisterId: z.uuid() }).optional(),
 });
 export type RectangularOpening = z.infer<typeof rectangularOpeningSchema>;
 export type ThroughOpening = RoundOpening | RectangularOpening;

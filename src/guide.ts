@@ -102,6 +102,7 @@ function preparationScope(project: Project) {
     ...rimFoamGuideScope(project),
     ...(project.roofValleys?.length ? { roofValleys: project.roofValleys } : {}),
     ...(project.roofVentFlashings?.length ? { roofVentFlashings: project.roofVentFlashings } : {}),
+    ...(project.floorRegisterPlans?.length ? { floorRegisterPlans: project.floorRegisterPlans } : {}),
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),

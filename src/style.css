@@ -3565,7 +3565,8 @@ small {
 .cut-pool .category-filter button.active { background: #e8eedf; }
 .part-quick-tools button { min-height: 40px; }
 .part-quick-tools button[aria-pressed="true"] { background: #e1e8d9; color: #304d28; }
-@media (max-width: 600px) {
+@media (max-width: 1180px) {
+  .part-quick-tools strong { display: none; }
   .part-quick-tools {
     justify-content: space-between;
     gap: 2px;
@@ -4018,4 +4019,9 @@ small {
 @media (min-width: 601px) and (max-width: 900px) {
   .material-placement-backdrop { justify-content: flex-end; }
   .material-placement-backdrop .modal { width: min(360px, 55vw); }
+}
+
+.material-placement-backdrop[data-material-dock="left"] { justify-content: flex-start; }
+@media (max-width: 600px) {
+  .material-placement-backdrop[data-material-dock="top"] { align-items: flex-start; }
 }

@@ -117,10 +117,12 @@ test("one material tile supports drop, length choice and a separate selected-par
   await page.keyboard.press("Escape");
   await expect(canvas).not.toHaveAttribute("data-material-placement-preview");
   await add.click();
+  const [centerX, , centerZ] = JSON.parse((await canvas.getAttribute("data-material-drop-point"))!);
   await confirmMaterialPlacement(page, "10 ft");
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("120");
-  await expect(page.getByRole("spinbutton", { name: "X", exact: true })).toHaveValue("0");
-  await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("0");
+  const placedX = Number(await page.getByRole("spinbutton", { name: "X", exact: true }).inputValue());
+  const placedZ = Number(await page.getByRole("spinbutton", { name: "Z", exact: true }).inputValue());
+  expect(Math.hypot(placedX - centerX, placedZ - centerZ)).toBeLessThanOrEqual(3.5);
   await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(page.locator(".bom-row").getByText(`${group} · 8 ft`, { exact: true })).toBeVisible();
   await expect(page.locator(".bom-row").getByText(`${group} · 10 ft`, { exact: true })).toBeVisible();
@@ -135,6 +137,58 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toHaveCount(0);
   await page.getByText("Project cost estimate", { exact: true }).click();
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toBeVisible();
+});
+
+test("the length picker leaves the placed preview visible near the right edge", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await page.goto("./");
+  const canvas = page.locator("canvas").first();
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
+  const view = (await canvas.boundingBox())!;
+  const target = { x: view.width - 30, y: view.height * 0.65 };
+  await page.locator('[data-material-family="treated-4x4"] .material-art').dragTo(canvas, { targetPosition: target });
+  const placement = page.getByRole("dialog", { name: "4 × 4 treated post" });
+  await expect(placement).toBeVisible();
+  const picker = (await placement.boundingBox())!;
+  expect(picker.x + picker.width).toBeLessThan(view.x + target.x);
+  const point = JSON.parse((await canvas.getAttribute("data-material-drop-point"))!);
+  await confirmMaterialPlacement(page, "12 ft");
+  await expect(page.getByRole("spinbutton", { name: "X", exact: true })).toHaveValue(String(point[0]));
+  await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue(String(point[2]));
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("72");
+  const turn = page.getByRole("button", { name: "Tip 90°", exact: true });
+  const action = (await turn.boundingBox())!;
+  const toolbar = (await page.getByRole("toolbar", { name: "Selected part tools" }).boundingBox())!;
+  expect(action.x + action.width).toBeLessThanOrEqual(toolbar.x + toolbar.width);
+});
+
+test("dragging from a scrolled phone shelf brings the ground back into view", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("./");
+  const canvas = page.locator("canvas").first();
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
+  const material = page.locator('[data-material-family="framing-2x4"] .material-art');
+  await material.evaluate((tile) => tile.scrollIntoView({ block: "start" }));
+  const source = (await material.boundingBox())!;
+  const initialScroll = await page.evaluate(() => window.scrollY);
+  expect(initialScroll).toBeGreaterThan(0);
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(230, 24, { steps: 7 });
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(initialScroll);
+  await expect.poll(async () => {
+    const view = (await canvas.boundingBox())!;
+    return view.y + view.height;
+  }).toBeGreaterThan(150);
+  const view = (await canvas.boundingBox())!;
+  const y = view.y + view.height - 65;
+  await page.mouse.move(view.x + view.width * 0.68, y, { steps: 7 });
+  await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
+  await page.mouse.up();
+  await expect(page.getByRole("dialog", { name: group, exact: true })).toBeVisible();
+  await confirmMaterialPlacement(page, "10 ft");
+  await expect(page.locator(".statusbar")).toContainText("1 part");
+  await expect(canvas).not.toHaveAttribute("data-material-drop-point");
 });
 
 test("a sized fitting search still leaves one tile and the chosen size keeps its exact purchase match", async ({ page }) => {
@@ -322,6 +376,11 @@ test("front-view drops stay at the framed depth and ignore controls", async ({ p
   await image.dragTo(canvas, { targetPosition: { x: view.width * 0.72, y: view.height * 0.51 } });
   await confirmMaterialPlacement(page, "10 ft");
   await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("60");
+  await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("120");
+  await page.getByRole("textbox", { name: "Find a material" }).fill("wood screws");
+  await page.getByRole("button", { name: "Add Wood screws", exact: true }).click();
+  await confirmMaterialPlacement(page, "3 in");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("1.5");
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("120");
 });
 
@@ -577,7 +636,8 @@ test.describe("phone material placement", () => {
     await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     const dialog = page.getByRole("dialog", { name: "4 × 4 treated post" });
     await expect(dialog).toBeVisible();
-    expect((await dialog.boundingBox())!.y).toBeGreaterThan(end.y);
+    const picker = (await dialog.boundingBox())!;
+    expect(end.y < picker.y || end.y > picker.y + picker.height).toBe(true);
     await confirmMaterialPlacement(page, "8 ft");
     await expect(page.getByRole("status").filter({ hasText: "4 × 4 treated post added." })).toHaveCSS("pointer-events", "none");
     await page.getByRole("button", { name: "Part details" }).click();

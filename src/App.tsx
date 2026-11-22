@@ -89,6 +89,7 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -983,12 +984,43 @@ export function App() {
     projectId: string;
     group: MaterialGroup;
     position?: V3;
+    dropPoint?: { x: number; y: number };
     finishedLength?: number;
     measuredLength?: number;
     offcutId?: string;
     quantity?: number;
     stock?: MaterialId;
   }>();
+  const materialPlacementBackdrop = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const backdrop = materialPlacementBackdrop.current;
+    const picker = backdrop?.querySelector<HTMLElement>("[data-material-placement]");
+    const drop = pendingMaterial?.dropPoint;
+    if (modal !== "place-material" || !backdrop || !picker || !drop) return;
+    const dockPicker = () => {
+      const bounds = backdrop.getBoundingClientRect();
+      const padding = getComputedStyle(backdrop);
+      const onPhone = window.matchMedia("(max-width: 600px)").matches;
+      let dock;
+      if (onPhone && drop.y > bounds.top + bounds.height / 2 &&
+          drop.y >= bounds.bottom - parseFloat(padding.paddingBottom) - picker.offsetHeight) {
+        dock = "top";
+      } else if (!onPhone && drop.x > bounds.left + bounds.width / 2 &&
+          drop.x >= bounds.right - parseFloat(padding.paddingRight) - picker.offsetWidth) {
+        dock = "left";
+      }
+      if (dock) backdrop.dataset.materialDock = dock;
+      else delete backdrop.dataset.materialDock;
+    };
+    dockPicker();
+    const sizeObserver = new ResizeObserver(dockPicker);
+    sizeObserver.observe(backdrop);
+    sizeObserver.observe(picker);
+    return () => {
+      sizeObserver.disconnect();
+      delete backdrop.dataset.materialDock;
+    };
+  }, [modal, pendingMaterial]);
   const viewport = useRef<HTMLDivElement>(null),
     workspaceCamera = useRef<{ camera: THREE.Camera; getTarget: () => THREE.Vector3 } | null>(null),
     file = useRef<HTMLInputElement>(null);
@@ -2917,7 +2949,10 @@ export function App() {
   }
   function requestMaterial(group: MaterialGroup, pointer?: { x: number; y: number }) {
     if (!canLeaveWorkingDraft()) return;
-    const position = pointer ? pointOnWorkspace(pointer) : undefined;
+    const target = workspaceCamera.current?.getTarget();
+    const inches = (feet: number) => snap ? Math.round(feet * 12) : feet * 12;
+    const center: V3 = target ? [inches(target.x), 0, inches(target.z)] : [0, 0, 0];
+    const position = pointer ? pointOnWorkspace(pointer) : center;
     if (pointer && !position) {
       if (materialDropCanvas(pointer)) {
         notify(canDropMaterial ? "Drop onto a visible surface, or use + to add at the center." : "Return to the normal workspace to drop a material.", true);
@@ -2931,7 +2966,7 @@ export function App() {
     }
     const distance = measured?.distance;
     const measuredLength = canCutToLength && distance !== undefined && distance >= 0.125 ? distance : undefined;
-    setPendingMaterial({ projectId: project.id, group, position, measuredLength });
+    setPendingMaterial({ projectId: project.id, group, position, dropPoint: pointer, measuredLength });
     setModal("place-material");
   }
   function copySelection() {
@@ -5320,7 +5355,7 @@ export function App() {
                     <em>{r.oversize} {r.oversize === 1 ? "part exceeds" : "parts exceed"} this stock size</em>
                   )}
                   {r.supplier && (r.quantity > 0 || !r.onHandStockUnits) && (
-                    <details className="stock-supplier-details" open>
+                    <details className="stock-supplier-details">
                       <summary>Supplier details</summary>
                       <small>Confirm availability with supplier</small>
                       <a href={r.supplier.url} target="_blank" rel="noreferrer">
@@ -5796,6 +5831,7 @@ export function App() {
             ["place-material", "board-cut-list", "floor-register", "round-duct", "round-duct-elbow"].includes(modal) ? "placement-backdrop" : "",
             modal === "place-material" ? "material-placement-backdrop" : "",
           ].filter(Boolean).join(" ")}
+          ref={materialPlacementBackdrop}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setModal(null);
           }}

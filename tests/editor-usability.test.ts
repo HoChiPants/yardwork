@@ -319,6 +319,9 @@ test("one palette card per family retains every exact catalog variant and separa
   assert.equal(materialStockDisplayName("stud"), "2 × 4 framing lumber · 8 ft");
   assert.equal(materialStockDisplayName("hd-spf-2x4-10"), "2 × 4 framing lumber · 10 ft");
   assert.equal(materialStockDisplayName("hd-treated-4x4-12"), "4 × 4 treated post · 12 ft");
+  const connectorScrews = groupedMaterials("Fasteners", "connector screws");
+  assert.deepEqual(connectorScrews.map(({ name }) => name), ["1½ in connector screws"]);
+  assert.deepEqual(materialPlacementOptions(connectorScrews[0]).options.map(({ id }) => id), ["sd9112r100"]);
   const rods = groupedMaterials("Rods");
   assert.deepEqual(rods.map(({ name }) => name), ["Closet rod"]);
   assert.deepEqual(materialPlacementOptions(rods[0]).options.map(({ id }) => id), ["closet-rod-72", "hd-everbilt-closet-rod-96"]);

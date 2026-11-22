@@ -91,6 +91,12 @@ const families: {
     preferred: "screw",
   },
   {
+    id: "connector-screws",
+    name: "1½ in connector screws",
+    ids: ["sd9112r100", "connector-screw"],
+    preferred: "sd9112r100",
+  },
+  {
     id: "pex-b",
     name: "Straight PEX-B pipe",
     ids: ["hd-pex-u860w10", "hd-pex-u870w10"],

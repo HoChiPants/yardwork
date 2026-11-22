@@ -28,12 +28,30 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   const list = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const previewFrame = useRef<number | null>(null);
+  const pointer = useRef<Point | null>(null);
   const preview = useRef(onPreview);
   preview.current = onPreview;
   const [ghost, setGhost] = useState<{ drag: Drag; point: Point; overCanvas: boolean } | null>(null);
   function stopPreviewFrame() {
     if (previewFrame.current !== null) cancelAnimationFrame(previewFrame.current);
     previewFrame.current = null;
+  }
+  function schedulePreview() {
+    if (previewFrame.current !== null) return;
+    previewFrame.current = requestAnimationFrame(() => {
+      previewFrame.current = null;
+      const active = drag.current;
+      const point = pointer.current;
+      if (!active || !point) return;
+      // Keep a short workspace reachable when the material shelf is below the fold.
+      const page = document.scrollingElement;
+      const edge = Math.min(64, window.innerHeight / 8);
+      const scroll = point.y < edge ? point.y - edge : Math.max(0, point.y - window.innerHeight + edge);
+      const before = page?.scrollTop;
+      if (page && scroll) page.scrollTop += Math.sign(scroll) * Math.min(18, Math.ceil(Math.abs(scroll) / 3));
+      setGhost({ drag: active, point, overCanvas: preview.current(point, active.stock.id) });
+      if (page?.scrollTop !== before) schedulePreview();
+    });
   }
   useEffect(() => {
     function cancel(event: KeyboardEvent) {
@@ -42,6 +60,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       event.preventDefault();
       event.stopPropagation();
       drag.current = null;
+      pointer.current = null;
       stopPreviewFrame();
       if (active.tile.hasPointerCapture(active.pointer)) active.tile.releasePointerCapture(active.pointer);
       setGhost(null);
@@ -78,21 +97,21 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       );
       active.action = alongRail ? "scroll" : "place";
     }
-    if (active.action === "scroll") {
-      // A thumb often starts sideways before pulling a tile into the model.
-      // Once that gesture reaches the workspace, restore the shelf and place the tile.
-      if (!rail || !preview.current(point, active.stock.id)) {
-        rail?.scrollTo(active.scrollLeft - dx, active.scrollTop - dy);
+    if (active.action === "scroll" && rail) {
+      // A thumb can start by browsing and then pull the same tile out of the shelf.
+      const bounds = rail.getBoundingClientRect();
+      const clearOfShelf = rail.scrollWidth > rail.clientWidth
+        ? point.y < bounds.top - 6 || point.y > bounds.bottom + 6
+        : point.x < bounds.left - 6 || point.x > bounds.right + 6;
+      if (!clearOfShelf) {
+        rail.scrollTo(active.scrollLeft - dx, active.scrollTop - dy);
         return;
       }
       rail.scrollTo(active.scrollLeft, active.scrollTop);
       active.action = "place";
     }
-    stopPreviewFrame();
-    previewFrame.current = requestAnimationFrame(() => {
-      previewFrame.current = null;
-      setGhost({ drag: active, point, overCanvas: preview.current(point, active.stock.id) });
-    });
+    pointer.current = point;
+    schedulePreview();
   }
   function art(group: MaterialGroup, stock: Drag["stock"]) {
     const profile = stock.wood && stock.stockKind === "linear" ? stock.size.slice().sort((a, b) => a - b)[1] : null;
@@ -103,6 +122,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     const active = drag.current;
     if (!active || active.pointer !== event.pointerId) return;
     drag.current = null;
+    pointer.current = null;
     stopPreviewFrame();
     setGhost(null);
     const point = pointOf(event);

@@ -26,7 +26,9 @@ type StopCheck = {
   angle: number;
   setup: MotionTestSetup;
   findings: string[];
+  canTryShorter: boolean;
 };
+const drawerTravelIncrement = 0.125;
 
 function openingPair(selected: MotionPlan, companion: MotionPlan, drawerTravel: number) {
   const pair = doorAndDrawer(selected, companion);
@@ -66,6 +68,22 @@ function reviewPasses(review: MotionReview, end = motionReviewTravel(review)) {
 
 const yieldToPage = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
+function stopSetup(selected: MotionPlan, companion: MotionPlan, drawerTravel: number, angle: number, test: SearchSetup) {
+  const { door } = openingPair(selected, companion, drawerTravel);
+  if (!Number.isFinite(angle) || angle < 0.01 || angle > door.mechanism.travel)
+    throw Error("Enter a stop angle within the door's saved travel.");
+  return doorFirstSetup(selected, companion, door, angle, drawerTravel, test);
+}
+
+function canShortenDrawerTravel(review: MotionReview, extension: number) {
+  const clearance = review.clearance;
+  // The door leg and all closed positions stay the same when the drawer target changes.
+  return extension > drawerTravelIncrement && !review.unresolvedIds.length &&
+    ![...review.hits, ...review.zone, ...review.siteFindings].some(({ phase }) => phase === 0) &&
+    (clearance?.result.status !== "short" || clearance.phase !== 0) &&
+    review.playbackLimit(0, motionReviewTravel(review)).phase !== 0;
+}
+
 /** Test the exact installed stop, including the swing with the drawer shut and the reverse sequence. */
 export function checkDrawerStop(
   project: Project,
@@ -75,12 +93,10 @@ export function checkDrawerStop(
   angle: number,
   test: SearchSetup,
 ): StopCheck {
-  const { door } = openingPair(selected, companion, drawerTravel);
-  if (!Number.isFinite(angle) || angle < 0.01 || angle > door.mechanism.travel)
-    throw Error("Enter a stop angle within the door's saved travel.");
-  const setup = doorFirstSetup(selected, companion, door, angle, drawerTravel, test);
+  const setup = stopSetup(selected, companion, drawerTravel, angle, test);
   const result = runMotionTest(project, selected, setup);
-  if (result.review && reviewPasses(result.review)) return { status: "clear", angle, setup, findings: [] };
+  if (result.review && reviewPasses(result.review))
+    return { status: "clear", angle, setup, findings: [], canTryShorter: false };
   const describePart = (project: Project, id: string) => {
     const label = partLabel(project, id);
     const piece = project.pieces.find((row) => row.id === id);
@@ -90,7 +106,46 @@ export function checkDrawerStop(
     .filter(({ id }) => id !== "pair-clearance" || result.review?.clearance?.result.status !== "met")
     .map(({ detail }) => detail);
   if (!findings.length) findings.push("Playback could not verify the whole opening and closing sequence at this stop.");
-  return { status: "review", angle, setup, findings };
+  return { status: "review", angle, setup, findings, canTryShorter: !!result.review && canShortenDrawerTravel(result.review, drawerTravel) };
+}
+
+/** Look for a shorter prefix of the same drawer path and verify the reverse sequence too. */
+export async function findShorterDrawerTravel(
+  project: Project,
+  selected: MotionPlan,
+  companion: MotionPlan,
+  drawerTravel: number,
+  angle: number,
+  test: SearchSetup,
+  signal?: AbortSignal,
+): Promise<{ extension: number; setup: MotionTestSetup } | undefined> {
+  await yieldToPage();
+  signal?.throwIfAborted();
+  const { review } = runMotionTest(project, selected, stopSetup(selected, companion, drawerTravel, angle, test));
+  if (!review || reviewPasses(review) || !canShortenDrawerTravel(review, drawerTravel)) return;
+  let first = 1;
+  let last = Math.ceil(drawerTravel / drawerTravelIncrement) - 1;
+  let verified: { extension: number; setup: MotionTestSetup } | undefined;
+  let nextYield = performance.now() + 16;
+  while (first <= last) {
+    signal?.throwIfAborted();
+    const index = Math.floor((first + last) / 2);
+    const extension = index * drawerTravelIncrement;
+    const setup = stopSetup(selected, companion, extension, angle, test);
+    const { review: candidate } = runMotionTest(project, selected, setup);
+    if (candidate && reviewPasses(candidate)) {
+      verified = { extension, setup };
+      first = index + 1;
+    } else {
+      last = index - 1;
+    }
+    if (performance.now() >= nextYield) {
+      await yieldToPage();
+      nextYield = performance.now() + 16;
+    }
+  }
+  signal?.throwIfAborted();
+  return verified;
 }
 
 /** Try the whole-degree openings and the reachable endpoint. Clearance can

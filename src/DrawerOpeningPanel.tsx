@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
-import { checkDrawerStop, doorAndDrawer, findDrawerOpening } from "./drawerOpening";
+import { checkDrawerStop, doorAndDrawer, findDrawerOpening, findShorterDrawerTravel } from "./drawerOpening";
 import { motionDistance } from "./mechanismMotion";
 import { preferredLengthUnit } from "./measurement";
 import type { Project } from "./model";
@@ -19,9 +19,10 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
   const pair = doorAndDrawer(selected, linked)!;
   const [extension, setExtension] = useState(initialExtension);
   const [stop, setStop] = useState(initialStop ?? NaN);
-  const [progress, setProgress] = useState<{ tried: number; total: number }>();
+  const [progress, setProgress] = useState<{ tried: number; total: number } | "shorter">();
   const [outcome, setOutcome] = useState<{ source: Project; result: Awaited<ReturnType<typeof findDrawerOpening>> }>();
   const [stopOutcome, setStopOutcome] = useState<{ source: Project; result: ReturnType<typeof checkDrawerStop> }>();
+  const [shorter, setShorter] = useState<Awaited<ReturnType<typeof findShorterDrawerTravel>> | null>();
   const [error, setError] = useState("");
   const run = useRef<AbortController | null>(null);
   useEffect(() => () => run.current?.abort(), [project]);
@@ -42,6 +43,7 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
     cancel();
     setOutcome(undefined);
     setStopOutcome(undefined);
+    setShorter(undefined);
     setError("");
     const task = new AbortController();
     run.current = task;
@@ -66,12 +68,32 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
     if (!valid || !validStop) return;
     setOutcome(undefined);
     setStopOutcome(undefined);
+    setShorter(undefined);
     setError("");
     try {
       const result = checkDrawerStop(project, selected, linked, extension, stop, test);
       setStopOutcome({ source: project, result });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Review the selected door and drawer.");
+    }
+  }
+
+  async function searchShorter() {
+    if (!checkedStop?.canTryShorter || progress) return;
+    const task = new AbortController();
+    run.current = task;
+    setProgress("shorter");
+    setError("");
+    try {
+      const option = await findShorterDrawerTravel(project, selected, linked, extension, stop, test, task.signal);
+      if (!task.signal.aborted) setShorter(option ?? null);
+    } catch (cause) {
+      if (!task.signal.aborted) setError(cause instanceof Error ? cause.message : "Review the selected door and drawer.");
+    } finally {
+      if (run.current === task) {
+        run.current = null;
+        setProgress(undefined);
+      }
     }
   }
 
@@ -83,27 +105,31 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
           cancel();
           setOutcome(undefined);
           setStopOutcome(undefined);
+          setShorter(undefined);
           setError("");
           setExtension(value);
         }} />
       <p className="small-note">Checks whole-degree angles and the reachable endpoint with other parts held at their current test positions.</p>
       <div className="motion-actions">
         <button type="submit" className="button secondary small" disabled={!valid || !!progress}>Find an opening</button>
-        {progress && <button type="button" className="text-button" onClick={cancel}>Cancel angle search</button>}
+        {progress && progress !== "shorter" && <button type="button" className="text-button" onClick={cancel}>Cancel angle search</button>}
       </div>
       <label className="field">
         Door stop angle (degrees)
         <input type="number" min={0.01} max={pair.door.mechanism.travel} step="any"
           value={Number.isFinite(stop) ? stop : ""}
           onChange={(event) => {
+            if (progress === "shorter") cancel();
             setStop(event.target.value === "" ? NaN : Number(event.target.value));
             setStopOutcome(undefined);
+            setShorter(undefined);
           }} />
       </label>
       <p className="small-note">Enter the measured stop or the stated angle for your exact hinge hardware. The saved door travel is {motionDistance(pair.door.mechanism.travel, "hinge")}.</p>
       <button type="button" className="button secondary small" disabled={!valid || !validStop || !!progress} onClick={checkStop}>Check door stop</button>
     </form>
-    {progress && <p role="status">{progress.total ? `Checked ${progress.tried} of ${progress.total} angles…` : "Checking the door swing…"}</p>}
+    {progress && progress !== "shorter" &&
+      <p role="status">{progress.total ? `Checked ${progress.tried} of ${progress.total} angles…` : "Checking the door swing…"}</p>}
     {error && <p role="alert" className="form-error">{error}</p>}
     {result && <div className="notice">
       <div>
@@ -127,9 +153,21 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
           ? `The ${motionDistance(checkedStop.angle, "hinge")} stop clears ${motionDistance(extension, "slide")} of drawer travel in the model.`
           : `Review the ${motionDistance(checkedStop.angle, "hinge")} stop for ${motionDistance(extension, "slide")} of drawer travel.`}</strong></p>
         {!!checkedStop.findings.length && <ul>{checkedStop.findings.slice(0, 3).map((line, index) => <li key={index}>{line}</li>)}</ul>}
-        <button type="button" className="button secondary small" onClick={() => onChoose(checkedStop.setup)}>
-          {checkedStop.status === "clear" ? "Use this stop sequence" : "Review this door-stop test"}
-        </button>
+        <div className="motion-actions">
+          <button type="button" className="button secondary small" onClick={() => onChoose(checkedStop.setup)}>
+            {checkedStop.status === "clear" ? "Use this stop sequence" : "Review this door-stop test"}
+          </button>
+          {checkedStop.canTryShorter && shorter === undefined && progress !== "shorter" &&
+            <button type="button" className="button secondary small" onClick={searchShorter}>Find shorter drawer travel</button>}
+        </div>
+        {progress === "shorter" && <p role="status">
+          Checking shorter extensions… <button type="button" className="text-button" onClick={cancel}>Cancel travel search</button>
+        </p>}
+        {shorter === null && <p role="status">No shorter extension was verified at this stop.</p>}
+        {shorter && <>
+          <p role="status">The model verified {motionDistance(shorter.extension, "slide")} of drawer travel at this stop, including closing.</p>
+          <button type="button" className="button secondary small" onClick={() => onChoose(shorter.setup)}>Use shorter sequence</button>
+        </>}
       </div>
     </section>}
   </details>;

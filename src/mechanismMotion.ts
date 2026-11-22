@@ -1327,7 +1327,7 @@ export function motionDistance(
 ) {
   return kind === "hinge"
     ? `${Number(value.toFixed(2))}°`
-    : formatPreciseInches(Number(value.toFixed(2)));
+    : formatPreciseInches(Number.isInteger(value * 8) ? value : Number(value.toFixed(2)));
 }
 
 export type MotionTestVariant = "baseline" | "saved";

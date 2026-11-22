@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildQuestion, answerBuildQuestion } from "../src/buildQuestions";
-import { checkDrawerStop, findDrawerOpening } from "../src/drawerOpening";
+import { checkDrawerStop, findDrawerOpening, findShorterDrawerTravel } from "../src/drawerOpening";
 import { guideMarkdown } from "../src/engine";
 import { blank, part, projectSchema } from "../src/model";
 import { runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
@@ -152,6 +152,10 @@ test("an explicit door-stop question keeps its measured angle and drawer extensi
   const { project, slide, swing } = cabinet();
   const question = buildQuestion("Will an 86.25 degree door stop let my drawer open 12.5 inches?");
   assert.deepEqual(question, { kind: "drawer-opening", stop: { angle: 86.25, extension: 12.5 } });
+  assert.deepEqual(buildQuestion("Can my drawer extend one ft 0.5 in with the door at thirty-five degrees?"),
+    { kind: "drawer-opening", stop: { angle: 35, extension: 12.5 } });
+  assert.deepEqual(buildQuestion("Can the drawer open with the cabinet door limited to 35°?"),
+    { kind: "drawer-opening", stop: { angle: 35 } });
   assert.deepEqual(answerBuildQuestion(project, question!, []).link, {
     label: "Check the door stop",
     action: { kind: "drawer-opening", drawerId: slide.id, doorId: swing.id, stop: { angle: 86.25, extension: 12.5 } },
@@ -159,4 +163,31 @@ test("an explicit door-stop question keeps its measured angle and drawer extensi
   assert.deepEqual(buildQuestion("Will an 86° door stop let my drawer open?"), {
     kind: "drawer-opening", stop: { angle: 86 },
   });
+});
+
+test("a reachable stop can verify shorter drawer travel without changing the saved slide", async () => {
+  const { project, slide, swing, door, drawer } = cabinet();
+  const original = JSON.stringify(project);
+  const held = { held: [] };
+  const option = await findShorterDrawerTravel(project, slide, swing, 12.5, 35, held);
+  assert.equal(option?.extension, 10.125);
+  assert.equal(checkDrawerStop(project, slide, swing, 10.25, 35, held).status, "review");
+  assert.deepEqual(option?.setup.sequenceTargets, {
+    selected: { kind: "slide", travel: 10.125 }, companion: { kind: "hinge", travel: 35 },
+  });
+  const review = runMotionTest(project, slide, option!.setup).review!;
+  assert.deepEqual(review.playbackLimit(0, 100), { travel: 100 });
+  assert.deepEqual(review.playbackLimit(100, 0), { travel: 0 });
+  const saved = saveMotionTestScenario(project, slide.id, "Shorter route", option!.setup).project;
+  assert.match(guideMarkdown(saved), /Cabinet door 35°, Pull-out drawer 10\.125 in/);
+  assert.equal(JSON.stringify(project), original);
+  const gap = { held: [], clearance: { movingId: drawer.id, otherId: door.id, minimum: 0.25 } };
+  const withGap = await findShorterDrawerTravel(project, swing, slide, 12.5, 35, gap);
+  assert.ok(withGap && withGap.extension < option!.extension);
+  assert.equal(runMotionTest(project, swing, withGap.setup).review?.clearance?.result.status, "met");
+  assert.equal(await findShorterDrawerTravel(project, slide, swing, 12.5, 90, held), undefined);
+  assert.equal(await findShorterDrawerTravel(project, slide, swing, 10.125, 35, held), undefined);
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(findShorterDrawerTravel(project, slide, swing, 12.5, 35, held, controller.signal), { name: "AbortError" });
 });

@@ -20,6 +20,10 @@ When a hinged door and sliding drawer are linked, open **Find a door opening for
 
 If the hardware has a fixed stop, enter its measured or published angle under **Find a door opening for the drawer** and choose **Check door stop**. You can also ask **“Will an 86.25 degree door stop let my drawer open 12.5 inches?”** Yardwork tests that exact angle, including the door swing with the drawer retracted and the reverse closing path. Use the actual hinge path and installed stop when measuring. [Blum opening-angle stop instructions](https://www.blum.com/us/en/products/hingesystems/clip-top-blumotion/downloads-videos/)
 
+If the door clears and the drawer cannot reach the requested extension, choose **Find shorter drawer travel**. Yardwork searches in ⅛ in increments with the same door stop, held parts and selected gap. **Use shorter sequence** loads the verified opening and closing sequence so you can save its measured targets in the build guide. The saved slide travel stays available for other tests. [Accuride slide travel and side-space guidance](https://www.accuride.com/media/amasty/amfile/attach/a3bcba75b0b82de060a661de95ce9f44.pdf)
+
+Try this workflow with the [editable cabinet](../public/examples/hinges/fixed-stop-drawer.yardwork.json). It includes a measured aisle edge, three named motion tests, and a plywood mounting spacer with recorded cuts and two reusable remnants.
+
 To compare several arrangements, run the test and open **Keep this test under a name**. Give each arrangement a name, such as “Open door first” or “Both drawers open.” Switch between them with **Clearance test**. Enter a different name when you want to keep the original arrangement and save a variation. In **Guide → Review build preparation**, choose a named result to reopen its test at the reported pose. Named tests use the current model each time they run.
 
 Open **Guide → Review build preparation → Motion and clearance** to inspect a flagged test. Each row identifies the affected parts or measured site face and opens the relevant motion at the finding. A missing part or companion opens the setup with its error so you can revise it.

@@ -1,0 +1,870 @@
+{
+  "schemaVersion": 123,
+  "id": "494b9715-9798-4677-be6f-11195975f2da",
+  "name": "Cabinet drawer behind a narrow door opening",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "1b2e5192-bf1c-41f8-a02f-ff769b491c9c"
+  ],
+  "motionPlans": [
+    {
+      "label": "Cabinet door",
+      "memberIds": [
+        "19dfa9fe-2cf9-427b-a6cc-5534f4def1a6"
+      ],
+      "mechanism": {
+        "kind": "hinge",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "pivot": [
+          -11.375,
+          0,
+          0
+        ],
+        "travel": 90
+      },
+      "id": "3038774b-1d0f-4135-bbfb-a7177c629f06"
+    },
+    {
+      "label": "Pull-out drawer",
+      "memberIds": [
+        "6a88c6b4-05f8-4469-8efe-2bd794a3bfbe",
+        "65e1f648-76df-4299-b458-bc217ad8eef9",
+        "707b98b1-465f-40e0-86e5-083687bcaae0",
+        "3a2b23a6-9ca2-4a4a-bdab-7988c7daaf6c",
+        "0c84eec9-fbdb-4475-9449-4a39e7c88cbb"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "travel": 18
+      },
+      "id": "a24ae507-37fe-4b89-ba9e-0854038e3927",
+      "testScenarios": [
+        {
+          "id": "86cf3d11-e3b8-49cd-b26e-df4964edbd5a",
+          "name": "35° stop · requested reach",
+          "setup": {
+            "linkedId": "3038774b-1d0f-4135-bbfb-a7177c629f06",
+            "openingOrder": "companion-first",
+            "sequenceTargets": {
+              "selected": {
+                "kind": "slide",
+                "travel": 12.5
+              },
+              "companion": {
+                "kind": "hinge",
+                "travel": 35
+              }
+            },
+            "held": []
+          }
+        },
+        {
+          "id": "11cadf5e-e5ce-45d7-bfdc-bb34d82d7fb2",
+          "name": "35° stop · shorter reach",
+          "setup": {
+            "linkedId": "3038774b-1d0f-4135-bbfb-a7177c629f06",
+            "openingOrder": "companion-first",
+            "sequenceTargets": {
+              "selected": {
+                "kind": "slide",
+                "travel": 5.375
+              },
+              "companion": {
+                "kind": "hinge",
+                "travel": 35
+              }
+            },
+            "held": []
+          }
+        },
+        {
+          "id": "487a822c-8de3-475f-ac45-a3db47c0b730",
+          "name": "90° stop · measured aisle edge",
+          "setup": {
+            "linkedId": "3038774b-1d0f-4135-bbfb-a7177c629f06",
+            "openingOrder": "companion-first",
+            "sequenceTargets": {
+              "selected": {
+                "kind": "slide",
+                "travel": 12.5
+              },
+              "companion": {
+                "kind": "hinge",
+                "travel": 90
+              }
+            },
+            "held": []
+          }
+        }
+      ]
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "487c04dc-5cf5-4da5-8a72-949ad496e2ee",
+      "label": "P001"
+    },
+    {
+      "partId": "8242bbf3-4df8-4f7e-a93d-98cf62a0ebc7",
+      "label": "P002"
+    },
+    {
+      "partId": "4195afd3-e1c0-4c22-837b-4d34d3d8f8b4",
+      "label": "P003"
+    },
+    {
+      "partId": "1857af33-ebd1-4aea-af9c-8be1069ca975",
+      "label": "P004"
+    },
+    {
+      "partId": "a654e9e2-c285-4169-9cc8-2b6e5eb1b6a0",
+      "label": "P005"
+    },
+    {
+      "partId": "992712d8-e520-4ab9-8045-63f5d5e5b91f",
+      "label": "P006"
+    },
+    {
+      "partId": "4b693851-180f-41fd-8ab3-54cebb08356c",
+      "label": "P007"
+    },
+    {
+      "partId": "b3235306-ac2a-4724-8cac-1d52212b69d6",
+      "label": "P008"
+    },
+    {
+      "partId": "8691cea4-380c-4693-ba9b-5eb726475f67",
+      "label": "P009"
+    },
+    {
+      "partId": "19dfa9fe-2cf9-427b-a6cc-5534f4def1a6",
+      "label": "P010"
+    },
+    {
+      "partId": "6a88c6b4-05f8-4469-8efe-2bd794a3bfbe",
+      "label": "P011"
+    },
+    {
+      "partId": "65e1f648-76df-4299-b458-bc217ad8eef9",
+      "label": "P012"
+    },
+    {
+      "partId": "707b98b1-465f-40e0-86e5-083687bcaae0",
+      "label": "P013"
+    },
+    {
+      "partId": "3a2b23a6-9ca2-4a4a-bdab-7988c7daaf6c",
+      "label": "P014"
+    },
+    {
+      "partId": "0c84eec9-fbdb-4475-9449-4a39e7c88cbb",
+      "label": "P015"
+    },
+    {
+      "partId": "41bad1ae-dcd2-4c54-a660-9dd4424bbd90",
+      "label": "O001"
+    },
+    {
+      "partId": "9eff967d-3aeb-45ec-9c77-f19478dbe612",
+      "label": "O002"
+    },
+    {
+      "partId": "591ba3ff-5f7a-4896-b558-d2362112edfe",
+      "label": "O003"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T03:49:32.468Z",
+  "pieces": [
+    {
+      "id": "487c04dc-5cf5-4da5-8a72-949ad496e2ee",
+      "name": "Left cabinet side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        30,
+        24
+      ],
+      "position": [
+        -11.625,
+        15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8242bbf3-4df8-4f7e-a93d-98cf62a0ebc7",
+      "name": "Right cabinet side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        30,
+        24
+      ],
+      "position": [
+        11.625,
+        15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4195afd3-e1c0-4c22-837b-4d34d3d8f8b4",
+      "name": "Cabinet top",
+      "material": "plywood",
+      "size": [
+        22.5,
+        0.75,
+        24
+      ],
+      "position": [
+        0,
+        29.625,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1857af33-ebd1-4aea-af9c-8be1069ca975",
+      "name": "Cabinet bottom",
+      "material": "plywood",
+      "size": [
+        22.5,
+        0.75,
+        24
+      ],
+      "position": [
+        0,
+        0.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a654e9e2-c285-4169-9cc8-2b6e5eb1b6a0",
+      "name": "Cabinet back",
+      "material": "plywood-half",
+      "size": [
+        22.5,
+        28.5,
+        0.46875
+      ],
+      "position": [
+        0,
+        15,
+        -11.765625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "992712d8-e520-4ab9-8045-63f5d5e5b91f",
+      "name": "Left outer mounting spacer",
+      "material": "plywood",
+      "size": [
+        0.75,
+        2,
+        18
+      ],
+      "position": [
+        -10.875,
+        10,
+        -2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "1b2e5192-bf1c-41f8-a02f-ff769b491c9c",
+        "sourceAxes": [
+          0,
+          1,
+          2
+        ],
+        "size": [
+          0.75,
+          3.5,
+          22
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "4b693851-180f-41fd-8ab3-54cebb08356c",
+      "name": "Left inner mounting spacer",
+      "material": "plywood",
+      "size": [
+        0.75,
+        2,
+        18
+      ],
+      "position": [
+        -10.125,
+        10,
+        -2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b3235306-ac2a-4724-8cac-1d52212b69d6",
+      "name": "Right inner mounting spacer",
+      "material": "plywood",
+      "size": [
+        0.75,
+        2,
+        18
+      ],
+      "position": [
+        10.125,
+        10,
+        -2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8691cea4-380c-4693-ba9b-5eb726475f67",
+      "name": "Right outer mounting spacer",
+      "material": "plywood",
+      "size": [
+        0.75,
+        2,
+        18
+      ],
+      "position": [
+        10.875,
+        10,
+        -2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "assembly": "Cabinet shell",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "19dfa9fe-2cf9-427b-a6cc-5534f4def1a6",
+      "name": "Cabinet door",
+      "material": "plywood",
+      "size": [
+        22.75,
+        28,
+        0.75
+      ],
+      "position": [
+        0.125,
+        15,
+        12.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c754ee65-0f9e-4979-b168-18ae550c6ce8",
+      "assembly": "Cabinet door",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6a88c6b4-05f8-4469-8efe-2bd794a3bfbe",
+      "name": "Drawer left side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        4,
+        18
+      ],
+      "position": [
+        -8.875,
+        12.25,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5c4f499c-f44f-48dc-8725-e5bc89ce2502",
+      "assembly": "Pull-out drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "65e1f648-76df-4299-b458-bc217ad8eef9",
+      "name": "Drawer right side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        4,
+        18
+      ],
+      "position": [
+        8.875,
+        12.25,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5c4f499c-f44f-48dc-8725-e5bc89ce2502",
+      "assembly": "Pull-out drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "707b98b1-465f-40e0-86e5-083687bcaae0",
+      "name": "Drawer front",
+      "material": "plywood",
+      "size": [
+        17,
+        4,
+        0.75
+      ],
+      "position": [
+        0,
+        12.25,
+        7.625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5c4f499c-f44f-48dc-8725-e5bc89ce2502",
+      "assembly": "Pull-out drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3a2b23a6-9ca2-4a4a-bdab-7988c7daaf6c",
+      "name": "Drawer back",
+      "material": "plywood",
+      "size": [
+        17,
+        4,
+        0.75
+      ],
+      "position": [
+        0,
+        12.25,
+        -9.625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5c4f499c-f44f-48dc-8725-e5bc89ce2502",
+      "assembly": "Pull-out drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0c84eec9-fbdb-4475-9449-4a39e7c88cbb",
+      "name": "Drawer bottom",
+      "material": "plywood-half",
+      "size": [
+        18.5,
+        0.46875,
+        18
+      ],
+      "position": [
+        0,
+        10.015625,
+        -1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5c4f499c-f44f-48dc-8725-e5bc89ce2502",
+      "assembly": "Pull-out drawer",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9eff967d-3aeb-45ec-9c77-f19478dbe612",
+      "name": "Offcut · Plywood strip for a mounting spacer",
+      "material": "plywood",
+      "size": [
+        3.5,
+        0.75,
+        3.875
+      ],
+      "position": [
+        0,
+        0.375,
+        9.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c5be1080-85c4-4e23-8275-2fea4487b817",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "1b2e5192-bf1c-41f8-a02f-ff769b491c9c",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3.5,
+          0.75,
+          22
+        ],
+        "offset": [
+          0,
+          0,
+          18.125
+        ]
+      }
+    },
+    {
+      "id": "591ba3ff-5f7a-4896-b558-d2362112edfe",
+      "name": "Offcut · Plywood strip for a mounting spacer",
+      "material": "plywood",
+      "size": [
+        1.375,
+        0.75,
+        18
+      ],
+      "position": [
+        1.0625,
+        0.375,
+        -2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "c5be1080-85c4-4e23-8275-2fea4487b817",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "1b2e5192-bf1c-41f8-a02f-ff769b491c9c",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3.5,
+          0.75,
+          22
+        ],
+        "offset": [
+          2.125,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "c5be1080-85c4-4e23-8275-2fea4487b817",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nConfirm the measured site faces and minimum gaps in the clearance schedule before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "494b9715-9798-4677-be6f-11195975f2da",
+        "notes": "Measure the available space and check clearances before cutting.\nConfirm the measured site faces and minimum gaps in the clearance schedule before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-ed219839",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "c754ee65-0f9e-4979-b168-18ae550c6ce8",
+      "title": "Assemble Cabinet door",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "494b9715-9798-4677-be6f-11195975f2da",
+        "stageKey": "assembly:Cabinet door",
+        "memberIds": [
+          "19dfa9fe-2cf9-427b-a6cc-5534f4def1a6"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-27e52e9f",
+        "title": "Assemble Cabinet door"
+      }
+    },
+    {
+      "id": "82f308ce-7ebb-4baf-9954-8bd26a40126a",
+      "title": "Assemble Cabinet shell",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "494b9715-9798-4677-be6f-11195975f2da",
+        "stageKey": "assembly:Cabinet shell",
+        "memberIds": [
+          "1857af33-ebd1-4aea-af9c-8be1069ca975",
+          "4195afd3-e1c0-4c22-837b-4d34d3d8f8b4",
+          "487c04dc-5cf5-4da5-8a72-949ad496e2ee",
+          "4b693851-180f-41fd-8ab3-54cebb08356c",
+          "8242bbf3-4df8-4f7e-a93d-98cf62a0ebc7",
+          "8691cea4-380c-4693-ba9b-5eb726475f67",
+          "992712d8-e520-4ab9-8045-63f5d5e5b91f",
+          "a654e9e2-c285-4169-9cc8-2b6e5eb1b6a0",
+          "b3235306-ac2a-4724-8cac-1d52212b69d6"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-444cffaa",
+        "title": "Assemble Cabinet shell"
+      }
+    },
+    {
+      "id": "5c4f499c-f44f-48dc-8725-e5bc89ce2502",
+      "title": "Assemble Pull-out drawer",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "494b9715-9798-4677-be6f-11195975f2da",
+        "stageKey": "assembly:Pull-out drawer",
+        "memberIds": [
+          "0c84eec9-fbdb-4475-9449-4a39e7c88cbb",
+          "3a2b23a6-9ca2-4a4a-bdab-7988c7daaf6c",
+          "65e1f648-76df-4299-b458-bc217ad8eef9",
+          "6a88c6b4-05f8-4469-8efe-2bd794a3bfbe",
+          "707b98b1-465f-40e0-86e5-083687bcaae0"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-b7ef2128",
+        "title": "Assemble Pull-out drawer"
+      }
+    },
+    {
+      "id": "8f7e225c-a7f4-4d95-bdec-9ed0ca6a85d9",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "494b9715-9798-4677-be6f-11195975f2da",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-40c858a1",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "siteClearances": [
+    {
+      "id": "fb0d1aeb-39de-4339-8f84-b872eef694c4",
+      "bindingId": null,
+      "label": "Measured aisle edge",
+      "side": "+Z",
+      "coordinate": 33,
+      "top": 30,
+      "minimum": 0.25
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": "design-v3-fd1b93b5",
+  "history": [
+    {
+      "id": "9cd7895a-3fb6-4018-8598-c267fda62324",
+      "at": "2026-11-22T03:49:32.470Z",
+      "stepId": "c5be1080-85c4-4e23-8275-2fea4487b817",
+      "message": "Assigned O001 · Offcut · Plywood strip for a mounting spacer to P006 · Left outer mounting spacer.",
+      "offcutCut": {
+        "sourceId": "1b2e5192-bf1c-41f8-a02f-ff769b491c9c",
+        "inputId": "41bad1ae-dcd2-4c54-a660-9dd4424bbd90",
+        "targetId": "992712d8-e520-4ab9-8045-63f5d5e5b91f",
+        "inputSize": [
+          0.75,
+          3.5,
+          22
+        ],
+        "result": {
+          "size": [
+            0.75,
+            2,
+            18
+          ],
+          "sourceSize": [
+            0.75,
+            3.5,
+            22
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "inputName": "Offcut · Plywood strip for a mounting spacer",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 18
+          },
+          {
+            "kind": "rip",
+            "size": 2
+          }
+        ],
+        "remnants": [
+          {
+            "id": "9eff967d-3aeb-45ec-9c77-f19478dbe612",
+            "size": [
+              0.75,
+              3.5,
+              3.875
+            ]
+          },
+          {
+            "id": "591ba3ff-5f7a-4896-b558-d2362112edfe",
+            "size": [
+              0.75,
+              1.375,
+              18
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

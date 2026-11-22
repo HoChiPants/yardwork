@@ -5691,6 +5691,7 @@ export function App() {
               })} />}
             {modal === "roof-vent-flashing" && <RoofVentFlashingPanel key={project.id} project={project}
               initialId={shownRoofVent?.projectId === project.id ? shownRoofVent.id : undefined}
+              measuredPoint={measurement.a}
               onSave={(input, id) => safe(() => {
                 change((live) => saveRoofVentFlashing(live, input, id));
                 notify("Vent flashing saved. The opening layout is in the build guide.");

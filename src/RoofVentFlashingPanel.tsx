@@ -1,15 +1,16 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { formatStockLength } from "./measurement";
-import { uid, type Project } from "./model";
+import { uid, type Project, type V3 } from "./model";
 import { partLabel } from "./partLabels";
-import { roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
-import { roofVentFlashingInputSchema, type RoofVentFlashingInput } from "./roofVentFlashingSchema";
+import { roofVentFlashingReviews, roofVentMeasuredPosition, saveRoofVentFlashing } from "./roofVentFlashing";
+import { roofVentFlashingInputSchema, type RoofVentFlashingInput, type RoofVentMeasurements } from "./roofVentFlashingSchema";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 
-export function RoofVentFlashingPanel({ project, initialId, onSave, onRemove, onShow }: {
+export function RoofVentFlashingPanel({ project, initialId, measuredPoint, onSave, onRemove, onShow }: {
   project: Project;
   initialId?: string;
+  measuredPoint: V3 | null;
   onSave: (input: RoofVentFlashingInput, id: string) => void;
   onRemove: (id: string) => void;
   onShow: (id: string) => void;
@@ -43,16 +44,17 @@ export function RoofVentFlashingPanel({ project, initialId, onSave, onRemove, on
         Remove flashing plan
       </button>
     </div>}
-    {panels.length ? <VentMeasurements key={active?.plan.id ?? "new"} panels={panels} project={project}
+    {panels.length ? <VentMeasurements key={active?.plan.id ?? "new"} panels={panels} project={project} measuredPoint={measuredPoint}
       existing={active?.plan} onSave={(input, id) => { onSave(input, id); select(id); }} /> :
       <p role="status">Save a modeled shingle deck panel in the Roofing section of Project code.</p>}
   </>;
 }
 
-function VentMeasurements({ project, panels, existing, onSave }: {
+function VentMeasurements({ project, panels, existing, measuredPoint, onSave }: {
   project: Project;
   panels: string[];
   existing?: NonNullable<Project["roofVentFlashings"]>[number];
+  measuredPoint: V3 | null;
   onSave: (input: RoofVentFlashingInput, id: string) => void;
 }) {
   const [id] = useState(existing?.id ?? uid());
@@ -72,6 +74,18 @@ function VentMeasurements({ project, panels, existing, onSave }: {
     source: Project; input: RoofVentFlashingInput; geometry: NonNullable<ReturnType<typeof roofVentFlashingReviews>[number]["geometry"]>;
   }>();
   const current = preview?.source === project ? preview : undefined;
+  const measuredPosition = useMemo(() => measuredPoint ? roofVentMeasuredPosition(project, input.panelId, measuredPoint) : null,
+    [input.panelId, measuredPoint, project]);
+  function updateMeasurements(values: Partial<RoofVentMeasurements>) {
+    setInput((previous) => ({ ...previous, ...values }));
+    setConfirmed(false);
+  }
+  function applyPosition() {
+    if (!measuredPosition) return;
+    updateMeasurements(measuredPosition);
+    setPreview(undefined);
+    setError("");
+  }
   function check(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -100,14 +114,15 @@ function VentMeasurements({ project, panels, existing, onSave }: {
       <input value={input.label} maxLength={80} onChange={(event) => setInput({ ...input, label: event.target.value })} />
     </label>
     <label className="field">Roof deck panel
-      <select value={input.panelId} onChange={(event) => setInput({ ...input, panelId: event.target.value })}>
+      <select value={input.panelId} onChange={(event) => updateMeasurements({ panelId: event.target.value })}>
         {panels.map((id) => <option key={id} value={id}>{partLabel(project, id)}</option>)}
       </select>
     </label>
     <p className="small-note">Measure along the deck surface from the center of the selected face. Across is positive to your right while facing downhill.</p>
+    {measuredPosition && <button type="button" className="text-button" onClick={applyPosition}>Use measured point on this panel</button>}
     <div className="valley-fields">
       {fields.map(({ key, label, min, max }) => <LengthInput key={key} label={label} min={min} max={max}
-        value={input[key]} onChange={(value) => setInput({ ...input, [key]: value })} />)}
+        value={input[key]} onChange={(value) => updateMeasurements({ [key]: value })} />)}
     </div>
     <label className="valley-check">
       <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />

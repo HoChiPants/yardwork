@@ -8,7 +8,8 @@ import { blank, part, projectSchema, uid } from "../src/model";
 import { saveProjectCode } from "../src/projectCode";
 import { blankProjectCode } from "../src/projectCodeSchema";
 import {
-  reviewRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing, type RoofVentMeasurements,
+  reviewRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, roofVentMeasuredPosition,
+  saveRoofVentFlashing, type RoofVentMeasurements,
 } from "../src/roofVentFlashing";
 import { composeRotation } from "../src/spatial";
 import { oateyRoofVentBoot } from "../src/roofVentFlashingReference";
@@ -45,6 +46,16 @@ test("a vertical pipe needs a longer opening through a rotated sloped deck", () 
   const [left, right, bottom] = geometry!.flange.map((point) => new Vector3(...point));
   assert.ok(Math.abs(left.distanceTo(right) - 18) < 1e-6);
   assert.ok(Math.abs(right.distanceTo(bottom) - 18) < 1e-6);
+});
+
+test("a measured upper-face point resolves to the vent offsets on a rotated deck", () => {
+  const { scoped, measurements } = fixture();
+  const { geometry } = reviewRoofVentFlashing(scoped, { ...measurements, across: 3.125, downhill: -4.75 });
+  const point = geometry!.center;
+  assert.deepEqual(roofVentMeasuredPosition(scoped, measurements.panelId, point), { across: 3.125, downhill: -4.75 });
+  assert.equal(roofVentMeasuredPosition(scoped, measurements.panelId, [point[0], point[1] - 0.5, point[2]]), null);
+  const outside = reviewRoofVentFlashing(scoped, { ...measurements, across: 30 }).geometry!.center;
+  assert.equal(roofVentMeasuredPosition(scoped, measurements.panelId, outside), null);
 });
 
 test("nominal sizing, pitch and field placement each have their own fit check", () => {

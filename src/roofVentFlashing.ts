@@ -12,6 +12,7 @@ import { partLabel } from "./partLabels";
 
 const epsilon = 1e-6;
 const diameterAllowance = 1 / 32;
+const facePickAllowance = 1 / 32;
 const vector = (point: V3) => new Vector3(...point);
 
 export type { RoofVentMeasurements } from "./roofVentFlashingSchema";
@@ -35,16 +36,7 @@ function contains(face: Vector3[], normal: Vector3, point: Vector3) {
   return sides.every((side) => side >= -epsilon) || sides.every((side) => side <= epsilon);
 }
 
-export function reviewRoofVentFlashing(project: Pick<Project, "pieces" | "projectCode">, input: RoofVentMeasurements): RoofVentReview {
-  if (!roofVentMeasurementSchema.safeParse(input).success)
-    return { issue: "Enter the pipe position, its actual outside diameter, planned clearance and the measured distances to the flange edges." };
-  const { panelId, across, downhill, outsideDiameter, radialClearance, flangeLeft, flangeUphill } = input;
-  const base = oateyRoofVentBoot.base;
-  // The dimensional check distinguishes 2 in nominal PVC from an actual 2 in tube.
-  // Seating the delivered boot remains a field check.
-  if (Math.abs(outsideDiameter - twoInchPvcVent.outsideDiameter) > diameterAllowance + epsilon) {
-    return { issue: "The measured outside diameter differs from the reviewed 2 in nominal PVC vent. Check the pipe and the delivered collar." };
-  }
+function roofVentDeck(project: Pick<Project, "pieces" | "projectCode">, panelId: string) {
   const code = project.projectCode;
   const plane = code?.trades.includes("roofing") && code.shingleRoof?.planes.find(({ basis }) =>
     basis.kind === "panel" && basis.pieceId === panelId);
@@ -61,6 +53,36 @@ export function reviewRoofVentFlashing(project: Pick<Project, "pieces" | "projec
   const up = vector(faces[0].normal).normalize();
   const downslope = new Vector3(0, -1, 0).addScaledVector(up, up.y).normalize();
   const crossSlope = downslope.clone().cross(up);
+  return { deck: { panel, pitch, face, origin, up, downslope, crossSlope } };
+}
+
+export function roofVentMeasuredPosition(project: Pick<Project, "pieces" | "projectCode">, panelId: string, point: V3) {
+  if (!point.every(Number.isFinite)) return null;
+  const { deck } = roofVentDeck(project, panelId);
+  if (!deck) return null;
+  const offset = vector(point).sub(deck.origin);
+  const height = offset.dot(deck.up);
+  if (Math.abs(height) > facePickAllowance ||
+    !contains(deck.face, deck.up, vector(point).addScaledVector(deck.up, -height))) return null;
+  return {
+    across: Number(offset.dot(deck.crossSlope).toFixed(5)),
+    downhill: Number(offset.dot(deck.downslope).toFixed(5)),
+  };
+}
+
+export function reviewRoofVentFlashing(project: Pick<Project, "pieces" | "projectCode">, input: RoofVentMeasurements): RoofVentReview {
+  if (!roofVentMeasurementSchema.safeParse(input).success)
+    return { issue: "Enter the pipe position, its actual outside diameter, planned clearance and the measured distances to the flange edges." };
+  const { panelId, across, downhill, outsideDiameter, radialClearance, flangeLeft, flangeUphill } = input;
+  const base = oateyRoofVentBoot.base;
+  // The dimensional check distinguishes 2 in nominal PVC from an actual 2 in tube.
+  // Seating the delivered boot remains a field check.
+  if (Math.abs(outsideDiameter - twoInchPvcVent.outsideDiameter) > diameterAllowance + epsilon) {
+    return { issue: "The measured outside diameter differs from the reviewed 2 in nominal PVC vent. Check the pipe and the delivered collar." };
+  }
+  const { deck, issue } = roofVentDeck(project, panelId);
+  if (!deck) return { issue };
+  const { panel, pitch, face, origin, up, downslope, crossSlope } = deck;
   const center = origin.addScaledVector(crossSlope, across).addScaledVector(downslope, downhill);
   const rectangle = (left: number, right: number, top: number, bottom: number) =>
     [[left, top], [right, top], [right, bottom], [left, bottom]].map(([x, y]) =>

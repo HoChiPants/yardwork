@@ -3866,6 +3866,8 @@ small {
 }
 .stock-size-options label:has(:checked) { background: #eef3e8; border-color: #a6b89a; }
 .stock-length-check { margin: 0 0 16px; }
+.stock-cut-quantity { flex-direction: row; align-items: center; gap: 12px; margin: 8px 0; }
+.stock-cut-quantity input { width: 72px; }
 .stock-length-recommendation {
   display: flex;
   align-items: flex-start;

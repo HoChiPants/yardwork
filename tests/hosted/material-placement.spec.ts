@@ -476,3 +476,69 @@ test.describe("phone material placement", () => {
     await expect(page.getByRole("toolbar", { name: "Model tools" })).toBeVisible();
   });
 });
+
+test("compare repeated cuts from a question, reuse the tail and export the shared stock order", async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByText("Questions about this build", { exact: true }).click();
+  await dialog.getByRole("button", { name: "Compare board lengths", exact: true }).click();
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Stock lengths for your cuts", exact: true });
+  await expect(answer).toContainText("1 × 10 ft makes 2 pieces at 4 ft");
+  await expect(answer).toContainText("2 × 8 ft");
+  await answer.getByRole("button", { name: "Preview 8 ft stock", exact: true }).click();
+  await expect(dialog.getByRole("radio", { name: "8 ft", exact: true })).toBeChecked();
+  const quantity = dialog.getByRole("spinbutton", { name: "Pieces at this length", exact: true });
+  await expect(quantity).toHaveValue("2");
+  await quantity.fill("25");
+  await expect(dialog).toContainText("Choose 1 to 24 whole pieces.");
+  await expect(dialog.getByRole("button", { name: "Place material", exact: true })).toBeDisabled();
+  await quantity.fill("2");
+  await dialog.getByRole("button", { name: "Use 10 ft", exact: true }).click();
+  await expect(dialog.getByRole("radio", { name: "10 ft", exact: true })).toBeChecked();
+  await expect(dialog).toContainText("Expected offcuts · 23.75 in.");
+  const canvas = page.locator("canvas").first();
+  await expect(canvas).toHaveAttribute("data-material-placement-count", "2");
+  await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,48,3.5]");
+  await page.screenshot({ path: info.outputPath("repeat-cut-phone.png") });
+  await dialog.getByRole("button", { name: "Plan and place 2 pieces", exact: true }).click();
+  await expect(canvas).not.toHaveAttribute("data-material-placement-count");
+  await expect(page.getByRole("button", { name: "Cut pool (1)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cut pool (0)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cut pool (1)", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: `Add ${group}`, exact: true }).click();
+  await dialog.getByRole("spinbutton", { name: "Needed finished length", exact: true }).fill("18");
+  await dialog.getByRole("button", { name: "Place from O001", exact: true }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator(".inspector-scroll .bom-row")).toContainText("1 board");
+  await expect(page.locator(".inspector-scroll .bom-row")).toContainText("3 parts · 1 offcut");
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await expect(dialog.getByRole("list", { name: "Home Depot purchase review" }).getByRole("link").first())
+    .toHaveAttribute("href", /homedepot\.com\/.*100077951/);
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  let downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Editable project/ }).click();
+  const model = projectSchema.parse(JSON.parse(await readFile((await (await downloaded).path())!, "utf8")));
+  const kept = model.pieces.filter(({ offcut }) => !offcut);
+  expect(kept.map(({ size }) => size[1])).toEqual([48, 48, 18]);
+  expect(new Set(kept.map(({ cutStock }) => cutStock?.id)).size).toBe(1);
+  expect(kept[0].position[0]).toBeLessThan(kept[1].position[0]);
+  expect(model.plannedCutSources).toHaveLength(1);
+  const source = model.plannedCutSources![0].sourceId;
+  expect(model.pieces.filter(({ offcut }) => offcut).map(({ cutStock, size }) => [cutStock?.id, size[1]])).toEqual([[source, 5.625]]);
+
+  if (!await dialog.isVisible()) await page.getByRole("button", { name: "Export", exact: true }).click();
+  downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await downloaded).path())!, "utf8");
+  expect(guide).toMatch(/## Planned stock cuts[\s\S]+1\. Crosscut 4 ft from the current end for P001[\s\S]+2\. Crosscut 4 ft from the current end for P002/);
+  expect(guide.indexOf("## Planned stock cuts")).toBeLessThan(guide.indexOf("## Recorded offcut cut order"));
+  expect(guide).toContain("Crosscut to 18 in");
+});

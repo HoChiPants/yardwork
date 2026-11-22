@@ -161,7 +161,7 @@ import { assemblyPartForOffcut } from "./sceneVisibility";
 import { rekeyGuidePlacements } from "./guidePlacement";
 import { GuidePlacementEditor } from "./GuidePlacementEditor";
 import { copySavedRevision } from "./recoverSavedRevision";
-import { planDedicatedBoardCut, recordStockCutLayouts, saveTubeCutLoss } from "./recordStockCutLayout";
+import { planDedicatedBoardCuts, recordStockCutLayouts, saveTubeCutLoss } from "./recordStockCutLayout";
 import { GuidePartLabels, PrintAssemblyPartLabels } from "./GuidePartLabels";
 import { assemblyPartLabels, type AssemblyPartLabel } from "./assemblyPartLabels";
 import { ConnectionReviewPanel } from "./ConnectionReviewPanel";
@@ -319,6 +319,7 @@ import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSli
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
 import { MaterialPlacement, type BoardPlacement } from "./MaterialPlacement";
+import { maxRepeatedBoards } from "./repeatedBoardCuts";
 import { groupedMaterials, materialDisplayName, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
@@ -955,6 +956,8 @@ export function App() {
     finishedLength?: number;
     measuredLength?: number;
     offcutId?: string;
+    quantity?: number;
+    stock?: MaterialId;
   }>();
   const viewport = useRef<HTMLDivElement>(null),
     workspaceCamera = useRef<{ camera: THREE.Camera; getTarget: () => THREE.Vector3 } | null>(null),
@@ -1397,7 +1400,8 @@ export function App() {
       case "board-placement": {
         const group = groupedMaterials("Lumber").find(({ id }) => id === action.groupId);
         if (!group) throw Error("This material changed. Explore the question again.");
-        setPendingMaterial({ projectId: project.id, group, finishedLength: action.length, offcutId: action.offcutId });
+        setPendingMaterial({ projectId: project.id, group, finishedLength: action.length,
+          offcutId: action.offcutId, quantity: action.quantity, stock: action.stock });
         setModal("place-material");
         break;
       }
@@ -2379,25 +2383,39 @@ export function App() {
     setPanel("part");
   }
   const prepareMaterial = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
-    const next = addMaterial(project, id, position, activeStepId);
-    const added = next.pieces.at(-1)!;
-    if (placement) {
-      const blank = boardBlankAtLength(id, placement.length);
-      if (!blank) throw Error("Enter a finished board length.");
-      added.size = blank.size;
-      added.stockLengthAxis = placement.kind === "offcut" ? placement.stockLengthAxis : blank.stockLengthAxis;
-      added.position[1] = position[1] + blank.size[1] / 2;
+    const quantity = placement?.kind === "stock-cut" ? placement.quantity ?? 1 : 1;
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > maxRepeatedBoards)
+      throw Error(`Choose 1 to ${maxRepeatedBoards} whole pieces.`);
+    const blank = placement ? boardBlankAtLength(id, placement.length) : null;
+    if (placement && !blank) throw Error("Enter a finished board length.");
+    let next = project;
+    const parts: Piece[] = [];
+    for (let index = 0; index < quantity; index++) {
+      const ground: V3 = [...position];
+      if (index && blank) {
+        ground[0] += (index % 6) * (blank.size[0] + 2);
+        ground[2] += Math.floor(index / 6) * (blank.size[2] + 2);
+        ground[1] = surfacePlacement(project, [ground[0], ground[1] + 0.0001, ground[2]], [0, -1, 0])?.[1] ?? 0;
+      }
+      next = addMaterial(next, id, ground, activeStepId);
+      const added = next.pieces.at(-1)!;
+      if (blank) {
+        added.size = [...blank.size];
+        added.stockLengthAxis = placement?.kind === "offcut" ? placement.stockLengthAxis : blank.stockLengthAxis;
+        added.position[1] = ground[1] + blank.size[1] / 2;
+      }
+      if (snap) added.position = snapPlacement(next, added, added.position, added.rotation).position;
+      const clear = placeWood(next, added, added.position, added.rotation);
+      if (clear.blocked) throw Error("No clear position was found for this stock.");
+      added.position = clear.position;
+      parts.push(added);
     }
-    if (snap) added.position = snapPlacement(next, added, added.position, added.rotation).position;
-    const clear = placeWood(next, added, added.position, added.rotation);
-    if (clear.blocked) throw Error("No clear position was found for this stock.");
-    added.position = clear.position;
-    return { next, added };
+    return { next, parts };
   }, [project, activeStepId, snap]);
   const showMaterialPreview = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
     try {
-      const { added } = prepareMaterial(id, position, placement);
-      materialDropMarker.current?.(position, added);
+      const { parts } = prepareMaterial(id, position, placement);
+      materialDropMarker.current?.(position, parts);
     } catch {
       materialDropMarker.current?.(position);
     }
@@ -2411,10 +2429,11 @@ export function App() {
   }, [pendingMaterial, project.id, showMaterialPreview]);
   function add(id: MaterialId, name: string, position: V3 = [0, 0, 0], placement?: BoardPlacement) {
     safe(() => {
-      const { next, added } = prepareMaterial(id, position, placement);
-      added.name = name;
+      const { next, parts } = prepareMaterial(id, position, placement);
+      for (const part of parts) part.name = name;
+      const [added] = parts;
       if (placement?.kind === "offcut") change(assignOffcutToPart(next, added.id, placement.id));
-      else if (placement?.kind === "stock-cut") change(planDedicatedBoardCut(next, added.id));
+      else if (placement?.kind === "stock-cut") change(planDedicatedBoardCuts(next, parts.map(({ id }) => id)));
       else change(next);
       setSelectionScope("part");
       setSelectedSectionId(null);
@@ -2425,6 +2444,7 @@ export function App() {
       if (modal === "place-material") setModal(null);
       notify(
         placement?.kind === "offcut" ? `${name} added from the Cut pool. The cut is in the build guide.`
+          : parts.length > 1 ? `${parts.length} pieces placed. Review the stock and cut order in the build guide.`
           : placement?.kind === "stock-cut" ? `${name} placed at its finished length. See Planned stock cuts in the build guide.`
           : `${name} added. Drag to move, or Shift-drag to rotate.`,
       );
@@ -5092,6 +5112,7 @@ export function App() {
                     <span>
                       {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)}{r.onHandStockUnits > 0 && " to buy"}{" "}
                       · {r.pieces} {r.pieces === 1 ? "part" : "parts"}
+                      {r.offcuts > 0 && ` · ${r.offcuts} ${r.offcuts === 1 ? "offcut" : "offcuts"}`}
                     </span>
                   </div>
                   {r.onHandStockUnits > 0 && (
@@ -5602,7 +5623,7 @@ export function App() {
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
               <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
                 position={pendingMaterial.position} finishedLength={pendingMaterial.finishedLength} measuredLength={pendingMaterial.measuredLength}
-                offcutId={pendingMaterial.offcutId} onPreview={previewMaterial} onPlace={(id, placement) => {
+                offcutId={pendingMaterial.offcutId} initialQuantity={pendingMaterial.quantity} initialStock={pendingMaterial.stock} onPreview={previewMaterial} onPlace={(id, placement) => {
                 add(id, pendingMaterial.group.name, pendingMaterial.position, placement);
               }} />
             )}

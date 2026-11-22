@@ -353,6 +353,7 @@ export type BomRow = {
   purchasedStockUnits: number;
   surplusStockUnits: number;
   pieces: number;
+  offcuts: number;
   price: number;
   priceSource: PriceSource;
   unpriced: boolean;
@@ -567,12 +568,14 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
             ? "unknown"
             : "example";
       const supplier = reviewedSupplierForMaterial(m);
+      const offcuts = parts.filter(({ offcut }) => offcut).length;
       return {
         id: m.id,
         ...counts,
         physicalStockUnits,
         onHandStockUnits,
-        pieces: parts.length,
+        pieces: parts.length - offcuts,
+        offcuts,
         price,
         priceSource,
         unpriced: priceSource === "unknown",
@@ -587,7 +590,7 @@ export function bom(p: Project, now = Date.now()): BomRow[] {
         verified: !!inventory,
       };
     })
-    .filter((r) => r.pieces > 0 || r.quantity > 0);
+    .filter((r) => r.pieces > 0 || r.offcuts > 0 || r.quantity > 0);
 }
 
 export function stockOnHand(rows: readonly BomRow[]) {

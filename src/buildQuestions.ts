@@ -17,7 +17,7 @@ import {
   reviewMotionTests,
   type MotionGapPair,
 } from "./mechanismMotion";
-import { parsePrompt, type Command, type Project } from "./model";
+import { parsePrompt, type Command, type MaterialId, type Project } from "./model";
 import { windowWallScope } from "./windowWall";
 import { reviewWaterRun } from "./wallWater";
 import { fittingLabel, reviewWaterFitting } from "./waterFittings";
@@ -31,8 +31,9 @@ import { ensurePartLabels, partLabel } from "./partLabels";
 import { openingDrainageNote, reviewOpeningFlashings } from "./openingFlashing";
 import { openingFlashingScope } from "./openingFlashingReference";
 import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./treatedWood";
-import { groupedMaterials, materialFamilyVariants } from "./materialGroups";
+import { groupedMaterials, materialFamilyVariants, materialPlacementOptions } from "./materialGroups";
 import { fittingBoardOffcuts } from "./offcutAssignment";
+import { compareRepeatedBoardCuts, maxRepeatedBoards } from "./repeatedBoardCuts";
 import { normalizeIdeaText } from "./ideaEdits";
 import { reviewRimAirSeals, rimAirSealKey, rimEdgeSealEstimate, uncutRimFoamOffcuts } from "./rimAirSeals";
 import { rimSealScope } from "./rimAirSealReference";
@@ -63,6 +64,7 @@ export type BuildQuestion =
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
+  | { kind: "board-stock"; length: number; nominal: string; treated: boolean; quantity: number }
   | { kind: "board-offcut"; length: number; nominal: string; treated: boolean; offcutLabel?: string }
   | { kind: "offcuts"; label?: string };
 
@@ -91,7 +93,7 @@ export type BuildQuestionAction =
   | { kind: "drawer-box"; panelIds: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
   | { kind: "treated-wood" }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
-  | { kind: "board-placement"; groupId: string; length: number; offcutId?: string }
+  | { kind: "board-placement"; groupId: string; length: number; offcutId?: string; quantity?: number; stock?: MaterialId }
   | Extract<BuildPreparationAction, { kind: "motion" | "lid" | "part" | "offcut" }>;
 
 type ReviewLink = { label: string; action: BuildQuestionAction };
@@ -139,8 +141,10 @@ const namedBoardOffcutQuestion =
   /^(?:can|could) i (?:make|cut|get) (?:a |one )?(.+) from (?:offcut |scrap |leftover )?(o\d{1,6})$/i;
 const boardOffcutQuestion =
   /^(?:(?:can|could) i (?:make|cut|get) (?:a |one )?(.+) from (?:an? |my |the |any )?(?:offcuts?|scraps?|leftovers?|cut pool)|do i have (?:any |an? )?(?:offcuts?|scraps?|leftovers?) for (?:a |one )?(.+))$/i;
+const boardPurchaseQuestion =
+  /^(?:(?:what|which) (?:stock|board) lengths? should i buy|compare (?:stock|board) lengths?) for (?:an? )?(.+)$/i;
 const boardOffcutSize =
-  /^(.+?)\s+(?:(pressure[- ]treated|treated)\s+)?(\d{1,2})\s*(?:[x×]|by)\s*(\d{1,2})(?:\s+(?:board|post|framing lumber))?$/i;
+  /^(.+?)\s+(?:(pressure[- ]treated|treated)\s+)?(\d{1,2})\s*(?:[x×]|by)\s*(\d{1,2})s?(?:\s+(?:boards?|posts?|framing lumber))?$/i;
 const boardFeet = /^(\d+(?:\.\d+)?)\s*(?:feet|foot|ft|['′])(?:\s*(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″]))?$/i;
 const boardInches = /^(\d+(?:\.\d+)?)\s*(?:inches|inch|in|["″])$/i;
 const drawerQuestion = /^(?:plan|fit|size|design|add) (?:a |the )?(?:cabinet )?drawer(?: box)? between (?<first>p\d{1,6}) and (?<second>p\d{1,6})(?: with (?:(?<left>\d+) left spacer layers?(?: and (?<bothRight>\d+) right spacer layers?)?|(?<right>\d+) right spacer layers?))?$/i;
@@ -172,6 +176,14 @@ const motionQuestion =
 function inchesFromLength(text: string) {
   const feet = boardFeet.exec(text), inches = boardInches.exec(text);
   return feet ? Number(feet[1]) * 12 + Number(feet[2] ?? 0) : Number(inches?.[1]);
+}
+
+function boardSize(text: string) {
+  const size = boardOffcutSize.exec(text);
+  if (!size) return null;
+  const length = inchesFromLength(size[1]);
+  if (!Number.isFinite(length) || length <= 0) return null;
+  return { length, nominal: `${Number(size[3])} × ${Number(size[4])}`, treated: !!size[2] };
 }
 
 export function buildQuestion(prompt: string): BuildQuestion | null {
@@ -207,17 +219,21 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   const scrap = scrapQuestion.exec(text);
   if (scrap)
     return { kind: "offcuts", label: labelKey(scrap.slice(1).find(Boolean)!) };
+  const purchase = boardPurchaseQuestion.exec(stopText);
+  if (purchase) {
+    const count = /^(\d+)\s+(.+)$/.exec(purchase[1]);
+    const repeated = count && boardSize(count[2]);
+    if (repeated) return { kind: "board-stock", ...repeated, quantity: Number(count[1]) };
+    const single = boardSize(purchase[1]);
+    if (single) return { kind: "board-stock", ...single, quantity: 1 };
+  }
   const namedStock = namedBoardOffcutQuestion.exec(text);
   const stock = namedStock ?? boardOffcutQuestion.exec(text);
-  const size = stock && boardOffcutSize.exec(normalizeIdeaText(stock[1] ?? stock[2]));
-  if (size) {
-    const length = inchesFromLength(size[1]);
-    if (Number.isFinite(length) && length > 0)
-      return {
-        kind: "board-offcut", length, nominal: `${Number(size[3])} × ${Number(size[4])}`, treated: !!size[2],
-        ...(namedStock ? { offcutLabel: labelKey(namedStock[2]) } : {}),
-      };
-  }
+  const size = stock && boardSize(normalizeIdeaText(stock[1] ?? stock[2]));
+  if (size) return {
+    kind: "board-offcut", ...size,
+    ...(namedStock ? { offcutLabel: labelKey(namedStock[2]) } : {}),
+  };
   if (offcutQuestion.test(text) || offcutSavingsQuestion.test(text)) return { kind: "offcuts" };
   if (doorSealQuestion.test(text)) return { kind: "greenhouse-weatherseal" };
   const flashing = openingFlashingQuestion.exec(text);
@@ -359,15 +375,46 @@ function answerOffcuts(project: Project, label?: string): BuildQuestionAnswer {
   };
 }
 
+function boardMaterialGroup(nominal: string, treated: boolean) {
+  return groupedMaterials("Lumber").find(({ name, id }) =>
+    treated ? name.includes(nominal) && id.startsWith("treated-") :
+      name.startsWith(`${nominal} `) && !id.startsWith("treated-"));
+}
+
+function answerBoardStock(
+  project: Project,
+  { nominal, treated, length, quantity }: Extract<BuildQuestion, { kind: "board-stock" }>,
+): BuildQuestionAnswer {
+  const title = "Stock lengths for your cuts";
+  const group = boardMaterialGroup(nominal, treated);
+  if (!group) return { title, detail: `No ${treated ? "treated " : ""}${nominal} board matches the material shelf.` };
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > maxRepeatedBoards)
+    return { title, detail: `Choose 1 to ${maxRepeatedBoards} pieces at the same finished length.` };
+  const { options } = materialPlacementOptions(group);
+  const plans = compareRepeatedBoardCuts(project, options, length, quantity);
+  const [best] = plans;
+  if (!best) return { title, detail: `No listed ${group.name} stock fits ${formatStockLength(length)} with the planned blade allowance.` };
+  return {
+    title,
+    detail: `${best.boards.length} × ${best.label} makes ${quantity} ${quantity === 1 ? "piece" : "pieces"} at ${formatStockLength(length)} from ${formatStockLength(best.purchaseLength)} of ${group.name}.`,
+    scope: "Compares new boards of a single stock length and accounts for the planned blade loss.",
+    rows: plans.map((plan) => ({
+      id: plan.id,
+      title: `${plan.boards.length} × ${plan.label}`,
+      detail: `${formatStockLength(plan.purchaseLength)} of stock · pieces per board ${plan.boards.map(({ count }) => count).join(", ")}`,
+      link: { label: `Preview ${plan.label} stock`, action: { kind: "board-placement", groupId: group.id,
+        length, quantity, stock: plan.id } },
+    })),
+  };
+}
+
 function answerBoardOffcut(
   project: Project,
   question: Extract<BuildQuestion, { kind: "board-offcut" }>,
 ): BuildQuestionAnswer {
   const { nominal, treated, length, offcutLabel } = question;
   const title = "Offcut for a finished board";
-  const group = groupedMaterials("Lumber").find(({ name, id }) =>
-    treated ? name.includes(nominal) && id.startsWith("treated-") :
-      name.startsWith(`${nominal} `) && !id.startsWith("treated-"));
+  const group = boardMaterialGroup(nominal, treated);
   if (!group) return {
     title,
     detail: `No ${treated ? "treated " : ""}${nominal} board matches the material shelf. Check the nominal size and treatment.`,
@@ -675,6 +722,8 @@ export function answerBuildQuestion(
           { link: { label: "Open movement tests", action: { kind: "motion-setup" } } }),
       };
     }
+    case "board-stock":
+      return answerBoardStock(project, question);
     case "board-offcut":
       return answerBoardOffcut(project, question);
     case "motion":

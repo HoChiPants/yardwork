@@ -4,7 +4,7 @@ import {
   tubeGroupKey,
   type CutSourceAxes,
 } from "./cutSourceAxes";
-import { inspectCutStock, setCutSourcesOnHand } from "./cutStock";
+import { inspectCutStock, plannedCutKerf, setCutSourcesOnHand } from "./cutStock";
 import { bom } from "./engine";
 import {
   material,
@@ -17,11 +17,13 @@ import {
 } from "./model";
 import { ensurePartLabels } from "./partLabels";
 import { rotate } from "./spatial";
-import { stockAxes } from "./stockAxes";
+import { orientedStockSize, stockAxes } from "./stockAxes";
 import { stockCutSequences, type StockCutLayout, type StockCutSequence } from "./stockCutSequence";
 import { formatStockLength } from "./measurement";
 import { cutPlanFingerprint } from "./plannedCutSources";
 import { isDrywall } from "./drywallReference";
+import { stockSplitState } from "./packing";
+import { repeatedBoardCuts } from "./repeatedBoardCuts";
 
 function indexReviewedLayouts(project: Project, rows: ReturnType<typeof bom>, loss: number | null) {
   const index = new Map<string, StockCutSequence>();
@@ -271,20 +273,39 @@ function saveStockCutLayouts(
   return saved;
 }
 
-/** The placement dialog reserves one new board for this part. Other blanks can still be packed together. */
-export function planDedicatedBoardCut(project: Project, pieceId: string): Project {
-  const piece = project.pieces.find(({ id }) => id === pieceId);
-  if (!piece || piece.offcut || piece.cutStock)
-    throw Error("Choose an unassigned board for the cut.");
-  const stock = material(piece.material);
-  if (!stock.wood || !stock.cuttable || stock.stockKind !== "linear")
-    throw Error("Choose wood board stock for the cut.");
+/** Reserve new stock for equal crosscuts, independently of older unassigned parts. */
+export function planDedicatedBoardCuts(project: Project, pieceIds: readonly string[]): Project {
   const labeled = ensurePartLabels(project);
-  const oneBoard = { ...labeled, pieces: [piece] };
-  const [sequence] = stockCutSequences(oneBoard, bom(oneBoard)).get(piece.material) ?? [];
-  if (!sequence || sequence.review || sequence.layout.kept.length !== 1)
-    throw Error(sequence?.review ?? "The finished part does not fit this board.");
-  return saveReviewedStockCuts(labeled, [sequence], { onHand: false, planned: true }).project;
+  const byId = new Map(labeled.pieces.map((piece) => [piece.id, piece]));
+  const pieces = pieceIds.map((id) => byId.get(id));
+  if (!pieces.length || new Set(pieceIds).size !== pieceIds.length ||
+      !pieces.every((piece): piece is Piece => !!piece && !piece.offcut && !piece.cutStock))
+    throw Error("Choose unassigned boards for these cuts.");
+  const [first] = pieces;
+  const stock = material(first.material);
+  if (!stock.wood || !stock.cuttable || stock.stockKind !== "linear")
+    throw Error("Choose wood board stock for the cuts.");
+  const length = orientedStockSize(first)[2];
+  if (pieces.some((piece) => piece.material !== first.material || orientedStockSize(piece)[2] !== length))
+    throw Error("Choose boards of the same stock and finished length.");
+  const stockLength = Math.max(...(stock.stockSize ?? stock.size));
+  const kerf = plannedCutKerf(labeled, stock.id);
+  const plan = repeatedBoardCuts(stockLength, length, pieces.length, kerf);
+  if (!plan) throw Error("The finished parts do not fit this board stock.");
+  if (stockSplitState(stockLength, length, kerf) === "whole") return labeled;
+  const batch = { ...labeled, pieces };
+  const row = bom(batch).find(({ id }) => id === stock.id)!;
+  let start = 0;
+  const bins = plan.boards.map(({ count, remaining }) => {
+    const cuts = pieces.slice(start, start + count).map(({ id, name }) => ({ id, name, length }));
+    start += count;
+    return { cuts, remaining };
+  });
+  const sequences = stockCutSequences(batch, [{ ...row, bins }]).get(stock.id) ?? [];
+  const problem = sequences.find(({ review }) => review)?.review;
+  if (problem || sequences.flatMap(({ layout }) => layout.kept).length !== pieces.length)
+    throw Error(problem ?? "Review the stock cut order for these parts.");
+  return saveReviewedStockCuts(labeled, sequences, { onHand: false, planned: true }).project;
 }
 
 /** Commit an exact set of reviewed cuts as one change, with no intermediate repacking. */

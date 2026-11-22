@@ -571,31 +571,30 @@ export default function IdeaPlanner({
           ))}
         </div>
       )}
-      {project.pieces.length > 0 && (
-        <details className="field-section">
-          <summary>Questions about this build</summary>
-          <div className="prompt-examples">
-            {[
-              ["Review weak spots", "What looks weak in this build?"],
-              ...(sampleWood ? [["Review a joint", `Review screw joints for ${partLabel(project, sampleWood.id)}`]] : []),
-              ...((project.motionPlans?.length || project.sections.some((section) => section.recipe?.openingLid))
-                ? [["Check movement", `Check motion for "${project.motionPlans?.[0]?.label ?? project.sections.find((section) => section.recipe?.openingLid)?.name}"`]] : []),
-              ...(project.pieces.some(({ offcut }) => offcut) ? [["Find uses for scraps", "What scraps can I reuse?"]] : []),
-              ...(project.pieces.some(({ material: id }) => isPressureTreated(id))
-                ? [["Review treated wood cuts", "Which cuts need field treatment?"]] : []),
-            ].map(([label, example]) => (
-              <button type="button" key={label} disabled={busy} onClick={() => {
-                setPrompt(example);
-                setWorkspaceRequest(null);
-                setError("");
-                setPlanningStatus("");
-              }}>
-                {label}
-              </button>
-            ))}
-          </div>
-        </details>
-      )}
+      <details className="field-section">
+        <summary>Questions about this build</summary>
+        <div className="prompt-examples">
+          {[
+            ["Compare board lengths", "What stock length should I buy for two 4 ft 2x4s?"],
+            ...(project.pieces.length ? [["Review weak spots", "What looks weak in this build?"]] : []),
+            ...(sampleWood ? [["Review a joint", `Review screw joints for ${partLabel(project, sampleWood.id)}`]] : []),
+            ...((project.motionPlans?.length || project.sections.some((section) => section.recipe?.openingLid))
+              ? [["Check movement", `Check motion for "${project.motionPlans?.[0]?.label ?? project.sections.find((section) => section.recipe?.openingLid)?.name}"`]] : []),
+            ...(project.pieces.some(({ offcut }) => offcut) ? [["Find uses for scraps", "What scraps can I reuse?"]] : []),
+            ...(project.pieces.some(({ material: id }) => isPressureTreated(id))
+              ? [["Review treated wood cuts", "Which cuts need field treatment?"]] : []),
+          ].map(([label, example]) => (
+            <button type="button" key={label} disabled={busy} onClick={() => {
+              setPrompt(example);
+              setWorkspaceRequest(null);
+              setError("");
+              setPlanningStatus("");
+            }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </details>
       {connectedPlanner && <>
         <label className="field">
           Planner

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   buildFixtureIds,
@@ -20,7 +21,7 @@ import {
   type V3,
 } from "../src/model";
 import { stockCutSequences } from "../src/stockCutSequence";
-import { planDedicatedBoardCut, planStockCutLayouts, recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
+import { planDedicatedBoardCuts, planStockCutLayouts, recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
 import { inspectCutStock, pieceCutKerf, setCutSourceOnHand, setPlannedWoodKerf } from "../src/cutStock";
 import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import { reviewedOfferForMaterial } from "../src/retailerCatalog";
@@ -100,7 +101,7 @@ test("proposed drywall layouts use score-and-snap coordinates and reject a chang
 test("a dedicated finished-board cut preserves other blanks and the measured blade allowance", () => {
   const project = setPlannedWoodKerf(cutProject("stud", [1.5, 24, 3.5], [1.5, 48, 3.5]), "stud", 0.09375);
   const [other, target] = project.pieces;
-  const planned = planDedicatedBoardCut(project, target.id);
+  const planned = planDedicatedBoardCuts(project, [target.id]);
   const [plan] = planned.plannedCutSources!;
   const [unchanged, kept, offcut] = planned.pieces;
 
@@ -115,7 +116,7 @@ test("a dedicated finished-board cut preserves other blanks and the measured bla
   const guide = guideMarkdown(planned);
   assert.match(guide, /^1\. Crosscut 4 ft from the current end for P002/m);
   assert.match(guide, /## Planned stock cuts[\s\S]+Blade allowance · 0.09375 in per cut\./);
-  assert.throws(() => planDedicatedBoardCut(planned, target.id), /unassigned board/);
+  assert.throws(() => planDedicatedBoardCuts(planned, [target.id]), /unassigned board/);
 });
 
 test("board placement prefers verified on-hand family stock and preserves its actual grain axis", () => {
@@ -874,4 +875,37 @@ test("a measured plywood cut width controls both sheet axes and usable remnant l
   const layouts = stockCutSequences(adjusted, bom(adjusted)).get("plywood")!;
   assert.ok(layouts.every(({ review }) => !review), "Avoid a joined layout that needs a sub-kerf edge trim");
   assert.ok(!projectSchema.safeParse({ ...measured, woodKerfs: { [owensCorningWallBatt.materialId]: 0.059 } }).success);
+});
+
+test("equal crosscuts share a board with exact kerf, stable source IDs and reusable tails", () => {
+  const project = setPlannedWoodKerf(
+    cutProject("stud-10", [1.5, 18, 3.5], [1.5, 48, 3.5], [1.5, 48, 3.5]),
+    "stud-10", 0.09375,
+  );
+  const [other, first, second] = project.pieces;
+  const planned = planDedicatedBoardCuts(project, [first.id, second.id]);
+  const [source] = planned.plannedCutSources!;
+  const [unchanged, keptFirst, keptSecond, scrap] = planned.pieces;
+  assert.deepEqual(unchanged, other);
+  assert.equal(keptFirst.cutStock!.id, source.sourceId);
+  assert.equal(keptSecond.cutStock!.id, source.sourceId);
+  assert.equal(scrap.cutStock!.id, source.sourceId);
+  assert.equal(cutSourceRegion(keptSecond).offset[2], 48.09375);
+  assert.equal(cutSourceRegion(scrap).size[2], 23.8125);
+  assert.equal(inspectCutStock(planned).valid.size, 1);
+  assert.equal(bom(planned).find(({ id }) => id === "stud-10")?.quantity, 2);
+  assert.match(guideMarkdown(planned), /^2\. Crosscut 4 ft from the current end for P003/m);
+  assert.throws(() => planDedicatedBoardCuts(project, [first.id, first.id]), /unassigned boards/);
+  assert.throws(() => planDedicatedBoardCuts(project, [other.id, first.id]), /same stock and finished length/);
+});
+
+
+test("the shareable rail practice guide follows the saved purchase and later offcut cut", () => {
+  const planUrl = new URL("../public/examples/wood-stock/repeated-shelf-rail-cuts.yardwork.json", import.meta.url);
+  const guideUrl = new URL("../public/examples/wood-stock/repeated-shelf-rail-cuts-guide.md", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(readFileSync(planUrl, "utf8")));
+  const [row] = bom(project);
+  assert.deepEqual([row.id, row.quantity, row.pieces, row.offcuts], ["stud-10", 1, 3, 1]);
+  assert.equal(inspectCutStock(project).valid.size, 1);
+  assert.equal(guideMarkdown(project), readFileSync(guideUrl, "utf8"));
 });

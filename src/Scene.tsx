@@ -1,3 +1,4 @@
+import { maxRepeatedBoards } from "./repeatedBoardCuts";
 import { libertyBarPull } from "./cabinetPullReference";
 import type { SubfloorJoint, SubfloorReview } from "./subfloor";
 import type { SubfloorAdhesiveReview } from "./subfloorAdhesive";
@@ -1336,16 +1337,27 @@ function CameraRig({
     />
   );
 }
-export type MaterialDropMarkerHandle = (point: V3 | null, preview?: Pick<Piece, "position" | "size" | "rotation">) => void;
+export type MaterialDropMarkerHandle = (
+  point: V3 | null,
+  previews?: readonly Pick<Piece, "position" | "size" | "rotation">[],
+) => void;
 
 function MaterialDropMarker({ marker }: { marker: NonNullable<SceneProps["materialDropMarker"]> }) {
   const group = useRef<THREE.Group>(null);
   const ghost = useRef<THREE.Mesh>(null);
+  const repeats = useRef<THREE.InstancedMesh>(null);
   const { invalidate, gl } = useThree();
   useLayoutEffect(() => {
     const node = group.current!;
     const part = ghost.current!;
-    marker.current = (point, preview) => {
+    const batch = repeats.current!;
+    const transform = new THREE.Object3D();
+    const pose = (target: THREE.Object3D, preview: Pick<Piece, "position" | "size" | "rotation">) => {
+      target.position.set(preview.position[0] / 12, preview.position[1] / 12, preview.position[2] / 12);
+      target.rotation.set(...preview.rotation);
+      target.scale.set(preview.size[0] / 12, preview.size[1] / 12, preview.size[2] / 12);
+    };
+    marker.current = (point, previews = []) => {
       if (!point && !node.visible) return;
       if (point) {
         node.position.set(point[0] / 12, point[1] / 12 + 0.035, point[2] / 12);
@@ -1353,14 +1365,23 @@ function MaterialDropMarker({ marker }: { marker: NonNullable<SceneProps["materi
       } else {
         delete gl.domElement.dataset.materialDropPoint;
       }
+      const [preview, ...others] = previews;
       if (preview) {
-        part.position.set(preview.position[0] / 12, preview.position[1] / 12, preview.position[2] / 12);
-        part.rotation.set(...preview.rotation);
-        part.scale.set(preview.size[0] / 12, preview.size[1] / 12, preview.size[2] / 12);
+        pose(part, preview);
+        gl.domElement.dataset.materialPlacementCount = String(previews.length);
         gl.domElement.dataset.materialPlacementPreview = JSON.stringify(preview.size);
       } else {
         delete gl.domElement.dataset.materialPlacementPreview;
+        delete gl.domElement.dataset.materialPlacementCount;
       }
+      batch.count = others.length;
+      batch.visible = others.length > 0;
+      others.forEach((item, index) => {
+        pose(transform, item);
+        transform.updateMatrix();
+        batch.setMatrixAt(index, transform.matrix);
+      });
+      batch.instanceMatrix.needsUpdate = true;
       part.visible = !!preview;
       node.visible = point !== null;
       invalidate();
@@ -1369,6 +1390,7 @@ function MaterialDropMarker({ marker }: { marker: NonNullable<SceneProps["materi
       marker.current = null;
       delete gl.domElement.dataset.materialDropPoint;
       delete gl.domElement.dataset.materialPlacementPreview;
+      delete gl.domElement.dataset.materialPlacementCount;
     };
   }, [gl, invalidate, marker]);
   return <>
@@ -1387,6 +1409,11 @@ function MaterialDropMarker({ marker }: { marker: NonNullable<SceneProps["materi
       <meshBasicMaterial color="#719658" transparent opacity={0.36} depthWrite={false} />
       <Edges color="#356c3d" />
     </mesh>
+    <instancedMesh ref={repeats} args={[undefined, undefined, maxRepeatedBoards - 1]}
+      visible={false} frustumCulled={false} raycast={() => null}>
+      <boxGeometry />
+      <meshBasicMaterial color="#719658" transparent opacity={0.36} depthWrite={false} />
+    </instancedMesh>
   </>;
 }
 function WorkZone({ project }: { project: Project }) {

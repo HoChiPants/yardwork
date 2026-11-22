@@ -1,0 +1,315 @@
+{
+  "schemaVersion": 127,
+  "id": "5229006a-4c47-4330-810a-78d9f31d1a0a",
+  "name": "Shelf rail and spacer cut practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "plannedCutSources": [
+    {
+      "sourceId": "060ac561-266b-4e7d-848c-75ba2d6c1df8",
+      "fingerprint": "binding-v1-574dba512551dbc8",
+      "historyIds": [
+        "250987a2-b8a2-4338-8844-596ff4fcb76b",
+        "dfadb8a3-15f9-42f6-b5e6-03a842addc65",
+        "633b8a62-383d-4ef1-9c83-f684d7069377"
+      ]
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "2e710a5f-febc-4aef-8e70-dc6340334568",
+      "label": "P001"
+    },
+    {
+      "partId": "55ecbf07-c505-4c2f-b443-cca50d4d013e",
+      "label": "P002"
+    },
+    {
+      "partId": "70114a6f-ecdc-4bad-a831-69e5d128e12f",
+      "label": "O001"
+    },
+    {
+      "partId": "f8687bce-75d1-401f-9c14-ca28e6bd0007",
+      "label": "P003"
+    },
+    {
+      "partId": "249c88af-30f8-46c1-a130-a43b84e7f3cd",
+      "label": "O002"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T10:15:45.627Z",
+  "pieces": [
+    {
+      "id": "2e710a5f-febc-4aef-8e70-dc6340334568",
+      "name": "48 in shelf rail A",
+      "material": "stud-10",
+      "size": [
+        1.5,
+        48,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        -5
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "assembly": "Cut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "060ac561-266b-4e7d-848c-75ba2d6c1df8",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          120,
+          3.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "55ecbf07-c505-4c2f-b443-cca50d4d013e",
+      "name": "48 in shelf rail B",
+      "material": "stud-10",
+      "size": [
+        1.5,
+        48,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        5
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "assembly": "Cut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "060ac561-266b-4e7d-848c-75ba2d6c1df8",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          120,
+          3.5
+        ],
+        "offset": [
+          0,
+          48.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "f8687bce-75d1-401f-9c14-ca28e6bd0007",
+      "name": "18 in setup spacer",
+      "material": "stud-10",
+      "size": [
+        1.5,
+        18,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "assembly": "Cut practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "060ac561-266b-4e7d-848c-75ba2d6c1df8",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          120,
+          3.5
+        ],
+        "offset": [
+          0,
+          96.25,
+          0
+        ]
+      }
+    },
+    {
+      "id": "249c88af-30f8-46c1-a130-a43b84e7f3cd",
+      "name": "Offcut · 2 × 4 framing lumber · 10 ft · board remnant 1",
+      "material": "stud-10",
+      "size": [
+        1.5,
+        5.625,
+        3.5
+      ],
+      "position": [
+        -93.1875,
+        0.75,
+        -5
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "stepId": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "060ac561-266b-4e7d-848c-75ba2d6c1df8",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          120,
+          3.5
+        ],
+        "offset": [
+          0,
+          114.375,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": [
+    {
+      "id": "250987a2-b8a2-4338-8844-596ff4fcb76b",
+      "at": "2026-11-22T10:15:45.631Z",
+      "stepId": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "message": "Recorded one 2 × 4 framing lumber · 10 ft board for 2 parts starting with P001. Added 1 rectangular offcut to the Cut pool."
+    },
+    {
+      "id": "dfadb8a3-15f9-42f6-b5e6-03a842addc65",
+      "at": "2026-11-22T10:15:45.631Z",
+      "stepId": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "message": "Stock cut order for P001 · 1. Crosscut 4 ft from the current end for P001 · 48 in shelf rail A."
+    },
+    {
+      "id": "633b8a62-383d-4ef1-9c83-f684d7069377",
+      "at": "2026-11-22T10:15:45.631Z",
+      "stepId": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "message": "Stock cut order for P001 · 2. Crosscut 4 ft from the current end for P002 · 48 in shelf rail B."
+    },
+    {
+      "id": "d32f1131-9825-4b4c-b4e6-fb3b3393ec00",
+      "at": "2026-11-22T10:15:45.646Z",
+      "stepId": "1810de32-eab1-495c-afb5-cd1916f8be2a",
+      "message": "Assigned O001 · Offcut · 2 × 4 framing lumber · 10 ft · board remnant 1 to P003 · 18 in setup spacer.",
+      "offcutCut": {
+        "sourceId": "060ac561-266b-4e7d-848c-75ba2d6c1df8",
+        "inputId": "70114a6f-ecdc-4bad-a831-69e5d128e12f",
+        "targetId": "f8687bce-75d1-401f-9c14-ca28e6bd0007",
+        "inputSize": [
+          1.5,
+          3.5,
+          23.75
+        ],
+        "result": {
+          "size": [
+            1.5,
+            3.5,
+            18
+          ],
+          "sourceSize": [
+            1.5,
+            3.5,
+            120
+          ],
+          "offset": [
+            0,
+            0,
+            96.25
+          ]
+        },
+        "inputName": "Offcut · 2 × 4 framing lumber · 10 ft · board remnant 1",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 18
+          }
+        ],
+        "remnants": [
+          {
+            "id": "249c88af-30f8-46c1-a130-a43b84e7f3cd",
+            "size": [
+              1.5,
+              3.5,
+              5.625
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

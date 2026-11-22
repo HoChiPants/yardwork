@@ -197,3 +197,21 @@ test("asking about cut end treatment identifies the affected part from current s
   assert.deepEqual(answer.rows?.[0].link?.action, { kind: "part", id: project.pieces[0].id });
   assert.equal(buildQuestion("Build a frame with treated wood"), null);
 });
+
+test("a stock question accounts for both crosscuts before recommending a shorter purchase", () => {
+  const project = blank("Repeat board lengths");
+  const request = buildQuestion("What stock length should I buy for two four-foot 2x4s?")!;
+  assert.deepEqual(request, { kind: "board-stock", quantity: 2, length: 48, nominal: "2 × 4", treated: false });
+  const answer = answerBuildQuestion(project, request, []);
+  assert.match(answer.detail, /^1 × 10 ft makes 2 pieces at 4 ft/);
+  assert.deepEqual(answer.rows?.map(({ title }) => title), ["1 × 10 ft", "1 × 12 ft", "2 × 8 ft"]);
+  assert.deepEqual(answer.rows?.[0].link?.action,
+    { kind: "board-placement", groupId: "framing-2x4", length: 48, quantity: 2, stock: "stud-10" });
+  const exactTail = answerBuildQuestion(project, buildQuestion("Compare stock lengths for two 47.9375 in 2x4 boards.")!, []);
+  assert.match(exactTail.detail, /^1 × 8 ft makes 2 pieces/);
+  const single = answerBuildQuestion(project, buildQuestion("What stock length should I buy for 4 ft treated 2x4?")!, []);
+  assert.match(single.detail, /^1 × 8 ft makes 1 piece at 4 ft from 8 ft of Ground-contact 2 × 4/);
+  const tooMany = answerBuildQuestion(project, buildQuestion("Compare stock lengths for 25 4 ft 2x4s.")!, []);
+  assert.equal(tooMany.rows, undefined);
+  assert.match(tooMany.detail, /1 to 24 pieces/);
+});

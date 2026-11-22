@@ -302,7 +302,7 @@ import { cutInstructions, cutInstructionsText } from "./cutInstructions";
 import { pieceThroughOpenings, throughOpeningProblem } from "./throughOpenings";
 import { toolGuideMarkdown, selectedToolsForProject } from "./toolGuide";
 import { toolChecklist } from "./tools";
-import { retailerName, retailerSearch, type Retailer } from "./retailers";
+import { retailerName, type Retailer } from "./retailers";
 import {
   measureBetween,
   formatMeasurement,
@@ -319,7 +319,7 @@ import { createWoodGroupSlide, createWoodSlide, placeWood, separateWood, woodSli
 import { copyObjects, pasteObjects, type ObjectClipboard } from "./editorClipboard";
 import { MaterialLibrary } from "./MaterialLibrary";
 import { MaterialPlacement, type BoardPlacement } from "./MaterialPlacement";
-import { groupedMaterials, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
+import { groupedMaterials, materialDisplayName, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { CutPool } from "./CutPool";
 import { MeasuredOffcutForm } from "./MeasuredOffcutForm";
 import { addMeasuredOffcut } from "./measuredOffcuts";
@@ -3207,139 +3207,7 @@ export function App() {
               )}
             </div>
           )}
-        <div
-          className={`canvas-wrap${workspaceReviewActive ? " motion-preview" : ""}${activeFastenerLayoutPreview || activeConnectorPreview || panel === "fit-stock" ? " layout-preview" : ""}`}
-          ref={viewport}
-        >
-          <SceneBoundary>
-            <Scene
-              project={project}
-              materialDropMarker={materialDropMarker}
-              showOffcuts={!shownCheckArea && showOffcuts}
-              readOnly={!!shownCheckArea || !!activeGuidePart || !!activeFastenerLayoutPreview || !!activeConnectorPreview || !!baseRailPreview || (panel === "fit-stock" && mode !== "fit-face")}
-              guidePartFocus={activeGuidePart ? {
-                pieceId: activeGuidePart.row.pieceId, label: activeGuidePart.row.label, isolated: activeGuidePart.isolated,
-              } : undefined}
-              fittedStockPreview={activeFittedPreview}
-              fittedStockFaces={activeFittedFaces}
-              baseRailPreview={baseRailPreview}
-              onPickFittedFace={(id, point, outward) => safe(() => {
-                if (!fittedFacePick || fittedFacePick.project !== project || panel !== "fit-stock") return;
-                if (id !== fittedFacePick.pieceId) throw Error(`Click a retained face of ${partLabel(project, fittedFacePick.pieceId)}.`);
-                const ref = pickRenderedFittedStockFace(project, id, point, outward);
-                setPickedFittedFace({which:fittedFacePick.which,pieceId:id,ref,nonce:++fittedPickNonce.current});
-                setFittedFacePick(null); setMode("select");
-              })}
-              lidPreview={activeLidPreview}
-              motionPreview={activeMotionPreview}
-              fitToView
-              animateView
-              shownProfileRun={shownProfileRun}
-              shownBandingEdge={shownBandingEdge}
-              shownSaunaHeater={shownSaunaHeater}
-              shownSaunaVentilation={shownSaunaVentilation}
-              shownDrawerMountId={panel === "motion" && !activeMotionPreview ? shownDrawerMountId : null}
-              shownLatchId={panel === "motion" && !activeMotionPreview ? shownLatchId : null}
-              shownRodSupportId={panel === "sections" ? shownRodSupportId : null}
-              shownSiteClearanceId={panel === "site-clearances" ? shownSiteClearanceId : null}
-              shownFoundation={panel === "site-clearances" ? shownFoundation : undefined}
-              shownTrimSeam={panel === "connections" && shownTrimSeam?.project === project &&
-                shownTrimSeam.pair === liveConnectionContext?.scope.focusPair?.slice().sort().join("/")
-                ? shownTrimSeam.marker : undefined}
-              shownSubfloor={shownSubfloor?.view !== "adhesive" && shownSubfloor?.view !== "joists" ? visibleSubfloor?.layout : undefined}
-              shownSubfloorAdhesive={visibleAdhesive}
-              shownSubfloorFasteners={visibleNails}
-              shownSubfloorJoists={visibleJoists}
-              shownPlateSeal={visiblePlateSeal?.layout ? {
-                top: !!visibleTopPlate,
-                start: visiblePlateSeal.layout.ends[0], outdated: !!visiblePlateSeal.outdated,
-                runs: visiblePlateSeal.layout.runs,
-              } : undefined}
-              shownSillGasket={panel === "sections" && shownSillGasket?.outline
-                ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
-                : undefined}
-              shownRimSeal={visibleRimSeal?.cuts}
-              shownRoofValley={panel === "checks" && roofValleyMarker ? [roofValleyMarker.start, roofValleyMarker.end] : undefined}
-              shownRoofVent={panel === "checks" ? roofVentMarker : undefined}
-              shownOpeningFlashing={panel === "opening-flashing" && openingFlashingPreview?.project === project
-                ? openingFlashingPreview.value : undefined}
-              shownPlumbingVentLayout={shownVentDatums}
-              shownDryerDuctLayout={shownDryerDuct}
-              shownCheckArea={shownCheckArea}
-              showAttachments={panel === "attachments"}
-              showRestraints={panel === "restraints"}
-              driverAccessPreview={activeDriverPreview}
-              showFasteners={panel === "fasteners" && !explode && stage === null}
-              fastenerLayoutPreview={activeFastenerLayoutPreview}
-              focusedFastenerLocationId={focusedFastenerLocation?.projectId === project.id && focusedFastenerLocation.planId === selectedFastenerPlanId ? focusedFastenerLocation.locationId : null}
-              selectedFastenerPlanId={project.fastenerPlans.some((plan) => plan.id === selectedFastenerPlanId) ? selectedFastenerPlanId : null}
-              showHinges={(panel === "sections" || panel === "hinges") && !activeLidPreview}
-              showConnectors={panel === "connectors" && !explode && stage === null}
-              selectedConnectorPlanId={selectedConnectorPlanId}
-              connectorPreview={activeConnectorPreview}
-              focusedConnectorEntryId={focusedConnectorEntryId}
-              onPickFastenerEntrance={(id, point, inward) => safe(() => {
-                if (!entrancePick || entrancePick.projectId !== project.id) return;
-                if (id !== entrancePick.headPieceId) throw Error("Click the selected member's retained face.");
-                const target = project.pieces.find((p) => p.id === id)!;
-                const picked = pickFastenerSurface(target, point, inward);
-                setPickedEntrance({ ...picked, projectId: project.id, panel:entrancePick.panel, planId: entrancePick.planId, locationId: entrancePick.locationId, nonce: ++entrancePickNonce.current });
-                setEntrancePick(null);
-                setMode("select");
-                notify("Entrance picked. Review the draft location and save the plan.");
-              })}
-              selectedAttachmentPlanId={selectedAttachmentPlanId}
-              onSelectAttachmentPlan={setSelectedAttachmentPlanId}
-              onSelectAttachmentPart={(id) => {
-                setSelected(id);
-                setSelectedSectionId(null);
-                setSelectionScope("part");
-              }}
-              selected={activeGuidePart?.row.pieceId ?? (shownCheckArea ? null : selected)}
-              selectedSectionId={shownCheckArea ? null : selectedSectionId}
-              onSectionMove={(id, origin, delta, previewed) => safe(() => {
-                const active = current.current;
-                const section = active.sections.find((row) => row.id === id);
-                if (!section) return;
-                const rotation = delta.every((value) => value === 0) ? section.rotation : composeRotation(delta, section.rotation);
-                moveWholeSection(id, snap && !previewed ? snapSectionOrigin(active, id, origin, rotation) : origin, rotation);
-              })}
-              onSelect={select}
-              onMove={(id, position, rotation) => move(id, position, rotation, true)}
-              interferenceIds={activeDriverPreview?.blockerIds ?? findings.find((finding)=>finding.id==="collision")?.pieceIds}
-              mode={mode}
-              wallTrace={mode === "trace-wall" ? {
-                a: wallTrace.a?.every(Number.isFinite) ? wallTrace.a : null,
-                b: wallTrace.b?.every(Number.isFinite) ? wallTrace.b : null,
-                outline: selectedOutline?.points,
-                footprints: wallTraceReview.value?.footprints ?? [],
-                blocked: !!wallTraceReview.value?.obstructions.length || !!wallTraceReview.value?.hasInternalOverlap || !!wallTraceReview.value?.row?.oversize,
-              } : undefined}
-              outlineReferenceLines={readingOutline && outlineTrace.source === "pdf" ? pdfPlanLines : undefined}
-              onWallTracePoint={pickWallTracePoint}
-              measurement={measurement}
-              onMeasurePoint={(point) =>
-                setMeasurement((previous) =>
-                  !previous.a || previous.b
-                    ? { a: point, b: null }
-                    : { ...previous, b: point },
-                )
-              }
-              snap={snap}
-              explode={explode}
-              xray={xray}
-              stage={stage}
-              view={view}
-              onCamera={onCamera}
-            />
-          </SceneBoundary>
-          <div className="scene-label">
-            <span className="scene-tag">
-              <span />
-              3D WORKSPACE
-            </span>
-            <span>Inches · actual dimensions</span>
-          </div>
+        <div className="workspace-toolbar" data-preview={workspaceReviewActive || !!activeFastenerLayoutPreview || !!activeConnectorPreview || panel === "fit-stock"}>
           <div className="scene-tools" role="toolbar" aria-label="Model tools">
             {(
               [
@@ -3474,6 +3342,133 @@ export function App() {
               <Expand size={16} />
             </button>
           </div>
+        </div>
+        <div
+          className="canvas-wrap"
+          ref={viewport}
+        >
+          <SceneBoundary>
+            <Scene
+              project={project}
+              materialDropMarker={materialDropMarker}
+              showOffcuts={!shownCheckArea && showOffcuts}
+              readOnly={!!shownCheckArea || !!activeGuidePart || !!activeFastenerLayoutPreview || !!activeConnectorPreview || !!baseRailPreview || (panel === "fit-stock" && mode !== "fit-face")}
+              guidePartFocus={activeGuidePart ? {
+                pieceId: activeGuidePart.row.pieceId, label: activeGuidePart.row.label, isolated: activeGuidePart.isolated,
+              } : undefined}
+              fittedStockPreview={activeFittedPreview}
+              fittedStockFaces={activeFittedFaces}
+              baseRailPreview={baseRailPreview}
+              onPickFittedFace={(id, point, outward) => safe(() => {
+                if (!fittedFacePick || fittedFacePick.project !== project || panel !== "fit-stock") return;
+                if (id !== fittedFacePick.pieceId) throw Error(`Click a retained face of ${partLabel(project, fittedFacePick.pieceId)}.`);
+                const ref = pickRenderedFittedStockFace(project, id, point, outward);
+                setPickedFittedFace({which:fittedFacePick.which,pieceId:id,ref,nonce:++fittedPickNonce.current});
+                setFittedFacePick(null); setMode("select");
+              })}
+              lidPreview={activeLidPreview}
+              motionPreview={activeMotionPreview}
+              fitToView
+              animateView
+              shownProfileRun={shownProfileRun}
+              shownBandingEdge={shownBandingEdge}
+              shownSaunaHeater={shownSaunaHeater}
+              shownSaunaVentilation={shownSaunaVentilation}
+              shownDrawerMountId={panel === "motion" && !activeMotionPreview ? shownDrawerMountId : null}
+              shownLatchId={panel === "motion" && !activeMotionPreview ? shownLatchId : null}
+              shownRodSupportId={panel === "sections" ? shownRodSupportId : null}
+              shownSiteClearanceId={panel === "site-clearances" ? shownSiteClearanceId : null}
+              shownFoundation={panel === "site-clearances" ? shownFoundation : undefined}
+              shownTrimSeam={panel === "connections" && shownTrimSeam?.project === project &&
+                shownTrimSeam.pair === liveConnectionContext?.scope.focusPair?.slice().sort().join("/")
+                ? shownTrimSeam.marker : undefined}
+              shownSubfloor={shownSubfloor?.view !== "adhesive" && shownSubfloor?.view !== "joists" ? visibleSubfloor?.layout : undefined}
+              shownSubfloorAdhesive={visibleAdhesive}
+              shownSubfloorFasteners={visibleNails}
+              shownSubfloorJoists={visibleJoists}
+              shownPlateSeal={visiblePlateSeal?.layout ? {
+                top: !!visibleTopPlate,
+                start: visiblePlateSeal.layout.ends[0], outdated: !!visiblePlateSeal.outdated,
+                runs: visiblePlateSeal.layout.runs,
+              } : undefined}
+              shownSillGasket={panel === "sections" && shownSillGasket?.outline
+                ? { points: shownSillGasket.outline, needsReview: !!shownSillGasket.issues.length }
+                : undefined}
+              shownRimSeal={visibleRimSeal?.cuts}
+              shownRoofValley={panel === "checks" && roofValleyMarker ? [roofValleyMarker.start, roofValleyMarker.end] : undefined}
+              shownRoofVent={panel === "checks" ? roofVentMarker : undefined}
+              shownOpeningFlashing={panel === "opening-flashing" && openingFlashingPreview?.project === project
+                ? openingFlashingPreview.value : undefined}
+              shownPlumbingVentLayout={shownVentDatums}
+              shownDryerDuctLayout={shownDryerDuct}
+              shownCheckArea={shownCheckArea}
+              showAttachments={panel === "attachments"}
+              showRestraints={panel === "restraints"}
+              driverAccessPreview={activeDriverPreview}
+              showFasteners={panel === "fasteners" && !explode && stage === null}
+              fastenerLayoutPreview={activeFastenerLayoutPreview}
+              focusedFastenerLocationId={focusedFastenerLocation?.projectId === project.id && focusedFastenerLocation.planId === selectedFastenerPlanId ? focusedFastenerLocation.locationId : null}
+              selectedFastenerPlanId={project.fastenerPlans.some((plan) => plan.id === selectedFastenerPlanId) ? selectedFastenerPlanId : null}
+              showHinges={(panel === "sections" || panel === "hinges") && !activeLidPreview}
+              showConnectors={panel === "connectors" && !explode && stage === null}
+              selectedConnectorPlanId={selectedConnectorPlanId}
+              connectorPreview={activeConnectorPreview}
+              focusedConnectorEntryId={focusedConnectorEntryId}
+              onPickFastenerEntrance={(id, point, inward) => safe(() => {
+                if (!entrancePick || entrancePick.projectId !== project.id) return;
+                if (id !== entrancePick.headPieceId) throw Error("Click the selected member's retained face.");
+                const target = project.pieces.find((p) => p.id === id)!;
+                const picked = pickFastenerSurface(target, point, inward);
+                setPickedEntrance({ ...picked, projectId: project.id, panel:entrancePick.panel, planId: entrancePick.planId, locationId: entrancePick.locationId, nonce: ++entrancePickNonce.current });
+                setEntrancePick(null);
+                setMode("select");
+                notify("Entrance picked. Review the draft location and save the plan.");
+              })}
+              selectedAttachmentPlanId={selectedAttachmentPlanId}
+              onSelectAttachmentPlan={setSelectedAttachmentPlanId}
+              onSelectAttachmentPart={(id) => {
+                setSelected(id);
+                setSelectedSectionId(null);
+                setSelectionScope("part");
+              }}
+              selected={activeGuidePart?.row.pieceId ?? (shownCheckArea ? null : selected)}
+              selectedSectionId={shownCheckArea ? null : selectedSectionId}
+              onSectionMove={(id, origin, delta, previewed) => safe(() => {
+                const active = current.current;
+                const section = active.sections.find((row) => row.id === id);
+                if (!section) return;
+                const rotation = delta.every((value) => value === 0) ? section.rotation : composeRotation(delta, section.rotation);
+                moveWholeSection(id, snap && !previewed ? snapSectionOrigin(active, id, origin, rotation) : origin, rotation);
+              })}
+              onSelect={select}
+              onMove={(id, position, rotation) => move(id, position, rotation, true)}
+              interferenceIds={activeDriverPreview?.blockerIds ?? findings.find((finding)=>finding.id==="collision")?.pieceIds}
+              mode={mode}
+              wallTrace={mode === "trace-wall" ? {
+                a: wallTrace.a?.every(Number.isFinite) ? wallTrace.a : null,
+                b: wallTrace.b?.every(Number.isFinite) ? wallTrace.b : null,
+                outline: selectedOutline?.points,
+                footprints: wallTraceReview.value?.footprints ?? [],
+                blocked: !!wallTraceReview.value?.obstructions.length || !!wallTraceReview.value?.hasInternalOverlap || !!wallTraceReview.value?.row?.oversize,
+              } : undefined}
+              outlineReferenceLines={readingOutline && outlineTrace.source === "pdf" ? pdfPlanLines : undefined}
+              onWallTracePoint={pickWallTracePoint}
+              measurement={measurement}
+              onMeasurePoint={(point) =>
+                setMeasurement((previous) =>
+                  !previous.a || previous.b
+                    ? { a: point, b: null }
+                    : { ...previous, b: point },
+                )
+              }
+              snap={snap}
+              explode={explode}
+              xray={xray}
+              stage={stage}
+              view={view}
+              onCamera={onCamera}
+            />
+          </SceneBoundary>
           <div className="scene-bottom">
             <div className="view-switch">
               {["iso", "front", "top"].map((v) => (
@@ -5058,7 +5053,7 @@ export function App() {
               {rows.map((r) => (
                 <div className="bom-row" key={r.id} data-stock-material={r.id} tabIndex={-1}>
                   <div>
-                    <strong>{material(r.id).name}</strong>
+                    <strong>{materialDisplayName(material(r.id).name)}</strong>
                     <span>
                       {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)}{r.onHandStockUnits > 0 && " to buy"}{" "}
                       · {r.pieces} {r.pieces === 1 ? "part" : "parts"}
@@ -5078,33 +5073,6 @@ export function App() {
                   {r.oversize > 0 && (
                     <em>{r.oversize} oversized · excluded from estimate</em>
                   )}
-                  {(r.quantity > 0 || !r.onHandStockUnits) && <details className="stock-store-details" open={r.supplier ? true : undefined}>
-                    <summary>{r.supplier ? "Supplier details" : "Store details"}</summary>
-                    <small>
-                      {r.verified
-                        ? `Snapshot · ${r.inventory!.available} available`
-                        : r.supplier ? "Confirm availability with supplier" : "Availability unverified"}
-                    </small>
-                    <a
-                      href={
-                        r.inventory?.url ??
-                        shoppingOfferForMaterial(
-                          material(r.id),
-                          project.retailer ?? "home-depot",
-                        )?.offer.url ??
-                        r.supplier?.url ??
-                        retailerSearch(
-                          project.retailer ?? "home-depot",
-                          material(r.id).search,
-                        )
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {r.supplier ? `View at ${r.supplier.seller}` : `Find at ${retailerName(project.retailer)}`}{" "}
-                      <ExternalLink size={11} />
-                    </a>
-                  </details>}
                   {project.retailer === "home-depot" && r.pieces >= 2 && (
                     <StockGroupComparison
                       key={project.id}
@@ -7124,7 +7092,7 @@ export function App() {
             const offer = printStockReferences.get(r.id);
             return (
               <li key={r.id}>
-                {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)} × {material(r.id).name} ·{" "}
+                {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)} × {materialDisplayName(material(r.id).name)} ·{" "}
                 {r.quantity === 0 && r.onHandStockUnits > 0 ? "stock on hand" : r.verified
                   ? `${r.inventory!.available} stock units reported · ${r.inventory!.available >= r.quantity ? "quantity covered by snapshot" : "snapshot quantity short"}`
                   : r.supplier ? (

@@ -86,10 +86,10 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
           onClick={() => setNeeded(zoneClearance)}>Use work zone clearance ({formatStockLength(zoneClearance)})</button>
       </div>}
       {!Number.isNaN(needed) && !validLength && <p role="status">Enter at least ⅛ in or clear the finished length.</p>}
-      {validLength && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p role="status">
-        {enough ? `${shortest.label} stock fits this cut with ${formatStockLength(choice.value - shortest.value)} less length to buy.` : `${shortest.label} stock fits this cut.`}{" "}
-        <button type="button" className="text-button" onClick={() => select(shortest.id)}>Use {shortest.label}</button>
-      </p> : <p role="status">{choice.label} stock fits this cut.</p>)}
+      {validLength && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <div className="stock-length-recommendation">
+        <p role="status">{enough ? `${shortest.label} stock fits this cut with ${formatStockLength(choice.value - shortest.value)} less length to buy.` : `${shortest.label} stock fits this cut.`}</p>
+        <button type="button" className="button secondary small" onClick={() => select(shortest.id)}>Use {shortest.label}</button>
+      </div> : <p role="status">{choice.label} stock fits this cut.</p>)}
       {changedOffcut && <p role="status">{changedOffcut} no longer fits this length.</p>}
       {(remnants.length > 1 || (changedOffcut && !!remnants.length)) && <details className="stock-offcut-options" open={changedOffcut ? true : undefined}>
         <summary>{remnants.length === 1 ? "Show matching offcut" : `Compare ${remnants.length} matching offcuts`}</summary>

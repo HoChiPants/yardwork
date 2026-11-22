@@ -25,22 +25,16 @@ test("records a Lowe's snapshot and keeps purchase links and handoff in the sele
   await page
     .getByRole("button", { name: "Save snapshot", exact: true })
     .click();
-  await expect(page.locator(".bom-row")).toContainText(
-    "Snapshot · 16 available",
-  );
-  await page.locator(".bom-row").getByText("Store details", { exact: true }).click();
-  await expect(
-    page.getByRole("link", { name: /Find at Lowe's/ }),
-  ).toHaveAttribute("href", "https://www.lowes.com/pd/test/1114951");
   await page
     .getByRole("button", { name: "Prepare Lowe's list", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toContainText(
     "Native Lowe's list import and account synchronization have not been verified",
   );
-  await expect(
-    page.getByRole("textbox", { name: "Lowe's material list", exact: true }),
-  ).toContainText("Retailer: Lowe's");
+  const checklist = page.getByRole("textbox", { name: "Lowe's material list", exact: true });
+  await expect(checklist).toHaveValue(/Retailer: Lowe's/);
+  await expect(checklist).toHaveValue(/https:\/\/www\.lowes\.com\/pd\/test\/1114951/);
+  await expect(checklist).toHaveValue(/16 available at store 101/);
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   await page
     .getByRole("button", { name: "Project settings", exact: true })
@@ -52,7 +46,6 @@ test("records a Lowe's snapshot and keeps purchase links and handoff in the sele
     page.getByLabel("Exact store number", { exact: true }),
   ).toHaveValue("");
   await page.getByRole("button", { name: "Done", exact: true }).click();
-  await expect(page.locator(".bom-row")).toContainText(
-    "Availability unverified",
-  );
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await expect(page.getByRole("list", { name: "Home Depot purchase review" })).toContainText("No recent store snapshot");
 });

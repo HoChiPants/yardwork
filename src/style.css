@@ -384,13 +384,8 @@ small {
   gap: 10px;
   padding: 11px 4px;
   border-bottom: 1px solid #eeeee6;
-  cursor: grab;
-  position: relative;
   user-select: none;
 }
-.material-card:active { cursor: grabbing; }
-.material-card .material-art { touch-action: none; }
-.material-card .material-info { touch-action: pan-y; min-width: 0; }
 .material-card:hover {
   background: #f8f7f0;
   border-radius: 7px;
@@ -404,7 +399,7 @@ small {
   background: #f1efe5;
   overflow: hidden;
 }
-.material-art > div {
+.material-art > span {
   position: absolute;
   width: 14px;
   height: 44px;
@@ -423,20 +418,20 @@ small {
   box-shadow: 4px 2px 0 #b58d58;
   transform: rotate(38deg) skewY(-14deg);
 }
-.material-art > div:nth-child(2) {
+.material-art > span:nth-child(2) {
   left: 10px;
   top: 8px;
   filter: brightness(0.93);
 }
-.material-art > div:nth-child(3) {
+.material-art > span:nth-child(3) {
   left: 25px;
   top: 4px;
   filter: brightness(1.08);
 }
-.material-art.plywood > div,
-.material-art.siding > div,
-.material-art.roof > div,
-.material-art.mesh > div {
+.material-art.plywood > span,
+.material-art.siding > span,
+.material-art.roof > span,
+.material-art.mesh > span {
   height: 34px;
   width: 37px;
   left: 8px;
@@ -446,7 +441,7 @@ small {
   box-shadow: 2px 3px 0 #777d6344;
   border-color: #79816355;
 }
-.material-art.siding > div {
+.material-art.siding > span {
   background:
     repeating-linear-gradient(
       90deg,
@@ -457,7 +452,7 @@ small {
     ),
     var(--material-color);
 }
-.material-art.roof > div {
+.material-art.roof > span {
   background:
     repeating-linear-gradient(
       90deg,
@@ -468,7 +463,7 @@ small {
     ),
     var(--material-color);
 }
-.material-art.mesh > div {
+.material-art.mesh > span {
   background:
     repeating-linear-gradient(
       90deg,
@@ -485,13 +480,13 @@ small {
       transparent 5px
     );
 }
-.material-art.plywood > div:not(:first-child),
-.material-art.siding > div:not(:first-child),
-.material-art.roof > div:not(:first-child),
-.material-art.mesh > div:not(:first-child) {
+.material-art.plywood > span:not(:first-child),
+.material-art.siding > span:not(:first-child),
+.material-art.roof > span:not(:first-child),
+.material-art.mesh > span:not(:first-child) {
   display: none;
 }
-.material-art.screw > div {
+.material-art.screw > span {
   width: 4px;
   height: 33px;
   background: repeating-linear-gradient(
@@ -504,7 +499,7 @@ small {
   border: 0;
   box-shadow: none;
 }
-.material-art.screw > div:before {
+.material-art.screw > span:before {
   content: "";
   position: absolute;
   width: 9px;
@@ -513,19 +508,24 @@ small {
   left: -3px;
   top: -2px;
 }
-.material-info {
-  min-width: 0;
+.material-grip {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: inherit;
+  padding: 0;
+  text-align: left;
+  cursor: grab;
+  touch-action: pan-y;
 }
-.material-info strong {
+.material-grip:active { cursor: grabbing; }
+.material-grip .material-art { touch-action: none; }
+.material-grip strong {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: -0.15px;
 }
-.material-card > button {
+.material-add {
   flex: none;
   width: 28px;
   height: 28px;
@@ -738,10 +738,6 @@ small {
 .motion-pair-banner > span {
   flex: 1 1 100%;
 }
-.motion-preview .scene-tools,
-.motion-preview .part-quick-tools { display: none; }
-.layout-preview .scene-tools,
-.layout-preview .part-quick-tools { display: none; }
 .lid-motion-panel input[type="range"] { width: 100%; margin: 0; }
 .lid-motion-panel .motion-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .drawer-stop-table th:first-child { width: 64px; font-variant-numeric: tabular-nums; }
@@ -756,51 +752,26 @@ small {
   margin: 10px 0 12px;
 }
 .motion-held-row .field { margin: 0; gap: 4px; }
-.scene-label {
-  position: absolute;
-  top: 21px;
-  left: 24px;
+.workspace-toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-}
-.scene-tag {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 8px;
-  color: #68785a;
-  letter-spacing: 1.25px;
-  font-weight: 600;
-}
-.scene-tag > span {
-  width: 5px;
-  height: 5px;
-  background: #899f72;
-  border-radius: 50%;
-}
-.scene-label > span:last-child {
-  font-size: 8px;
-  color: #9ca28e;
-}
-.scene-tools {
-  display: flex;
-  position: absolute;
-  top: 19px;
-  left: max(17px, calc(50% - 195px));
-  right: 84px;
-  width: fit-content;
-  max-width: calc(100% - 101px);
+  flex: none;
   flex-wrap: wrap;
-  gap: 4px;
-  border: 1px solid #e0e3d4;
-  box-shadow: 0 3px 12px #4b593312;
-  border-radius: 8px;
-  padding: 5px;
-  background: #fffef9ee;
-  backdrop-filter: blur(10px);
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 5px clamp(8px, 1.4vw, 18px);
+  background: #fffefa;
 }
+.scene-tools,
+.view-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+}
+.workspace-toolbar[data-preview="true"] .scene-tools { display: none; }
+.workspace-toolbar[data-preview="true"] .view-tools { margin-left: auto; }
 .scene-tools button {
   flex: none;
   width: 31px;
@@ -818,15 +789,8 @@ small {
   display: block;
   background: #e9ebdf;
   width: 1px;
-  margin: 5px;
-}
-.view-tools {
-  display: flex;
-  flex-direction: column;
-  position: absolute;
-  right: 18px;
-  top: 20px;
-  gap: 7px;
+  height: 18px;
+  margin-inline: 3px;
 }
 .view-tools button {
   width: 31px;
@@ -1430,19 +1394,6 @@ small {
   font-size: 9px;
   color: #bf7756;
 }
-.bom-row .stock-store-details {
-  color: var(--ink, #33392e);
-}
-.stock-store-details > small {
-  display: block;
-  margin-block: 5px;
-}
-.stock-store-details > a {
-  font-size: 9px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
 .materials-store-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2011,28 +1962,22 @@ small {
   .material-card {
     padding: 13px 5px;
   }
-  .material-info strong {
+  .material-grip strong {
     font-size: 11px;
-  }
-  .material-info small {
-    font-size: 9px;
-  }
-  .material-info > span {
-    font-size: 10px;
   }
   .material-art {
     width: 58px;
     height: 60px;
   }
-  .material-art > div {
+  .material-art > span {
     top: 10px;
     left: 22px;
   }
-  .material-art > div:nth-child(2) {
+  .material-art > span:nth-child(2) {
     left: 14px;
     top: 12px;
   }
-  .material-art > div:nth-child(3) {
+  .material-art > span:nth-child(3) {
     left: 29px;
     top: 8px;
   }
@@ -2091,31 +2036,14 @@ small {
     padding: 7px 9px;
     font-size: 9px;
   }
-  .scene-label {
-    left: 17px;
-    top: 17px;
-  }
-  .scene-label > span:last-child {
-    display: none;
-  }
-  .scene-tools {
-    top: 45px;
-    left: 17px;
-  }
   .material-art {
     width: 43px;
   }
-  .material-info strong {
+  .material-grip strong {
     font-size: 11px;
   }
   .material-card {
     gap: 7px;
-  }
-  .material-info small {
-    font-size: 7px;
-  }
-  .material-info em {
-    font-size: 7px;
   }
   .library {
     padding: 22px 12px 12px;
@@ -2471,26 +2399,26 @@ small {
     align-content: center;
     flex-wrap: nowrap;
   }
-  .material-card .material-info { touch-action: pan-x; }
+  .material-grip { touch-action: pan-x; }
   .material-art {
     width: 36px;
     height: 48px;
   }
-  .material-info strong {
+  .material-grip strong {
     font-size: 11px;
     line-height: 1.3;
   }
-  .material-card > button {
+  .material-add {
     width: 36px;
     height: 36px;
   }
-  .material-art > div {
+  .material-art > span {
     left: 10px;
   }
-  .material-art > div:nth-child(2) {
+  .material-art > span:nth-child(2) {
     left: 5px;
   }
-  .material-art > div:nth-child(3) {
+  .material-art > span:nth-child(3) {
     left: 18px;
   }
   .workbench {
@@ -2542,18 +2470,10 @@ small {
     font-size: 0;
     gap: 0;
   }
-  .scene-tools {
-    top: 42px;
-    right: 78px;
-    max-width: calc(100% - 95px);
-    align-items: center;
-    gap: 2px;
-  }
-  .scene-tools i { margin-inline: 2px; }
-  .scene-tools button {
-    width: 27px;
-    height: 29px;
-  }
+  .workspace-toolbar { gap: 3px 6px; }
+  .scene-tools, .view-tools { gap: 2px; }
+  .scene-tools i { margin-inline: 0; }
+  .scene-tools button, .view-tools button { width: 27px; height: 29px; }
   .timeline-heading h3 {
     font-size: 13px;
   }
@@ -2592,10 +2512,6 @@ small {
     left: 15px;
     right: 13px;
     bottom: 13px;
-  }
-  .view-tools {
-    right: 13px;
-    top: 16px;
   }
   .orbit-hint {
     display: none;
@@ -3014,10 +2930,10 @@ small {
   width: 54px;
   flex-shrink: 0;
 }
-.material-art > div {
+.material-art > span {
   margin: auto;
 }
-.material-art.hd-liberty-p01012-pc-c > div {
+.material-art.hd-liberty-p01012-pc-c > span {
   width: 70%;
   height: 6px;
   border-color: #8a939a;
@@ -3028,8 +2944,8 @@ small {
   box-shadow: 0 2px 2px #48525b35;
   transform: translate(-50%, -50%) rotate(-24deg);
 }
-.material-art.hd-liberty-p01012-pc-c > div::before,
-.material-art.hd-liberty-p01012-pc-c > div::after {
+.material-art.hd-liberty-p01012-pc-c > span::before,
+.material-art.hd-liberty-p01012-pc-c > span::after {
   content: "";
   position: absolute;
   top: 4px;
@@ -3038,15 +2954,15 @@ small {
   border-radius: 0 0 2px 2px;
   background: linear-gradient(90deg, #89959e, #b7c1c9, #78858e);
 }
-.material-art.hd-liberty-p01012-pc-c > div::before { left: 12%; }
-.material-art.hd-liberty-p01012-pc-c > div::after { right: 12%; }
-.material-art.linear > div {
+.material-art.hd-liberty-p01012-pc-c > span::before { left: 12%; }
+.material-art.hd-liberty-p01012-pc-c > span::after { right: 12%; }
+.material-art.linear > span {
   width: var(--board-width, 14px);
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%) rotate(-28deg);
 }
-.material-art.tube > div {
+.material-art.tube > span {
   width: 7px;
   border-radius: 6px;
   background: linear-gradient(90deg, #748477, var(--material-color), #f2f4ec);
@@ -3063,10 +2979,6 @@ small {
   }
   .part-quick-tools strong {
     display: none;
-  }
-  .scene-label {
-    max-width: 80%;
-    flex-wrap: wrap;
   }
   .build-timeline .timeline-heading {
     align-items: flex-start;
@@ -3114,14 +3026,14 @@ small {
   width: 100%;
   min-width: 0;
 }
-.material-art.fastener > div {
+.material-art.fastener > span {
   width: 7px;
   height: 36px;
   background: #8f9a94;
   box-shadow: none;
   border-radius: 2px 2px 0 0;
 }
-.material-art.fastener > div:before {
+.material-art.fastener > span:before {
   content: "";
   position: absolute;
   top: -3px;
@@ -3131,7 +3043,7 @@ small {
   background: #67776c;
   border-radius: 3px;
 }
-.material-art.connector > div {
+.material-art.connector > span {
   width: 26px;
   height: 27px;
   border-left: 5px solid #84958a;
@@ -3139,7 +3051,7 @@ small {
   background: transparent;
   box-shadow: none;
 }
-.material-art.sheet > div {
+.material-art.sheet > span {
   width: 36px;
   height: 40px;
   border-radius: 1px;
@@ -3944,6 +3856,14 @@ small {
 }
 .stock-size-options label:has(:checked) { background: #eef3e8; border-color: #a6b89a; }
 .stock-length-check { margin: 0 0 16px; }
+.stock-length-recommendation {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 6px;
+}
+.stock-length-recommendation .button { min-height: 34px; }
 .use-measured-length { display: block; margin: 8px 0; }
 .stock-offcut-options { margin: 12px 0; }
 .stock-offcut-options summary { cursor: pointer; }

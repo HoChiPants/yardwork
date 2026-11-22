@@ -152,9 +152,14 @@ export function groupedMaterials(
 }
 
 
-function paletteStockName(name: string) {
+export function materialDisplayName(name: string) {
   return name.replace(/^(?:The )?(?:Home Depot|Lowe[’']s)\s+/i, "")
     .replace(/\s*·\s*(?:The )?(?:Home Depot|Lowe[’']s)(?: reference)?(?=\s*·|\s*$)/gi, "")
+    .trim();
+}
+
+function paletteStockName(name: string) {
+  return materialDisplayName(name)
     .replace(/\s*·\s*\d+(?:\.\d+)? ft\s*$/i, "")
     .replace(/\s*·\s*[^·]*\bactual\s*$/i, "")
     .replace(/^(.*)\s+·\s+(\S+) category$/, "$2 in $1")

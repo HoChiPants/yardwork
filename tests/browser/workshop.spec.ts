@@ -240,9 +240,12 @@ test("records a matched inventory snapshot and makes ZIP settings editable", asy
   await page
     .getByRole("button", { name: "Save snapshot", exact: true })
     .click();
-  await expect(page.locator(".bom-row").first()).toContainText(
-    "Snapshot · 100 available",
-  );
+  const purchase = page.getByRole("list", { name: "Home Depot purchase review" });
+  const prepare = page.getByRole("button", { name: "Prepare Home Depot list", exact: true });
+  const close = page.getByRole("button", { name: "Close dialog", exact: true });
+  await prepare.click();
+  await expect(purchase).toContainText("100 available in snapshot");
+  await close.click();
   await page
     .getByRole("button", { name: "Project settings", exact: true })
     .click();
@@ -253,9 +256,9 @@ test("records a matched inventory snapshot and makes ZIP settings editable", asy
     .getByRole("textbox", { name: "Store ZIP", exact: true })
     .press("Tab");
   await page.getByRole("button", { name: "Done", exact: true }).click();
-  await expect(page.locator(".bom-row").first()).toContainText(
-    "Availability unverified",
-  );
+  await prepare.click();
+  await expect(purchase).toContainText("No recent store snapshot");
+  await close.click();
   await page.getByRole("button", { name: "Project settings", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Store ZIP", exact: true })).toHaveValue("84101");
   await page.getByRole("button", { name: "Done", exact: true }).click();

@@ -1,3 +1,4 @@
+import { materialDisplayName } from "../../src/materialGroups";
 import { confirmMaterialPlacement } from "../helpers/materialPlacement";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
@@ -271,14 +272,10 @@ test("manual .188/.453 sheets keep exact dimensions, cut remnants and one-sheet 
   for (const row of sheets) {
     const purchase = page
       .locator(".bom-row")
-      .filter({ has: page.getByText(material(row.id).name, { exact: true }) });
+      .filter({ has: page.getByText(materialDisplayName(material(row.id).name), { exact: true }) });
     await expect(purchase).toContainText("1 sheet");
     await expect(purchase).not.toContainText(/Unpriced|\$/);
-    await expect(purchase).toContainText("Availability unverified");
-    await purchase.getByText("Store details", { exact: true }).click();
-    await expect(
-      purchase.getByRole("link", { name: "Find at Home Depot", exact: true }),
-    ).toHaveAttribute("href", new RegExp(`/${row.offer}$`));
+    await expect(purchase).not.toContainText(/Home Depot|Store details/);
   }
   await page
     .getByRole("button", { name: "Review product references", exact: true })

@@ -80,9 +80,10 @@ test("one material tile supports drop, length choice and a separate selected-par
     const part = (await partTools.boundingBox())!;
     const ground = (await page.locator(".canvas-wrap").boundingBox())!;
     expect(part.y).toBeGreaterThanOrEqual(ground.y + ground.height - 1);
-    expect(part.y).toBeGreaterThan(general.y + general.height);
+    expect(general.y + general.height).toBeLessThanOrEqual(ground.y);
     const viewTools = (await page.locator(".view-tools").boundingBox())!;
-    expect(general.x + general.width).toBeLessThanOrEqual(viewTools.x + 1);
+    expect(viewTools.y + viewTools.height).toBeLessThanOrEqual(ground.y);
+    expect(general.x + general.width <= viewTools.x + 1 || general.y + general.height <= viewTools.y).toBe(true);
     expect(viewTools.x + viewTools.width).toBeLessThanOrEqual(width);
     const save = (await page.getByRole("button", { name: "Save project", exact: true }).boundingBox())!;
     expect(save.x + save.width).toBeLessThanOrEqual(width);
@@ -104,10 +105,10 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("0");
   await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(page.locator(".bom-row").first()).not.toContainText(/Unpriced|\$/);
-  const firstStock = page.locator(".bom-row").first();
-  await expect(firstStock.getByRole("link", { name: "Find at Home Depot" })).toHaveCount(0);
-  await firstStock.getByText("Store details", { exact: true }).click();
-  await expect(firstStock.getByRole("link", { name: "Find at Home Depot" })).toBeVisible();
+  await expect(page.locator(".bom-row").filter({ hasText: /Home Depot|Store details|Availability unverified/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await expect(page.getByRole("list", { name: "Home Depot purchase review" }).getByRole("link").first()).toHaveAttribute("href", /homedepot\.com/);
+  await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   const printShopping = page.locator(".print-guide .pricing-summary-print + ul");
   await expect(printShopping).toContainText(group);
   await expect(printShopping).not.toContainText(/Unpriced|\$/i);
@@ -116,7 +117,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toBeVisible();
 });
 
-test("click a material tile and use a measured span to choose shorter stock", async ({ page }) => {
+test("activate a material tile by keyboard and use a measured span to choose shorter stock", async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto("./");
   const canvas = page.locator("canvas").first();
@@ -136,7 +137,7 @@ test("click a material tile and use a measured span to choose shorter stock", as
     await measurement.getByText(`Point ${end} · exact coordinates`, { exact: true }).click();
   }
   await measurement.getByRole("button", { name: "Done measuring", exact: true }).click();
-  await page.locator('[data-material-family="framing-2x4"]').getByText(group, { exact: true }).click();
+  await page.getByRole("button", { name: group, exact: true }).press("Enter");
   const placement = page.getByRole("dialog", { name: group, exact: true });
   await placement.getByRole("radio", { name: "12 ft", exact: true }).check();
   const length = placement.getByRole("spinbutton", { name: "Needed finished length", exact: true });

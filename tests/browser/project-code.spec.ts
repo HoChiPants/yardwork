@@ -273,7 +273,7 @@ test("site datums update the 3D sidewall vent review and survive a save and an e
     .getByRole("button", { name: "Show vent datums in 3D", exact: true })
     .click();
   await expect(
-    page.getByText("A space for your next idea.", { exact: true }),
+    page.getByText("Drag a material onto the grid.", { exact: true }),
   ).toBeHidden();
   await expect(page.getByTestId("plumbing-vent-terminal")).toHaveText(
     "Vent · 1 ft from wall",

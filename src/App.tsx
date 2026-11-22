@@ -1855,6 +1855,7 @@ export function App() {
     [project],
   );
   const guideReady = guideIsCurrent(project);
+  const hasBuildParts = project.pieces.some((part) => !part.offcut);
   const connectionReview = useMemo(() => connectionCoverage(project), [project]);
   const woodJointDetails = useMemo(() => woodJointDecisionEntries(project), [project]);
   const sillGasketReview = useMemo(() => reviewSillGaskets(project), [project]);
@@ -2633,11 +2634,7 @@ export function App() {
   }
   function materialDropCanvas({ x, y }: { x: number; y: number }) {
     const canvas = viewport.current?.querySelector("canvas");
-    const hit = document.elementFromPoint(x, y);
-    // The starter actions sit over otherwise empty ground. Let a material drag
-    // pass through them while the permanent camera and model controls stay protected.
-    const starter = hit?.closest(".empty-workspace");
-    return canvas && (hit === canvas || (starter && viewport.current?.contains(starter))) ? canvas : null;
+    return canvas && document.elementFromPoint(x, y) === canvas ? canvas : null;
   }
   const canDropMaterial = !workspaceReviewActive && !activeFastenerLayoutPreview && !activeConnectorPreview &&
     !baseRailPreview && panel !== "fit-stock" && stage === null && !explode;
@@ -2976,6 +2973,7 @@ export function App() {
               className="button secondary inspector-focus-toggle"
               aria-controls="workshop-inspector"
               aria-expanded={inspectorFocus.focused}
+              title={inspectorFocus.returnable ? "Return to inspector" : "Expand inspector"}
               onClick={inspectorFocus.expand}
             ><Expand size={14} />{inspectorFocus.returnable ? "Return to inspector" : "Expand inspector"}</button>
           </div>
@@ -3470,26 +3468,8 @@ export function App() {
               <CircleHelp size={17} />
             </button>
           </div>
-          {!project.pieces.length && !project.workZone && !project.planLines.length && !project.drawingReference?.calibration.visible && !shownVentDatums && !shownDryerDuct && mode !== "trace-wall" && (
-            <div className="empty-workspace">
-              <Box size={30} />
-              <h2>A space for your next idea.</h2>
-              <p>
-                Set your available space, drag in materials, or describe what
-                you want to build.
-              </p>
-              <div className="inline">
-                <button
-                  className="button secondary"
-                  onClick={() => setModal("zone")}
-                >
-                  Set work zone
-                </button>
-                <button className="button primary" onClick={() => openIdea()}>
-                  Plan an idea
-                </button>
-              </div>
-            </div>
+          {!project.pieces.length && !project.workZone && !project.planLines.length && !project.drawingReference?.calibration.visible && !shownVentDatums && !shownDryerDuct && mode === "select" && (
+            <p className="empty-workspace">Drag a material onto the grid.</p>
           )}
           {mode === "trace-wall" && (
             <div className="wall-trace-hint">
@@ -3595,7 +3575,11 @@ export function App() {
           piece && mode !== "measure" && mode !== "fastener" && (
             <div className="part-quick-tools" role="toolbar" aria-label="Selected part tools">
               <strong>{piece.name}</strong>
-              <button onClick={() => { setPanel("part"); inspectorFocus.expand(); }}>
+              <button type="button" aria-controls="workshop-inspector" onClick={() => {
+                setPanel("part");
+                inspectorFocus.inspectorRef.current?.focus({ preventScroll: true });
+                inspectorFocus.inspectorRef.current?.scrollIntoView({ block: "nearest" });
+              }}>
                 <Settings2 size={15} /> Part details
               </button>
               <button onClick={()=>setMode("move")}><Move3D size={15}/>Move XYZ</button>
@@ -3623,7 +3607,7 @@ export function App() {
               )}
             </div>
           )}
-        <section className="build-timeline">
+        <section className="build-timeline" data-empty={!hasBuildParts}>
           <div className="timeline-heading">
             <div>
               <span className="eyebrow">DESIGN FIRST · GUIDE WHEN READY</span>
@@ -3642,7 +3626,7 @@ export function App() {
             </div>
             <button
               className="button primary small"
-              disabled={!project.pieces.some((p) => !p.offcut)}
+              disabled={!hasBuildParts}
               onClick={generateGuide}
             >
               <Layers3 size={15} />
@@ -5573,7 +5557,7 @@ export function App() {
             </button>
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
               <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
-                finishedLength={pendingMaterial.finishedLength} measuredLength={pendingMaterial.measuredLength}
+                position={pendingMaterial.position} finishedLength={pendingMaterial.finishedLength} measuredLength={pendingMaterial.measuredLength}
                 offcutId={pendingMaterial.offcutId} onPlace={(id, placement) => {
                 add(id, pendingMaterial.group.name, pendingMaterial.position, placement);
               }} />

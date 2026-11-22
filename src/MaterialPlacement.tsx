@@ -3,7 +3,7 @@ import { LengthInput } from "./LengthInput";
 import { materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { plannedCutKerf, type inspectCutStock } from "./cutStock";
 import { formatStockLength, preferredLengthUnit } from "./measurement";
-import type { MaterialId, Piece, Project } from "./model";
+import type { MaterialId, Piece, Project, V3 } from "./model";
 import { fittingBoardOffcuts } from "./offcutAssignment";
 import { partLabel } from "./partLabels";
 import { stockSplitState } from "./packing";
@@ -12,10 +12,11 @@ export type BoardPlacement =
   | { kind: "offcut"; id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] }
   | { kind: "stock-cut"; length: number };
 
-export function MaterialPlacement({ group, project, inspection, finishedLength, measuredLength, offcutId, onPlace }: {
+export function MaterialPlacement({ group, project, inspection, position = [0, 0, 0], finishedLength, measuredLength, offcutId, onPlace }: {
   group: MaterialGroup;
   project: Project;
   inspection: ReturnType<typeof inspectCutStock>;
+  position?: V3;
   finishedLength?: number;
   measuredLength?: number;
   offcutId?: string;
@@ -26,6 +27,11 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
   const [needed, setNeeded] = useState(finishedLength ?? NaN);
   const [selectedOffcut, selectOffcut] = useState(offcutId);
   const choice = options.find(({ id }) => id === selected)!;
+  const zone = project.workZone;
+  const [x, y, z] = position;
+  const zoneClearance = zone && Math.abs(x) <= zone.width / 2 && Math.abs(z) <= zone.depth / 2
+    ? zone.height - y : 0;
+  const canUseZoneClearance = zoneClearance >= 0.125 && preferred.size[1] === Math.max(...preferred.size);
   const kerf = plannedCutKerf(project, choice.id);
   const fits = (length: number, id: MaterialId) => {
     const state = stockSplitState(length, needed, plannedCutKerf(project, id));
@@ -56,9 +62,12 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
     </fieldset> : <p className="single-stock-size">{choice.label} stock</p>}
     {canCutToLength && <div className="stock-length-check">
       <LengthInput label="Finished length (optional)" ariaLabel="Needed finished length" value={needed}
-        defaultUnit={preferredLengthUnit(finishedLength ?? measuredLength ?? NaN)} onChange={setNeeded} />
+        defaultUnit={preferredLengthUnit(finishedLength ?? measuredLength ?? zoneClearance)} onChange={setNeeded} />
       {measuredLength !== undefined && <button type="button" className="text-button use-measured-length"
         onClick={() => setNeeded(measuredLength)}>Use measured span ({formatStockLength(measuredLength)})</button>}
+      {canUseZoneClearance && zoneClearance < choice.value && Number.isNaN(needed) &&
+        <button type="button" className="text-button use-measured-length"
+          onClick={() => setNeeded(zoneClearance)}>Use work zone clearance ({formatStockLength(zoneClearance)})</button>}
       {!Number.isNaN(needed) && !validLength && <p role="status">Enter at least ⅛ in or clear the finished length.</p>}
       {validLength && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p role="status">
         {enough ? `${shortest.label} stock fits this cut with ${formatStockLength(choice.value - shortest.value)} less length to buy.` : `${shortest.label} stock fits this cut.`}{" "}

@@ -20,10 +20,10 @@ test("one material tile supports drop, length choice and a separate selected-par
   const canvas = page.locator("canvas").first();
   await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
   const art = (await tile.locator(".material-art").boundingBox())!;
-  const actions = (await page.locator(".empty-workspace").getByRole("button").first().boundingBox())!;
+  const groundHint = (await page.getByText("Drag a material onto the grid.", { exact: true }).boundingBox())!;
   await page.mouse.move(art.x + art.width / 2, art.y + art.height / 2);
   await page.mouse.down();
-  await page.mouse.move(actions.x + actions.width / 2, actions.y + actions.height / 2, { steps: 8 });
+  await page.mouse.move(groundHint.x + groundHint.width / 2, groundHint.y + groundHint.height / 2, { steps: 8 });
   await expect(page.locator(".material-drag-preview.can-drop .material-art")).toBeVisible();
   const [x, y, z] = JSON.parse((await canvas.getAttribute("data-material-drop-point"))!);
   expect(y).toBe(0);
@@ -112,6 +112,28 @@ test("click a material tile and use a measured span to choose shorter stock", as
   await placement.getByRole("button", { name: "Plan cut and place", exact: true }).click();
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
   await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("24");
+});
+
+test("use the work zone clearance to choose and cut the shortest listed board", async ({ page }) => {
+  await page.goto("./");
+  await page.locator(".project-heading").getByRole("button", { name: "Set work zone", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("spinbutton", { name: "Zone height", exact: true }).fill("48");
+  await dialog.getByRole("button", { name: "Apply work zone", exact: true }).click();
+  await page.getByRole("button", { name: `Add ${group}`, exact: true }).click();
+  await dialog.getByRole("radio", { name: "12 ft", exact: true }).check();
+  await dialog.getByRole("button", { name: "Use work zone clearance (4 ft)", exact: true }).click();
+  await expect(dialog).toContainText("8 ft stock fits this cut with 4 ft less length to buy.");
+  await dialog.getByRole("button", { name: "Use 8 ft", exact: true }).click();
+  await dialog.getByRole("button", { name: "Plan cut and place", exact: true }).click();
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("24");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Editable project/ }).click();
+  const exported = projectSchema.parse(JSON.parse(await readFile((await (await download).path())!, "utf8")));
+  expect(exported.pieces.find(({ offcut }) => !offcut)?.material).toBe("stud");
+  expect(exported.pieces.some(({ offcut }) => offcut)).toBe(true);
 });
 
 test("an existing surface receives a dropped board and single-stock boards can be cut before placement", async ({ page }) => {
@@ -367,19 +389,22 @@ test("a named scrap stays selected when comparing other compatible offcuts", asy
 });
 
 test.describe("phone material placement", () => {
-  test.use({ viewport: { width: 390, height: 900 }, isMobile: true, hasTouch: true });
+  test.use({ viewport: { width: 390, height: 667 }, isMobile: true, hasTouch: true });
 
-  test("touch-drag a treated post onto the workspace and open its separate details", async ({ page, context }) => {
+  test("touch-drag a treated post from a short screen and edit it in the docked inspector", async ({ page, context }) => {
     await page.goto("./");
     const canvas = page.locator("canvas").first();
     await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
+    await page.getByRole("textbox", { name: "Find a material" }).fill("4x4 treated post");
     const add = page.getByRole("button", { name: "Add 4 × 4 treated post", exact: true });
     const tile = page.locator(".material-card").filter({ has: add });
-    await tile.scrollIntoViewIfNeeded();
+    await expect(tile).toHaveText("4 × 4 treated post");
     const source = (await tile.locator(".material-art").boundingBox())!;
     const view = (await canvas.boundingBox())!;
     const start = { x: source.x + source.width / 2, y: source.y + source.height / 2 };
     const end = { x: Math.min(start.x, view.x + view.width * 0.68), y: view.y + view.height * 0.7 };
+    expect(start.y).toBeLessThan(page.viewportSize()!.height);
+    expect(end.y).toBeGreaterThan(0);
     const touch = await context.newCDPSession(page);
     await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [start] });
     for (let i = 1; i <= 8; i++) {
@@ -393,10 +418,11 @@ test.describe("phone material placement", () => {
     await expect(page.getByRole("dialog")).toHaveAccessibleName("4 × 4 treated post");
     await confirmMaterialPlacement(page, "8 ft");
     await page.getByRole("button", { name: "Part details" }).click();
-    const details = page.getByRole("dialog", { name: "Inspector" });
-    await expect(details).toBeVisible();
+    const details = page.locator("#workshop-inspector");
+    await expect(details).toHaveAttribute("data-inspector-focused", "false");
+    await expect(details).toBeInViewport();
     await expect(details.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("48");
-    await details.getByRole("button", { name: "Back to workspace" }).click();
-    await expect(page.getByRole("button", { name: "Rename project", exact: true })).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("toolbar", { name: "Model tools" })).toBeVisible();
   });
 });

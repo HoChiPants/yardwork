@@ -18,6 +18,7 @@ import {
 } from "./model";
 import { ensurePartLabels, partLabel } from "./partLabels";
 import { stockAxes } from "./stockAxes";
+import { isDrywall } from "./drywallReference";
 
 const epsilon = 1e-7;
 type OffcutTarget = Pick<Piece, "material" | "size" | "stockLengthAxis"> &
@@ -51,7 +52,7 @@ export function fittingOffcuts(
   allowedOffcutIds?: ReadonlySet<string>,
 ) {
   const stock = material(target.material);
-  if (target.offcut || target.cutStock || !stock.wood || !stock.cuttable)
+  if (target.offcut || target.cutStock || (!stock.wood && !isDrywall(target.material)) || !stock.cuttable)
     return [];
   const targetAxes = axesOf(stockAxes(target));
   const desired = sizeAlong(target, targetAxes);
@@ -93,7 +94,7 @@ export function fittingOffcuts(
                 axis: axes[2],
                 kind: "crosscut" as const,
                 size: desired[2],
-                text: `Crosscut to ${formatStockLength(desired[2])}`,
+                text: `${isDrywall(target.material) ? "Score and snap length to" : "Crosscut to"} ${formatStockLength(desired[2])}`,
               },
             ]
           : []),
@@ -103,7 +104,7 @@ export function fittingOffcuts(
                 axis: axes[1],
                 kind: "rip" as const,
                 size: desired[1],
-                text: `Rip to ${formatStockLength(desired[1])}`,
+                text: `${isDrywall(target.material) ? "Score and snap width to" : "Rip to"} ${formatStockLength(desired[1])}`,
               },
             ]
           : []),

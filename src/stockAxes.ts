@@ -1,4 +1,5 @@
 import { isBatt, material, type Piece, type V3 } from "./model";
+import { isDrywall } from "./drywallReference";
 type Axis = 0 | 1 | 2;
 type StockDimensions = Pick<Piece, "size" | "stockLengthAxis" | "material"> &
   Partial<Pick<Piece, "cutStock">>;
@@ -13,11 +14,11 @@ export function stockAxes(
     const [thickness, width, length] = recorded;
     return { length, width, thickness };
   }
-  const batt = isBatt(piece.material);
+  const fixedSheetThickness = isBatt(piece.material) || isDrywall(piece.material);
   const length =
     piece.stockLengthAxis ??
     fallback ??
-    (batt
+    (fixedSheetThickness
       ? 2
       : material(piece.material).shape === "tube-envelope"
         ? 1
@@ -25,13 +26,12 @@ export function stockAxes(
   const remaining = ([0, 1, 2] as Axis[])
     .filter((axis) => axis !== length)
     .sort((a, b) => reference[b] - reference[a]);
-  if (batt) {
+  if (fixedSheetThickness) {
     const stockThickness = Math.min(...material(piece.material).size);
     const fullThickness = remaining.filter(
       (axis) => Math.abs(reference[axis] - stockThickness) < 0.001,
     );
-    // Generated batts have local Z thickness; catalog-placed batts use Y.
-    // Keep the same thickness axis after trimming a width smaller than it.
+    // Keep the full-thickness axis after trimming a width smaller than it.
     const thickness =
       fullThickness.length === 1
         ? fullThickness[0]

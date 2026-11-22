@@ -86,7 +86,7 @@ export function OffcutReusePlanDetails({ plan, fromCut = false }: {
         <p>
           {fromCut
             ? "These offcuts can stay in the Cut pool for another part."
-            : "No rectangular offcuts fit the unassigned wood parts. Check stock type, thickness, grain direction and room for the saw cut."}
+            : "No rectangular offcuts fit the unassigned parts. Check stock type, thickness, orientation and cutting allowance."}
         </p>
       )}
     </>

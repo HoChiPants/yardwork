@@ -11,10 +11,11 @@ import {
 } from "./model";
 import { orientedStockSize } from "./stockAxes";
 import { isPexPipe } from "./wallWaterReference";
+import { isDrywall } from "./drywallReference";
 
 export const KERF = 0.125;
 export const cutKerf = (materialId: MaterialId) =>
-  isBatt(materialId) || isPexPipe(materialId) ? 0 : KERF;
+  isBatt(materialId) || isDrywall(materialId) || isPexPipe(materialId) ? 0 : KERF;
 export const plannedCutKerf = (project: Project, id: MaterialId) =>
   project.woodKerfs?.[id] ?? cutKerf(id);
 
@@ -114,6 +115,17 @@ export function inspectCutStock(project: Project) {
       detail = "Parts from this tube disagree on the recorded cutting loss.";
     else if (pieces.some((piece) => piece.cutStock!.woodKerf !== source.woodKerf))
       detail = "Parts from this wood source disagree on the recorded cutting loss.";
+    else if (
+      isDrywall(first.material) &&
+      (source.woodKerf !== undefined || source.tubeKerf !== undefined ||
+        pieces.some((piece) => {
+          const axis = piece.cutStock!.sourceAxes?.[0];
+          return piece.cutPlanes.length > 0 ||
+            Math.abs((axis === undefined
+              ? orientedStockSize(piece)[0] : piece.size[axis]) - 0.5) > 1e-6;
+        }))
+    )
+      detail = "Score-and-snap drywall cuts must keep the full panel thickness and have no recorded saw kerf.";
     else if (
       m.shape === "tube-envelope" &&
       pieces.some((piece, index) => {

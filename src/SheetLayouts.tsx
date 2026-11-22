@@ -3,13 +3,16 @@ import { isBatt, material, type Project } from "./model";
 import { formatPreciseInches } from "./measurement";
 import { ensurePartLabels, partLabel } from "./partLabels";
 import { fitLayoutLabel } from "./layoutLabels";
+import { isDrywall } from "./drywallReference";
 
 /** Proposed rectangular blank layout; physical cut provenance remains separate. */
 export function sheetPlansMarkdown(rows: BomRow[], project: Project) {
   const sheets = rows.filter((row) => row.sheets.length);
   if (!sheets.length) return "";
   const labeled = ensurePartLabels(project);
-  const allowance = sheets.some((row) => isBatt(row.id))
+  const allowance = sheets.some(({ id }) => isDrywall(id))
+    ? "Drywall layouts model score-and-snap cuts with zero cutting loss. Check the marked face, finished seam edges and sheet orientation."
+    : sheets.some((row) => isBatt(row.id))
     ? "Proposed layouts use zero modeled knife kerf for batts and ⅛ in kerf for other sheet stock."
     : "Proposed rectangular blank layouts with ⅛ in kerf.";
   return (
@@ -48,7 +51,8 @@ export function SheetLayouts({
   const content = (
     <>
       <p className="small-note">
-        {batt ? "Proposed batt layout · zero modeled knife kerf. Check the actual cavity before trimming."
+        {isDrywall(row.id) ? "Proposed drywall layout · score and snap with zero modeled cutting loss."
+          : batt ? "Proposed batt layout · zero modeled knife kerf. Check the actual cavity before trimming."
           : "Proposed blank layout · ⅛ in kerf."} Specified stock-length directions are
         preserved; otherwise the longer blank dimension follows stock length.
         Verify grain/flutes, trim allowance, actual dimensions and cutting

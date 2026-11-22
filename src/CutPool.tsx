@@ -5,6 +5,7 @@ import { formatStockLength } from "./measurement";
 import { pieceThroughOpenings } from "./throughOpenings";
 import { orientedStockSize } from "./stockAxes";
 import { workshopAsset } from "./workshopTransport";
+import { isDrywall } from "./drywallReference";
 export function CutPool({
   project,
   onInspect,
@@ -51,7 +52,9 @@ export function CutPool({
       }}>
         Add measured offcut
       </button>
-      {scrap.length > 0 && project.pieces.some((piece) => !piece.offcut && !piece.cutStock && material(piece.material).wood) && (
+      {scrap.length > 0 && project.pieces.some((piece) =>
+        !piece.offcut && !piece.cutStock && (material(piece.material).wood || isDrywall(piece.material)),
+      ) && (
         <button type="button" className="button secondary full" onClick={onReviewReuse}>
           Review offcut reuse
         </button>

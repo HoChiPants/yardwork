@@ -5,10 +5,11 @@ import { offcutCutSchema } from "./offcutCutSchema";
 import { partLabel } from "./partLabels";
 import { stockAxes } from "./stockAxes";
 import { pieceThroughOpenings } from "./throughOpenings";
+import { isDrywall } from "./drywallReference";
 
 export function isRecordableStraightTrim(piece: Piece) {
   const stock = material(piece.material);
-  return !piece.offcut && stock.wood && stock.cuttable &&
+  return !piece.offcut && (stock.wood || isDrywall(piece.material)) && stock.cuttable &&
     !piece.cutPlanes.length && !pieceThroughOpenings(piece).length &&
     (piece.cutStock?.size ?? piece.size).every((span) => span <= 240);
 }

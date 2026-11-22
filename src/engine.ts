@@ -22,6 +22,7 @@ import { plannedStockCutOrders, plannedStockCutOrdersMarkdown } from "./plannedC
 import { beamSource, reviewShelfSag, shelfSagGuideLines, shelfSagScope, shelfSagSummary, stiffnessSource } from "./shelfSag";
 import { homeDepotShoppingList } from "./handoff";
 import { stockCutSequences } from "./stockCutSequence";
+import { isDrywall } from "./drywallReference";
 import { reviewSunliteMounts, sunliteMountLines, sunliteMountScope } from "./sunliteMounts";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { reviewGreenhouseVentBacking, ventBackingGuideLines, ventBackingScope, ventBackingSource, ventBackingSummary } from "./greenhouseVentBacking";
@@ -220,7 +221,7 @@ export function cutPiece(
       requestedAxis ??
       (tube
         ? 1
-        : isBatt(source.material) || source.cutStock?.sourceAxes ? stockAxes(source).length
+        : isBatt(source.material) || isDrywall(source.material) || source.cutStock?.sourceAxes ? stockAxes(source).length
         : (source.stockLengthAxis ??
           source.size.indexOf(Math.max(...source.size)))),
     original = source.size[axis];
@@ -230,6 +231,8 @@ export function cutPiece(
     );
   if (isBatt(source.material) && axis === stockAxes(source).thickness)
     throw Error("Trim a batt to width or length. Choose stock of the correct thickness for the cavity.");
+  if (isDrywall(source.material) && axis === stockAxes(source).thickness)
+    throw Error("Score and snap the panel to width or length. The sheet thickness stays fixed.");
   if (!Number.isFinite(length) || length <= 0 || length + kerf >= original)
     throw Error(
       `Cut must be greater than zero and below ${format(original - kerf)} to leave an offcut.`,
@@ -2488,7 +2491,11 @@ export function recordChanges(before: Project, after: Project): Project {
     if (p.size.some((v, i) => v !== old.size[i])) {
       messages.push({
         stepId: p.stepId,
-        message: `${offcuts.length ? "Cut" : "Resized"} ${p.name} to ${p.size.map(format).join(" × ")}.${offcuts.length ? (isBatt(p.material) ? " Kept the offcut; no knife kerf modeled." : " Kept the offcut; ⅛ in saw kerf removed.") : ""}`,
+        message: `${offcuts.length ? "Cut" : "Resized"} ${p.name} to ${p.size.map(format).join(" × ")}.${offcuts.length
+          ? isDrywall(p.material) ? " Kept the score-and-snap offcut."
+            : isBatt(p.material) ? " Kept the offcut; no knife kerf modeled."
+              : " Kept the offcut; ⅛ in saw kerf removed."
+          : ""}`,
       });
     } else if (
       JSON.stringify(p.roundOpenings ?? []) !==

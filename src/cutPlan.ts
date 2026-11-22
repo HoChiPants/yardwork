@@ -12,9 +12,11 @@ import {
 } from "./model";
 import { rotate } from "./spatial";
 import { stockAxes } from "./stockAxes";
+import { isDrywall } from "./drywallReference";
 export function cuttingAxes(piece: Piece) {
   if (
     isBatt(piece.material) ||
+    isDrywall(piece.material) ||
     piece.stockLengthAxis != null ||
     piece.cutStock?.sourceAxes ||
     (piece.cutStock && (piece.cutPlanes.length || material(piece.material).wood))

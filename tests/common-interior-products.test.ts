@@ -180,11 +180,11 @@ test("all original32 stock definitions and44 reviewed/candidate records remain d
     retailerCatalog.slice(0, 44).map((p) => p.id),
     Object.keys(baseline.products),
   );
-  assert.equal(catalog.length, 81);
-  assert.equal(retailerCatalog.length, 161);
+  assert.equal(catalog.length, 83);
+  assert.equal(retailerCatalog.length, 163);
   assert.equal(
     retailerCatalog.reduce((n, p) => n + p.offers.length, 0),
-    179,
+    181,
   );
   assert.equal(retailerCatalog.filter((p) => p.category === "tool").length, 25);
 });

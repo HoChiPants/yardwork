@@ -4,6 +4,7 @@ import { formatStockLength } from "./measurement";
 import type { Project } from "./model";
 import { partLabel } from "./partLabels";
 import { plannedStockCutOrders, type PlannedStockCutOrder } from "./plannedCutSources";
+import { isDrywall } from "./drywallReference";
 
 export const offcutCutOrderTitle = "Recorded offcut cut order";
 export const offcutCutOrderScope =
@@ -114,7 +115,9 @@ export function offcutCutRows(
         : undefined,
       cuts: record.cuts.map(
         ({ kind, size }) =>
-          `${kind === "crosscut" ? "Crosscut" : "Rip"} to ${formatStockLength(size)}`,
+          `${part && isDrywall(part.material)
+            ? kind === "crosscut" ? "Score and snap length" : "Score and snap width"
+            : kind === "crosscut" ? "Crosscut" : "Rip"} to ${formatStockLength(size)}`,
       ),
       remnants: record.remnants.map(
         ({ id, size }) =>

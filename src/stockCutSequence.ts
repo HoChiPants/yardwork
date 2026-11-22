@@ -20,6 +20,7 @@ import { reviewRodFit } from "./rodFits";
 import { isPexPipe, pexInstallation } from "./wallWaterReference";
 import { tubeGroupKey, tubeKerfSchema } from "./cutSourceAxes";
 import { fieldTreatmentReference, fieldTreatmentScope, isPressureTreated } from "./treatedWood";
+import { drywallInstallation, isDrywall } from "./drywallReference";
 
 const EPSILON = 1e-8;
 
@@ -69,6 +70,11 @@ export function stockCutMaterialNotes(id: MaterialId) {
   if (isBatt(id))
     return {
       text: "Batt layouts assume zero cutting loss from a knife and keep the full thickness. Measure the actual cavity and follow the insulation maker’s handling instructions.",
+    };
+  if (isDrywall(id))
+    return {
+      text: "The layout is for straight score-and-snap cuts of full-thickness drywall. Retain the face paper orientation and check which factory edges remain before laying out joints.",
+      link: { label: "USG marking and cutting guide", url: drywallInstallation },
     };
   return null;
 }
@@ -124,17 +130,18 @@ function sheetSequence(
   sheet: StockPlan,
   kerf: number,
   describePart: (id: string) => string,
-  kind: "sheet" | "batt" | "glazing" | "foam",
+  kind: "sheet" | "batt" | "drywall" | "glazing" | "foam",
 ) {
   const batt = kind === "batt";
+  const drywall = kind === "drywall";
   const glazing = kind === "glazing";
-  const crosscut = batt
+  const crosscut = drywall ? "Score and snap" : batt
     ? "Knife-cut"
     : glazing
       ? "Cut across the flutes to make"
       : "Crosscut";
-  const rip = batt ? "Knife-trim" : glazing ? "Cut along the flutes" : "Rip";
-  const trim = batt ? "Knife-trim" : glazing ? "Trim" : "Crosscut";
+  const rip = drywall ? "Score and snap" : batt ? "Knife-trim" : glazing ? "Cut along the flutes" : "Rip";
+  const trim = drywall ? "Score and snap" : batt ? "Knife-trim" : glazing ? "Trim" : "Crosscut";
   const strips = new Map<number, StockPlacement[]>();
   for (const placement of sheet.placements) {
     if (placement.rotated && kind !== "foam") {
@@ -253,9 +260,10 @@ export function stockCutSequences(
     const rod = row.id === everbiltClosetRod.materialId;
     const tube = rod || isPexPipe(row.id);
     const batt = isBatt(row.id);
+    const drywall = isDrywall(row.id);
     const glazing = stock.shape === "glazing-envelope";
     if (
-      (!stock.wood && !tube && !batt && !glazing) ||
+      (!stock.wood && !tube && !batt && !drywall && !glazing) ||
       !stock.cuttable ||
       (!row.bins.length && !row.sheets.length)
     )
@@ -279,7 +287,8 @@ export function stockCutSequences(
       return {
         title,
         partIds,
-        source: batt
+        source: drywall
+          ? `${size} · score and snap · zero modeled cutting loss` : batt
           ? `${size} · zero modeled knife loss`
           : woodKerf !== undefined || (kind === "tube" && tubeKerf !== undefined)
             ? `${size} · ${formatStockLength(kerf)} measured loss per cut`
@@ -310,7 +319,7 @@ export function stockCutSequences(
         sequence.review ??= `${describePart(piece.id)} needs a stock length axis along the flutes before you can record this panel.`;
         return;
       }
-      if ((batt || glazing) && Math.abs(partThickness - thickness) > EPSILON) {
+      if ((batt || drywall || glazing) && Math.abs(partThickness - thickness) > EPSILON) {
         sequence.review ??= `${describePart(piece.id)} needs the full source thickness. Review its dimensions and stock length axis.`;
         return;
       }
@@ -442,7 +451,8 @@ export function stockCutSequences(
       for (const { id } of sheet.placements)
         addFollowUp(sequence, pieces.get(id)!, false);
       if (!sequence.review)
-        sheetSequence(sequence, sheet, defaultKerf, describePart, batt ? "batt" : glazing ? "glazing" : "sheet");
+        sheetSequence(sequence, sheet, defaultKerf, describePart,
+          batt ? "batt" : drywall ? "drywall" : glazing ? "glazing" : "sheet");
     }
     if (sequences.length) groups.set(row.id, sequences);
   }

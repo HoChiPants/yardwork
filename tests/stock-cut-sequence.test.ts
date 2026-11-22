@@ -38,6 +38,8 @@ import { planOffcutReuse } from "../src/offcutReusePlan";
 import { offcutCutRows } from "../src/offcutCutGuide";
 import { planOffcutRelease } from "../src/offcutReleasePlan";
 import { generateBuildGuide } from "../src/guide";
+import { makeLabeledCutPreview } from "../src/CutStudio";
+import { drywallStock } from "../src/drywallReference";
 
 function cutProject(material: MaterialId, ...sizes: V3[]) {
   const project = blank("Cut sequence");
@@ -53,6 +55,47 @@ function cutProject(material: MaterialId, ...sizes: V3[]) {
   );
   return project;
 }
+
+test("a drywall score-and-snap offcut supplies the second strip from one purchased sheet", () => {
+  const stock = drywallStock[0];
+  const project = cutProject(stock.id, [48, 0.5, 96], [24, 0.5, 96]);
+  const [sheet, target] = project.pieces;
+  assert.equal(bom(project)[0].quantity, 2);
+  assert.throws(() => cutPiece(project, sheet.id, 0.25, 1), /sheet thickness stays fixed/);
+  const preview = makeLabeledCutPreview(project, sheet.id, 96, 24);
+  const scrap = preview.project.pieces.find(({ offcut }) => offcut)!;
+  assert.deepEqual(scrap.size, [24, 0.5, 96]);
+  assert.equal(pieceCutKerf(scrap), 0);
+
+  const reuse = planOffcutReuse(preview.project, preview.offcutIds);
+  assert.equal(reuse.assignments[0].partId, target.id);
+  assert.equal(bom(reuse.project)[0].quantity, 1);
+  assert.equal(reuse.project.pieces.length, 2);
+  assert.ok(inspectCutStock(reuse.project).valid.has(scrap.cutStock!.id));
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(reuse.project)));
+  assert.match(guideMarkdown(reopened), /Score and snap width to 2 ft/i);
+  assert.equal(homeDepotShoppingList(reopened).items.find(({ productId }) => productId === stock.internet)?.quantity, 1);
+  const { requirements } = toolChecklist(reopened);
+  assert.ok(requirements.some(({ capability }) => capability === "score-drywall"));
+  assert.ok(!requirements.some(({ capability }) => capability === "plastic-cut"));
+});
+
+test("proposed drywall layouts use score-and-snap coordinates and reject a changed thickness", () => {
+  const stock = drywallStock[1];
+  const project = cutProject(stock.id, [48, 0.5, 72], [48, 0.5, 72]);
+  const rows = bom(project);
+  assert.equal(rows[0].quantity, 1);
+  const [sequence] = stockCutSequences(project, rows).get(stock.id)!;
+  assert.equal(sequence.review, undefined);
+  assert.match(sequence.steps[0], /Score and snap Strip 1 at 6 ft/);
+  const { project: recorded } = planStockCutLayouts(project, [sequence.layout]);
+  const source = recorded.pieces[0].cutStock!;
+  assert.ok(inspectCutStock(recorded).valid.has(source.id));
+  const corrupted = structuredClone(recorded);
+  corrupted.pieces[0].size[1] = 0.45;
+  assert.match(inspectCutStock(corrupted).invalid[0].detail, /full panel thickness/);
+  assert.throws(() => addMeasuredOffcut(project, project.steps[0].id, stock.id, [30, 10, 0.45]), /exact drywall thickness/);
+});
 
 test("a dedicated finished-board cut preserves other blanks and the measured blade allowance", () => {
   const project = setPlannedWoodKerf(cutProject("stud", [1.5, 24, 3.5], [1.5, 48, 3.5]), "stud", 0.09375);

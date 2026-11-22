@@ -1,6 +1,7 @@
 import { setCutSourceOnHand } from "./cutStock";
 import { formatPreciseInches } from "./measurement";
 import { isPexPipe } from "./wallWaterReference";
+import { isDrywall } from "./drywallReference";
 import {
   catalog,
   part,
@@ -13,7 +14,7 @@ import {
 
 export const measuredOffcutMaterials = catalog.filter(
   (stock) =>
-    (stock.wood || isPexPipe(stock.id)) &&
+    (stock.wood || isDrywall(stock.id) || isPexPipe(stock.id)) &&
     stock.cuttable &&
     (stock.stockKind === "linear" || stock.stockKind === "sheet"),
 );
@@ -33,7 +34,7 @@ export function addMeasuredOffcut(
   label = "",
 ) {
   const stock = measuredOffcutMaterials.find(({ id }) => id === materialId);
-  if (!stock) throw Error("Choose cuttable wood or supported straight PEX pipe.");
+  if (!stock) throw Error("Choose cuttable wood, drywall or straight PEX pipe.");
   if (!project.steps.some(({ id }) => id === stepId))
     throw Error("Choose a current build step.");
   const limits = measuredOffcutLimits(stock);
@@ -49,6 +50,8 @@ export function addMeasuredOffcut(
     return Math.min(value, limit);
   });
   const pipe = isPexPipe(materialId);
+  if (isDrywall(materialId) && Math.abs(thickness - limits[2]) > 0.000001)
+    throw Error("Choose the exact drywall thickness and measure the sheet width and length.");
   if (pipe && (Math.abs(width - limits[1]) > 0.000001 || Math.abs(thickness - limits[2]) > 0.000001))
     throw Error("Choose the exact pipe stock diameter and measure only its length.");
   const size: V3 = pipe ? [width, length, thickness] : [width, thickness, length];

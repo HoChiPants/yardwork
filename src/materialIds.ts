@@ -3,6 +3,7 @@ import { waterSupportIds } from "./waterSupportReference";
 import { waterStop } from "./waterStopReference";
 import { subfloorPanel } from "./bottomPlateSealReference";
 import { sinkTrap } from "./sinkDrainReference";
+import { drywallStock } from "./drywallReference";
 
 export const materialIds = [
   "stud",
@@ -79,4 +80,5 @@ export const materialIds = [
   "hd-treated-2x8-8",
   "hd-treated-2x8-10",
   subfloorPanel.id,
+  ...drywallStock.map(({ id }) => id),
 ] as const;

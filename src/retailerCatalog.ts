@@ -42,6 +42,7 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { bottomPlateSealant, subfloorPanel } from "./bottomPlateSealReference";
+import { drywallInstallation, drywallReviewedAt, drywallSpecification, drywallStock } from "./drywallReference";
 import { rimFoam } from "./rimAirSealReference";
 import { weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot } from "./roofVentFlashingReference";
@@ -78,6 +79,7 @@ const sourceHosts = new Set([
   "dewalt.com",
   "www.dewalt.com",
   "www.stanleytools.com",
+  "www.usg.com",
   "images.thdstatic.com",
   "pdf.lowes.com",
   "www.palram.com",
@@ -4366,6 +4368,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     discrepancies: ["Home Depot lists both 1 in and 2 in maximum widths. Yardwork screens at 1 in. Check the delivered label and gap preparation."],
     capabilities: [],
   },
+  ...drywallStock.map(({ id, length, model, internet, sku }): z.input<typeof retailerProductSchema> => ({
+    id,
+    name: `USG Sheetrock UltraLight ½ in × 4 ft × ${length / 12} ft`,
+    manufacturer: "USG",
+    manufacturerPartNumber: model,
+    category: "panel",
+    status: "reviewed-specs",
+    verifiedAt: drywallReviewedAt,
+    profile: profile("sheet", [48, 0.5, length], 1, { materialFamily: "gypsum wallboard" }),
+    offers: [hd(internet, model, sku)],
+    sources: [
+      { url: `https://www.homedepot.com/p/${internet}`, verifiedAt: drywallReviewedAt, note: "Reviewed single-sheet listing and panel dimensions." },
+      { url: drywallSpecification, verifiedAt: drywallReviewedAt, note: "USG identifies the ½ in paper-faced gypsum panel for dry interior wall and ceiling applications." },
+    ],
+    roleQualifications: [],
+    discrepancies: [],
+    capabilities: [],
+  })),
   {
     id: subfloorPanel.id,
     name: subfloorPanel.name,
@@ -4514,15 +4534,22 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: flashingKnife.listing, verifiedAt: windowFlashingTape.reviewedAt, note: "Exact single 10-099 utility knife." },
       { url: flashingKnife.specification, verifiedAt: windowFlashingTape.reviewedAt, note: "Stanley documents a retractable utility blade secured by the interlocking nose." },
       { url: flexWrap.instructions, verifiedAt: windowFlashingTape.reviewedAt, note: "DuPont illustrates trimming the wall wrap with a knife and specifies protecting the underlying flashing." },
+      { url: drywallInstallation, verifiedAt: drywallReviewedAt, note: "USG specifies a utility knife for scoring the face paper and cutting the back paper." },
     ],
     discrepancies: ["Listings differ on blade positions and storage capacity. Those details are not used for the tool match."],
-    capabilities: ["trim-flashing-tape"],
+    capabilities: ["trim-flashing-tape", "score-drywall"],
     toolCapabilityEvidence: [{
       evidenceType: "manufacturer-product-specification",
       capabilities: ["trim-flashing-tape"],
       sourceRefs: [flashingKnife.specification, flexWrap.instructions],
       scope: "Hand trimming of flexible flashing tape and wall wrap with a utility blade.",
       requirements: ["Confirm the blade and backing for the delivered membrane. Do not cut the installed flashing when trimming the wall-wrap flap."],
+    }, {
+      evidenceType: "manufacturer-product-specification",
+      capabilities: ["score-drywall"],
+      sourceRefs: [flashingKnife.specification, drywallInstallation],
+      scope: "Marking and scoring paper-faced gypsum panels for straight score-and-snap cuts.",
+      requirements: ["Use a suitable straightedge and support the sheet for the cut."],
     }],
   },
   ...openingSealMaterials.map((seal): z.input<typeof retailerProductSchema> => ({

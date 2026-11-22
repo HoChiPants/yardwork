@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 121**. Yardwork reads valid formats 1–120 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 122**. Yardwork reads valid formats 1–121 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 122 adds exact 8 ft and 12 ft Sheetrock UltraLight material IDs. Straight score-and-snap cuts use the existing source coordinates, retain the ½ in panel thickness and model zero cutting loss. Earlier projects preserve their original material IDs and kerfs.
 
 Format 121 optionally stores `roofVentFlashings` with the retained roof panel ID, measured pipe center and diameter, planned clearance, flange offsets, field confirmation and layout signature. Current geometry determines the cut envelope and shopping quantity. Earlier files keep their existing roof plans and open without a vent layout.
 

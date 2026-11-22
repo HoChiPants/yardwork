@@ -21,6 +21,7 @@ import { stockAxes } from "./stockAxes";
 import { stockCutSequences, type StockCutLayout, type StockCutSequence } from "./stockCutSequence";
 import { formatStockLength } from "./measurement";
 import { cutPlanFingerprint } from "./plannedCutSources";
+import { isDrywall } from "./drywallReference";
 
 function indexReviewedLayouts(project: Project, rows: ReturnType<typeof bom>, loss: number | null) {
   const index = new Map<string, StockCutSequence>();
@@ -292,8 +293,8 @@ export function recordStockCutLayouts(project: Project, requested: readonly Stoc
 }
 
 export function planStockCutLayouts(project: Project, requested: readonly StockCutLayout[]) {
-  if (requested.some(({ materialId }) => !material(materialId).wood))
-    throw Error("Choose wood boards or sheets for a planned stock cut order.");
+  if (requested.some(({ materialId }) => !material(materialId).wood && !isDrywall(materialId)))
+    throw Error("Choose wood or drywall for a planned stock cut order.");
   return saveStockCutLayouts(project, requested, { onHand: false, planned: true });
 }
 

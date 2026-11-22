@@ -24,6 +24,7 @@ import { ThroughOpeningEditor } from "./ThroughOpeningEditor";
 import { recordStraightTrim, isRecordableStraightTrim } from "./recordedStraightTrim";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
 import { OffcutReusePlanDetails } from "./OffcutReuseReview";
+import { drywallInstallation, isDrywall } from "./drywallReference";
 
 /** A private candidate: canceled offcuts never consume labels in the actual project. */
 export function makeLabeledCutPreview(
@@ -263,7 +264,9 @@ export function CutStudio({
               ? compound
                 ? "Measure three corners from the starting end. Yardwork calculates the fourth corner and centers the cutting loss on the cut plane."
                 : "Measure both marks from the starting end shown at the top. Yardwork centers the cutting loss on the cut line."
-              : isBatt(source.material)
+              : isDrywall(source.material)
+                ? "Set the width and length to keep. The score-and-snap preview shows the remaining full-thickness pieces."
+                : isBatt(source.material)
                 ? "Set the width and length of the retained batt. The model uses a zero-kerf knife cut and keeps the offcuts."
                 : source.cutStock?.tubeKerf !== undefined
                   ? `Set the retained tube length. This layout uses the source's recorded ${displayedKerf} loss per cut.`
@@ -271,6 +274,8 @@ export function CutStudio({
                     ? "Set the size you want to keep. The preview shows the usable offcuts."
                     : `Set the size you want to keep. The preview allows ${displayedKerf} for cutting loss and shows usable offcuts.`}
           </p>
+          {isDrywall(source.material) &&
+            <a href={drywallInstallation} target="_blank" rel="noreferrer">USG marking and cutting guide</a>}
           {canSetKerf ? (
             <details className="cut-kerf">
               <summary>Blade kerf · {displayedKerf} per cut</summary>
@@ -567,8 +572,8 @@ export function CutStudio({
                 <label className="field">
                   Cut order
                   <select value={order} onChange={(event) => setOrder(event.target.value as TrimOrder)}>
-                    <option value="crosscut-first">Crosscut first</option>
-                    <option value="rip-first">Rip first</option>
+                    <option value="crosscut-first">{isDrywall(source.material) ? "Length first" : "Crosscut first"}</option>
+                    <option value="rip-first">{isDrywall(source.material) ? "Width first" : "Rip first"}</option>
                   </select>
                   <span className="small-note">The retained size stays the same. The order changes the usable offcuts.</span>
                 </label>

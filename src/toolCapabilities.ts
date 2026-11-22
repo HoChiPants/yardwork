@@ -6,6 +6,7 @@ export const toolCapabilities = [
   "wood-crosscut",
   "wood-angle-crosscut",
   "cut-insulation",
+  "score-drywall",
   "cut-foil",
   "staple-foil",
   "wood-rip",

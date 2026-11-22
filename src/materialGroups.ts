@@ -2,12 +2,19 @@ import { catalog, type Material, type MaterialId } from "./model";
 import { formatPreciseInches, formatStockLength } from "./measurement";
 import { materialIds } from "./materialIds";
 import { homeDepotTreatedLumber } from "./homeDepotTreatedLumber";
+import { drywallStock } from "./drywallReference";
 const families: {
   id: string;
   name: string;
   ids: MaterialId[];
   preferred: MaterialId;
 }[] = [
+  {
+    id: "half-inch-drywall",
+    name: "½ in drywall",
+    ids: drywallStock.map(({ id }) => id),
+    preferred: drywallStock[0].id,
+  },
   {
     id: "framing-2x4",
     name: "2 × 4 framing lumber",

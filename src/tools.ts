@@ -16,6 +16,7 @@ import { waterTestManufacturer } from "./waterPressure";
 import { maxFittingInstructions, waterDepthGauge } from "./waterFittingReference";
 import { reviewWaterRun } from "./wallWater";
 import { flashingKnife, flexWrap } from "./openingFlashingReference";
+import { drywallInstallation, isDrywall } from "./drywallReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { isBatt, isHardware, material, type Project } from "./model";
@@ -253,6 +254,11 @@ const definitions: Record<
     name: "Cut flexible flashing tape and trim the wall-wrap flap",
     review: "Measure and cut strips on a suitable backing. When trimming the flap, protect the flashing below. Press the membrane evenly onto the prepared wall face with firm hand pressure or a smooth roller.",
     referenceUrls: [flexWrap.instructions, flashingKnife.specification],
+  },
+  "score-drywall": {
+    name: "Score and snap gypsum panels",
+    review: "Use a utility knife and a long straightedge or drywall T-square. Check the face orientation and support the sheet before marking and snapping.",
+    referenceUrls: [drywallInstallation, flashingKnife.specification],
   },
   "apply-quart-sealant": {
     name: "Apply a bead with a 28 fl oz cartridge gun",
@@ -907,6 +913,14 @@ export function toolChecklist(
     };
     const hasValidSource =
       !!piece.cutStock && lineage.valid.has(piece.cutStock.id);
+    if (isDrywall(piece.material)) {
+      const stock = [...(m.stockSize ?? m.size)].sort((a, b) => a - b);
+      if (!piece.offcut && orientedStockSize(piece).some((size, axis) => axis > 0 && size < stock[axis] - 0.001)) {
+        add("score-drywall", source, hasValidSource ? "required" : "conditional");
+        add("measure", source);
+      }
+      continue;
+    }
     if (isBatt(piece.material)) {
       const stock = [...m.size].sort((a, b) => a - b);
       const blank = orientedStockSize(piece);

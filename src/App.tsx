@@ -323,6 +323,7 @@ import { OffcutReleaseReview, type OffcutReleasePreview } from "./OffcutReleaseR
 import { planOffcutRelease } from "./offcutReleasePlan";
 import { OffcutReuseReview } from "./OffcutReuseReview";
 import { planOffcutReuse, type OffcutReusePlan } from "./offcutReusePlan";
+import { isDrywall } from "./drywallReference";
 import { ObjectMovement } from "./ObjectMovement";
 import { InventoryForm } from "./InventoryForm";
 import { HomeDepotHandoff } from "./HomeDepotHandoff";
@@ -4432,7 +4433,7 @@ export function App() {
                           ["fastener", "connector", "equipment"].includes(
                             material(piece.material).stockKind,
                           ) ||
-                          (isBatt(piece.material) && i === stockAxes(piece).thickness) ||
+                          ((isBatt(piece.material) || isDrywall(piece.material)) && i === stockAxes(piece).thickness) ||
                           (material(piece.material).orderRollWidth !== undefined && i === 2) ||
                           (material(piece.material).shape === "tube-envelope" &&
                             i !== 1)
@@ -4450,7 +4451,7 @@ export function App() {
                   <small className="muted">
                     {material(piece.material).shape === "tube-envelope"
                       ? "Outside diameter is fixed by this product; tube wall thickness and support capacity remain unverified. Use Cut part to shorten it."
-                      : isBatt(piece.material)
+                      : isBatt(piece.material) || isDrywall(piece.material)
                         ? "Keep the stock thickness. Use Cut part to trim the length or width and keep the offcut."
                       : material(piece.material).shape === "door-leaf-envelope"
                         ? "The prehung leaf has fixed dimensions. Position it in its rough opening and use Test movement to check the swing."
@@ -4486,7 +4487,7 @@ export function App() {
                     </>
                   )}
                   {material(piece.material).cuttable &&
-                    !isBatt(piece.material) &&
+                    !isBatt(piece.material) && !isDrywall(piece.material) &&
                     material(piece.material).shape !== "tube-envelope" && (
                       <label className="field">
                         Stock length / grain or flute axis

@@ -26,6 +26,7 @@ import { waterStop } from "./waterStopReference";
 import { waterStopsSchema } from "./waterStopSchema";
 import { sinkTrap } from "./sinkDrainReference";
 import { subfloorPanel } from "./bottomPlateSealReference";
+import { drywallStock } from "./drywallReference";
 import { subfloorAdhesivePlansSchema, subfloorChecksSchema, subfloorJoistPlansSchema, subfloorNailPlansSchema } from "./subfloorSchema";
 import { bottomPlateSealsSchema } from "./bottomPlateSealSchema";
 import { sinkDrainsSchema } from "./sinkDrainSchema";
@@ -1689,6 +1690,23 @@ export const catalog: Material[] = [
     size: subfloorPanel.size, color: "#ba9160", productReference: subfloorPanel.id,
     price: 0, priceKind: "unpriced", unit: "sheet", search: "osb subfloor tongue groove t&g sturd-i-floor 486701",
   },
+  ...drywallStock.map(({ id, length, model, internet }): Material => ({
+    id,
+    name: `½ in drywall · ${length / 12} ft`,
+    subtitle: "USG Sheetrock UltraLight · interior wall and ceiling gypsum panel",
+    category: "Panels",
+    stockKind: "sheet",
+    cuttable: true,
+    wood: false,
+    packCount: 1,
+    size: [48, 0.5, length],
+    color: "#e4decd",
+    productReference: id,
+    price: 0,
+    priceKind: "unpriced",
+    unit: "sheet",
+    search: `gypsum plasterboard sheetrock ultralight wall ceiling ${model} ${internet}`,
+  })),
 ];
 export const material = (id: MaterialId) => catalog.find((m) => m.id === id)!;
 export function canPlanWoodKerf(id: MaterialId) {

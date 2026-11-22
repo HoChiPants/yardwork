@@ -7,6 +7,7 @@ import {
 } from "./measuredOffcuts";
 import { material, type MaterialId, type V3 } from "./model";
 import { isPexPipe } from "./wallWaterReference";
+import { isDrywall } from "./drywallReference";
 
 function defaults(id: MaterialId): V3 {
   const [, width, thickness] = measuredOffcutLimits(material(id));
@@ -39,7 +40,9 @@ export function MeasuredOffcutForm({
     <form onSubmit={submit}>
       <h2 id="modal-title">Add a measured offcut</h2>
       <p className="small-note">
-        {isPexPipe(id) ? "Measure the usable length of this exact pipe with clean ends." : "Measure the rectangular piece you have along the grain for length."}
+        {isPexPipe(id) ? "Measure the usable length of this exact pipe with clean ends."
+          : isDrywall(id) ? "Measure the usable width and length and keep track of the face paper."
+            : "Measure the rectangular piece you have along the grain for length."}
       </p>
       <label className="field">
         Matching stock
@@ -55,7 +58,7 @@ export function MeasuredOffcutForm({
           {(["linear", "sheet"] as const).map((kind) => (
             <optgroup
               key={kind}
-              label={kind === "linear" ? "Boards" : "Wood panels"}
+              label={kind === "linear" ? "Boards" : "Panels"}
             >
               {measuredOffcutMaterials
                 .filter(({ stockKind, id }) => stockKind === kind && !isPexPipe(id))
@@ -76,7 +79,8 @@ export function MeasuredOffcutForm({
             : `Stock limits · ${limits.map(formatPreciseInches).join(" × ")} · length, width, thickness`}
         </small>
       </label>
-      {(isPexPipe(id) ? ["Length"] as const : ["Length", "Width", "Thickness"] as const).map((label, index) => (
+      {(isPexPipe(id) ? ["Length"] as const : isDrywall(id)
+        ? ["Length", "Width"] as const : ["Length", "Width", "Thickness"] as const).map((label, index) => (
         <LengthInput
           key={`${id}/${label}`}
           label={label}

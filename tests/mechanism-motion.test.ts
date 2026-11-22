@@ -567,6 +567,41 @@ test("a door swing finds a mid-arc obstruction while retaining geometry and rest
   assert.equal(guideIsCurrent(edited.project), false);
 });
 
+test("hinge playback stops at a brief trim obstruction from either direction", () => {
+  const base = blank("Door and trim swing");
+  const door = panel(base, "Cabinet door", [24, 30, 0.75], [12, 18, 0]);
+  const trim = panel(base, "Fixed trim", [0.75, 3, 0.75], [20.2820028858828, 18, 13.506899814717375]);
+  trim.rotation = [0, -0.5875097009912037, 0];
+  const saved = saveMotionPlan({ ...base, pieces: [door, trim] }, {
+    label: "Cabinet door",
+    memberIds: [door.id],
+    mechanism: { kind: "hinge", pivot: [0, 18, 0], axis: [0, 1, 0], travel: 90 },
+  });
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(saved.project)));
+  const result = reviewMotion(reopened, reopened.motionPlans![0]);
+  assert.deepEqual(result.preview(0).interferenceIds, []);
+  assert.deepEqual(result.preview(90).interferenceIds, []);
+  assert.ok(result.preview(32.767).interferenceIds.includes(trim.id));
+  assert.deepEqual(result.preview(33.5).interferenceIds, []);
+  assert.ok(result.preview(34.557).interferenceIds.includes(trim.id));
+  const opening = result.playbackLimit(0, 90);
+  const closing = result.playbackLimit(90, 0);
+  assert.ok(opening.travel > 32.74 && opening.travel < 32.767, `Opening stopped at ${opening.travel}°`);
+  assert.ok(closing.travel > 34.557 && closing.travel < 35, `Closing stopped at ${closing.travel}°`);
+  assert.ok(opening.inspectAt !== undefined);
+  assert.ok(closing.inspectAt !== undefined);
+  assert.ok(result.preview(opening.inspectAt).interferenceIds.includes(trim.id));
+  assert.ok(result.preview(closing.inspectAt).interferenceIds.includes(trim.id));
+  assert.deepEqual(result.preview(opening.travel).interferenceIds, []);
+  assert.deepEqual(result.preview(closing.travel).interferenceIds, []);
+  assert.deepEqual(result.preview(0).pieces, [door]);
+
+  const clear = { ...reopened, pieces: [door, { ...trim, position: [trim.position[0] * 1.01, 18, trim.position[2] * 1.01] as V3 }] };
+  const clearResult = reviewMotion(clear, reopened.motionPlans![0]);
+  assert.equal(clearResult.playbackLimit(0, 90).travel, 90);
+  assert.equal(clearResult.playbackLimit(90, 0).travel, 0);
+});
+
 test("hinged travel checks interior work-zone extrema, including a swing with both endpoints inside", () => {
   const project = blank();
   const door = panel(project, "Wide door", [24, 14, 0.75], [12, 15, 0]);

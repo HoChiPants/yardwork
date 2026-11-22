@@ -334,6 +334,57 @@ export function swingSeparated(
   );
 }
 
+/** Certify a fixed-axis swing segment using vertex projection extrema about
+ * its midpoint pose. A single separating direction must cover the entire arc. */
+export function swingIntervalSeparated(
+  midpoint: CollisionSolid,
+  fixed: CollisionSolid,
+  pivot: V3,
+  rotationAxis: V3,
+  halfAngle: number,
+  tolerance: number,
+) {
+  const cosine = Math.cos(halfAngle);
+  const sine = Math.sin(halfAngle);
+  const compound = midpoint.cells || fixed.cells;
+  const contact = compound ? Math.min(tolerance, cellTolerance) : tolerance;
+  const separated = (moving: ConvexCollisionSolid, obstacle: ConvexCollisionSolid) => {
+    const paths = moving.vertices.map((point) => {
+      const offset = subtract(point, pivot);
+      const depth = dot(offset, rotationAxis);
+      return {
+        along: depth,
+        radial: subtract(offset, rotationAxis.map((value) => value * depth) as V3),
+        tangent: cross(rotationAxis, offset),
+      };
+    });
+    for (const axis of separatingAxes(moving, obstacle)) {
+      const obstacleProjection = projection(obstacle, axis, pivot);
+      const along = dot(rotationAxis, axis);
+      let min = Infinity;
+      let max = -Infinity;
+      for (const path of paths) {
+        const center = path.along * along;
+        const a = dot(path.radial, axis);
+        const b = dot(path.tangent, axis);
+        const left = center + a * cosine - b * sine;
+        const right = center + a * cosine + b * sine;
+        const radius = Math.hypot(a, b);
+        min = Math.min(min, left, right);
+        max = Math.max(max, left, right);
+        if (Math.abs(Math.atan2(b, a)) <= halfAngle) max = Math.max(max, center + radius);
+        if (Math.abs(Math.atan2(-b, -a)) <= halfAngle) min = Math.min(min, center - radius);
+      }
+      const gap = Math.max(obstacleProjection.min - max, min - obstacleProjection.max);
+      if (gap + contact >= 1e-9) return true;
+    }
+    return false;
+  };
+  return separated(midpoint, fixed) || (!!compound &&
+    (midpoint.cells ?? [midpoint]).every((moving) =>
+      (fixed.cells ?? [fixed]).every((obstacle) => separated(moving, obstacle))));
+}
+
 /** The callback bounds the two solids' combined displacement along a test axis. */
 export function intervalSeparated(
   first: CollisionSolid,

@@ -12,6 +12,8 @@ The opening uses the selected measured hinge axis when available and otherwise u
 
 For a door or drawer in a rotated cabinet, use **Moving part axes**. Set the leaf or drawer box as the reference and include its handle and other moving parts in the same group. Preset hinge edges follow the reference part. **Workspace axes** and exact workspace pivot coordinates are available for hardware located from a room datum.
 
+For a rigid hinge against fixed trim, **Test movement** checks the rotating part across the angle interval. Play pauses before contact or an interval that needs review. Open and closed inspection are still available. In the practice project, the two endpoints clear the trim and playback stops at different angles from each side. [Door and trim practice plan](../public/examples/motion/door-trim-swing.yardwork.json) · [Build guide](../public/examples/motion/door-trim-swing-guide.md) · [Blum angle-stop example](https://ea.blum.com/en/opening-angle-stops-155-hinges/)
+
 Playback and inspection use temporary poses. Saved projects retain their explicit open or closed design pose.
 
 In **Test movement**, choose **Save test setup** to keep nearby held positions or a linked motion with the selected movement. Save the project to reopen the setup from the library. The printed and Markdown guides list the saved arrangement and the clearance findings for the current model. Held positions are percentages of each motion’s travel, so changing a motion’s range changes where it is held.

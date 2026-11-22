@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 134,
+  "id": "b06ea45b-d0ee-452c-8bf8-2f3a9ebbbbbb",
+  "name": "Cabinet door and close trim",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T14:34:09.134Z",
+  "pieces": [
+    {
+      "id": "050e899d-9bde-49dd-b4d9-5b48e7dfe765",
+      "name": "Cabinet door",
+      "material": "plywood",
+      "size": [
+        24,
+        30,
+        0.75
+      ],
+      "position": [
+        12,
+        18,
+        0
+      ],
+      "stepId": "595f500d-1aba-43ef-a133-b9718f0154e8",
+      "assembly": "Cabinet",
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stockLengthAxis": null,
+      "offcut": false,
+      "cutStock": null,
+      "cutPlanes": []
+    },
+    {
+      "id": "4e88252a-580e-429a-8597-292de6ef8fa1",
+      "name": "Fixed trim",
+      "material": "plywood",
+      "size": [
+        0.75,
+        3,
+        0.75
+      ],
+      "position": [
+        20.2820028858828,
+        18,
+        13.506899814717375
+      ],
+      "stepId": "595f500d-1aba-43ef-a133-b9718f0154e8",
+      "assembly": "Cabinet",
+      "rotation": [
+        0,
+        -0.5875097009912037,
+        0
+      ],
+      "stockLengthAxis": null,
+      "offcut": false,
+      "cutStock": null,
+      "cutPlanes": []
+    }
+  ],
+  "steps": [
+    {
+      "id": "595f500d-1aba-43ef-a133-b9718f0154e8",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "history": [],
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "motionPlans": [
+    {
+      "label": "Cabinet door",
+      "memberIds": [
+        "050e899d-9bde-49dd-b4d9-5b48e7dfe765"
+      ],
+      "mechanism": {
+        "kind": "hinge",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "pivot": [
+          -12,
+          0,
+          0
+        ],
+        "travel": 90
+      },
+      "id": "46af1d56-d1b5-426d-96c9-e730e1b2fbea"
+    }
+  ]
+}

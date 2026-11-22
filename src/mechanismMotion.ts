@@ -40,6 +40,7 @@ import {
   prepareCollisionSolid,
   slideOverlapInterval,
   solidOverlap,
+  swingIntervalSeparated,
   swingSeparated,
   transformCollisionSolid,
   translateCollisionSolid,
@@ -407,21 +408,26 @@ function swingHit(
     unresolvedBefore?: number;
   };
   const possible: { hit?: Contact } = {};
+  let visited = 0;
   const search = (start: number, end: number): Contact | null => {
     const center = (start + end) / 2;
+    if (++visited > 4096) {
+      possible.hit ??= { first: start, inspectAt: center, uncertain: true };
+      return null;
+    }
     const middle = poseSolid(moving, mechanism, center);
-    const displacement = (radius * (end - start) * radians) / 2;
+    const halfAngle = (end - start) * radians / 2;
     if (
       swingSeparated(
         middle,
         fixed,
         mechanism.axis,
-        displacement,
+        radius * halfAngle,
         contactTolerance,
-      )
+      ) || swingIntervalSeparated(middle, fixed, mechanism.pivot, mechanism.axis, halfAngle, contactTolerance)
     )
       return null;
-    if (end - start > 0.0625)
+    if (end - start > 1 / 512)
       return search(start, center) ?? search(center, end);
     for (const point of [start, center, end]) {
       const pose =
@@ -434,7 +440,7 @@ function swingHit(
   };
   const confirmed = search(0, mechanism.travel);
   const earlier = possible.hit;
-  return confirmed && earlier && (moving.cells || fixed.cells)
+  return confirmed && earlier
     ? { ...confirmed, unresolvedBefore: earlier.first }
     : (confirmed ?? earlier ?? null);
 }
@@ -1086,19 +1092,16 @@ export function reviewMotionPath(
           const hit = contactAlong(row, other, from, to);
           if (!hit) continue;
           if (hit.uncertain) {
-            if (other.motion || row.solid.cells || other.solid.cells ||
-                (row.motion.kind === "hinge" && row.motion.hingePath))
-              recordContact(
-                Math.max(0, hit.first - precision),
-                hit.inspectAt,
-                true,
-              );
+            recordContact(Math.max(0, hit.first - precision), hit.inspectAt, true);
+            continue;
+          }
+          if (hit.unresolvedBefore !== undefined) {
+            recordContact(Math.max(0, hit.unresolvedBefore - precision), hit.inspectAt, true);
             continue;
           }
           let low = Math.max(0, hit.first - precision);
           let high = hit.inspectAt;
-          if (low > target && (hit.unresolvedBefore ?? Infinity) > target)
-            continue;
+          if (low > target) continue;
           const overlaps = (travel: number) =>
             pairOverlap(row, other, from + direction * travel);
           while (high - low > precision) {
@@ -1106,8 +1109,6 @@ export function reviewMotionPath(
             if (overlaps(mid)) high = mid;
             else low = mid;
           }
-          if (hit.unresolvedBefore !== undefined)
-            low = Math.max(0, hit.unresolvedBefore - precision);
           recordContact(low, high);
         }
         if (!project.workZone) continue;

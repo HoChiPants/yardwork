@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 134,
+  "id": "f27030f7-0b2d-4a06-ad8c-c962572dc473",
+  "name": "Field treatment on a cut rail",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "4cd707ee-385f-444c-ad19-9ccca30daf41",
+      "label": "P001"
+    },
+    {
+      "partId": "fb9728e4-5eb6-40eb-90ba-6892b116b1af",
+      "label": "O001"
+    },
+    {
+      "partId": "d587ae83-7185-4d6f-a32a-53aa4e11fe26",
+      "label": "P002"
+    },
+    {
+      "partId": "12c34379-abe7-4fd9-a6e7-ca6719512101",
+      "label": "O002"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T15:26:07.086Z",
+  "pieces": [
+    {
+      "id": "4cd707ee-385f-444c-ad19-9ccca30daf41",
+      "name": "Practice rail",
+      "material": "hd-treated-2x6-8",
+      "size": [
+        5.5,
+        1.5,
+        60
+      ],
+      "position": [
+        0,
+        0.75,
+        -18
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "52cc1bb4-0ad2-4154-ad90-3c7d231a1c32",
+      "assembly": "Treated rail practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 1,
+          "center": [
+            -18,
+            0
+          ],
+          "diameter": 0.5
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "949253a9-e139-4f75-9e33-7b7fede2e9d6",
+        "size": [
+          5.5,
+          1.5,
+          96
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "d587ae83-7185-4d6f-a32a-53aa4e11fe26",
+      "name": "Scrap setup block",
+      "material": "hd-treated-2x6-8",
+      "size": [
+        5.5,
+        1.5,
+        12
+      ],
+      "position": [
+        14,
+        0.75,
+        -14
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "52cc1bb4-0ad2-4154-ad90-3c7d231a1c32",
+      "assembly": "Treated rail practice",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "949253a9-e139-4f75-9e33-7b7fede2e9d6",
+        "size": [
+          5.5,
+          1.5,
+          96
+        ],
+        "offset": [
+          0,
+          0,
+          60.125
+        ]
+      }
+    },
+    {
+      "id": "12c34379-abe7-4fd9-a6e7-ca6719512101",
+      "name": "Offcut · Practice rail",
+      "material": "hd-treated-2x6-8",
+      "size": [
+        5.5,
+        1.5,
+        23.75
+      ],
+      "position": [
+        0,
+        0.75,
+        36.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "87ff2c57-7c14-4562-8c05-280c9a4d7f02",
+      "assembly": "Treated rail practice",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "949253a9-e139-4f75-9e33-7b7fede2e9d6",
+        "size": [
+          5.5,
+          1.5,
+          96
+        ],
+        "offset": [
+          0,
+          0,
+          72.25
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "87ff2c57-7c14-4562-8c05-280c9a4d7f02",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "f27030f7-0b2d-4a06-ad8c-c962572dc473",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-b714d61c",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "52cc1bb4-0ad2-4154-ad90-3c7d231a1c32",
+      "title": "Assemble Treated rail practice",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "f27030f7-0b2d-4a06-ad8c-c962572dc473",
+        "stageKey": "assembly:Treated rail practice",
+        "memberIds": [
+          "4cd707ee-385f-444c-ad19-9ccca30daf41",
+          "d587ae83-7185-4d6f-a32a-53aa4e11fe26"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-edb3cdf4",
+        "title": "Assemble Treated rail practice"
+      }
+    },
+    {
+      "id": "e0350df9-47c8-4214-a881-6e2eceb01300",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "f27030f7-0b2d-4a06-ad8c-c962572dc473",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-7dc08110",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice the cut schedule on a treated 2 × 6. The 12-inch scrap block can be used to check the drill setup and the finish prescribed for the delivered labeled wood. The rails and holes are laid out as a shop exercise; confirm engineering before altering an installed member.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-a576bad0",
+  "history": [
+    {
+      "id": "e424241a-8e64-4b66-8769-1ff2e743d6c0",
+      "at": "2026-11-22T15:26:07.093Z",
+      "stepId": "87ff2c57-7c14-4562-8c05-280c9a4d7f02",
+      "message": "Assigned O001 · Offcut · Practice rail to P002 · Scrap setup block.",
+      "offcutCut": {
+        "sourceId": "949253a9-e139-4f75-9e33-7b7fede2e9d6",
+        "inputId": "fb9728e4-5eb6-40eb-90ba-6892b116b1af",
+        "targetId": "d587ae83-7185-4d6f-a32a-53aa4e11fe26",
+        "inputSize": [
+          1.5,
+          5.5,
+          35.875
+        ],
+        "result": {
+          "size": [
+            5.5,
+            1.5,
+            12
+          ],
+          "sourceSize": [
+            5.5,
+            1.5,
+            96
+          ],
+          "offset": [
+            0,
+            0,
+            60.125
+          ]
+        },
+        "inputName": "Offcut · Practice rail",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 12
+          }
+        ],
+        "remnants": [
+          {
+            "id": "12c34379-abe7-4fd9-a6e7-ca6719512101",
+            "size": [
+              1.5,
+              5.5,
+              23.75
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -110,7 +110,7 @@ export type BuildQuestionAction =
   | { kind: "board-cut-list"; name: string; plan: BoardCutPlan }
   | { kind: "offcut-reuse"; plan: OffcutReusePlan }
   | { kind: "board-placement"; groupId: string; length: number; offcutId?: string; quantity?: number; stock?: MaterialId }
-  | Extract<BuildPreparationAction, { kind: "motion" | "lid" | "part" | "offcut" }>;
+  | Extract<BuildPreparationAction, { kind: "motion" | "lid" | "part" | "offcut" | "field-treatment" }>;
 
 type ReviewLink = { label: string; action: BuildQuestionAction };
 type ReviewRow = {
@@ -1156,13 +1156,13 @@ export function answerBuildQuestion(
           ? `Showing ${Math.min(6, cuts.length)} of ${cuts.length} labeled pieces with cuts or holes to review.`
           : "The model has no listed cuts or holes in pressure-treated wood.",
         scope: fieldTreatmentScope,
-        rows: cuts.slice(0, 6).map(({ piece, detail }) => ({
+        rows: cuts.slice(0, 6).map(({ piece, detail, surfaceArea }) => ({
           id: piece.id,
           title: `${labels.get(piece.id)} · ${piece.name}`,
           detail,
           link: {
-            label: piece.offcut ? "Inspect offcut" : "Inspect part",
-            action: { kind: piece.offcut ? "offcut" : "part", id: piece.id },
+            label: surfaceArea ? "Show treatment surfaces" : piece.offcut ? "Inspect offcut" : "Inspect part",
+            action: { kind: surfaceArea ? "field-treatment" : piece.offcut ? "offcut" : "part", id: piece.id },
           },
         })),
         ...(cuts.length && {

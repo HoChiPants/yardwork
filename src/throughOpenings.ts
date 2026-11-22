@@ -227,7 +227,7 @@ export function throughOpeningSurface(
   const axis = openings[0].axis;
   const [u, v] = openingAxes(axis);
   const { outer, rings, covers, cells } = planarShape(size, openings);
-  const faces: { normal: V3; points: V3[] }[] = [];
+  const faces: { normal: V3; points: V3[]; openingWall?: true }[] = [];
   const outline: number[] = [];
   const lift = ([x, y]: Point2, depth: number): V3 => {
     const point: V3 = [0, 0, 0];
@@ -307,6 +307,7 @@ export function throughOpeningSurface(
         faces.push({
           normal,
           points: [lift(a, low), lift(b, low), lift(b, high), lift(a, high)],
+          ...(boundary > 0 && { openingWall: true }),
         });
         outline.push(
           ...lift(a, low),

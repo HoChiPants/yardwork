@@ -309,6 +309,8 @@ import { previewGroupStockReplacement, previewPartStockReplacement } from "./par
 import { CutStockLayout } from "./CutStockLayoutView";
 import { completePlannedCutSource, plannedStockCutOrders, releasePlannedCutSources } from "./plannedCutSources";
 import { cutStockLayoutMarkdown } from "./cutStockLayout";
+import { formatCoverageArea } from "./depthCoverage";
+import { fieldTreatmentGeometry } from "./treatedWood";
 import "./CutStockLayout.css";
 import { cutInstructions, cutInstructionsText } from "./cutInstructions";
 import { pieceThroughOpenings, throughOpeningProblem } from "./throughOpenings";
@@ -362,7 +364,7 @@ import {
   transformSection,
   snapSectionOrigin,
 } from "./sections";
-import { composeRotation } from "./spatial";
+import { composeRotation, rotate } from "./spatial";
 import {
   addMaterial,
   bom,
@@ -690,6 +692,7 @@ export function App() {
   const [dryerDuctProjectId, setDryerDuctProjectId] = useState<string | null>(null);
   const [siteReturnPanel, setSiteReturnPanel] = useState<"checks" | "sections" | "motion" | "connections">("checks");
   const [shownAreaFinding, setShownAreaFinding] = useState<{ project: Project; id: string } | null>(null);
+  const [shownFieldTreatment, setShownFieldTreatment] = useState<{ projectId: string; pieceId: string } | null>(null);
   const [supportBlockDraft, setSupportBlockDraft] = useState<{ project: Project; fit: PanelSupportBlockPreview } | null>(null);
   const [eaveBlockDraft, setEaveBlockDraft] = useState<{ project: Project; fit: EaveFitPreview } | null>(null);
   const [shelfDividerDraft, setShelfDividerDraft] = useState<{ project: Project; fit: ShelfDividerPreview } | null>(null);
@@ -1181,6 +1184,14 @@ export function App() {
       case "offcut":
         inspectStock(action.id);
         break;
+      case "field-treatment":
+        inspectStock(action.id);
+        setStage(null);
+        setPlaying(false);
+        setExplode(false);
+        setMode("select");
+        setShownFieldTreatment({ projectId: project.id, pieceId: action.id });
+        break;
       case "part":
         inspectConnectionPiece(action.id);
         setPanel("part");
@@ -1617,6 +1628,7 @@ export function App() {
       }
       case "part":
       case "offcut":
+      case "field-treatment":
       case "motion":
       case "lid":
         openBuildPreparationItem(action, false);
@@ -1947,7 +1959,25 @@ export function App() {
     labelPoint: subfloorBlock.block.position,
     tone: subfloorBlock.motionConflicts.length ? undefined : "reference" as const,
   } : undefined;
-  const shownCheckArea = subfloorBlockArea ?? shelfDividerArea ?? eaveBlockArea ?? supportBlockArea ?? areaFinding?.area;
+  const currentCutSources = useMemo(() => inspectCutStock(project), [project]);
+  const treatmentGeometry = useMemo(() =>
+    panel === "part" && piece
+      ? fieldTreatmentGeometry(piece, !!piece.cutStock && currentCutSources.valid.has(piece.cutStock.id))
+      : null,
+  [panel, piece, currentCutSources]);
+  const showingFieldTreatment = !!treatmentGeometry && shownFieldTreatment?.projectId === project.id && shownFieldTreatment.pieceId === piece?.id;
+  const treatmentArea = useMemo(() => {
+    if (!showingFieldTreatment || !piece || !treatmentGeometry) return;
+    const { max } = bounds(piece);
+    return {
+      kind: "field-treatment" as const,
+      outlines: treatmentGeometry.faces.map((face) => face.map((v) =>
+        rotate(v, piece.rotation).map((coordinate, axis) => coordinate + piece.position[axis]) as V3)),
+      label: `Field treatment · ${formatCoverageArea(treatmentGeometry.squareInches)}`,
+      labelPoint: [piece.position[0], max[1] + 1.5, piece.position[2]] as V3,
+    };
+  }, [showingFieldTreatment, piece, treatmentGeometry]);
+  const shownCheckArea = treatmentArea ?? subfloorBlockArea ?? shelfDividerArea ?? eaveBlockArea ?? supportBlockArea ?? areaFinding?.area;
   const activeGuidePart = panel === "step" && guidePartFocus?.project === project &&
     stage !== null && project.steps[stage]?.id === guidePartFocus.row.stepId && currentStep.id === guidePartFocus.row.stepId
     ? guidePartFocus : null;
@@ -2245,7 +2275,6 @@ export function App() {
     () => offcutCutRows(exportGuide, printCutSources, printSavedStockOrders),
     [exportGuide, printCutSources, printSavedStockOrders],
   );
-  const currentCutSources = useMemo(() => inspectCutStock(project), [project]);
   const currentSavedStockOrders = useMemo(
     () => new Map(plannedStockCutOrders(project, currentCutSources).map((order) => [order.sourceId, order])),
     [project, currentCutSources],
@@ -3385,6 +3414,7 @@ export function App() {
                   setShelfDividerDraft(null);
                   setSupportBlockDraft(null);
                   setShownAreaFinding(null);
+                  setShownFieldTreatment(null);
                 }}>Hide highlighted area</button>
               )}
             </div>
@@ -4664,6 +4694,12 @@ export function App() {
                   <div className="field-section">
                     <h4>Field treatment</h4>
                     <p className="small-note">{selectedTreatment.detail}</p>
+                    {treatmentGeometry && <button type="button" className="button secondary" onClick={() => {
+                      if (showingFieldTreatment) setShownFieldTreatment(null);
+                      else openBuildPreparationItem({ kind: "field-treatment", id: piece.id }, returnToPreparation);
+                    }}>
+                      {showingFieldTreatment ? "Hide treatment surfaces" : "Show treatment surfaces"}
+                    </button>}
                   </div>
                 )}
                 {movementTools}

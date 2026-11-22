@@ -1326,16 +1326,32 @@ test("treated wood field cuts and scraps follow the model through build question
     .locator("details.preparation-group").filter({ hasText: "Pressure-treated wood cuts" });
   await review.locator(":scope > summary").click();
   await expect(review).toContainText("Recorded cut face · local +Z. 1 round opening.");
+  await expect(review).toContainText("Identified field-cut surfaces · 10.6 sq in.");
   await expect(review.getByRole("link", { name: "American Wood Council field treatment guidance" })).toHaveAttribute("href", /awc\.org/);
   await review.getByRole("button", { name: /O001.*Offcut/ }).click();
   await expect(page.locator(".part-title")).toContainText("REUSABLE OFFCUT");
-  await expect(page.getByText("Recorded cut face · local −Z.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Recorded cut face · local −Z. Identified field-cut surfaces · 8.25 sq in.", { exact: true })).toBeVisible();
+  const marker = page.getByTestId("field-treatment-marker");
+  await expect(marker).toHaveText("Field treatment · 8.25 sq in");
+  await expect(marker).toHaveAttribute("data-treatment-patches", "1");
+  await page.getByRole("button", { name: "Hide highlighted area", exact: true }).click();
+  await expect(marker).toHaveCount(0);
+  await page.getByRole("button", { name: "Show treatment surfaces", exact: true }).click();
+  await expect(marker).toHaveText("Field treatment · 8.25 sq in");
+  await page.getByRole("button", { name: "Hide treatment surfaces", exact: true }).click();
+  await expect(marker).toHaveCount(0);
+  await page.getByRole("button", { name: "Back to build preparation" }).click();
+  await review.locator(":scope > summary").click();
+  await review.getByRole("button", { name: /P001.*Treated sill/ }).click();
+  await expect(marker).toHaveText("Field treatment · 10.6 sq in");
+  await expect(marker).toHaveAttribute("data-treatment-patches", "49");
 
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download");
   await dialog.getByRole("button", { name: /^Build guide/ }).click();
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/### Pressure-treated wood cuts[\s\S]*P001 · Treated sill · Recorded cut face · local \+Z. 1 round opening\.[\s\S]*O001 · Offcut · Treated sill/);
+  expect(guide).toContain("Identified field-cut surfaces · 10.6 sq in.");
   await expect(page.locator(".print-guide .build-preparation-print")).toContainText("1 round opening.");
 });
 

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { buildFixtureIds, createBuildStudy } from "../src/buildFixtures";
 import { reviewAssemblyOrder } from "../src/assemblyOrder";
@@ -12,15 +13,16 @@ import { bom, cutPiece, guideMarkdown, validate } from "../src/engine";
 import { connectionCoverage } from "../src/connectionCoverage";
 import { homeDepotShoppingList } from "../src/handoff";
 import { stockCutSequences } from "../src/stockCutSequence";
-import { blank, part, uid } from "../src/model";
+import { blank, part, projectSchema, uid } from "../src/model";
 import { motionTestFindings, projectMotionReviews, saveMotionPlan, saveMotionTestSetup } from "../src/mechanismMotion";
 import { lidTravelPose, projectLidTravelChecks } from "../src/lidTravelFindings";
 import { lidPreview } from "../src/lidMotion";
 import { supplyRows } from "../src/supplies";
-import type { Project } from "../src/model";
+import type { Piece, Project } from "../src/model";
 import { editRoundOpening } from "../src/throughOpeningCuts";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
-import { treatedWoodCuts } from "../src/treatedWood";
+import { endCutPlane } from "../src/cutProfiles";
+import { fieldTreatmentGeometry, treatedWoodCuts } from "../src/treatedWood";
 
 function preparation(project: Project) {
   const stock = bom(project),
@@ -346,9 +348,9 @@ test("treated wood review follows planned cuts, saved cut faces, holes and lefto
   const rows = preparation(opened).find(({ id }) => id === "treated-wood")!.items;
   const leftover = opened.pieces.find(({ offcut }) => offcut)!;
   assert.deepEqual(rows.map(({ action, detail }) => [action, detail]), [
-    [{ kind: "part", id: rail.id }, "Recorded cut face · local +Z. 1 round opening."],
+    [{ kind: "field-treatment", id: rail.id }, "Recorded cut face · local +Z. 1 round opening. Identified field-cut surfaces · 10.6 sq in."],
     [{ kind: "part", id: brace.id }, "Planned trim from selected stock · length to 4 ft."],
-    [{ kind: "offcut", id: leftover.id }, "Recorded cut face · local −Z."],
+    [{ kind: "field-treatment", id: leftover.id }, "Recorded cut face · local −Z. Identified field-cut surfaces · 8.25 sq in."],
   ]);
   const guide = guideMarkdown(opened);
   assert.match(guide, /### Pressure-treated wood cuts[\s\S]*American Wood Council field treatment guidance[\s\S]*P001 · Sill[\s\S]*O001 · Offcut · Sill/);
@@ -359,6 +361,7 @@ test("treated wood review follows planned cuts, saved cut faces, holes and lefto
   const [review] = treatedWoodCuts(damaged);
   assert.match(review.detail, /Confirm cut faces from the original blank/);
   assert.doesNotMatch(review.detail, /local \+Z/);
+  assert.ok(review.surfaceArea! > 2.35 && review.surfaceArea! < 2.36, "The modeled hole is independent of the disputed face.");
 
   const shop = blank();
   const onHand = addMeasuredOffcut(shop, shop.steps[0].id, "treated", [30, 5.5, 1.5]);
@@ -367,4 +370,39 @@ test("treated wood review follows planned cuts, saved cut faces, holes and lefto
     "On-hand blank · check which faces were previously cut and treated.",
   );
   assert.equal(preparation(onHand)[0].items[0].action.kind, "offcut");
+  assert.equal(treatedWoodCuts(onHand)[0].surfaceArea, undefined);
+});
+
+test("treatment geometry measures retained miter and notch walls without counting factory surfaces", () => {
+  const project = blank();
+  const rail = part("Treated rail", "treated", [5.5, 1.5, 60], [0, 0.75, 0], project.steps[0].id, "Base");
+  assert.equal(fieldTreatmentGeometry(rail, false), null, "Dimensions alone do not locate a cut.");
+  const miter = { ...rail, cutPlanes: [endCutPlane(rail.size, 2, true, 45, 0)] };
+  const angled = fieldTreatmentGeometry(miter, false)!;
+  assert.equal(angled.faces.length, 1);
+  assert.ok(Math.abs(angled.squareInches - 5.5 * 1.5 * Math.SQRT2) < 1e-7);
+
+  const notched: Piece = {
+    ...rail,
+    cutStock: { id: uid(), size: [5.5, 1.5, 96], offset: [0, 0, 0] },
+    rectangularOpenings: [{ axis: 1, center: [30, 0], spans: [4, 2] }],
+  };
+  const identified = fieldTreatmentGeometry(notched, true)!;
+  assert.equal(identified.squareInches, 14.25, "Only the retained cap and the three notch walls count.");
+  assert.equal(fieldTreatmentGeometry(notched, false)!.squareInches, 9, "Unverified lineage excludes the cap.");
+});
+
+test("the treated cut practice plan keeps the shared board, modeled surfaces and guide current", async () => {
+  const fixture = new URL("../public/examples/wood-stock/treated-cut-surfaces.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(await readFile(fixture, "utf8")));
+  const rows = treatedWoodCuts(project);
+  assert.ok(guideIsCurrent(project));
+  assert.equal(bom(project).find(({ id }) => id === "hd-treated-2x6-8")?.quantity, 1);
+  assert.deepEqual(rows.map(({ piece, surfaceArea }) => [piece.name, Number(surfaceArea?.toFixed(2))]), [
+    ["Practice rail", 10.6],
+    ["Scrap setup block", 16.5],
+    ["Offcut · Practice rail", 8.25],
+  ]);
+  assert.deepEqual(project.pieces.find(({ offcut }) => offcut)?.size, [5.5, 1.5, 23.75]);
+  assert.equal(guideMarkdown(project).trimEnd(), (await readFile(new URL("treated-cut-surfaces-guide.md", fixture), "utf8")).trimEnd());
 });

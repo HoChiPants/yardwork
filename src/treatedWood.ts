@@ -1,10 +1,14 @@
+import { Vector3 } from "three";
+import { clipBox } from "./cutProfiles";
 import { inspectCutStock } from "./cutStock";
+import { formatCoverageArea } from "./depthCoverage";
 import { greenhouseFoundationReviews } from "./greenhouseFoundation";
 import { greenhouseBaseTimber, greenhouseBaseTimber12 } from "./greenhouseBaseReference";
 import { homeDepotTreatedLumber } from "./homeDepotTreatedLumber";
 import { formatStockLength } from "./measurement";
-import { material, type MaterialId, type Piece, type Project } from "./model";
+import { material, type MaterialId, type Piece, type Project, type V3 } from "./model";
 import { orientedStockSize } from "./stockAxes";
+import { pieceThroughOpenings, throughOpeningSurface } from "./throughOpenings";
 
 export const fieldTreatmentTitle = "Pressure-treated wood cuts";
 
@@ -28,6 +32,57 @@ export const isPressureTreated = (id: MaterialId) => treatedStock.has(id);
 
 const tolerance = 1e-6;
 const axes = ["X", "Y", "Z"] as const;
+
+function sourceCutFaces(piece: Piece, verified: boolean) {
+  const source = piece.cutStock;
+  if (!source || !verified) return [];
+  return axes.flatMap((_, axis) => [
+    ...(source.offset[axis] > tolerance ? [{ axis, sign: -1 }] : []),
+    ...(source.size[axis] - source.offset[axis] - piece.size[axis] > tolerance ? [{ axis, sign: 1 }] : []),
+  ]);
+}
+
+/** Only retained modeled faces. A shorter blank alone does not identify the treated side. */
+export function fieldTreatmentGeometry(piece: Piece, sourceVerified: boolean) {
+  if (!isPressureTreated(piece.material)) return null;
+  const stockFaces = sourceCutFaces(piece, sourceVerified);
+  const openings = pieceThroughOpenings(piece);
+  if (!stockFaces.length && !openings.length && !piece.cutPlanes.length) return null;
+  const isStockCut = (normal: V3) => stockFaces.some(({ axis, sign }) => normal[axis] === sign);
+  try {
+    let faces: V3[][];
+    if (openings.length) {
+      faces = throughOpeningSurface(piece.size, openings).faces
+        .filter(({ normal, openingWall }) => openingWall || isStockCut(normal))
+        .map(({ points }) => points);
+    } else {
+      const solid = clipBox(piece.size, piece.cutPlanes);
+      faces = solid.faces
+        .filter(({ normal, kind }) => kind === "cut" || isStockCut(normal))
+        .map(({ indices }) => indices.map((index) => solid.vertices[index]));
+    }
+    if (!faces.length) return null;
+    let squareInches = 0;
+    for (const points of faces) {
+      const origin = new Vector3(...points[0]);
+      for (let i = 1; i < points.length - 1; i++) {
+        const a = new Vector3(...points[i]).sub(origin);
+        const b = new Vector3(...points[i + 1]).sub(origin);
+        squareInches += a.cross(b).length() / 2;
+      }
+    }
+    return { faces, squareInches };
+  } catch {
+    return null;
+  }
+}
+
+function fieldTreatmentArea(piece: Piece, sourceVerified: boolean) {
+  if (piece.cutPlanes.length || pieceThroughOpenings(piece).length)
+    return fieldTreatmentGeometry(piece, sourceVerified)?.squareInches;
+  return sourceCutFaces(piece, sourceVerified).reduce((area, { axis }) =>
+    area + piece.size[(axis + 1) % 3] * piece.size[(axis + 2) % 3], 0);
+}
 
 function stockTrim(piece: Piece, stock: ReturnType<typeof material>) {
   const catalogSpans = [...(stock.stockSize ?? stock.size)].sort((a, b) => a - b);
@@ -53,10 +108,8 @@ function cutFaceReview(
     return "Shaped cut · inspect the saved profile and any trimmed faces.";
   if (!source) return piece.offcut ? "" : stockTrim(piece, material(piece.material));
 
-  const faces = axes.flatMap((axis, i) => [
-    ...(source.offset[i] > tolerance ? [`local −${axis}`] : []),
-    ...(source.size[i] - source.offset[i] - piece.size[i] > tolerance ? [`local +${axis}`] : []),
-  ]);
+  const faces = sourceCutFaces(piece, true).map(({ axis, sign }) =>
+    `local ${sign < 0 ? "−" : "+"}${axes[axis]}`);
   if (faces.length)
     return `Recorded cut ${faces.length === 1 ? "face" : "faces"} · ${faces.join(", ")}.`;
   return onHand.has(source.id) && stockTrim(piece, material(piece.material))
@@ -83,12 +136,14 @@ export function treatedWoodCuts(
     const round = piece.roundOpenings?.length ?? 0;
     const rectangular = piece.rectangularOpenings?.length ?? 0;
     const anchors = foundationBores.get(piece.id) ?? 0;
+    const surfaceArea = fieldTreatmentArea(piece, !!piece.cutStock && checked.valid.has(piece.cutStock.id));
     const details = [
       cutFaceReview(piece, checked.valid, onHand),
       round ? `${round} round ${round === 1 ? "opening" : "openings"}.` : "",
       rectangular ? `${rectangular} rectangular ${rectangular === 1 ? "opening or notch" : "openings or notches"}.` : "",
       anchors ? `${anchors} planned foundation anchor ${anchors === 1 ? "bore" : "bores"} through the rail.` : "",
+      surfaceArea ? `Identified field-cut surfaces · ${formatCoverageArea(surfaceArea)}.` : "",
     ].filter(Boolean);
-    return details.length ? [{ piece, detail: details.join(" ") }] : [];
+    return details.length ? [{ piece, detail: details.join(" "), surfaceArea: surfaceArea || undefined }] : [];
   });
 }

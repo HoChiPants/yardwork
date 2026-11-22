@@ -22,6 +22,7 @@ import { fieldTreatmentReference, fieldTreatmentScope, fieldTreatmentTitle, isPr
 export type BuildPreparationAction =
   | { kind: "part"; id: string }
   | { kind: "offcut"; id: string }
+  | { kind: "field-treatment"; id: string }
   | { kind: "guide-step"; id: string }
   | { kind: "connections"; scope: ConnectionReviewScope }
   | { kind: "stock"; id: MaterialId }
@@ -229,11 +230,11 @@ export function buildPreparation(
     intro: fieldTreatmentScope,
     reference: fieldTreatmentReference,
     empty: "No modeled field cuts or holes.",
-    items: treated.map(({ piece, detail }) => ({
+    items: treated.map(({ piece, detail, surfaceArea }) => ({
       id: piece.id,
       title: `${labels.get(piece.id)} · ${piece.name}`,
       detail,
-      action: { kind: piece.offcut ? "offcut" : "part", id: piece.id },
+      action: { kind: surfaceArea ? "field-treatment" : piece.offcut ? "offcut" : "part", id: piece.id },
     })),
   }] : [];
   if (!hasBuild) return treatment;

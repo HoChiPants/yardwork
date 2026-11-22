@@ -24,6 +24,7 @@ export function CheckAreaMarkers({
     area.kind === "shelf-divider-preview" ||
     area.kind === "eave-block-preview";
   const reference = area.tone === "reference";
+  const treatment = area.kind === "field-treatment";
   const color = bearing ? "#386e4d" : reference ? "#35748c" : "#aa4421";
   const triangles = useMemo(
     () =>
@@ -53,14 +54,14 @@ export function CheckAreaMarkers({
           <meshBasicMaterial
             color={bearing ? "#539364" : reference ? "#4794a9" : "#d66936"}
             transparent
-            opacity={0.28}
+            opacity={treatment ? 0.58 : 0.28}
             side={DoubleSide}
             depthTest={false}
             depthWrite={false}
           />
         </mesh>
       )}
-      {outlines.map((points, index) => (
+      {!treatment && outlines.map((points, index) => (
         <Line
           key={index}
           points={[...points, points[0]]}
@@ -115,6 +116,7 @@ export function CheckAreaMarkers({
           data-contact-patches={bearing || area.kind === "panel-floor-bearing" ? outlines.length : undefined}
           data-span-lines={area.kind === "seat-span" || area.kind === "shelf-span" ? area.lines?.length : undefined}
           data-pin-reaches={area.kind === "shelf-span" ? area.referenceLines?.length : undefined}
+          data-treatment-patches={treatment ? outlines.length : undefined}
         >
           {area.label}
         </span>

@@ -1339,6 +1339,7 @@ export function motionReviewDistance(review: MotionReview, travel: number, phase
 export type MotionPreview = ReturnType<MotionReview["preview"]> & {
   draftGeometry?: true;
   focusPair?: MotionCollisionFocus;
+  gapEndpoints?: ClosestPairGap["endpoints"];
   focusTest?: { planId: string; setup?: MotionTestSetup; scenarioId?: string };
   obstaclePieces?: readonly Piece[];
   hiddenPieceIds?: readonly string[];

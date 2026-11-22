@@ -105,7 +105,9 @@ test("the gap search retains a lower bound when its pose budget runs out", async
     return [...pair];
   }, () => 100_000);
   assert.equal(checked, 511);
-  assert.deepEqual(gap, { at: 0, gap: 1, lowerBound: 0 });
+  assert.equal(gap.at, 0);
+  assert.equal(gap.gap, 1);
+  assert.equal(gap.lowerBound, 0);
   const signal = AbortSignal.abort();
   await assert.rejects(findClosestPairGap(90, () => {
     assert.fail("An aborted search should skip geometry work.");
@@ -133,7 +135,29 @@ test("solid distance measures a Euclidean diagonal between separated retained pa
   assert.ok(Math.abs(solidGap(prepareCollisionSolid(a)!, prepareCollisionSolid(b)!) - 0.5) < 1e-8);
 });
 
-test("the clearance checker measures the inside edge of a through-cut", () => {
+test("the displayed gap segment joins the closest points on crossing edges", () => {
+  const project = blank();
+  const step = project.steps[0].id;
+  const a = part("A", "plywood", [4, 0.5, 0.5], [0, 0, 0], step, "Test");
+  const b = part("B", "plywood", [0.5, 0.5, 4], [0, 1, 0], step, "Test");
+  let measured = false;
+  const distance = solidGap(prepareCollisionSolid(a)!, prepareCollisionSolid(b)!, ([first, second]) => {
+    measured = true;
+    assert.equal(first[1], 0.25);
+    assert.equal(second[1], 0.75);
+    assert.equal(first[0], second[0]);
+    assert.equal(first[2], second[2]);
+    assert.ok(Math.abs(first[0]) <= 0.25 && Math.abs(first[2]) <= 0.25);
+  });
+  assert.equal(distance, 0.5);
+  assert.ok(measured);
+  b.position[1] = 0.5;
+  assert.equal(solidGap(prepareCollisionSolid(a)!, prepareCollisionSolid(b)!, () => {
+    assert.fail("Touching parts have no positive gap to mark.");
+  }), 0);
+});
+
+test("the clearance checker measures and marks the inside edge of a through-cut", async () => {
   const project = blank();
   const step = project.steps[0].id;
   const drawer = part("Moving insert", "plywood", [3.875, 3, 1], [0, 8, 0], step, "Cabinet");
@@ -148,4 +172,9 @@ test("the clearance checker measures the inside edge of a through-cut", () => {
   assert.deepEqual(result.clearance?.result, { status: "short", gap: 0.0625, at: 6 });
   const pass = runMotionTest(saved, plan, { held: [], clearance: { ...clearance, minimum: 0.05 } });
   assert.equal(pass.review?.clearance?.result.status, "met");
+  const found = await pass.review!.clearance!.findClosest!();
+  const [moving, cell] = found.endpoints!;
+  assert.equal(Math.abs(moving[0]), 1.9375);
+  assert.equal(Math.abs(cell[0]), 2);
+
 });

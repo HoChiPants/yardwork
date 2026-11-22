@@ -1,5 +1,5 @@
 import type { V3 } from "./model";
-import { intervalSeparated, solidGap, type CollisionSolid } from "./solidCollision";
+import { intervalSeparated, solidGap, type CollisionSolid, type GapEndpoints } from "./solidCollision";
 
 export type PairClearanceResult =
   | { status: "met" }
@@ -43,7 +43,7 @@ export function sweepPairClearance(
   return search(0, travel, 0);
 }
 
-export type ClosestPairGap = { at: number; gap: number; lowerBound: number };
+export type ClosestPairGap = { at: number; gap: number; lowerBound: number; endpoints?: GapEndpoints };
 
 /** The best checked pose bounds the minimum from above. Keep an interval
  * lower bound even if the search reaches its evaluation budget. */
@@ -54,13 +54,22 @@ export async function findClosestPairGap(
   signal?: AbortSignal,
 ): Promise<ClosestPairGap> {
   signal?.throwIfAborted();
-  let best = { at: 0, gap: solidGap(...posePair(0)) };
+  let bestPair = posePair(0);
+  let best = { at: 0, gap: solidGap(...bestPair) };
+  function result(lowerBound: number): ClosestPairGap {
+    let endpoints: GapEndpoints | undefined;
+    if (best.gap > 0) solidGap(...bestPair, (points) => { endpoints = points; });
+    return { ...best, lowerBound, endpoints };
+  }
   const speed = speedBound();
   if (travel === 0 || speed === 0 || best.gap === 0)
-    return { ...best, lowerBound: Math.max(0, best.gap - gapRoundoff) };
+    return result(Math.max(0, best.gap - gapRoundoff));
   function check(at: number, pair: [CollisionSolid, CollisionSolid]) {
     const gap = solidGap(...pair);
-    if (gap < best.gap) best = { at, gap };
+    if (gap < best.gap) {
+      best = { at, gap };
+      bestPair = pair;
+    }
     return gap;
   }
   check(travel, posePair(travel));
@@ -95,5 +104,5 @@ export async function findClosestPairGap(
     }
   }
   signal?.throwIfAborted();
-  return { ...best, lowerBound: Math.min(best.gap, ...remaining.map((row) => row.lowerBound)) };
+  return result(Math.min(best.gap, ...remaining.map((row) => row.lowerBound)));
 }

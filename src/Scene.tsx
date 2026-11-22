@@ -72,7 +72,7 @@ import type { FittedFaceRef, FittedStockPreview } from "./fittedStock";
 import { visibleStagePieces, visibleStockPieces } from "./sceneVisibility";
 import type { MotionPreview } from "./mechanismMotion";
 import { lidAxisSegment, reviewLidTravel, type LidPreview } from "./lidMotion";
-import { formatMeasurement, measureBetween } from "./measurement";
+import { formatMeasurement, formatPreciseInches, measureBetween } from "./measurement";
 import {
   material,
   type Piece,
@@ -1446,12 +1446,16 @@ function WorkZone({ project }: { project: Project }) {
 }
 function Measurement({
   measurement,
+  isMotionGap = false,
 }: {
   measurement: SceneProps["measurement"];
+  isMotionGap?: boolean;
 }) {
   const a = measurement?.a,
     b = measurement?.b;
   if (!a) return null;
+  const distance = b ? measureBetween(a, b).distance : 0;
+  const radius = isMotionGap ? Math.min(0.045, distance / 48) : 0.045;
   const first = a.map((v) => v / 12) as V3;
   const second = b?.map((v) => v / 12) as V3;
   const midpoint = second
@@ -1461,7 +1465,7 @@ function Measurement({
     <group>
       {[first, ...(second ? [second] : [])].map((point, i) => (
         <mesh key={i} position={point} renderOrder={1000} raycast={() => null}>
-          <sphereGeometry args={[0.045, 14, 10]} />
+          <sphereGeometry args={[radius, 14, 10]} />
           <meshBasicMaterial color="#287c9b" depthTest={false} />
         </mesh>
       ))}
@@ -1469,7 +1473,7 @@ function Measurement({
         <Line
           points={[first, second]}
           color="#287c9b"
-          lineWidth={2}
+          lineWidth={isMotionGap ? 3 : 2}
           depthTest={false}
           renderOrder={1000}
           raycast={() => null}
@@ -1477,9 +1481,10 @@ function Measurement({
       )}
       <Html
         center
-        position={[midpoint[0], midpoint[1] + 0.18, midpoint[2]]}
+        position={isMotionGap ? midpoint : [midpoint[0], midpoint[1] + 0.18, midpoint[2]]}
         style={{
           pointerEvents: "none",
+          ...(isMotionGap && { transform: "translate(-50%, calc(-100% - 8px))" }),
           whiteSpace: "nowrap",
           color: "#145c76",
           fontSize: 12,
@@ -1490,10 +1495,9 @@ function Measurement({
           padding: "5px 8px",
         }}
       >
-        <span data-testid="measurement-label">
-          {b
-            ? formatMeasurement(measureBetween(a, b).distance)
-            : "Start point · choose end point"}
+        <span data-testid={isMotionGap ? "motion-gap-label" : "measurement-label"}>
+          {isMotionGap ? `${formatPreciseInches(distance)} gap`
+            : b ? formatMeasurement(distance) : "Start point · choose end point"}
         </span>
       </Html>
     </group>
@@ -1869,6 +1873,12 @@ function World(props: SceneProps) {
       )}
       {props.mode === "measure" && (
         <Measurement measurement={props.measurement} />
+      )}
+      {props.focusedMotion && props.motionPreview?.gapEndpoints && (
+        <Measurement isMotionGap measurement={{
+          a: props.motionPreview.gapEndpoints[0],
+          b: props.motionPreview.gapEndpoints[1],
+        }} />
       )}
       {props.mode === "trace-wall" && props.wallTrace && <WallTraceOverlay {...props.wallTrace} />}
       {section && (

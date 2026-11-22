@@ -90,6 +90,8 @@ test("a drawer draft clears its door after adding fixed spacers and exports the 
   await expect(pose).toHaveAttribute("data-pose", "100");
   await expect(pose).toContainText("Cabinet drawer · 5 in");
   await expect(pose).toContainText("Focused on");
+  await expect(page.getByTestId("motion-gap-label")).toHaveText("0.38932 in gap");
+  await page.screenshot({ path: info.outputPath("closest-gap-marker.png") });
 
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const downloaded = page.waitForEvent("download");

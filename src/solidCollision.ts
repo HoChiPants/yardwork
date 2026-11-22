@@ -483,10 +483,16 @@ function surfaceFeatures(shape: ConvexCollisionSolid) {
   return { vertices, triangles, edges: [...edges.values()] };
 }
 
+export type GapEndpoints = [V3, V3];
+
 /** Euclidean gap at one pose. For separated convex solids, the closest features
  * are covered by vertex-to-face and edge-to-edge distances, including endpoints.
  * Through-openings use the retained cells, never their filled outer hull. */
-export function solidGap(first: CollisionSolid, second: CollisionSolid): number {
+export function solidGap(
+  first: CollisionSolid,
+  second: CollisionSolid,
+  onEndpoints?: (points: GapEndpoints) => void,
+): number {
   if (solidOverlap(first, second, 0)) return 0;
   const checked = new Map<ConvexCollisionSolid, ReturnType<typeof surfaceFeatures>>();
   const features = (shape: ConvexCollisionSolid) => {
@@ -497,6 +503,8 @@ export function solidGap(first: CollisionSolid, second: CollisionSolid): number 
     return prepared;
   };
   const point = new Vector3();
+  const nearest = onEndpoints && [new Vector3(), new Vector3()] as const;
+  const edgePoints = onEndpoints && [new Vector3(), new Vector3()] as const;
   let bestSquared = Infinity;
   for (const a of first.cells ?? [first]) {
     for (const b of second.cells ?? [second]) {
@@ -505,19 +513,37 @@ export function solidGap(first: CollisionSolid, second: CollisionSolid): number 
       if (bound >= bestSquared) continue;
       const firstFeatures = features(a);
       const secondFeatures = features(b);
-      for (const [from, to] of [[firstFeatures, secondFeatures], [secondFeatures, firstFeatures]]) {
+      for (const [from, to, reversed] of [
+        [firstFeatures, secondFeatures, false],
+        [secondFeatures, firstFeatures, true],
+      ] as const) {
         for (const vertex of from.vertices)
           for (const face of to.triangles) {
             face.closestPointToPoint(vertex, point);
-            bestSquared = Math.min(bestSquared, vertex.distanceToSquared(point));
+            const squared = vertex.distanceToSquared(point);
+            if (squared < bestSquared) {
+              bestSquared = squared;
+              nearest?.[0].copy(reversed ? point : vertex);
+              nearest?.[1].copy(reversed ? vertex : point);
+            }
           }
       }
       for (const edgeA of firstFeatures.edges)
-        for (const edgeB of secondFeatures.edges)
-          bestSquared = Math.min(bestSquared, edgeA.distanceSqToLine3(edgeB));
+        for (const edgeB of secondFeatures.edges) {
+          const squared = edgeA.distanceSqToLine3(edgeB, edgePoints?.[0], edgePoints?.[1]);
+          if (squared < bestSquared) {
+            bestSquared = squared;
+            if (nearest && edgePoints) {
+              // Three's distance routine subtracts the second point from the first in place.
+              nearest[0].addVectors(edgePoints[0], edgePoints[1]);
+              nearest[1].copy(edgePoints[1]);
+            }
+          }
+        }
     }
   }
   if (!Number.isFinite(bestSquared)) throw Error("Could not measure the modeled contact gap.");
+  if (nearest && bestSquared > 0) onEndpoints?.([nearest[0].toArray(), nearest[1].toArray()]);
   return Math.sqrt(Math.max(0, bestSquared));
 }
 

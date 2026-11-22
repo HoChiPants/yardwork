@@ -879,6 +879,9 @@ test("a drawer can pass without touching and still fail a saved minimum gap test
   await result.getByRole("button", { name: "Inspect closest pose", exact: true }).click();
   await expect(page.getByTestId("motion-preview-label")).toHaveAttribute("data-pose", "6");
   await expect(page.getByTestId("motion-preview-label")).toContainText("Focused on P001 and P002");
+  await expect(page.getByTestId("motion-gap-label")).toHaveText("0.0625 in gap");
+  await page.getByRole("button", { name: "Show full project", exact: true }).click();
+  await expect(page.getByTestId("motion-gap-label")).toHaveCount(0);
   await required.fill("0.04");
   await panel.getByRole("button", { name: "Check gap through travel", exact: true }).click();
   await expect(result.getByRole("button", { name: "Find closest gap", exact: true })).toBeVisible();

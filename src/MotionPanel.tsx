@@ -766,11 +766,18 @@ export function MotionPanel({
     }
   }
 
-  function show(value: number, siteFaceId?: string, phase?: MotionPhase, focusPair?: MotionCollisionFocus) {
+  function show(
+    value: number,
+    siteFaceId?: string,
+    phase?: MotionPhase,
+    focusPair?: MotionCollisionFocus,
+    gapEndpoints?: MotionPreview["gapEndpoints"],
+  ) {
     cancel();
     if (review) onPreview({
       ...review.preview(value, undefined, siteFaceId, phase),
       focusPair,
+      gapEndpoints,
       focusTest: focusPair ? { planId: review.plan.id, setup: activeReview?.setup, scenarioId: selectedScenario?.id } : undefined,
     });
   }
@@ -1342,9 +1349,9 @@ export function MotionPanel({
                   </button>
                 );
               })()}
-              <ClosestMotionGap review={review} onInspect={({ at, phase }) => {
+              <ClosestMotionGap review={review} onInspect={({ at, phase, endpoints }) => {
                 const requirement = review.clearance?.requirement;
-                if (requirement) show(at, undefined, phase, [requirement.movingId, requirement.otherId]);
+                if (requirement) show(at, undefined, phase, [requirement.movingId, requirement.otherId], endpoints);
               }} />
             </section>
           )}

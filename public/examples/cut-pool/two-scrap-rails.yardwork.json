@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 136,
+  "id": "aefe55bd-6ea7-49e7-9864-2f0859bcd3c2",
+  "name": "Shelf rail cuts from two scraps",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "woodKerfs": {
+    "stud": 0.125,
+    "stud-10": 0.125
+  },
+  "onHandCutSources": [
+    "07b3e8e1-caa0-4876-b761-b6a720e23fa7"
+  ],
+  "plannedCutSources": [
+    {
+      "sourceId": "d890980d-ed88-4722-8cb4-d4168fddf48e",
+      "fingerprint": "binding-v1-046f83cddbc35983",
+      "historyIds": [
+        "2502278e-66dd-4291-9dd6-829ebaa0bf64",
+        "225f67fa-e700-423a-8110-15e0274ac0f5",
+        "44ef5400-f326-45fd-bfec-485ee7d586e9"
+      ]
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "1c467543-9a7c-49b7-b423-629e29759ab0",
+      "label": "P001"
+    },
+    {
+      "partId": "79b5f35d-6ca9-415d-ab06-3ce273afbc90",
+      "label": "O001"
+    },
+    {
+      "partId": "68b4830b-1d7e-4585-8434-7c60b31e97e8",
+      "label": "O002"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T18:27:32.706Z",
+  "pieces": [
+    {
+      "id": "1c467543-9a7c-49b7-b423-629e29759ab0",
+      "name": "Original shelf rail",
+      "material": "stud",
+      "size": [
+        1.5,
+        57.5,
+        3.5
+      ],
+      "position": [
+        -12,
+        28.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "851768ff-2a2c-4246-b672-5b72167bb986",
+      "assembly": "",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "d890980d-ed88-4722-8cb4-d4168fddf48e",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "woodKerf": 0.125,
+        "size": [
+          1.5,
+          96,
+          3.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "79b5f35d-6ca9-415d-ab06-3ce273afbc90",
+      "name": "Offcut · Measured shelf rail scrap",
+      "material": "stud-10",
+      "size": [
+        3.5,
+        1.5,
+        50.25
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "01330820-19a8-4bbe-bc98-738ea35a5bf0",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "07b3e8e1-caa0-4876-b761-b6a720e23fa7",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3.5,
+          1.5,
+          50.25
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "68b4830b-1d7e-4585-8434-7c60b31e97e8",
+      "name": "Offcut · 2 × 4 framing lumber · board remnant 1",
+      "material": "stud",
+      "size": [
+        1.5,
+        38.375,
+        3.5
+      ],
+      "position": [
+        -12,
+        76.8125,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "01330820-19a8-4bbe-bc98-738ea35a5bf0",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "d890980d-ed88-4722-8cb4-d4168fddf48e",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "woodKerf": 0.125,
+        "size": [
+          1.5,
+          96,
+          3.5
+        ],
+        "offset": [
+          0,
+          57.625,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "01330820-19a8-4bbe-bc98-738ea35a5bf0",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, check the cutting loss for each stock unit, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "aefe55bd-6ea7-49e7-9864-2f0859bcd3c2",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, check the cutting loss for each stock unit, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-63dde57d",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "851768ff-2a2c-4246-b672-5b72167bb986",
+      "title": "Review loose parts",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "aefe55bd-6ea7-49e7-9864-2f0859bcd3c2",
+        "stageKey": "loose-parts",
+        "memberIds": [
+          "1c467543-9a7c-49b7-b423-629e29759ab0"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-8fa0c508",
+        "title": "Review loose parts"
+      }
+    },
+    {
+      "id": "da7477d0-fabb-4d62-94af-23de63f88981",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "aefe55bd-6ea7-49e7-9864-2f0859bcd3c2",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-1d90fe76",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Cut practice for reusing a measured scrap and a leftover from an earlier shelf rail. Ask Plan an idea: “Plan 2x4 cuts of 26 in, 24 in and 38.25 in using my Cut pool.” Confirm actual stock and blade loss. The finished blanks are a cutting exercise.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-84a93eb4",
+  "history": [
+    {
+      "id": "2502278e-66dd-4291-9dd6-829ebaa0bf64",
+      "at": "2026-11-22T18:27:32.719Z",
+      "stepId": "01330820-19a8-4bbe-bc98-738ea35a5bf0",
+      "message": "Recorded one 2 × 4 framing lumber board for 1 part starting with P001. Added 1 rectangular offcut to the Cut pool."
+    },
+    {
+      "id": "225f67fa-e700-423a-8110-15e0274ac0f5",
+      "at": "2026-11-22T18:27:32.719Z",
+      "stepId": "01330820-19a8-4bbe-bc98-738ea35a5bf0",
+      "message": "Recorded wood blade kerf for P001 · 0.125 in per cut."
+    },
+    {
+      "id": "44ef5400-f326-45fd-bfec-485ee7d586e9",
+      "at": "2026-11-22T18:27:32.719Z",
+      "stepId": "01330820-19a8-4bbe-bc98-738ea35a5bf0",
+      "message": "Stock cut order for P001 · 1. Crosscut 57.5 in from the current end for P001 · Original shelf rail."
+    }
+  ]
+}

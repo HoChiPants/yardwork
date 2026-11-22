@@ -45,7 +45,7 @@ Starting stock · 10 ft × 3.5 in × 1.5 in (length × width × thickness).
 
 Blade allowance · 0.125 in per cut.
 
-The source layout has changed since this order was saved. Check the steps against the current layout and later trims.
+Offcut cuts are recorded for this stock. Check these steps against the current layout, then follow the recorded offcut cut order.
 
 1. Crosscut 5 ft from the current end for P001 · 60 in rail.
 2. Crosscut 40 in from the current end for P002 · 40 in rail.

@@ -28,6 +28,8 @@ export function plannedStockCutOrders(
   if (!project.plannedCutSources?.length) return [];
   const { groups, valid } = inspection ?? inspectCutStock(project);
   const history = new Map(project.history.map((entry) => [entry.id, entry]));
+  const reuseSources = new Set(project.history.flatMap(({ offcutCut }) =>
+    offcutCut && !offcutCut.releasedAt && !offcutCut.retainedTrim ? [offcutCut.sourceId] : []));
   return project.plannedCutSources.map((plan) => {
     const pieces = groups.get(plan.sourceId);
     const first = pieces?.[0];
@@ -52,7 +54,9 @@ export function plannedStockCutOrders(
         ? "Review the current cut source before following the order."
         : !complete ? "The saved cut order is incomplete. Review the layout before cutting." : undefined,
       review: usable && !cutPlanCanRelease(plan, pieces)
-        ? "The source layout has changed since this order was saved. Check the steps against the current layout and later trims."
+        ? reuseSources.has(plan.sourceId)
+          ? "Offcut cuts are recorded for this stock. Check these steps against the current layout, then follow the recorded offcut cut order."
+          : "The source layout has changed since this order was saved. Check the steps against the current layout and later trims."
         : undefined,
     };
   });

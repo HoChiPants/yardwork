@@ -273,7 +273,7 @@ test("a named existing offcut can supply several pieces before new stock is chos
   const project = addMeasuredOffcut(blankProject, blankProject.steps[0].id, "hd-kdht-2x4-8", [80, 3.5, 1.5], "Stored 2 × 4");
   const request = buildQuestion("Plan 2x4 cuts of 48 in, 30 in, 44 in and 42 in using O001")!;
   assert.deepEqual(request, { kind: "board-cut-list", nominal: "2 × 4", treated: false,
-    lengths: [48, 30, 44, 42], offcutLabel: "O001" });
+    lengths: [48, 30, 44, 42], offcutLabels: ["O001"] });
   const result = answerBuildQuestion(project, request, []);
   assert.match(result.detail, /4 pieces using O001 · 1 board to buy/);
   const action = result.link?.action;
@@ -284,12 +284,43 @@ test("a named existing offcut can supply several pieces before new stock is chos
   assert.equal(action.plan.purchaseLength, 96);
   const exactTail = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 41 in and 38.875 in from offcut O001")!, []);
   assert.match(exactTail.detail, /0 boards to buy/);
-  const thinTrim = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 41 in and 38.75 in using O001")!, []);
+  const bladeTail = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 41 in and 38.75 in using O001")!, []);
+  assert.match(bladeTail.detail, /0 boards to buy/);
+  const thinTrim = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 41 in and 38.8 in using O001")!, []);
   assert.match(thinTrim.detail, /1 board to buy/);
   const unavailable = answerBuildQuestion(project, buildQuestion("Plan treated 2x4 cuts of 48 in using O001")!, []);
   assert.equal(unavailable.link, undefined);
 });
 
+
+test("a cut list spreads cuts across measured and expected offcuts without buying a new board", () => {
+  const draft = blank("Two starting boards");
+  const step = draft.steps[0].id;
+  const rail = part("Rail", "stud", [1.5, 57.5, 3.5], [0, 28.75, 0], step, "Rails");
+  draft.pieces = [rail];
+  const measured = addMeasuredOffcut(draft, step, "stud-10", [50.25, 3.5, 1.5], "Measured 2 × 4");
+  const withSources = planDedicatedBoardCuts(measured, [rail.id]);
+  const project = addMeasuredOffcut(withSources, step, "hd-treated-2x4-8", [51, 3.5, 1.5]);
+  for (const source of ["using offcuts O001 and O002", "using my Cut pool", "from O001, O002 & O001"]) {
+    const answer = answerBuildQuestion(project, buildQuestion(`Plan 2x4 cuts of 26 in, 24 in and 38.25 in ${source}`)!, []);
+    assert.match(answer.detail, /3 pieces using O001, O002 · 0 boards to buy/);
+    const action = answer.link?.action;
+    assert.equal(action?.kind, "board-cut-list");
+    if (action?.kind !== "board-cut-list") throw Error("Expected a cut list preview.");
+    assert.deepEqual(action.plan.boards.map(({ stock, source, cuts, offcut }) => [stock, source?.label, source?.pending, cuts, offcut]), [
+      ["stud-10", "O001", false, [26, 24], 0],
+      ["stud", "O002", true, [38.25], 0],
+    ]);
+  }
+  const missing = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 26 in and 24 in using O001 and O003")!, []);
+  assert.match(missing.detail, /O003 has no matching/);
+  assert.equal(missing.link, undefined);
+  const one = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 26 in using O001 and O002")!, []);
+  assert.match(one.detail, /at most one named offcut per finished piece/);
+  const onlyOneFits = answerBuildQuestion(project, buildQuestion("Plan 2x4 cuts of 24 in and 60 in using O001 and O002")!, []);
+  assert.match(onlyOneFits.detail, /cannot use every named offcut/);
+  assert.equal(onlyOneFits.link, undefined);
+});
 
 test("a named cut list keeps the original planned board as a prerequisite", () => {
   const draft = blank("Expected board offcut");

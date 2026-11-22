@@ -38,7 +38,7 @@ import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./tre
 import { groupedMaterials, materialFamilyVariants, materialPlacementOptions } from "./materialGroups";
 import { fittingBoardOffcuts } from "./offcutAssignment";
 import { compareRepeatedBoardCuts, maxRepeatedBoards } from "./repeatedBoardCuts";
-import { findBoardCutListOffcut, maxMixedBoardCuts, mixedBoardStockOptions, planMixedBoardCuts, type BoardCutPlan } from "./mixedBoardCuts";
+import { findBoardCutListOffcuts, maxComparedOffcuts, maxMixedBoardCuts, mixedBoardStockOptions, planMixedBoardCuts, type BoardCutPlan } from "./mixedBoardCuts";
 import { normalizeIdeaText } from "./ideaEdits";
 import { reviewRimAirSeals, rimAirSealKey, rimEdgeSealEstimate, uncutRimFoamOffcuts } from "./rimAirSeals";
 import { rimSealScope } from "./rimAirSealReference";
@@ -79,7 +79,7 @@ export type BuildQuestion =
   | { kind: "water-support" }
   | { kind: "treated-wood" }
   | { kind: "drawer-box"; labels: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
-  | { kind: "board-cut-list"; nominal: string; treated: boolean; lengths: number[]; offcutLabel?: string; issue?: string }
+  | { kind: "board-cut-list"; nominal: string; treated: boolean; lengths: number[]; offcutLabels?: string[]; issue?: string }
   | { kind: "board-stock"; length: number; nominal: string; treated: boolean; quantity: number }
   | { kind: "board-offcut"; length: number; nominal: string; treated: boolean; offcutLabel?: string }
   | { kind: "offcuts"; label?: string };
@@ -218,13 +218,13 @@ function boardSize(text: string) {
 }
 
 function readBoardCutList(text: string): Extract<BuildQuestion, { kind: "board-cut-list" }> | null {
-  const selected = /,?\s+(?:using|from) (?:offcut )?(o\d{1,6})$/i.exec(text);
+  const selected = /,?\s+(?:using|from)\s+((?:(?:offcuts?|scraps?)\s+)?o\d{1,6}(?:(?:\s*,\s*(?:and\s+)?|\s+and\s+|\s*&\s*)(?:(?:offcut|scrap)\s+)?o\d{1,6})*|(?:(?:my|the|existing|available)\s+)?(?:cut pool|offcuts?|scraps?|leftovers))$/i.exec(text);
   const match = mixedBoardQuestion.exec(selected ? text.slice(0, selected.index) : text);
   if (!match) return null;
   const [, treatment, width, depth, entries = ""] = match;
   const result = { kind: "board-cut-list" as const, nominal: `${Number(width)} × ${Number(depth)}`,
     treated: !!treatment, lengths: [] as number[],
-    ...(selected ? { offcutLabel: labelKey(selected[1]) } : {}) };
+    ...(selected ? { offcutLabels: [...new Set((selected[1].match(/\bo\d{1,6}\b/gi) ?? []).map(labelKey))] } : {}) };
   for (const entry of entries.split(/\s*,\s*(?:and\s+)?|\s+and\s+/)) {
     const value = entry.trim();
     const explicitCount = /^(\d+)\s*[x×]\s*(.+)$/.exec(value);
@@ -448,23 +448,46 @@ function boardMaterialGroup(nominal: string, treated: boolean) {
 
 function answerBoardCutList(
   project: Project,
-  { nominal, treated, lengths, offcutLabel, issue }: Extract<BuildQuestion, { kind: "board-cut-list" }>,
+  { nominal, treated, lengths, offcutLabels, issue }: Extract<BuildQuestion, { kind: "board-cut-list" }>,
 ): BuildQuestionAnswer {
   const title = "Lumber cut list";
   if (issue) return { title, detail: issue };
   const group = boardMaterialGroup(nominal, treated);
   if (!group) return { title, detail: `No ${treated ? "treated " : ""}${nominal} board matches the material shelf.` };
-  const source = offcutLabel ? findBoardCutListOffcut(project, group, offcutLabel, lengths) : undefined;
-  if (source === null) return { title, detail: `${offcutLabel} has no matching full-width blank for these cuts.` };
-  const plan = planMixedBoardCuts(project, mixedBoardStockOptions(project, group), lengths, source);
-  if (!plan) return { title, detail: `The cut list does not fit the listed ${group.name} stock with the planned blade allowance.` };
-  const purchases = plan.boards.filter(({ source }) => !source).length;
+  if (offcutLabels && offcutLabels.length > lengths.length)
+    return { title, detail: "Choose at most one named offcut per finished piece." };
+  const matched = offcutLabels ? findBoardCutListOffcuts(project, group, lengths, offcutLabels) : undefined;
+  const named = !!offcutLabels?.length;
+  const selected = named && offcutLabels
+    ? offcutLabels.flatMap((label) => {
+      const offcut = matched?.get(label);
+      return offcut ? [offcut] : [];
+    })
+    : [...(matched?.values() ?? [])].sort((a, b) =>
+      Number(a.source.pending) - Number(b.source.pending) ||
+      Number(b.onHand) - Number(a.onHand) || b.length - a.length || a.kerf - b.kerf);
+  const missing = offcutLabels?.filter((label) => !matched?.has(label)) ?? [];
+  if (missing.length)
+    return { title, detail: `${missing.join(", ")} ${missing.length === 1 ? "has" : "have"} no matching full-width blank for these cuts.` };
+  const plan = planMixedBoardCuts(project, mixedBoardStockOptions(project, group), lengths,
+    selected.slice(0, maxComparedOffcuts), named);
+  if (!plan) return { title, detail: named
+    ? "The cuts cannot use every named offcut with the listed stock and blade allowances. Try a smaller selection."
+    : `The cut list does not fit the listed ${group.name} stock with the planned blade allowance.` };
+  const labels = plan.boards.flatMap(({ source }) => source ? [source.label] : []);
+  const purchases = plan.boards.length - labels.length;
+  const pieces = `${lengths.length} ${lengths.length === 1 ? "piece" : "pieces"}`;
   return {
     title,
-    detail: offcutLabel
-      ? `${lengths.length} ${lengths.length === 1 ? "piece" : "pieces"} using ${offcutLabel} · ${purchases} ${purchases === 1 ? "board" : "boards"} to buy.`
-      : `${lengths.length} ${lengths.length === 1 ? "piece" : "pieces"} from ${plan.boards.length} ${plan.boards.length === 1 ? "board" : "boards"} · ${formatStockLength(plan.purchaseLength)} of ${group.name} to buy.`,
-    scope: "Uses the shortest total length of listed new stock, with the blade allowance for each source.",
+    detail: labels.length
+      ? `${pieces} using ${labels.join(", ")} · ${purchases} ${purchases === 1 ? "board" : "boards"} to buy.`
+      : `${pieces} from ${plan.boards.length} ${plan.boards.length === 1 ? "board" : "boards"} · ${formatStockLength(plan.purchaseLength)} of ${group.name} to buy.`,
+    scope: [
+      "Uses the least total length of listed new stock across the compared options, with each source’s blade allowance.",
+      ...(offcutLabels && !selected.length ? ["No matching Cut pool offcuts fit these cuts."] : []),
+      ...(selected.length > maxComparedOffcuts
+        ? [`Considered up to ${maxComparedOffcuts} of ${selected.length} matching offcuts. Name specific offcuts to compare another selection.`] : []),
+    ].join(" "),
     rows: plan.boards.map(({ length, cuts, offcut, source }, index) => ({
       id: String(index),
       title: source ? `${source.label} · ${formatStockLength(length)} from Cut pool` : `Board ${index + 1} · ${formatStockLength(length)}`,

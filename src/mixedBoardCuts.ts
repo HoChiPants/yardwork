@@ -7,6 +7,7 @@ import { fittingBoardOffcuts } from "./offcutAssignment";
 import { ensurePartLabels } from "./partLabels";
 
 export const maxMixedBoardCuts = 12;
+export const maxComparedOffcuts = 32;
 
 type OffcutSource = {
   id: string;
@@ -20,30 +21,45 @@ type AvailableOffcut = {
   length: number;
   kerf: number;
   source: OffcutSource;
-  fits: ReadonlySet<number>;
+  fits: Set<number>;
   canSplitAgain: boolean;
+  onHand: boolean;
 };
 
-export function findBoardCutListOffcut(project: Project, group: MaterialGroup, label: string, lengths: readonly number[]): AvailableOffcut | null {
+export function findBoardCutListOffcuts(
+  project: Project,
+  group: MaterialGroup,
+  lengths: readonly number[],
+  labels?: readonly string[],
+) {
   const labeled = ensurePartLabels(project);
-  const id = labeled.partLabels.find((entry) => entry.label === label)?.partId;
-  if (!id) return null;
-  const inspection = inspectCutStock(project);
+  const partLabels = new Map(labeled.partLabels.map(({ partId, label }) => [partId, label]));
+  const wanted = labels?.length ? new Set(labels) : undefined;
+  const inspection = inspectCutStock(labeled);
   const family = materialFamilyVariants(group.preferred);
-  const matches = [...new Set(lengths)].flatMap((length) =>
-    fittingBoardOffcuts(project, family, length, inspection)
-      .filter(({ piece, available, desired }) => piece.id === id && Math.abs(available[1] - desired[1]) <= 1e-7)
-      .map((match) => ({ ...match, length })));
-  const first = matches[0];
-  if (!first) return null;
-  return {
-    stock: first.piece.material,
-    length: first.available[2],
-    kerf: pieceCutKerf(first.piece),
-    source: { id: first.piece.id, label, axis: first.stockLengthAxis, pending: first.sourceCutPending },
-    fits: new Set(matches.filter(({ stockLengthAxis }) => stockLengthAxis === first.stockLengthAxis).map(({ length }) => length)),
-    canSplitAgain: !!first.piece.cutStock?.sourceAxes,
-  };
+  const matches = new Map<string, AvailableOffcut>();
+  for (const length of new Set(lengths)) {
+    for (const { piece, available, desired, stockLengthAxis, sourceCutPending, onHand }
+      of fittingBoardOffcuts(labeled, family, length, inspection)) {
+      const label = partLabels.get(piece.id);
+      if (!label || (wanted && !wanted.has(label)) || Math.abs(available[1] - desired[1]) > 1e-7) continue;
+      const previous = matches.get(label);
+      if (previous) {
+        if (stockLengthAxis === previous.source.axis) previous.fits.add(length);
+      } else {
+        matches.set(label, {
+          stock: piece.material,
+          length: available[2],
+          kerf: pieceCutKerf(piece),
+          source: { id: piece.id, label, axis: stockLengthAxis, pending: sourceCutPending },
+          fits: new Set([length]),
+          canSplitAgain: !!piece.cutStock?.sourceAxes,
+          onHand,
+        });
+      }
+    }
+  }
+  return matches;
 }
 
 export type BoardCutPlan = {
@@ -82,7 +98,8 @@ export function planMixedBoardCuts(
   project: Project,
   options: readonly { id: MaterialId; value: number }[],
   lengths: readonly number[],
-  offcut?: AvailableOffcut,
+  offcuts: readonly AvailableOffcut[] = [],
+  useEveryOffcut = false,
 ): BoardCutPlan | null {
   if (!lengths.length || lengths.length > maxMixedBoardCuts ||
       lengths.some((length) => !Number.isFinite(length) || length < 0.125)) return null;
@@ -93,25 +110,29 @@ export function planMixedBoardCuts(
   })).sort((a, b) => a.length - b.length || a.kerf - b.kerf);
   const limit = 1 << lengths.length;
 
-  // A subset needs one blade allowance between pieces. The last piece
-  // needs another only when it does not consume the available tail.
-  const candidate: (Board | undefined)[] = Array(limit);
-  for (let mask = 1; mask < limit; mask++) {
+  const subsets = Array.from({ length: limit }, (_, mask) => {
     const cuts = lengths.filter((_, index) => mask & (1 << index));
-    const combined = cuts.reduce((total, length) => total + length, 0);
-    for (const option of stock) {
-      const available = option.length - (cuts.length - 1) * option.kerf;
-      const end = stockSplitState(available, combined, option.kerf);
-      if (end === "whole" || end === "cut") {
-        candidate[mask] = {
-          ...option,
-          cuts,
-          offcut: end === "whole" ? 0 : Math.max(0, available - combined - option.kerf),
-        };
-        break;
-      }
-    }
+    return { cuts, combined: cuts.reduce((total, length) => total + length, 0) };
+  });
+  function layout(mask: number, option: Pick<Board, "stock" | "length" | "kerf">): Board | undefined {
+    const { cuts, combined } = subsets[mask];
+    // Every two pieces need a blade pass between them. The last piece can
+    // end at the edge, use a final blade-width tail, or leave a remnant.
+    const available = option.length - (cuts.length - 1) * option.kerf;
+    const end = stockSplitState(available, combined, option.kerf);
+    if (end === "whole" || end === "cut") return {
+      ...option,
+      cuts,
+      offcut: end === "whole" ? 0 : Math.max(0, available - combined - option.kerf),
+    };
   }
+  const candidate = subsets.map((_, mask) => {
+    if (!mask) return;
+    for (const option of stock) {
+      const board = layout(mask, option);
+      if (board) return board;
+    }
+  });
 
   type Score = { purchaseLength: number; boards: number; scrap: number; chosen: number };
   const best: (Score | undefined)[] = Array(limit);
@@ -137,42 +158,54 @@ export function planMixedBoardCuts(
     }
   }
 
-  let unassigned = limit - 1;
-  const boards: Board[] = [];
-  if (offcut) {
-    let chosen: Board | undefined;
-    let chosenScore: Score | undefined;
-    let reusedLength = 0;
-    for (let group = 1; group < limit; group++) {
-      const rest = best[(limit - 1) ^ group];
-      if (!rest) continue;
-      const cuts = lengths.filter((_, index) => group & (1 << index));
-      if ((!offcut.canSplitAgain && cuts.length > 1) || cuts.some((length) => !offcut.fits.has(length))) continue;
-      const sum = cuts.reduce((total, length) => total + length, 0);
-      const tailBeforeFinalBlade = offcut.length - sum - (cuts.length - 1) * offcut.kerf;
-      // Reusing a scrap requires an exact final blank or a real remaining
-      // trim. A blade-width-only shave is outside fitted-offcut rules.
-      const whole = Math.abs(tailBeforeFinalBlade) <= 1e-7;
-      if (!whole && tailBeforeFinalBlade <= offcut.kerf + 1e-7) continue;
-      if (chosenScore && (rest.purchaseLength > chosenScore.purchaseLength ||
-          (rest.purchaseLength === chosenScore.purchaseLength && (rest.boards > chosenScore.boards ||
-            (rest.boards === chosenScore.boards && sum <= reusedLength))))) continue;
-      chosen = { stock: offcut.stock, length: offcut.length, kerf: offcut.kerf, cuts,
-        offcut: whole ? 0 : tailBeforeFinalBlade - offcut.kerf, source: offcut.source };
-      chosenScore = rest;
-      reusedLength = sum;
-      unassigned = (limit - 1) ^ group;
+  type OffcutAllocation = { board: Board; preceding?: OffcutAllocation };
+  type Reuse = {
+    purchase: Score;
+    newMask: number;
+    reusedLength: number;
+    choice?: OffcutAllocation;
+  };
+  // Start with the best new-stock plan for each subset, then consider each
+  // physical offcut once. Each transition uses disjoint finished pieces.
+  let allocations: (Reuse | undefined)[] = best.map((purchase, newMask) =>
+    purchase && { purchase, newMask, reusedLength: 0 });
+  const fullMask = limit - 1;
+  for (const { source, stock, length, kerf, fits, canSplitAgain } of offcuts) {
+    if (!useEveryOffcut && allocations[fullMask]?.purchase.purchaseLength === 0) break;
+    const patterns = subsets.map(({ cuts }, mask) =>
+      mask && (canSplitAgain || cuts.length === 1) && cuts.every((cut) => fits.has(cut))
+        ? layout(mask, { stock, length, kerf })
+        : undefined);
+    const next: (Reuse | undefined)[] = useEveryOffcut ? Array(limit) : [...allocations];
+    for (let mask = 1; mask < limit; mask++) {
+      let choice = next[mask];
+      for (let group = mask & -mask; group; group = (group - mask) & mask) {
+        const board = patterns[group];
+        const rest = allocations[mask ^ group];
+        if (!board || !rest) continue;
+        const { purchase } = rest;
+        const reusedLength = rest.reusedLength + subsets[group].combined;
+        if (choice && (purchase.purchaseLength > choice.purchase.purchaseLength ||
+            (purchase.purchaseLength === choice.purchase.purchaseLength &&
+              (purchase.boards > choice.purchase.boards ||
+                (purchase.boards === choice.purchase.boards && reusedLength <= choice.reusedLength))))) continue;
+        choice = { purchase, newMask: rest.newMask, reusedLength,
+          choice: { board: { ...board, source }, preceding: rest.choice } };
+      }
+      next[mask] = choice;
     }
-    if (!chosen) return null;
-    boards.push(chosen);
+    allocations = next;
   }
 
-  const total = best[unassigned];
+  const total = allocations[fullMask];
   if (!total) return null;
-  for (let mask = unassigned; mask;) {
+  const boards: Board[] = [];
+  for (let choice = total.choice; choice; choice = choice.preceding) boards.push(choice.board);
+  boards.reverse();
+  for (let mask = total.newMask; mask;) {
     const { chosen } = best[mask]!;
     boards.push(candidate[chosen]!);
     mask ^= chosen;
   }
-  return { boards, purchaseLength: total.purchaseLength };
+  return { boards, purchaseLength: total.purchase.purchaseLength };
 }

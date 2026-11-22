@@ -5830,7 +5830,7 @@ export function App() {
           Made for the making <ArrowRight size={12} />
         </button>
       </footer>
-      {toast && (modal !== "cut" || toast.error) && (
+      {toast && ((modal !== "cut" && modal !== "board-cut-list") || toast.error) && (
         <div className={`toast ${toast.error ? "error" : ""}`} role="status">
           {toast.error ? (
             <AlertTriangle size={17} />

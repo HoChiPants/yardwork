@@ -9,7 +9,7 @@ export function BoardCutListReview({ name, plan, onApply }: {
   const partCount = plan.boards.reduce((total, { cuts }) => total + cuts.length, 0);
   return <>
     <h2 id="modal-title">Review lumber cut list</h2>
-    <p>{name} · {plan.purchaseLength ? `${formatStockLength(plan.purchaseLength)} to buy` : "0 boards to buy"}</p>
+    <p>{name} · {plan.purchaseLength ? `${formatStockLength(plan.purchaseLength)} of new stock` : "No additional boards for these cuts"}</p>
     <ol className="board-cut-review" aria-label="Stock cut order">
       {plan.boards.map(({ length, cuts, kerf, offcut, source }, index) => (
         <li key={index}>

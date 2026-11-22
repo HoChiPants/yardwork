@@ -60,3 +60,81 @@ test("a practice offcut supplies two shorter parts and saves a new board on the 
   const text = await readFile((await (await guide).path())!, "utf8");
   expect(text).toMatch(/O001 → P001[\s\S]*O002 → P004[\s\S]*12\.75 in/);
 });
+
+test("one cut list uses two sources, carries the earlier cut into the guide, and buys no additional boards", async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const fixture = await page.request.get(new URL("./examples/cut-pool/two-scrap-rails.yardwork.json", page.url()).href);
+  expect(fixture.ok()).toBe(true);
+  const bytes = await fixture.body();
+  const initial = projectSchema.parse(JSON.parse(bytes.toString("utf8")));
+  const [planned] = initial.plannedCutSources!;
+  const [measured] = initial.onHandCutSources!;
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "two-scrap-rails.yardwork.json", mimeType: "application/json", buffer: bytes,
+  });
+  await expect(page.getByRole("button", { name: "Cut pool (2)", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByText("Questions about this build", { exact: true }).click();
+  await dialog.getByRole("button", { name: "Plan a cut list", exact: true }).click();
+  const prompt = dialog.getByRole("textbox", { name: "Describe your idea" });
+  await expect(prompt).toHaveValue(/using my Cut pool/);
+  await prompt.fill("Plan 2x4 cuts of 26 in, 24 in and 38.25 in using my Cut pool");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Lumber cut list", exact: true });
+  await expect(answer).toContainText("3 pieces using O001, O002 · 0 boards to buy");
+  await answer.getByRole("button", { name: "Preview cut list in 3D", exact: true }).click();
+  const order = dialog.getByRole("list", { name: "Stock cut order" });
+  const stock = order.getByRole("listitem");
+  await expect(stock).toHaveCount(2);
+  await expect(stock.nth(0)).toContainText("O001 · 50.25 in from Cut pool");
+  await expect(stock.nth(0)).toContainText("26 in + 2 ft");
+  await expect(stock.nth(1)).toContainText("O002 · 38.375 in from Cut pool");
+  await expect(stock.nth(1)).toContainText("Complete the source stock cut order first.");
+  await expect(dialog).toContainText("No additional boards for these cuts");
+  await expect(page.locator("canvas").first()).toHaveAttribute("data-material-placement-count", "3");
+  await expect(page.locator(".statusbar")).toContainText("1 part");
+  await expect(page.locator(".toast")).toHaveCount(0);
+  await page.screenshot({ path: info.outputPath("two-scraps-preview.png") });
+  await dialog.getByRole("button", { name: "Plan and place 3 pieces", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cut pool (0)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cut pool (2)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cut pool (0)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator('.bom-row[data-stock-material="stud"]')).toContainText("1 board");
+  await expect(page.locator('.bom-row[data-stock-material="stud-10"]')).toContainText("0 boards to buy");
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft()).revision).toBe(1);
+  const saved = projectSchema.parse((await draft()).project);
+  expect(saved.plannedCutSources).toEqual([planned]);
+  expect(saved.pieces.map(({ cutStock }) => cutStock?.id)).toEqual([planned.sourceId, measured, measured, planned.sourceId]);
+  const allocations = saved.history.flatMap(({ offcutCut }) => offcutCut ? [offcutCut] : []);
+  expect(allocations.map(({ sourceId }) => sourceId)).toEqual([measured, measured, planned.sourceId]);
+  expect(allocations[1].inputId).toBe(allocations[0].remnants[0].id);
+  expect(allocations.slice(1).every(({ remnants }) => !remnants.length)).toBe(true);
+  expect(inspectCutStock(saved).invalid).toHaveLength(0);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: saved.name }).click();
+  await expect.poll(async () => (await draft()).project.plannedCutSources).toEqual([planned]);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const exported = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guideFile = await exported;
+  await guideFile.saveAs(info.outputPath("two-scrap-rails-guide.md"));
+  const guide = await readFile((await guideFile.path())!, "utf8");
+  expect(guide).toMatch(/## Planned stock cuts[\s\S]+Crosscut 57\.5 in[\s\S]+## Recorded offcut cut order/);
+  expect(guide).toContain("Offcut cuts are recorded for this stock.");
+  expect(guide).toContain("O001 → P002");
+  expect(guide).toContain("O003 → P003");
+  expect(guide).toMatch(/O002 → P004[\s\S]+Find P001 under Planned stock cuts[\s\S]+Crosscut to 38\.25 in · Blade uses the remaining 0\.125 in/);
+});

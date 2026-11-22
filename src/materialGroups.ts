@@ -145,6 +145,22 @@ const families: {
     preferred: "cedarbrook-pedestal-48",
   },
 ];
+const plainNames: Partial<Record<MaterialId, string>> = {
+  "n10dhdg-r": "1½ in connector nails",
+  "sunlite-8mm": "8 mm twinwall polycarbonate",
+  "plytanium-703": "23/32 in BC pine plywood",
+  "jm-u1330-batt": "R-13 unfaced wall insulation",
+  "cedarbrook-sauna-door-24x76": "Prehung cedar sauna door",
+  "hd-masonite-75777": "Prehung interior door",
+  "hd-nail-shield-ns1": "Pipe nail shield",
+  "hd-sharkbite-ur23036": "½ in × ⅜ in compression angle stop",
+  "hd-oatey-hdc9704b": "1½ in tubular sink P-trap",
+  "cedarbrook-sauna-foil": "Sauna foil vapor barrier",
+  "owens-corning-c84a-batt": "R-30 unfaced ceiling insulation",
+  "owens-corning-me22-batt": "R-15 unfaced wall insulation",
+  "hd-liberty-p01012-pc-c": "Cabinet bar pull",
+};
+
 export type MaterialGroup = {
   id: string;
   name: string;
@@ -178,13 +194,13 @@ export function groupedMaterials(
       : [item];
     const variants = all.filter((m) => {
       if (category !== "All" && m.category !== category) return false;
-      const keywords = paletteSearch(`${family?.name ?? ""} ${m.name} ${m.subtitle} ${m.search} ${pipeSize(m.id)?.label ?? ""}`);
+      const keywords = paletteSearch(`${family?.name ?? plainNames[m.id] ?? ""} ${m.name} ${m.subtitle} ${m.search} ${pipeSize(m.id)?.label ?? ""}`);
       return terms.every((term) => keywords.includes(term));
     });
     if (variants.length)
       result.push({
         id,
-        name: family?.name ?? paletteStockName(item.name),
+        name: family?.name ?? plainNames[item.id] ?? paletteStockName(item.name),
         variants,
         preferred: family?.preferred ?? item.id,
       });
@@ -205,7 +221,7 @@ export function materialStockDisplayName(id: MaterialId) {
   const family = families.find(({ ids }) => ids.includes(id));
   const pipe = pipeSize(id);
   if (family && pipe) return `${family.name} · ${pipe.label}`;
-  if (stock.category !== "Lumber" || stock.stockKind !== "linear") return materialDisplayName(stock.name);
+  if (stock.category !== "Lumber" || stock.stockKind !== "linear") return plainNames[id] ?? materialDisplayName(stock.name);
   const length = Math.max(...(stock.stockSize ?? stock.size));
   return `${family?.name ?? paletteStockName(stock.name)} · ${formatStockLength(length)}`;
 }

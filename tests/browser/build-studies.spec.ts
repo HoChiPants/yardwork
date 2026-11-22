@@ -523,7 +523,7 @@ for (const scenario of [
     await study.getByRole("combobox", { name: scenario.select, exact: true }).selectOption(scenario.stock);
     await study.getByRole("button", { name: "Open as new project", exact: true }).click();
     await page.getByRole("button", { name: "List", exact: true }).click();
-    const row = page.locator(".bom-row").filter({ has: page.getByText(scenario.name, { exact: true }) });
+    const row = page.locator(`.bom-row[data-stock-material="${scenario.stock}"]`);
     await expect(row).toContainText(scenario.purchase);
     const order = row.locator("details.stock-cut-order");
     await order.locator(":scope > summary").click();

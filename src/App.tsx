@@ -997,8 +997,14 @@ export function App() {
     const backdrop = materialPlacementBackdrop.current;
     const picker = backdrop?.querySelector<HTMLElement>("[data-material-placement]");
     const drop = pendingMaterial?.dropPoint;
-    if (modal !== "place-material" || !backdrop || !picker || !drop) return;
+    if (modal !== "place-material" || !backdrop || !picker) return;
+    const previousFocus = document.activeElement;
+    const firstChoice = picker.querySelector<HTMLElement>('input[type="radio"]:checked') ??
+      picker.querySelector<HTMLElement>(".modal-close");
+    firstChoice?.focus({ preventScroll: true });
+
     const dockPicker = () => {
+      if (!drop) return;
       const bounds = backdrop.getBoundingClientRect();
       const padding = getComputedStyle(backdrop);
       const onPhone = window.matchMedia("(max-width: 600px)").matches;
@@ -1020,6 +1026,10 @@ export function App() {
     return () => {
       sizeObserver.disconnect();
       delete backdrop.dataset.materialDock;
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected &&
+          (document.activeElement === document.body || picker.contains(document.activeElement))) {
+        previousFocus.focus({ preventScroll: true });
+      }
     };
   }, [modal, pendingMaterial]);
   const viewport = useRef<HTMLDivElement>(null),
@@ -7087,7 +7097,7 @@ export function App() {
                   {
                     title: "Shopping list",
                     description:
-                      "CSV · stock quantities, pricing, and product links",
+                      "CSV · stock quantities and product links",
                     icon: ClipboardList,
                     action: () =>
                       download(

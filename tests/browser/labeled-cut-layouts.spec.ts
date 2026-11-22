@@ -161,7 +161,7 @@ test("record a planned sheet, reuse a remnant and reopen the shared source and c
   ];
   const before = await importProject(page, initial);
   await page.getByRole("button", { name: "List", exact: true }).click();
-  const row = page.locator(".bom-row").filter({ hasText: "Plytanium" }).first();
+  const row = page.locator('.bom-row[data-stock-material="plytanium-703"]');
   await expect(row).toContainText("1 sheet");
   const order = row.locator(".stock-cut-order");
   await order.locator(":scope > summary").click();

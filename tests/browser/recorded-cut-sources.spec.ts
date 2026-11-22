@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { projectSchema, material, uid, type Project } from "../../src/model";
+import { projectSchema, uid, type MaterialId, type Project } from "../../src/model";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { bom } from "../../src/engine";
 import { addFramingLumber } from "../helpers/materialPlacement";
@@ -33,9 +33,9 @@ async function importProject(page: Page, project: Project) {
   await expect(dialog).toHaveCount(0);
   return draft(page, actual => actual.name.startsWith(project.name) && actual.pieces.length === project.pieces.length);
 }
-async function openSource(page: Page, materialName: string, sourceId: string, state = "planar") {
+async function openSource(page: Page, materialId: MaterialId, sourceId: string, state = "planar") {
   await page.getByRole("button", { name: "List", exact: true }).click();
-  const row = page.locator(".inspector-scroll .bom-row").filter({ has: page.getByText(materialName, { exact: true }) });
+  const row = page.locator(`.inspector-scroll .bom-row[data-stock-material="${materialId}"]`);
   await expect(row).toHaveCount(1);
   const disclosure = row.locator("details.recorded-source-layout").filter({ has: page.locator(`[data-source-id='${sourceId}']`) });
   await expect(disclosure).toHaveCount(1);
@@ -53,7 +53,6 @@ test("angle a board, reuse the shaped offcut, and reopen one recorded source", a
   await page.getByRole("button", { name: "Rename project", exact: true }).click();
   await page.getByLabel("Project name", { exact: true }).fill(`Miter test ${uid().slice(0, 8)}`);
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
-  const name = material("stud").name;
   await addFramingLumber(page);
   const initial = await draft(page, (project) => project.pieces.length === 1);
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
@@ -81,7 +80,7 @@ test("angle a board, reuse the shaped offcut, and reopen one recorded source", a
   expect(reused.pieces.find(({ id }) => id === spare.id)?.cutPlanes).toEqual(spare.cutPlanes);
   expect(bom(reused).find(({ id }) => id === "stud")?.physicalStockUnits).toEqual(1);
 
-  const { row, layout } = await openSource(page, name, kept.cutStock!.id, "profile-review");
+  const { row, layout } = await openSource(page, kept.material, kept.cutStock!.id, "profile-review");
   await expect(row).toContainText("1 board");
   await expect(layout.getByRole("img", { name: "Retained shapes across the stock face" })).toBeVisible();
   await expect(layout.getByRole("img", { name: "Retained shapes across the stock edge" })).toBeVisible();
@@ -147,7 +146,7 @@ test("compound cut calculates the fourth corner and exports the retained face ma
 test("phone bevel keeps the far end, rejects equal marks and keeps canceled stock intact", async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await page.getByRole("button", { name: "Add 23/32 in Plytanium BC pine plywood", exact: true }).click();
+  await page.getByRole("button", { name: "Add 23/32 in BC pine plywood", exact: true }).click();
   const original = await draft(page, (project) => project.pieces.length === 1);
   const cutButton = page.getByRole("button", { name: "Cut part", exact: true });
   const dialog = page.getByRole("dialog");
@@ -184,7 +183,7 @@ test("recorded banquette stock shows exact P/O reservations and gap, follows rea
   project.name = `SYNTHETIC actual source ${uid().slice(0, 8)}`;
   const before = await importProject(page, project), block = before.pieces.find(piece => before.partLabels.find(row => row.partId === piece.id)?.label === "P043")!;
   const sourceId = block.cutStock!.id, remnant = before.pieces.find(piece => piece.offcut && piece.cutStock?.id === sourceId)!;
-  let { row, layout } = await openSource(page, material(block.material).name, sourceId);
+  let { row, layout } = await openSource(page, block.material, sourceId);
   await expect(row).toContainText("1 board");
   await expect(row).toContainText("2 parts");
   await expect(row.locator(".cut-board")).toHaveCount(0);
@@ -242,7 +241,7 @@ test("recorded banquette stock shows exact P/O reservations and gap, follows rea
   await page.locator(".project-list > button").filter({ hasText: before.name }).click();
   const reopened = await draft(page, actual => actual.id === before.id);
   for (const key of ["pieces", "steps", "fastenerPlans", "connectorPlans", "lidHingePlans", "hingeStockSources", "supplies", "toolSelections"] as const) expect(reopened[key]).toEqual(before[key]);
-  ({ row, layout } = await openSource(page, material(block.material).name, sourceId));
+  ({ row, layout } = await openSource(page, block.material, sourceId));
   await expect(layout.locator("g[data-gap-index]")).toHaveCount(1);
   expect(errors).toEqual([]);
 });
@@ -251,7 +250,7 @@ test("phone plywood length-and-width cuts show three exact regions from one shee
   await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
   await page.goto("/");
-  await page.getByRole("button", { name: "Add 23/32 in Plytanium BC pine plywood", exact: true }).click();
+  await page.getByRole("button", { name: "Add 23/32 in BC pine plywood", exact: true }).click();
   const added = await draft(page, project => project.pieces.length === 1), id = added.pieces[0].id;
   await page.getByRole("button", { name: "Cut part", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -263,7 +262,7 @@ test("phone plywood length-and-width cuts show three exact regions from one shee
   expect(piece.size).toEqual([20, 0.703, 60]);
   expect(cut.pieces.filter(piece => piece.offcut)).toHaveLength(2);
   const sourceId = piece.cutStock!.id;
-  const { row, layout } = await openSource(page, material(piece.material).name, sourceId);
+  const { row, layout } = await openSource(page, piece.material, sourceId);
   await expect(row).toContainText("1 sheet");
   // This exact panel's listed actual blank differs from its nominal 4x8 label.
   await expect(layout).toHaveAttribute("data-source-size", "[47.938,0.703,95.938]");

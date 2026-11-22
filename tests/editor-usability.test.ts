@@ -322,6 +322,10 @@ test("one palette card per family retains every exact catalog variant and separa
   const connectorScrews = groupedMaterials("Fasteners", "connector screws");
   assert.deepEqual(connectorScrews.map(({ name }) => name), ["1½ in connector screws"]);
   assert.deepEqual(materialPlacementOptions(connectorScrews[0]).options.map(({ id }) => id), ["sd9112r100"]);
+  const nails = groupedMaterials("Fasteners", "Simpson n10dhdg-r");
+  assert.deepEqual(nails.map(({ name }) => name), ["1½ in connector nails"]);
+  assert.equal(materialPlacementOptions(nails[0]).preferred.id, "n10dhdg-r");
+  assert.equal(materialStockDisplayName("n10dhdg-r"), "1½ in connector nails");
   const rods = groupedMaterials("Rods");
   assert.deepEqual(rods.map(({ name }) => name), ["Closet rod"]);
   assert.deepEqual(materialPlacementOptions(rods[0]).options.map(({ id }) => id), ["closet-rod-72", "hd-everbilt-closet-rod-96"]);

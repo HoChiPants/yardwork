@@ -10,6 +10,7 @@ type Drag = {
   tile: HTMLDivElement;
   group: MaterialGroup;
   stock: MaterialGroup["variants"][number];
+  needsChoice: boolean;
   action: "pending" | "place" | "scroll";
   scrollLeft: number;
   scrollTop: number;
@@ -22,9 +23,10 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   onPreview: (point: Point | null, stock?: MaterialGroup["preferred"]) => boolean;
   onPlace: (group: MaterialGroup, pointer?: Point) => void;
 }) {
-  const groups = useMemo(() => groupedMaterials(category, search).map((group) => ({
-    group, stock: materialPlacementOptions(group).preferred,
-  })), [category, search]);
+  const groups = useMemo(() => groupedMaterials(category, search).map((group) => {
+    const { preferred: stock, chooseSize, canCutToLength } = materialPlacementOptions(group);
+    return { group, stock, needsChoice: chooseSize || canCutToLength };
+  }), [category, search]);
   const list = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const previewFrame = useRef<number | null>(null);
@@ -74,10 +76,10 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     };
   }, []);
   const pointOf = (event: PointerEvent) => ({ x: event.clientX, y: event.clientY });
-  function start(event: PointerEvent<HTMLDivElement>, group: MaterialGroup, stock: Drag["stock"]) {
+  function start(event: PointerEvent<HTMLDivElement>, { group, stock, needsChoice }: Pick<Drag, "group" | "stock" | "needsChoice">) {
     if (drag.current || event.button !== 0 || !event.isPrimary) return;
     drag.current = {
-      pointer: event.pointerId, start: pointOf(event), tile: event.currentTarget, group, stock,
+      pointer: event.pointerId, start: pointOf(event), tile: event.currentTarget, group, stock, needsChoice,
       action: "pending", scrollLeft: list.current?.scrollLeft ?? 0, scrollTop: list.current?.scrollTop ?? 0,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -136,21 +138,24 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       onPlace(active.group);
     }
   }
+  const dragHint = ghost?.overCanvas
+    ? ghost.drag.needsChoice ? "Release to choose size" : "Release to place"
+    : "Drag onto the grid";
   return <>
     <div className="material-list" ref={list}>
-      {groups.map(({ group, stock }) => <div key={group.id} className="material-card" data-material-family={group.id}
-          onPointerDown={(event) => start(event, group, stock)} onPointerMove={move}
+      {groups.map((entry) => <div key={entry.group.id} className="material-card" data-material-family={entry.group.id}
+          onPointerDown={(event) => start(event, entry)} onPointerMove={move}
           onPointerUp={(event) => finish(event, true)}
           onPointerCancel={(event) => finish(event, false)}
           onLostPointerCapture={(event) => finish(event, false)}
           onDragStart={(event) => event.preventDefault()}>
           <button type="button" className="material-grip" title="Drag into the workspace or click to add at the center"
-            onClick={(event) => { if (event.detail === 0) onPlace(group); }}>
-            {art(group, stock)}
-            <strong>{group.name}</strong>
+            onClick={(event) => { if (event.detail === 0) onPlace(entry.group); }}>
+            {art(entry.group, entry.stock)}
+            <strong>{entry.group.name}</strong>
           </button>
-          <button type="button" className="material-add" aria-label={`Add ${group.name}`} title="Add at the center"
-            onClick={(event) => { if (event.detail === 0) onPlace(group); }}><Plus size={16} /></button>
+          <button type="button" className="material-add" aria-label={`Add ${entry.group.name}`} title="Add at the center"
+            onClick={(event) => { if (event.detail === 0) onPlace(entry.group); }}><Plus size={16} /></button>
         </div>
       )}
       {!groups.length && <p className="small-note">No matching materials.</p>}
@@ -160,7 +165,10 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
       data-above={ghost.point.y > window.innerHeight - 85 || undefined}
       style={{ left: ghost.point.x, top: ghost.point.y }}>
       {art(ghost.drag.group, ghost.drag.stock)}
-      <strong>{ghost.drag.group.name}</strong>
+      <div>
+        <strong>{ghost.drag.group.name}</strong>
+        <small>{dragHint}</small>
+      </div>
     </div>, document.body)}
   </>;
 }

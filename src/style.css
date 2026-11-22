@@ -3793,6 +3793,13 @@ small {
   background: #f2f7ec;
 }
 .material-drag-preview .material-art { width: 41px; height: 43px; }
+.material-drag-preview small {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #526548;
+}
 .stock-size-options { display: flex; flex-wrap: wrap; gap: 8px; border: 0; padding: 0; margin: 18px 0; }
 .stock-size-options legend { margin-bottom: 8px; font-weight: 600; }
 .single-stock-size { margin-block: 14px; font-weight: 600; }

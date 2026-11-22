@@ -16,7 +16,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(tile).toHaveCount(1);
   await expect(tile).toHaveText(group);
   await expect(tile.getByRole("combobox")).toHaveCount(0);
-  await expect(page.locator(".material-list")).not.toContainText(/Home Depot|Lowe’s|SPF|\$/);
+  await expect(page.locator(".material-list")).not.toContainText(/Home Depot|Lowe’s|SPF|Plytanium|Simpson|SharkBite|Cedarbrook|\$/);
   const canvas = page.locator("canvas").first();
   await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
   await expect.poll(() => canvas.evaluate((ground: HTMLCanvasElement) => {
@@ -38,7 +38,8 @@ test("one material tile supports drop, length choice and a separate selected-par
     await page.mouse.move(groundHint.x + groundHint.width / 2, groundHint.y + groundHint.height / 2, { steps: 8 });
   }
   await dragToGround(card.x + 2, card.y + 2);
-  await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
+  const dropHint = page.locator(".material-drag-preview.can-drop");
+  await expect(dropHint).toContainText("Release to choose size");
   await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,96,3.5]");
   await page.keyboard.press("Escape");
   await page.mouse.up();
@@ -236,9 +237,17 @@ test("activate a material tile by keyboard and use a measured span to choose sho
     await measurement.getByText(`Point ${end} · exact coordinates`, { exact: true }).click();
   }
   await measurement.getByRole("button", { name: "Done measuring", exact: true }).click();
-  await page.getByRole("button", { name: group, exact: true }).press("Enter");
+  const tile = page.getByRole("button", { name: group, exact: true });
+  await tile.press("Enter");
   const placement = page.getByRole("dialog", { name: group, exact: true });
-  await placement.getByRole("radio", { name: "12 ft", exact: true }).check();
+  await expect(placement.getByRole("radio", { name: "8 ft", exact: true })).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(placement.getByRole("radio", { name: "10 ft", exact: true })).toBeChecked();
+  await page.keyboard.press("Escape");
+  await expect(tile).toBeFocused();
+  await tile.press("Enter");
+  await page.keyboard.press("ArrowLeft");
+  await expect(placement.getByRole("radio", { name: "12 ft", exact: true })).toBeChecked();
   const length = placement.getByRole("spinbutton", { name: "Needed finished length", exact: true });
   await expect(length).toHaveValue("");
   await placement.getByRole("button", { name: "Use measured span (4 ft)", exact: true }).click();

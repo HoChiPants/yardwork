@@ -178,7 +178,7 @@ test("real sourced fasteners show exact pack sizes without inventing a zero pric
   await page.getByRole("button", { name: "Fasteners", exact: true }).click();
   await page
     .getByRole("button", {
-      name: "Add Simpson 1½ in connector nails",
+      name: "Add 1½ in connector nails",
       exact: true,
     })
     .click();

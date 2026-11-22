@@ -48,6 +48,7 @@ import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 import { weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot } from "./roofVentFlashingReference";
 import { floorRegisterBoot } from "./floorRegisterReference";
+import { roundDuctStock } from "./roundDuctReference";
 import { trimSealant } from "./trimSealantReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
@@ -4463,6 +4464,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
       { url: weatherWatch.evaluation, verifiedAt: weatherWatch.reviewedAt, note: "ICC-ES ESR-1322 covers the listed membrane and installation conditions." },
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [weatherWatch.listing, weatherWatch.specification] },
+    discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: roundDuctStock.id,
+    name: roundDuctStock.label,
+    manufacturer: "Master Flow",
+    manufacturerPartNumber: roundDuctStock.model,
+    category: "equipment",
+    status: "reviewed-specs",
+    verifiedAt: roundDuctStock.reviewedAt,
+    profile: profile("equipment", null, 1, { materialFamily: "30-gauge galvanized round duct" }),
+    offers: [hd(roundDuctStock.internet, roundDuctStock.model, roundDuctStock.sku)],
+    sources: [
+      { url: roundDuctStock.listing, verifiedAt: roundDuctStock.reviewedAt, note: "Single 6 in × 5 ft round, snap-lock metal duct pipe with one crimped end." },
+      { url: roundDuctStock.specification, verifiedAt: roundDuctStock.reviewedAt, note: "GAF lists CP6X60 among its standard round metal pipe models." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [roundDuctStock.listing, roundDuctStock.specification] },
     discrepancies: [],
     capabilities: [],
   },

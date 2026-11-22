@@ -11,6 +11,8 @@ import { reviewRoofValleys } from "./roofValleys";
 import { oateyRoofVentBoot, roofVentPurchasePurpose } from "./roofVentFlashingReference";
 import { floorRegisterBoot, floorRegisterPurchasePurpose } from "./floorRegisterReference";
 import { floorRegisterBootCount } from "./floorRegister";
+import { roundDuctPurchaseCount } from "./roundDuct";
+import { roundDuctPurchasePurpose, roundDuctStock } from "./roundDuctReference";
 import { roofVentFlashingCount } from "./roofVentFlashing";
 import { trimSealant } from "./trimSealantReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
@@ -219,6 +221,11 @@ export function homeDepotPurchaseNeeds(
     const count = floorRegisterBootCount(project);
     include(floorRegisterBoot.id, floorRegisterPurchasePurpose, count,
       count === null ? "Recheck the selected floor register cut and boot clearance before ordering." : undefined);
+  }
+  if (project.roundDuctRuns?.length) {
+    const count = roundDuctPurchaseCount(project);
+    include(roundDuctStock.id, roundDuctPurchasePurpose, count,
+      count === null ? "Recheck the clearance and cut lengths on the saved straight runs." : undefined);
   }
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);

@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 131,
+  "floorRegisterPlans": [
+    {
+      "id": "b514a1b1-6578-4cd0-a0c7-6cca92dd5806",
+      "input": {
+        "panelId": "67d2e284-bf22-40a7-a4d5-e793f7266d8a",
+        "fromLeft": 10,
+        "fromFront": 21,
+        "openingLength": 10.25,
+        "openingWidth": 4.25,
+        "throatLength": 10,
+        "throatWidth": 4,
+        "bodyLength": 15,
+        "bodyWidth": 6,
+        "depth": 9,
+        "bodyOffsetX": 2,
+        "bodyOffsetZ": 0
+      }
+    }
+  ],
+  "roundDuctRuns": [
+    {
+      "id": "d65cbfd6-d1a0-40d0-bf82-b8d92ca16504",
+      "input": {
+        "name": "Straight supply branch",
+        "start": [
+          0.625,
+          7.1485,
+          7.125
+        ],
+        "end": [
+          80.625,
+          7.1485,
+          7.125
+        ],
+        "envelopeWidth": 8,
+        "stockLength": 60,
+        "startEngagement": 2,
+        "endEngagement": 2,
+        "jointOverlap": 1,
+        "cutLoss": 0.125
+      }
+    }
+  ],
+  "id": "2c3399ef-7b60-48e5-a22b-faf873fb50f2",
+  "name": "Round duct from a floor register · practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T11:29:03.936Z",
+  "pieces": [
+    {
+      "id": "67d2e284-bf22-40a7-a4d5-e793f7266d8a",
+      "name": "Measured subfloor sheet",
+      "material": "hd-osb-subfloor-486701",
+      "size": [
+        48,
+        0.703,
+        32
+      ],
+      "position": [
+        0,
+        12,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "b0534664-0c4e-487b-9950-31e2538e71f7",
+      "assembly": "Floor",
+      "offcut": false,
+      "cutPlanes": [],
+      "rectangularOpenings": [
+        {
+          "axis": 1,
+          "center": [
+            7.125,
+            -8.875
+          ],
+          "spans": [
+            4.25,
+            10.25
+          ],
+          "source": {
+            "floorRegisterId": "b514a1b1-6578-4cd0-a0c7-6cca92dd5806"
+          }
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "5857bb27-a600-4521-8f06-ab80737b3940",
+      "name": "Center joist",
+      "material": "hd-spf-2x6-8",
+      "size": [
+        48,
+        5.5,
+        1.5
+      ],
+      "position": [
+        0,
+        8.8985,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "b0534664-0c4e-487b-9950-31e2538e71f7",
+      "assembly": "Floor",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "83f127be-580b-4544-8e72-62ea953a1b40",
+      "name": "Panel edge joist",
+      "material": "hd-spf-2x6-8",
+      "size": [
+        48,
+        5.5,
+        1.5
+      ],
+      "position": [
+        0,
+        8.8985,
+        -15.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "b0534664-0c4e-487b-9950-31e2538e71f7",
+      "assembly": "Floor",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3ba96b83-3d5b-49b6-abe1-c42690adecf3",
+      "name": "Panel edge joist",
+      "material": "hd-spf-2x6-8",
+      "size": [
+        48,
+        5.5,
+        1.5
+      ],
+      "position": [
+        0,
+        8.8985,
+        15.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "b0534664-0c4e-487b-9950-31e2538e71f7",
+      "assembly": "Floor",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "b0534664-0c4e-487b-9950-31e2538e71f7",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

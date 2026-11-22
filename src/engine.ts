@@ -127,6 +127,8 @@ import { valleyKey } from "./roofValleySchema";
 import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
 import { floorRegisterGuideLines, floorRegisterReviews } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
+import { roundDuctGuideLines, roundDuctReviews } from "./roundDuct";
+import { roundDuctScope, roundDuctStock } from "./roundDuctReference";
 import { roofVentFlashingGuideLines, roofVentFlashingReviews } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { floorHangerGuideLines } from "./floorHangerPlans";
@@ -723,6 +725,11 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
     if (issue) findings.push({
       id: `floor-register-${plan.id}`, title: "Review floor register fit",
       severity: "warning", detail: issue, pieceId: plan.input.panelId,
+    });
+  }
+  for (const { id, input, issues } of roundDuctReviews(p)) {
+    if (issues.length) findings.push({
+      id: `round-duct-${id}`, title: `Review duct route · ${input.name}`, severity: "warning", detail: issues.join(" "),
     });
   }
   for (const row of reviewOpeningFlashings(p).rows) {
@@ -2086,6 +2093,7 @@ export function guideMarkdown(p: Project) {
   const roofValleys = roofValleyGuideLines(p);
   const roofVentFlashings = roofVentFlashingGuideLines(p);
   const floorRegisters = floorRegisterGuideLines(p);
+  const roundDucts = roundDuctGuideLines(p);
   const floorReviews = subfloorReviews(p);
   const floorHangers = floorHangerGuideLines(p, connections.intents);
   const doorKits = new Set((p.motionPlans ?? []).flatMap((plan) => {
@@ -2329,6 +2337,9 @@ export function guideMarkdown(p: Project) {
     (floorRegisters.length ? `\n\n## Floor register cutting and sealing\n\n${floorRegisterScope}\n\n` +
       floorRegisters.map((line) => "- " + line).join("\n") +
       `\n\n[Master Flow boot instructions](${floorRegisterBoot.specification}) · [Home Depot reference](${floorRegisterBoot.listing}) · [PNNL duct-boot air sealing](${floorRegisterBoot.airSeal})\n` : "") +
+    (roundDucts.length ? `\n\n## Round duct cutting and sealing\n\n${roundDuctScope}\n\n` +
+      roundDucts.map((line) => "- " + line).join("\n") +
+      `\n\n[Master Flow pipe reference](${roundDuctStock.listing}) · [PNNL metal duct sealing](${roundDuctStock.sealing})\n` : "") +
     (p.waterRuns?.length ? "\n\n## Wall water-line schedule\n\n" +
       p.waterRuns.flatMap((run) => waterRunGuide(p, run)).map((line) => "- " + line.replace(/[\r\n]+/g, " ")).join("\n") +
       `\n\n[Stud boring](${studBoreSource}) · [Pipe protection](${pipeProtectionSource}) · [SharkBite installation](${pexInstallation})\n` : "") +

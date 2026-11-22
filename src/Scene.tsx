@@ -1,4 +1,6 @@
 import type { FloorRegisterPreview } from "./floorRegister";
+import type { previewRoundDuct } from "./roundDuct";
+import { roundDuctStock } from "./roundDuctReference";
 import { maxRepeatedBoards } from "./repeatedBoardCuts";
 import { libertyBarPull } from "./cabinetPullReference";
 import type { SubfloorJoint, SubfloorReview } from "./subfloor";
@@ -100,6 +102,7 @@ export type SceneProps = {
   shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[]; edgeOutline?: V3[] }>;
   shownRoofValley?: [V3, V3];
   floorRegister?: FloorRegisterPreview;
+  roundDuct?: ReturnType<typeof previewRoundDuct>;
   shownRoofVent?: { center: V3; flange: V3[]; layout: V3[] };
   shownOpeningFlashing?: OpeningFlashingPreview;
   shownPlumbingVentLayout?: PlumbingVentLayout;
@@ -1699,6 +1702,22 @@ function World(props: SceneProps) {
             color="#28677d" lineWidth={4} depthTest={false} raycast={() => null} />
           <Html position={props.shownRoofValley[0].map((value) => value / 12) as V3} style={{ pointerEvents: "none" }}>
             <span className="site-clearance-marker" data-testid="roof-valley-marker">Valley centerline · eave</span>
+          </Html>
+        </group>
+      )}
+      {!isolated && props.roundDuct?.geometry && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <group position={props.roundDuct.geometry.center.map((value) => value / 12) as V3} rotation={props.roundDuct.geometry.rotation}>
+          <mesh raycast={() => null}>
+            <cylinderGeometry args={[roundDuctStock.diameter / 24, roundDuctStock.diameter / 24, props.roundDuct.geometry.length / 12, 24]} />
+            <meshBasicMaterial color={props.roundDuct.issues.length ? "#c25636" : "#426f80"} transparent opacity={0.35} depthWrite={false} depthTest={false} />
+          </mesh>
+          <mesh raycast={() => null}>
+            <boxGeometry args={props.roundDuct.geometry.size.map((value) => value / 12) as V3} />
+            <meshBasicMaterial visible={false} />
+            <Edges color={props.roundDuct.issues.length ? "#c25636" : "#426f80"} />
+          </mesh>
+          <Html position={[0, 0, props.roundDuct.geometry.size[0] / 24]} style={{ pointerEvents: "none" }} center>
+            <span className="site-clearance-marker" data-testid="round-duct-marker">{props.roundDuct.issues.length ? "Review duct clearance" : "6 in round duct"}</span>
           </Html>
         </group>
       )}

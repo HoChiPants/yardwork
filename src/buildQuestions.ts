@@ -42,6 +42,8 @@ import { modeledRoofValleys } from "./roofValleys";
 import { valleyScope } from "./roofValleyReference";
 import { floorRegisterScope } from "./floorRegisterReference";
 import { floorRegisterCutoutLabel, floorRegisterCutoutUse, floorRegisterReviews } from "./floorRegister";
+import { roundDuctReviews } from "./roundDuct";
+import { roundDuctScope } from "./roundDuctReference";
 import { roofVentFlashingScope } from "./roofVentFlashingReference";
 import type { RimSide } from "./rimAirSealSchema";
 
@@ -64,6 +66,7 @@ export type BuildQuestion =
   | { kind: "rim-air-seal" }
   | { kind: "roof-valley" }
   | { kind: "floor-register"; reuse?: true }
+  | { kind: "round-duct" }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "treated-wood" }
@@ -94,6 +97,7 @@ export type BuildQuestionAction =
   | { kind: "rim-air-seal"; sectionId?: string; side?: RimSide }
   | { kind: "roof-valley" }
   | { kind: "floor-register"; planId?: string }
+  | { kind: "round-duct"; runId?: string }
   | { kind: "roof-vent-flashing" }
   | { kind: "water-support" }
   | { kind: "drawer-box"; panelIds: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean }
@@ -176,6 +180,7 @@ const rimAirSealQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[- ]seal|seal
 const roofValleyQuestion = /^(?:(?:how (?:do|can|should) i )?(?:line|seal|waterproof) (?:the |a |my )?roof valle(?:y|ys)|(?:plan|review|check|show) (?:the )?roof valley (?:lining|membrane|cuts))$/i;
 const floorRegisterQuestion = /^(?:(?:plan|fit|check|review|show) (?:a |the |my )?floor (?:register|duct boot)|how (?:do|can|should) i (?:air[- ]seal|seal) (?:a |the |my )?floor (?:register|duct boot))$/i;
 const floorRegisterCutoutQuestion = /^(?:(?:(?:how (?:do|can|should) i )?(?:record|keep|reuse|save)|what can i do with) (?:a |the |my )?floor (?:register|duct boot) (?:cutout|offcut|scrap))$/i;
+const roundDuctQuestion = /^(?:how (?:do|can|should) i )?(?:plan|lay out|check|review|show) (?:a |the |my )?(?:straight )?(?:6 in(?:ch)? )?(?:round |metal |supply )?duct (?:runs?|cuts?)$/i;
 const roofVentFlashingQuestion = /^(?:how (?:do|can|should) i (?:flash|seal) (?:the |a |my )?(?:(?:plumbing )?vent(?: pipe)? through (?:the |a |my )?roof|roof vent(?: pipe)?)|(?:plan|review|check|show) (?:the |my )?roof vent flashing)$/i;
 const sinkDrainQuestion = /^(?:plan|fit|add|review|check|show|size) (?:a |the |my )?(?:(?:kitchen |kitchenette |cabinet )?sink (?:drain|trap)|(?:sink |kitchen )?p[ -]?trap|trap arm)(?: (?:at|under|for|in) .+)?$/i;
 const waterStopQuestion = /^(?:plan|fit|add|review|check|show) (?:a |the |my )?(?:(?:pex |fixture |sink |kitchen |kitchenette )?(?:shut[ -]?offs?|angle stops?)(?: (?:for|at|under|on) .+)?|(?:a )?(?:shutoff |stop )valves?(?: (?:at|for|under) .+)?)$/i;
@@ -295,6 +300,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (roofValleyQuestion.test(text)) return { kind: "roof-valley" };
   if (floorRegisterCutoutQuestion.test(text)) return { kind: "floor-register", reuse: true };
   if (floorRegisterQuestion.test(text)) return { kind: "floor-register" };
+  if (roundDuctQuestion.test(text)) return { kind: "round-duct" };
   if (roofVentFlashingQuestion.test(text)) return { kind: "roof-vent-flashing" };
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
   if (waterSupportQuestion.test(text)) return { kind: "water-support" };
@@ -902,6 +908,17 @@ export function answerBuildQuestion(
         detail: "Check a measured floor opening and boot against the surrounding framing before cutting.",
         scope: floorRegisterScope,
         link: { label: "Plan floor register", action: { kind: "floor-register" } },
+      };
+    case "round-duct":
+      return {
+        title: "Cut and fit a straight round duct run",
+        detail: "Use measured collar tips and pipe overlap to check the clearance, cut lengths, and seal joints.",
+        scope: roundDuctScope,
+        rows: roundDuctReviews(project).map(({ id, input, issues, cuts }) => ({
+          id, title: input.name, detail: issues.length ? issues.join(" ") : `${cuts?.length ?? 0} stock pieces in the current cut list.`,
+          link: { label: "Open saved duct run", action: { kind: "round-duct", runId: id } },
+        })),
+        link: { label: "Plan round duct run", action: { kind: "round-duct" } },
       };
     case "roof-vent-flashing":
       return {

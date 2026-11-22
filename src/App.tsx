@@ -32,6 +32,9 @@ import { FloorRegisterPanel } from "./FloorRegisterPanel";
 import { floorRegisterGuideLines, floorRegisterReviews, isFloorRegisterPanel, recordFloorRegisterCutout, removeFloorRegister,
   saveFloorRegister, type FloorRegisterPreview } from "./floorRegister";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
+import { RoundDuctPanel } from "./RoundDuctPanel";
+import { previewRoundDuct, removeRoundDuct, roundDuctGuideLines, saveRoundDuct } from "./roundDuct";
+import { roundDuctScope, roundDuctStock } from "./roundDuctReference";
 import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
 import { removeRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
@@ -422,6 +425,7 @@ type Modal =
   | "rim-air-seal"
   | "roof-valley"
   | "floor-register"
+  | "round-duct"
   | "roof-vent-flashing"
   | "water-support"
   | "export"
@@ -667,6 +671,8 @@ export function App() {
   const [shownRimSeal, setShownRimSeal] = useState<{ projectId: string; key: string }>();
   const [shownRoofValley, setShownRoofValley] = useState<{ projectId: string; id: string }>();
   const [floorRegisterDraft, setFloorRegisterDraft] = useState<FloorRegisterPreview>();
+  const [roundDuctDraft, setRoundDuctDraft] = useState<ReturnType<typeof previewRoundDuct>>();
+  const [shownRoundDuct, setShownRoundDuct] = useState<{ projectId: string; id: string }>();
   const [shownFloorRegister, setShownFloorRegister] = useState<{ projectId: string; id: string }>();
   const [shownRoofVent, setShownRoofVent] = useState<{ projectId: string; id: string }>();
   const [rimSealTarget, setRimSealTarget] = useState<{ sectionId?: string; side?: RimSide }>();
@@ -1013,6 +1019,7 @@ export function App() {
     if (next !== "offcut-reuse") setOffcutReusePlan(null);
     if (next !== "board-cut-list") setBoardCutDraft(null);
     if (next !== "floor-register") setFloorRegisterDraft(undefined);
+    if (next !== "round-duct") setRoundDuctDraft(undefined);
     if (next !== "offcut-release") setOffcutReleasePreview(null);
     if (next !== "inventory") setInventoryTarget(undefined);
     if (next !== null) inspectorFocus.suspend();
@@ -1555,6 +1562,11 @@ export function App() {
         if (action.planId) setShownFloorRegister({ projectId: project.id, id: action.planId });
         setModal("floor-register");
         break;
+      case "round-duct":
+        setStage(null); setPlaying(false); setExplode(false); setPanel("checks");
+        if (action.runId) setShownRoundDuct({ projectId: project.id, id: action.runId });
+        setModal("round-duct");
+        return;
       case "roof-vent-flashing":
         setPanel("checks");
         setModal("roof-vent-flashing");
@@ -2031,6 +2043,11 @@ export function App() {
   const floorRegisterMarker = useMemo(() => shownFloorRegister?.projectId === project.id
     ? floorRegisterReviews(project).find(({ plan, issue }) => plan.id === shownFloorRegister.id && !issue)?.layout
     : undefined, [project, shownFloorRegister]);
+  const roundDuctMarker = useMemo(() => {
+    if (shownRoundDuct?.projectId !== project.id) return undefined;
+    const run = project.roundDuctRuns?.find(({ id }) => id === shownRoundDuct.id);
+    return run ? previewRoundDuct(project, run.input, run.id) : undefined;
+  }, [project, shownRoundDuct]);
   const roofVentMarker = useMemo(() => shownRoofVent?.projectId === project.id
     ? roofVentFlashingReviews(project).find(({ plan, issue }) => plan.id === shownRoofVent.id && !issue)?.geometry : undefined,
   [project, shownRoofVent]);
@@ -2187,6 +2204,7 @@ export function App() {
   const printRimSeals = useMemo(() => rimAirSealGuideLines(printRimSealReview), [printRimSealReview]);
   const printRoofValleys = useMemo(() => roofValleyGuideLines(exportGuide), [exportGuide]);
   const printFloorRegisters = useMemo(() => floorRegisterGuideLines(exportGuide), [exportGuide]);
+  const printRoundDuct = useMemo(() => roundDuctGuideLines(exportGuide), [exportGuide]);
   const printRoofVents = useMemo(() => roofVentFlashingGuideLines(exportGuide), [exportGuide]);
   const printOpeningFlashing = useMemo(() => openingFlashingGuideLines(reviewOpeningFlashings(exportGuide)), [exportGuide]);
   const printWindowWalls = useMemo(() => reviewGeneratedWindowWalls(exportGuide), [exportGuide]);
@@ -3523,6 +3541,7 @@ export function App() {
               shownRimSeal={visibleRimSeal?.cuts}
               shownRoofValley={panel === "checks" && roofValleyMarker ? [roofValleyMarker.start, roofValleyMarker.end] : undefined}
               floorRegister={modal === "floor-register" ? floorRegisterDraft : panel === "checks" ? floorRegisterMarker : undefined}
+              roundDuct={modal === "round-duct" ? roundDuctDraft : panel === "checks" ? roundDuctMarker : undefined}
               shownRoofVent={panel === "checks" ? roofVentMarker : undefined}
               shownOpeningFlashing={panel === "opening-flashing" && openingFlashingPreview?.project === project
                 ? openingFlashingPreview.value : undefined}
@@ -4425,6 +4444,10 @@ export function App() {
               {floorRegisterMarker && <button type="button" className="text-button" onClick={() => setShownFloorRegister(undefined)}>
                 Hide floor register layout
               </button>}
+              <button type="button" className="button secondary" onClick={() => {
+                setStage(null); setExplode(false); setPlaying(false); setModal("round-duct");
+              }}>Plan round duct run</button>
+              {roundDuctMarker && <button type="button" className="text-button" onClick={() => setShownRoundDuct(undefined)}>Hide duct run</button>}
               {(project.projectCode?.trades.includes("roofing") || !!project.roofValleys?.length) &&
                 <button type="button" className="button secondary full" onClick={() => setModal("roof-valley")}>Plan roof valley lining</button>}
               {roofValleyMarker && <button type="button" className="text-button" onClick={() => setShownRoofValley(undefined)}>Hide valley centerline</button>}
@@ -5684,7 +5707,7 @@ export function App() {
       )}
       {modal && (
         <div
-          className={modal === "place-material" || modal === "board-cut-list" || modal === "floor-register" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
+          className={modal === "place-material" || modal === "board-cut-list" || modal === "floor-register" || modal === "round-duct" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setModal(null);
           }}
@@ -5844,6 +5867,24 @@ export function App() {
               })}
               onShow={(id) => {
                 setShownFloorRegister({ projectId: project.id, id });
+                setStage(null); setPlaying(false); setExplode(false); setPanel("checks"); setModal(null);
+              }} />}
+            {modal === "round-duct" && <RoundDuctPanel key={project.id} project={project} measurement={measurement}
+              initialId={shownRoundDuct?.projectId === project.id ? shownRoundDuct.id : undefined}
+              onPreview={setRoundDuctDraft}
+              onSave={(input, id) => safe(() => {
+                const next = change((live) => saveRoundDuct(live, input, id));
+                const run = next.roundDuctRuns?.at(-1);
+                if (run) setShownRoundDuct({ projectId: project.id, id: run.id });
+                setModal(null);
+                notify("Duct run and cut list saved.");
+              })}
+              onRemove={(id) => safe(() => {
+                change((live) => removeRoundDuct(live, id));
+                if (shownRoundDuct?.id === id) setShownRoundDuct(undefined);
+              })}
+              onShow={(id) => {
+                setShownRoundDuct({ projectId: project.id, id });
                 setStage(null); setPlaying(false); setExplode(false); setPanel("checks"); setModal(null);
               }} />}
             {modal === "roof-vent-flashing" && <RoofVentFlashingPanel key={project.id} project={project}
@@ -7376,6 +7417,13 @@ export function App() {
               <a href={floorRegisterBoot.airSeal}>PNNL duct-boot air sealing</a></p>
           </section>
         )}
+        {printRoundDuct.length > 0 && <section>
+          <h2>Round duct cutting and sealing</h2>
+          <p>{roundDuctScope}</p>
+          <ul>{printRoundDuct.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          <p><a href={roundDuctStock.listing}>Master Flow pipe reference</a>{" · "}
+            <a href={roundDuctStock.sealing}>PNNL metal duct sealing</a></p>
+        </section>}
         {printRoofVents.length > 0 && (
           <section className="roof-vent-flashing-print">
             <h2>Roof vent flashing</h2>

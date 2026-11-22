@@ -20,6 +20,7 @@ import { rimEdgeSealant, rimFoam, rimSealScope } from "./rimAirSealReference";
 import { valleyScope, weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
+import { roundDuctScope, roundDuctStock } from "./roundDuctReference";
 import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
 import { trimSealant } from "./trimSealantReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
@@ -419,6 +420,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "box",
     contents: [{ name: "10 × 4 in to 6 in galvanized end register box", quantity: 1 }],
     requirements: [floorRegisterScope],
+  },
+  [roundDuctStock.id]: {
+    purchaseUnit: "pipe",
+    contents: [{ name: "6 in × 5 ft galvanized snap-lock duct", quantity: 1 }],
+    requirements: [roundDuctScope],
   },
   [rimFoam.id]: {
     purchaseUnit: "sheet",

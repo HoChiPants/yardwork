@@ -930,6 +930,7 @@ export function App() {
     group: MaterialGroup;
     position?: V3;
     finishedLength?: number;
+    measuredLength?: number;
     offcutId?: string;
   }>();
   const viewport = useRef<HTMLDivElement>(null),
@@ -2606,7 +2607,11 @@ export function App() {
   }
   function materialDropCanvas({ x, y }: { x: number; y: number }) {
     const canvas = viewport.current?.querySelector("canvas");
-    return canvas && document.elementFromPoint(x, y) === canvas ? canvas : null;
+    const hit = document.elementFromPoint(x, y);
+    // The starter actions sit over otherwise empty ground. Let a material drag
+    // pass through them while the permanent camera and model controls stay protected.
+    const starter = hit?.closest(".empty-workspace");
+    return canvas && (hit === canvas || (starter && viewport.current?.contains(starter))) ? canvas : null;
   }
   const canDropMaterial = !workspaceReviewActive && !activeFastenerLayoutPreview && !activeConnectorPreview &&
     !baseRailPreview && panel !== "fit-stock" && stage === null && !explode;
@@ -2659,7 +2664,9 @@ export function App() {
       add(options[0].id, group.name, position);
       return;
     }
-    setPendingMaterial({ projectId: project.id, group, position });
+    const distance = measured?.distance;
+    const measuredLength = canCutToLength && distance !== undefined && distance >= 0.125 ? distance : undefined;
+    setPendingMaterial({ projectId: project.id, group, position, measuredLength });
     setModal("place-material");
   }
   function copySelection() {
@@ -5532,7 +5539,8 @@ export function App() {
             </button>
             {modal === "place-material" && pendingMaterial?.projectId === project.id && (
               <MaterialPlacement group={pendingMaterial.group} project={project} inspection={currentCutSources}
-                finishedLength={pendingMaterial.finishedLength} offcutId={pendingMaterial.offcutId} onPlace={(id, placement) => {
+                finishedLength={pendingMaterial.finishedLength} measuredLength={pendingMaterial.measuredLength}
+                offcutId={pendingMaterial.offcutId} onPlace={(id, placement) => {
                 add(id, pendingMaterial.group.name, pendingMaterial.position, placement);
               }} />
             )}

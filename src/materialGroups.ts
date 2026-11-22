@@ -63,6 +63,12 @@ const families: {
     preferred: "one-six",
   },
   {
+    id: "cedar-tongue-and-groove",
+    name: "Tongue-and-groove cedar",
+    ids: ["cedarbrook-cedar-tg-72"],
+    preferred: "cedarbrook-cedar-tg-72",
+  },
+  {
     id: "birch-plywood",
     name: "Birch plywood",
     ids: ["hd-purebond-birch-188", "hd-purebond-birch-453", "hd-purebond-birch-703"],

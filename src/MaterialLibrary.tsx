@@ -45,6 +45,10 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     if (active.active) {
       onPreview(null);
       if (place) onPlace(active.group, pointOf(event));
+      return;
+    }
+    if (place && event.currentTarget.contains(document.elementFromPoint(event.clientX, event.clientY))) {
+      onPlace(active.group);
     }
   }
   return <>

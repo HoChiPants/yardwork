@@ -20,7 +20,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   const canvas = page.locator("canvas").first();
   await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
   const art = (await tile.locator(".material-art").boundingBox())!;
-  const actions = (await page.locator(".empty-workspace .inline").boundingBox())!;
+  const actions = (await page.locator(".empty-workspace").getByRole("button").first().boundingBox())!;
   await page.mouse.move(art.x + art.width / 2, art.y + art.height / 2);
   await page.mouse.down();
   await page.mouse.move(actions.x + actions.width / 2, actions.y + actions.height / 2, { steps: 8 });
@@ -74,6 +74,40 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toHaveCount(0);
   await page.getByText("Project cost estimate", { exact: true }).click();
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toBeVisible();
+});
+
+test("click a material tile and use a measured span to choose shorter stock", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("button", { name: "Top", exact: true }).click();
+  const canvas = page.locator("canvas").first();
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
+  await page.getByRole("button", { name: "Measure (D)", exact: true }).click();
+  const view = (await canvas.boundingBox())!;
+  for (const fraction of [0.35, 0.56]) {
+    await page.mouse.click(view.x + view.width * fraction, view.y + view.height * 0.63);
+  }
+  const measurement = page.locator(".measurement-panel");
+  for (const [end, x] of [["A", "0"], ["B", "48"]]) {
+    await measurement.getByText(`Point ${end} · exact coordinates`, { exact: true }).click();
+    for (const [axis, value] of [["X", x], ["Y", "0"], ["Z", "0"]]) {
+      await measurement.getByRole("spinbutton", { name: `Point ${end} ${axis}`, exact: true }).fill(value);
+    }
+    await measurement.getByText(`Point ${end} · exact coordinates`, { exact: true }).click();
+  }
+  await measurement.getByRole("button", { name: "Done measuring", exact: true }).click();
+  await page.locator('[data-material-family="framing-2x4"]').getByText(group, { exact: true }).click();
+  const placement = page.getByRole("dialog", { name: group, exact: true });
+  await placement.getByRole("radio", { name: "12 ft", exact: true }).check();
+  const length = placement.getByRole("spinbutton", { name: "Needed finished length", exact: true });
+  await expect(length).toHaveValue("");
+  await placement.getByRole("button", { name: "Use measured span (4 ft)", exact: true }).click();
+  await expect(length).toHaveValue("4");
+  await expect(placement.getByRole("combobox", { name: "Finished length (optional) units" })).toHaveValue("ft");
+  await expect(placement).toContainText("8 ft stock fits this cut with 4 ft less length to buy.");
+  await placement.getByRole("button", { name: "Use 8 ft", exact: true }).click();
+  await placement.getByRole("button", { name: "Plan cut and place", exact: true }).click();
+  await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("48");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("24");
 });
 
 test("an existing surface receives a dropped board and single-stock boards can be cut before placement", async ({ page }) => {

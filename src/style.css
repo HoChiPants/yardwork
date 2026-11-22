@@ -3823,6 +3823,7 @@ small {
 }
 .stock-size-options label:has(:checked) { background: #eef3e8; border-color: #a6b89a; }
 .stock-length-check { margin: 0 0 16px; }
+.use-measured-length { display: block; margin: 8px 0; }
 .stock-offcut-options { margin: 12px 0; }
 .stock-offcut-options summary { cursor: pointer; }
 .stock-offcut-options fieldset { display: grid; gap: 8px; margin: 8px 0 0; }

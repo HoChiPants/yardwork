@@ -12,11 +12,12 @@ export type BoardPlacement =
   | { kind: "offcut"; id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] }
   | { kind: "stock-cut"; length: number };
 
-export function MaterialPlacement({ group, project, inspection, finishedLength, offcutId, onPlace }: {
+export function MaterialPlacement({ group, project, inspection, finishedLength, measuredLength, offcutId, onPlace }: {
   group: MaterialGroup;
   project: Project;
   inspection: ReturnType<typeof inspectCutStock>;
   finishedLength?: number;
+  measuredLength?: number;
   offcutId?: string;
   onPlace: (id: MaterialId, placement?: BoardPlacement) => void;
 }) {
@@ -55,7 +56,9 @@ export function MaterialPlacement({ group, project, inspection, finishedLength, 
     </fieldset> : <p className="single-stock-size">{choice.label} stock</p>}
     {canCutToLength && <div className="stock-length-check">
       <LengthInput label="Finished length (optional)" ariaLabel="Needed finished length" value={needed}
-        defaultUnit={preferredLengthUnit(finishedLength ?? NaN)} onChange={setNeeded} />
+        defaultUnit={preferredLengthUnit(finishedLength ?? measuredLength ?? NaN)} onChange={setNeeded} />
+      {measuredLength !== undefined && <button type="button" className="text-button use-measured-length"
+        onClick={() => setNeeded(measuredLength)}>Use measured span ({formatStockLength(measuredLength)})</button>}
       {!Number.isNaN(needed) && !validLength && <p role="status">Enter at least ⅛ in or clear the finished length.</p>}
       {validLength && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p role="status">
         {enough ? `${shortest.label} stock fits this cut with ${formatStockLength(choice.value - shortest.value)} less length to buy.` : `${shortest.label} stock fits this cut.`}{" "}

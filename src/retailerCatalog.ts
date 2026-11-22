@@ -43,7 +43,7 @@ import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edge
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { bottomPlateSealant, subfloorPanel } from "./bottomPlateSealReference";
 import { drywallInstallation, drywallReviewedAt, drywallSpecification, drywallStock } from "./drywallReference";
-import { rimFoam } from "./rimAirSealReference";
+import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 import { weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot } from "./roofVentFlashingReference";
 import { trimSealant } from "./trimSealantReference";
@@ -4498,6 +4498,25 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [rimFoam.listing, rimFoam.manufacturer] },
     discrepancies: [],
+    capabilities: [],
+  },
+  {
+    id: rimEdgeSealant.id,
+    name: rimEdgeSealant.name,
+    manufacturer: "DuPont",
+    manufacturerPartNumber: rimEdgeSealant.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: rimEdgeSealant.reviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "polyurethane insulating foam sealant" }),
+    offers: [hd(rimEdgeSealant.internet, rimEdgeSealant.model, rimEdgeSealant.sku)],
+    sources: [
+      { url: rimEdgeSealant.listing, verifiedAt: rimEdgeSealant.reviewedAt, note: "One 12 oz Smart Dispenser can, model 99108824." },
+      { url: rimEdgeSealant.specification, verifiedAt: rimEdgeSealant.reviewedAt, note: "1 in maximum gap, wood and most plastics, with reuse instructions for the Smart Dispenser." },
+      { url: rimEdgeSealant.rimDetail, verifiedAt: rimEdgeSealant.reviewedAt, note: "DuPont shows Gaps & Cracks around all four edges of XPS inserts at rim joists." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [rimEdgeSealant.listing, rimEdgeSealant.specification] },
+    discrepancies: ["Usable coverage depends on the joint and application. The estimate uses measured trial coverage."],
     capabilities: [],
   },
   {

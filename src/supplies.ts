@@ -16,7 +16,7 @@ import { harviaKit } from "./saunaHeaterReference";
 import { edgeBandingProducts, edgeBandingScope, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails } from "./paslodeFinishReference";
 import { bottomPlateScope, bottomPlateSealant } from "./bottomPlateSealReference";
-import { rimFoam, rimSealScope } from "./rimAirSealReference";
+import { rimEdgeSealant, rimFoam, rimSealScope } from "./rimAirSealReference";
 import { valleyScope, weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
@@ -418,6 +418,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     purchaseUnit: "sheet",
     contents: [{ name: "2 in × 4 ft × 8 ft rigid foam sheet", quantity: 1 }],
     requirements: [rimSealScope],
+  },
+  [rimEdgeSealant.id]: {
+    purchaseUnit: "can",
+    contents: [{ name: "12 oz Gaps & Cracks foam with Smart Dispenser", quantity: 1 }],
+    requirements: ["Check the foam and substrate with a matching trial joint. Use the included dispenser and follow the label for preparation, ventilation, protection and expansion."],
   },
   [flexWrap.id]: {
     purchaseUnit: "roll",

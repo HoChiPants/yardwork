@@ -4,7 +4,7 @@ import { subfloorAdhesiveTakeoff } from "./subfloorAdhesive";
 import { subfloorAdhesive, subfloorNails } from "./subfloorReference";
 import { subfloorCommonNailTakeoff } from "./subfloorFastening";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
-import { rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
+import { rimEdgeSealant, rimEdgeSealPurchasePurpose, rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
 import { reviewRimAirSeals } from "./rimAirSeals";
 import { valleyPurchasePurpose, weatherWatch } from "./roofValleyReference";
 import { reviewRoofValleys } from "./roofValleys";
@@ -198,9 +198,10 @@ export function homeDepotPurchaseNeeds(
       required ? undefined : "Review changed or interrupted seams to establish cartridge use.");
   }
   if (project.rimAirSeals?.length) {
-    const { sheets, needsReview } = reviewRimAirSeals(project);
+    const { sheets, needsReview, edgeSealant } = reviewRimAirSeals(project);
     include(rimFoam.id, rimFoamPurchasePurpose, needsReview ? null : sheets.length,
       needsReview ? "Remeasure changed or blocked bays before choosing the sheet quantity." : undefined);
+    if (edgeSealant) include(rimEdgeSealant.id, rimEdgeSealPurchasePurpose, edgeSealant.required, edgeSealant.issue);
   }
   if (project.roofValleys?.length) {
     const { rolls, needsReview } = reviewRoofValleys(project);

@@ -33,7 +33,7 @@ import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./tre
 import { groupedMaterials, materialFamilyVariants } from "./materialGroups";
 import { fittingBoardOffcuts } from "./offcutAssignment";
 import { normalizeIdeaText } from "./ideaEdits";
-import { reviewRimAirSeals, rimAirSealKey } from "./rimAirSeals";
+import { reviewRimAirSeals, rimAirSealKey, rimEdgeSealEstimate } from "./rimAirSeals";
 import { rimSealScope } from "./rimAirSealReference";
 import { modeledRoofValleys } from "./roofValleys";
 import { valleyScope } from "./roofValleyReference";
@@ -228,7 +228,9 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   if (bottomPlateQuestion.test(text)) return { kind: "bottom-plate-seal" };
   if (/^(?:(?:how (?:can|do|should) i |plan |check |review )?(?:air[ -])?seal (?:the |a |my )?top plate(?: to (?:the )?drywall)?|(?:how (?:can|do|should) i )?seal (?:the )?drywall to (?:the |a )?top plate)$/i.test(text))
     return { kind: "top-plate-seal" };
-  if (rimAirSealQuestion.test(text)) return { kind: "rim-air-seal" };
+  if (rimAirSealQuestion.test(text) ||
+      /^how much (?:edge )?(?:sealant|spray foam)(?: do i need)? for (?:the |my )?(?:rim[- ]joists?|band[- ]joists?|floor rims?)$/i.test(text))
+    return { kind: "rim-air-seal" };
   if (roofValleyQuestion.test(text)) return { kind: "roof-valley" };
   if (roofVentFlashingQuestion.test(text)) return { kind: "roof-vent-flashing" };
   if (sinkDrainQuestion.test(text)) return { kind: "sink-drain" };
@@ -712,16 +714,25 @@ export function answerBuildQuestion(
     case "rim-air-seal": {
       const review = reviewRimAirSeals(project);
       const floor = project.sections.find(({ generator }) => generator?.type === "foundation");
+      const takeoff = review.edgeSealant;
+      const quantities = takeoff?.issue ?? (takeoff?.required ? `The saved trial coverage estimates ${takeoff.required} ${takeoff.required === 1 ? "can" : "cans"} of edge sealant.`
+        : "Enter matching trial coverage to estimate the sealant.");
       return {
         title: "Air-seal the floor rim",
         detail: floor
-          ? "Select the rim and measure the openings with continuous backing. Check the foam fit, then review the shared sheet cuts and any reusable offcuts."
+          ? `Select the rim and measure the openings with continuous backing. Check the foam fit, then review the shared sheet cuts and any reusable offcuts. ${quantities}`
           : "Add a Floor & foundation assembly so Yardwork can identify the actual rims and joist bays.",
-        rows: review.rows.map(({ plan, name, issues, cuts }) => ({
-          id: rimAirSealKey(plan.input), title: name,
-          detail: issues.join(" ") || `${cuts.length} measured foam ${cuts.length === 1 ? "insert" : "inserts"}. Seal all four edges after dry fitting.`,
-          link: { label: "Review these rim bays", action: { kind: "rim-air-seal", sectionId: plan.input.sectionId, side: plan.input.side } },
-        })),
+        rows: review.rows.map((row) => {
+          const { plan, name, issues, cuts } = row;
+          const edge = rimEdgeSealEstimate(row);
+          return {
+            id: rimAirSealKey(plan.input), title: name,
+            detail: issues.join(" ") || `${cuts.length} measured foam ${cuts.length === 1 ? "insert" : "inserts"}. ${edge
+              ? `Seal ${formatStockLength(edge.run)} along all four edges after dry fitting.`
+              : "Seal all four edges after dry fitting."}`,
+            link: { label: "Review these rim bays", action: { kind: "rim-air-seal", sectionId: plan.input.sectionId, side: plan.input.side } },
+          };
+        }),
         ...(floor && { link: { label: "Open rim air seal planner", action: { kind: "rim-air-seal", sectionId: floor.id } } }),
         scope: rimSealScope,
       };

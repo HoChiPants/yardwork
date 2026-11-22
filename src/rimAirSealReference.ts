@@ -12,6 +12,22 @@ export const rimFoam = {
   reviewedAt: "2026-11-21T23:08:00Z",
 } as const;
 
+export const rimEdgeSealant = {
+  id: "great-stuff-99108824",
+  name: "Great Stuff Gaps & Cracks Smart Dispenser",
+  model: "99108824",
+  internet: "312450325",
+  sku: "1005578558",
+  maxGap: 1,
+  listing: "https://www.homedepot.com/p/312450325",
+  instructions: "https://www.greatstuff.dupont.com/products/gaps-cracks-insulating-foam-sealant-smart-dispenser.html",
+  specification: "https://www.greatstuff.dupont.com/content/dam/dupont/amer/us/en/Greatstuff/public/documents/43-D100014-enNA.pdf",
+  rimDetail: "https://www.dupont.com/content/dam/dupont/amer/us/en/Greatstuff/public/documents/179-16011.pdf",
+  reviewedAt: "2026-11-22T05:18:00Z",
+} as const;
+
+export const rimEdgeSealPurchasePurpose = "Measured floor rim edge sealing";
+
 export const rimSealGuide = "https://basc.pnnl.gov/resource-guides/rigid-foam-board-insulation-existing-band-joists";
 export const rimSealEdges = "https://basc.pnnl.gov/resource-guides/garage-rimband-joist-adjoining-conditioned-space";
 export const rimFoamPurchasePurpose = "Measured floor rim foam cuts";

@@ -12,7 +12,7 @@ import { hingePurchaseSummary } from "./hingePurchases";
 import { connectorPurchaseSummary } from "./connectorPurchases";
 import { rodSocketPurchases } from "./rodFits";
 import { homeDepotAssemblyPurchaseReview, homeDepotPurchaseNeeds, homeDepotStockMatch, homeDepotToolReview } from "./handoffPurchases";
-import { rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
+import { rimEdgeSealant, rimEdgeSealPurchasePurpose, rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
 import { reviewRimAirSeals } from "./rimAirSeals";
 import { valleyPurchasePurpose, weatherWatch } from "./roofValleyReference";
 import { reviewRoofValleys } from "./roofValleys";
@@ -26,6 +26,10 @@ const linkedPurchasePlans: Partial<Record<string, { purpose: string; units: (pro
       const plan = reviewRimAirSeals(project);
       return plan.needsReview ? 0 : plan.sheets.length;
     },
+  },
+  [rimEdgeSealant.id]: {
+    purpose: rimEdgeSealPurchasePurpose,
+    units: (project) => reviewRimAirSeals(project).edgeSealant?.required ?? 0,
   },
   [weatherWatch.id]: {
     purpose: valleyPurchasePurpose,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { rimFoam } from "./rimAirSealReference";
+import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 
 export const rimSideSchema = z.enum(["back", "front"]);
 export type RimSide = z.infer<typeof rimSideSchema>;
@@ -22,6 +22,14 @@ export const rimAirSealInputSchema = z.strictObject({
     width: z.number().positive().max(rimFoam.width),
     length: z.number().positive().max(rimFoam.length),
   }).optional(),
+  edgeSeal: z.strictObject({
+    depth: z.number().positive().max(rimFoam.thickness),
+    trialLengthPerCan: z.number().min(0.125),
+    session: z.string().trim().min(1).max(60),
+  }).optional(),
+}).refine(({ edgeSeal, gap }) => !edgeSeal || gap <= rimEdgeSealant.maxGap, {
+  path: ["edgeSeal"],
+  message: "Great Stuff Gaps & Cracks is for gaps up to 1 in. Recheck the clearance or plan a different sealant.",
 }).refine(({ bays }) => new Set(bays.map(({ left, right }) => `${left}/${right}`)).size === bays.length,
   "Each rim bay can appear once on this plan.");
 export type RimAirSealInput = z.infer<typeof rimAirSealInputSchema>;

@@ -93,7 +93,7 @@ export type SceneProps = {
   shownSubfloorJoists?: SubfloorJoistReview;
   shownPlateSeal?: { top?: boolean; start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
   shownSillGasket?: { points: V3[]; needsReview: boolean };
-  shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[] }>;
+  shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[]; edgeOutline?: V3[] }>;
   shownRoofValley?: [V3, V3];
   shownRoofVent?: { center: V3; flange: V3[]; layout: V3[] };
   shownOpeningFlashing?: OpeningFlashingPreview;
@@ -1660,12 +1660,14 @@ function World(props: SceneProps) {
         </group>
       )}
       {!isolated && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview &&
-        props.shownRimSeal?.map(({ id, outline }, index) => (
+        props.shownRimSeal?.map(({ id, outline, edgeOutline }, index) => (
           <group key={id}>
             <Line points={outline.map((point) => point.map((value) => value / 12) as V3)}
               color="#ad4e75" lineWidth={3} depthTest={false} raycast={() => null} />
+            {edgeOutline && <Line points={edgeOutline.map((point) => point.map((value) => value / 12) as V3)}
+              color="#136d76" lineWidth={2} dashed dashSize={0.13} gapSize={0.12} depthTest={false} raycast={() => null} />}
             {index === 0 && <Html position={outline[0].map((value) => value / 12) as V3} style={{ pointerEvents: "none" }}>
-              <span className="site-clearance-marker" data-testid="rim-seal-marker">Rim foam cuts</span>
+              <span className="site-clearance-marker" data-testid="rim-seal-marker">{edgeOutline ? "Rim foam cuts and edge seals" : "Rim foam cuts"}</span>
             </Html>}
           </group>
         ))}

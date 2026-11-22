@@ -5,9 +5,9 @@ import { guideMarkdown, validate } from "../src/engine";
 import { homeDepotShoppingList } from "../src/handoff";
 import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
 import { applyCommand, blank, part, projectSchema, type Project } from "../src/model";
-import { rimFoam } from "../src/rimAirSealReference";
+import { rimEdgeSealant, rimFoam } from "../src/rimAirSealReference";
 import type { RimAirSealInput, RimSide } from "../src/rimAirSealSchema";
-import { reviewRimAirSeals, rimAirSealFrame, saveRimAirSeal } from "../src/rimAirSeals";
+import { reviewRimAirSeals, rimAirSealFrame, rimEdgeSealEstimate, saveRimAirSeal } from "../src/rimAirSeals";
 import { transformSection } from "../src/sections";
 import { addSupply } from "../src/supplies";
 
@@ -114,4 +114,60 @@ test("a rim insulation question routes to the modeled floor without fabricating 
   assert.match(result.detail, /measure the openings/);
   assert.equal(answerBuildQuestion(blank(), query!, []).link, undefined);
   assert.equal(buildQuestion("Build a 10 ft floor with foam at the rim joists"), null);
+});
+
+test("edge sealant uses a four-edge centerline and rounds cans by work session", () => {
+  const project = floor();
+  const edgeSeal = { depth: 0.5, trialLengthPerCan: 120, session: "First floor" };
+  const back = measurements(project, "back");
+  const front = measurements(project, "front", [1]);
+  const withBack = saveRimAirSeal(project, {
+    ...back, edgeSeal, offcut: { label: "Foam A", width: 14.25, length: 4.75 },
+  });
+  const saved = projectSchema.parse(JSON.parse(JSON.stringify(saveRimAirSeal(withBack, {
+    ...front, edgeSeal: { ...edgeSeal, session: "first floor" },
+  }))));
+  const review = reviewRimAirSeals(saved);
+  const estimate = rimEdgeSealEstimate(review.rows[0])!;
+  assert.equal(estimate.run, 75.5);
+  assert.equal(estimate.cans, 75.5 / 120);
+  assert.equal(review.rows[0].cuts[0].edgeOutline?.length, 5);
+  assert.deepEqual(review.rows[0].cuts[0].edgeOutline?.[0], review.rows[0].cuts[0].edgeOutline?.[4]);
+  assert.equal(review.edgeSealant?.required, 1);
+  assert.equal(review.edgeSealant?.sessions[0].run, 114);
+  const split = saveRimAirSeal(saved, { ...front, edgeSeal: { ...edgeSeal, session: "Later" } });
+  assert.equal(reviewRimAirSeals(split).edgeSealant?.required, 2);
+  assert.match(guideMarkdown(saved), /75.5 in at 0.5 in fill depth/);
+  assert.match(guideMarkdown(saved), /1 can of Great Stuff Gaps & Cracks/);
+  assert.match(guideMarkdown(saved), /Offcut Foam A/);
+  assert.match(answerBuildQuestion(saved, buildQuestion("How much sealant do I need for my rim joists?")!, []).detail,
+    /saved trial coverage estimates 1 can/);
+  const need = homeDepotPurchaseNeeds(saved).find(({ id }) => id === rimEdgeSealant.id);
+  assert.equal(need?.required, 1);
+  const included = addHomeDepotPurchaseNeed(saved, rimEdgeSealant.id);
+  assert.strictEqual(addHomeDepotPurchaseNeed(included, rimEdgeSealant.id), included);
+  assert.match(homeDepotShoppingList(included).text, /1 can.*Internet #312450325/);
+  const sealed = review.rows[0].cuts[0].outline;
+  const position = sealed[0].map((point, axis) => (point + sealed[2][axis]) / 2) as [number, number, number];
+  const obstruction = part("Pipe backing", "stud", [1, 2, 2], position, project.steps[0].id, "Review");
+  const blocked = { ...included, pieces: [...included.pieces, obstruction] };
+  assert.equal(reviewRimAirSeals(blocked).edgeSealant?.required, null);
+  assert.equal(homeDepotPurchaseNeeds(blocked).find(({ id }) => id === rimEdgeSealant.id)?.required, null);
+  assert.doesNotMatch(homeDepotShoppingList(blocked).text, /312450325/);
+  assert.match(homeDepotShoppingList(addSupply(blocked, rimEdgeSealant.id, 1, "Separate trial")).text, /1 can.*312450325/);
+});
+
+test("old rim plans retain their cuts and measured seal estimates stay in the product scope", () => {
+  const project = floor();
+  const input = measurements(project, "back");
+  const old = { ...saveRimAirSeal(project, input), schemaVersion: 123 };
+  const reopened = projectSchema.parse(old);
+  assert.equal(reopened.schemaVersion, 124);
+  assert.deepEqual(reopened.rimAirSeals, old.rimAirSeals);
+  assert.equal(reviewRimAirSeals(reopened).edgeSealant, null);
+  assert.equal(reviewRimAirSeals(reopened).rows[0].cuts[0].edgeOutline, undefined);
+  const edgeSeal = { depth: 0.5, trialLengthPerCan: 120, session: "Bench trial" };
+  assert.throws(() => saveRimAirSeal(project, { ...input, gap: 1.125, edgeSeal }), /gaps up to 1 in/);
+  assert.throws(() => saveRimAirSeal(project, { ...input, edgeSeal: { ...edgeSeal, depth: 2.125 } }));
+  assert.throws(() => saveRimAirSeal(project, { ...input, edgeSeal: { ...edgeSeal, trialLengthPerCan: 0 } }));
 });

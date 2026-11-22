@@ -121,7 +121,7 @@ import { greenhouseAttachmentScope, greenhouseRoofAttachmentLines, greenhouseRoo
 import { greenhouseBaseConnections, greenhouseBaseGuideLines, greenhouseBaseScope, greenhouseBaseSummary } from "./greenhouseBaseConnections";
 import { floorBaseConnections, floorBaseConnectionGuideLines, floorBaseConnectionScope } from "./floorBaseConnections";
 import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey } from "./rimAirSeals";
-import { rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
+import { rimEdgeSealant, rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import { reviewRoofValleys, roofValleyGuideLines } from "./roofValleys";
 import { valleyKey } from "./roofValleySchema";
 import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
@@ -2063,7 +2063,8 @@ export function guideMarkdown(p: Project) {
   const windowWalls = reviewGeneratedWindowWalls(p);
   const baseConnections = greenhouseBaseGuideLines(p, greenhouseBaseConnections(p, connections.intents));
   const floorJoints = floorBaseConnectionGuideLines(p, floorBaseConnections(p, connections.intents));
-  const rimAirSeals = rimAirSealGuideLines(reviewRimAirSeals(p));
+  const rimSealReview = reviewRimAirSeals(p);
+  const rimAirSeals = rimAirSealGuideLines(rimSealReview);
   const roofValleys = roofValleyGuideLines(p);
   const roofVentFlashings = roofVentFlashingGuideLines(p);
   const floorHangers = floorHangerGuideLines(p, connections.intents);
@@ -2235,8 +2236,9 @@ export function guideMarkdown(p: Project) {
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     (floorHangers.length ? `\n\n## Floor base hanger plan\n\n${floorHangerScope}\n\n[ESR-3096 Table 20](${floorHangerReport})\n\n` +
       floorHangers.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
-    (rimAirSeals.length ? `\n\n## Floor rim foam and air seals\n\n${rimSealScope}\n\n[PNNL field guide](${rimSealGuide}) · [Owens Corning instructions](${rimFoam.manufacturer})\n\n` +
-      rimAirSeals.map((line) => "- " + line.replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
+    (rimAirSeals.length ? `\n\n## Floor rim foam and air seals\n\n${rimSealScope}\n\n[PNNL field guide](${rimSealGuide}) · [Owens Corning instructions](${rimFoam.manufacturer})` +
+      (rimSealReview.edgeSealant ? ` · [DuPont sealant instructions](${rimEdgeSealant.instructions})` : "") + "\n\n" +
+      rimAirSeals.map((line) => "- " + line.replace(/[\r\n]/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") + "\n" : "") +
     (panelBearing.length ? "\n\n## Shelf and seat bearing\n\n" + panelBearingScope + "\n\n" +
       panelBearing.map((line) => "- " +
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +

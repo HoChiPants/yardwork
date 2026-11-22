@@ -6,12 +6,13 @@ import { packRectangles, type RectangleCut, type StockPlan } from "./packing";
 import { prepareCollisionBox, prepareCollisionSolid, solidOverlap } from "./solidCollision";
 import { inverseRotation, rotate } from "./spatial";
 import { foamSheetCutOrder } from "./stockCutSequence";
+import { maxSupplyQuantity } from "./supplySchema";
 import { pieceThroughOpenings } from "./throughOpenings";
 import {
   rimAirSealInputSchema, rimAirSealPlansSchema,
   type RimAirSealInput, type RimAirSealPlan, type RimSide,
 } from "./rimAirSealSchema";
-import { rimFoam } from "./rimAirSealReference";
+import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 
 const epsilon = 1e-6;
 const localInches = (value: number) => Math.round(value * 1e6) / 1e6;
@@ -99,6 +100,7 @@ export type RimSealCut = RectangleCut & {
   opening: { width: number; height: number };
   perimeter: number;
   outline: V3[];
+  edgeOutline?: V3[];
 };
 type RimSealRow = {
   name: string;
@@ -166,14 +168,18 @@ export function checkRimAirSeal(project: Project, input: RimAirSealInput, frame 
     const height = localInches(measured.height - 2 * input.gap);
     const left = bay.x - width / 2, right = bay.x + width / 2;
     const low = bottom + input.gap, high = top - input.gap;
+    const outline = (offset: number) => ([
+      [left - offset, low - offset, face], [right + offset, low - offset, face],
+      [right + offset, high + offset, face], [left - offset, high + offset, face],
+      [left - offset, low - offset, face],
+    ] as V3[]).map(world);
     const cut = {
       id: `${rimAirSealKey(input)}/${bay.id}`,
       name: `${name} · ${bay.label} (${partLabel(project, bay.left)}–${partLabel(project, bay.right)})`,
       width, length: height, opening: { width: measured.width, height: measured.height },
       perimeter: 2 * (measured.width + measured.height),
-      outline: ([
-        [left, low, face], [right, low, face], [right, high, face], [left, high, face], [left, low, face],
-      ] as V3[]).map(world),
+      outline: outline(0),
+      ...(input.edgeSeal && { edgeOutline: outline(input.gap / 2) }),
     };
     cuts.push(cut);
     signatures.push([bay.id, bay.stock, bay.x, bay.width, bay.top, bay.bottom]);
@@ -236,6 +242,39 @@ function foamCuts(rows: ReviewedRimSeal[]) {
   return { sheets, scraps, gaps, unusedOffcuts };
 }
 
+export function rimEdgeSealEstimate({ plan, cuts, issues }: ReviewedRimSeal) {
+  const { edgeSeal, gap } = plan.input;
+  if (!edgeSeal || issues.length) return null;
+  // The midline of the rectangular clearance is half a gap inside each edge.
+  // This counts all four corners once when the run is multiplied by gap and fill depth.
+  const run = cuts.reduce((total, cut) => total + cut.perimeter - 4 * gap, 0);
+  return { ...edgeSeal, run, cans: run / edgeSeal.trialLengthPerCan };
+}
+
+function rimEdgeSealTakeoff(rows: ReviewedRimSeal[]) {
+  const configured = rows.filter(({ plan }) => plan.input.edgeSeal);
+  if (!configured.length) return null;
+  const sessions = new Map<string, { name: string; run: number; cans: number }>();
+  for (const row of configured) {
+    const estimate = rimEdgeSealEstimate(row);
+    if (!estimate) continue;
+    const key = sameLabel(estimate.session);
+    const session = sessions.get(key) ?? { name: estimate.session, run: 0, cans: 0 };
+    session.run += estimate.run;
+    session.cans += estimate.cans;
+    sessions.set(key, session);
+  }
+  const batches = [...sessions.values()].map((session) => ({
+    ...session,
+    required: Math.max(1, Math.ceil(session.cans - 1e-9)),
+  }));
+  const required = batches.reduce((total, session) => total + session.required, 0);
+  const issue = configured.some(({ issues }) => issues.length)
+    ? "Remeasure the changed or blocked bays before choosing the can quantity."
+    : required > maxSupplyQuantity ? "Recheck the trial coverage and units before choosing the can quantity." : undefined;
+  return { sessions: batches, required: issue ? null : required, issue };
+}
+
 export function reviewRimAirSeals(project: Project) {
   const plans = project.rimAirSeals ?? [];
   const labels = new Map<string, number>();
@@ -252,7 +291,10 @@ export function reviewRimAirSeals(project: Project) {
     return { ...row, plan };
   });
   const first = foamCuts(rows);
-  if (!first.gaps.length) return { rows, ...first, needsReview: rows.some(({ issues }) => issues.length > 0) };
+  if (!first.gaps.length) return {
+    rows, ...first, edgeSealant: rimEdgeSealTakeoff(rows),
+    needsReview: rows.some(({ issues }) => issues.length > 0),
+  };
   const unavailable = new Map(first.gaps.map(({ cut, issue }) => [cut.id, issue]));
   for (const row of rows) {
     for (const cut of row.cuts) {
@@ -260,7 +302,7 @@ export function reviewRimAirSeals(project: Project) {
       if (issue) row.issues.push(`${cut.name}. ${issue}`);
     }
   }
-  return { rows, ...foamCuts(rows), needsReview: true };
+  return { rows, ...foamCuts(rows), edgeSealant: rimEdgeSealTakeoff(rows), needsReview: true };
 }
 
 export function saveRimAirSeal(project: Project, measurements: RimAirSealInput) {
@@ -292,16 +334,26 @@ export const foamBlankSize = (width: number, height: number) => `${formatStockLe
 export function rimAirSealGuideLines(review: ReturnType<typeof reviewRimAirSeals>) {
   if (!review.rows.length) return [];
   return [
-    ...review.rows.flatMap(({ name, plan, issues, cuts }) => [
-      `${name} · ${formatStockLength(plan.input.gap)} clearance at each edge.`,
-      ...issues.map((issue) => `Needs review. ${issue}`),
-      ...(!issues.length ? cuts.map((cut) => `${cut.name} · cut ${foamBlankSize(cut.width, cut.length)}. Dry-fit and seal the four edges (${formatStockLength(cut.perimeter)} measured perimeter).`) : []),
-    ]),
+    ...review.rows.flatMap((row) => {
+      const { name, plan, issues, cuts } = row;
+      const edge = rimEdgeSealEstimate(row);
+      return [
+        `${name} · ${formatStockLength(plan.input.gap)} clearance at each edge.`,
+        ...issues.map((issue) => `Needs review. ${issue}`),
+        ...(!issues.length ? cuts.map((cut) => `${cut.name} · cut ${foamBlankSize(cut.width, cut.length)}. Dry-fit and seal the four edges (${formatStockLength(cut.perimeter)} measured perimeter).`) : []),
+        ...(edge ? [`After dry-fitting, seal ${formatStockLength(edge.run)} at ${formatStockLength(edge.depth)} fill depth. Trial coverage was ${formatStockLength(edge.trialLengthPerCan)} per can · ${edge.session}.`] : []),
+      ];
+    }),
     ...[...review.scraps, ...review.sheets].flatMap(({ label, stock, order, kerf }) => [
       `${label} · ${foamBlankSize(stock.width, stock.length)} · ${formatStockLength(kerf)} measured cutting loss.`,
       ...order.steps.filter(Boolean).map((text, index) => `${index + 1}. ${text}`),
       ...order.remnants.map((size) => `Keep reusable foam ${size} if the edges remain sound. Measure and label it after cutting.`),
     ]),
+    ...(review.edgeSealant ? [
+      ...review.edgeSealant.sessions.map(({ name, required }) =>
+        `${name} · ${required} ${required === 1 ? "can" : "cans"} of ${rimEdgeSealant.name} estimated from the matching trial joints.`),
+      ...(review.edgeSealant.issue ? [review.edgeSealant.issue] : []),
+    ] : []),
     ...review.unusedOffcuts.map((label) => `Keep offcut ${label} for a different cut. This plan uses new stock instead.`),
   ];
 }

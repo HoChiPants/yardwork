@@ -2,10 +2,10 @@ import { useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { formatStockLength } from "./measurement";
 import type { Project } from "./model";
-import { rimFoam, rimSealEdges, rimSealGuide, rimSealScope } from "./rimAirSealReference";
+import { rimEdgeSealant, rimFoam, rimSealEdges, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import { rimAirSealInputSchema, type RimAirSealInput, type RimSide } from "./rimAirSealSchema";
 import {
-  foamBlankSize, reviewRimAirSeals, rimAirSealFrame, rimAirSealKey, saveRimAirSeal,
+  foamBlankSize, reviewRimAirSeals, rimAirSealFrame, rimAirSealKey, rimEdgeSealEstimate, saveRimAirSeal,
 } from "./rimAirSeals";
 
 type Target = Pick<RimAirSealInput, "sectionId" | "side">;
@@ -58,6 +58,7 @@ export function RimAirSealPanel({ project, initialSectionId, initialSide, ...act
         <div>
           <p><strong>Saved plan</strong> · {record.name}</p>
           {record.issues.map((issue) => <p key={issue} role="status">{issue}</p>)}
+          <RimEdgeSealSummary row={record} review={saved} />
           <div className="rim-seal-actions">
             {!record.issues.length && <button type="button" className="button secondary" onClick={() => actions.onShow(target)}>Show saved foam cuts in 3D</button>}
             <button type="button" className="text-button" onClick={() => actions.onRemove(target)}>Remove saved seal plan</button>
@@ -67,6 +68,19 @@ export function RimAirSealPanel({ project, initialSectionId, initialSide, ...act
       <RimSealMeasurements key={key} project={project} target={target} original={record?.plan.input} onSave={actions.onSave} />
     </> : <p role="status">Add a generated floor base first.</p>}
   </>;
+}
+
+type RimSealReview = ReturnType<typeof reviewRimAirSeals>;
+
+function RimEdgeSealSummary({ row, review }: { row: RimSealReview["rows"][number]; review: RimSealReview }) {
+  const estimate = rimEdgeSealEstimate(row);
+  const takeoff = review.edgeSealant;
+  if (!row.plan.input.edgeSeal || !takeoff) return null;
+  return <div className="small-note">
+    {estimate && <p>{formatStockLength(estimate.run)} along all four edges</p>}
+    {takeoff.issue ? <p role="status">{takeoff.issue}</p> : takeoff.sessions.map(({ name, required }) =>
+      <p key={name}><strong>{required} {required === 1 ? "can" : "cans"} estimated</strong> · {name}</p>)}
+  </div>;
 }
 
 type BayDraft = RimAirSealInput["bays"][number];
@@ -82,6 +96,7 @@ function RimSealMeasurements({ project, target, original, onSave }: {
   const [gap, setGap] = useState(original?.gap ?? NaN);
   const [kerf, setKerf] = useState(original?.kerf ?? NaN);
   const [offcut, setOffcut] = useState(original?.offcut);
+  const [edgeSeal, setEdgeSeal] = useState(original?.edgeSeal);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<{ input: RimAirSealInput; source: Project; result: ReturnType<typeof reviewRimAirSeals> } | null>(null);
@@ -100,10 +115,15 @@ function RimSealMeasurements({ project, target, original, onSave }: {
     const selected = bays.filter(({ left, right }) => available.some((bay) => bay.left === left && bay.right === right));
     if (!selected.length) { setError("Choose at least one clear bay and enter its measured width and height."); return; }
     const parsed = rimAirSealInputSchema.safeParse({
-      ...target, topInset, gap, kerf, bays: selected, ...(offcut && { offcut }), confirmedBacking: confirmed,
+      ...target, topInset, gap, kerf, bays: selected, ...(offcut && { offcut }),
+      ...(edgeSeal && { edgeSeal }), confirmedBacking: confirmed,
     });
     if (!parsed.success) {
-      setError("Enter the measured width and height for each selected bay, the top offset, edge clearance and cutting loss. Check the offcut dimensions and field confirmation.");
+      const sealIssue = parsed.error.issues.find(({ path }) => path[0] === "edgeSeal");
+      setError(sealIssue
+        ? gap > rimEdgeSealant.maxGap ? "Use a clearance of 1 in or less with this sealant estimate."
+          : "Enter the seal depth, usable trial length per can and work session. The fill depth fits within the 2 in insert."
+        : "Enter the measured width and height for each selected bay, the top offset, edge clearance and cutting loss. Check the offcut dimensions and field confirmation.");
       return;
     }
     try {
@@ -157,6 +177,24 @@ function RimSealMeasurements({ project, target, original, onSave }: {
       <LengthInput label="Offcut length" value={offcut.length} max={rimFoam.length} onChange={(length) => setOffcut({ ...offcut, length })} />
     </div>}
     <label className="rim-seal-check">
+      <input type="checkbox" checked={!!edgeSeal} onChange={(event) =>
+        setEdgeSeal(event.target.checked ? { depth: NaN, trialLengthPerCan: NaN, session: "Rim sealing" } : undefined)} />
+      <span>Estimate edge sealant</span>
+    </label>
+    {edgeSeal && <fieldset>
+      <legend>{rimEdgeSealant.name}</legend>
+      <p className="small-note">Use a matching scrap to check adhesion. Enter the usable cured length from one can at the same gap and fill depth. Give plans the same work-session name when they can share opened cans. <a href={rimEdgeSealant.instructions} target="_blank" rel="noreferrer">Product instructions</a></p>
+      <div className="rim-seal-fields">
+        <LengthInput label="Seal fill depth" value={edgeSeal.depth} max={rimFoam.thickness}
+          onChange={(depth) => setEdgeSeal({ ...edgeSeal, depth })} />
+        <LengthInput label="Usable trial length per can" value={edgeSeal.trialLengthPerCan} defaultUnit="ft"
+          onChange={(trialLengthPerCan) => setEdgeSeal({ ...edgeSeal, trialLengthPerCan })} />
+        <label className="field">Sealant work session
+          <input value={edgeSeal.session} maxLength={60} onChange={(event) => setEdgeSeal({ ...edgeSeal, session: event.target.value })} />
+        </label>
+      </div>
+    </fieldset>}
+    <label className="rim-seal-check">
       <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
       <span>I checked this air barrier boundary, measured the openings, and verified continuous backing and access on all four edges.</span>
     </label>
@@ -170,6 +208,7 @@ function RimSealMeasurements({ project, target, original, onSave }: {
       <p>{livePreview.result.sheets.length} new {livePreview.result.sheets.length === 1 ? "sheet" : "sheets"} for the reviewed plans ·{" "}
         {livePreview.result.scraps.length} measured {livePreview.result.scraps.length === 1 ? "offcut used" : "offcuts used"}.</p>
       {livePreview.result.needsReview && <p>Other plans need review before ordering foam for the project.</p>}
+      <RimEdgeSealSummary row={planPreview} review={livePreview.result} />
       {livePreview.result.unusedOffcuts.map((label) => <p key={label}>Keep offcut {label} for a different cut.</p>)}
       {[...livePreview.result.scraps, ...livePreview.result.sheets].map(({ label, order, kerf }) => <details key={label}>
         <summary>{label} · {formatStockLength(kerf)} cutting loss</summary>

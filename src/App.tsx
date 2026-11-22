@@ -32,7 +32,7 @@ import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
 import { removeRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
 import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey, removeRimAirSeal, saveRimAirSeal } from "./rimAirSeals";
-import { rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
+import { rimEdgeSealant, rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import type { RimSide } from "./rimAirSealSchema";
 import { OpeningFlashingPanel } from "./OpeningFlashingPanel";
 import { WindowWallFields, windowWallExample } from "./WindowWallFields";
@@ -7228,7 +7228,9 @@ export function App() {
             <h2>Floor rim foam and air seals</h2>
             <p>{rimSealScope}</p>
             <ul>{printRimSeals.map((line, index) => <li key={index}>{line}</li>)}</ul>
-            <p><a href={rimSealGuide}>PNNL field guide</a>{" · "}<a href={rimFoam.manufacturer}>Owens Corning instructions</a></p>
+            <p><a href={rimSealGuide}>PNNL field guide</a>{" · "}<a href={rimFoam.manufacturer}>Owens Corning instructions</a>
+              {exportGuide.rimAirSeals?.some(({ input }) => input.edgeSeal) && <>{" · "}
+                <a href={rimEdgeSealant.instructions}>DuPont sealant instructions</a></>}</p>
           </section>
         )}
         {printSillGaskets.length > 0 && (

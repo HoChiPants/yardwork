@@ -2083,3 +2083,38 @@ test("the idea planner uses one measured scrap for both cleats and exports the b
   expect(guide).toContain("Crosscut to 20 in · Blade uses the remaining 0.125 in.");
   expect(guide).not.toContain("O003");
 });
+
+test("scoped hanging bay and rod edits preserve the outside closet dimensions in the saved guide", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  const dialog = page.getByRole("dialog");
+  const idea = dialog.getByRole("textbox", { name: "Describe your idea" });
+  const explore = dialog.getByRole("button", { name: "Explore idea", exact: true });
+  await idea.fill("Closet insert overall width 72 inches, depth 24 inches, height 84 inches. Tower width 25 inches, four shelves. Left hanging bay width 16 inches. Rod center height 60 inches.");
+  await explore.click();
+  await expect(dialog.getByText("Clear hanging bays: 16 in left and 28 in right.", { exact: true })).toBeVisible();
+  await idea.fill("Set the right hanging bay width to 30 inches and rod center height to 62 inches.");
+  await explore.click();
+  await expect(dialog.getByText("Clear hanging bays: 14 in left and 30 in right.", { exact: true })).toBeVisible();
+  await expect(dialog.getByRole("spinbutton", { name: "closet-insert width", exact: true })).toHaveValue("72");
+  await expect(dialog.getByRole("spinbutton", { name: "closet-insert height", exact: true })).toHaveValue("84");
+  await dialog.getByRole("button", { name: "Add proposed layout", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const saved = await page.waitForFunction((key) => {
+    const draft = JSON.parse(localStorage.getItem(key) ?? "null");
+    return draft?.revision === 1 ? draft.project : null;
+  }, CURRENT_DRAFT_KEY);
+  const project = await saved.jsonValue() as Project;
+  const spec = project.ideaBindings[0].entries[0].spec;
+  if (spec.type !== "structure" || spec.structure.kind !== "closet-insert") throw Error("Expected a saved closet insert");
+  expect(spec.structure.parameters).toMatchObject({ width: 72, height: 84, rightBayWidth: 30, rodHeight: 62 });
+  const leftDivider = project.pieces.find(({ designRole }) => designRole === "tower-left")!;
+  expect(leftDivider.position[0]).toBeCloseTo(-20.875);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await downloaded).path())!, "utf8");
+  expect(guide).toContain("Clear hanging bays: 14 in left and 30 in right.");
+  expect(guide).toContain("Rod center setting: 62 in above the floor.");
+});

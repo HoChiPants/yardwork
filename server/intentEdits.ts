@@ -3,6 +3,7 @@ import {
   isAddition,
   referencedFamily,
   ambiguousShelfReference,
+  closetMeasurements,
   requestedShelfCount,
   namedMeasurement,
   normalizeIdeaText,
@@ -187,6 +188,10 @@ export function prepareIntentEdits(
     "storage",
     "openingLid",
     "backHeight",
+    "towerWidth",
+    "leftBayWidth",
+    "rightBayWidth",
+    "rodHeight",
     "shelfCount",
     "frameMaterial",
     "panelMaterial",
@@ -194,12 +199,24 @@ export function prepareIntentEdits(
     delete (intent as unknown as Record<string, unknown>)[key];
   if (targets.length === 1) intent.targetSection = targets[0] + 1;
   let reducerFields = false;
+  const closet = family === "closet-insert" ? closetMeasurements(text) : null;
+  if (closet) {
+    for (const [key, fact] of Object.entries(closet.facts) as [keyof typeof closet.facts, ReturnType<typeof namedMeasurement>][]) {
+      if (!fact) continue;
+      if (fact.inches === null)
+        return clarify(source, "Give the closet opening or rod-center measurement in inches or feet.");
+      if (fact.inches <= 0 || fact.inches > 240)
+        return clarify(source, "Give a positive closet opening or rod-center measurement up to 240 inches.");
+      intent[key] = fact.inches;
+      reducerFields = true;
+    }
+  }
   for (const [key, labels] of Object.entries(dimensionLabels) as [
     keyof typeof dimensionLabels,
     string,
   ][]) {
     const fact = namedMeasurement(
-      text,
+      closet?.envelope ?? text,
       labels,
       ["width", "depth", "height"].includes(key)
         ? /(?:door|roof|back|tower|shelf|bench)\s*$/

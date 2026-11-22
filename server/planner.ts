@@ -12,6 +12,7 @@ import { catalog } from "../src/model";
 import { groundUnsupportedPlan } from "../src/unsupportedIntent";
 import { carryPlacementQuestions } from "../src/placementEdits";
 import { localRelativeResizePlan } from "../src/relativeIdeaResize";
+import { closetMeasurements, referencedFamily } from "../src/ideaEdits";
 import {
   ideaPlanSchema,
   localIdeaPlan,
@@ -53,6 +54,18 @@ async function plannerResponse(
       provider: "Workspace dimensions",
       message: "Review the resize and resulting fit before applying.",
     });
+  const family = referencedFamily(request.prompt, request.previousPlan);
+  const closet = family === "closet-insert" ||
+    (!family && request.previousPlan?.structures.some(({ kind }) => kind === "closet-insert"));
+  if (closet) {
+    const { leftBayWidth, rightBayWidth, rodHeight } = closetMeasurements(request.prompt).facts;
+    if (leftBayWidth || rightBayWidth || rodHeight)
+      return res.json({
+        plan: localIdeaPlan(request),
+        provider: "Workspace dimensions",
+        message: "Review the measured closet openings and rod position before applying.",
+      });
+  }
   if (!process.env.OLLAMA_URL)
     return res.json({
       plan: localIdeaPlan(request),
@@ -106,7 +119,7 @@ async function plannerResponse(
             "You are a DIY layout planning assistant. Return one JSON plan conforming to the supplied schema, with summary, explicit assumptions, useful suggestions, questions, and at most 12 editable modules. Do not force unrelated ideas into walls. If the requested design is unsupported or measurements are essential, return modules:[] and useful questions/suggestions.",
             "All dimensions and positions are INCHES. Convert feet and number words to inches. position is module ground-origin center [x,y,z], y is elevation above the floor. yaw is degrees about Y. Work zones are centered on X/Z and begin at floor Y=0. Do not exceed their bounds; consider existing occupied section bounds. Do not replace or remove existing parts. For a follow-up with previousPlan, change only the requested dimensions/features and preserve the previous module count, placement and unspecified values; do not reset to defaults.",
             "Module kinds: bench (lumber frame, seat panel and optional vertical back panel); workbench (frame and top); cabinet (frame, recessed side/back infill and shelves); shelf (frame, top and shelves); frame (open lumber box frame); panel (one rectangular sheet part with width/height/depth describing its actual physical box). For bench, height means finished SEAT height, and backHeight is additional height above the seat. storage=true encloses a bench with a bottom and front/rear/side panels; openingLid=true gives that storage bench a rear-pivot seat lid; lidOpen controls its access preview and must be false for a new plan unless requested. No back means backHeight=0, including when an existing wall will be the back. Honor explicit section counts by returning that many actual bench modules, not just a summary. For others backHeight=0. levels is shelf count, 1..6; use 1 for non-shelves. FrameMaterial must be catalog linear lumber, panelMaterial must be sheet stock. Use stud and plywood unless requested otherwise. Framed modules need width/depth/height >=8in. Parts are deterministically expanded, and connections are not automatically invented.",
-            "Whole structures may instead use structures:[{kind,parameters,selections:{}}]. Supported kinds are greenhouse (outside width/depth/eaveHeight plus roofRise), sauna (CLEAR INSIDE clearWidth/clearDepth/clearHeight; framing and reserved interior layers add outside), closet-insert (outside width/depth/height, clear towerWidth, shelfCount), and casework-shelves (outside width/depth/height, shelfCount, shelfClearance as the shelf front setback). Panel bookcases use casework-shelves with actual selected sheet thickness; resizing never scales plywood thickness. Ordinary lumber-framed shelves remain shelf furniture modules. Use bounded parameters from the schema. These generate real framing/casework and roof cuts, with unresolved specialty-material and installation decisions retained in notes. Do not replace these with an unrelated bench. Leave selections empty unless the exact catalog product reference is known; do not invent source qualification.",
+            "Whole structures may instead use structures:[{kind,parameters,selections:{}}]. Supported kinds are greenhouse (outside width/depth/eaveHeight plus roofRise), sauna (CLEAR INSIDE clearWidth/clearDepth/clearHeight; framing and reserved interior layers add outside), closet-insert (outside width/depth/height, clear towerWidth, shelfCount, optional clear leftBayWidth/rightBayWidth and rodHeight from floor to rod center), and casework-shelves (outside width/depth/height, shelfCount, shelfClearance as the shelf front setback). Panel bookcases use casework-shelves with actual selected sheet thickness; resizing never scales plywood thickness. Ordinary lumber-framed shelves remain shelf furniture modules. Use bounded parameters from the schema. These generate real framing/casework and roof cuts, with unresolved specialty-material and installation decisions retained in notes. Do not replace these with an unrelated bench. Leave selections empty unless the exact catalog product reference is known; do not invent source qualification.",
             "Use the requested measurements. If they are missing, disclose provisional dimensions in assumptions; never imply suitability or engineering approval. For L-shaped banquettes use two bench modules with NO overlapping corner. Given footprint width W, return R, seat depth D: main width W, position [0,0,-R/2+D/2], yaw0; return width R-D, position [-W/2+D/2,0,D/2], yaw90. R must exceed D+8. Use at most 6 modules for a simple idea.",
             "Do not promise load capacity, code compliance, stability or safe seat dimensions. Suggestions should mention missing bracing, fasteners, anchors, joinery or access details that need design. Unsupported plumbing, electric, structural calculations and sculpted/moving geometry belong in questions rather than fabricated pieces.",
             `Available stock: ${JSON.stringify(inventory)}.`,

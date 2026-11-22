@@ -15,6 +15,8 @@ import {
 } from "./planSchema";
 import type { StructureIdea } from "./recipeSchemas";
 import { groundUnsupportedPlan } from "./unsupportedIntent";
+import { material } from "./model";
+import { closetBayLayout } from "./closetBayLayout";
 
 function structureDimension(
   structure: StructureIdea,
@@ -26,6 +28,12 @@ function structureDimension(
     )
   )
     return null;
+  if (structure.kind === "closet-insert") {
+    const bay = /\b(left|right) (?:hanging |rod )?bay\b/.exec(scope);
+    if (bay) return field === "width" ? bay[1] === "left" ? "leftBayWidth" : "rightBayWidth" : null;
+    if (/\brod(?: (?:center|centerline))?\b/.test(scope))
+      return field === "height" ? "rodHeight" : null;
+  }
   if (field === "roof rise")
     return structure.kind === "greenhouse" ? "roofRise" : null;
   if (/\bdoor\b/.test(scope)) {
@@ -97,7 +105,9 @@ function resizeIdea(previous: IdeaPlan, resize: RelativeResize): IdeaPlan {
   )
     return retainWithQuestion(previous, targetQuestion);
 
-  const family = referencedFamily(scope, previous);
+  const closetScope = /\b(?:left|right) (?:hanging |rod )?bay\b|\brod (?:center |centerline )?height\b|\b(?:the |hanging )rods?\b/.test(scope);
+  const family = referencedFamily(scope, previous) ??
+    (closetScope && previous.structures.some(({ kind }) => kind === "closet-insert") ? "closet-insert" : null);
   if (
     explicitModule !== undefined &&
     family &&
@@ -137,10 +147,28 @@ function resizeIdea(previous: IdeaPlan, resize: RelativeResize): IdeaPlan {
       string,
       unknown
     >;
-    const current = parameters[key];
-    if (typeof current !== "number")
-      return retainWithQuestion(previous, dimensionQuestion);
-    parameters[key] = current + delta;
+    let current = parameters[key];
+    if (structure.kind === "closet-insert") {
+      const p = structure.parameters;
+      const t = Math.min(...material(structure.selections.caseworkPanels?.materialId ?? "plywood").size);
+      const bays = closetBayLayout(p, t);
+      if (key === "leftBayWidth" || key === "rightBayWidth") {
+        current = key === "leftBayWidth" ? bays.left : bays.right;
+        delete p[key === "leftBayWidth" ? "rightBayWidth" : "leftBayWidth"];
+      }
+      if (key === "rodHeight") current = p.rodHeight ?? Math.min(64, p.height - 6);
+      if (typeof current !== "number") return retainWithQuestion(previous, dimensionQuestion);
+      parameters[key] = current + delta;
+      const problem = closetBayLayout(p, t).problem;
+      if (problem) return retainWithQuestion(previous, problem);
+      const rod = structure.selections.closetRod?.materialId;
+      const radius = rod ? Math.min(...material(rod).size) / 2 : 0;
+      if (p.rodHeight !== undefined && p.rodHeight + radius >= p.height - t)
+        return retainWithQuestion(previous, "Set the rod lower so it clears the inside face of the top panel.");
+    } else {
+      if (typeof current !== "number") return retainWithQuestion(previous, dimensionQuestion);
+      parameters[key] = current + delta;
+    }
   } else {
     if (
       field === "roof rise" ||

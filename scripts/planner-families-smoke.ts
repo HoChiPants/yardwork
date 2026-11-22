@@ -58,6 +58,7 @@ async function propose(
   prompt: string,
   validate: (plan: IdeaPlan, preview: Preview) => void,
   previousPlan?: IdeaPlan,
+  provider = "Ollama",
 ): Promise<IdeaPlan | null> {
   const started = Date.now();
   const record: CaseRecord = {
@@ -81,8 +82,8 @@ async function propose(
     assert.equal(response.status, 200, JSON.stringify(body));
     assert.equal(
       body.provider,
-      "Ollama",
-      "Must exercise the actual configured model, not a preset or fallback",
+      provider,
+      "Verify the expected planner handled this request",
     );
     const plan = ideaPlanSchema.parse(body.plan);
     const draft = blank(`Actual AI ${name}`);
@@ -273,9 +274,9 @@ await propose(
     near(structure.parameters.clearHeight, 84, "clear height");
   },
 );
-await propose(
+const closet = await propose(
   "closet-insert",
-  "Plan a closet insert with outside dimensions 7 feet wide, 24 inches deep and 7.5 feet high. Use the closet-insert whole-structure generator with a 25 inch clear shelf tower and four shelves. No rod or mounting product has been selected.",
+  "Plan a closet insert with outside dimensions 7 feet wide, 24 inches deep and 7.5 feet high. Use the closet-insert whole-structure generator with a 25 inch clear shelf tower and four shelves. Left hanging bay width 20 inches. Rod center height 60 inches. No rod or mounting product has been selected.",
   (plan) => {
     assert.equal(plan.modules.length, 0);
     assert.equal(plan.structures.length, 1);
@@ -285,8 +286,27 @@ await propose(
     near(structure.parameters.depth, 24, "depth");
     near(structure.parameters.height, 90, "height");
     near(structure.parameters.towerWidth, 25, "tower width");
+    near(structure.parameters.leftBayWidth!, 20, "measured left opening");
+    near(structure.parameters.rodHeight!, 60, "rod center height");
     assert.equal(structure.parameters.shelfCount, 4);
   },
+  undefined,
+  "Workspace dimensions",
+);
+if (closet) await propose(
+  "closet-bay-revision",
+  "Set the right hanging bay width to 28 inches and rod center height to 62 inches.",
+  (plan) => {
+    const structure = plan.structures[0];
+    assert.ok(structure.kind === "closet-insert");
+    near(structure.parameters.width, 84, "preserved outside width");
+    near(structure.parameters.height, 90, "preserved outside height");
+    near(structure.parameters.rightBayWidth!, 28, "measured right opening");
+    near(structure.parameters.rodHeight!, 62, "rod center height");
+    assert.equal(structure.parameters.leftBayWidth, undefined);
+  },
+  closet,
+  "Workspace dimensions",
 );
 await propose(
   "shelves",

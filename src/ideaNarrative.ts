@@ -1,3 +1,5 @@
+import { closetBaySummary } from "./closetBayLayout";
+import { material } from "./model";
 import type { IdeaPlan, PlanModule } from "./planSchema";
 
 const n = (value: number) => String(Number(value.toFixed(3)));
@@ -200,10 +202,18 @@ export function reconcileNarrative(plan: IdeaPlan): IdeaPlan {
       sentences.push(
         `Sauna study: clear inside ${n(p.clearWidth)} × ${n(p.clearDepth)} × ${n(p.clearHeight)} in.`,
       );
-    else if (structure.kind === "closet-insert" && "towerWidth" in p)
+    else if (structure.kind === "closet-insert" && "towerWidth" in p) {
       sentences.push(
         `Closet insert study: outside ${n(p.width)} × ${n(p.depth)} × ${n(p.height)} in; clear shelf tower ${n(p.towerWidth)} in, ${p.shelfCount} shelves.`,
       );
+      if (p.leftBayWidth !== undefined || p.rightBayWidth !== undefined) {
+        const t = Math.min(...material(structure.selections.caseworkPanels?.materialId ?? "plywood").size);
+        const bays = closetBaySummary(p, t);
+        if (bays) sentences.push(bays);
+      }
+      if (p.rodHeight !== undefined && (structure.selections.closetRod || p.leftBayWidth !== undefined || p.rightBayWidth !== undefined))
+        sentences.push(`Rod center setting: ${n(p.rodHeight)} in above the floor.`);
+    }
     else if (structure.kind === "casework-shelves" && "shelfClearance" in p)
       sentences.push(
         `Panel casework study: outside ${n(p.width)} × ${n(p.depth)} × ${n(p.height)} in; ${p.shelfCount} adjustable shelves, ${n(p.shelfClearance)} in front setback.`,

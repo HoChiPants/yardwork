@@ -1,0 +1,1877 @@
+{
+  "schemaVersion": 134,
+  "id": "91c89468-b855-4ee5-9948-a4c357d4348e",
+  "name": "Unequal closet hanging bays",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [
+    {
+      "id": "66ea7e9a-6b7a-4b64-b4e1-7295c0c5775d",
+      "productId": "everbilt-eh-wsthdus-311v",
+      "quantity": 2,
+      "purpose": "Closet rod end sockets",
+      "note": "One open and one closed socket per pair. Dry-fit the delivered rod and review support, backing and attachment."
+    }
+  ],
+  "rodFitPlans": [
+    {
+      "rodId": "0d880a10-86e5-47ee-89fa-29e74ac03eba",
+      "rodMaterial": "hd-everbilt-closet-rod-96",
+      "modeledSpan": 15.99999999999999,
+      "start": {
+        "pieceId": "cc709970-b25b-457e-8c1a-9a8b9862a705",
+        "pointLocal": [
+          0.3515000000000015,
+          18,
+          0
+        ],
+        "normalLocal": [
+          1,
+          0,
+          0
+        ],
+        "geometryFingerprint": "attachment-geometry-v1-8b239c394be435ea"
+      },
+      "end": {
+        "pieceId": "0fb218bd-0d06-41cb-a6a3-b8f95387b4c6",
+        "pointLocal": [
+          -0.3515000000000015,
+          18,
+          0
+        ],
+        "normalLocal": [
+          -1,
+          0,
+          0
+        ],
+        "geometryFingerprint": "attachment-geometry-v1-e1ac911ddd48cdaf"
+      },
+      "measurements": {
+        "measuredSpan": 16,
+        "startSetback": 0.25,
+        "endSetback": 0.125,
+        "clearance": 0.125,
+        "closedEnd": "start",
+        "basis": "Example measured faces and socket allowance for cut-planning practice.",
+        "measuredAt": "2026-11-22T16:00:00.000Z"
+      }
+    },
+    {
+      "rodId": "8c8bcde3-76ac-4398-bed0-f6a6c3aba796",
+      "rodMaterial": "hd-everbilt-closet-rod-96",
+      "modeledSpan": 28.18799999999999,
+      "start": {
+        "pieceId": "8a12cc02-a341-4398-8d2f-282bcaba5aea",
+        "pointLocal": [
+          0.3514999999999997,
+          18,
+          0
+        ],
+        "normalLocal": [
+          1,
+          0,
+          0
+        ],
+        "geometryFingerprint": "attachment-geometry-v1-8223d70f1ba3dbca"
+      },
+      "end": {
+        "pieceId": "537daeff-595d-48f7-997d-268a4be81d5a",
+        "pointLocal": [
+          -0.3515000000000015,
+          18,
+          0
+        ],
+        "normalLocal": [
+          -1,
+          0,
+          0
+        ],
+        "geometryFingerprint": "attachment-geometry-v1-8f89981518d9b525"
+      },
+      "measurements": {
+        "measuredSpan": 28.188,
+        "startSetback": 0.25,
+        "endSetback": 0.125,
+        "clearance": 0.125,
+        "closedEnd": "start",
+        "basis": "Example measured faces and socket allowance for cut-planning practice.",
+        "measuredAt": "2026-11-22T16:00:00.000Z"
+      }
+    }
+  ],
+  "tubeCutPlans": [
+    {
+      "rodIds": [
+        "0d880a10-86e5-47ee-89fa-29e74ac03eba",
+        "8c8bcde3-76ac-4398-bed0-f6a6c3aba796"
+      ],
+      "kerf": 0.032
+    }
+  ],
+  "plannedCutSources": [
+    {
+      "sourceId": "bf0b46c4-f070-4bc8-8f2b-4ac2f56345ab",
+      "fingerprint": "binding-v1-6ae121b222ada0cf",
+      "historyIds": [
+        "7ab89c9c-f278-4e7f-a2be-9cd96641c00c",
+        "6fe04a81-e34f-4713-9f86-54c05b4141d1",
+        "5b496414-54b1-4441-b071-21f9efbc744c",
+        "60736c38-2c0a-4e65-bf03-1e0defb6bbac",
+        "4d8e9bf6-792b-443e-8cd3-dfb1724581b2"
+      ]
+    },
+    {
+      "sourceId": "88b95323-3161-404c-aec2-30400424ba94",
+      "fingerprint": "binding-v1-cfd333b9425ce851",
+      "historyIds": [
+        "4af10eb7-b81a-4671-bea0-f68879647a7a",
+        "14f356de-c1cd-499f-b772-46cf1ad68b9c",
+        "6dd8c527-7f92-482a-809e-d7cb013cb8ae",
+        "4e5b131d-196d-44db-82bc-ee60414d2c67",
+        "3191ac83-db42-4a46-8b48-4f22912b442c"
+      ]
+    },
+    {
+      "sourceId": "4d302c68-3ee3-4cd7-8af7-eb158e1acbdd",
+      "fingerprint": "binding-v1-af0bdeb5e5540e6d",
+      "historyIds": [
+        "fd6ab911-d0fb-4e4a-97a9-b3c8f4b8d5c3",
+        "5cec3520-c3a6-4274-9c45-a0564e04cc89",
+        "c9955160-f710-4c5f-980e-53338170f0c9",
+        "82dbc9d1-5308-4998-ac1d-a024d421b6fa",
+        "eb62492e-b414-46db-b32b-76ab75014e75"
+      ]
+    },
+    {
+      "sourceId": "3da2ac28-14b2-42ab-b57d-9dbb07567156",
+      "fingerprint": "binding-v1-b7441262da286498",
+      "historyIds": [
+        "fc56b330-31c2-4add-b0bc-02269586434c",
+        "535d6400-5bad-47c9-a088-0ae9dda35644",
+        "2a23e0ec-8d86-426d-8d1d-5c60487b7b9c",
+        "62ae0594-5dc9-4f87-8a17-2c4fcef59c7a",
+        "0cae482c-ac7c-4b18-b664-1d6ed448fa11"
+      ]
+    },
+    {
+      "sourceId": "23568f2a-4438-4c69-b209-609b34a2dedd",
+      "fingerprint": "binding-v1-7d5ddebd91145fb2",
+      "historyIds": [
+        "c276ba19-fd24-499d-846e-ebf42b5d8e4d",
+        "34040b69-462c-4429-a340-0be38462ad48",
+        "641de286-65d9-4ba8-9609-9dac1ea08a3e"
+      ]
+    },
+    {
+      "sourceId": "4bee078b-4a0a-4fa5-8ac7-7b58daba3be7",
+      "fingerprint": "binding-v1-d6ab0b48716fc8c8",
+      "historyIds": [
+        "8706b10a-0da7-400a-a6e2-8375f4bc2183",
+        "438def65-c1af-4199-9261-c9f9dff73738",
+        "ce1c3116-7344-4645-91ef-014c919ed3b2"
+      ]
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "37e73e44-9912-48da-946d-6f73708bad10",
+      "label": "P001"
+    },
+    {
+      "partId": "41565b60-4717-4e6c-8a9d-13d8bae2217b",
+      "label": "P002"
+    },
+    {
+      "partId": "cc709970-b25b-457e-8c1a-9a8b9862a705",
+      "label": "P003"
+    },
+    {
+      "partId": "0fb218bd-0d06-41cb-a6a3-b8f95387b4c6",
+      "label": "P004"
+    },
+    {
+      "partId": "8a12cc02-a341-4398-8d2f-282bcaba5aea",
+      "label": "P005"
+    },
+    {
+      "partId": "537daeff-595d-48f7-997d-268a4be81d5a",
+      "label": "P006"
+    },
+    {
+      "partId": "f7a2a392-eaf0-48dc-9aad-14bb91172d6b",
+      "label": "P007"
+    },
+    {
+      "partId": "b01cccc0-6b6e-4386-aceb-b2f363b4ad65",
+      "label": "P008"
+    },
+    {
+      "partId": "12b271d6-2853-4f3d-a815-6abe834bd0ff",
+      "label": "P009"
+    },
+    {
+      "partId": "a5ab9224-c76e-48ed-a5e7-7462d4bff662",
+      "label": "P010"
+    },
+    {
+      "partId": "0d880a10-86e5-47ee-89fa-29e74ac03eba",
+      "label": "P011"
+    },
+    {
+      "partId": "8c8bcde3-76ac-4398-bed0-f6a6c3aba796",
+      "label": "P012"
+    },
+    {
+      "partId": "1056c224-5a14-4a3b-9dce-1a6c410e1470",
+      "label": "O001"
+    },
+    {
+      "partId": "e303c8d2-0ed6-4ca5-b937-e4e6af5731c2",
+      "label": "O002"
+    },
+    {
+      "partId": "ff77f5f2-1040-4590-8f5a-e8c6ae58bcdd",
+      "label": "O003"
+    },
+    {
+      "partId": "29915f74-5827-4848-80a6-20a84e065554",
+      "label": "O004"
+    },
+    {
+      "partId": "940a31be-c77f-4670-8645-91ce35d1e7b4",
+      "label": "O005"
+    },
+    {
+      "partId": "376b9959-2ef1-44e6-961e-ede9eb4981b7",
+      "label": "O006"
+    },
+    {
+      "partId": "028ba0a9-3e68-4d98-b263-63d2e833c195",
+      "label": "O007"
+    },
+    {
+      "partId": "c464c3b5-7954-4fbb-aee0-6f94cb640c6b",
+      "label": "O008"
+    },
+    {
+      "partId": "330cf30b-5901-4a46-9e55-d71f4dbec1f3",
+      "label": "O009"
+    },
+    {
+      "partId": "20082391-879d-4ec4-ba17-1687b971fb1a",
+      "label": "O010"
+    },
+    {
+      "partId": "7d0ae25b-b044-4b3f-bf58-8b2d53032d7d",
+      "label": "O011"
+    },
+    {
+      "partId": "64a9d06b-3b77-4092-b33c-02b8abc30dd0",
+      "label": "O012"
+    },
+    {
+      "partId": "c3db9f57-7a92-440b-a506-23b1edc5b1db",
+      "label": "O013"
+    },
+    {
+      "partId": "9753a070-9a93-4473-879e-9369d66256bc",
+      "label": "O014"
+    },
+    {
+      "partId": "01c2acc8-0021-446b-89ad-5e578354b363",
+      "label": "O015"
+    },
+    {
+      "partId": "2dd9707d-4a60-4f4f-882a-be035b59b848",
+      "label": "O016"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T16:33:10.920Z",
+  "pieces": [
+    {
+      "id": "37e73e44-9912-48da-946d-6f73708bad10",
+      "name": "Closet casework · top or bottom",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        72,
+        0.703,
+        24
+      ],
+      "position": [
+        0,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6dd579be-d3f5-476e-9ad6-f14b53843aa6",
+      "assembly": "Closet casework",
+      "designRole": "bottom",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "23568f2a-4438-4c69-b209-609b34a2dedd",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "41565b60-4717-4e6c-8a9d-13d8bae2217b",
+      "name": "Closet casework · top or bottom",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        72,
+        0.703,
+        24
+      ],
+      "position": [
+        0,
+        83.6485,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6dd579be-d3f5-476e-9ad6-f14b53843aa6",
+      "assembly": "Closet casework",
+      "designRole": "top",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "4bee078b-4a0a-4fa5-8ac7-7b58daba3be7",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "cc709970-b25b-457e-8c1a-9a8b9862a705",
+      "name": "Closet casework · vertical",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        82.594,
+        24
+      ],
+      "position": [
+        -35.6485,
+        42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6dd579be-d3f5-476e-9ad6-f14b53843aa6",
+      "assembly": "Closet casework",
+      "designRole": "side-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "bf0b46c4-f070-4bc8-8f2b-4ac2f56345ab",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "0fb218bd-0d06-41cb-a6a3-b8f95387b4c6",
+      "name": "Closet casework · vertical",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        82.594,
+        24
+      ],
+      "position": [
+        -18.945500000000003,
+        42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6dd579be-d3f5-476e-9ad6-f14b53843aa6",
+      "assembly": "Closet casework",
+      "designRole": "tower-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "88b95323-3161-404c-aec2-30400424ba94",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "8a12cc02-a341-4398-8d2f-282bcaba5aea",
+      "name": "Closet casework · vertical",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        82.594,
+        24
+      ],
+      "position": [
+        6.7574999999999985,
+        42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6dd579be-d3f5-476e-9ad6-f14b53843aa6",
+      "assembly": "Closet casework",
+      "designRole": "tower-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "4d302c68-3ee3-4cd7-8af7-eb158e1acbdd",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "537daeff-595d-48f7-997d-268a4be81d5a",
+      "name": "Closet casework · vertical",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        82.594,
+        24
+      ],
+      "position": [
+        35.6485,
+        42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6dd579be-d3f5-476e-9ad6-f14b53843aa6",
+      "assembly": "Closet casework",
+      "designRole": "side-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "3da2ac28-14b2-42ab-b57d-9dbb07567156",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "f7a2a392-eaf0-48dc-9aad-14bb91172d6b",
+      "name": "Closet casework · tower shelf",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        25,
+        0.703,
+        23.5
+      ],
+      "position": [
+        -6.094000000000001,
+        17.221799999999998,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9f50f8ba-2c6b-444f-b551-f1a56660012b",
+      "assembly": "Closet casework",
+      "designRole": "tower-shelf-1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "bf0b46c4-f070-4bc8-8f2b-4ac2f56345ab",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "b01cccc0-6b6e-4386-aceb-b2f363b4ad65",
+      "name": "Closet casework · tower shelf",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        25,
+        0.703,
+        23.5
+      ],
+      "position": [
+        -6.094000000000001,
+        33.7406,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9f50f8ba-2c6b-444f-b551-f1a56660012b",
+      "assembly": "Closet casework",
+      "designRole": "tower-shelf-2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "88b95323-3161-404c-aec2-30400424ba94",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "12b271d6-2853-4f3d-a815-6abe834bd0ff",
+      "name": "Closet casework · tower shelf",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        25,
+        0.703,
+        23.5
+      ],
+      "position": [
+        -6.094000000000001,
+        50.2594,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9f50f8ba-2c6b-444f-b551-f1a56660012b",
+      "assembly": "Closet casework",
+      "designRole": "tower-shelf-3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "4d302c68-3ee3-4cd7-8af7-eb158e1acbdd",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "a5ab9224-c76e-48ed-a5e7-7462d4bff662",
+      "name": "Closet casework · tower shelf",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        25,
+        0.703,
+        23.5
+      ],
+      "position": [
+        -6.094000000000001,
+        66.7782,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9f50f8ba-2c6b-444f-b551-f1a56660012b",
+      "assembly": "Closet casework",
+      "designRole": "tower-shelf-4",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "3da2ac28-14b2-42ab-b57d-9dbb07567156",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "0d880a10-86e5-47ee-89fa-29e74ac03eba",
+      "name": "Closet hanging rods · cut tube rod",
+      "material": "hd-everbilt-closet-rod-96",
+      "size": [
+        1.31,
+        15.5,
+        1.31
+      ],
+      "position": [
+        -27.2345,
+        60,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "7836072f-2804-461b-91ff-01ff116d7c38",
+      "assembly": "Closet hanging rods",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "8c8bcde3-76ac-4398-bed0-f6a6c3aba796",
+      "name": "Closet hanging rods · cut tube rod",
+      "material": "hd-everbilt-closet-rod-96",
+      "size": [
+        1.31,
+        27.688,
+        1.31
+      ],
+      "position": [
+        21.2655,
+        60,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "7836072f-2804-461b-91ff-01ff116d7c38",
+      "assembly": "Closet hanging rods",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "1056c224-5a14-4a3b-9dce-1a6c410e1470",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 1",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        57.468999999999994,
+        23.5
+      ],
+      "position": [
+        -35.6485,
+        54.5625,
+        23.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "bf0b46c4-f070-4bc8-8f2b-4ac2f56345ab",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          25.125,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "e303c8d2-0ed6-4ca5-b937-e4e6af5731c2",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 2",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        82.594,
+        0.25
+      ],
+      "position": [
+        -35.6485,
+        42,
+        35.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "bf0b46c4-f070-4bc8-8f2b-4ac2f56345ab",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          47.75
+        ]
+      }
+    },
+    {
+      "id": "ff77f5f2-1040-4590-8f5a-e8c6ae58bcdd",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 3",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        13.281000000000006,
+        48
+      ],
+      "position": [
+        -35.6485,
+        90.0625,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "bf0b46c4-f070-4bc8-8f2b-4ac2f56345ab",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          82.719,
+          0
+        ]
+      }
+    },
+    {
+      "id": "29915f74-5827-4848-80a6-20a84e065554",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 1",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        57.468999999999994,
+        23.5
+      ],
+      "position": [
+        -18.945500000000003,
+        54.5625,
+        23.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "88b95323-3161-404c-aec2-30400424ba94",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          25.125,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "940a31be-c77f-4670-8645-91ce35d1e7b4",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 2",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        82.594,
+        0.25
+      ],
+      "position": [
+        -18.945500000000003,
+        42,
+        35.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "88b95323-3161-404c-aec2-30400424ba94",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          47.75
+        ]
+      }
+    },
+    {
+      "id": "376b9959-2ef1-44e6-961e-ede9eb4981b7",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 3",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        13.281000000000006,
+        48
+      ],
+      "position": [
+        -18.945500000000003,
+        90.0625,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "88b95323-3161-404c-aec2-30400424ba94",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          82.719,
+          0
+        ]
+      }
+    },
+    {
+      "id": "028ba0a9-3e68-4d98-b263-63d2e833c195",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 1",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        57.468999999999994,
+        23.5
+      ],
+      "position": [
+        6.7574999999999985,
+        54.5625,
+        23.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "4d302c68-3ee3-4cd7-8af7-eb158e1acbdd",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          25.125,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "c464c3b5-7954-4fbb-aee0-6f94cb640c6b",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 2",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        82.594,
+        0.25
+      ],
+      "position": [
+        6.7574999999999985,
+        42,
+        35.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "4d302c68-3ee3-4cd7-8af7-eb158e1acbdd",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          47.75
+        ]
+      }
+    },
+    {
+      "id": "330cf30b-5901-4a46-9e55-d71f4dbec1f3",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 3",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        13.281000000000006,
+        48
+      ],
+      "position": [
+        6.7574999999999985,
+        90.0625,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "4d302c68-3ee3-4cd7-8af7-eb158e1acbdd",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          82.719,
+          0
+        ]
+      }
+    },
+    {
+      "id": "20082391-879d-4ec4-ba17-1687b971fb1a",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 1",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        57.468999999999994,
+        23.5
+      ],
+      "position": [
+        35.6485,
+        54.5625,
+        23.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "3da2ac28-14b2-42ab-b57d-9dbb07567156",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          25.125,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "7d0ae25b-b044-4b3f-bf58-8b2d53032d7d",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 2",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        82.594,
+        0.25
+      ],
+      "position": [
+        35.6485,
+        42,
+        35.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "3da2ac28-14b2-42ab-b57d-9dbb07567156",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          47.75
+        ]
+      }
+    },
+    {
+      "id": "64a9d06b-3b77-4092-b33c-02b8abc30dd0",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 3",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.703,
+        13.281000000000006,
+        48
+      ],
+      "position": [
+        35.6485,
+        90.0625,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "3da2ac28-14b2-42ab-b57d-9dbb07567156",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          0.703,
+          96,
+          48
+        ],
+        "offset": [
+          0,
+          82.719,
+          0
+        ]
+      }
+    },
+    {
+      "id": "c3db9f57-7a92-440b-a506-23b1edc5b1db",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 1",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        72,
+        0.703,
+        23.875
+      ],
+      "position": [
+        0,
+        0.3515,
+        24.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "23568f2a-4438-4c69-b209-609b34a2dedd",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "9753a070-9a93-4473-879e-9369d66256bc",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 2",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        23.875,
+        0.703,
+        48
+      ],
+      "position": [
+        48.0625,
+        0.3515,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "23568f2a-4438-4c69-b209-609b34a2dedd",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          72.125,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "01c2acc8-0021-446b-89ad-5e578354b363",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 1",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        72,
+        0.703,
+        23.875
+      ],
+      "position": [
+        0,
+        83.6485,
+        24.0625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "4bee078b-4a0a-4fa5-8ac7-7b58daba3be7",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          24.125
+        ]
+      }
+    },
+    {
+      "id": "2dd9707d-4a60-4f4f-882a-be035b59b848",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 2",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        23.875,
+        0.703,
+        48
+      ],
+      "position": [
+        48.0625,
+        83.6485,
+        12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "4bee078b-4a0a-4fa5-8ac7-7b58daba3be7",
+        "sourceAxes": [
+          1,
+          2,
+          0
+        ],
+        "size": [
+          96,
+          0.703,
+          48
+        ],
+        "offset": [
+          72.125,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "e0d1eb5c-b490-4dde-b166-bed5886c8126",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, check the cutting loss for each stock unit, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "91c89468-b855-4ee5-9948-a4c357d4348e",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, check the cutting loss for each stock unit, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-4da3c944",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "title": "Assemble Closet casework",
+      "notes": "Recorded operation history from an earlier phase. Review against the current assembly stages.",
+      "complete": false
+    },
+    {
+      "id": "6dd579be-d3f5-476e-9ad6-f14b53843aa6",
+      "title": "Closet: Dry-fit the closet carcass",
+      "notes": "Dry-fit and clamp the listed outside panels and tower dividers. Check the measured opening, clear bays, square and access around trim/baseboards. Keep clamp and tool access before closing the body. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7a7c7473-3aac-4b7d-b3ce-5e9d97d44b5a",
+        "stageKey": "carcass",
+        "memberIds": [
+          "0fb218bd-0d06-41cb-a6a3-b8f95387b4c6",
+          "37e73e44-9912-48da-946d-6f73708bad10",
+          "41565b60-4717-4e6c-8a9d-13d8bae2217b",
+          "537daeff-595d-48f7-997d-268a4be81d5a",
+          "8a12cc02-a341-4398-8d2f-282bcaba5aea",
+          "cc709970-b25b-457e-8c1a-9a8b9862a705"
+        ],
+        "notes": "Dry-fit and clamp the listed outside panels and tower dividers. Check the measured opening, clear bays, square and access around trim/baseboards. Keep clamp and tool access before closing the body. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-7892c616",
+        "title": "Closet: Dry-fit the closet carcass"
+      }
+    },
+    {
+      "id": "9f50f8ba-2c6b-444f-b551-f1a56660012b",
+      "title": "Closet: Set up tower supports and shelves",
+      "notes": "Review support and drilling plans for each shelf before placement. Only explicitly planned holes and supports are documented; other support details remain unresolved. Dry-fit the actual tower shelves at their recorded levels and verify clearance from the hanging bays.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7a7c7473-3aac-4b7d-b3ce-5e9d97d44b5a",
+        "stageKey": "tower-shelves",
+        "memberIds": [
+          "12b271d6-2853-4f3d-a815-6abe834bd0ff",
+          "a5ab9224-c76e-48ed-a5e7-7462d4bff662",
+          "b01cccc0-6b6e-4386-aceb-b2f363b4ad65",
+          "f7a2a392-eaf0-48dc-9aad-14bb91172d6b"
+        ],
+        "notes": "Review support and drilling plans for each shelf before placement. Only explicitly planned holes and supports are documented; other support details remain unresolved. Dry-fit the actual tower shelves at their recorded levels and verify clearance from the hanging bays.",
+        "fingerprint": "phase-v1-12af322b",
+        "title": "Closet: Set up tower supports and shelves"
+      }
+    },
+    {
+      "id": "7836072f-2804-461b-91ff-01ff116d7c38",
+      "title": "Closet: Dry-fit hanging rods and review supports",
+      "notes": "Check the actual listed rods against the clear bays. Resolve matched sockets, any required center support, engagement/end deductions and mounting locations before cutting or attachment; geometric rod lengths are provisional without those details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "7a7c7473-3aac-4b7d-b3ce-5e9d97d44b5a",
+        "stageKey": "rods",
+        "memberIds": [
+          "0d880a10-86e5-47ee-89fa-29e74ac03eba",
+          "8c8bcde3-76ac-4398-bed0-f6a6c3aba796"
+        ],
+        "notes": "Check the actual listed rods against the clear bays. Resolve matched sockets, any required center support, engagement/end deductions and mounting locations before cutting or attachment; geometric rod lengths are provisional without those details.",
+        "fingerprint": "phase-v1-ca2165e7",
+        "title": "Closet: Dry-fit hanging rods and review supports"
+      }
+    },
+    {
+      "id": "8869f1e4-48cd-428f-8961-6413742a19f8",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "91c89468-b855-4ee5-9948-a4c357d4348e",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-d10f73b7",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice project for two unequal openings using PureBond panel thickness. The socket setbacks, clearance and tube cutting loss are sample measurements. Measure the actual openings and delivered sockets and check backing, shelf supports and fasteners before installation.\n\nCloset insert — PARTIAL DIMENSIONAL STUDY\nUnresolved: closet-supports: Review shelf-support fit and drilling, carcass joints, rod sockets/supports, anti-tip anchors and substrate-dependent fastening.\nUnresolved: closet-obstacles: Baseboards, trim, door swings, wall/stud locations and access clearances need measured obstacle geometry.\nUnresolved: closet-loads: Shelf/rod spans, panel grade, loads and anchoring are not qualified by this casework geometry.\nUnresolved: material.caseworkPanels.installation: Unfinished birch plywood sized for editable dry indoor casework. Measure the delivered thickness and check usable sheet edges before sizing joinery. Review actual shelf or seat loads, joinery and anchorage separately.\nUnresolved: material.closetRod.installation: Hanging-clothes rod envelope. One 96-inch stock unit; measure before cutting. Dry-fit the delivered rod and sockets, measure both setbacks and insertion clearance, and confirm intermediate support, backing, fasteners and hanging load for your installation.\nUnresolved: material.closetRodSupport.installation: Review Everbilt 311V end sockets for the delivered rod and confirm backing, fasteners and any intermediate supports before installation.\nUnresolved: closet-rod-end-allowances: The modeled clear openings are provisional lengths. Use the measured opening, socket setbacks and insertion clearance to calculate each cut. Confirm mounting, height, access and intermediate supports.\n\nPlanning review — Closet insert design study\nCloset insert study: outside 72 × 24 × 84 in; clear shelf tower 25 in, 4 shelves. Clear hanging bays: 16 in left and 28.188 in right. Rod center setting: 60 in above the floor.\nAssumption: Missing dimensions use provisional defaults shown below; edit them before applying.\nAssumption: Width, depth and height describe the outside casework envelope.\nOpen question: Which exact stock products, attachments, loads and measured site constraints apply?\nReview: Review the generated missing-material and installation decisions. Geometry, source identity and contact checks do not establish code compliance or structural capacity.",
+  "sections": [
+    {
+      "id": "67f313a9-ebb1-4c0a-aed5-386f7d6a97ba",
+      "name": "Closet casework",
+      "pieceIds": [
+        "37e73e44-9912-48da-946d-6f73708bad10",
+        "41565b60-4717-4e6c-8a9d-13d8bae2217b",
+        "cc709970-b25b-457e-8c1a-9a8b9862a705",
+        "0fb218bd-0d06-41cb-a6a3-b8f95387b4c6",
+        "8a12cc02-a341-4398-8d2f-282bcaba5aea",
+        "537daeff-595d-48f7-997d-268a4be81d5a",
+        "f7a2a392-eaf0-48dc-9aad-14bb91172d6b",
+        "b01cccc0-6b6e-4386-aceb-b2f363b4ad65",
+        "12b271d6-2853-4f3d-a815-6abe834bd0ff",
+        "a5ab9224-c76e-48ed-a5e7-7462d4bff662"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "fdc9b1f5-6e23-4a21-beda-91d8f3e928ac",
+      "name": "Closet hanging rods",
+      "pieceIds": [
+        "0d880a10-86e5-47ee-89fa-29e74ac03eba",
+        "8c8bcde3-76ac-4398-bed0-f6a6c3aba796"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [
+    {
+      "version": 1,
+      "id": "95396aa5-03c6-497d-9d9f-04885e6f50e2",
+      "revision": 1,
+      "currentFingerprint": "binding-v1-913d4278ea7b5f8b",
+      "reviewBlock": "Closet insert — PARTIAL DIMENSIONAL STUDY\nUnresolved: closet-supports: Review shelf-support fit and drilling, carcass joints, rod sockets/supports, anti-tip anchors and substrate-dependent fastening.\nUnresolved: closet-obstacles: Baseboards, trim, door swings, wall/stud locations and access clearances need measured obstacle geometry.\nUnresolved: closet-loads: Shelf/rod spans, panel grade, loads and anchoring are not qualified by this casework geometry.\nUnresolved: material.caseworkPanels.installation: Unfinished birch plywood sized for editable dry indoor casework. Measure the delivered thickness and check usable sheet edges before sizing joinery. Review actual shelf or seat loads, joinery and anchorage separately.\nUnresolved: material.closetRod.installation: Hanging-clothes rod envelope. One 96-inch stock unit; measure before cutting. Dry-fit the delivered rod and sockets, measure both setbacks and insertion clearance, and confirm intermediate support, backing, fasteners and hanging load for your installation.\nUnresolved: material.closetRodSupport.installation: Review Everbilt 311V end sockets for the delivered rod and confirm backing, fasteners and any intermediate supports before installation.\nUnresolved: closet-rod-end-allowances: The modeled clear openings are provisional lengths. Use the measured opening, socket setbacks and insertion clearance to calculate each cut. Confirm mounting, height, access and intermediate supports.\n\nPlanning review — Closet insert design study\nCloset insert study: outside 72 × 24 × 84 in; clear shelf tower 25 in, 4 shelves. Clear hanging bays: 16 in left and 28.188 in right. Rod center setting: 60 in above the floor.\nAssumption: Missing dimensions use provisional defaults shown below; edit them before applying.\nAssumption: Width, depth and height describe the outside casework envelope.\nOpen question: Which exact stock products, attachments, loads and measured site constraints apply?\nReview: Review the generated missing-material and installation decisions. Geometry, source identity and contact checks do not establish code compliance or structural capacity.",
+      "generatedNotes": "Closet insert — PARTIAL DIMENSIONAL STUDY\nUnresolved: closet-supports: Review shelf-support fit and drilling, carcass joints, rod sockets/supports, anti-tip anchors and substrate-dependent fastening.\nUnresolved: closet-obstacles: Baseboards, trim, door swings, wall/stud locations and access clearances need measured obstacle geometry.\nUnresolved: closet-loads: Shelf/rod spans, panel grade, loads and anchoring are not qualified by this casework geometry.\nUnresolved: material.caseworkPanels.installation: Unfinished birch plywood sized for editable dry indoor casework. Measure the delivered thickness and check usable sheet edges before sizing joinery. Review actual shelf or seat loads, joinery and anchorage separately.\nUnresolved: material.closetRod.installation: Hanging-clothes rod envelope. One 96-inch stock unit; measure before cutting. Dry-fit the delivered rod and sockets, measure both setbacks and insertion clearance, and confirm intermediate support, backing, fasteners and hanging load for your installation.\nUnresolved: material.closetRodSupport.installation: Review Everbilt 311V end sockets for the delivered rod and confirm backing, fasteners and any intermediate supports before installation.\nUnresolved: closet-rod-end-allowances: The modeled clear openings are provisional lengths. Use the measured opening, socket setbacks and insertion clearance to calculate each cut. Confirm mounting, height, access and intermediate supports.",
+      "title": "Closet insert design study",
+      "summary": "Closet insert study: outside 72 × 24 × 84 in; clear shelf tower 25 in, 4 shelves. Clear hanging bays: 16 in left and 28.188 in right. Rod center setting: 60 in above the floor.",
+      "assumptions": [
+        "Missing dimensions use provisional defaults shown below; edit them before applying.",
+        "Width, depth and height describe the outside casework envelope."
+      ],
+      "questions": [
+        "Which exact stock products, attachments, loads and measured site constraints apply?"
+      ],
+      "suggestions": [
+        "Review the generated missing-material and installation decisions. Geometry, source identity and contact checks do not establish code compliance or structural capacity."
+      ],
+      "entries": [
+        {
+          "id": "7a7c7473-3aac-4b7d-b3ce-5e9d97d44b5a",
+          "spec": {
+            "type": "structure",
+            "structure": {
+              "entryId": "7a7c7473-3aac-4b7d-b3ce-5e9d97d44b5a",
+              "kind": "closet-insert",
+              "parameters": {
+                "width": 72,
+                "depth": 24,
+                "height": 84,
+                "towerWidth": 25,
+                "leftBayWidth": 16,
+                "shelfCount": 4,
+                "rodHeight": 60,
+                "origin": [
+                  0,
+                  0,
+                  0
+                ],
+                "yaw": 0
+              },
+              "selections": {
+                "caseworkPanels": {
+                  "materialId": "hd-purebond-birch-703",
+                  "productRegistryRef": "hd-purebond-birch-703-165921"
+                },
+                "closetRod": {
+                  "materialId": "hd-everbilt-closet-rod-96",
+                  "productRegistryRef": "everbilt-eh-wsthdus-320v"
+                }
+              }
+            }
+          },
+          "generatedNotes": "Closet insert — PARTIAL DIMENSIONAL STUDY\nUnresolved: closet-supports: Review shelf-support fit and drilling, carcass joints, rod sockets/supports, anti-tip anchors and substrate-dependent fastening.\nUnresolved: closet-obstacles: Baseboards, trim, door swings, wall/stud locations and access clearances need measured obstacle geometry.\nUnresolved: closet-loads: Shelf/rod spans, panel grade, loads and anchoring are not qualified by this casework geometry.\nUnresolved: material.caseworkPanels.installation: Unfinished birch plywood sized for editable dry indoor casework. Measure the delivered thickness and check usable sheet edges before sizing joinery. Review actual shelf or seat loads, joinery and anchorage separately.\nUnresolved: material.closetRod.installation: Hanging-clothes rod envelope. One 96-inch stock unit; measure before cutting. Dry-fit the delivered rod and sockets, measure both setbacks and insertion clearance, and confirm intermediate support, backing, fasteners and hanging load for your installation.\nUnresolved: material.closetRodSupport.installation: Review Everbilt 311V end sockets for the delivered rod and confirm backing, fasteners and any intermediate supports before installation.\nUnresolved: closet-rod-end-allowances: The modeled clear openings are provisional lengths. Use the measured opening, socket setbacks and insertion clearance to calculate each cut. Confirm mounting, height, access and intermediate supports.",
+          "pose": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "casework-panels",
+              "sectionId": "67f313a9-ebb1-4c0a-aed5-386f7d6a97ba",
+              "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f"
+            },
+            {
+              "role": "hanging-rods",
+              "sectionId": "fdc9b1f5-6e23-4a21-beda-91d8f3e928ac",
+              "stepId": "af84d6a6-7b75-4876-8066-5c6123b29eb4"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": "design-v3-ffd5b80",
+  "history": [
+    {
+      "id": "7ab89c9c-f278-4e7f-a2be-9cd96641c00c",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Recorded one PureBond birch plywood · 0.703 in actual sheet for 2 parts starting with P003. Added 3 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "6fe04a81-e34f-4713-9f86-54c05b4141d1",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P003 · 1. Crosscut Strip 1 at 82.594 in from the current end of the sheet."
+    },
+    {
+      "id": "5b496414-54b1-4441-b071-21f9efbc744c",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P003 · 2. Rip 2 ft from the current edge of Strip 1 for P003 · Closet casework · vertical."
+    },
+    {
+      "id": "60736c38-2c0a-4e65-bf03-1e0defb6bbac",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P003 · 3. Rip 23.5 in from the current edge of Strip 1 for P007 · Closet casework · tower shelf."
+    },
+    {
+      "id": "4d8e9bf6-792b-443e-8cd3-dfb1724581b2",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P003 · 4. Crosscut the P007 · Closet casework · tower shelf blank to 25 in from its end."
+    },
+    {
+      "id": "4af10eb7-b81a-4671-bea0-f68879647a7a",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Recorded one PureBond birch plywood · 0.703 in actual sheet for 2 parts starting with P004. Added 3 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "14f356de-c1cd-499f-b772-46cf1ad68b9c",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P004 · 1. Crosscut Strip 1 at 82.594 in from the current end of the sheet."
+    },
+    {
+      "id": "6dd8c527-7f92-482a-809e-d7cb013cb8ae",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P004 · 2. Rip 2 ft from the current edge of Strip 1 for P004 · Closet casework · vertical."
+    },
+    {
+      "id": "4e5b131d-196d-44db-82bc-ee60414d2c67",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P004 · 3. Rip 23.5 in from the current edge of Strip 1 for P008 · Closet casework · tower shelf."
+    },
+    {
+      "id": "3191ac83-db42-4a46-8b48-4f22912b442c",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P004 · 4. Crosscut the P008 · Closet casework · tower shelf blank to 25 in from its end."
+    },
+    {
+      "id": "fd6ab911-d0fb-4e4a-97a9-b3c8f4b8d5c3",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Recorded one PureBond birch plywood · 0.703 in actual sheet for 2 parts starting with P005. Added 3 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "5cec3520-c3a6-4274-9c45-a0564e04cc89",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P005 · 1. Crosscut Strip 1 at 82.594 in from the current end of the sheet."
+    },
+    {
+      "id": "c9955160-f710-4c5f-980e-53338170f0c9",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P005 · 2. Rip 2 ft from the current edge of Strip 1 for P005 · Closet casework · vertical."
+    },
+    {
+      "id": "82dbc9d1-5308-4998-ac1d-a024d421b6fa",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P005 · 3. Rip 23.5 in from the current edge of Strip 1 for P009 · Closet casework · tower shelf."
+    },
+    {
+      "id": "eb62492e-b414-46db-b32b-76ab75014e75",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P005 · 4. Crosscut the P009 · Closet casework · tower shelf blank to 25 in from its end."
+    },
+    {
+      "id": "fc56b330-31c2-4add-b0bc-02269586434c",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Recorded one PureBond birch plywood · 0.703 in actual sheet for 2 parts starting with P006. Added 3 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "535d6400-5bad-47c9-a088-0ae9dda35644",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P006 · 1. Crosscut Strip 1 at 82.594 in from the current end of the sheet."
+    },
+    {
+      "id": "2a23e0ec-8d86-426d-8d1d-5c60487b7b9c",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P006 · 2. Rip 2 ft from the current edge of Strip 1 for P006 · Closet casework · vertical."
+    },
+    {
+      "id": "62ae0594-5dc9-4f87-8a17-2c4fcef59c7a",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P006 · 3. Rip 23.5 in from the current edge of Strip 1 for P010 · Closet casework · tower shelf."
+    },
+    {
+      "id": "0cae482c-ac7c-4b18-b664-1d6ed448fa11",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P006 · 4. Crosscut the P010 · Closet casework · tower shelf blank to 25 in from its end."
+    },
+    {
+      "id": "c276ba19-fd24-499d-846e-ebf42b5d8e4d",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Recorded one PureBond birch plywood · 0.703 in actual sheet for 1 part starting with P001. Added 2 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "34040b69-462c-4429-a340-0be38462ad48",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P001 · 1. Crosscut Strip 1 at 6 ft from the current end of the sheet."
+    },
+    {
+      "id": "641de286-65d9-4ba8-9609-9dac1ea08a3e",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P001 · 2. Rip 2 ft from the current edge of Strip 1 for P001 · Closet casework · top or bottom."
+    },
+    {
+      "id": "8706b10a-0da7-400a-a6e2-8375f4bc2183",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Recorded one PureBond birch plywood · 0.703 in actual sheet for 1 part starting with P002. Added 2 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "438def65-c1af-4199-9261-c9f9dff73738",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P002 · 1. Crosscut Strip 1 at 6 ft from the current end of the sheet."
+    },
+    {
+      "id": "ce1c3116-7344-4645-91ef-014c919ed3b2",
+      "at": "2026-11-22T16:33:11.042Z",
+      "stepId": "47fa3dd8-d15d-4a66-bb5e-377bce36bb4f",
+      "message": "Stock cut order for P002 · 2. Rip 2 ft from the current edge of Strip 1 for P002 · Closet casework · top or bottom."
+    }
+  ]
+}

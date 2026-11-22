@@ -1,3 +1,4 @@
+import { closetBayLayout } from "./closetBayLayout";
 import { openingAxes, openingHalfSpans, pieceThroughOpenings } from "./throughOpenings";
 import {
   material,
@@ -195,6 +196,7 @@ export function closetSupportRoleOptions(
     stockId = spec.structure.selections.caseworkPanels?.materialId ?? "plywood",
     stock = material(stockId),
     t = Math.min(...stock.size),
+    bays = closetBayLayout(params, t),
     pose = {
       position: owner!.entry.pose.origin,
       rotation: owner!.entry.pose.rotation,
@@ -207,14 +209,12 @@ export function closetSupportRoleOptions(
         : [t, params.height - 2 * t, params.depth],
       position: V3 = index
         ? [
-            0,
+            bays.towerCenter,
             t + ((params.height - 2 * t) * index) / (params.shelfCount + 1),
             0.25,
           ]
         : [
-            role === "tower-left"
-              ? -params.towerWidth / 2 - t / 2
-              : params.towerWidth / 2 + t / 2,
+            bays.towerCenter + (role === "tower-left" ? -1 : 1) * (params.towerWidth / 2 + t / 2),
             params.height / 2,
             0,
           ],

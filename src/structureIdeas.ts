@@ -8,10 +8,12 @@ import {
   buildClosetInsert,
   buildCaseworkShelves,
 } from "./structures";
-import type { Project } from "./model";
+import { material, type Project } from "./model";
+import { closetBayLayout } from "./closetBayLayout";
 import type { IdeaPlan } from "./planning";
 import {
   referencedFamily,
+  closetMeasurements,
   namedMeasurement,
   normalizeIdeaText,
   requestedShelfCount,
@@ -27,6 +29,10 @@ export function updateStructureParameter(
   if (typeof parameters[key] !== "number")
     throw Error("Unknown dimensional parameter.");
   parameters[key] = value;
+  if (idea.kind === "closet-insert") {
+    if (key === "leftBayWidth") delete parameters.rightBayWidth;
+    if (key === "rightBayWidth") delete parameters.leftBayWidth;
+  }
   return next;
 }
 
@@ -73,11 +79,13 @@ export function localStructureIdea(request: {
       ],
     };
   const kind = namedKind ?? previous!.kind;
+  const closet = kind === "closet-insert" ? closetMeasurements(text) : null;
+  const envelope = closet?.envelope ?? text;
   const unitValue = (n: string, unit: string | undefined, extra?: string) =>
     Number(n) * (/^(in|[″"])/.test(unit ?? "") ? 1 : 12) + Number(extra ?? 0);
   const dimension = (labels: string, overall = false) =>
     namedMeasurement(
-      text,
+      overall ? envelope : text,
       labels,
       overall
         ? kind === "casework-shelves"
@@ -85,7 +93,7 @@ export function localStructureIdea(request: {
           : /(?:door|roof|tower|bench|shelf|seat)\s*$/
         : undefined,
     )?.inches ?? undefined;
-  const pair = text.match(
+  const pair = envelope.match(
       /(\d+(?:\.\d+)?)\s*(ft|feet|in|inches)?\s*(?:x|×|by)\s*(\d+(?:\.\d+)?)\s*(ft|feet|in|inches)?/,
     ),
     pairUnit = pair?.[4] ?? pair?.[2] ?? "ft";
@@ -110,7 +118,8 @@ export function localStructureIdea(request: {
       "wide|width",
       "deep|depth|long|length",
       "high|height|tall|eave height",
-    ].some((labels) => namedMeasurement(text, labels)?.inches === null)
+    ].some((labels) => namedMeasurement(envelope, labels)?.inches === null) ||
+    Object.values(closet?.facts ?? {}).some((fact) => fact?.inches === null)
   )
     return clarify(
       "Should the measurement be in inches or feet? Existing dimensions are retained.",
@@ -165,13 +174,12 @@ export function localStructureIdea(request: {
   for (const [key, labels] of [
     ["doorWidth", "door width"],
     ["doorHeight", "door height"],
-    ["towerWidth", "tower width"],
   ]) {
     const value = dimension(labels);
     if (
       value !== undefined &&
       kind !== "casework-shelves" &&
-      (key !== "towerWidth" || kind === "closet-insert")
+      kind !== "closet-insert"
     )
       parameters[key] = value;
   }
@@ -207,6 +215,14 @@ export function localStructureIdea(request: {
       0,
       0,
     ] as V3;
+  if (closet) {
+    const { leftBayWidth, rightBayWidth } = closet.facts;
+    if (leftBayWidth && !rightBayWidth) delete parameters.rightBayWidth;
+    if (rightBayWidth && !leftBayWidth) delete parameters.leftBayWidth;
+    for (const [key, fact] of Object.entries(closet.facts)) {
+      if (fact?.inches !== undefined && fact.inches !== null) parameters[key] = fact.inches;
+    }
+  }
   if (kind === "sauna") {
     for (const [key, labels] of [
       ["benchWidth", "bench width"],
@@ -222,12 +238,27 @@ export function localStructureIdea(request: {
     if (!prior && parameters.benchDepth === undefined)
       parameters.benchDepth = Math.min(24, Number(parameters.clearDepth));
   }
-  const structure = structureIdeaSchema.parse({
+  const candidate = structureIdeaSchema.safeParse({
     entryId: prior?.entryId,
     kind,
     parameters,
     selections: prior?.selections ?? {},
   });
+  if (!candidate.success) {
+    if (closet) return clarify("Check the cabinet size, clear bay widths and rod height against the supported measurements.");
+    throw candidate.error;
+  }
+  const structure = candidate.data;
+  if (structure.kind === "closet-insert") {
+    const p = structure.parameters;
+    const thickness = Math.min(...material(structure.selections.caseworkPanels?.materialId ?? "plywood").size);
+    const { problem } = closetBayLayout(p, thickness);
+    if (problem) return clarify(problem);
+    const rod = structure.selections.closetRod?.materialId;
+    const radius = rod ? Math.min(...material(rod).size) / 2 : 0;
+    if (p.rodHeight !== undefined && p.rodHeight + radius >= p.height - thickness)
+      return clarify("Set the rod lower so it clears the inside face of the top panel.");
+  }
   if (prior && request.previousPlan) {
     const target = request.previousPlan.structures.indexOf(previous!),
       next = structuredClone(request.previousPlan);

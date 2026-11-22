@@ -298,6 +298,25 @@ export function namedMeasurement(
   return { inches: measuredInches(match), raw: match[0], unitExplicit: !!match[2] };
 }
 
+export function closetMeasurements(input: string) {
+  const text = normalizeIdeaText(input);
+  const bay = (side: "left" | "right") => {
+    const name = `${side} (?:hanging |rod )?bay`;
+    return namedMeasurement(text, `(?:wide )?(?:for (?:the )?)?${name}(?: clear)?(?: width| wide)?`);
+  };
+  const facts = {
+    towerWidth: namedMeasurement(text, "tower (?:clear )?width|clear (?:shelf )?tower width"),
+    leftBayWidth: bay("left"),
+    rightBayWidth: bay("right"),
+    rodHeight: namedMeasurement(text, "rod (?:(?:center|centerline) )?height|(?:hanging )?rods? (?:centered )?at"),
+  };
+  let envelope = text;
+  for (const fact of Object.values(facts)) {
+    if (fact) envelope = envelope.replace(fact.raw, " ");
+  }
+  return { facts, envelope };
+}
+
 const comparisons = {
   wider: ["width", 1], narrower: ["width", -1],
   deeper: ["depth", 1], shallower: ["depth", -1],

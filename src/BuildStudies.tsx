@@ -232,7 +232,7 @@ export default function BuildStudies({
             ? "Finished seat height"
             : "Outside height";
   function field(
-    key: Exclude<keyof BuildStudyParameters, 'roofVent' | 'rafterSpacing'>,
+    key: Exclude<keyof BuildStudyParameters, 'roofVent' | 'rafterSpacing' | 'leftBayWidth'>,
     label: string,
     min = 1,
     max = 240,
@@ -405,6 +405,10 @@ export default function BuildStudies({
           <a className="text-button" href={`${exampleFiles}-shopping.txt`} download>
             Shopping checklist
           </a>
+          {selected === "closet-insert" && <a className="text-button"
+            href={workshopAsset("/examples/closet/unequal-bays.yardwork.json")} download>
+            Unequal-bay practice plan
+          </a>}
         </div>
         {exampleError && (
           <p role="alert" className="form-error">
@@ -465,8 +469,18 @@ export default function BuildStudies({
       )}
       {selected === "sauna" &&
         field("interiorLayerAllowance", "Interior layer allowance", 0, 12)}
-      {selected === "closet-insert" &&
-        field("towerWidth", "Clear shelf-tower width", 8, 200)}
+      {selected === "closet-insert" && (
+        <div className="planner-module-grid">
+          {field("towerWidth", "Clear shelf-tower width", 8, 200)}
+          <LengthInput label="Clear left hanging bay" ariaLabel="Study clear left hanging bay"
+            value={parameters.leftBayWidth ?? NaN} min={1} max={240}
+            onChange={(value) => setParameters((previous) => ({
+              ...previous,
+              leftBayWidth: Number.isFinite(value) ? value : undefined,
+            }))} />
+          <p className="small-note">Leave the left bay blank to center the tower.</p>
+        </div>
+      )}
       {(selected === "shelves" || selected === "closet-insert") && (
         <label className="field">
           Adjustable shelf count

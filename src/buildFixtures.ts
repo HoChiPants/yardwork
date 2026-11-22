@@ -574,6 +574,7 @@ export type BuildStudyParameters = {
   doorWidth: number;
   doorHeight: number;
   towerWidth: number;
+  leftBayWidth?: number;
   shelfCount: number;
   rodHeight: number;
   roofVent?: GreenhouseRoofVent;
@@ -773,6 +774,7 @@ export function createBuildStudy(
         depth: p.depth,
         height: p.height,
         towerWidth: p.towerWidth,
+        ...(p.leftBayWidth !== undefined ? { leftBayWidth: p.leftBayWidth } : {}),
         shelfCount: p.shelfCount,
         rodHeight: p.rodHeight,
       },
@@ -849,6 +851,7 @@ export function createBuildStudy(
                 depth: p.depth,
                 height: p.height,
                 towerWidth: p.towerWidth,
+                ...(p.leftBayWidth !== undefined ? { leftBayWidth: p.leftBayWidth } : {}),
                 shelfCount: p.shelfCount,
                 rodHeight: p.rodHeight,
               };

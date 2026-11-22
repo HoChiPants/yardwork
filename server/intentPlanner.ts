@@ -15,6 +15,7 @@ import {
 } from "./ollamaResponse";
 import {
   referencedFamily,
+  closetMeasurements,
   namedMeasurement,
   editCaseworkShelfCount,
   normalizeIdeaText,
@@ -92,6 +93,10 @@ export const modelIntentSchema = z.strictObject({
   roofRise: dimension,
   doorWidth: dimension,
   doorHeight: dimension,
+  towerWidth: dimension,
+  leftBayWidth: dimension,
+  rightBayWidth: dimension,
+  rodHeight: dimension,
   frameMaterial: z.enum(materialIds).optional(),
   panelMaterial: z.enum(materialIds).optional(),
   summary: z.string().max(400).default(""),
@@ -126,7 +131,7 @@ export function wireIntentToPlan(
     const design = { ...raw } as Record<string, unknown>;
     // A zero in an optional feature slot indicates an omitted provider value.
     // Primary dimensions and user-supplied facts still need their own validation.
-    for (const key of ["returnLength", "sectionCount", "targetSection", "shelfCount", "roofRise", "doorWidth", "doorHeight"])
+    for (const key of ["returnLength", "sectionCount", "targetSection", "shelfCount", "roofRise", "doorWidth", "doorHeight", "towerWidth", "leftBayWidth", "rightBayWidth", "rodHeight"])
       if (design[key] === 0) delete design[key];
     input = design;
   }
@@ -169,6 +174,10 @@ export function normalizeIntentPlaceholders(input: unknown): unknown {
     "roofRise",
     "doorWidth",
     "doorHeight",
+    "towerWidth",
+    "leftBayWidth",
+    "rightBayWidth",
+    "rodHeight",
   ];
   const optional = [
     ...positive,
@@ -339,6 +348,21 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
     )
       delete intent.backHeight;
   }
+  const closet = intent.family === "closet-insert" ? closetMeasurements(request.prompt) : null;
+  if (closet) {
+    const { envelope, facts } = closet;
+    // A model can confuse a bay or rod measurement with the outside envelope.
+    if ((facts.leftBayWidth || facts.rightBayWidth || facts.towerWidth) && !namedMeasurement(envelope, "wide|width"))
+      delete intent.width;
+    if (facts.rodHeight && !namedMeasurement(envelope, "tall|high|height"))
+      delete intent.height;
+    if (facts.leftBayWidth && !facts.rightBayWidth) delete intent.rightBayWidth;
+    if (facts.rightBayWidth && !facts.leftBayWidth) delete intent.leftBayWidth;
+    for (const key of Object.keys(facts) as (keyof typeof facts)[]) {
+      const value = facts[key]?.inches;
+      if (value !== undefined && value !== null) intent[key] = value;
+    }
+  }
   const prepared = prepareIntentEdits(request, intent);
   intent = prepared.intent;
   if (prepared.mode === "clarify") return intentToPlan(request, intent);
@@ -358,6 +382,16 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
   ] as const)
     if (intent[key] !== undefined)
       additions.push(`${intent[key]} inches ${label}`);
+  if (intent.family === "closet-insert") {
+    for (const [key, label] of [
+      ["towerWidth", "tower width"],
+      ["leftBayWidth", "left hanging bay width"],
+      ["rightBayWidth", "right hanging bay width"],
+      ["rodHeight", "rod center height"],
+    ] as const)
+      if (intent[key] !== undefined && !closet?.facts[key])
+        additions.push(`${label} ${intent[key]} inches`);
+  }
   if (intent.shape === "l") additions.push("L-shaped");
   if (intent.sectionCount !== undefined)
     additions.push(`${intent.sectionCount} sections`);
@@ -461,7 +495,7 @@ export function intentMessages(request: PlannerRequest) {
       role: "system",
       content: [
         "Extract DIY design intent. Return compact JSON only; never code or individual parts. Geometry is built separately. Allowed family: banquette, bench, workbench, cabinet, shelves, frame, greenhouse, sauna, closet-insert, casework-shelves, clarify. Use casework-shelves for panel casework or plywood bookcases; shelves is a framed lumber shelf module. Preserve the previous typed family on follow-up dimensions or shelf-count edits.",
-        "Design fields: family, operation(create/revise/append), width, depth, height, shape(straight/l), returnLength, sectionCount, targetSection(1-based), storage, openingLid, backHeight, shelfCount, roofRise, doorWidth, doorHeight, frameMaterial, panelMaterial. Only family and operation are required. Omit unspecified measurements/features. All measurements are INCHES: convert feet and number words. Width is the OVERALL run, depth is seat depth for benches, height is finished seat height. L returnLength is its overall footprint; count the corner once. Sauna dimensions are clear inside. Greenhouse height is eave height, with roofRise above. No back means backHeight is0.",
+        "Design fields: family, operation(create/revise/append), width, depth, height, shape(straight/l), returnLength, sectionCount, targetSection(1-based), storage, openingLid, backHeight, shelfCount, roofRise, doorWidth, doorHeight, towerWidth, leftBayWidth, rightBayWidth, rodHeight, frameMaterial, panelMaterial. Only family and operation are required. Omit unspecified measurements/features. All measurements are INCHES: convert feet and number words. Width is the OVERALL run, depth is seat depth for benches, height is finished seat height. L returnLength is its overall footprint; count the corner once. Sauna dimensions are clear inside. Greenhouse height is eave height, with roofRise above. For closet inserts width and height are outside dimensions; towerWidth and bay widths are clear openings, and rodHeight is from the floor to the rod center. No back means backHeight is0.",
         "Use revise for a follow-up, append for adding another item; preserve unspecified settings and selected sources. Include targetSection only for a named/numbered section edit. Choose material IDs only when explicitly requested; do not invent product IDs. Unsupported trades or unclear intent return exactly family:clarify, operation:clarify and question:one concise useful question (at most240 characters). Never claim load capacity, code compliance or safe construction.",
         "Return no summary, suggestions, questions array, narrative, code or individual parts. The application derives all design explanations from validated geometry. Omit unrequested defaults and do not ask to reconfirm measurements already stated.",
         `Context: ${JSON.stringify({ workZone: request.workZone ?? null, previousProposal: previous })}`,

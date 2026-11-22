@@ -41,6 +41,7 @@ import { previewProposalStock, proposalStockRequest, type ProposalCutScope } fro
 import { planStockCutLayouts } from "./recordStockCutLayout";
 import { partLabel } from "./partLabels";
 import { updateStructureParameter } from "./structureIdeas";
+import { closetBaySummary } from "./closetBayLayout";
 import { editFurniturePlan, straightRun } from "./ideaEdits";
 import {
   ideaPlanSchema,
@@ -785,6 +786,23 @@ export default function IdeaPlanner({
                   ? `Panel thickness: ${formatPreciseInches(Math.min(...material(structure.selections.caseworkPanels?.materialId ?? "plywood").size))} from the modeled stock. Size and shelf-count controls update the assembled casework. Supports, joints and anchors still need design.`
                   : "Actual parts and profile cuts. Review material choices in Explore whole builds, and resolve the missing-component notes before construction."}
               </p>
+              {structure.kind === "closet-insert" && <p>
+                {closetBaySummary(structure.parameters, Math.min(...material(structure.selections.caseworkPanels?.materialId ?? "plywood").size))}
+              </p>}
+              {structure.kind === "closet-insert" &&
+                (structure.parameters.leftBayWidth !== undefined || structure.parameters.rightBayWidth !== undefined) && (
+                  <button type="button" className="text-button" onClick={() => setResult((current) => {
+                    if (!current) return current;
+                    const structures = current.plan.structures.map((item, index) => {
+                      if (index !== i || item.kind !== "closet-insert") return item;
+                      const parameters = { ...item.parameters };
+                      delete parameters.leftBayWidth;
+                      delete parameters.rightBayWidth;
+                      return { ...item, parameters };
+                    });
+                    return { ...current, plan: { ...current.plan, structures } };
+                  })}>Center the shelf tower</button>
+                )}
               <div className="planner-module-grid">
                 {Object.entries(structure.parameters)
                   .filter(
@@ -799,7 +817,11 @@ export default function IdeaPlanner({
                         structure.kind === "casework-shelves" &&
                         field === "shelfClearance"
                           ? "Shelf front setback"
-                          : field.replace(/([A-Z])/g, " $1")
+                          : ({
+                            leftBayWidth: "Clear left hanging bay",
+                            rightBayWidth: "Clear right hanging bay",
+                            rodHeight: "Rod center height",
+                          } as Record<string, string>)[field] ?? field.replace(/([A-Z])/g, " $1")
                       }
                       ariaLabel={`${structure.kind} ${field}`}
                       value={value as number}

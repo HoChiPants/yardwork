@@ -91,6 +91,8 @@ export const closetParamsSchema = z.object({
   depth: inch.min(12),
   height: inch.min(36),
   towerWidth: inch.min(8).default(25),
+  leftBayWidth: inch.optional(),
+  rightBayWidth: inch.optional(),
   shelfCount: z.number().int().min(1).max(6).default(4),
   rodHeight: z.number().finite().min(6).max(240).optional(),
   ...pose,

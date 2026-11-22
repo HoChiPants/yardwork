@@ -1,3 +1,4 @@
+import { closetBayLayout } from "./closetBayLayout";
 import { Euler, Matrix4, Vector3 } from "three";
 import { cedarbrookLining } from "./saunaLiningReference";
 import { cedarbrookDoor } from "./saunaDoorReference";
@@ -1574,7 +1575,7 @@ export function buildClosetInsert(
       unresolved,
     )!,
     t = panels ? Math.min(...material(panels).size) : 0,
-    sideClear = (p.width - 4 * t - p.towerWidth) / 2,
+    bays = closetBayLayout(p, t),
     build = builder(project, "Closet insert", p.origin, p.yaw);
   if (!panels)
     throw Error(
@@ -1599,10 +1600,8 @@ export function buildClosetInsert(
       wood: false,
       kind: "connector",
     });
-  if (sideClear <= 1 || p.height <= 2 * t)
-    throw Error(
-      "The requested tower and actual panel thickness leave no valid hanging bays.",
-    );
+  if (bays.problem) throw Error(bays.problem);
+  if (p.height <= 2 * t) throw Error("The top and bottom panels leave no clear height.");
   const carcass = build.group("Closet casework", "casework-panels");
   for (const [role, y] of [
     ["bottom", t / 2],
@@ -1616,8 +1615,8 @@ export function buildClosetInsert(
     ).designRole = role;
   for (const [role, x] of [
     ["side-left", -p.width / 2 + t / 2],
-    ["tower-left", -p.towerWidth / 2 - t / 2],
-    ["tower-right", p.towerWidth / 2 + t / 2],
+    ["tower-left", bays.towerCenter - p.towerWidth / 2 - t / 2],
+    ["tower-right", bays.towerCenter + p.towerWidth / 2 + t / 2],
     ["side-right", p.width / 2 - t / 2],
   ] as const)
     carcass.add(
@@ -1631,7 +1630,7 @@ export function buildClosetInsert(
       "tower shelf",
       panels,
       [p.towerWidth, t, p.depth - 0.5],
-      [0, t + ((p.height - 2 * t) * i) / (p.shelfCount + 1), 0.25],
+      [bays.towerCenter, t + ((p.height - 2 * t) * i) / (p.shelfCount + 1), 0.25],
     ).designRole = `tower-shelf-${i}`;
   carcass.finish();
   if (rod) {
@@ -1645,14 +1644,13 @@ export function buildClosetInsert(
       throw Error(
         "The requested rod height does not fit below the actual top panel.",
       );
-    const rods = build.group("Closet hanging rods", "hanging-rods"),
-      center = p.towerWidth / 2 + t + sideClear / 2;
-    for (const side of [-1, 1])
+    const rods = build.group("Closet hanging rods", "hanging-rods");
+    for (const [side, span] of [[-1, bays.left], [1, bays.right]] as const)
       rods.add(
         "cut tube rod",
         rod,
-        [diameter, sideClear, diameter],
-        [side * center, height, 0],
+        [diameter, span, diameter],
+        [bays.towerCenter + side * (p.towerWidth / 2 + t + span / 2), height, 0],
         [0, 0, -Math.PI / 2],
       );
     rods.finish();
@@ -1676,8 +1674,8 @@ export function buildClosetInsert(
     height: p.height,
     actualPanelThickness: t,
     towerClearWidth: p.towerWidth,
-    leftClearBay: sideClear,
-    rightClearBay: sideClear,
+    leftClearBay: bays.left,
+    rightClearBay: bays.right,
   });
 }
 

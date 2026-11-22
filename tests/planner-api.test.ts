@@ -363,3 +363,40 @@ test("HTTP planner route returns local questions, bounded AI modules, and errors
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("measured closet openings resolve quickly when an Ollama connection is configured", async () => {
+  const oldURL = process.env.OLLAMA_URL;
+  const oldFormat = process.env.OLLAMA_PLANNER_FORMAT;
+  const oldFetch = globalThis.fetch;
+  const previousPlan = localIdeaPlan({
+    prompt: "Closet insert overall width 72 inches and overall height 84 inches.",
+  });
+  let payload: { provider: string; plan: typeof previousPlan } | undefined;
+  const response = Object.assign(new EventEmitter(), {
+    json(value: typeof payload) {
+      payload = value;
+      return this;
+    },
+  }) as unknown as Response;
+  try {
+    process.env.OLLAMA_URL = "http://127.0.0.1:11434";
+    process.env.OLLAMA_PLANNER_FORMAT = "schema";
+    globalThis.fetch = async () => { throw Error("A measured bay should resolve before calling Ollama."); };
+    await plannerHandler({
+      body: { previousPlan, prompt: "Set the left hanging bay width to 36 inches and rod center height to 62 inches." },
+    } as Request, response);
+    assert.equal(payload?.provider, "Workspace dimensions");
+    const revised = payload?.plan.structures[0];
+    if (revised?.kind !== "closet-insert") throw Error("Expected a closet insert");
+    assert.equal(revised.parameters.width, 72);
+    assert.equal(revised.parameters.height, 84);
+    assert.equal(revised.parameters.leftBayWidth, 36);
+    assert.equal(revised.parameters.rodHeight, 62);
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (oldURL === undefined) delete process.env.OLLAMA_URL;
+    else process.env.OLLAMA_URL = oldURL;
+    if (oldFormat === undefined) delete process.env.OLLAMA_PLANNER_FORMAT;
+    else process.env.OLLAMA_PLANNER_FORMAT = oldFormat;
+  }
+});

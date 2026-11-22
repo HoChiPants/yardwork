@@ -2040,7 +2040,11 @@ test("a fitted greenhouse door saves a checked weatherseal and exports the strip
 
 test("the idea planner uses one measured scrap for both cleats and exports the blade-width finish", async ({ page }) => {
   await page.goto("./");
-  const example = await readFile("public/examples/cut-pool/closet-cleats.yardwork.json");
+  await page.getByRole("button", { name: "Cut pool (0)", exact: true }).click();
+  const exampleDownload = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Download closet cleat practice plan", exact: true }).click();
+  const example = await readFile((await (await exampleDownload).path())!);
+  expect(example.equals(await readFile("public/examples/cut-pool/closet-cleats.yardwork.json"))).toBe(true);
   const dialog = page.getByRole("dialog");
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();

@@ -85,6 +85,9 @@ export function CutPool({
           <a className="text-button" href={workshopAsset("/examples/cut-pool/save-a-board.yardwork.json")} download>
             Download board-saving practice plan
           </a>
+          <a className="text-button" href={workshopAsset("/examples/cut-pool/closet-cleats.yardwork.json")} download>
+            Download closet cleat practice plan
+          </a>
         </div>
       )}
       {view === "scrap" && <>

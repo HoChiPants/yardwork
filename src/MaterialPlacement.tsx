@@ -36,10 +36,14 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   const choice = options.find(({ id }) => id === selected)!;
   const zone = project.workZone;
   const [x, y, z] = position;
-  const zoneClearance = zone && Math.abs(x) <= zone.width / 2 && Math.abs(z) <= zone.depth / 2
-    ? zone.height - y : 0;
   const canChooseOrientation = canCutToLength && preferred.size[1] === Math.max(...preferred.size);
-  const canUseZoneClearance = orientation === "upright" && canChooseOrientation && zoneClearance >= 0.125;
+  const flat = orientation === "flat";
+  const freeWidth = zone ? zone.width - 2 * Math.abs(x) : 0;
+  const freeDepth = zone ? zone.depth - 2 * Math.abs(z) : 0;
+  const freeHeight = zone ? zone.height - y : 0;
+  const zoneClearance = zone && canChooseOrientation && y >= 0 &&
+    freeDepth >= preferred.size[2] && (flat ? freeHeight : freeWidth) >= preferred.size[0]
+    ? flat ? freeWidth : freeHeight : 0;
   const kerf = plannedCutKerf(project, choice.id);
   const fits = (length: number, id: MaterialId, finished: number) => {
     const state = stockSplitState(length, finished, plannedCutKerf(project, id));
@@ -55,7 +59,7 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   const batch = repeats.find(({ id }) => id === choice.id);
   const recommendedBatch = repeats[0];
   const enough = validQuantity && (Number.isNaN(needed) || (validLength && fits(choice.value, choice.id, needed)));
-  const zoneStock = canCutToLength && canUseZoneClearance && zoneClearance < choice.value && Number.isNaN(needed)
+  const zoneStock = zoneClearance >= 0.125 && zoneClearance < choice.value && Number.isNaN(needed)
     ? shortestFor(zoneClearance) : undefined;
   const planCut = canCutToLength && validLength && validQuantity &&
     (repeated ? !!batch : stockSplitState(choice.value, needed, kerf) === "cut");
@@ -108,7 +112,7 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
       {measuredLength !== undefined && <button type="button" className="text-button use-measured-length"
         onClick={() => setNeeded(measuredLength)}>Use measured span ({formatStockLength(measuredLength)})</button>}
       {zoneStock && <div>
-        <p className="small-note">{choice.label} is taller than the available space.{zoneStock.value < choice.value &&
+        <p className="small-note">{choice.label} is {flat ? "longer" : "taller"} than the available space.{zoneStock.value < choice.value &&
           ` A cut from ${zoneStock.label} stock can fit.`}</p>
         <button type="button" className="text-button use-measured-length"
           onClick={() => setNeeded(zoneClearance)}>Use work zone clearance ({formatStockLength(zoneClearance)})</button>

@@ -158,7 +158,7 @@ test("oversized mesh is flagged and remains excluded from quote and handoff purc
   ]);
   await expect(page.locator(".bom-row")).toContainText("1 roll · 2 parts");
   await expect(page.locator(".bom-row")).toContainText(
-    "1 oversized · excluded from estimate",
+    "1 part exceeds this stock size",
   );
   await expect(page.locator(".bom-row")).not.toContainText(/Unpriced|\$/);
   await page.getByText("Project cost estimate", { exact: true }).click();

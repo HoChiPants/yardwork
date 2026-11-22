@@ -30,13 +30,14 @@ test("one material tile supports drop, length choice and a separate selected-par
     return new Set(pixels.filter((_, index) => index % 4 === 0)).size;
   })).toBeGreaterThan(5);
   const art = (await tile.locator(".material-art").boundingBox())!;
+  const card = (await tile.boundingBox())!;
   const groundHint = (await page.getByText("Drag a material onto the grid.", { exact: true }).boundingBox())!;
-  async function dragToGround() {
-    await page.mouse.move(art.x + art.width / 2, art.y + art.height / 2);
+  async function dragToGround(x: number, y: number) {
+    await page.mouse.move(x, y);
     await page.mouse.down();
     await page.mouse.move(groundHint.x + groundHint.width / 2, groundHint.y + groundHint.height / 2, { steps: 8 });
   }
-  await dragToGround();
+  await dragToGround(card.x + 2, card.y + 2);
   await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
   await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,96,3.5]");
   await page.keyboard.press("Escape");
@@ -44,7 +45,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(canvas).not.toHaveAttribute("data-material-drop-point");
   await expect(canvas).not.toHaveAttribute("data-material-placement-preview");
-  await dragToGround();
+  await dragToGround(art.x + art.width / 2, art.y + art.height / 2);
   await expect(page.locator(".material-drag-preview.can-drop .material-art")).toBeVisible();
   const dropPoint = (await canvas.getAttribute("data-material-drop-point"))!;
   const [x, y, z] = JSON.parse(dropPoint);
@@ -55,6 +56,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(canvas).toHaveAttribute("data-material-drop-point", dropPoint);
   expect((await placement.boundingBox())!.x).toBeGreaterThan(groundHint.x + groundHint.width);
   await expect(placement.getByRole("radio")).toHaveCount(3);
+  await expect(placement).not.toContainText(/Home Depot|SPF|\$/);
   await expect(placement.getByRole("radio", { name: "8 ft" })).toBeChecked();
   await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,96,3.5]");
   await placement.getByRole("radio", { name: "12 ft" }).check();
@@ -74,6 +76,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue(String(z));
   const workspaceTools = page.getByRole("toolbar", { name: "Model tools", exact: true });
   const partTools = page.getByRole("toolbar", { name: "Selected part tools", exact: true });
+  const projectSettings = page.getByRole("button", { name: "Rename project", exact: true });
   for (const width of [1440, 1024, 901, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     const general = (await workspaceTools.boundingBox())!;
@@ -81,6 +84,8 @@ test("one material tile supports drop, length choice and a separate selected-par
     const ground = (await page.locator(".canvas-wrap").boundingBox())!;
     expect(part.y).toBeGreaterThanOrEqual(ground.y + ground.height - 1);
     expect(general.y + general.height).toBeLessThanOrEqual(ground.y);
+    const settings = (await projectSettings.boundingBox())!;
+    expect(settings.y + settings.height).toBeLessThanOrEqual(ground.y);
     const viewTools = (await page.locator(".view-tools").boundingBox())!;
     expect(viewTools.y + viewTools.height).toBeLessThanOrEqual(ground.y);
     expect(general.x + general.width <= viewTools.x + 1 || general.y + general.height <= viewTools.y).toBe(true);
@@ -101,6 +106,10 @@ test("one material tile supports drop, length choice and a separate selected-par
       }
     }
   }
+  await projectSettings.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(partTools).toBeVisible();
   await page.screenshot({ path: info.outputPath("material-placement-phone.png"), fullPage: false });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await add.click();
@@ -184,6 +193,32 @@ test("use the work zone clearance to choose and cut the shortest listed board", 
   const exported = projectSchema.parse(JSON.parse(await readFile((await (await download).path())!, "utf8")));
   expect(exported.pieces.find(({ offcut }) => !offcut)?.material).toBe("stud");
   expect(exported.pieces.some(({ offcut }) => offcut)).toBe(true);
+});
+
+test("lay a board flat and use the available zone width to choose shorter stock", async ({ page }) => {
+  await page.goto("./");
+  await page.locator(".project-heading").getByRole("button", { name: "Set work zone", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("combobox", { name: "Width units", exact: true }).selectOption("ft");
+  await dialog.getByRole("spinbutton", { name: "Zone width", exact: true }).fill("4");
+  await dialog.getByRole("button", { name: "Apply work zone", exact: true }).click();
+  await page.getByRole("button", { name: `Add ${group}`, exact: true }).click();
+  await dialog.getByRole("button", { name: "Lay flat", exact: true }).click();
+  await dialog.getByRole("radio", { name: "12 ft", exact: true }).check();
+  await expect(dialog).toContainText("12 ft is longer than the available space. A cut from 8 ft stock can fit.");
+  await dialog.getByRole("button", { name: "Use work zone clearance (4 ft)", exact: true }).click();
+  await dialog.getByRole("button", { name: "Use 8 ft", exact: true }).click();
+  await dialog.getByRole("button", { name: "Plan cut and place", exact: true }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Editable project/ }).click();
+  const saved = projectSchema.parse(JSON.parse(await readFile((await (await download).path())!, "utf8")));
+  const board = saved.pieces.find(({ offcut }) => !offcut)!;
+  expect(board.material).toBe("stud");
+  expect(bounds(board).min[0]).toBeCloseTo(-24);
+  expect(bounds(board).max[0]).toBeCloseTo(24);
+  expect(bounds(board).min[1]).toBeCloseTo(0);
+  expect(saved.pieces.some(({ offcut }) => offcut)).toBe(true);
 });
 
 test("drag from the plus and lay a cut board flat on an existing surface", async ({ page }) => {

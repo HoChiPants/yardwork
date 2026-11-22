@@ -385,11 +385,14 @@ small {
   padding: 11px 4px;
   border-bottom: 1px solid #eeeee6;
   user-select: none;
+  cursor: grab;
+  touch-action: none;
 }
 .material-card:hover {
   background: #f8f7f0;
   border-radius: 7px;
 }
+.material-card:active { cursor: grabbing; }
 .material-art {
   height: 54px;
   width: 52px;
@@ -515,10 +518,8 @@ small {
   gap: inherit;
   padding: 0;
   text-align: left;
-  cursor: grab;
-  touch-action: none;
+  cursor: inherit;
 }
-.material-grip:active { cursor: grabbing; }
 .material-grip strong {
   font-size: 12px;
   font-weight: 600;
@@ -533,7 +534,6 @@ small {
   border: 1px solid #e5e8dc;
   color: #7a896a;
   padding: 0;
-  touch-action: none;
 }
 .drag-hint {
   display: flex;

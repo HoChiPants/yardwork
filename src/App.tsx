@@ -5271,7 +5271,7 @@ export function App() {
                     </small>
                   )}
                   {r.oversize > 0 && (
-                    <em>{r.oversize} oversized · excluded from estimate</em>
+                    <em>{r.oversize} {r.oversize === 1 ? "part exceeds" : "parts exceed"} this stock size</em>
                   )}
                   {r.supplier && (r.quantity > 0 || !r.onHandStockUnits) && (
                     <details className="stock-supplier-details" open>

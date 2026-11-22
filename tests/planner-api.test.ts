@@ -23,9 +23,11 @@ test("relative follow-ups use current workspace dimensions with Ollama configure
   try {
     process.env.OLLAMA_URL = "http://127.0.0.1:11434";
     globalThis.fetch = async () => { throw Error("A measured resize should resolve before calling Ollama."); };
-    await plannerHandler({ body: { prompt: "Make it six inches wider", previousPlan } } as Request, res);
+    await plannerHandler({ body: { prompt: "Make it six inches wider and one inch deeper", previousPlan } } as Request, res);
     assert.equal(payload?.provider, "Workspace dimensions");
-    assert.equal(payload?.plan.modules[0].width, 66);
+    assert.deepEqual(payload?.plan.modules[0], {
+      ...previousPlan.modules[0], width: 66, depth: previousPlan.modules[0].depth + 1,
+    });
     assert.equal(previousPlan.modules[0].width, 60);
   } finally {
     globalThis.fetch = originalFetch;

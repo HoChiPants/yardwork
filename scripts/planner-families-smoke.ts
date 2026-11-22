@@ -158,7 +158,7 @@ async function propose(
 
 const storage = await propose(
   "storage-banquette",
-  "Build a straight three-section storage banquette, total width 6 feet, depth 24 inches and finished seat height 18 inches. Each section must be a separate bench with enclosed storage and an opening seat lid. No back: the existing wall is the back. Show all lids closed.",
+  "Build a straight storage banquette with three sections, each 24 inches wide, depth 24 inches and finished seat height 18 inches. Each section must be a separate bench with enclosed storage and an opening seat lid. No back: the existing wall is the back. Show all lids closed.",
   (plan, preview) => {
     assert.equal(plan.modules.length, 3);
     assert.equal(plan.structures.length, 0);
@@ -212,6 +212,20 @@ if (storage) {
       }
     },
     storage,
+  );
+  await propose(
+    "storage-scoped-compound-revision",
+    "Make section 2 two inches taller and one inch deeper.",
+    (plan, preview) => {
+      assert.deepEqual(plan.modules, [
+        storage.modules[0],
+        { ...storage.modules[1], height: 20, depth: 25 },
+        storage.modules[2],
+      ]);
+      near(preview.max[1] - preview.min[1], 20, "changed seat height");
+    },
+    storage,
+    "Workspace dimensions",
   );
 } else {
   const skipped: CaseRecord = {

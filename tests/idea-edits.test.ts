@@ -9,6 +9,7 @@ import {
 } from "../src/planning";
 import { mentionedFamily, namedMeasurement } from "../src/ideaEdits";
 import { rotate } from "../src/spatial";
+import { wireIntentToPlan } from "../server/intentPlanner";
 const seed = () =>
   localIdeaPlan({
     prompt:
@@ -41,6 +42,15 @@ test("overall run width distributes dimensions and reflows to the requested actu
   p.workZone = { width: 96, depth: 24, height: 84 };
   assert.equal(previewIdeaPlan(p, next).workZoneFits, true);
 });
+test("each after a section count specifies per-section stock dimensions in both planner paths", () => {
+  const prompt = "Build a straight banquette with three sections, each 36 inches wide, seat depth 24 inches, seat height 18 inches, lift-up lids and no back.";
+  for (const plan of [localIdeaPlan({ prompt }), wireIntentToPlan({ prompt }, { family: "banquette", operation: "create", width: 36, sectionCount: 3 })]) {
+    assert.deepEqual(plan.modules.map(({ width }) => width), [36, 36, 36]);
+    near(width(plan), 108);
+    assert.ok(plan.modules.every(({ openingLid, storage, backHeight }) => openingLid && storage && backHeight === 0));
+  }
+});
+
 test("each-member width reflows without overlapping neighboring compartments", () => {
   const next = localIdeaPlan({
     prompt: "Make each section 30 inches wide",

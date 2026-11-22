@@ -405,6 +405,8 @@ The compact native intent grammar passed seven warm real-model checks on Qwen2.5
 
 When refining a proposal or a saved design, try “make section 2 two inches taller,” “make the whole run 6 inches wider,” or “increase the greenhouse roof rise by 6 inches.” Yardwork calculates these changes from the current measurements with or without Ollama. In a straight run, an overall width change is shared proportionally. Say “each section” to apply the amount to every member. Review the resulting fit and rebuild before applying.
 
+Give several exact changes in one revision, such as **“Make section 2 two inches taller and one inch deeper.”** Both dimensions apply to section 2. To change another section in the same request, name it explicitly. An unclear amount or target keeps the existing dimensions until clarified. A new request like **“three sections, each 24 inches wide”** gives a 72 in seating run. The [editable banquette practice plan](public/examples/wood-stock/banquette-compound-revision.yardwork.json) shows the resized center module, recorded cuts for the revision and an earlier board order retained on the left section. [Build guide](public/examples/wood-stock/banquette-compound-revision-guide.md)
+
 For natural-language interpretation with a local model, run Ollama separately and configure:
 
 ```sh

@@ -18,6 +18,7 @@ import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
 import { PROJECT_FORMAT_VERSION } from "../../src/projectVersion";
 import { saveMotionPlan, saveMotionTestScenario } from "../../src/mechanismMotion";
 import { addMeasuredOffcut } from "../../src/measuredOffcuts";
+import { planBoardCutGroups } from "../../src/recordStockCutLayout";
 import { partLabel } from "../../src/partLabels";
 import { addSupply } from "../../src/supplies";
 import { createBuildStudy } from "../../src/buildFixtures";
@@ -830,11 +831,16 @@ test("wood glue takeoff shows modeled contact and saves a confirmed bottle estim
   expect(guide).toContain("Dry-fit before using glue.");
 });
 
-test("relative wording revises one applied section and exports the resized build", async ({ page }) => {
-  const original = applyIdeaPlan(blank("Relative revision"), localIdeaPlan({
-    prompt: "Three-section storage banquette 72 inches wide, 24 inches deep, 18 inches seat height, opening lids and no back",
+test("a compound relative revision changes one banquette section and preserves the other cuts", async ({ page }) => {
+  const baseline = applyIdeaPlan(blank("Two dimensions in one revision"), localIdeaPlan({
+    prompt: "Build a three-section storage banquette, each section 24 inches wide, 24 inches deep, 18 inches seat height, opening lids and no back",
   }));
-  const binding = original.ideaBindings[0];
+  const binding = baseline.ideaBindings[0];
+  const keptIds = [binding.entries[0], binding.entries[2]].flatMap(({ sections }) =>
+    sections.flatMap(({ sectionId }) => baseline.sections.find(({ id }) => id === sectionId)!.pieceIds));
+  const keptRail = baseline.pieces.find(({ material, id }) => material === "stud" && keptIds.includes(id))!;
+  const original = planBoardCutGroups(baseline, [[keptRail.id]]);
+  const [keptSource] = original.plannedCutSources!;
   const unrelated = part("Spare board", "one-four", [0.75, 12, 3.5], [60, 8, 0], original.steps[0].id, "Loose stock");
   original.pieces.push(unrelated);
   await page.goto("./");
@@ -842,41 +848,63 @@ test("relative wording revises one applied section and exports the resized build
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
   await page.locator("input[type=file]").setInputFiles({
-    name: "relative-revision.yardwork.json",
+    name: "compound-revision.yardwork.json",
     mimeType: "application/json",
     buffer: Buffer.from(JSON.stringify(original)),
   });
   await expect(dialog).toHaveCount(0);
   await page.getByRole("button", { name: "Sections", exact: true }).click();
   await page.getByRole("button", { name: `Revise design ${binding.title}`, exact: true }).click();
-  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Make section 2 two inches taller");
-  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
-  for (const [seat, height] of [[1, 18], [2, 20], [3, 18]]) {
+  const ask = async (prompt: string) => {
+    await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(prompt);
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  };
+  await ask("Make section 2 two inches taller and one inch deeper");
+  for (const [seat, height, depth] of [[1, 18, 24], [2, 20, 25], [3, 18, 24]]) {
     await expect(dialog.getByRole("spinbutton", {
       name: `Banquette section ${seat} height`, exact: true,
     })).toHaveValue(String(height));
+    await expect(dialog.getByRole("spinbutton", {
+      name: `Banquette section ${seat} depth`, exact: true,
+    })).toHaveValue(String(depth));
   }
+  await ask("Save the cut order with this proposal");
+  const stock = dialog.getByRole("region", { name: "Proposal cuts and stock" });
+  await expect(stock.getByRole("combobox", { name: "Wood cut orders to save" })).toHaveValue("proposal");
+  await expect(stock.getByRole("status")).toContainText(/Save \d+ stock units? with this design/);
   await dialog.getByRole("button", { name: "Apply design changes", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
   await expect.poll(async () => (await readDraft())?.revision).toBe(1);
-  const saved: typeof original = (await readDraft()).project;
+  const saved: Project = (await readDraft()).project;
   expect(saved.ideaBindings).toHaveLength(1);
   expect(saved.ideaBindings[0].entries.map(({ id }) => id)).toEqual(binding.entries.map(({ id }) => id));
   expect(saved.pieces.find(({ id }) => id === unrelated.id)?.size).toEqual(unrelated.size);
+  for (const piece of original.pieces.filter(({ id }) => keptIds.includes(id)))
+    expect(saved.pieces.find(({ id }) => id === piece.id)).toEqual(piece);
+  expect(saved.plannedCutSources!.length).toBeGreaterThan(1);
+  expect(saved.plannedCutSources).toContainEqual(keptSource);
+  expect(saved.pieces.filter(({ cutStock }) => cutStock?.id === keptSource.sourceId))
+    .toEqual(original.pieces.filter(({ cutStock }) => cutStock?.id === keptSource.sourceId));
   for (const [i, entry] of binding.entries.entries()) {
     const ids = saved.sections.find(({ id }) => id === entry.sections[0].sectionId)!.pieceIds;
-    const top = Math.max(...saved.pieces.filter(({ id }) => ids.includes(id)).map((piece) => bounds(piece).max[1]));
-    expect(top).toBeCloseTo(i === 1 ? 20 : 18, 4);
+    const geometry = saved.pieces.filter(({ id }) => ids.includes(id)).map(bounds);
+    expect(Math.max(...geometry.map(({ max }) => max[1]))).toBeCloseTo(i === 1 ? 20 : 18, 4);
+    expect(Math.max(...geometry.map(({ max }) => max[2])) - Math.min(...geometry.map(({ min }) => min[2])))
+      .toBeCloseTo(i === 1 ? 25 : 24, 4);
   }
 
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: original.name }).click();
+  await expect.poll(async () => (await readDraft())?.project.plannedCutSources).toEqual(saved.plannedCutSources);
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download");
   await dialog.getByRole("button", { name: /^Build guide/ }).click();
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toMatch(/Seat heights: 18, 20 in/);
-  expect(guide).toContain("Cut");
+  expect(guide).toContain("## Planned stock cuts");
 });
 
 test("a drawer can pass without touching and still fail a saved minimum gap test", async ({ page }) => {

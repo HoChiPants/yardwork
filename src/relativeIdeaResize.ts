@@ -2,7 +2,7 @@ import {
   ambiguousShelfReference,
   referencedFamily,
   reflow,
-  requestedRelativeResize,
+  requestedRelativeResizes,
   retainWithQuestion,
   straightRun,
   type RelativeResize,
@@ -238,11 +238,23 @@ function resizeIdea(previous: IdeaPlan, resize: RelativeResize): IdeaPlan {
       );
 }
 
+function applyResizeRequests(previous: IdeaPlan, edits: readonly RelativeResize[]): IdeaPlan {
+  let candidate = previous;
+  for (const edit of edits) {
+    candidate = resizeIdea(candidate, edit);
+    if (candidate.questions.length) return retainWithQuestion(previous, candidate.questions[0]);
+  }
+  return edits.length === 1 ? candidate : {
+    ...candidate,
+    summary: "Resized the requested dimensions together using the current design.",
+  };
+}
+
 /** Shared by the hosted workshop and self-hosted routes, even with an AI provider configured. */
 export function localRelativeResizePlan(
   request: PlannerRequest,
 ): IdeaPlan | null {
-  const resize = requestedRelativeResize(request.prompt);
+  const resize = requestedRelativeResizes(request.prompt);
   if (!resize) return null;
   const boundary = groundUnsupportedPlan(request);
   if (boundary) return ideaPlanSchema.parse(boundary);
@@ -252,7 +264,7 @@ export function localRelativeResizePlan(
   const plan = hasDesign
     ? "question" in resize
       ? retainWithQuestion(previous, resize.question)
-      : resizeIdea(previous, resize)
+      : applyResizeRequests(previous, resize)
     : ideaPlanSchema.parse({
         title: "Choose a design to resize",
         summary: "A relative change needs an existing design.",

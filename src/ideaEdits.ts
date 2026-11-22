@@ -331,13 +331,7 @@ const adjustmentPattern = new RegExp(`^(increase|decrease|reduce)\\s+(.+?)\\s+by
 
 type ResizeField = "width" | "depth" | "height" | "roof rise";
 export type RelativeResize = { scope: string; field: ResizeField; delta: number };
-/** Keep relative requests distinct from absolute dimensions and from model guesses. */
-export function requestedRelativeResize(input: string): RelativeResize | { question: string } | null {
-  const text = normalizeIdeaText(input)
-    .trim()
-    .replace(/^please\s+/, "")
-    .replace(/[.!?]+$/, "")
-    .replace(/,?\s+(?:(?:and|but)\s+keep\s+everything\s+else\s+the\s+same|without\s+changing\s+anything\s+else)$/, "");
+function readRelativeResize(text: string): RelativeResize | { question: string } | null {
   const sizeText = text.replace(/^make\s+/, "");
   const comparative = sizeText.match(comparisonPattern);
   const comparativeBy = sizeText.match(comparisonByPattern);
@@ -358,7 +352,7 @@ export function requestedRelativeResize(input: string): RelativeResize | { quest
   const question = "Give one positive resize amount, with inches or feet, such as “make section 2 two inches taller.”";
   if (!amount) return { question };
   // A separate edit needs its own preview. Scope here names the existing design.
-  if (/[,;]|\b(?:and|then|but|or)\b/.test(scope)) return { question };
+  if (/[,;]|[.!?]\s|\b(?:and|then|but|or)\b/.test(scope)) return { question };
   try {
     const inches = measuredInches(amount, comparative ? 2 : 1);
     return inches && inches > 0 ? { scope, field, delta: sign * inches } : { question };
@@ -366,6 +360,46 @@ export function requestedRelativeResize(input: string): RelativeResize | { quest
     return { question: (error as Error).message };
   }
 }
+const resizeSeparator = /\s*(?:[,;]\s*(?:and(?:\s+then)?\b)?|\s+(?:and(?:\s+then)?|then)\s+|[.!?](?=\s|$))\s*/;
+const joinedFeetAndInches = new RegExp(
+  `(${numeric}\\s*(?:feet|foot|ft|[′']))\\s+and\\s+(?=${numeric}\\s*(?:inches|inch|in\\b|[″"]))`,
+  "g",
+);
+const implicitResizeScope = /^(?:the\s+|its?\s+|this\s+)?(?:(?:overall|finished|clear)\s+)?(?:width|depth|height|roof rise)?$/;
+
+/** Read every dimension before changing a proposal, including clauses with an inherited target. */
+export function requestedRelativeResizes(input: string): RelativeResize[] | { question: string } | null {
+  const text = normalizeIdeaText(input)
+    .trim()
+    .replace(/^please\s+/, "")
+    .replace(/[.!?]+$/, "")
+    .replace(/,?\s+(?:(?:and|but)\s+keep\s+everything\s+else\s+the\s+same|without\s+changing\s+anything\s+else)$/, "");
+  const single = readRelativeResize(text);
+  if (single && !("question" in single)) return [single];
+  const clauses = text.replace(joinedFeetAndInches, "$1 ").split(resizeSeparator);
+  if (clauses.length < 2) return single;
+  let adjustmentVerb: string | undefined;
+  const parsed = clauses.map((clause) => {
+    const text = clause.trim();
+    const explicitVerb = /^(increase|decrease|reduce)\s+/.exec(text)?.[1];
+    const direct = readRelativeResize(text);
+    const implicit = !direct && adjustmentVerb && readRelativeResize(`${adjustmentVerb} ${text}`);
+    if (!implicit) adjustmentVerb = explicitVerb;
+    return direct ?? (implicit || null);
+  });
+  if (!parsed.some(Boolean)) return single;
+  const edits: RelativeResize[] = [];
+  for (const change of parsed) {
+    if (!change)
+      return { question: "Name a dimension and an amount with inches or feet for each requested change." };
+    if ("question" in change) return change;
+    const prior = edits.at(-1);
+    const implicit = /^(?:it|this)$/.test(change.scope) || implicitResizeScope.test(change.scope);
+    edits.push(prior && implicit ? { ...change, scope: prior.scope } : change);
+  }
+  return edits;
+}
+
 /** Scope words must qualify the width measurement, not an unrelated sentence about each seat. */
 export function widthAppliesToEach(input: string) {
   const text = normalizeIdeaText(input),
@@ -378,6 +412,7 @@ export function widthAppliesToEach(input: string) {
     /\b(?:each|every)\s+(?:(?:seating|bench)\s+)?(?:section|compartment|module|seat|bench)(?:\s+(?:should be|is|at|of))?\s*$/.test(
       before,
     ) ||
+    /\b\d{1,2}[ -]*(?:sections|compartments|modules|seats|benches)[,;:]?\s+(?:and\s+)?each(?:\s+(?:should be|is|at))?\s*$/.test(before) ||
     /^\s*(?:each|per\s+(?:section|compartment|module|seat|bench))\b/.test(after)
   );
 }

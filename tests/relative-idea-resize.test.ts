@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { blank } from "../src/model";
+import { blank, projectSchema } from "../src/model";
+import { guideMarkdown } from "../src/engine";
 import { localIdeaPlan, previewIdeaPlan, type IdeaPlan } from "../src/planning";
 
 const seats = () =>
@@ -68,6 +70,59 @@ test("a relative section edit preserves the other sections and the selected mate
   assert.deepEqual(byName.modules.map(({ height }) => height), [18, 21, 20]);
 });
 
+test("coordinated changes inherit a specific section or honor a different explicit section", () => {
+  const original = seats();
+  original.modules[1].panelMaterial = "plytanium-703";
+  const requests = [
+    "Make section 2 two inches taller and one inch deeper.",
+    "Make section 2 two inches taller. Make it one inch deeper.",
+    "Increase the height of section 2 by two inches, and its depth by one inch.",
+    "Make Banquette section 2 two inches taller and one inch deeper, and keep everything else the same.",
+  ];
+  for (const prompt of requests) {
+    const result = revise(original, prompt);
+    assert.deepEqual(result.questions, [], prompt);
+    assert.deepEqual(result.modules, [
+      original.modules[0],
+      { ...original.modules[1], height: 20, depth: 25 },
+      original.modules[2],
+    ], prompt);
+  }
+  const customName = structuredClone(original);
+  customName.modules[1].name = "Bay B.2";
+  assert.deepEqual(revise(customName, "Make Bay B.2 2 inches taller and it 1 inch deeper").modules, [
+    customName.modules[0],
+    { ...customName.modules[1], height: 20, depth: 25 },
+    customName.modules[2],
+  ]);
+  const twoSeats = revise(original, "Make section 2 two inches taller and make section 3 one inch deeper.");
+  assert.deepEqual(twoSeats.modules.map(({ height, depth }) => [height, depth]), [[18, 24], [20, 24], [18, 25]]);
+  const feetAndInches = revise(original, "Make section 2 one foot and two inches taller, one inch deeper, and two inches wider.");
+  assert.deepEqual(feetAndInches.modules.map(({ height, depth, width }) => [height, depth, width]),
+    [[18, 24, 24], [32, 25, 26], [18, 24, 24]]);
+  const structure = localIdeaPlan({ prompt: "Build a greenhouse 72 inches wide" });
+  const updated = revise(structure, "Increase the roof rise by 6 inches and the door width by 2 inches.");
+  assert.deepEqual(updated.structures[0].parameters, {
+    ...structure.structures[0].parameters,
+    roofRise: 30,
+    doorWidth: 32,
+  });
+});
+
+test("a malformed or out-of-range clause retains the whole design revision", () => {
+  const original = seats();
+  for (const [prompt, reason] of [
+    ["Make it two inches taller and 99 inches narrower", /supported dimensions/],
+    ["Make section 2 two inches taller and make section 9 one inch deeper", /existing design/],
+    ["Make section 2 two inches taller and one deeper", /inches or feet/],
+    ["Make section 2 two inches taller and lengthen it two inches", /dimension and an amount/],
+  ] as const) {
+    const result = revise(original, prompt);
+    assert.deepEqual(result.modules, original.modules, prompt);
+    assert.match(result.questions[0], reason, prompt);
+  }
+});
+
 test("relative structural edits use the requested parameter and keep the rest of the recipe", () => {
   const greenhouse = localIdeaPlan({
     prompt: "Build a greenhouse 72 inches wide",
@@ -123,8 +178,8 @@ test("missing units, invalid results and ambiguous targets retain the prior desi
     ["Make the seat back 2 inches taller", /existing seat back/],
     ["Make the banquette lid 2 inches wider", /supported dimension/],
     [
-      "Make it 6 inches wider and 2 inches taller",
-      /one positive resize amount/,
+      "Make it 6 inches wider and 2 taller",
+      /inches or feet/,
     ],
   ] as const) {
     const result = revise(original, prompt);
@@ -140,4 +195,16 @@ test("missing units, invalid results and ambiguous targets retain the prior desi
     localIdeaPlan({ prompt: "Make it 6 inches wider" }).questions[0],
     /starting dimensions/,
   );
+});
+
+test("the editable banquette practice plan includes the revised center and recorded cut orders", () => {
+  const asset = (extension: string) => readFileSync(new URL(`../public/examples/wood-stock/banquette-compound-revision${extension}`, import.meta.url), "utf8");
+  const project = projectSchema.parse(JSON.parse(asset(".yardwork.json")));
+  const entries = project.ideaBindings[0].entries;
+  assert.deepEqual(entries.map(({ spec }) => spec.type === "furniture" && [spec.recipe.width, spec.recipe.depth, spec.recipe.height]),
+    [[24, 24, 18], [24, 25, 20], [24, 24, 18]]);
+  assert.equal(project.plannedCutSources?.length, 6);
+  const guide = guideMarkdown(project);
+  assert.equal(guide.trimEnd() + "\n", asset("-guide.md"));
+  assert.match(guide, /69.75 in/);
 });

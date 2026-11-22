@@ -33,13 +33,16 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
     ? zone.height - y : 0;
   const canUseZoneClearance = zoneClearance >= 0.125 && preferred.size[1] === Math.max(...preferred.size);
   const kerf = plannedCutKerf(project, choice.id);
-  const fits = (length: number, id: MaterialId) => {
-    const state = stockSplitState(length, needed, plannedCutKerf(project, id));
+  const fits = (length: number, id: MaterialId, finished: number) => {
+    const state = stockSplitState(length, finished, plannedCutKerf(project, id));
     return state === "whole" || state === "cut";
   };
   const validLength = needed >= 0.125;
-  const shortest = validLength ? options.find(({ id, value }) => fits(value, id)) : undefined;
-  const enough = Number.isNaN(needed) || (validLength && fits(choice.value, choice.id));
+  const shortestFor = (length: number) => options.find(({ id, value }) => fits(value, id, length));
+  const shortest = validLength ? shortestFor(needed) : undefined;
+  const enough = Number.isNaN(needed) || (validLength && fits(choice.value, choice.id, needed));
+  const zoneStock = canCutToLength && canUseZoneClearance && zoneClearance < choice.value && Number.isNaN(needed)
+    ? shortestFor(zoneClearance) : undefined;
   const planCut = canCutToLength && validLength && stockSplitState(choice.value, needed, kerf) === "cut";
   const leftover = choice.value - needed - kerf;
   const remnants = canCutToLength && validLength
@@ -65,9 +68,12 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
         defaultUnit={preferredLengthUnit(finishedLength ?? measuredLength ?? zoneClearance)} onChange={setNeeded} />
       {measuredLength !== undefined && <button type="button" className="text-button use-measured-length"
         onClick={() => setNeeded(measuredLength)}>Use measured span ({formatStockLength(measuredLength)})</button>}
-      {canUseZoneClearance && zoneClearance < choice.value && Number.isNaN(needed) &&
+      {zoneStock && <div>
+        <p className="small-note">{choice.label} is taller than the available space.{zoneStock.value < choice.value &&
+          ` A cut from ${zoneStock.label} stock can fit.`}</p>
         <button type="button" className="text-button use-measured-length"
-          onClick={() => setNeeded(zoneClearance)}>Use work zone clearance ({formatStockLength(zoneClearance)})</button>}
+          onClick={() => setNeeded(zoneClearance)}>Use work zone clearance ({formatStockLength(zoneClearance)})</button>
+      </div>}
       {!Number.isNaN(needed) && !validLength && <p role="status">Enter at least ⅛ in or clear the finished length.</p>}
       {validLength && (!shortest ? <p role="status">No listed length fits this cut.</p> : !enough || shortest.value < choice.value ? <p role="status">
         {enough ? `${shortest.label} stock fits this cut with ${formatStockLength(choice.value - shortest.value)} less length to buy.` : `${shortest.label} stock fits this cut.`}{" "}

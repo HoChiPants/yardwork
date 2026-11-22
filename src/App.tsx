@@ -949,12 +949,17 @@ export function App() {
     offcutId?: string;
   }>();
   const viewport = useRef<HTMLDivElement>(null),
-    camera = useRef<THREE.Camera | null>(null),
+    workspaceCamera = useRef<{ camera: THREE.Camera; getTarget: () => THREE.Vector3 } | null>(null),
     file = useRef<HTMLInputElement>(null);
   const materialDropMarker = useRef<((point: V3 | null) => void) | null>(null);
-  const onCamera = useCallback((c: THREE.Camera) => {
-    camera.current = c;
+  const onCamera = useCallback((camera: THREE.Camera, getTarget: () => THREE.Vector3) => {
+    workspaceCamera.current = { camera, getTarget };
   }, []);
+  useEffect(() => {
+    if (modal !== "place-material" || pendingMaterial?.projectId !== project.id || !pendingMaterial.position) return;
+    materialDropMarker.current?.(pendingMaterial.position);
+    return () => materialDropMarker.current?.(null);
+  }, [modal, pendingMaterial, project.id]);
   const inspectWorkspace = useCallback(() => {
     inspectorFocus.suspend();
     requestAnimationFrame(() => viewport.current?.scrollIntoView({behavior:"smooth",block:"center"}));
@@ -2652,9 +2657,10 @@ export function App() {
   const canDropMaterial = !workspaceReviewActive && !activeFastenerLayoutPreview && !activeConnectorPreview &&
     !baseRailPreview && panel !== "fit-stock" && stage === null && !explode;
   function pointOnWorkspace(pointer: { x: number; y: number }): V3 | undefined {
-    const activeCamera = camera.current;
+    const active = workspaceCamera.current;
     const canvas = materialDropCanvas(pointer);
-    if (!canvas || !activeCamera || !canDropMaterial) return;
+    if (!canvas || !active || !canDropMaterial) return;
+    const { camera: activeCamera, getTarget } = active;
     const rect = canvas.getBoundingClientRect();
     const ray = new THREE.Raycaster();
     activeCamera.updateMatrixWorld();
@@ -2673,11 +2679,11 @@ export function App() {
       // A thin or sloped support can disappear under a one-inch grid snap.
       return snapped && Math.abs(snapped[1] - point[1]) <= 0.8 ? snapped : point;
     }
-    // Near the floor horizon, use the workspace center plane for ground depth.
+    // Near the floor horizon, use the depth the user is framing, including after panning.
     if (!nearHorizon) return;
     const normal = forward.setY(0);
     if (normal.lengthSq() < 1e-8) return;
-    const hit = ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal.normalize(), new THREE.Vector3()), new THREE.Vector3());
+    const hit = ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal.normalize(), getTarget()), new THREE.Vector3());
     if (!hit) return;
     return [snap ? Math.round(hit.x * 12) : hit.x * 12, 0, snap ? Math.round(hit.z * 12) : hit.z * 12];
   }
@@ -3596,6 +3602,12 @@ export function App() {
               }}>
                 <Settings2 size={15} /> Part details
               </button>
+              {(material(piece.material).cuttable || canEditThroughOpenings(piece)) && (
+                <button data-cut-part onClick={() => setModal("cut")}>
+                  <Scissors size={15} />
+                  Cut part
+                </button>
+              )}
               <button onClick={()=>setMode("move")}><Move3D size={15}/>Move XYZ</button>
               <button aria-pressed={mode==="lift"} onClick={()=>setMode("lift")}>↕ Lift</button>
               <button onClick={copySelection}><Copy size={15}/>Copy</button>
@@ -3613,12 +3625,6 @@ export function App() {
                 <RotateCcw size={15} />
                 Tip 90°
               </button>
-              {(material(piece.material).cuttable || canEditThroughOpenings(piece)) && (
-                <button data-cut-part onClick={() => setModal("cut")}>
-                  <Scissors size={15} />
-                  Cut part
-                </button>
-              )}
             </div>
           )}
         <section className="build-timeline" data-empty={!hasBuildParts}>
@@ -5556,7 +5562,7 @@ export function App() {
       )}
       {modal && (
         <div
-          className="modal-backdrop"
+          className={modal === "place-material" ? "modal-backdrop placement-backdrop" : "modal-backdrop"}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setModal(null);
           }}

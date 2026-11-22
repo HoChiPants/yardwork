@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { groupedMaterials, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 
 type Point = { x: number; y: number };
-type Drag = { pointer: number; start: Point; group: MaterialGroup; stock: MaterialGroup["variants"][number]; active: boolean };
+type Drag = { pointer: number; start: Point; tile: HTMLDivElement; group: MaterialGroup; stock: MaterialGroup["variants"][number]; active: boolean };
 const dragDistance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export function MaterialLibrary({ category, search, onPreview, onPlace }: {
@@ -19,15 +19,29 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   const drag = useRef<Drag | null>(null);
   const preview = useRef(onPreview);
   preview.current = onPreview;
-  useEffect(() => () => {
-    if (drag.current?.active) preview.current(null);
-  }, []);
   const [ghost, setGhost] = useState<{ drag: Drag; point: Point; overCanvas: boolean } | null>(null);
+  useEffect(() => {
+    function cancel(event: KeyboardEvent) {
+      const active = drag.current;
+      if (event.key !== "Escape" || !active?.active) return;
+      event.preventDefault();
+      event.stopPropagation();
+      drag.current = null;
+      if (active.tile.hasPointerCapture(active.pointer)) active.tile.releasePointerCapture(active.pointer);
+      setGhost(null);
+      preview.current(null);
+    }
+    window.addEventListener("keydown", cancel, true);
+    return () => {
+      window.removeEventListener("keydown", cancel, true);
+      if (drag.current?.active) preview.current(null);
+    };
+  }, []);
   const pointOf = (event: PointerEvent) => ({ x: event.clientX, y: event.clientY });
   function start(event: PointerEvent<HTMLDivElement>, group: MaterialGroup, stock: Drag["stock"]) {
     const target = event.target as Element;
     if (drag.current || event.button !== 0 || !event.isPrimary || target.closest("button")) return;
-    drag.current = { pointer: event.pointerId, start: pointOf(event), group, stock, active: false };
+    drag.current = { pointer: event.pointerId, start: pointOf(event), tile: event.currentTarget, group, stock, active: false };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
   function move(event: PointerEvent<HTMLDivElement>) {
@@ -60,18 +74,15 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     }
   }
   return <>
-    <div className="section-label">
-      {category === "All" ? "MATERIAL TYPES" : category.toUpperCase()}
-      <span>{groups.length}</span>
-    </div>
     <div className="material-list">
       {groups.map(({ group, stock }) => <div key={group.id} className="material-card" data-material-family={group.id}
           onPointerDown={(event) => start(event, group, stock)} onPointerMove={move}
+          onDragStart={(event) => event.preventDefault()}
           onPointerUp={(event) => finish(event, true)} onPointerCancel={(event) => finish(event, false)}
           onLostPointerCapture={(event) => finish(event, false)}>
           {art(stock)}
           <div className="material-info"><strong>{group.name}</strong></div>
-          <button type="button" aria-label={`Add ${group.name}`} onClick={() => onPlace(group)}><Plus size={16} /></button>
+          <button type="button" aria-label={`Add ${group.name}`} title="Add at the center" onClick={() => onPlace(group)}><Plus size={16} /></button>
         </div>
       )}
       {!groups.length && <p className="small-note">No matching materials.</p>}

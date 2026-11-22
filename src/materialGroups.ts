@@ -1,4 +1,4 @@
-import { catalog, type Material, type MaterialId } from "./model";
+import { catalog, material, type Material, type MaterialId } from "./model";
 import { formatPreciseInches, formatStockLength } from "./measurement";
 import { materialIds } from "./materialIds";
 import { homeDepotTreatedLumber } from "./homeDepotTreatedLumber";
@@ -162,15 +162,17 @@ function paletteStockName(name: string) {
 }
 
 export function materialPlacementOptions(group: MaterialGroup) {
-  const ids = materialFamilyVariants(group.preferred);
-  const all = catalog.filter((stock) => ids.includes(stock.id));
-  const preferred = all.find(({ id }) => id === group.preferred)!;
+  const preferred = material(group.preferred);
   const dimension = (stock: Material) => group.id === "birch-plywood" ? Math.min(...stock.size) :
     group.id === "pex-b" ? stock.id === "hd-pex-u860w10" ? 0.5 : 0.75 : Math.max(...(stock.stockSize ?? stock.size));
   const label = (value: number) => group.id === "birch-plywood" || group.id === "pex-b"
     ? formatPreciseInches(value) : formatStockLength(value);
-  const representatives = new Map([preferred, ...all.filter((stock) => stock.id !== preferred.id)]
-    .reverse().map((stock) => [dimension(stock), stock]));
+  const representatives = new Map<number, Material>();
+  // The family order chooses the generic stock first when several products share a size.
+  for (const stock of [preferred, ...materialFamilyVariants(group.preferred).map(material)]) {
+    const size = dimension(stock);
+    if (!representatives.has(size)) representatives.set(size, stock);
+  }
   return {
     preferred,
     canCutToLength: preferred.wood && preferred.cuttable && preferred.stockKind === "linear",

@@ -153,7 +153,7 @@ export type SceneProps = {
   selectedAttachmentPlanId?: string | null;
   onSelectAttachmentPlan?: (id: string | null) => void;
   onSelectAttachmentPart?: (id: string) => void;
-  onCamera: (camera: THREE.Camera) => void;
+  onCamera: (camera: THREE.Camera, getTarget: () => THREE.Vector3) => void;
   materialDropMarker?: RefObject<((point: V3 | null) => void) | null>;
 };
 function woodTexture() {
@@ -1173,7 +1173,7 @@ function CameraRig({
   const moving = useRef(false);
   const framedBounds = useRef<PerspectiveBounds | null>(null);
   useEffect(() => {
-    onCamera(camera);
+    onCamera(camera, () => controls.current?.target ?? target.current);
   }, [camera, onCamera]);
   useEffect(() => {
     const active = framePieces;

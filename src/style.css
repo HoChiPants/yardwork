@@ -371,22 +371,6 @@ small {
   background: #eaf0e2;
   font-weight: 600;
 }
-.section-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 8px;
-  font-weight: 650;
-  letter-spacing: 1.4px;
-  color: #a0a597;
-  padding: 0 2px 11px;
-}
-.section-label span {
-  font-size: 9px;
-  border: 1px solid #e7eadf;
-  padding: 1px 5px;
-  border-radius: 4px;
-}
 .material-list {
   overflow-y: auto;
   min-height: 70px;
@@ -1585,6 +1569,18 @@ small {
 .modal.wide {
   width: 560px;
 }
+.placement-backdrop {
+  background: #343c2d2a;
+  backdrop-filter: none;
+}
+@media (min-width: 901px) {
+  .placement-backdrop { justify-content: flex-end; }
+  .placement-backdrop .modal { width: 360px; }
+}
+@media (max-width: 600px) {
+  .placement-backdrop { align-items: flex-end; }
+  .placement-backdrop .modal { max-height: 80dvh; }
+}
 .modal-close {
   position: absolute;
   right: 16px;
@@ -2215,9 +2211,6 @@ small {
     overflow: hidden;
     padding: 22px 12px;
   }
-  .section-label {
-    font-size: 7px;
-  }
   .categories {
     padding-bottom: 15px;
   }
@@ -2385,7 +2378,6 @@ small {
   }
   .library-heading,
   .categories,
-  .section-label,
   .drag-hint,
   .store-card {
     display: none;

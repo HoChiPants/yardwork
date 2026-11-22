@@ -1,6 +1,6 @@
 # Move, copy and reuse stock
 
-Select a part, then use **Lift** in its floating controls or **Lift / lower (L)** in the inspector. Drag the wood upward or downward to change its elevation; **Alt-drag** also lifts from the ordinary selection tool. Normal dragging preserves the starting elevation and can land on a higher supporting surface.
+Select a part, then use **Lift** below the workspace or **Lift / lower (L)** in the inspector. Drag the wood upward or downward to change its elevation. **Alt-drag** also lifts from the ordinary selection tool. Normal dragging preserves the starting elevation and can land on a higher supporting surface.
 
 **Raise / Lower** use the selected increment: ⅛ in, ½ in, 1 in, 6 in or 1 ft. **Alt + ↑ / ↓** use the same increment. **Move XYZ** exposes the axis handles; exact coordinates remain in the inspector. Bottom elevation is shown separately from the part's center-Y coordinate. Position fields preserve precision when you tab through without editing.
 
@@ -10,7 +10,7 @@ Select a section and choose **Move section in 3D** or **Lift** to move all its m
 
 Use **Copy object / Paste object**, **⌘/Ctrl+C / V**, or **⌘/Ctrl+D** to duplicate. Text fields keep normal text shortcuts. Copies appear beside the build, get fresh part identities and can be moved independently. Whole-section copies retain a selectable group. Physical cut-source allocations and connection plans stay with their original parts; a copied shape does not create another reusable offcut.
 
-The materials palette has one tile per stock family. Drag the picture or title into the workspace or choose **+** to start at the center. After you pick a location, the **2 × 4 framing lumber** tile offers 8, 10 and 12 ft stock. Enter a finished length, use a measured span, or use the available work zone clearance for a standing board. Yardwork compares shorter stock and matching offcuts. The **List** panel holds product references and the project cost estimate.
+The materials palette has one tile per stock family. Drag the picture or title onto the grid or a supporting face. The green marker shows the landing point and stays there while you choose a size. Press **Esc** to cancel a drag, or choose **+** to start at the center. The **2 × 4 framing lumber** tile offers 8, 10 and 12 ft stock. Enter a finished length, use a measured span, or use the available work zone clearance for a standing board. Yardwork compares shorter stock and matching offcuts. The **List** panel holds product references and the project cost estimate.
 
 **Cut part** starts whole-foot dimensions in feet; other dimensions start in inches. Cut descriptions and the pool follow the same rule, so 72 in becomes 6 ft while 23.875 in remains inches. Choosing a unit manually remains possible. Stored dimensions keep their canonical inch values.
 

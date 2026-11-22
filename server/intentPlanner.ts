@@ -20,6 +20,7 @@ import {
   editCaseworkShelfCount,
   normalizeIdeaText,
   requestsBanquetteReturn,
+  type BuildFamily,
 } from "../src/ideaEdits";
 import {
   ideaPlanSchema,
@@ -122,6 +123,74 @@ export const intentWireSchema = z.discriminatedUnion("family", [
   clarifyWireSchema,
 ]);
 export type IntentWire = z.infer<typeof intentWireSchema>;
+
+function stockMentions(input: string) {
+  const prompt = normalizeIdeaText(input);
+  return {
+    explicitlyNamed: (id: (typeof materialIds)[number]) =>
+      prompt.includes(id) || prompt.includes(normalizeIdeaText(material(id).name)),
+    framing: /\b(?:use|frame|build)\b[^.,;\n]{0,90}\b(?:pressure[- ]treated|lumber|studs?|boards?|cedar|pine|fir|2\s*x\s*4)\b/.test(prompt),
+    panels: /\b(?:plywood|plytanium|purebond|mdf|osb|melamine|sheet stock)\b/.test(prompt),
+  };
+}
+
+type IntentField = keyof typeof designWireSchema.shape;
+
+const familyFields: Partial<Record<BuildFamily, readonly IntentField[]>> = {
+  bench: ["sectionCount", "storage", "openingLid", "backHeight"],
+  workbench: [],
+  cabinet: ["shelfCount"],
+  shelf: ["shelfCount"],
+  frame: [],
+  greenhouse: ["roofRise", "doorWidth", "doorHeight"],
+  sauna: ["doorWidth", "doorHeight"],
+  "closet-insert": ["towerWidth", "leftBayWidth", "rightBayWidth", "rodHeight", "shelfCount"],
+  "casework-shelves": ["shelfCount"],
+};
+
+function hasPreviousDesign({ previousPlan }: PlannerRequest) {
+  return !!previousPlan && (previousPlan.modules.length > 0 || previousPlan.structures.length > 0);
+}
+
+const supportedDesignFamilies = designWireSchema.shape.family.options;
+type DesignFamily = typeof supportedDesignFamilies[number];
+
+function providerIntentGrammar(request: PlannerRequest) {
+  const family = referencedFamily(request.prompt, request.previousPlan);
+  const focusedFields = family && familyFields[family];
+  const stock = stockMentions(request.prompt);
+  const namedStock = materialIds.some(stock.explicitlyNamed);
+  const always = new Set<IntentField>(["family", "operation", "width", "depth", "height"]);
+  const isEdit = hasPreviousDesign(request);
+  const supportsReturn = !focusedFields || (family === "bench" && requestsBanquetteReturn(request.prompt));
+  const shape = Object.fromEntries(
+    (Object.entries(designWireSchema.shape) as [IntentField, z.ZodType][]).filter(([field]) => {
+      if (field === "frameMaterial") return stock.framing || namedStock;
+      if (field === "panelMaterial") return stock.panels || namedStock;
+      if (field === "shape" || field === "returnLength") return supportsReturn;
+      if (field === "targetSection") return isEdit;
+      return always.has(field) || !focusedFields || focusedFields.includes(field);
+    }),
+  );
+  const familyOptions: DesignFamily[] = focusedFields
+    ? supportedDesignFamilies.filter((key) => (key === "banquette" ? "bench" : key === "shelves" ? "shelf" : key) === family)
+    : [...supportedDesignFamilies];
+  const schema = z.discriminatedUnion("family", [
+    z.strictObject({
+      ...shape,
+      family: z.enum(familyOptions),
+      operation: isEdit ? designWireSchema.shape.operation : z.literal("create"),
+    }),
+    clarifyWireSchema,
+  ]);
+  return {
+    format: toOllamaSchema(schema.toJSONSchema()),
+    fields: Object.keys(shape).filter((field) => field !== "family" && field !== "operation"),
+    familyOptions,
+    isEdit,
+  };
+}
+
 export function wireIntentToPlan(
   request: PlannerRequest,
   raw: unknown,
@@ -142,17 +211,14 @@ export function wireIntentToPlan(
       operation: "clarify",
       questions: [wire.question],
     });
-  if (!request.previousPlan) delete wire.targetSection;
-  const prompt = normalizeIdeaText(request.prompt);
-  const explicitlyNamed = (id: (typeof materialIds)[number]) =>
-    prompt.includes(id) || prompt.includes(normalizeIdeaText(material(id).name));
-  const namesFramingStock =
-    /\b(?:use|frame|build)\b[^.,;\n]{0,90}\b(?:pressure[- ]treated|lumber|studs?|boards?|cedar|pine|fir|2\s*x\s*4)\b/.test(prompt);
-  const namesPanelStock =
-    /\b(?:plywood|plytanium|purebond|mdf|osb|melamine|sheet stock)\b/.test(prompt);
-  if (wire.frameMaterial && !explicitlyNamed(wire.frameMaterial) && !namesFramingStock)
+  if (!hasPreviousDesign(request)) {
+    wire.operation = "create";
+    delete wire.targetSection;
+  }
+  const stock = stockMentions(request.prompt);
+  if (wire.frameMaterial && !stock.explicitlyNamed(wire.frameMaterial) && !stock.framing)
     delete wire.frameMaterial;
-  if (wire.panelMaterial && !explicitlyNamed(wire.panelMaterial) && !namesPanelStock)
+  if (wire.panelMaterial && !stock.explicitlyNamed(wire.panelMaterial) && !stock.panels)
     delete wire.panelMaterial;
   return intentToPlan(request, wire);
 }
@@ -455,7 +521,7 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
   return finalize(plan);
 }
 
-export function intentMessages(request: PlannerRequest) {
+export function intentMessages(request: PlannerRequest, grammar = providerIntentGrammar(request)) {
   const previous = request.previousPlan
     ? {
         modules: request.previousPlan.modules.map(
@@ -494,10 +560,17 @@ export function intentMessages(request: PlannerRequest) {
     {
       role: "system",
       content: [
-        "Extract DIY design intent. Return compact JSON only; never code or individual parts. Geometry is built separately. Allowed family: banquette, bench, workbench, cabinet, shelves, frame, greenhouse, sauna, closet-insert, casework-shelves, clarify. Use casework-shelves for panel casework or plywood bookcases; shelves is a framed lumber shelf module. Preserve the previous typed family on follow-up dimensions or shelf-count edits.",
-        "Design fields: family, operation(create/revise/append), width, depth, height, shape(straight/l), returnLength, sectionCount, targetSection(1-based), storage, openingLid, backHeight, shelfCount, roofRise, doorWidth, doorHeight, towerWidth, leftBayWidth, rightBayWidth, rodHeight, frameMaterial, panelMaterial. Only family and operation are required. Omit unspecified measurements/features. All measurements are INCHES: convert feet and number words. Width is the OVERALL run, depth is seat depth for benches, height is finished seat height. L returnLength is its overall footprint; count the corner once. Sauna dimensions are clear inside. Greenhouse height is eave height, with roofRise above. For closet inserts width and height are outside dimensions; towerWidth and bay widths are clear openings, and rodHeight is from the floor to the rod center. No back means backHeight is0.",
-        "Use revise for a follow-up, append for adding another item; preserve unspecified settings and selected sources. Include targetSection only for a named/numbered section edit. Choose material IDs only when explicitly requested; do not invent product IDs. Unsupported trades or unclear intent return exactly family:clarify, operation:clarify and question:one concise useful question (at most240 characters). Never claim load capacity, code compliance or safe construction.",
-        "Return no summary, suggestions, questions array, narrative, code or individual parts. The application derives all design explanations from validated geometry. Omit unrequested defaults and do not ask to reconfirm measurements already stated.",
+        "Extract DIY design intent as one compact JSON object. Use only the schema fields. Never emit prose, code, individual parts, load or code claims.",
+        `Families: ${grammar.familyOptions.join(", ")}. Use casework-shelves for panel bookcases and shelves for framed lumber shelving when those families are available.`,
+        ...(grammar.familyOptions.includes("bench") && grammar.familyOptions.includes("workbench")
+          ? ["A counter or worktop for standing tasks is a workbench. Benches and banquettes are seating."]
+          : []),
+        grammar.isEdit
+          ? "Use revise for changes or append for new items. Keep the prior family and unspecified values. Set targetSection only for a named or numbered edit."
+          : "Use create for a new design.",
+        `Set family and operation. Omit unrequested fields. Optional fields: ${grammar.fields.join(", ")}.`,
+        "Convert numbers and lengths to inches. Width is the full run including all sections. Bench height is the seat height; L return length is its overall footprint. Greenhouse height is eave height, with roof rise above. Sauna dimensions are clear inside. Closet bay and tower widths are clear openings, and rod height is to its center.",
+        "No back means backHeight is 0. Select stock IDs only when explicitly requested. If unclear or unsupported, return family clarify, operation clarify and one short question.",
         `Context: ${JSON.stringify({ workZone: request.workZone ?? null, previousProposal: previous })}`,
       ].join("\n"),
     },
@@ -519,6 +592,7 @@ export async function generateIntentPlan(
     phase: "transport" | "response" | "intent" = "transport";
   try {
     signal.throwIfAborted();
+    const grammar = providerIntentGrammar(request);
     const response = await fetch(new URL("/api/chat", process.env.OLLAMA_URL), {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -526,9 +600,9 @@ export async function generateIntentPlan(
       body: JSON.stringify({
         model: process.env.OLLAMA_MODEL ?? defaultOllamaModel,
         stream: false,
-        format: toOllamaSchema(intentWireSchema.toJSONSchema()),
+        format: grammar.format,
         options: { temperature: 0, seed: 0, num_ctx: 4096, num_predict: 512 },
-        messages: intentMessages(request),
+        messages: intentMessages(request, grammar),
       }),
     });
     status = response.status;

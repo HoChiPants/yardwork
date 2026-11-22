@@ -326,10 +326,7 @@ test("older narrative-bearing replays still use the compatible internal mapper w
   assert.doesNotMatch(plan.summary, /wrong/);
   assert.match(
     intentMessages({ prompt: "bench" })[0].content,
-    /Return no summary/,
+    /Never emit prose/,
   );
-  assert.match(
-    intentMessages({ prompt: "bench" })[0].content,
-    /doorWidth, doorHeight/,
-  );
+  assert.doesNotMatch(intentMessages({ prompt: "bench" })[0].content, /doorWidth|doorHeight/);
 });

@@ -340,6 +340,21 @@ await propose(
   },
 );
 
+await propose(
+  "standing-work-surface",
+  "A landing spot for school bags and mail, 60 inches wide, 18 inches deep, and 36 inches tall. I want to stand at it and sort mail on a flat worktop.",
+  (plan, preview) => {
+    assert.equal(plan.modules.length, 1);
+    assert.equal(plan.structures.length, 0);
+    const surface = plan.modules[0];
+    assert.equal(surface.kind, "workbench");
+    near(surface.width, 60, "width");
+    near(surface.depth, 18, "depth");
+    near(surface.height, 36, "standing work surface height");
+    near(preview.max[1] - preview.min[1], 36, "geometry height");
+  },
+);
+
 const failed = records.filter((record) => !record.passed).length;
 console.log(
   JSON.stringify({

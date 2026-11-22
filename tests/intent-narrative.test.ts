@@ -162,11 +162,8 @@ test("native sparse schema omits narrative output and still validates returned d
     assert.deepEqual(design.required, ["family", "operation"]);
     assert.equal(clarify.properties.question.maxLength, 240);
     assert.doesNotMatch(next.summary, /return|three opening lids/);
-    assert.match(
-      intentMessages({ prompt: "bench" })[0].content,
-      /doorWidth, doorHeight/,
-    );
-    assert.match(intentMessages({ prompt: "bench" })[0].content, /Return no summary, suggestions, questions array/);
+    assert.doesNotMatch(intentMessages({ prompt: "bench" })[0].content, /doorWidth|doorHeight/);
+    assert.match(intentMessages({ prompt: "bench" })[0].content, /Never emit prose, code, individual parts/);
     globalThis.fetch = async () =>
       new Response(
         JSON.stringify({

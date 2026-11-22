@@ -193,7 +193,12 @@ test("sparse transport makes one request, uses the converted union grammar and e
       assert.equal(sent.options.num_ctx, 4096);
       assert.equal(sent.options.num_predict, 512);
       assert.deepEqual(sent.format.oneOf[0].required, ["family", "operation"]);
-      assert.equal(sent.format.oneOf[0].properties.summary, undefined);
+      const fields = sent.format.oneOf[0].properties;
+      assert.deepEqual(fields.family.enum, ["banquette", "bench"]);
+      assert.equal(fields.operation.const, "create");
+      assert.equal(fields.sectionCount.type, "integer");
+      for (const field of ["summary", "roofRise", "shelfCount", "targetSection", "returnLength", "frameMaterial", "panelMaterial"])
+        assert.equal(fields[field], undefined, field);
       return reply({
         ...completed(),
         model: "PRIVATE_MODEL",
@@ -227,6 +232,54 @@ test("sparse transport makes one request, uses the converted union grammar and e
   assert.equal(receipts[0].evalCount, 20);
   assert.ok(receipts[0].wallDurationMs >= 0);
   assert.doesNotMatch(JSON.stringify(receipts), /PRIVATE/);
+});
+
+test("transport keeps return measurements, explicit stock and valid edit operations when requested", async () => {
+  const previousPlan = localIdeaPlan({ prompt: "a storage banquette with three sections and opening lids" });
+  await withProvider(
+    async (_url, init) => {
+      const { properties: fields } = JSON.parse(String(init?.body)).format.oneOf[0];
+      assert.ok(fields.returnLength);
+      assert.ok(fields.shape);
+      assert.ok(fields.panelMaterial);
+      assert.ok(fields.targetSection);
+      assert.deepEqual(fields.operation.enum, ["create", "revise", "append"]);
+      assert.equal(fields.roofRise, undefined);
+      return reply(completed({ family: "clarify", operation: "clarify", question: "How long is the return?" }));
+    },
+    async () => {
+      const plan = await generateIntentPlan({
+        prompt: "Make this banquette L-shaped and use plywood.",
+        previousPlan,
+      });
+      assert.deepEqual(plan.modules, previousPlan.modules);
+      assert.deepEqual(plan.questions, ["How long is the return?"]);
+    },
+  );
+});
+
+test("an unnamed new design can use an inferred family even if the provider sends a revise operation", async () => {
+  await withProvider(
+    async (_url, init) => {
+      const sent = JSON.parse(String(init?.body));
+      const { properties: fields } = sent.format.oneOf[0];
+      assert.match(sent.messages[0].content, /worktop for standing tasks is a workbench/);
+      assert.ok(fields.family.enum.includes("workbench"));
+      assert.ok(fields.family.enum.includes("greenhouse"));
+      assert.ok(fields.roofRise);
+      assert.equal(fields.operation.const, "create");
+      return reply(completed({ ...intent, family: "workbench", operation: "revise", height: 38 }));
+    },
+    async () => {
+      const plan = await generateIntentPlan({
+        prompt: "A surface for sorting mail, 60 inches wide, 24 inches deep and 38 inches high.",
+      });
+      assert.deepEqual(
+        plan.modules.map(({ kind, width, depth, height }) => [kind, width, depth, height]),
+        [["workbench", 60, 24, 38]],
+      );
+    },
+  );
 });
 
 test("HTTP failure never retries, accepts raw error bodies or changes the previous proposal", async () => {

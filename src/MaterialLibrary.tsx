@@ -10,7 +10,7 @@ const dragDistance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 export function MaterialLibrary({ category, search, onPreview, onPlace }: {
   category: string;
   search: string;
-  onPreview: (point: Point | null) => boolean;
+  onPreview: (point: Point | null, stock?: MaterialGroup["preferred"]) => boolean;
   onPlace: (group: MaterialGroup, pointer?: Point) => void;
 }) {
   const groups = useMemo(() => groupedMaterials(category, search).map((group) => ({
@@ -50,7 +50,7 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     const point = pointOf(event);
     if (!active.active && dragDistance(point, active.start) < 6) return;
     active.active = true;
-    setGhost({ drag: active, point, overCanvas: onPreview(point) });
+    setGhost({ drag: active, point, overCanvas: onPreview(point, active.stock.id) });
   }
   function art(stock: Drag["stock"]) {
     const profile = stock.wood && stock.stockKind === "linear" ? stock.size.slice().sort((a, b) => a - b)[1] : null;

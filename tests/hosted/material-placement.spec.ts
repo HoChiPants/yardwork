@@ -38,10 +38,12 @@ test("one material tile supports drop, length choice and a separate selected-par
   }
   await dragToGround();
   await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
+  await expect(canvas).toHaveAttribute("data-material-placement-preview", "[1.5,96,3.5]");
   await page.keyboard.press("Escape");
   await page.mouse.up();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(canvas).not.toHaveAttribute("data-material-drop-point");
+  await expect(canvas).not.toHaveAttribute("data-material-placement-preview");
   await dragToGround();
   await expect(page.locator(".material-drag-preview.can-drop .material-art")).toBeVisible();
   const dropPoint = (await canvas.getAttribute("data-material-drop-point"))!;
@@ -102,6 +104,10 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("0");
   await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(page.locator(".bom-row").first()).not.toContainText(/Unpriced|\$/);
+  const firstStock = page.locator(".bom-row").first();
+  await expect(firstStock.getByRole("link", { name: "Find at Home Depot" })).toHaveCount(0);
+  await firstStock.getByText("Store details", { exact: true }).click();
+  await expect(firstStock.getByRole("link", { name: "Find at Home Depot" })).toBeVisible();
   const printShopping = page.locator(".print-guide .pricing-summary-print + ul");
   await expect(printShopping).toContainText(group);
   await expect(printShopping).not.toContainText(/Unpriced|\$/i);
@@ -194,6 +200,7 @@ test("an existing surface receives a dropped board and single-stock boards can b
   await expect(page.locator(".material-drag-preview.can-drop")).toBeVisible();
   const [, surface] = JSON.parse((await canvas.getAttribute("data-material-drop-point"))!);
   expect(surface).toBeCloseTo(12.375);
+  await expect(canvas).toHaveAttribute("data-material-placement-preview", "[0.75,96,1.5]");
   await page.mouse.up();
   await expect(dialog).toHaveAccessibleName("1 × 2 board");
   await expect(dialog).toContainText("8 ft stock");

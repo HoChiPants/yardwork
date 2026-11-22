@@ -251,7 +251,7 @@ function HomeDepotShoppingHandoff({
                         : `${snapshot.available} available in snapshot`}
                     {snapshot && (
                       <>
-                        {" · "}{snapshot.price.toLocaleString("en-US", { style: "currency", currency: "USD" })} per purchase unit{" · "}
+                        {" · "}
                         <time dateTime={snapshot.checkedAt}>
                           {new Date(snapshot.checkedAt).toLocaleDateString()}
                         </time>

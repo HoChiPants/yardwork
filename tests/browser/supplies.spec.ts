@@ -96,7 +96,7 @@ test("record a mixed Home Depot store check from the purchase handoff", async ({
   await dialog.getByRole("button", { name: "Save store snapshots", exact: true }).click();
   await expect(dialog.getByRole("status")).toHaveText("2 store snapshots recorded.");
   await expect(row).toContainText("Short by 1 in snapshot");
-  await expect(row).toContainText("$0.00 per purchase unit");
+  await expect(row).not.toContainText(/\$|per purchase unit/);
   await expect(dialog.getByRole("listitem").filter({ hasText: /#338861827/ })).toContainText("12 available in snapshot");
   await expect(dialog.getByRole("link", { name: /Home Depot’s project instructions/ })).toHaveAttribute("href", "https://www.homedepot.com/c/create-a-project");
   await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
@@ -161,8 +161,10 @@ test("record a mixed Home Depot store check from the purchase handoff", async ({
   expect(received.supplies).toEqual(separate.supplies);
   await page.getByRole("button", { name: "List", exact: true }).click();
   await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
-  await expect(dialog.getByRole("listitem").filter({ hasText: /#338861827/ })).toContainText("$4.25 per purchase unit");
-  await expect(dialog.getByRole("listitem").filter({ hasText: /#314150989/ })).toContainText("$0.00 per purchase unit");
+  const purchaseReview = dialog.getByRole("list", { name: "Home Depot purchase review" });
+  await expect(purchaseReview.getByRole("listitem").filter({ hasText: /#338861827/ })).toContainText("12 available in snapshot");
+  await expect(purchaseReview.getByRole("listitem").filter({ hasText: /#314150989/ })).toContainText("1 available in snapshot");
+  await expect(purchaseReview).not.toContainText(/\$|per purchase unit/);
 });
 
 test("edit an exact Home Depot tool snapshot without losing its precise check time or prior listing", async ({ page }) => {

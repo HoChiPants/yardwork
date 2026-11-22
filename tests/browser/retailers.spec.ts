@@ -28,6 +28,7 @@ test("records a Lowe's snapshot and keeps purchase links and handoff in the sele
   await expect(page.locator(".bom-row")).toContainText(
     "Snapshot · 16 available",
   );
+  await page.locator(".bom-row").getByText("Store details", { exact: true }).click();
   await expect(
     page.getByRole("link", { name: /Find at Lowe's/ }),
   ).toHaveAttribute("href", "https://www.lowes.com/pd/test/1114951");

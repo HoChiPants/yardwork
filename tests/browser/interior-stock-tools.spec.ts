@@ -275,6 +275,7 @@ test("manual .188/.453 sheets keep exact dimensions, cut remnants and one-sheet 
     await expect(purchase).toContainText("1 sheet");
     await expect(purchase).not.toContainText(/Unpriced|\$/);
     await expect(purchase).toContainText("Availability unverified");
+    await purchase.getByText("Store details", { exact: true }).click();
     await expect(
       purchase.getByRole("link", { name: "Find at Home Depot", exact: true }),
     ).toHaveAttribute("href", new RegExp(`/${row.offer}$`));

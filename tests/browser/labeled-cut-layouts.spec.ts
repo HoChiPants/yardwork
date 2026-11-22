@@ -533,7 +533,7 @@ test("compare Home Depot stock as a batch and preserve a recorded source through
   expect(reopened.inventory).toEqual(observed.inventory);
 });
 
-test("open comparisons and purchase handoffs expire observed prices without editing the project", async ({ page }) => {
+test("open comparisons and purchase handoffs expire snapshots without exposing line prices or editing the project", async ({ page }) => {
   const start = Date.now();
   const day = 24 * 60 * 60 * 1000;
   const stockExpires = start + 95000, hardwareExpires = start + 116000;
@@ -567,8 +567,8 @@ test("open comparisons and purchase handoffs expire observed prices without edit
   const choice = comparison.getByRole("combobox", { name: "Alternate stock", exact: true });
   await choice.selectOption(alternate);
   await expect(comparison).toContainText("Affected lines · 4 → 3 boards to buy");
-  await expect(comparison).toContainText("Observed subtotal for affected lines · $38.00 → $42.00");
-  await expect(comparison).toContainText("4 available · 3 needed · $14.00 per board");
+  await expect(comparison).toContainText("4 available · 3 needed");
+  await expect(comparison).not.toContainText(/\$|per board/);
 
   async function advanceTo(time: number) {
     const current = await page.evaluate(() => Date.now());
@@ -576,10 +576,9 @@ test("open comparisons and purchase handoffs expire observed prices without edit
     await page.clock.fastForward(time - current);
   }
   await advanceTo(start + 65000);
-  await expect(comparison).toContainText("Observed subtotal for affected lines · $38.00 → $42.00");
+  await expect(comparison).toContainText("4 available · 3 needed");
   await advanceTo(stockExpires + 250);
   await expect(comparison).toContainText("Current store availability unverified");
-  await expect(comparison).not.toContainText("Observed subtotal");
   await expect(choice).toHaveValue(alternate);
   await expect(comparison).toContainText("Affected lines · 4 → 3 boards to buy");
 
@@ -587,10 +586,10 @@ test("open comparisons and purchase handoffs expire observed prices without edit
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("listitem").filter({ hasText: "#312528815" })).toContainText("No recent store snapshot");
   const hinge = dialog.getByRole("listitem").filter({ hasText: "#314150989" });
-  await expect(hinge).toContainText("$19.00 per purchase unit");
+  await expect(hinge).toContainText("3 available in snapshot");
+  await expect(hinge).not.toContainText(/\$|per purchase unit/);
   await advanceTo(hardwareExpires + 250);
   await expect(hinge).toContainText("No recent store snapshot");
-  await expect(hinge).not.toContainText("$19.00 per purchase unit");
   const after = await draft(page, (p) => p.id === before.id);
   expect(after).toEqual(before);
 });

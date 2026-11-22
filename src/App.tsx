@@ -2360,19 +2360,21 @@ export function App() {
     added.position = clear.position;
     return { next, added };
   }, [project, activeStepId, snap]);
-  const previewMaterial = useCallback((id: MaterialId | null, placement?: BoardPlacement) => {
-    if (!id || pendingMaterial?.projectId !== project.id) {
-      materialDropMarker.current?.(null);
-      return;
-    }
-    const position = pendingMaterial.position ?? [0, 0, 0];
+  const showMaterialPreview = useCallback((id: MaterialId, position: V3, placement?: BoardPlacement) => {
     try {
       const { added } = prepareMaterial(id, position, placement);
       materialDropMarker.current?.(position, added);
     } catch {
       materialDropMarker.current?.(position);
     }
-  }, [pendingMaterial, prepareMaterial, project.id]);
+  }, [prepareMaterial]);
+  const previewMaterial = useCallback((id: MaterialId | null, placement?: BoardPlacement) => {
+    if (!id || pendingMaterial?.projectId !== project.id) {
+      materialDropMarker.current?.(null);
+      return;
+    }
+    showMaterialPreview(id, pendingMaterial.position ?? [0, 0, 0], placement);
+  }, [pendingMaterial, project.id, showMaterialPreview]);
   function add(id: MaterialId, name: string, position: V3 = [0, 0, 0], placement?: BoardPlacement) {
     safe(() => {
       const { next, added } = prepareMaterial(id, position, placement);
@@ -2699,9 +2701,10 @@ export function App() {
     if (!hit) return;
     return [snap ? Math.round(hit.x * 12) : hit.x * 12, 0, snap ? Math.round(hit.z * 12) : hit.z * 12];
   }
-  function previewMaterialDrop(pointer: { x: number; y: number } | null) {
+  function previewMaterialDrop(pointer: { x: number; y: number } | null, stock?: MaterialId) {
     const point = pointer ? pointOnWorkspace(pointer) : undefined;
-    materialDropMarker.current?.(point ?? null);
+    if (point && stock) showMaterialPreview(stock, point);
+    else materialDropMarker.current?.(null);
     return !!point;
   }
   function requestMaterial(group: MaterialGroup, pointer?: { x: number; y: number }) {
@@ -4803,37 +4806,8 @@ export function App() {
           {panel === "materials" && (
             <>
               <div className="panel-intro">
-                <span className="eyebrow">LESS GUESSWORK. MORE BUILDING.</span>
-                <h2>Your material list.</h2>
-                <button
-                  className="button secondary full"
-                  onClick={() => {
-                    setInventoryTarget(undefined);
-                    setModal("inventory");
-                  }}
-                >
-                  <Plus size={14} />
-                  Record store snapshot
-                </button>
-                <p>
-                  Cuts retain their physical source stock. Untracked boards use
-                  length packing. Sheet blanks share proposed layouts with ⅛ in
-                  kerf; existing cut sources are reserved separately.
-                </p>
+                <h2>Material list</h2>
               </div>
-              <button
-                className="button secondary full"
-                onClick={() => setModal("catalog")}
-              >
-                Review product references
-              </button>
-              <details className="field-section">
-                <summary>Project cost estimate</summary>
-                <PricingSummary coverage={pricing} />
-                {pricedTools.length > 0 && <p className="small-note">
-                  {money(pricedTools.reduce((total, row) => total + (row.total ?? 0), 0))} estimated for tools.
-                </p>}
-              </details>
               {project.fastenerPlans.length > 0 && (
                 <details className="field-section">
                   <summary>Planned wood-fastener purchases</summary>
@@ -5091,33 +5065,36 @@ export function App() {
                       {r.surplusStockUnits} spare
                     </small>
                   )}
-                  {(r.quantity > 0 || !r.onHandStockUnits) && <small>
-                    {r.verified
-                      ? `Snapshot · ${r.inventory!.available} available`
-                      : r.supplier ? "Confirm availability with supplier" : "Availability unverified"}
-                  </small>}
                   {r.oversize > 0 && (
                     <em>{r.oversize} oversized · excluded from estimate</em>
                   )}
-                  {(r.quantity > 0 || !r.onHandStockUnits) && <a
-                    href={
-                      r.inventory?.url ??
-                      shoppingOfferForMaterial(
-                        material(r.id),
-                        project.retailer ?? "home-depot",
-                      )?.offer.url ??
-                      r.supplier?.url ??
-                      retailerSearch(
-                        project.retailer ?? "home-depot",
-                        material(r.id).search,
-                      )
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {r.supplier ? `View at ${r.supplier.seller}` : `Find at ${retailerName(project.retailer)}`}{" "}
-                    <ExternalLink size={11} />
-                  </a>}
+                  {(r.quantity > 0 || !r.onHandStockUnits) && <details className="stock-store-details" open={r.supplier ? true : undefined}>
+                    <summary>{r.supplier ? "Supplier details" : "Store details"}</summary>
+                    <small>
+                      {r.verified
+                        ? `Snapshot · ${r.inventory!.available} available`
+                        : r.supplier ? "Confirm availability with supplier" : "Availability unverified"}
+                    </small>
+                    <a
+                      href={
+                        r.inventory?.url ??
+                        shoppingOfferForMaterial(
+                          material(r.id),
+                          project.retailer ?? "home-depot",
+                        )?.offer.url ??
+                        r.supplier?.url ??
+                        retailerSearch(
+                          project.retailer ?? "home-depot",
+                          material(r.id).search,
+                        )
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {r.supplier ? `View at ${r.supplier.seller}` : `Find at ${retailerName(project.retailer)}`}{" "}
+                      <ExternalLink size={11} />
+                    </a>
+                  </details>}
                   {project.retailer === "home-depot" && r.pieces >= 2 && (
                     <StockGroupComparison
                       key={project.id}
@@ -5241,6 +5218,13 @@ export function App() {
                   <WoodStockKerf project={project} row={r} onApply={applyWoodStockKerf} />
                 </div>
               ))}
+              <details className="field-section">
+                <summary>Project cost estimate</summary>
+                <PricingSummary coverage={pricing} />
+                {pricedTools.length > 0 && <p className="small-note">
+                  {money(pricedTools.reduce((total, row) => total + (row.total ?? 0), 0))} estimated for tools.
+                </p>}
+              </details>
               <button
                 className="button secondary full"
                 onClick={() =>
@@ -5261,10 +5245,13 @@ export function App() {
                 <ExternalLink size={14} />
                 Prepare {retailerName(project.retailer)} list
               </button>
-              <p className="small-note">
-                This CSV is a shopping handoff. Direct import into Home Depot
-                Project Planning is not connected.
-              </p>
+              <div className="materials-store-actions">
+                <button className="text-button" onClick={() => {
+                  setInventoryTarget(undefined);
+                  setModal("inventory");
+                }}>Record store snapshot</button>
+                <button className="text-button" onClick={() => setModal("catalog")}>Review product references</button>
+              </div>
             </>
           )}
           {returnToPreparation && ["part", "materials", "tools", "checks"].includes(panel) && (
@@ -6123,11 +6110,6 @@ export function App() {
                             })}
                           </ul>
                         )}
-                        <p>
-                          {preview.impact.incompleteEstimate
-                            ? "Stock subtotal incomplete: some materials are unpriced or parts exceed the modeled stock."
-                            : `Priced stock subtotal: ${money(preview.impact.costBefore)} → ${money(preview.impact.costAfter)} (example/snapshot prices; supplies and other costs excluded)`}
-                        </p>
                         {preview.impact.findings.slice(0, 3).map((f) => (
                           <p key={f.id}>
                             <AlertTriangle size={12} />

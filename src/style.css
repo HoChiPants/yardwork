@@ -1430,11 +1430,24 @@ small {
   font-size: 9px;
   color: #bf7756;
 }
-.bom-row > a {
+.bom-row .stock-store-details {
+  color: var(--ink, #33392e);
+}
+.stock-store-details > small {
+  display: block;
+  margin-block: 5px;
+}
+.stock-store-details > a {
   font-size: 9px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
+}
+.materials-store-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 10px;
 }
 .bom-row details {
   width: 100%;

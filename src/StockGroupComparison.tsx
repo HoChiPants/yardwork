@@ -5,8 +5,6 @@ import { previewGroupStockReplacement, stockReplacementGroup } from "./partStock
 import { purchaseUnitLabel } from "./purchaseUnits";
 import { reviewedOfferForMaterial } from "./retailerCatalog";
 
-const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
-
 export function StockGroupComparison({
   project,
   source,
@@ -38,7 +36,6 @@ export function StockGroupComparison({
   const after = purchase?.reduce((total, row) => total + row.after, 0);
   const snapshot = preview?.result?.snapshot;
   const length = preview?.result?.purchasedLength;
-  const cost = preview?.result?.observedCost;
   const needed = purchase?.find(({ id }) => id === alternate?.id)?.after ?? 0;
   return (
     <details className="field-section stock-group-comparison">
@@ -50,7 +47,7 @@ export function StockGroupComparison({
       <label className="field">
         Alternate stock
         <select value={alternate?.id ?? ""} onChange={(event) => setSelection(event.target.value)}>
-          <option value="">Choose a Home Depot product</option>
+          <option value="">Choose a stock size or grade</option>
           {group.options.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
         </select>
       </label>
@@ -60,9 +57,6 @@ export function StockGroupComparison({
         <>
           <p><strong>Affected lines · {before} → {after} {purchaseUnitLabel(alternate.unit, after)} to buy</strong></p>
           {length && <p className="small-note">Total board length to buy · {formatStockLength(length.before)} → {formatStockLength(length.after)}</p>}
-          {cost && cost.before !== null && cost.after !== null && (
-            <p className="small-note">Observed subtotal for affected lines · {currency.format(cost.before)} → {currency.format(cost.after)}</p>
-          )}
           <ul aria-label="Stock purchase changes">
             {purchase.map(({ id, before, after }) => (
               <li key={id}>{material(id).name} · {before} → {after} {purchaseUnitLabel(material(id).unit, after)} to buy</li>
@@ -70,7 +64,7 @@ export function StockGroupComparison({
           </ul>
           <p className="small-note">
             {snapshot
-              ? `Store ${snapshot.store}, ZIP ${snapshot.zip} snapshot · ${snapshot.available} available · ${needed} needed · ${currency.format(snapshot.price)} per ${alternate.unit}`
+              ? `Store ${snapshot.store}, ZIP ${snapshot.zip} snapshot · ${snapshot.available} available · ${needed} needed`
               : "Current store availability unverified"}
           </p>
           <button type="button" className="text-button" onClick={() => onRecordSnapshot(alternate.id)}>

@@ -3889,6 +3889,13 @@ small {
 .foam-map-remnant { fill: #f8f8f3; stroke: #676e60; stroke-dasharray: 4 2; }
 .foam-map-origin { fill: #334733; }
 .rim-foam-cut-map text { fill: #273c26; font-weight: 650; }
+.rim-foam-record-form {
+  padding: 10px;
+  border-radius: 6px;
+  background: #fffefa;
+}
+.rim-foam-record-form legend,
+.rim-foam-record-form .rim-seal-check { color: #34432d; }
 @media print {
   .rim-foam-cut-map svg { max-height: 200px; print-color-adjust: exact; }
 }

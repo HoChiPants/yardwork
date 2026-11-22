@@ -1,6 +1,8 @@
 # Project format and recovery
 
-New exports use **format 126**. Yardwork reads valid formats 1–125 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 127**. Yardwork reads valid formats 1–126 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 127 adds recorded rim foam cuts with the labeled physical source, cut map, cutting loss and measured remnants. A completed cut covers a bay while the saved blank dimensions still fit its measured plan. Spent sources remain in the cut history and each saved remnant receives its own Cut pool ID.
 
 Format 126 adds a project-level `rimFoamOffcuts` pool of labeled, measured 2 in foam rectangles. Rim plans can reserve several of these sources by ID. Earlier inline offcut measurements remain attached to their original plans.
 

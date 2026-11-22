@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import type { Project } from "./model";
 import { rimFoam } from "./rimAirSealReference";
-import { foamBlankSize, type reviewRimAirSeals } from "./rimAirSeals";
+import { foamBlankSize, uncutRimFoamOffcuts, type reviewRimAirSeals } from "./rimAirSeals";
 import { addRimFoamOffcut, removeRimFoamOffcut } from "./rimFoamOffcuts";
 
 export function FoamOffcutPool({ project, review, onChange, onPlan }: {
@@ -16,7 +16,10 @@ export function FoamOffcutPool({ project, review, onChange, onPlan }: {
   const [width, setWidth] = useState(NaN);
   const [length, setLength] = useState(NaN);
   const [error, setError] = useState("");
-  const stock = project.rimFoamOffcuts ?? [];
+  const stock = uncutRimFoamOffcuts(project);
+  const records = project.rimFoamCutRecords ?? [];
+  const measuredFrom = new Map(records.flatMap(({ label, remnants }) =>
+    remnants.map(({ id, slot }) => [id, `${label} · R${slot + 1}`] as const)));
 
   function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,6 +52,7 @@ export function FoamOffcutPool({ project, review, onChange, onPlan }: {
       return <article key={id} className="cut-pool-row">
         <strong>{name}</strong>
         <p>{foamBlankSize(width, length)} · 2 in foam</p>
+        {measuredFrom.has(id) && <p className="small-note">Cut from {measuredFrom.get(id)}</p>}
         {reservation ? <small>{reservation.name} · {reservation.issues.length ? "Review reservation"
           : planned ? `${planned} planned ${planned === 1 ? "cut" : "cuts"}` : "Reserved · unused in the current layout"}</small> :
           <button type="button" className="text-button" onClick={() => remove(id)}>
@@ -71,6 +75,14 @@ export function FoamOffcutPool({ project, review, onChange, onPlan }: {
       <button type="button" className="text-button" onClick={() => setAdding(true)}>Add foam offcut</button>
       {onPlan && stock.length > 0 && <button className="text-button" type="button" onClick={onPlan}>Plan rim cuts</button>}
     </div>}
+    {records.length > 0 && <details>
+      <summary>Recorded foam cuts ({records.length})</summary>
+      {records.map(({ id, label, stock, remnants }) => <article key={id} className="cut-pool-row">
+        <strong>{label}</strong>
+        <p>{stock.placements.length} {stock.placements.length === 1 ? "blank" : "blanks"} cut</p>
+        {remnants.map((remnant) => <small key={remnant.id}>{remnant.label} · {foamBlankSize(remnant.width, remnant.length)}</small>)}
+      </article>)}
+    </details>}
     {error && <p className="form-error" role="alert">{error}</p>}
   </details>;
 }

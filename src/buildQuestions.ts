@@ -33,7 +33,7 @@ import { fieldTreatmentScope, fieldTreatmentTitle, treatedWoodCuts } from "./tre
 import { groupedMaterials, materialFamilyVariants } from "./materialGroups";
 import { fittingBoardOffcuts } from "./offcutAssignment";
 import { normalizeIdeaText } from "./ideaEdits";
-import { reviewRimAirSeals, rimAirSealKey, rimEdgeSealEstimate } from "./rimAirSeals";
+import { reviewRimAirSeals, rimAirSealKey, rimEdgeSealEstimate, uncutRimFoamOffcuts } from "./rimAirSeals";
 import { rimSealScope } from "./rimAirSealReference";
 import { modeledRoofValleys } from "./roofValleys";
 import { valleyScope } from "./roofValleyReference";
@@ -721,16 +721,21 @@ export function answerBuildQuestion(
       const quantities = takeoff?.issue ?? (takeoff?.required ? `The saved trial coverage estimates ${takeoff.required} ${takeoff.required === 1 ? "can" : "cans"} of edge sealant.`
         : "Enter matching trial coverage to estimate the sealant.");
       const pooled = review.scraps.filter(({ poolOffcutId }) => poolOffcutId).length;
-      const pooledStock = project.rimFoamOffcuts?.length ?? 0;
+      const pooledStock = uncutRimFoamOffcuts(project).length;
+      const completed = review.completed.size;
+      const savedCuts = completed && !review.needsReview
+        ? ` The cut records cover ${completed} ${completed === 1 ? "blank" : "blanks"}.` : "";
       const foamReuse = pooled && !review.needsReview
         ? ` The saved layouts use ${pooled} Cut pool ${pooled === 1 ? "offcut" : "offcuts"} and ${review.sheets.length} new foam ${review.sheets.length === 1 ? "sheet" : "sheets"}.`
+        : completed && !review.needsReview
+          ? ` The remaining layouts need ${review.sheets.length} new foam ${review.sheets.length === 1 ? "sheet" : "sheets"}.`
         : pooledStock
           ? ` Cut pool has ${pooledStock} measured foam ${pooledStock === 1 ? "offcut" : "offcuts"}. Select the pieces in the rim planner to check which cuts fit.`
           : "";
       return {
         title: "Air-seal the floor rim",
         detail: floor
-          ? `Select the rim and measure the openings with continuous backing. Check the foam fit, then review the shared sheet cuts and any reusable offcuts. ${quantities}${foamReuse}`
+          ? `Select the rim and measure the openings with continuous backing. Check the foam fit, then review the shared sheet cuts and any reusable offcuts. ${quantities}${savedCuts}${foamReuse}`
           : "Add a Floor & foundation assembly so Yardwork can identify the actual rims and joist bays.",
         rows: review.rows.map((row) => {
           const { plan, name, issues, cuts } = row;

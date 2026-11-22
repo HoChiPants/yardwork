@@ -197,7 +197,7 @@ export function homeDepotPurchaseNeeds(
     include(bottomPlateSealant.id, "Clear bottom plate bead runs by work session", required || null,
       required ? undefined : "Review changed or interrupted seams to establish cartridge use.");
   }
-  if (project.rimAirSeals?.length) {
+  if (project.rimAirSeals?.length || project.rimFoamCutRecords?.length) {
     const { sheets, needsReview, edgeSealant } = reviewRimAirSeals(project);
     include(rimFoam.id, rimFoamPurchasePurpose, needsReview ? null : sheets.length,
       needsReview ? "Remeasure changed or blocked bays before choosing the sheet quantity." : undefined);

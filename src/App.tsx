@@ -31,7 +31,8 @@ import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReferen
 import { RoofVentFlashingPanel } from "./RoofVentFlashingPanel";
 import { removeRoofVentFlashing, roofVentFlashingGuideLines, roofVentFlashingReviews, saveRoofVentFlashing } from "./roofVentFlashing";
 import { oateyRoofVentBoot, roofVentFlashingScope } from "./roofVentFlashingReference";
-import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey, removeRimAirSeal, saveRimAirSeal } from "./rimAirSeals";
+import { reviewRimAirSeals, rimAirSealGuideLines, rimAirSealKey, removeRimAirSeal, saveRimAirSeal, uncutRimFoamOffcuts } from "./rimAirSeals";
+import { recordRimFoamCuts } from "./rimFoamOffcuts";
 import { RimFoamCutMap } from "./RimFoamCutMap";
 import { rimEdgeSealant, rimFoam, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import type { RimSide } from "./rimAirSealSchema";
@@ -2870,7 +2871,7 @@ export function App() {
             <Layers3 size={14} />
             Assemblies
           </button>
-          <button className={library === "cuts" ? "active" : ""} onClick={() => setLibrary("cuts")}><Scissors size={14}/>Cut pool ({offcutCount + (project.rimFoamOffcuts?.length ?? 0)})</button>
+          <button className={library === "cuts" ? "active" : ""} onClick={() => setLibrary("cuts")}><Scissors size={14}/>Cut pool ({offcutCount + uncutRimFoamOffcuts(project).length})</button>
         </div>
         {library === "cuts" ? <CutPool project={project} onInspect={inspectStock} onReuse={reuseOffcut}
           rimReview={rimSealReview} onFoamChange={change}
@@ -5748,6 +5749,10 @@ export function App() {
                 notify("Rim air seal saved. The foam cuts are in the build guide.");
               })}
               onRemove={(target) => safe(() => change((live) => removeRimAirSeal(live, target)))}
+              onRecord={(source, label, scraps) => {
+                change((live) => recordRimFoamCuts(live, source, label, scraps));
+                notify(scraps.length ? "Cuts recorded. Measured remnants are in Cut pool." : "Foam cuts recorded.");
+              }}
               onShow={(target) => {
                 setShownRimSeal({ projectId: project.id, key: rimAirSealKey(target) });
                 setPanel("sections");
@@ -7218,7 +7223,7 @@ export function App() {
             <h2>Floor rim foam and air seals</h2>
             <p>{rimSealScope}</p>
             <ul>{printRimSeals.map((line, index) => <li key={index}>{line}</li>)}</ul>
-            {[...printRimSealReview.scraps, ...printRimSealReview.sheets].map((source) =>
+            {[...printRimSealReview.scraps, ...printRimSealReview.sheets, ...printRimSealReview.recordedMaps].map((source) =>
               <RimFoamCutMap key={source.label} source={source} />)}
             <p><a href={rimSealGuide}>PNNL field guide</a>{" · "}<a href={rimFoam.manufacturer}>Owens Corning instructions</a>
               {exportGuide.rimAirSeals?.some(({ input }) => input.edgeSeal) && <>{" · "}

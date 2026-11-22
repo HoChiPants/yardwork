@@ -64,11 +64,14 @@ function hingeStockInputs(project: Project) {
 }
 function rimFoamGuideScope(project: Project) {
   const plans = project.rimAirSeals?.filter(({ input }) => input.poolOffcutIds?.length);
-  if (!plans?.length) return {};
-  const ids = new Set(plans.flatMap(({ input }) => input.poolOffcutIds ?? []));
+  const records = project.rimFoamCutRecords;
+  const ids = new Set(plans?.flatMap(({ input }) => input.poolOffcutIds ?? []));
   return {
-    rimFoamPlans: plans,
-    rimFoamOffcuts: (project.rimFoamOffcuts ?? []).filter(({ id }) => ids.has(id)),
+    ...(plans?.length ? {
+      rimFoamPlans: plans,
+      rimFoamOffcuts: (project.rimFoamOffcuts ?? []).filter(({ id }) => ids.has(id)),
+    } : {}),
+    ...(records?.length ? { rimFoamCutRecords: records } : {}),
   };
 }
 function preparationScope(project: Project) {

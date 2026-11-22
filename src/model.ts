@@ -5,7 +5,7 @@ import { pureBondCasework } from "./homeDepotCaseworkReference";
 import { homeDepotFraming } from "./homeDepotFramingReference";
 import { baseBoardDepth, baseBoardIds, baseBoards, baseMemberLengths, baseMembers, floorBaseJoistCenters, floorBaseRoles, homeDepotTreatedLumber, treatedLumberProductId } from "./homeDepotTreatedLumber";
 import { floorHangerPlanSchema } from "./floorHangerSchema";
-import { rimAirSealPlansSchema, rimFoamOffcutPoolSchema } from "./rimAirSealSchema";
+import { rimAirSealPlansSchema, rimFoamCutRecordsSchema, rimFoamOffcutPoolSchema } from "./rimAirSealSchema";
 import { roofValleysSchema } from "./roofValleySchema";
 import { roofVentFlashingsSchema } from "./roofVentFlashingSchema";
 import { greenhouseFoundationSchema } from "./greenhouseFoundationSchema";
@@ -482,6 +482,7 @@ export const currentProjectSchema = z
     schemaVersion: z.literal(PROJECT_FORMAT_VERSION),
     rimAirSeals: rimAirSealPlansSchema.optional(),
     rimFoamOffcuts: rimFoamOffcutPoolSchema.optional(),
+    rimFoamCutRecords: rimFoamCutRecordsSchema.optional(),
     roofValleys: roofValleysSchema.optional(),
     roofVentFlashings: roofVentFlashingsSchema.optional(),
     id,

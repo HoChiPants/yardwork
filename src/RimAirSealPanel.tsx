@@ -1,13 +1,16 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { LengthInput } from "./LengthInput";
 import { RimFoamCutMap } from "./RimFoamCutMap";
+import { RimFoamCutRecordForm } from "./RimFoamCutRecordForm";
 import { formatStockLength } from "./measurement";
 import type { Project } from "./model";
 import { rimEdgeSealant, rimFoam, rimSealEdges, rimSealGuide, rimSealScope } from "./rimAirSealReference";
 import { rimAirSealInputSchema, type RimAirSealInput, type RimSide } from "./rimAirSealSchema";
 import {
-  foamBlankSize, reviewRimAirSeals, rimAirSealFrame, rimAirSealKey, rimEdgeSealEstimate, saveRimAirSeal,
+  foamBlankSize, reviewRimAirSeals, rimAirSealFrame, rimAirSealKey, rimEdgeSealEstimate, rimFoamSourceKey,
+  saveRimAirSeal, uncutRimFoamOffcuts, type RimFoamSheet,
 } from "./rimAirSeals";
+import type { MeasuredFoamRemnant } from "./rimFoamOffcuts";
 
 type Target = Pick<RimAirSealInput, "sectionId" | "side">;
 type Props = {
@@ -17,6 +20,7 @@ type Props = {
   onSave: (input: RimAirSealInput) => void;
   onRemove: (target: Target) => void;
   onShow: (target: Target) => void;
+  onRecord: (source: RimFoamSheet, label: string, remnants: MeasuredFoamRemnant[]) => void;
 };
 
 export function RimAirSealPanel({ project, initialSectionId, initialSide, ...actions }: Props) {
@@ -32,7 +36,7 @@ export function RimAirSealPanel({ project, initialSectionId, initialSide, ...act
   const saved = useMemo(() => reviewRimAirSeals(project), [project]);
   const record = saved.rows.find(({ plan }) => rimAirSealKey(plan.input) === key);
   const bayIds = new Set(record?.issues.length ? [] : record?.cuts.map(({ id }) => id));
-  const sources = [...saved.scraps, ...saved.sheets].filter(({ stock }) =>
+  const sources = [...saved.scraps, ...saved.sheets, ...saved.recordedMaps].filter(({ stock }) =>
     stock.placements.some(({ id }) => bayIds.has(id)));
   return <>
     <h2 id="modal-title">Plan rim air sealing</h2>
@@ -69,7 +73,10 @@ export function RimAirSealPanel({ project, initialSectionId, initialSide, ...act
           </div>
           {sources.length > 0 && <details>
             <summary>Saved foam cut maps</summary>
-            {sources.map((source) => <RimFoamCutMap key={source.label} source={source} showOrder />)}
+            {sources.map((source) => <div key={rimFoamSourceKey(source)}>
+              <RimFoamCutMap source={source} showOrder={!("record" in source)} />
+              {!("record" in source) && <RimFoamCutRecordForm source={source} onRecord={actions.onRecord} />}
+            </div>)}
           </details>}
         </div>
       </div>}
@@ -107,6 +114,9 @@ function RimSealMeasurements({ project, target, original, onSave }: {
   const [poolOffcutIds, setPoolOffcutIds] = useState(original?.poolOffcutIds ?? []);
   const [edgeSeal, setEdgeSeal] = useState(original?.edgeSeal);
   const [confirmed, setConfirmed] = useState(false);
+  const availableFoam = uncutRimFoamOffcuts(project);
+  const availableFoamIds = new Set(availableFoam.map(({ id }) => id));
+  const foamChoices = (project.rimFoamOffcuts ?? []).filter(({ id }) => availableFoamIds.has(id) || poolOffcutIds.includes(id));
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<{ input: RimAirSealInput; source: Project; result: ReturnType<typeof reviewRimAirSeals> } | null>(null);
   const available = frame.bays.filter(({ issue }) => !issue);
@@ -174,7 +184,7 @@ function RimSealMeasurements({ project, target, original, onSave }: {
         </div>;
       })}
     </fieldset>
-    {(offcut || !project.rimFoamOffcuts?.length) && <label className="rim-seal-check">
+    {(offcut || !availableFoam.length) && <label className="rim-seal-check">
       <input type="checkbox" checked={!!offcut} onChange={(event) =>
         setOffcut(event.target.checked ? { label: "", width: NaN, length: NaN } : undefined)} />
       <span>Try a measured 2 in foam offcut first</span>
@@ -186,17 +196,18 @@ function RimSealMeasurements({ project, target, original, onSave }: {
       <LengthInput label="Offcut width" value={offcut.width} max={rimFoam.width} onChange={(width) => setOffcut({ ...offcut, width })} />
       <LengthInput label="Offcut length" value={offcut.length} max={rimFoam.length} onChange={(length) => setOffcut({ ...offcut, length })} />
     </div>}
-    {((project.rimFoamOffcuts?.length ?? 0) > 0 || poolOffcutIds.length > 0) && <fieldset>
+    {(foamChoices.length > 0 || poolOffcutIds.length > 0) && <fieldset>
       <legend>Foam offcuts from Cut pool</legend>
-      {(project.rimFoamOffcuts ?? []).map(({ id, label, width, length }) => {
+      {foamChoices.map(({ id, label, width, length }) => {
         const checked = poolOffcutIds.includes(id);
         const reserved = project.rimAirSeals?.some(({ input }) =>
           rimAirSealKey(input) !== rimAirSealKey(target) && input.poolOffcutIds?.includes(id));
         return <label className="rim-seal-check" key={id}>
           <input type="checkbox" aria-label={`Include foam offcut ${label}`} checked={checked}
-            disabled={reserved && !checked} onChange={(event) => setPoolOffcutIds(event.target.checked
+            disabled={!availableFoamIds.has(id) || (reserved && !checked)} onChange={(event) => setPoolOffcutIds(event.target.checked
               ? [...poolOffcutIds, id] : poolOffcutIds.filter((entry) => entry !== id))} />
-          <span>{label} · {foamBlankSize(width, length)}{reserved && " · reserved for another rim"}</span>
+          <span>{label} · {foamBlankSize(width, length)}{!availableFoamIds.has(id) ? " · cut recorded"
+            : reserved && " · reserved for another rim"}</span>
         </label>;
       })}
       {poolOffcutIds.filter((id) => !project.rimFoamOffcuts?.some((source) => source.id === id)).map((id) =>

@@ -7,7 +7,7 @@ import { orientedStockSize } from "./stockAxes";
 import { workshopAsset } from "./workshopTransport";
 import { isDrywall } from "./drywallReference";
 import { FoamOffcutPool } from "./FoamOffcutPool";
-import type { reviewRimAirSeals } from "./rimAirSeals";
+import { uncutRimFoamOffcuts, type reviewRimAirSeals } from "./rimAirSeals";
 export function CutPool({
   project,
   onInspect,
@@ -37,7 +37,7 @@ export function CutPool({
           pieceThroughOpenings(piece).length),
     );
   const pieces = view === "scrap" ? scrap : used;
-  const reusableCount = scrap.length + (project.rimFoamOffcuts?.length ?? 0);
+  const reusableCount = scrap.length + uncutRimFoamOffcuts(project).length;
   const planned = new Set(project.plannedCutSources?.map(({ sourceId }) => sourceId));
   return (
     <section className="cut-pool" aria-label="Cut pool">

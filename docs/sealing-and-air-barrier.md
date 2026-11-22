@@ -61,6 +61,10 @@ Ask **“Can I reuse my foam offcuts for the rim?”** to open the planner and c
 
 Open a source in the cut preview or choose **Saved foam cut maps** to see the marked corner, offsets, labeled blanks, and expected leftovers for that sheet or offcut. The same labels appear in the cut order and printable build guide. Mark a square corner on the physical stock, confirm the cut allowance, then measure and label the leftovers before logging them in Cut pool.
 
+After cutting and checking the blanks, open **Saved foam cut maps → Record cuts and scraps** for the source. Check each remnant you are keeping and enter its actual dimensions, in the orientation shown on the map, along with its physical label. The guide retains the source map and the measured pieces become available in Cut pool for another layout. Finished blanks are counted against the saved bay dimensions. If those dimensions change, review the affected blank before cutting again. Follow the field checks for dry fit, backing and edge seals. [PNNL band-joist retrofit detail](https://basc.pnnl.gov/resource-guides/rigid-foam-board-insulation-existing-band-joists)
+
+The [recorded-remnant practice plan](../public/examples/air-sealing/rim-recorded-remnant.yardwork.json) carries simulated measurements for a back-rim cut and plans one front-rim insert from the remnant. Its guide shows the original foam map, the measured piece and the remaining cut order.
+
 ## Wood bottom plate on subfloor
 
 Open **Sections → Seal a bottom plate**, then choose the actual long side. Measure its gap and fill depth and confirm the exposed dry wood before previewing a bead. Blue marks show modeled backing and bead space. Orange marks show interruptions to review in the field. Leave required subfloor joint spacing and review how the air barrier crosses the joint. Seal and inspect before finishes cover the work. [PNNL bottom plates](https://basc.pnnl.gov/diy-guides/air-seal-bottom-plates) · [APA flooring and spacing](https://www.apawood.org/buildertips/pdfs/Q300.pdf)

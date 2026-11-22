@@ -10,7 +10,7 @@ import { maxSupplyQuantity } from "./supplySchema";
 import { pieceThroughOpenings } from "./throughOpenings";
 import {
   rimAirSealInputSchema, rimAirSealPlansSchema, rimFoamLabelKey,
-  type RimAirSealInput, type RimAirSealPlan, type RimFoamOffcut, type RimSide,
+  type RimAirSealInput, type RimAirSealPlan, type RimFoamCutRecord, type RimFoamOffcut, type RimSide,
 } from "./rimAirSealSchema";
 import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 
@@ -187,12 +187,13 @@ export function checkRimAirSeal(project: Project, input: RimAirSealInput, frame 
   return { name, rimId: rim.id, signature, issues, cuts };
 }
 
-type FoamSheet = {
+export type RimFoamSheet = {
   label: string;
   kerf: number;
   stock: StockPlan;
   order: ReturnType<typeof foamSheetCutOrder>;
   poolOffcutId?: string;
+  offcutLabel?: string;
 };
 type ReviewedRimSeal = RimSealRow & { plan: RimAirSealPlan; pooledOffcuts: RimFoamOffcut[] };
 
@@ -200,30 +201,62 @@ function splitFoamStock(cuts: RimSealCut[], width: number, length: number, kerf:
   return packRectangles(cuts, width, length, { kerf, checkEdgeCuts: true });
 }
 
-function createSheet(label: string, stock: StockPlan, kerf: number, names: Map<string, string>): FoamSheet {
+function createSheet(label: string, stock: StockPlan, kerf: number, names: Map<string, string>): RimFoamSheet {
   return { label, kerf, stock, order: foamSheetCutOrder(stock, kerf, (id) => names.get(id) ?? id) };
 }
 
-function foamCuts(rows: ReviewedRimSeal[]) {
-  const sheets: FoamSheet[] = [];
-  const scraps: FoamSheet[] = [];
+export function rimFoamSourceKey({ label, poolOffcutId, offcutLabel, stock, kerf }: RimFoamSheet) {
+  return JSON.stringify([label, poolOffcutId, offcutLabel, stock, kerf]);
+}
+
+export function uncutRimFoamOffcuts(project: Project) {
+  const consumed = new Set((project.rimFoamCutRecords ?? []).map(({ poolOffcutId }) => poolOffcutId));
+  return (project.rimFoamOffcuts ?? []).filter(({ id }) => !consumed.has(id));
+}
+
+function foamCuts(rows: ReviewedRimSeal[], records: RimFoamCutRecord[], consumed: RimFoamCutRecord[]) {
+  const sheets: RimFoamSheet[] = [];
+  const scraps: RimFoamSheet[] = [];
   const gaps: { cut: RimSealCut; issue: string }[] = [];
   const unusedOffcuts: string[] = [];
+  const recorded = new Map<string, StockPlan["placements"]>();
+  for (const { stock } of records) {
+    for (const cut of stock.placements) {
+      const existing = recorded.get(cut.id) ?? [];
+      existing.push(cut);
+      recorded.set(cut.id, existing);
+    }
+  }
+  const consumedLabels = new Set(consumed.map(({ label }) => rimFoamLabelKey(label)));
+  const consumedIds = new Set(consumed.flatMap(({ poolOffcutId }) => poolOffcutId ? [poolOffcutId] : []));
+  const completed = new Set<string>();
+  const changedBlanks: string[] = [];
   const newStock = new Map<number, RimSealCut[]>();
   const names = new Map(rows.flatMap(({ cuts }) => cuts.map(({ id, name }) => [id, name])));
   for (const row of rows) {
     if (row.issues.length) continue;
     const { kerf, offcut } = row.plan.input;
-    let remaining = row.cuts;
+    let remaining = row.cuts.filter((cut) => {
+      const earlier = recorded.get(cut.id);
+      if (earlier?.some(({ width, length, rotated }) =>
+        Math.abs(cut.width - (rotated ? length : width)) <= epsilon &&
+        Math.abs(cut.length - (rotated ? width : length)) <= epsilon)) {
+        completed.add(cut.id);
+        return false;
+      }
+      if (earlier) changedBlanks.push(cut.name);
+      return true;
+    });
     const available = [
       ...(offcut ? [{ ...offcut, id: undefined }] : []),
       ...row.pooledOffcuts,
-    ].sort((a, b) => a.width * a.length - b.width * b.length || a.label.localeCompare(b.label, "en-US"));
+    ].filter(({ id, label }) => !(id && consumedIds.has(id)) && !consumedLabels.has(rimFoamLabelKey(label)))
+      .sort((a, b) => a.width * a.length - b.width * b.length || a.label.localeCompare(b.label, "en-US"));
     for (const source of available) {
       const { plans } = splitFoamStock(remaining, source.width, source.length, kerf);
       const candidate = plans[0] && createSheet(`Offcut ${source.label}`, plans[0], kerf, names);
       if (candidate && !candidate.order.review) {
-        scraps.push({ ...candidate, ...(source.id && { poolOffcutId: source.id }) });
+        scraps.push({ ...candidate, offcutLabel: source.label, ...(source.id && { poolOffcutId: source.id }) });
         const used = new Set(candidate.stock.placements.map(({ id }) => id));
         remaining = remaining.filter(({ id }) => !used.has(id));
       } else unusedOffcuts.push(source.label);
@@ -243,7 +276,7 @@ function foamCuts(rows: ReviewedRimSeal[]) {
       cut, issue: "This blank needs a different sheet layout, board size or cutting allowance.",
     });
   }
-  return { sheets, scraps, gaps, unusedOffcuts };
+  return { sheets, scraps, gaps, unusedOffcuts, completed, changedBlanks };
 }
 
 export function rimEdgeSealEstimate({ plan, cuts, issues }: ReviewedRimSeal) {
@@ -281,6 +314,13 @@ function rimEdgeSealTakeoff(rows: ReviewedRimSeal[]) {
 
 export function reviewRimAirSeals(project: Project) {
   const plans = project.rimAirSeals ?? [];
+  const records = project.rimFoamCutRecords ?? [];
+  const recordedSources = new Map(records.map((record) => [rimFoamLabelKey(record.label), record]));
+  const recordedMaps = records.map((record) => ({
+    ...createSheet(`Cut ${record.label}`, record.stock, record.kerf,
+      new Map(record.stock.placements.map(({ id, name }) => [id, name]))),
+    record,
+  }));
   const pool = new Map((project.rimFoamOffcuts ?? []).map((offcut) => [offcut.id, offcut]));
   const poolLabels = new Set([...pool.values()].map(({ label }) => rimFoamLabelKey(label)));
   const labels = new Map<string, number>();
@@ -297,12 +337,19 @@ export function reviewRimAirSeals(project: Project) {
     if (!row.issues.length && row.signature !== plan.frame)
       row.issues.push("The modeled opening moved or changed. Remeasure before cutting or ordering stock.");
     const { offcut, poolOffcutIds } = plan.input;
+    function checkCompletedSource(label: string, source: "inline" | "pool", id?: string) {
+      const record = recordedSources.get(rimFoamLabelKey(label));
+      if (record && (record.source !== source || record.poolOffcutId !== id ||
+        !record.stock.placements.some((cut) => cut.id.startsWith(rimAirSealKey(plan.input) + "/"))))
+        row.issues.push(`Foam ${label} has already been cut. Choose an available piece from Cut pool.`);
+    }
     if (offcut) {
       const label = rimFoamLabelKey(offcut.label);
       if ((labels.get(label) ?? 0) > 1)
         row.issues.push(`Offcut ${offcut.label} is assigned twice. Use a different measured offcut.`);
       if (poolLabels.has(label))
         row.issues.push(`Offcut ${offcut.label} is also in Cut pool. Use its pool record instead of entering it again.`);
+      checkCompletedSource(offcut.label, "inline");
     }
     const pooledOffcuts = (poolOffcutIds ?? []).flatMap((id) => {
       const source = pool.get(id);
@@ -314,14 +361,17 @@ export function reviewRimAirSeals(project: Project) {
         row.issues.push(`Foam offcut ${source.label} is reserved for more than one rim. Review its use before cutting.`);
       if (labels.has(rimFoamLabelKey(source.label)))
         row.issues.push(`Foam offcut ${source.label} also has a separately entered reservation. Review its use before cutting.`);
+      checkCompletedSource(source.label, "pool", id);
       return [source];
     });
     return { ...row, plan, pooledOffcuts };
   });
-  const first = foamCuts(rows);
+  const validMaps = recordedMaps.filter(({ order }) => !order.review);
+  const validRecords = validMaps.map(({ record }) => record);
+  const first = foamCuts(rows, validRecords, records);
   if (!first.gaps.length) return {
-    rows, ...first, edgeSealant: rimEdgeSealTakeoff(rows),
-    needsReview: rows.some(({ issues }) => issues.length > 0),
+    rows, ...first, recordedMaps: validMaps, edgeSealant: rimEdgeSealTakeoff(rows),
+    needsReview: rows.some(({ issues }) => issues.length > 0) || validRecords.length < records.length,
   };
   const unavailable = new Map(first.gaps.map(({ cut, issue }) => [cut.id, issue]));
   for (const row of rows) {
@@ -330,7 +380,7 @@ export function reviewRimAirSeals(project: Project) {
       if (issue) row.issues.push(`${cut.name}. ${issue}`);
     }
   }
-  return { rows, ...foamCuts(rows), edgeSealant: rimEdgeSealTakeoff(rows), needsReview: true };
+  return { rows, ...foamCuts(rows, validRecords, records), recordedMaps: validMaps, edgeSealant: rimEdgeSealTakeoff(rows), needsReview: true };
 }
 
 export function saveRimAirSeal(project: Project, measurements: RimAirSealInput) {
@@ -360,7 +410,7 @@ export function removeRimAirSeal(project: Project, input: Pick<RimAirSealInput, 
 export const foamBlankSize = (width: number, height: number) => `${formatStockLength(width)} × ${formatStockLength(height)}`;
 
 export function rimAirSealGuideLines(review: ReturnType<typeof reviewRimAirSeals>) {
-  if (!review.rows.length) return [];
+  if (!review.rows.length && !review.recordedMaps.length) return [];
   return [
     ...review.rows.flatMap((row) => {
       const { name, plan, issues, cuts } = row;
@@ -368,10 +418,15 @@ export function rimAirSealGuideLines(review: ReturnType<typeof reviewRimAirSeals
       return [
         `${name} · ${formatStockLength(plan.input.gap)} clearance at each edge.`,
         ...issues.map((issue) => `Needs review. ${issue}`),
-        ...(!issues.length ? cuts.map((cut) => `${cut.name} · cut ${foamBlankSize(cut.width, cut.length)}. Dry-fit and seal the four edges (${formatStockLength(cut.perimeter)} measured perimeter).`) : []),
+        ...(!issues.length ? cuts.map((cut) => `${cut.name} · ${review.completed.has(cut.id) ? "recorded cut" : "cut"} ${foamBlankSize(cut.width, cut.length)}. Dry-fit and seal the four edges (${formatStockLength(cut.perimeter)} measured perimeter).`) : []),
         ...(edge ? [`After dry-fitting, seal ${formatStockLength(edge.run)} at ${formatStockLength(edge.depth)} fill depth. Trial coverage was ${formatStockLength(edge.trialLengthPerCan)} per can · ${edge.session}.`] : []),
       ];
     }),
+    ...review.changedBlanks.map((name) => `${name} · a recorded blank has different dimensions. Review the new cut before proceeding.`),
+    ...review.recordedMaps.flatMap(({ record, label }) => [
+      `${label} · ${record.stock.placements.length} ${record.stock.placements.length === 1 ? "blank" : "blanks"} recorded.`,
+      ...record.remnants.map(({ label, slot, width, length }) => `R${slot + 1} · ${label} measured at ${foamBlankSize(width, length)} and recorded in Cut pool.`),
+    ]),
     ...[...review.scraps, ...review.sheets].flatMap(({ label, stock, order, kerf }) => [
       `${label} · ${foamBlankSize(stock.width, stock.length)} · ${formatStockLength(kerf)} measured cutting loss.`,
       ...order.steps.filter(Boolean).map((text, index) => `${index + 1}. ${text}`),

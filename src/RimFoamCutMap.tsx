@@ -1,11 +1,12 @@
 import { fitLayoutLabel } from "./layoutLabels";
 import { formatStockLength } from "./measurement";
-import { foamBlankSize, type reviewRimAirSeals } from "./rimAirSeals";
+import { foamBlankSize, type RimFoamSheet } from "./rimAirSeals";
+import type { RimFoamCutRecord } from "./rimAirSealSchema";
 
-type FoamSource = ReturnType<typeof reviewRimAirSeals>["sheets"][number];
+type FoamSource = RimFoamSheet & { record?: RimFoamCutRecord };
 
 export function RimFoamCutMap({ source, showOrder = false }: { source: FoamSource; showOrder?: boolean }) {
-  const { label, stock, order } = source;
+  const { label, stock, order, record } = source;
   const { width, length, placements } = stock;
   const padding = Math.max(width, length) / 30;
   const parts = new Map(placements.map((placement) => [placement.id, placement]));
@@ -20,7 +21,7 @@ export function RimFoamCutMap({ source, showOrder = false }: { source: FoamSourc
     ...order.layout.leftovers.map((box, index) => ({
       ...box,
       tag: `R${index + 1}`,
-      name: "Expected remnant",
+      name: record ? "Original remnant area" : "Expected remnant",
       turned: false,
       remnant: true,
     })),
@@ -56,6 +57,9 @@ export function RimFoamCutMap({ source, showOrder = false }: { source: FoamSourc
           {" · "}{formatStockLength(x)} right, {formatStockLength(y)} down
         </li>)}
       </ul>
+      {record?.remnants.map(({ id, label, slot, width, length }) => <p className="small-note" key={id}>
+        R{slot + 1} · {label} measured at {foamBlankSize(width, length)} and recorded in Cut pool.
+      </p>)}
       {showOrder && <>
         <p><strong>Cut order</strong> · {formatStockLength(source.kerf)} cutting loss</p>
         <ol aria-label={`${label} cut order`}>

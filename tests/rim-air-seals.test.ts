@@ -8,10 +8,10 @@ import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoff
 import { applyCommand, blank, part, projectSchema, type Project } from "../src/model";
 import { rimEdgeSealant, rimFoam } from "../src/rimAirSealReference";
 import type { RimAirSealInput, RimSide } from "../src/rimAirSealSchema";
-import { reviewRimAirSeals, rimAirSealFrame, rimEdgeSealEstimate, saveRimAirSeal } from "../src/rimAirSeals";
+import { removeRimAirSeal, reviewRimAirSeals, rimAirSealFrame, rimEdgeSealEstimate, saveRimAirSeal, uncutRimFoamOffcuts } from "../src/rimAirSeals";
 import { transformSection } from "../src/sections";
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
-import { addRimFoamOffcut, removeRimFoamOffcut } from "../src/rimFoamOffcuts";
+import { addRimFoamOffcut, recordRimFoamCuts, removeRimFoamOffcut } from "../src/rimFoamOffcuts";
 import { addSupply } from "../src/supplies";
 
 function floor() {
@@ -232,4 +232,73 @@ test("foam stock reservations survive reopening and block duplicate physical sou
   const removed = removeRimFoamOffcut(freed, offcut.id);
   assert.equal(removed.rimFoamOffcuts, undefined);
   assert.equal(reviewRimAirSeals(removed).sheets.length, 1);
+});
+
+test("recording a cut retires the parent and makes the measured remnant reusable on another rim", () => {
+  const project = addRimFoamOffcut(floor(), { label: "Foam A", width: 14.25, length: 10 });
+  const [original] = project.rimFoamOffcuts!;
+  const back = measurements(project, "back", [1]);
+  const saved = generateBuildGuide(saveRimAirSeal(project, { ...back, poolOffcutIds: [original.id] }));
+  const [source] = reviewRimAirSeals(saved).scraps;
+  assert.deepEqual(source.order.layout.leftovers, [{ x: 0, y: 4.875, width: 14.25, length: 5.125 }]);
+  assert.throws(() => recordRimFoamCuts(saved, source, "", [
+    { slot: 0, label: "Foam A-R1", width: 14.25, length: 5.25 },
+  ]), /exceeds its rectangle/);
+  assert.throws(() => recordRimFoamCuts(saved, source, "", [
+    { slot: 0, label: "foam a", width: 14.25, length: 5 },
+  ]), /already in use/);
+  const finished = projectSchema.parse(JSON.parse(JSON.stringify(recordRimFoamCuts(saved, source, "", [
+    { slot: 0, label: "Foam A-R1", width: 14.25, length: 5 },
+  ]))));
+  assert.equal(guideIsCurrent(finished), false);
+  assert.equal(reviewRimAirSeals(finished).completed.size, 1);
+  assert.equal(reviewRimAirSeals(finished).sheets.length, 0);
+  assert.match(guideMarkdown(finished), /Foam A-R1 measured at 14\.25 in × 5 in/);
+  const [child] = uncutRimFoamOffcuts(finished);
+  assert.equal(child.label, "Foam A-R1");
+  assert.notEqual(child.id, original.id);
+  assert.throws(() => recordRimFoamCuts(finished, source, "", []), /layout changed or was recorded/);
+  assert.throws(() => removeRimFoamOffcut(finished, original.id), /linked to recorded cuts/);
+  assert.throws(() => saveRimAirSeal(removeRimAirSeal(finished, back), {
+    ...measurements(finished, "front", [1]), poolOffcutIds: [original.id],
+  }), /already been cut/);
+  const front = saveRimAirSeal(finished, { ...measurements(finished, "front", [1]), poolOffcutIds: [child.id] });
+  const next = reviewRimAirSeals(front);
+  assert.equal(next.sheets.length, 0);
+  assert.equal(next.scraps[0].poolOffcutId, child.id);
+  const both = recordRimFoamCuts(front, next.scraps[0], "", []);
+  assert.deepEqual(uncutRimFoamOffcuts(both), []);
+  assert.equal(reviewRimAirSeals(both).completed.size, 2);
+});
+
+test("recorded sheets leave the buy list and dimension changes require another matching blank", () => {
+  const project = floor();
+  const input = measurements(project, "back", [1]);
+  const purchased = addHomeDepotPurchaseNeed(saveRimAirSeal(project, input), rimFoam.id);
+  assert.match(homeDepotShoppingList(purchased).text, /1 sheet.*345181221/);
+  const [sheet] = reviewRimAirSeals(purchased).sheets;
+  const cut = recordRimFoamCuts(purchased, sheet, "Sheet 1", []);
+  assert.equal(reviewRimAirSeals(cut).completed.size, 1);
+  assert.equal(reviewRimAirSeals(cut).sheets.length, 0);
+  assert.doesNotMatch(homeDepotShoppingList(cut).text, /345181221/);
+  const resized = saveRimAirSeal(cut, { ...input, gap: 0.1875 });
+  assert.equal(reviewRimAirSeals(resized).completed.size, 0);
+  assert.equal(reviewRimAirSeals(resized).sheets.length, 1);
+  assert.equal(reviewRimAirSeals(resized).recordedMaps.length, 1);
+  assert.match(guideMarkdown(resized), /a recorded blank has different dimensions/);
+  assert.throws(() => recordRimFoamCuts(resized, sheet, "Sheet 2", []), /layout changed or was recorded/);
+});
+
+test("completed legacy offcuts retain credit when the cut was rotated on the source", () => {
+  const project = floor();
+  const input = measurements(project, "back", [1]);
+  const planned = saveRimAirSeal(project, { ...input, offcut: { label: "Narrow stock", width: 5, length: 16 } });
+  const [source] = reviewRimAirSeals(planned).scraps;
+  assert.equal(source.stock.placements[0].rotated, true);
+  const finished = recordRimFoamCuts(planned, source, "", []);
+  assert.equal(reviewRimAirSeals(finished).completed.size, 1);
+  assert.equal(reviewRimAirSeals(finished).sheets.length, 0);
+  assert.throws(() => addRimFoamOffcut(removeRimAirSeal(finished, input), {
+    label: "Narrow stock", width: 5, length: 16,
+  }), /already belongs to a recorded cut/);
 });

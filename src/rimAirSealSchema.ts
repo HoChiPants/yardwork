@@ -23,6 +23,47 @@ export const rimFoamOffcutPoolSchema = z.array(rimFoamOffcutSchema).max(200).ref
   new Set(rows.map(({ label }) => rimFoamLabelKey(label))).size === rows.length,
   "Use a unique label for each physical foam offcut.");
 
+const rimFoamPlacementSchema = z.strictObject({
+  id: z.string().min(1).max(180),
+  name: z.string().min(1).max(220),
+  x: z.number().min(0),
+  y: z.number().min(0),
+  width: z.number().positive(),
+  length: z.number().positive(),
+  rotated: z.boolean(),
+});
+const rimFoamStockSchema = z.strictObject({
+  width: z.number().positive().max(rimFoam.width),
+  length: z.number().positive().max(rimFoam.length),
+  usedLength: z.number().min(0).max(rimFoam.length),
+  placements: z.array(rimFoamPlacementSchema).min(1).max(2000),
+}).refine(({ width, length, placements }) =>
+  new Set(placements.map(({ id }) => id)).size === placements.length &&
+  placements.every((cut) => cut.x + cut.width <= width + 1e-6 && cut.y + cut.length <= length + 1e-6),
+  "Recorded blanks must fit inside the source.");
+export const rimFoamCutRecordSchema = z.strictObject({
+  id: z.uuid(),
+  label: rimFoamDimensionsSchema.shape.label,
+  source: z.enum(["sheet", "pool", "inline"]),
+  poolOffcutId: z.uuid().optional(),
+  stock: rimFoamStockSchema,
+  kerf: z.number().min(0).max(1),
+  remnants: z.array(rimFoamOffcutSchema.extend({ slot: z.number().int().min(0) })).max(200),
+}).refine((row) => (row.source === "pool") === !!row.poolOffcutId &&
+  (row.source !== "sheet" || (row.stock.width === rimFoam.width && row.stock.length === rimFoam.length)) &&
+  new Set(row.remnants.map(({ slot }) => slot)).size === row.remnants.length,
+  "Recorded foam cuts need a matching physical source and unique remnant marks.");
+export type RimFoamCutRecord = z.infer<typeof rimFoamCutRecordSchema>;
+export const rimFoamCutRecordsSchema = z.array(rimFoamCutRecordSchema).max(400).refine((records) => {
+  const consumed = records.flatMap(({ poolOffcutId }) => poolOffcutId ? [poolOffcutId] : []);
+  const remnants = records.flatMap(({ remnants }) => remnants);
+  return new Set(records.map(({ id }) => id)).size === records.length &&
+    new Set(records.map(({ label }) => rimFoamLabelKey(label))).size === records.length &&
+    new Set(consumed).size === consumed.length &&
+    new Set(remnants.map(({ id }) => id)).size === remnants.length &&
+    new Set(remnants.map(({ label }) => rimFoamLabelKey(label))).size === remnants.length;
+}, "Each physical foam source and remnant needs one cut record.");
+
 export const rimAirSealInputSchema = z.strictObject({
   sectionId: z.uuid(),
   side: rimSideSchema,

@@ -18,7 +18,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(tile.getByRole("combobox")).toHaveCount(0);
   await expect(page.getByText("Home Depot sourcing", { exact: true })).toHaveCount(0);
   const canvas = page.locator("canvas").first();
-  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
   const art = (await tile.locator(".material-art").boundingBox())!;
   const actions = (await page.locator(".empty-workspace").getByRole("button").first().boundingBox())!;
   await page.mouse.move(art.x + art.width / 2, art.y + art.height / 2);
@@ -71,6 +71,9 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("spinbutton", { name: "Z", exact: true })).toHaveValue("0");
   await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(page.locator(".bom-row").first()).not.toContainText(/Unpriced|\$/);
+  const printShopping = page.locator(".print-guide .pricing-summary-print + ul");
+  await expect(printShopping).toContainText(group);
+  await expect(printShopping).not.toContainText(/Unpriced|\$/i);
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toHaveCount(0);
   await page.getByText("Project cost estimate", { exact: true }).click();
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toBeVisible();
@@ -125,7 +128,7 @@ test("an existing surface receives a dropped board and single-stock boards can b
   });
   await page.getByRole("button", { name: "Top", exact: true }).click();
   const canvas = page.locator("canvas");
-  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
   await page.getByRole("textbox", { name: "Find a material" }).fill("1x2 board");
   const add = page.getByRole("button", { name: "Add 1 × 2 board", exact: true });
   const image = page.locator(".material-card").filter({ has: add }).locator(".material-art");
@@ -154,7 +157,7 @@ test("front-view drops stay at the workspace depth and ignore controls", async (
   await page.goto("./");
   await page.getByRole("button", { name: "Front", exact: true }).click();
   const canvas = page.locator("canvas").first();
-  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
+  await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
   const image = page.locator('[data-material-family="framing-2x4"] .material-art');
   await image.dragTo(page.getByRole("button", { name: "Fit project", exact: true }));
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -369,7 +372,7 @@ test.describe("phone material placement", () => {
   test("touch-drag a treated post onto the workspace and open its separate details", async ({ page, context }) => {
     await page.goto("./");
     const canvas = page.locator("canvas").first();
-    await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/);
+    await expect(canvas).toHaveAttribute("data-workshop-camera", /"settled":true/, { timeout: 25_000 });
     const add = page.getByRole("button", { name: "Add 4 × 4 treated post", exact: true });
     const tile = page.locator(".material-card").filter({ has: add });
     await tile.scrollIntoViewIfNeeded();

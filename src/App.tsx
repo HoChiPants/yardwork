@@ -7021,7 +7021,6 @@ export function App() {
             return (
               <li key={r.id}>
                 {r.quantity} {purchaseUnitLabel(material(r.id).unit, r.quantity)} × {material(r.id).name} ·{" "}
-                {r.unpriced && r.quantity > 0 ? "UNPRICED" : money(r.total)} ·{" "}
                 {r.quantity === 0 && r.onHandStockUnits > 0 ? "stock on hand" : r.verified
                   ? `${r.inventory!.available} stock units reported · ${r.inventory!.available >= r.quantity ? "quantity covered by snapshot" : "snapshot quantity short"}`
                   : r.supplier ? (
@@ -7396,7 +7395,6 @@ export function App() {
                   .
                 </p>
                 <p>
-                  {r.total === null ? "UNPRICED" : money(r.total)} ·{" "}
                   {r.inventory
                     ? `User-recorded ${r.inventory.available} purchase packs at store ${r.inventory.store}, ZIP ${r.inventory.zip}; checked ${r.inventory.checkedAt}`
                     : "Stock unverified"}

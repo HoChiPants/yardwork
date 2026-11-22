@@ -1,3 +1,4 @@
+import { trimSealant } from "./trimSealantReference";
 import { subfloorJointLine, subfloorReport, subfloorReviews, uniqueSubfloorJoints } from "./subfloor";
 import { subfloorAdhesiveReport, subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReport, subfloorFasteningReviews } from "./subfloorFastening";
@@ -11,7 +12,7 @@ import { drawingReferenceDescription } from "./drawingReference";
 import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
 import { buildPreparation, buildPreparationMarkdown } from "./buildPreparation";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
-import { trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { trimBackerRodCutPlan, trimBackerRodGuideLines, trimSealantGuideLines, trimSeamPurchaseSummary, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
 import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { openingFlashingGuideLines, reviewGeneratedWindowWalls, reviewOpeningFlashings } from "./openingFlashing";
@@ -2106,6 +2107,7 @@ export function guideMarkdown(p: Project) {
   const bearingJoints = bearingConnectionGuideLines(p, bearingReview, connections);
   const woodJointDetails = woodJointDecisionEntries(p);
   const trimBacking = trimBackerRodCutPlan(p, woodJointDetails);
+  const trimSealantSchedule = trimSealantGuideLines(trimSeamPurchaseSummary(p, woodJointDetails));
   const roofBearing = reviewGreenhouseRafterBearing(p);
   const rafterBearing = rafterBearingGuideLines(p, roofBearing);
   const roofAttachments = greenhouseRoofAttachmentLines(p, greenhouseRoofAttachments(p, connections.intents, roofBearing));
@@ -2316,6 +2318,10 @@ export function guideMarkdown(p: Project) {
       woodJointDetails.map((entry) => "- " +
         woodJointDecisionLine(entry).replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       "\n" : "") +
+    (trimSealantSchedule.length ? "\n\n## Trim sealant work sessions\n\n" +
+      trimSealantSchedule.map((line) => "- " +
+        line.replace(/[\r\n]/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      `\n\n[DAP application and coverage](${trimSealant.specification})\n` : "") +
     (trimBacking.length ? `\n\n## ${trimBacking.some(({ hasAirSeal }) => hasAirSeal) ? "Backer rod cut plan" : "Trim backer rod cut plan"}\n\n` + trimBackerRodScope + "\n\n" +
       trimBackerRodGuideLines(trimBacking).map((line) => "- " +
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +

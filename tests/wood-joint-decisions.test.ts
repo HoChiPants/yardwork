@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
 import { saveOpeningFlashing } from "../src/openingFlashing";
 import { generatedWindowMembers } from "../src/windowWall";
 import assert from "node:assert/strict";
@@ -111,7 +113,11 @@ test("chosen dry-trim edges survive a rigid move and feed the joint answer, guid
     })),
   };
   const summary = trimSeamPurchaseSummary(moved)!;
-  assert.deepEqual(summary, { required: 1, selected: 0, length: "8 in", ready: 2, review: 0 });
+  const { batches, ...quantities } = summary;
+  assert.deepEqual(quantities, { required: 1, selected: 0, length: "8 in", ready: 2, review: 0 });
+  assert.deepEqual(batches.map(({ name, cartridges, lengthInches }) => [name, cartridges, lengthInches]), [
+    ["Trim work", 1, 8],
+  ]);
   assert.match(guideMarkdown(moved), /Trim sealant · Edge \d \(4 in\).*DAP coverage of 55 ft/s);
   const question = connectionQuestion(moved, "Review trim seam between P001 and P002")!;
   const answer = answerConnectionQuestion(moved, question);
@@ -238,4 +244,42 @@ test("measured trim and opening backing share the same exact rod roll and purcha
   const need = homeDepotPurchaseNeeds(saved).find(({ id }) => id === "frost-king-c21h");
   assert.equal(need?.missing, 1);
   assert.ok(need?.canAdd);
+});
+
+test("trim sessions reserve separate cartridges while sharing matching work, cuts and trial scraps", () => {
+  const sample = (name: string) => readFileSync(new URL(`../public/examples/air-sealing/trim-work-sessions${name}`, import.meta.url), "utf8");
+  const project = projectSchema.parse(JSON.parse(sample(".yardwork.json")));
+  const purchased = project.supplies.find(({ productId }) => productId === trimSealant.id);
+  assert.equal(purchased?.quantity, 2);
+  const summary = trimSeamPurchaseSummary(project)!;
+  assert.deepEqual(summary.batches.map(({ name, lengthInches, cartridges }) => [name, lengthInches, cartridges]), [
+    ["Cabinet trim", 58, 1],
+    ["Closet trim", 30, 1],
+  ]);
+  assert.equal(summary.required, 2);
+  assert.equal(summary.selected, 2);
+  assert.equal(guideMarkdown(project), sample("-guide.md"));
+  assert.match(sample("-guide.md"), /Test the finish on offcuts O00[12], O00[12] from the same stock/);
+  assert.match(sample("-guide.md"), /Keep 210 in for a future matching run/);
+
+  const question = buildQuestion("How much sealant do I need for my wood trim?")!;
+  assert.deepEqual(question, { kind: "trim-sealant" });
+  const answer = answerBuildQuestion(project, question, []);
+  assert.match(answer.detail, /2 cartridges for 88 in of reviewed trim seams/);
+  assert.deepEqual(answer.rows?.map(({ title }) => title), ["Cabinet trim", "Closet trim"]);
+  const closed = project.woodJointDecisions!.find(({ trimSeam }) => trimSeam?.session === "Closet trim")!;
+  const { contactSignature: _seal, ...input } = closed.trimSeam!;
+  const shared = saveTrimSeam(project, closed.firstId, closed.secondId, { ...input, session: "  CABINET TRIM  " });
+  assert.equal(trimSeamPurchaseSummary(shared)?.required, 1);
+  assert.equal(shared.woodJointDecisions!.find(({ firstId, secondId }) =>
+    firstId === closed.firstId && secondId === closed.secondId)?.trimSeam?.session, "CABINET TRIM");
+  const noPurchase = { ...project, supplies: project.supplies.filter((supply) => supply !== purchased) };
+  assert.equal(homeDepotPurchaseNeeds(noPurchase).find(({ id }) => id === trimSealant.id)?.missing, 2);
+  assert.equal(addHomeDepotPurchaseNeed(noPurchase, trimSealant.id).supplies.at(-1)?.quantity, 2);
+  const changed = { ...noPurchase, pieces: noPurchase.pieces.map((p) =>
+    p.id === closed.secondId ? { ...p, position: [p.position[0], p.position[1], p.position[2] + 2] as V3 } : p) };
+  assert.equal(trimSeamPurchaseSummary(changed)?.required, 1);
+  assert.equal(trimSeamPurchaseSummary(changed)?.review, 1);
+  assert.equal(homeDepotPurchaseNeeds(changed).find(({ id }) => id === trimSealant.id)?.missing, 1);
+  assert.match(answerBuildQuestion(changed, question, []).detail, /1 seam needs a fresh fit review/);
 });

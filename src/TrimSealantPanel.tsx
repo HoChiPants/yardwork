@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from "react";
 import type { Project } from "./model";
 import { addHomeDepotPurchaseNeed } from "./handoffPurchases";
-import { trimBackerRodCutPlan, trimBackerRodGuideLines, trimSeamPurchaseSummary, woodJointDecisionEntries } from "./woodJointDecisions";
+import { trimBackerRodCutPlan, trimBackerRodGuideLines, trimSeamPurchaseSummary, trimSealantSessionLine, woodJointDecisionEntries } from "./woodJointDecisions";
 import { addSupply } from "./supplies";
 import { trimSealant } from "./trimSealantReference";
 import { estimateTrimSealant } from "./trimSealantTakeoff";
+import { workshopAsset } from "./workshopTransport";
 
 export function TrimSealantPanel({
   project,
@@ -53,15 +54,21 @@ export function TrimSealantPanel({
   }
 
   return (
-    <details className="field-section">
+    <details className="field-section trim-sealant-estimator">
       <summary>Estimate trim sealant</summary>
       <p className="small-note">{trimSealant.scope}</p>
+      {!planned && <p><a className="text-button" href={workshopAsset("/examples/air-sealing/trim-work-sessions.yardwork.json")} download>Download the trim work session practice plan</a></p>}
       {planned && (
         <section className="field-section" aria-label="Measured trim seams">
           <h3>Measured trim seams</h3>
           {planned.required !== null && <p className="small-note">
             {planned.length} across {planned.ready} {planned.ready === 1 ? "joint" : "joints"} · {planned.required} planned {planned.required === 1 ? "cartridge" : "cartridges"} · {planned.selected} in List
           </p>}
+          {planned.batches.length > 0 && (
+            <ul>{planned.batches.map((batch) =>
+              <li key={batch.name} className="small-note">{trimSealantSessionLine(batch)}</li>)}</ul>
+          )}
+          {planned.required === null && planned.ready > 0 && <p className="small-note">Review the measured coverage. The combined estimate exceeds the supported purchase quantity.</p>}
           {planned.review > 0 && <p className="small-note">
             {planned.review} {planned.review === 1 ? "joint needs" : "joints need"} a fresh seam review.
           </p>}

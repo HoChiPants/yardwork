@@ -1,0 +1,812 @@
+{
+  "schemaVersion": 136,
+  "id": "de4f08a4-5c22-40ec-98cb-a0dcfff986ae",
+  "name": "Cabinet and closet trim sessions",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [
+    {
+      "id": "014f9db5-673a-4668-b9e0-efdc193ab990",
+      "productId": "dap-dynaflex-230-white-101",
+      "quantity": 2,
+      "purpose": "Measured wood trim seams by work session",
+      "note": "Counted from the current saved plan. Confirm the delivered product and installation before building."
+    },
+    {
+      "id": "a49205d5-1689-4465-9928-a7aa05aaf72a",
+      "productId": "frost-king-c21h",
+      "quantity": 1,
+      "purpose": "Measured wood trim backing cuts",
+      "note": "Counted from the current saved plan. Confirm the delivered product and installation before building."
+    }
+  ],
+  "plannedCutSources": [
+    {
+      "sourceId": "3dc2dc26-1033-4ef8-accc-d5eb016fca6d",
+      "fingerprint": "binding-v1-b9ddf6add6bb875b",
+      "historyIds": [
+        "0e30eb7d-b200-4d0d-9117-3016851fd088",
+        "ae28977e-7dd4-4c75-8c80-5236ce958f1e",
+        "24a6eb3e-55de-4fe9-b8dc-0eb931aadd5f",
+        "a3939d0a-c0fc-4174-8faf-f350f0cdd81b"
+      ]
+    },
+    {
+      "sourceId": "df4e22e3-d65d-47f8-b550-c76fa17f98a8",
+      "fingerprint": "binding-v1-f1ebd140a304e01d",
+      "historyIds": [
+        "b6067f7f-2fcf-4506-9e22-47d9733b42bd",
+        "7e2df989-10bb-4daf-b8b3-b2ed69969ae8",
+        "1fc48ae5-1a00-4d4c-9613-46d4e9ae07b7",
+        "297c394f-ac73-400d-8cab-94370029fa3d",
+        "24cb6e29-a687-4025-a66c-abc21e12c45c",
+        "f9e12850-da75-4809-989d-024b86342e41",
+        "aa8664fb-b04a-48bd-a19d-7b2eab14f187"
+      ]
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "woodJointDecisions": [
+    {
+      "firstId": "1b8d7b0f-be81-4002-a0e3-3dd2a8306ee5",
+      "secondId": "25b081c4-04db-498b-876f-b956a6e4eb82",
+      "method": "sealant",
+      "note": "Seal the exposed upper edge after dry-fitting the rail.",
+      "contactSignature": "[\"attachment-geometry-v1-4557b366cf97e392\",\"attachment-geometry-v1-94a0302b2ffa5c43\",[0,2.75,-0.789],[[1,0,0],[0,1,0],[0,0,1]]]",
+      "trimSeam": {
+        "edgeIds": [
+          "[-14,1.75,-0.40625]/[14,1.75,-0.40625]"
+        ],
+        "gapWidth": 0.125,
+        "gapDepth": 0.125,
+        "session": "Cabinet trim",
+        "contactSignature": "[\"attachment-geometry-v1-4557b366cf97e392\",\"attachment-geometry-v1-94a0302b2ffa5c43\",[0,2.75,-0.789],[[1,0,0],[0,1,0],[0,0,1]]]"
+      }
+    },
+    {
+      "firstId": "bea2804b-3b81-4f83-9705-0713bec1190f",
+      "secondId": "fa3b7117-6bda-4520-96cb-046e2caf579b",
+      "method": "sealant",
+      "note": "Seal the exposed upper edge after dry-fitting the rail.",
+      "contactSignature": "[\"attachment-geometry-v1-8d39eb84501754d4\",\"attachment-geometry-v1-43caa3f712ad53d9\",[0,-2.75,0.789],[[1,0,0],[0,1,0],[0,0,1]]]",
+      "trimSeam": {
+        "edgeIds": [
+          "[-15,-1,0.38275]/[15,-1,0.38275]"
+        ],
+        "gapWidth": 0.125,
+        "gapDepth": 0.125,
+        "session": "Cabinet trim",
+        "contactSignature": "[\"attachment-geometry-v1-8d39eb84501754d4\",\"attachment-geometry-v1-43caa3f712ad53d9\",[0,-2.75,0.789],[[1,0,0],[0,1,0],[0,0,1]]]"
+      }
+    },
+    {
+      "firstId": "a8f1ccf6-6934-47c0-951b-da3193ba1d69",
+      "secondId": "e36bb83c-8de9-4a90-bd27-f5c417d7b4a9",
+      "method": "sealant",
+      "note": "Leave 6 to 8 in open from the marked start for service access.",
+      "contactSignature": "[\"attachment-geometry-v1-5441b06742d4c223\",\"attachment-geometry-v1-bfa6ddcb5abceb7e\",[0,-2.75,1.039],[[1,0,0],[0,1,0],[0,0,1]]]",
+      "trimSeam": {
+        "edgeIds": [
+          "[-16,-1,0.50775]/[16,-1,0.50775]"
+        ],
+        "gapWidth": 0.3125,
+        "gapDepth": 0.25,
+        "fieldCoverageFeet": 20,
+        "openSpans": [
+          {
+            "edgeId": "[-16,-1,0.50775]/[16,-1,0.50775]",
+            "start": 6,
+            "end": 8
+          }
+        ],
+        "backerRodId": "frost-king-c21h",
+        "session": "Closet trim",
+        "contactSignature": "[\"attachment-geometry-v1-5441b06742d4c223\",\"attachment-geometry-v1-bfa6ddcb5abceb7e\",[0,-2.75,1.039],[[1,0,0],[0,1,0],[0,0,1]]]"
+      }
+    }
+  ],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "25b081c4-04db-498b-876f-b956a6e4eb82",
+      "label": "P001"
+    },
+    {
+      "partId": "1b8d7b0f-be81-4002-a0e3-3dd2a8306ee5",
+      "label": "P002"
+    },
+    {
+      "partId": "bea2804b-3b81-4f83-9705-0713bec1190f",
+      "label": "P003"
+    },
+    {
+      "partId": "fa3b7117-6bda-4520-96cb-046e2caf579b",
+      "label": "P004"
+    },
+    {
+      "partId": "a8f1ccf6-6934-47c0-951b-da3193ba1d69",
+      "label": "P005"
+    },
+    {
+      "partId": "e36bb83c-8de9-4a90-bd27-f5c417d7b4a9",
+      "label": "P006"
+    },
+    {
+      "partId": "fc38b71d-4f98-40fa-9664-8e0580561395",
+      "label": "O001"
+    },
+    {
+      "partId": "e7cf8b8a-5ad5-42b4-b886-0332ce4568f9",
+      "label": "O002"
+    },
+    {
+      "partId": "466a9b7b-b236-4664-ade3-44003fd56893",
+      "label": "O003"
+    },
+    {
+      "partId": "4930797f-ed44-4a3f-9edb-fbba2fa7928d",
+      "label": "O004"
+    },
+    {
+      "partId": "70cde90d-2242-4219-8118-2b0fb8e580ed",
+      "label": "O005"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T17:25:28.699Z",
+  "pieces": [
+    {
+      "id": "25b081c4-04db-498b-876f-b956a6e4eb82",
+      "name": "Left cabinet backing",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        30,
+        9,
+        0.703
+      ],
+      "position": [
+        -36,
+        4.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "caafa8a2-0ae9-4143-80a2-880336a516f0",
+      "assembly": "Left cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "df4e22e3-d65d-47f8-b550-c76fa17f98a8",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.703
+        ],
+        "offset": [
+          0,
+          18.25,
+          0
+        ]
+      }
+    },
+    {
+      "id": "1b8d7b0f-be81-4002-a0e3-3dd2a8306ee5",
+      "name": "Left cabinet trim",
+      "material": "hd-pine-1x4",
+      "size": [
+        28,
+        3.5,
+        0.75
+      ],
+      "position": [
+        -36,
+        1.75,
+        0.7889999999999999
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "caafa8a2-0ae9-4143-80a2-880336a516f0",
+      "assembly": "Left cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "3dc2dc26-1033-4ef8-accc-d5eb016fca6d",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          3.5,
+          0.75
+        ],
+        "offset": [
+          62.25,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "bea2804b-3b81-4f83-9705-0713bec1190f",
+      "name": "Right cabinet backing",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        32,
+        9,
+        0.703
+      ],
+      "position": [
+        0,
+        4.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d692d3ae-4fb7-45eb-b99e-ed0ac13847f6",
+      "assembly": "Right cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "df4e22e3-d65d-47f8-b550-c76fa17f98a8",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.703
+        ],
+        "offset": [
+          0,
+          9.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "fa3b7117-6bda-4520-96cb-046e2caf579b",
+      "name": "Right cabinet trim",
+      "material": "hd-pine-1x4",
+      "size": [
+        30,
+        3.5,
+        0.75
+      ],
+      "position": [
+        0,
+        1.75,
+        0.7889999999999999
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d692d3ae-4fb7-45eb-b99e-ed0ac13847f6",
+      "assembly": "Right cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "3dc2dc26-1033-4ef8-accc-d5eb016fca6d",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          3.5,
+          0.75
+        ],
+        "offset": [
+          32.125,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "a8f1ccf6-6934-47c0-951b-da3193ba1d69",
+      "name": "Closet backing",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        34,
+        9,
+        0.703
+      ],
+      "position": [
+        37,
+        4.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "11e289f1-19a8-41db-84bd-e5cc2d833487",
+      "assembly": "Closet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "df4e22e3-d65d-47f8-b550-c76fa17f98a8",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.703
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "e36bb83c-8de9-4a90-bd27-f5c417d7b4a9",
+      "name": "Closet trim",
+      "material": "hd-pine-1x4",
+      "size": [
+        32,
+        3.5,
+        0.75
+      ],
+      "position": [
+        37,
+        1.75,
+        1.039
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "11e289f1-19a8-41db-84bd-e5cc2d833487",
+      "assembly": "Closet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "3dc2dc26-1033-4ef8-accc-d5eb016fca6d",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          3.5,
+          0.75
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "fc38b71d-4f98-40fa-9664-8e0580561395",
+      "name": "Offcut · Common pine 1 × 4 · Home Depot reference · board remnant 1",
+      "material": "hd-pine-1x4",
+      "size": [
+        5.625,
+        3.5,
+        0.75
+      ],
+      "position": [
+        114.1875,
+        1.75,
+        1.039
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "3dc2dc26-1033-4ef8-accc-d5eb016fca6d",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          3.5,
+          0.75
+        ],
+        "offset": [
+          90.375,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "e7cf8b8a-5ad5-42b4-b886-0332ce4568f9",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 1",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        1.875,
+        9,
+        0.703
+      ],
+      "position": [
+        53.0625,
+        13.625,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "df4e22e3-d65d-47f8-b550-c76fa17f98a8",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.703
+        ],
+        "offset": [
+          32.125,
+          9.125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "466a9b7b-b236-4664-ade3-44003fd56893",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 2",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        3.875,
+        9,
+        0.703
+      ],
+      "position": [
+        52.0625,
+        22.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "df4e22e3-d65d-47f8-b550-c76fa17f98a8",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.703
+        ],
+        "offset": [
+          30.125,
+          18.25,
+          0
+        ]
+      }
+    },
+    {
+      "id": "4930797f-ed44-4a3f-9edb-fbba2fa7928d",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 3",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        34,
+        20.625,
+        0.703
+      ],
+      "position": [
+        37,
+        37.6875,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "df4e22e3-d65d-47f8-b550-c76fa17f98a8",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.703
+        ],
+        "offset": [
+          0,
+          27.375,
+          0
+        ]
+      }
+    },
+    {
+      "id": "70cde90d-2242-4219-8118-2b0fb8e580ed",
+      "name": "Offcut · PureBond birch plywood · 0.703 in actual · sheet remnant 4",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        61.875,
+        48,
+        0.703
+      ],
+      "position": [
+        85.0625,
+        24,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": {
+        "id": "df4e22e3-d65d-47f8-b550-c76fa17f98a8",
+        "sourceAxes": [
+          2,
+          1,
+          0
+        ],
+        "size": [
+          96,
+          48,
+          0.703
+        ],
+        "offset": [
+          34.125,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "9a5e7d20-148f-431f-8adc-bd0d3d333cd4",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "de4f08a4-5c22-40ec-98cb-a0dcfff986ae",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-34138a28",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "title": "Fit the closet trim",
+      "notes": "Check that the rod fits and leave the marked service access open.",
+      "complete": false
+    },
+    {
+      "id": "11e289f1-19a8-41db-84bd-e5cc2d833487",
+      "title": "Assemble Closet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "de4f08a4-5c22-40ec-98cb-a0dcfff986ae",
+        "stageKey": "assembly:Closet",
+        "memberIds": [
+          "a8f1ccf6-6934-47c0-951b-da3193ba1d69",
+          "e36bb83c-8de9-4a90-bd27-f5c417d7b4a9"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-207e280e",
+        "title": "Assemble Closet"
+      }
+    },
+    {
+      "id": "ff4a0254-4b7d-4597-9203-ae2880035137",
+      "title": "Fit the cabinet trim",
+      "notes": "Dry-fit both rails to their boards and verify the top gaps.",
+      "complete": false
+    },
+    {
+      "id": "caafa8a2-0ae9-4143-80a2-880336a516f0",
+      "title": "Assemble Left cabinet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "de4f08a4-5c22-40ec-98cb-a0dcfff986ae",
+        "stageKey": "assembly:Left cabinet",
+        "memberIds": [
+          "1b8d7b0f-be81-4002-a0e3-3dd2a8306ee5",
+          "25b081c4-04db-498b-876f-b956a6e4eb82"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-650abfdf",
+        "title": "Assemble Left cabinet"
+      }
+    },
+    {
+      "id": "d692d3ae-4fb7-45eb-b99e-ed0ac13847f6",
+      "title": "Assemble Right cabinet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "de4f08a4-5c22-40ec-98cb-a0dcfff986ae",
+        "stageKey": "assembly:Right cabinet",
+        "memberIds": [
+          "bea2804b-3b81-4f83-9705-0713bec1190f",
+          "fa3b7117-6bda-4520-96cb-046e2caf579b"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-ef9debce",
+        "title": "Assemble Right cabinet"
+      }
+    },
+    {
+      "id": "80c5871c-1754-4da5-855c-bf00198b60b6",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "de4f08a4-5c22-40ec-98cb-a0dcfff986ae",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-eb28bdc7",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice mock-up for three fitted interior trim edges and two work sessions. The simulated trial coverage and keep-open range demonstrate the workflow. Verify the delivered trim, bead and mounting access on the actual build.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-b0e90f99",
+  "history": [
+    {
+      "id": "0e30eb7d-b200-4d0d-9117-3016851fd088",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Recorded one Common pine 1 × 4 · Home Depot reference board for 3 parts starting with P006. Added 1 rectangular offcut to the Cut pool."
+    },
+    {
+      "id": "ae28977e-7dd4-4c75-8c80-5236ce958f1e",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P006 · 1. Crosscut 32 in from the current end for P006 · Closet trim."
+    },
+    {
+      "id": "24a6eb3e-55de-4fe9-b8dc-0eb931aadd5f",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P006 · 2. Crosscut 30 in from the current end for P004 · Right cabinet trim."
+    },
+    {
+      "id": "a3939d0a-c0fc-4174-8faf-f350f0cdd81b",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P006 · 3. Crosscut 28 in from the current end for P002 · Left cabinet trim."
+    },
+    {
+      "id": "b6067f7f-2fcf-4506-9e22-47d9733b42bd",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Recorded one PureBond birch plywood · 0.703 in actual sheet for 3 parts starting with P005. Added 4 rectangular offcuts to the Cut pool."
+    },
+    {
+      "id": "7e2df989-10bb-4daf-b8b3-b2ed69969ae8",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P005 · 1. Crosscut Strip 1 at 34 in from the current end of the sheet."
+    },
+    {
+      "id": "1fc48ae5-1a00-4d4c-9613-46d4e9ae07b7",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P005 · 2. Rip 9 in from the current edge of Strip 1 for P005 · Closet backing."
+    },
+    {
+      "id": "297c394f-ac73-400d-8cab-94370029fa3d",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P005 · 3. Rip 9 in from the current edge of Strip 1 for P003 · Right cabinet backing."
+    },
+    {
+      "id": "24cb6e29-a687-4025-a66c-abc21e12c45c",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P005 · 4. Crosscut the P003 · Right cabinet backing blank to 32 in from its end."
+    },
+    {
+      "id": "f9e12850-da75-4809-989d-024b86342e41",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P005 · 5. Rip 9 in from the current edge of Strip 1 for P001 · Left cabinet backing."
+    },
+    {
+      "id": "aa8664fb-b04a-48bd-a19d-7b2eab14f187",
+      "at": "2026-11-22T17:25:28.705Z",
+      "stepId": "9adeda03-a153-4b19-9160-ca30ad52f412",
+      "message": "Stock cut order for P005 · 6. Crosscut the P001 · Left cabinet backing blank to 30 in from its end."
+    }
+  ]
+}

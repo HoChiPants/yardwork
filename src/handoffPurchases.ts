@@ -239,7 +239,7 @@ export function homeDepotPurchaseNeeds(
   if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
     const details = woodJointDecisionEntries(project);
     const trim = trimSeamPurchaseSummary(project, details);
-    if (trim) include(trimSealant.id, "Measured wood trim seams", trim.required,
+    if (trim) include(trimSealant.id, "Measured wood trim seams by work session", trim.required,
       trim.required === null ? "Review measured seams and cartridge coverage." : undefined);
   }
   if (project.greenhouseDoorSeals?.length) {

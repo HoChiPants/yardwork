@@ -3,7 +3,7 @@ import { formatPreciseInches } from "./measurement";
 import type { Project } from "./model";
 import { trimBackerRodInstructions, trimBackerRodMinRecess, trimBackerRods, trimBackerRodScope } from "./trimBackerRodReference";
 import { modeledTrimSeamEdges, trimSeamMarker, type TrimSeamMarker } from "./trimSeamGeometry";
-import { trimSealant } from "./trimSealantReference";
+import { defaultTrimSealantSession, trimSealant } from "./trimSealantReference";
 import { trimSeamLine, type WoodJointDecisionEntry } from "./woodJointDecisions";
 import { trimSeamOpenSpanLimit, type TrimSeamInput, type TrimSeamOpenSpan } from "./woodJointDecisionSchema";
 
@@ -29,6 +29,7 @@ export function TrimSeamPanel({ project, entry, onSave, onShow }: {
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const session = String(form.get("session") ?? "").trim();
     try {
       onSave({
         edgeIds,
@@ -37,6 +38,7 @@ export function TrimSeamPanel({ project, entry, onSave, onShow }: {
         ...(trial && { fieldCoverageFeet: Number(form.get("trial")) }),
         ...(openSpans.length && { openSpans }),
         ...(backerRodId && { backerRodId }),
+        ...(session && { session }),
       });
       onShow(null);
       setError("");
@@ -156,6 +158,10 @@ export function TrimSeamPanel({ project, entry, onSave, onShow }: {
             {trial && <label className="field">Trial coverage (ft per cartridge)
               <input name="trial" type="number" min="0.001" step="any" defaultValue={plan?.fieldCoverageFeet} required />
             </label>}
+            <label className="field">Work session (optional)
+              <input name="session" maxLength={60} defaultValue={plan?.session} placeholder={defaultTrimSealantSession} />
+            </label>
+            <p className="small-note">Seams in the same session share the cartridge estimate.</p>
             <button className="button secondary" type="submit" disabled={!edgeIds.length}>Save measured seam</button>
           </form>
         )}

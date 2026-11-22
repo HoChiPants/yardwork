@@ -1,3 +1,4 @@
+import { trimSealant } from "./trimSealantReference";
 import { DrawingReferencePanel } from "./DrawingReferencePanel";
 import { drawingPlanLines, drawingReferenceDescription, type DrawingReference } from "./drawingReference";
 import { WallTracePanel } from "./WallTracePanel";
@@ -5,7 +6,7 @@ import { detectPlanOutlines, outlineAtPoint } from "./planOutlines";
 import { emptyWallTrace, reviewWallOutline, reviewWallTrace, snapWallTracePoint, type OutlineFace, type WallTracePoint } from "./wallTrace";
 import { BuildPreparationPanel, PrintBuildPreparation } from "./BuildPreparationPanel";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
-import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimBackerRodGuideLines, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
+import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimBackerRodGuideLines, trimSealantGuideLines, trimSeamPurchaseSummary, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
 import { trimBackerRodInstructions, trimBackerRodScope } from "./trimBackerRodReference";
 import { reviewSillGaskets, sillGasketGuideLines } from "./sillGaskets";
 import { sillGasketScope } from "./sillGasketReference";
@@ -1589,6 +1590,16 @@ export function App() {
         setSubfloorTarget(action.panelId);
         setModal("subfloor-support");
         return;
+      case "trim-sealant":
+        setPanel("materials");
+        inspectorFocus.expand();
+        requestAnimationFrame(() => {
+          const estimate = inspectorFocus.scrollRef.current?.querySelector<HTMLDetailsElement>(".trim-sealant-estimator");
+          if (!estimate) return;
+          estimate.open = true;
+          estimate.scrollIntoView({ block: "start" });
+        });
+        return;
       case "bottom-plate-seal":
         setBottomPlateTarget(action.planId);
         setModal("bottom-plate-seal");
@@ -2283,6 +2294,7 @@ export function App() {
   const lidStayFitSchedule = useMemo(() => lidStayFitGuideRows(exportGuide), [exportGuide]);
   const exportConnectionReview = useMemo(() => connectionCoverage(exportGuide), [exportGuide]);
   const exportWoodJointDetails = useMemo(() => woodJointDecisionEntries(exportGuide), [exportGuide]);
+  const printTrimSealant = useMemo(() => trimSealantGuideLines(trimSeamPurchaseSummary(exportGuide, exportWoodJointDetails)), [exportGuide, exportWoodJointDetails]);
   const printTrimBacking = useMemo(() => trimBackerRodCutPlan(exportGuide, exportWoodJointDetails), [exportGuide, exportWoodJointDetails]);
   const printSillGaskets = useMemo(() => sillGasketGuideLines(reviewSillGaskets(exportGuide)), [exportGuide]);
   const printRimSealReview = useMemo(() => reviewRimAirSeals(exportGuide), [exportGuide]);
@@ -7721,6 +7733,13 @@ export function App() {
             <p>{woodJointDecisionScope}</p>
             <ul>{exportWoodJointDetails.map((entry) =>
               <li key={entry.id}>{woodJointDecisionLine(entry)}</li>)}</ul>
+          </section>
+        )}
+        {printTrimSealant.length > 0 && (
+          <section className="trim-sealant-sessions-print">
+            <h2>Trim sealant work sessions</h2>
+            <ul>{printTrimSealant.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            <p><a href={trimSealant.specification}>DAP application and coverage</a></p>
           </section>
         )}
         {printTrimBacking.length > 0 && (

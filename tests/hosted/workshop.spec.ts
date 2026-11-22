@@ -374,6 +374,71 @@ test("glue and measured trim seams follow actual parts into the saved project, c
   await expect(page.locator(".print-guide .wood-joint-details-print")).toContainText("4 in of dry interior trim seams");
 });
 
+test("trim sessions stay separate in saved seams, answers and the shopping handoff", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByText("Estimate trim sealant", { exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Download the trim work session practice plan" }).click();
+  const file = (await (await download).path())!;
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "trim-work-sessions.yardwork.json", mimeType: "application/json", buffer: await readFile(file),
+  });
+  async function ask(question: string) {
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(question);
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  }
+  await ask("How much trim sealant do I need?");
+  const answer = dialog.getByRole("region", { name: "Trim sealant by work session" });
+  await expect(answer).toContainText("2 cartridges for 88 in of reviewed trim seams.");
+  await answer.getByRole("button", { name: "Open trim sealant estimate" }).click();
+  const measured = page.getByRole("region", { name: "Measured trim seams" });
+  await expect(measured).toContainText("Cabinet trim · 58 in of seam · 1 cartridge");
+  await expect(measured).toContainText("Closet trim · 30 in of seam · 1 cartridge");
+
+  await ask("Review trim seam between P003 and P004");
+  await dialog.getByRole("region", { name: "Workspace joint review" }).getByRole("button", { name: "Inspect joint" }).click();
+  const joint = page.getByRole("region", { name: "Selected wood contact" });
+  await joint.getByText("Plan trim sealant", { exact: true }).click();
+  const session = joint.getByRole("textbox", { name: "Work session (optional)" });
+  await expect(session).toHaveValue("Cabinet trim");
+  await session.fill("Cabinet second visit");
+  await joint.getByRole("button", { name: "Save measured seam", exact: true }).click();
+  await ask("How many cartridges of trim sealant do I need?");
+  await expect(answer).toContainText("3 cartridges for 88 in of reviewed trim seams.");
+  await answer.getByRole("button", { name: "Open trim sealant estimate" }).click();
+  await expect(measured).toContainText("Cabinet second visit · 30 in of seam · 1 cartridge");
+  await measured.getByRole("button", { name: "Add missing seam cartridge" }).click();
+  await expect(measured).toContainText("3 in List");
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  const purchase = dialog.getByRole("list", { name: "Home Depot purchase review" }).locator("li")
+    .filter({ has: page.locator('a[href*="100035980"]') });
+  await expect(purchase).toContainText("3 cartridges");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).revision, CURRENT_DRAFT_KEY)).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: "Cabinet and closet trim sessions" }).click();
+  await ask("How much trim sealant do I need?");
+  await expect(answer).toContainText("Cabinet second visit");
+  await expect(answer).toContainText("3 in the shopping list");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const guideDownload = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await guideDownload).path())!, "utf8");
+  expect(guide).toContain("Cabinet second visit · 30 in of seam · 1 cartridge");
+  expect(guide).toContain("Keep 210 in for a future matching run");
+  await expect(page.locator(".print-guide .trim-sealant-sessions-print")).toContainText("Cabinet second visit");
+});
+
 test("an interrupted trim seam leaves access open and adds one exact backer rod roll", async ({ page }) => {
   const project = blank("Interrupted trim opening");
   const step = project.steps[0].id;

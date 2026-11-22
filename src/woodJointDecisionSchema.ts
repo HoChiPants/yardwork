@@ -20,6 +20,7 @@ export const trimSeamInputSchema = z.strictObject({
   fieldCoverageFeet: z.number().positive().optional(),
   openSpans: z.array(trimSeamOpenSpan).min(1).max(trimSeamOpenSpanLimit).optional(),
   backerRodId: z.enum(trimBackerRods.map(({ id }) => id)).optional(),
+  session: z.string().trim().min(1).max(60).optional(),
 });
 export type TrimSeamInput = z.infer<typeof trimSeamInputSchema>;
 export type TrimSeamOpenSpan = z.infer<typeof trimSeamOpenSpan>;

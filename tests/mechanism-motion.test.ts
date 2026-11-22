@@ -1,3 +1,4 @@
+import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { endCutPlane } from "../src/cutProfiles";
@@ -366,7 +367,7 @@ test("a saved solo opening limit stops at the requested angle and preserves olde
   });
   const legacy = projectSchema.parse(JSON.parse(JSON.stringify({ ...saved.project, schemaVersion: 134 })));
   const plan = legacy.motionPlans![0];
-  assert.equal(legacy.schemaVersion, 135);
+  assert.equal(legacy.schemaVersion, PROJECT_FORMAT_VERSION);
   assert.ok(runMotionTest(legacy, plan).review!.hits.length);
   const setup = { held: [], sequenceTargets: { selected: { kind: "hinge", travel: 75 } as const } };
   const updated = saveMotionTestSetup(legacy, plan.id, setup);

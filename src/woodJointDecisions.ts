@@ -8,7 +8,7 @@ import { formatPreciseInches, formatStockLength } from "./measurement";
 import { packRuns } from "./stockRunPacking";
 import { trimBackerRodLength, trimBackerRods } from "./trimBackerRodReference";
 import { estimateModeledTrimSeam, modeledTrimSeamEdges } from "./trimSeamGeometry";
-import { trimSealant } from "./trimSealantReference";
+import { defaultTrimSealantSession, trimSealant } from "./trimSealantReference";
 import { maxSupplyQuantity } from "./supplySchema";
 import {
   trimSeamInputSchema,
@@ -81,7 +81,7 @@ export function saveWoodJointDecision(
   return { ...project, woodJointDecisions: woodJointDecisionsSchema.parse([...rest, decision]) };
 }
 
-export function saveTrimSeam(project: Project, aId: string, bId: string, draft: TrimSeamInput | null) {
+export function saveTrimSeam(project: Project, aId: string, bId: string, draft: TrimSeamInput | null): Project {
   const id = woodPairKey(aId, bId);
   const decisions = project.woodJointDecisions ?? [];
   const decision = decisions.find(({ firstId, secondId }) => woodPairKey(firstId, secondId) === id);
@@ -199,7 +199,8 @@ export function trimSeamLine(entry: WoodJointDecisionEntry) {
     : "";
   const backing = backerRod
     ? ` Fit ${backerRod.name} along the seal runs before caulking.` : "";
-  return `Trim sealant · ${spans} · ${note}${backing} Use a compatible cartridge gun.${trial}`;
+  const session = entry.decision.trimSeam?.session;
+  return `Trim sealant · ${spans}${session ? ` · ${session}` : ""} · ${note}${backing} Use a compatible cartridge gun.${trial}`;
 }
 
 export function trimBackerRodCutPlan(project: Project, entries = woodJointDecisionEntries(project)) {
@@ -235,19 +236,61 @@ export function trimSeamPurchaseSummary(
 ) {
   const sealed = entries.filter(({ trimSeam }) => !!trimSeam);
   if (!sealed.length) return null;
-  const estimates = sealed.flatMap(({ trimSeam }) => trimSeam?.estimate ? [trimSeam.estimate] : []);
-  const totalUse = estimates.reduce((sum, { cartridgeUse }) => sum + cartridgeUse, 0);
-  const required = estimates.length ? Math.max(1, Math.ceil(totalUse - 1e-10)) : 0;
-  const lengthInches = estimates.reduce((sum, { lengthInches }) => sum + lengthInches, 0);
+  const sessions = new Map<string, { name: string; use: number; lengthInches: number; joints: string[] }>();
+  for (const { decision, title, trimSeam } of sealed) {
+    if (!trimSeam?.estimate) continue;
+    const name = decision.trimSeam?.session ?? defaultTrimSealantSession;
+    const key = name.toLowerCase();
+    const row = sessions.get(key) ?? { name, use: 0, lengthInches: 0, joints: [] };
+    row.use += trimSeam.estimate.cartridgeUse;
+    row.lengthInches += trimSeam.estimate.lengthInches;
+    row.joints.push(title);
+    sessions.set(key, row);
+  }
+  const batches = [...sessions.values()].map((row) => ({
+    ...row,
+    cartridges: Math.max(1, Math.ceil(row.use - 1e-10)),
+  }));
+  const required = batches.reduce((sum, { cartridges }) => sum + cartridges, 0);
+  const lengthInches = batches.reduce((sum, row) => sum + row.lengthInches, 0);
+  const ready = batches.reduce((sum, { joints }) => sum + joints.length, 0);
   const selected = project.supplies.reduce((total, row) =>
     row.productId === trimSealant.id ? total + row.quantity : total, 0);
   return {
     required: required > 0 && required <= maxSupplyQuantity ? required : null,
-    ready: estimates.length,
-    review: sealed.length - estimates.length,
+    ready,
+    review: sealed.length - ready,
     length: formatStockLength(lengthInches),
     selected,
+    batches,
   };
+}
+
+type TrimSealantBatch = NonNullable<ReturnType<typeof trimSeamPurchaseSummary>>["batches"][number];
+
+export function trimSealantSessionDetail({ lengthInches, cartridges, use }: TrimSealantBatch) {
+  const leftover = Math.max(0, 100 * (cartridges - use)).toFixed(1);
+  return `${formatStockLength(lengthInches)} of seam · ${cartridges} ${cartridges === 1 ? "cartridge" : "cartridges"} · about ${leftover}% of the last cartridge left.`;
+}
+
+export function trimSealantSessionLine(batch: TrimSealantBatch) {
+  return `${batch.name} · ${trimSealantSessionDetail(batch)}`;
+}
+
+export function trimSealantGuideLines(summary: ReturnType<typeof trimSeamPurchaseSummary>) {
+  if (!summary) return [];
+  const ready = summary.batches.flatMap((batch) => [
+    trimSealantSessionLine(batch),
+    `Joints · ${batch.joints.join(" / ")}.`,
+  ]);
+  const pending = summary.review > 0
+    ? [`${summary.review} ${summary.review === 1 ? "seam needs" : "seams need"} a fresh fit review before counting toward the estimate.`]
+    : [];
+  return [
+    ...(ready.length ? [trimSealant.finishSteps, ...ready] : []),
+    ...(summary.required === null && summary.ready ? ["Review the measured coverage. The combined estimate exceeds the supported purchase quantity."] : []),
+    ...pending,
+  ];
 }
 
 export function woodJointDecisionLine(entry: WoodJointDecisionEntry) {

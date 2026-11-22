@@ -1,3 +1,5 @@
+import { trimSealantSessionDetail, trimSeamPurchaseSummary } from "./woodJointDecisions";
+import { trimSealant } from "./trimSealantReference";
 import { isSubfloorPanel, subfloorReviews } from "./subfloor";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
 import { topPlateSealReviews, topPlateSealScope } from "./topPlateSeal";
@@ -63,6 +65,7 @@ export type BuildQuestion =
   | { kind: "water-stop" }
   | { kind: "sink-drain" }
   | { kind: "subfloor-support"; panelLabel?: string }
+  | { kind: "trim-sealant" }
   | { kind: "bottom-plate-seal" }
   | { kind: "top-plate-seal" }
   | { kind: "rim-air-seal" }
@@ -97,6 +100,7 @@ export type BuildQuestionAction =
   | { kind: "water-stop"; stopId?: string }
   | { kind: "sink-drain"; drainId?: string }
   | { kind: "subfloor-support"; panelId?: string }
+  | { kind: "trim-sealant" }
   | { kind: "bottom-plate-seal"; planId?: string }
   | { kind: "top-plate-seal"; planId?: string }
   | { kind: "rim-air-seal"; sectionId?: string; side?: RimSide }
@@ -182,6 +186,7 @@ const teeQuestion = /^(?:(?:how (?:do|can|should) i )?(?:branch|tee off) (?:the 
 const pressureQuestion = /^(?:(?:how (?:do|can|should) i )?pressure[- ]test (?:the |my |a )?(?:pex|water(?: supply)?) (?:main|runs?|lines?|pipes?|system)|(?:log|record|review|check|show) (?:a |the |my )?(?:pex |water )?pressure tests?)$/i;
 const namedSubfloorQuestion = /^(?:(?:plan|fit|add|preview|check|show) (?:(?:subfloor )?blocking|subfloor adhesive|subfloor fasteners|(?:floor )?joist (?:bearing|span))|(?:count|how many) (?:subfloor )?nails) (?:under|at|for) (p\d{1,6})$/i;
 const subfloorQuestion = /^(?:(?:check|review|show|plan) (?:the |my )?(?:subfloor(?: support| blocking| joist spacing| adhesive| fasteners| (?:panel )?joints| joint spacing| end spacing)?|(?:floor )?joist (?:spacing|bearing|span))|does (?:the |my )?subfloor need (?:more )?blocking|(?:count|how many) subfloor nails|how far do (?:my |the )?(?:floor )?joists span)$/i;
+const trimSealantQuestion = /^(?:how much trim (?:sealant|caulk)(?: do i need)?|how much (?:sealant|caulk)(?: do i need)? for (?:the |my )?(?:wood )?trim|how many (?:cartridges|tubes) of (?:trim sealant|trim caulk)(?: do i need)?|(?:estimate|review|show|check) (?:the |my )?trim (?:sealant|caulk)(?: work sessions?)?)$/i;
 const bottomPlateQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[ -]seal|seal|caulk) (?:the |a |my )?(?:wall )?(?:bottom|sole) plates?(?: to (?:the )?(?:wood )?subfloor)?|(?:plan|review|check|show) (?:the |a )?(?:bottom|sole) plate (?:air[ -]seals?|seals?))$/i;
 const rimAirSealQuestion = /^(?:(?:how (?:do|can|should) i )?(?:air[- ]seal|seal|insulate) (?:the |my )?(?:rim[- ]joists?|band[- ]joists?|floor rims?)|(?:plan|review|check|show) (?:the )?(?:rim(?:[- ]joist)?|band[- ]joist|floor rim) (?:air[- ]seal(?:ing)?|insulation|foam cuts))$/i;
 const roofValleyQuestion = /^(?:(?:how (?:do|can|should) i )?(?:line|seal|waterproof) (?:the |a |my )?roof valle(?:y|ys)|(?:plan|review|check|show) (?:the )?roof valley (?:lining|membrane|cuts))$/i;
@@ -300,6 +305,7 @@ export function buildQuestion(prompt: string): BuildQuestion | null {
   const namedSubfloor = namedSubfloorQuestion.exec(text);
   if (namedSubfloor) return { kind: "subfloor-support", panelLabel: labelKey(namedSubfloor[1]) };
   if (subfloorQuestion.test(text)) return { kind: "subfloor-support" };
+  if (trimSealantQuestion.test(text)) return { kind: "trim-sealant" };
   if (bottomPlateQuestion.test(text)) return { kind: "bottom-plate-seal" };
   if (/^(?:(?:how (?:can|do|should) i |plan |check |review )?(?:air[ -])?seal (?:the |a |my )?top plate(?: to (?:the )?drywall)?|(?:how (?:can|do|should) i )?seal (?:the )?drywall to (?:the |a )?top plate)$/i.test(text))
     return { kind: "top-plate-seal" };
@@ -775,6 +781,28 @@ export function answerBuildQuestion(
   switch (question.kind) {
     case "checks":
       return answerChecks(project, findings);
+    case "trim-sealant": {
+      const estimate = trimSeamPurchaseSummary(project);
+      const review = estimate?.review ?? 0;
+      return {
+        title: "Trim sealant by work session",
+        scope: trimSealant.scope,
+        detail: [
+          estimate?.required != null
+            ? `${estimate.required} ${estimate.required === 1 ? "cartridge" : "cartridges"} for ${estimate.length} of reviewed trim seams. ${estimate.selected} in the shopping list.`
+            : estimate?.ready
+              ? "Review the measured coverage. The combined estimate exceeds the supported purchase quantity."
+              : "Save measured trim seams on wood joint details or enter field measurements in List.",
+          ...(review > 0 ? [`${review} ${review === 1 ? "seam needs" : "seams need"} a fresh fit review.`] : []),
+        ].join(" "),
+        rows: estimate?.batches.map((batch) => ({
+          id: batch.name,
+          title: batch.name,
+          detail: trimSealantSessionDetail(batch),
+        })),
+        ...(project.retailer === "home-depot" && { link: { label: "Open trim sealant estimate", action: { kind: "trim-sealant" } } }),
+      };
+    }
     case "drawer-opening": {
       const plans = project.motionPlans ?? [];
       const hinges = plans.filter(({ mechanism }) => mechanism.kind === "hinge");

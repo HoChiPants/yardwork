@@ -14,7 +14,7 @@ export const subfloorJointReference = {
   endGap: 0.125,
   // Limit the review to nearby edges on the same plane.
   maxModelGap: 1,
-  spacing: "https://apawood.org/buildertips/pages/M300.html",
+  spacing: "https://www.apawood.org/guides-tools-training/technical-document-library/builder-tips/prevent-buckling-with-proper-spacing/",
   airSeal: "https://basc.pnnl.gov/resource-guides/floor-above-unconditioned-basement-or-vented-crawlspace",
 } as const;
 

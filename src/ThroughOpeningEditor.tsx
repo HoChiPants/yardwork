@@ -3,6 +3,10 @@ import { LengthInput } from "./LengthInput";
 import { formatStockLength, preferredLengthUnit } from "./measurement";
 import type { Piece, Project } from "./model";
 import {
+  openingCutoutInstructions, openingCutoutReview, recordOpeningCutout,
+} from "./openingCutouts";
+import { partLabel } from "./partLabels";
+import {
   editThroughOpening,
   rectangularOpeningMarks,
   roundOpeningMarks,
@@ -51,12 +55,14 @@ export function ThroughOpeningEditor({
   piece,
   rectangular,
   onApply,
+  onRecover,
   onClose,
 }: {
   project: Project;
   piece: Piece;
   rectangular: boolean;
   onApply: (project: Project) => void;
+  onRecover: (project: Project) => void;
   onClose: () => void;
 }) {
   const shape = rectangular ? "rectangularOpenings" : "roundOpenings";
@@ -76,6 +82,10 @@ export function ThroughOpeningEditor({
       ? centered(piece, firstAxis, rectangular)
       : marksFor(piece, openings[index]),
   );
+  const cutout = rectangular && index !== null && !removing &&
+    JSON.stringify(marks) === JSON.stringify(marksFor(piece, openings[index]))
+    ? openingCutoutReview(project, piece, index)
+    : undefined;
   const fixedAxis = all.length > (index === null ? 0 : 1);
   const preview = useMemo(() => {
     try {
@@ -343,6 +353,12 @@ export function ThroughOpeningEditor({
           {preview.error}
         </p>
       )}
+      {cutout?.existing ? <p className="small-note">
+        A piece from this opening was recorded as {partLabel(project, cutout.existing.offcutId)}.
+      </p> : cutout && (cutout.pending
+        ? <p className="small-note">Complete the source stock cut order before recording this cutout.</p>
+        : <OpeningCutoutForm key={index} limits={cutout.limits} onRecord={(length, width) =>
+          onRecover(recordOpeningCutout(project, piece.id, index!, length, width))} />)}
       <button
         className="button primary full"
         type="button"
@@ -366,4 +382,31 @@ export function ThroughOpeningEditor({
       </button>
     </div>
   );
+}
+
+function OpeningCutoutForm({ limits, onRecord }: {
+  limits: [number, number, number];
+  onRecord: (length: number, width: number) => void;
+}) {
+  const [length, setLength] = useState(NaN);
+  const [width, setWidth] = useState(NaN);
+  const [error, setError] = useState("");
+  return <details className="field-section">
+    <summary>Record recovered cutout</summary>
+    <form onSubmit={(event) => {
+      event.preventDefault();
+      setError("");
+      try {
+        onRecord(length, width);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Check the measured cutout.");
+      }
+    }}>
+      <p className="small-note">{openingCutoutInstructions} The recorded thickness stays {formatStockLength(limits[2])}.</p>
+      <LengthInput label="Usable length along grain" value={length} min={0.001} max={limits[0]} required onChange={setLength} />
+      <LengthInput label="Usable width across grain" value={width} min={0.001} max={limits[1]} required onChange={setWidth} />
+      <button type="submit" className="button secondary" disabled={!(length > 0 && width > 0)}>Add cutout to Cut pool</button>
+      {error && <p className="form-error" role="alert">{error}</p>}
+    </form>
+  </details>;
 }

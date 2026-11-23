@@ -1,0 +1,54 @@
+import { readFile } from "node:fs/promises";
+import { expect, test } from "@playwright/test";
+import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { projectSchema } from "../../src/model";
+import { drywallBottomPlateStudy } from "../helpers/drywallBottomPlateStudy";
+
+test("check the drywall-to-floor detail, buy the joint sealant once, and export both seams in order", async ({ page }, info) => {
+  const { underneath, bottom } = drywallBottomPlateStudy();
+  const project = { ...underneath.project, name: `Wall-to-floor detail ${crypto.randomUUID().slice(0, 8)}` };
+  await page.goto("./");
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "wall-to-floor.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("How do I seal drywall to the bottom plate?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await dialog.getByRole("button", { name: "Open drywall-to-bottom-plate seal", exact: true }).click();
+  await dialog.getByRole("combobox", { name: "Wood bottom plate", exact: true }).selectOption(bottom.id);
+  await dialog.getByRole("combobox", { name: "Long side to seal", exact: true }).selectOption("b");
+  await dialog.getByRole("spinbutton", { name: "Widest measured gap", exact: true }).fill("0.125");
+  await dialog.getByRole("spinbutton", { name: "Measured fill depth", exact: true }).fill("0.125");
+  await dialog.getByRole("checkbox", { name: /^This is a dry, unrated interior detail/ }).check();
+  await dialog.getByRole("button", { name: "Preview bottom plate seal", exact: true }).click();
+  const preview = dialog.getByRole("region", { name: "Bottom plate seal preview" });
+  await expect(preview).toContainText("8 ft clear for a bead");
+  await expect(preview.getByRole("listitem")).toHaveCount(2);
+  await preview.getByRole("button", { name: "Save bottom plate seal and show in 3D", exact: true }).click();
+  await expect(page.getByTestId("drywall-bottom-plate-seam-start")).toHaveText("Bead start · Drywall-to-bottom-plate seal");
+  await page.screenshot({ path: info.outputPath("wall-to-floor-seal.png") });
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await dialog.getByRole("button", { name: /^Add 1 cartridge of OSI SC175/ }).click();
+  await expect(dialog.getByRole("list", { name: "Home Depot purchase review" })).toContainText("#202768254");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft()).revision).toBe(1);
+  const stored = projectSchema.parse((await draft()).project);
+  expect(stored.drywallBottomPlateSeals?.[0].plateId).toBe(bottom.id);
+  expect(stored.bottomPlateSeals?.length).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/Air-seal Wall bottom plate[\s\S]*Air-seal drywall at Wall bottom plate[\s\S]*Hang drywall at the sealed plates/);
+  expect(guide).toMatch(/## Drywall-to-bottom-plate seals[\s\S]*4 ft of modeled bead path[\s\S]*1 cartridge of OSI SC175/);
+});

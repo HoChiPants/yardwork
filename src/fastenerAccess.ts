@@ -13,6 +13,7 @@ import {
   solidOverlap,
 } from "./solidCollision";
 import { rotate } from "./spatial";
+import { drywallPlateGuidePanels } from "./topPlateSeal";
 
 const epsilon = 1e-6;
 export const driverAccessScope =
@@ -20,59 +21,57 @@ export const driverAccessScope =
 
 type Stage = { title: string; index: number };
 type AccessStageOrder = "saved" | "suggested";
+export const driverAccessOrderName = {
+  saved: "Saved guide order",
+  suggested: "Suggested assembly order",
+  mixed: "Order varies by approach",
+} as const;
 type Envelope = { center: V3; size: V3; rotation: V3 };
 export type DriverAccessLocation = {
   id: string;
   label: string;
   state: "clear" | "before-stage" | "within-stage" | "blocked" | "pending";
+  order: AccessStageOrder;
   detail: string;
   envelopes: Envelope[];
   blockerIds: string[];
 };
+export const driverAccessStateName: Record<DriverAccessLocation["state"], string> = {
+  clear: "Clear",
+  "before-stage": "Fasten before adding a later part",
+  "within-stage": "Fasten before another part in this step",
+  blocked: "Approach blocked",
+  pending: "Path needs review",
+};
 type AccessReview = {
   review: FastenerReview;
-  order: AccessStageOrder;
+  order: AccessStageOrder | "mixed";
   locations: DriverAccessLocation[];
 };
 
 function stageAssignments(project: Project) {
-  const stages = assemblyStages(project);
-  const steps = new Map(
-    project.steps.map((step, index) => [step.id, { step, index }]),
-  );
-  const stepByPart = new Map(
-    project.pieces.map((piece) => [piece.id, piece.stepId]),
-  );
-  const assigned = stages.map((stage) => {
-    const stepId = stepByPart.get(stage.memberIds[0]);
-    const saved = stepId ? steps.get(stepId) : undefined;
-    const phase = saved?.step.generated;
-    if (
-      phase?.kind !== "assembly-stage" ||
-      phase.stageKey !== stage.key ||
-      (phase.planId !== stage.ownerId && stage.ownerId !== project.id) ||
-      phase.memberIds.length !== stage.memberIds.length ||
-      !stage.memberIds.every(
-        (id) => stepByPart.get(id) === stepId && phase.memberIds.includes(id),
-      )
-    )
-      return undefined;
-    return saved;
-  });
-  const savedMatches = stages.length > 0 && assigned.every(Boolean);
-  return {
-    order: savedMatches ? ("saved" as const) : ("suggested" as const),
-    parts: new Map(
-      stages.flatMap((stage, index) => {
-        const saved = savedMatches ? assigned[index] : undefined;
-        const value: Stage = {
-          title: saved?.step.title ?? stage.title,
-          index: saved?.index ?? index,
-        };
-        return stage.memberIds.map((id) => [id, value] as const);
-      }),
-    ),
-  };
+  const suggested = new Map(assemblyStages(project).flatMap((stage) =>
+    stage.memberIds.map((id) => [id, { ...stage, index: stage.order }] as const),
+  ));
+  const steps = new Map(project.steps.map((step, index) => [step.id, {
+    title: step.title,
+    index,
+    phase: step.generated,
+    members: new Set(step.generated?.kind === "assembly-stage" ? step.generated.memberIds : []),
+  }]));
+  const drywall = drywallPlateGuidePanels(project);
+  const saved = new Map<string, Stage>();
+  for (const piece of project.pieces) {
+    const live = suggested.get(piece.id);
+    const step = steps.get(piece.stepId);
+    if (!live || !step?.members.has(piece.id) || step.phase?.kind !== "assembly-stage") continue;
+    const isDrywallPhase = drywall.standalone.has(piece.id) &&
+      step.phase.planId === project.id && step.phase.stageKey === drywall.stageKey;
+    if (isDrywallPhase ||
+      (step.phase.stageKey === live.key && step.phase.planId === live.ownerId))
+      saved.set(piece.id, step);
+  }
+  return { saved, suggested };
 }
 
 function blockersDescription(project: Project, pieces: readonly Piece[]) {
@@ -91,7 +90,7 @@ export function reviewDriverAccess(
 ): AccessReview[] {
   const measured = reviews.filter(({ plan }) => plan.driverAccess);
   if (!measured.length) return [];
-  const { order, parts } = stageAssignments(project);
+  const { saved, suggested } = stageAssignments(project);
   const candidates = project.pieces
     .filter((p) => !p.offcut && !isHardware(p.material))
     .map((piece) => ({ piece, radius: Math.hypot(...piece.size) / 2 }));
@@ -100,14 +99,13 @@ export function reviewDriverAccess(
   return measured.map((review) => {
     const { plan } = review;
     const access = plan.driverAccess!;
-    const head = parts.get(plan.head.pieceId);
-    const receiver = parts.get(plan.receiver.pieceId);
-    const ready =
-      head && receiver
-        ? head.index >= receiver.index
-          ? head
-          : receiver
-        : null;
+    const readyStage = (stages: ReadonlyMap<string, Stage>) => {
+      const head = stages.get(plan.head.pieceId);
+      const receiver = stages.get(plan.receiver.pieceId);
+      return head && receiver ? (head.index >= receiver.index ? head : receiver) : undefined;
+    };
+    const savedReady = readyStage(saved);
+    const suggestedReady = readyStage(suggested);
     const planes = [
       ...new Map(
         [
@@ -131,6 +129,7 @@ export function reviewDriverAccess(
         return {
           ...base,
           state: "pending",
+          order: savedReady ? "saved" : "suggested",
           detail:
             "Review the screw entrance and path before testing tool access.",
           envelopes: [],
@@ -194,14 +193,24 @@ export function reviewDriverAccess(
           );
         const retained = prepared.get(piece.id)!;
         return solids.some((solid) => solidOverlap(solid, retained, epsilon))
-          ? [{ piece, stage: parts.get(piece.id) }]
+          ? [piece]
           : [];
       });
-      const blockerIds = blockers.map(({ piece }) => piece.id);
+      const blockerIds = blockers.map(({ id }) => id);
+      const savedEarlier = savedReady && blockers.find(({ id }) => {
+        const stage = saved.get(id);
+        return stage && stage.index < savedReady.index &&
+          id !== plan.head.pieceId && id !== plan.receiver.pieceId;
+      });
+      const order = savedReady && (savedEarlier || blockers.every(({ id }) => saved.has(id)))
+        ? "saved" : "suggested";
+      const ready = order === "saved" ? savedReady : suggestedReady;
+      const stages = order === "saved" ? saved : suggested;
+      const stagedBlockers = blockers.map((piece) => ({ piece, stage: stages.get(piece.id) }));
       const report = (
         state: DriverAccessLocation["state"],
         detail: string,
-      ) => ({ ...base, state, detail, envelopes, blockerIds });
+      ): DriverAccessLocation => ({ ...base, order, state, detail, envelopes, blockerIds });
       if (floor || fixed.length) {
         const obstacles = [
           ...(floor ? ["the modeled floor"] : []),
@@ -220,29 +229,31 @@ export function reviewDriverAccess(
           "clear",
           "The measured straight tool approach clears the modeled assembly.",
         );
-      const blockedBy = blockersDescription(
-        project,
-        blockers.map(({ piece }) => piece),
+      const required = blockers.filter(({ id }) =>
+        id === plan.head.pieceId || id === plan.receiver.pieceId,
       );
-      const required = blockers.some(
-        ({ piece }) =>
-          piece.id === plan.head.pieceId || piece.id === plan.receiver.pieceId,
-      );
-      if (
-        required ||
-        !ready ||
-        blockers.some(({ stage }) => !stage || stage.index < ready.index)
-      )
+      if (required.length)
         return report(
           "blocked",
-          `The tool approach meets ${blockedBy}. Review a different entry, tool or assembly order.`,
+          `The tool approach meets the screw members ${blockersDescription(project, required)}. Check a different tool or entry direction.`,
         );
-      const first = blockers.reduce((a, b) =>
+      const early = ready && stagedBlockers.find(({ stage }) => stage && stage.index < ready.index);
+      if (early?.stage && ready)
+        return report(
+          "blocked",
+          `“${early.stage.title}” places ${blockersDescription(project, [early.piece])} in the tool path before “${ready.title}”. Review moving that task later or try a different tool or entry direction.`,
+        );
+      if (!ready || stagedBlockers.some(({ stage }) => !stage))
+        return report(
+          "blocked",
+          `The tool approach meets ${blockersDescription(project, blockers)}. Confirm the parts’ assembly steps or check a different tool or entry direction.`,
+        );
+      const first = stagedBlockers.reduce((a, b) =>
         a.stage!.index <= b.stage!.index ? a : b,
       ).stage!;
       const firstParts = blockersDescription(
         project,
-        blockers
+        stagedBlockers
           .filter(({ stage }) => stage?.index === first.index)
           .map(({ piece }) => piece),
       );
@@ -256,6 +267,8 @@ export function reviewDriverAccess(
             `Dry-fit both screw members during “${ready.title}” and check access before “${first.title}” adds ${firstParts}.`,
           );
     });
+    const firstOrder = locations[0]?.order ?? (savedReady ? "saved" : "suggested");
+    const order = locations.every((location) => location.order === firstOrder) ? firstOrder : "mixed";
     return { review, order, locations };
   });
 }
@@ -268,9 +281,9 @@ export function driverAccessGuideLines(
     ({ review, order, locations }) => {
       const access = review.plan.driverAccess!;
       return [
-        `${review.plan.label} · ${order === "saved" ? "Saved guide order" : "Suggested assembly order"} · shaft ${formatPreciseInches(access.shaftWidth)} wide with ${formatPreciseInches(access.bitReach)} reach · tool body ${formatPreciseInches(access.bodyWidth)} wide × ${formatPreciseInches(access.bodyLength)} long · approach travel ${formatPreciseInches(access.approachTravel)}.`,
+        `${review.plan.label} · ${driverAccessOrderName[order]} · shaft ${formatPreciseInches(access.shaftWidth)} wide with ${formatPreciseInches(access.bitReach)} reach · tool body ${formatPreciseInches(access.bodyWidth)} wide × ${formatPreciseInches(access.bodyLength)} long · approach travel ${formatPreciseInches(access.approachTravel)}.`,
         ...(locations.length
-          ? locations.map((row) => `${row.label} · ${row.detail}`)
+          ? locations.map((row) => `${row.label} · ${order === "mixed" ? `${driverAccessOrderName[row.order]} · ` : ""}${row.detail}`)
           : ["Record a screw location to check its tool approach."]),
         driverAccessScope,
       ];

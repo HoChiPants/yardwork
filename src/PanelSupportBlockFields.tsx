@@ -1,35 +1,49 @@
 import { useState } from "react";
-import { formatStockLength } from "./measurement";
+import { formatPreciseInches, formatStockLength } from "./measurement";
+import { LengthInput } from "./LengthInput";
 import type { MaterialId, Piece, Project } from "./model";
 import {
   panelSupportStocks,
-  previewPanelSupportBlock,
+  previewSupportBlock,
   type PanelSupportBlockPreview,
+  type SupportBlockTarget,
+  type SupportBlockPosition,
 } from "./panelSupportBlock";
 import { partLabel } from "./partLabels";
 
 export function PanelSupportBlockFields({
   project,
-  panelId,
+  target,
   stops,
   preview,
   onPreview,
   onAdd,
 }: {
   project: Project;
-  panelId: string;
+  target: SupportBlockTarget;
   stops: readonly Piece[];
   preview: PanelSupportBlockPreview | null;
   onPreview: (fit: PanelSupportBlockPreview | null) => void;
-  onAdd: (fit: PanelSupportBlockPreview) => void;
+  onAdd: (fit: PanelSupportBlockPreview, reviewJoints?: boolean) => void;
 }) {
   const [stopId, setStopId] = useState(stops[0].id);
   const [stock, setStock] = useState<MaterialId>("stud");
   const [reuse, setReuse] = useState(true);
+  const [x, setX] = useState(0);
+  const [z, setZ] = useState(0);
   const [error, setError] = useState("");
   function reset() {
     setError("");
     onPreview(null);
+  }
+  function check(position?: SupportBlockPosition) {
+    try {
+      setError("");
+      onPreview(previewSupportBlock(project, target, stopId, stock, reuse, position));
+    } catch (problem) {
+      onPreview(null);
+      setError(problem instanceof Error ? problem.message : "Review the support block fit.");
+    }
   }
   return (
     <section
@@ -38,7 +52,7 @@ export function PanelSupportBlockFields({
     >
       <h3>Fit a support block</h3>
       <p className="small-note">
-        Try a square-ended block centered under the part where contact stops.
+        Fit a square-ended block under the part where contact stops.
       </p>
       <label className="field">
         Part to support
@@ -83,27 +97,22 @@ export function PanelSupportBlockFields({
         />
         Use a matching offcut when one fits
       </label>
-      <button
-        type="button"
-        className="button secondary full"
-        onClick={() => {
-          try {
-            setError("");
-            onPreview(
-              previewPanelSupportBlock(project, panelId, stopId, stock, reuse),
-            );
-          } catch (problem) {
-            onPreview(null);
-            setError(
-              problem instanceof Error
-                ? problem.message
-                : "Review the support block fit.",
-            );
-          }
-        }}
-      >
-        Preview support block
-      </button>
+      <details className="field-section">
+        <summary>Offset from center</summary>
+        <div className="number-row">
+          <LengthInput label="Block X offset" value={x} min={-12000} max={12000} onChange={(value) => { setX(value); reset(); }} />
+          <LengthInput label="Block Z offset" value={z} min={-12000} max={12000} onChange={(value) => { setZ(value); reset(); }} />
+        </div>
+        <p className="small-note">Offsets follow the workspace axes from the center of the receiving underside.</p>
+      </details>
+      <div className="button-row">
+        <button type="button" className="button secondary small" onClick={() => check(x === 0 && z === 0 ? undefined : { kind: "offset", x, z })}>
+          Preview support block
+        </button>
+        <button type="button" className="button secondary small" onClick={() => check({ kind: "nearby" })}>
+          Find nearby fit
+        </button>
+      </div>
       {error && (
         <p className="form-error" role="alert">
           {error}
@@ -118,6 +127,9 @@ export function PanelSupportBlockFields({
               : "the modeled floor"}{" "}
             to {partLabel(project, preview.stopId)}.
           </p>
+          {preview.offset.some((value) => Math.abs(value) > 1e-7) && <p>
+            Offset from underside center · X {formatPreciseInches(preview.offset[0])} · Z {formatPreciseInches(preview.offset[1])}.
+          </p>}
           <p>
             {preview.reusedId
               ? `Use ${partLabel(project, preview.reusedId)} from the Cut pool. ${preview.operations.length ? preview.operations.join(" · ") + "." : "Fits as measured."}`
@@ -150,6 +162,10 @@ export function PanelSupportBlockFields({
               onClick={() => onAdd(preview)}
             >
               Add support block
+            </button>
+            <button type="button" className="button secondary" disabled={!!preview.motionConflicts.length}
+              onClick={() => onAdd(preview, true)}>
+              Add and review joints
             </button>
             <button type="button" className="button secondary" onClick={reset}>
               Cancel preview

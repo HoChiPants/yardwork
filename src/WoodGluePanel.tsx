@@ -1,4 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { WoodGlueFacesPanel } from "./WoodGlueFacesPanel";
+import type { GlueFaceMarker } from "./woodGlueFaces";
 import { reviewConnectionContact } from "./connectionContacts";
 import type { Project } from "./model";
 import { purchaseUnitLabel } from "./purchaseUnits";
@@ -6,12 +8,18 @@ import { woodGlue } from "./woodGlueReference";
 import { estimateWoodGlue, isWoodGlueEstimate, saveWoodGlueEstimate } from "./woodGlueTakeoff";
 import type { WoodJointDecisionEntry } from "./woodJointDecisions";
 
-export function WoodGluePanel({ project, joints, onChange }: {
+export function WoodGluePanel({ project, joints, jointId, onChange, onShow }: {
   project: Project;
   joints: WoodJointDecisionEntry[];
+  jointId?: string;
   onChange: (project: Project) => void;
+  onShow: (marker: GlueFaceMarker | null) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!jointId);
+  const panel = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (jointId) panel.current?.scrollIntoView({ block: "nearest" });
+  }, [jointId]);
   const [preview, setPreview] = useState<{
     project: Project;
     area: number;
@@ -55,9 +63,10 @@ export function WoodGluePanel({ project, joints, onChange }: {
   }
 
   return (
-    <details className="field-section" onToggle={(event) => {
+    <details ref={panel} open={open} className="field-section" onToggle={(event) => {
       setOpen(event.currentTarget.open);
       if (!event.currentTarget.open) {
+        onShow(null);
         setPreview(undefined);
         setError("");
         setMessage("");
@@ -67,13 +76,14 @@ export function WoodGluePanel({ project, joints, onChange }: {
       {open && (
         <>
           <p className="small-note">{woodGlue.scope}</p>
+          <WoodGlueFacesPanel project={project} joints={glueJoints} jointId={jointId} onChange={onChange} onShow={onShow} />
           {saved && <p className="small-note">Saved estimate · {saved.note}</p>}
           {glueJoints.length > ready.length && (
             <p className="small-note">{glueJoints.length - ready.length} glue {glueJoints.length - ready.length === 1 ? "joint needs" : "joints need"} fit review.</p>
           )}
           {ready.length ? (
             <>
-              <p className="small-note">Largest modeled face per joint. Confirm the areas you will actually coat and count each coated surface once.</p>
+              <p className="small-note">Enter a field-measured area for a manual estimate. The reference below shows the largest contact patch per joint.</p>
               <ul className="small-note">
                 {ready.map(({ id, title, memberIds }) => {
                   const area = reviewConnectionContact(parts.get(memberIds[0])!, parts.get(memberIds[1])!).area;

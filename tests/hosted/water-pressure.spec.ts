@@ -2,6 +2,71 @@ import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { blankProjectCode } from "../../src/projectCodeSchema";
+import { applyCommand, blank, step, type SectionCommand } from "../../src/model";
+import { previewWaterRun } from "../../src/wallWaterApply";
+import { previewWallDrywall } from "../../src/wallDrywall";
+import { generateBuildGuide, guideIsCurrent } from "../../src/guide";
+import { reviewAssemblyOrder } from "../../src/assemblyOrder";
+import { transformSection } from "../../src/sections";
+import { guideMarkdown } from "../../src/engine";
+
+test("the planner and build guide flag drywall scheduled before the water test", async ({ page }) => {
+  const command: SectionCommand = { type: "wall", width: 96, height: 96, depth: 48, spacing: 16, wallStock: "hd-spf-2x6-8" };
+  const framed = applyCommand(blank("Water rough-in before finish"), command);
+  const [wall] = framed.sections;
+  const { project: piped } = previewWaterRun(framed, {
+    name: "Sink branch", sectionId: wall.id, materialId: "hd-pex-u860w10",
+    start: 3, end: 93, height: 24, depth: 0, bore: 0.875, reuse: false,
+  });
+  const options = { side: "front", stockId: "hd-usg-drywall-half-8", floorGap: 0.5 } as const;
+  const modeled = previewWallDrywall(piped, { ...options, wallId: wall.id });
+  const added = applyCommand(modeled.project, command);
+  const dry = added.sections.find(({ id, generator }) =>
+    generator?.type === "wall" && !modeled.project.sections.some((section) => section.id === id))!;
+  const separate = transformSection(added, dry.id, [0, 0, 144], dry.rotation);
+  const unrelated = previewWallDrywall(separate, { ...options, wallId: dry.id });
+  const guide = generateBuildGuide(unrelated.project);
+  const review = guide.steps.find(({ generated }) => generated?.kind === "water-pressure-review")!;
+  expect(guideIsCurrent(guide)).toBe(true);
+  expect(review.notes).toContain(modeled.section.name);
+  expect(review.notes).not.toContain(unrelated.section.name);
+  expect(reviewAssemblyOrder(guide)).toEqual([]);
+  const early = step("Close drywall early", "Install the panels at the sink wall.");
+  const earlyParts = new Set([...modeled.section.pieceIds, ...unrelated.section.pieceIds.slice(0, 1)]);
+  const custom = {
+    ...guide,
+    steps: guide.steps.flatMap((task) => task === review ? [early, task] : [task]),
+    pieces: guide.pieces.map((part) => earlyParts.has(part.id) ? { ...part, stepId: early.id } : part),
+  };
+  const finding = reviewAssemblyOrder(custom).find(({ current }) => current.step.id === early.id);
+  expect(finding?.prerequisites.map(({ step }) => step.id)).toEqual([review.id]);
+  const sheet = guide.pieces.find(({ id }) => id === modeled.section.pieceIds[0])!;
+  const cover = guide.steps.find(({ id }) => id === sheet.stepId)!;
+  const project = {
+    ...guide,
+    steps: guide.steps.filter((task) => task !== cover).flatMap((task) => task === review ? [cover, task] : [task]),
+  };
+  expect(guideIsCurrent(project)).toBe(true);
+  const order = guideMarkdown(project);
+  expect(order).toMatch(/Review moving this step after step \d+ \(Review water test before concealment\)/);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "rough-in-lining.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("What should I check before hanging drywall?");
+  await dialog.getByRole("button", { name: /^(Explore idea|Explore with built-in layout)$/ }).click();
+  const answer = dialog.getByRole("region", { name: "Water rough-in before drywall" });
+  await expect(answer).toContainText(modeled.section.name);
+  await expect(answer).not.toContainText(unrelated.section.name);
+  await expect(answer).toContainText("Move the lining after the review.");
+  await answer.getByRole("button", { name: "Open lining step", exact: true }).click();
+  await expect(page.getByRole("heading", { name: cover.title, exact: true })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Review water test before concealment" })).toBeVisible();
+});
 
 test("log a kitchenette water test, separate the hold reviews and reopen historical evidence after a layout change", async ({ page }) => {
   test.setTimeout(150_000);

@@ -49,7 +49,7 @@ export function CutStudio({
 }: {
   project: Project;
   pieceId: string;
-  onApply: (next: Project, kind: "trim" | "trim-reuse" | "round" | "rectangle") => void;
+  onApply: (next: Project, kind: "trim" | "trim-reuse" | "round" | "rectangle" | "opening-recovery") => void;
   onClose: () => void;
 }) {
   const source = project.pieces.find((p) => p.id === pieceId)!;
@@ -257,6 +257,7 @@ export function CutStudio({
           rectangular={mode === "rectangle"}
           piece={source}
           onApply={(next) => onApply(next, mode)}
+          onRecover={(next) => onApply(next, "opening-recovery")}
           onClose={onClose}
         />
       ) : (

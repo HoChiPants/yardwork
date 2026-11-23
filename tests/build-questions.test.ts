@@ -6,7 +6,7 @@ import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
 import { guideMarkdown, validate } from "../src/engine";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
 import { blank, part, projectSchema } from "../src/model";
-import { saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
+import { saveMotionPlan, saveMotionTestScenario, saveMotionTestSetup } from "../src/mechanismMotion";
 import { planDedicatedBoardCuts } from "../src/recordStockCutLayout";
 
 test("workspace questions leave layout and edit requests to the planner", () => {
@@ -26,6 +26,21 @@ test("workspace questions leave layout and edit requests to the planner", () => 
   });
 });
 
+test("elevation prompts resolve a part label and preserve the measured datum", () => {
+  const project = blank("Shelf height");
+  const step = project.steps[0].id;
+  const shelf = part("Shelf", "plywood", [12, 0.75, 12], [0, 5, 0], step, "Cabinet");
+  project.pieces = [shelf];
+  const request = buildQuestion("Please raise P1 so its underside is two feet 3 inches above the floor.")!;
+  assert.deepEqual(request, { kind: "part-elevation", label: "P001", height: 27 });
+  const answer = answerBuildQuestion(project, request, []);
+  assert.match(answer.detail, /Shelf would move to 27 in above the floor/);
+  assert.deepEqual(answer.link?.action, { kind: "part-elevation", id: shelf.id, height: 27 });
+  assert.equal(project.pieces[0].position[1], 5);
+  assert.equal(answerBuildQuestion(project, buildQuestion("Set P99’s bottom to 2 ft")!, []).link, undefined);
+  assert.match(answerBuildQuestion(project, buildQuestion("Set the bottom of P1 to a little higher")!, []).detail, /Enter a height in feet or inches/);
+});
+
 test("the editable cabinet practice plan reports the actual targets in build questions and its cut guide", () => {
   const asset = (name: string) => readFileSync(new URL(`../public/examples/motion/${name}`, import.meta.url), "utf8");
   const project = projectSchema.parse(JSON.parse(asset("limited-linked-travel.yardwork.json")));
@@ -41,6 +56,11 @@ test("the editable cabinet practice plan reports the actual targets in build que
   assert.equal(project.plannedCutSources?.length, 1);
   assert.ok(project.pieces.some(({ offcut }) => offcut));
   assert.equal(guideMarkdown(project), asset("limited-linked-travel-guide.md"));
+  const compare = buildQuestion("Should I open the cabinet door or drawer first?")!;
+  const decision = answerBuildQuestion(project, compare, []);
+  assert.match(decision.detail, /Cabinet door first/);
+  assert.doesNotMatch(decision.detail, /Pull-out tray first/);
+  assert.match(decision.link?.label ?? "", /Open order comparison/);
 });
 
 test("a closest-gap question selects the saved linked path and keeps ambiguous paths explicit", () => {
@@ -76,6 +96,38 @@ test("a closest-gap question selects the saved linked path and keeps ambiguous p
   assert.equal(answerBuildQuestion(saved.project, wrongName, []).link?.action.kind, "motion-setup");
   const missingPart = buildQuestion("Find the closest gap between P1 and P7")!;
   assert.match(answerBuildQuestion(saved.project, missingPart, []).detail, /Choose two different part labels/);
+});
+
+test("contact questions use the named motion test and the requested direction", () => {
+  const project = blank("Drawer beside trim");
+  const step = project.steps[0].id;
+  const drawer = part("Drawer", "plywood", [2, 2, 2], [0, 6, 0], step, "Cabinet");
+  const trim = part("Trim", "plywood", [2, 2, 2], [6, 6, 0], step, "Cabinet");
+  const { project: withSlide, plan } = saveMotionPlan({ ...project, pieces: [drawer, trim] }, {
+    label: "Drawer", memberIds: [drawer.id], mechanism: { kind: "slide", axis: [1, 0, 0], travel: 12 },
+  });
+  const { project: named, scenario } = saveMotionTestScenario(withSlide, plan.id, "Full clearance", {
+    held: [], sequenceTargets: { selected: { kind: "slide", travel: 12 } },
+  });
+  const shortened = saveMotionTestSetup(named, plan.id, {
+    held: [], sequenceTargets: { selected: { kind: "slide", travel: 2 } },
+  });
+  const request = buildQuestion('Where does P1 hit when closing in “Full clearance”?')!;
+  assert.deepEqual(request, { kind: "motion-contact", subject: "P1", direction: "closing", testName: "full clearance" });
+  const reported = answerBuildQuestion(shortened, request, []);
+  assert.equal(reported.rows?.length, 1);
+  assert.match(reported.rows?.[0].detail ?? "", /Closing pauses near 7\.99 in.*P002 · Trim.*Approach at 8 in.*Approximate local marks/);
+  assert.equal(reported.rows?.[0].link?.label, "Show closing approach");
+  assert.deepEqual(reported.rows?.[0].link?.action, {
+    kind: "motion-direction", planId: plan.id, direction: "closing", setup: scenario.setup,
+    name: scenario.name, scenarioId: scenario.id, approach: true,
+  });
+  const working = answerBuildQuestion(shortened, buildQuestion("Show first contact for Drawer on opening")!, []);
+  assert.match(working.rows?.[0].detail ?? "", /Modeled path clears to 2 in/);
+  assert.equal(working.rows?.[0].link?.label, "Preview open");
+  const missing = answerBuildQuestion(shortened, buildQuestion("Where does the drawer hit in Missing test?")!, []);
+  assert.match(missing.rows?.[0].detail ?? "", /No named test.*missing test/);
+  assert.equal(missing.rows?.[0].link, undefined);
 });
 
 test("an offcut question checks one finished board and links to prefilled placement", () => {
@@ -189,7 +241,8 @@ test("a labeled scrap answer plans cuts only from its recorded source and leaves
     { kind: "offcuts", label: "O001" },
     [],
   );
-  assert.match(shorter.detail, /No current unassigned part fits/);
+  assert.equal(shorter.link?.action.kind, "cut-pool");
+  assert.equal(shorter.rows?.[0].link?.action.kind, "offcut-split");
   const longer = answerBuildQuestion(
     project,
     { kind: "offcuts", label: "O002" },

@@ -10,7 +10,7 @@ export function DrawerStopComparison({ project, selected, linked, test, extensio
   project: Project;
   selected: MotionPlan;
   linked: MotionPlan;
-  test: Pick<MotionTestSetup, "held" | "clearance">;
+  test: Pick<MotionTestSetup, "held" | "clearance" | "additionalClearances">;
   extension: number;
   maxAngle: number;
   initialAngles?: readonly number[];

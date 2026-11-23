@@ -101,8 +101,8 @@ export function CheckAreaMarkers({
         />
       ))}
       {area.referenceLines?.map((line, index) => (
-        <Line key={index} points={line.map(feet)} color="#286985" lineWidth={5}
-          renderOrder={10} depthTest={false} depthWrite={false} raycast={() => null} />
+        <Line key={index} points={line.map(feet)} color="#286985" lineWidth={area.kind === "roof-deck-end" ? 2 : 5}
+          renderOrder={area.kind === "roof-deck-end" ? 8 : 10} depthTest={false} depthWrite={false} raycast={() => null} />
       ))}
       <Html
         center

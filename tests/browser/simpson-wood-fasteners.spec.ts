@@ -24,6 +24,7 @@ import { guideIsCurrent } from "../../src/guide";
 import { fastenerScheduleCsv } from "../../src/fastenerCsv";
 import { supplyRows } from "../../src/supplies";
 import { toolChecklist } from "../../src/tools";
+import { fastenerDistanceStudy } from "../helpers/fastenerDistanceStudy";
 
 test.setTimeout(120000);
 const csvId = "simpson-csvz3r70",
@@ -149,6 +150,25 @@ async function exportText(page: Page, title: string) {
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   return text;
 }
+test("inspect receiver distances that fall short even with a clear screw centerline", async ({ page }) => {
+  const { project, plan } = fastenerDistanceStudy();
+  await importProject(page, project);
+  const panel = await openPanel(page, plan.id);
+  const location = panel.locator(`[data-location-id='${plan.locations[0].id}']`);
+  if ((await location.getAttribute("open")) === null) await location.locator(":scope > summary").click();
+  await location.getByText("Ray path and measurements", { exact: true }).click();
+  const distances = location.getByTestId("fastener-entry-distances");
+  await distances.locator("summary").click();
+  await expect(distances).toContainText("Receiver center to nearest edge 0.25 in · nearest end 1 in");
+  await expect(distances).toContainText("Load parallel to grain · 1 in edge and 3 in end required · edge and end distance short.");
+  await expect(distances).toContainText("Withdrawal only · 0.875 in edge and 2.25 in end required");
+  const guide = await exportText(page, "Build guide Markdown");
+  expect(guide).toContain("Receiver center to nearest edge 0.25 in · nearest end 1 in");
+  expect(guide).toContain("ER-192 Tables 26 and 39");
+  const csv = await exportText(page, "Wood-fastener schedule CSV");
+  expect(csv).toContain("Receiver center-to-end (in)");
+  expect(csv).toContain("edge and end distance short");
+});
 async function saveReopen(page: Page, expected: Project) {
   await page.getByRole("button", { name: "Save project", exact: true }).click();
   await expect

@@ -1,8 +1,20 @@
+import { formatGlueArea, modeledGluePlan } from "./woodGlueFaces";
+import { woodGlue } from "./woodGlueReference";
 import { bottomPlateSealReviews, bottomPlateSealTakeoff } from "./bottomPlateSeal";
 import { wallPlateSealTakeoff } from "./topPlateSeal";
 import { subfloorAdhesiveTakeoff } from "./subfloorAdhesive";
 import { subfloorAdhesive, subfloorNails } from "./subfloorReference";
 import { subfloorCommonNailTakeoff } from "./subfloorFastening";
+import { drywallJointTape, drywallScrews } from "./drywallReference";
+import { drywallScrewTakeoff } from "./wallDrywallScrews";
+import { drywallJointTapeTakeoff } from "./wallDrywallJoints";
+import { formatStockLength } from "./measurement";
+import { cabinetDoorHingeTakeoff } from "./cabinetDoors";
+import { libertyFlushHinge } from "./cabinetDoorsReference";
+import { floorStopTakeoff } from "./doorFloorStop";
+import { everbiltFloorStop } from "./doorFloorStopReference";
+import { georgianPassageTakeoff } from "./doorHardware";
+import { georgianPassage } from "./doorHardwareReference";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { rimEdgeSealant, rimEdgeSealPurchasePurpose, rimFoam, rimFoamPurchasePurpose } from "./rimAirSealReference";
 import { reviewRimAirSeals } from "./rimAirSeals";
@@ -22,6 +34,10 @@ import { flexWrap } from "./openingFlashingReference";
 import { greenhouseDoorSealTakeoff } from "./greenhouseDoorSeal";
 import { doorSeal } from "./greenhouseDoorSealReference";
 import { trimBackerRodCutPlan, trimSeamPurchaseSummary, woodJointDecisionEntries } from "./woodJointDecisions";
+import { pipeAirSealBatches, reviewPipeAirSeals } from "./pipeAirSeal";
+import { openingSilicone } from "./openingAirSealReference";
+import { countertopSealPurchase } from "./countertopSeal";
+import { countertopSealant } from "./countertopSealReference";
 import { concreteAnchor } from "./concreteAnchorReference";
 import { assemblyStages } from "./assemblyStages";
 import { connectionPreparationItems } from "./buildPreparation";
@@ -73,7 +89,7 @@ import { edgeBandingPending, edgeBandingTitle, reviewEdgeBanding } from "./edgeB
 import { selectedToolsForProject } from "./toolGuide";
 import { toolChecklist } from "./tools";
 
-export function homeDepotStockMatch(row: BomRow) {
+export function homeDepotStockMatch(row: Pick<BomRow, "id" | "inventory">) {
   const reference = shoppingOfferForMaterial(material(row.id), "home-depot");
   const offer = reference?.offer;
   const inventory = row.inventory;
@@ -193,7 +209,25 @@ export function homeDepotPurchaseNeeds(
       marks === null ? "Subfloor fastening plans" : `${marks} planned subfloor nails · about ${subfloorNails.estimatedBoxCount} per 1-lb box`,
       required, required === null ? "Review changed or incomplete nail paths to finish the box estimate." : undefined);
   }
-  if (project.topPlateSeals?.length) {
+  const drywallBoxes = drywallScrewTakeoff(project);
+  if (drywallBoxes) include(drywallScrews.id, drywallBoxes.marks === null ? "Drywall screw layout"
+    : `${drywallBoxes.marks} planned drywall screws · estimated at ${drywallScrews.estimatedBoxCount} per 1-lb box`,
+    drywallBoxes.required, drywallBoxes.required === null ? "Review backing and screw paths before estimating boxes." : undefined);
+  const jointTape = drywallJointTapeTakeoff(project);
+  if (jointTape) include(drywallJointTape.id, jointTape.length === null ? "Drywall joint tape"
+    : formatStockLength(jointTape.length) + " of flat drywall joints · 250 ft per roll",
+    jointTape.required, jointTape.required === null ? "Review changed drywall layouts before counting tape rolls." : undefined);
+  const cabinetHinges = cabinetDoorHingeTakeoff(project);
+  if (cabinetHinges.required || cabinetHinges.review) include(libertyFlushHinge.id,
+    cabinetHinges.hinges ? `${cabinetHinges.hinges} flush cabinet door hinges` : "Fitted cabinet door hinges",
+    cabinetHinges.required || null, cabinetHinges.review ? "Review changed cabinet door fits before counting their hinges." : undefined);
+  const floorStops = floorStopTakeoff(project);
+  if (floorStops.required || floorStops.review) include(everbiltFloorStop.id, "Fitted interior floor stops",
+    floorStops.required || null, floorStops.review ? "Review changed or obstructed stop layouts before counting those stops." : undefined);
+  const knobs = georgianPassageTakeoff(project);
+  if (knobs.required || knobs.review) include(georgianPassage.id, "Fitted interior passage hardware",
+    knobs.required || null, knobs.review ? "Review both faces of the measured knob installation before including that set." : undefined);
+  if (project.topPlateSeals?.length || project.drywallBottomPlateSeals?.length) {
     const { required, needsReview } = wallPlateSealTakeoff(project);
     include(bottomPlateSealant.id, "Wall plate bead runs by work session", required || null,
       needsReview ? "Review changed or interrupted seams to finish the cartridge estimate." : undefined);
@@ -236,33 +270,48 @@ export function homeDepotPurchaseNeeds(
   }
   const ductSeal = reviewRoundDuctSeal(project);
   if (ductSeal) include(roundDuctMastic.id, roundDuctMasticPurchasePurpose, ductSeal.tubes ?? null, ductSeal.issue);
-  if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam)) {
+  if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam) || project.sections.some(({ doorCasing }) => doorCasing?.seal)) {
     const details = woodJointDecisionEntries(project);
     const trim = trimSeamPurchaseSummary(project, details);
-    if (trim) include(trimSealant.id, "Measured wood trim seams by work session", trim.required,
+    if (trim) include(trimSealant.id, "Measured trim seams by work session", trim.required,
       trim.required === null ? "Review measured seams and cartridge coverage." : undefined);
   }
+  const glue = modeledGluePlan(project);
+  if (project.countertopSeals?.length) {
+    const countertop = countertopSealPurchase(project);
+    include(countertopSealant.id, "Measured countertop splash seams by work session", countertop.count,
+      countertop.count === null ? "Review the measured countertop seams and coverage." : undefined);
+  }
+  if (glue) include(woodGlue.id, `${formatGlueArea(glue.area)} of selected wood glue faces`,
+    glue.required, glue.quantityIssue);
   if (project.greenhouseDoorSeals?.length) {
     const seal = greenhouseDoorSealTakeoff(project);
     include(doorSeal.id, "Reviewed greenhouse door weatherseal cuts", seal.required,
       seal.required === null ? "Review the saved door weatherseal plans before adding packs." : undefined);
   }
-  if (project.woodJointDecisions?.some(({ trimSeam }) => trimSeam?.backerRodId) ||
+  if (project.pipeAirSeals?.length || project.countertopSeals?.length || project.woodJointDecisions?.some(({ trimSeam }) => trimSeam?.backerRodId) ||
       project.openingFlashings?.some(({ measurements }) => measurements.airSeal?.method === "silicone")) {
-    for (const { product, rolls, hasAirSeal } of trimBackerRodCutPlan(project))
-      include(product.id, hasAirSeal ? "Measured interior seal and matching trim backing cuts" : "Measured wood trim backing cuts", rolls.length);
+    for (const { product, rolls, hasAirSeal, hasCountertop, hasPipeSeal } of trimBackerRodCutPlan(project))
+      include(product.id, hasPipeSeal ? "Measured pipe seal and matching backing cuts" : hasCountertop ? "Measured countertop and matching backing cuts" :
+        hasAirSeal ? "Measured interior seal and matching trim backing cuts" : "Measured wood trim backing cuts", rolls.length);
   }
+  const airSealUnits = new Map<string, number>();
   if (project.openingFlashings?.length) {
     const { groups, tapeGroups, airSealBatches } = reviewOpeningFlashings(project);
     const retail = groups.find(({ width }) => width === flexWrap.retailWidth);
     if (retail) include(flexWrap.id, "Checked rough opening sill cuts", retail.rolls.length);
     for (const { product, boxes } of tapeGroups)
       include(product.id, "Checked jamb and head tape cuts", boxes);
-    const units = new Map<string, number>();
     for (const { material, units: count } of airSealBatches)
-      units.set(material.id, (units.get(material.id) ?? 0) + count);
-    for (const [id, count] of units) include(id, "Interior air seal estimates by work session", count);
+      airSealUnits.set(material.id, (airSealUnits.get(material.id) ?? 0) + count);
   }
+  const pipeSeals = reviewPipeAirSeals(project);
+  const pipeCartridges = pipeAirSealBatches(pipeSeals).reduce((sum, { count }) => sum + count, 0);
+  if (pipeCartridges) airSealUnits.set(openingSilicone.id, (airSealUnits.get(openingSilicone.id) ?? 0) + pipeCartridges);
+  if (pipeSeals.some(({ issue }) => issue) && !airSealUnits.has(openingSilicone.id))
+    include(openingSilicone.id, "Pipe air seal estimate", null, "Recheck changed pipe seals before counting cartridges.");
+  for (const [id, count] of airSealUnits) include(id, id === openingSilicone.id && pipeCartridges
+    ? "Reviewed pipe and interior air seal work sessions" : "Interior air seal estimates by work session", count);
   if (project.motionPlans?.length) {
     const slideReview = drawerSlidePurchaseReview(project);
     for (const { productId, needed } of slideReview.products) {

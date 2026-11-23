@@ -11,7 +11,7 @@ export function DrawerOpeningPanel({ project, selected, linked, test, initialExt
   project: Project;
   selected: MotionPlan;
   linked: MotionPlan;
-  test: Pick<MotionTestSetup, "held" | "clearance">;
+  test: Pick<MotionTestSetup, "held" | "clearance" | "additionalClearances">;
   initialExtension: number;
   initialStop?: number;
   initialComparison?: readonly number[];

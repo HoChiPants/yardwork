@@ -135,7 +135,7 @@ test("explicit tool packages use their own snapshot and export lines without cha
 
 test("every sample offers exact shopping options for measurement, square, workholding and eye protection without inferring purchases", () => {
   const available = supplyProducts("home-depot", "tools");
-  assert.equal(available.length, 14);
+  assert.equal(available.length, 15);
   for (const name of [
     "greenhouse",
     "sauna",

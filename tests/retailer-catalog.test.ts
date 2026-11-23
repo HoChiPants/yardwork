@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { blank, material, part, projectSchema, type MaterialId, type V3 } from "../src/model";
 import { bom, cutPiece, guideMarkdown } from "../src/engine";
 import { homeDepotShoppingList } from "../src/handoff";
+import { addSupply } from "../src/supplies";
 import { groupedMaterials } from "../src/materialGroups";
 import {
   retailerCatalog,
@@ -15,6 +16,47 @@ import {
   reviewedOfferForMaterial,
   shoppingOfferForMaterial,
 } from "../src/retailerCatalog";
+
+test("Simpson connector screw sizes count separately and framing angles carry exact supply units", () => {
+  const project = blank("Connector hardware");
+  project.store = "1234";
+  const stocks = [
+    ["sd10112r100", "202071154", "SD10112R100", "479710", 1.5, 0.16, 101],
+    ["sd9212r100-r", "206101818", "SD9212R100-R", "478811", 2.5, 0.13, 1],
+  ] as const;
+  for (const [id, product, model, sku, length, shank, count] of stocks) {
+    const stock = material(id);
+    const offer = reviewedOfferForMaterial(stock, "home-depot")!;
+    assert.deepEqual([offer.productId, offer.retailerModel, offer.retailerItemNumber], [product, model, sku]);
+    assert.equal(stock.fastenerLength, length);
+    assert.equal(stock.shankDiameter, shank);
+    assert.equal(stock.packCount, 100);
+    assert.equal(stock.priceKind, "unpriced");
+    project.pieces.push(...Array.from({ length: count }, (_, i) =>
+      part(stock.name, id, stock.size, [i + 1, 2, length], project.steps[0].id, "Hardware")));
+  }
+  const now = new Date().toISOString();
+  project.inventory = stocks.map(([material, internetNumber]) => ({
+    material, internetNumber, retailer: "home-depot", name: "Synthetic price snapshot",
+    store: project.store, zip: project.zip, checkedAt: now,
+    url: `https://www.homedepot.com/p/${internetNumber}`, available: 2, price: 11,
+  }));
+  const ordered = addSupply(addSupply(project, "simpson-a23z", 2), "simpson-a33", 3);
+  const restored = projectSchema.parse(JSON.parse(JSON.stringify(ordered)));
+  const rows = bom(restored);
+  assert.equal(restored.pieces.length, 102);
+  assert.deepEqual(restored.connectorPlans, []);
+  assert.deepEqual(rows.map(({ id, quantity, total }) => [id, quantity, total]), [
+    ["sd10112r100", 2, 22], ["sd9212r100-r", 1, 11],
+  ]);
+  const shopping = homeDepotShoppingList(restored).items;
+  for (const [productId, quantity] of [["202071154", 2], ["206101818", 1], ["100375310", 2], ["100374962", 3]] as const)
+    assert.equal(shopping.find((item) => item.productId === productId)?.quantity, quantity, productId);
+  const wrongSize = { ...restored, inventory: restored.inventory!.map(({ internetNumber, ...row }) =>
+    ({ ...row, internetNumber: internetNumber === "202071154" ? "202071152" : internetNumber, url: internetNumber === "202071154"
+      ? "https://www.homedepot.com/p/202071152" : row.url })) };
+  assert.equal(bom(wrongSize).find(({ id }) => id === "sd10112r100")?.inventory, undefined);
+});
 
 test("ground-contact boards bind real stock dimensions and selling units in two palette families", () => {
   const expected: [MaterialId, string, string, string, V3][] = [
@@ -205,7 +247,7 @@ test("Home Depot regional framing listings match full-length board stock and sta
     ["stud", "338861827"],
     ["stud-10", "100077951"],
     ["stud-12", "312528815"],
-    ["two-six", "100083274"],
+    ["two-six", "334216730"],
     ["two-eight", "100049292"],
   ] as const) {
     const stock = material(id);

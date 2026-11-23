@@ -9,11 +9,13 @@ import {
   validate,
 } from "../src/engine";
 import { homeDepotShoppingList } from "../src/handoff";
-import { material, part, projectSchema } from "../src/model";
+import { addMeasuredOffcut } from "../src/measuredOffcuts";
+import { runMotionTest, saveMotionPlan } from "../src/mechanismMotion";
+import { material, part, projectSchema, type V3 } from "../src/model";
 import { reviewPanelBearing } from "../src/panelBearing";
 import { previewShelfDivider } from "../src/shelfDivider";
 import { saveShelfSagPlan, shelfSagGeometry } from "../src/shelfSag";
-import { rotate } from "../src/spatial";
+import { composeRotation, rotate } from "../src/spatial";
 import { reviewWoodSupport } from "../src/woodSupport";
 
 function fixture() {
@@ -170,4 +172,47 @@ test("a blocked bay, a floating base and inadequate sheet stock leave the plan u
     () => previewShelfDivider(project, shelf.id, "stud", false),
     /Choose a rectangular wood sheet/,
   );
+});
+
+test("the shelf divider search preserves saved slide travel, assigns real scrap and flags later movement", () => {
+  const { project, shelf } = fixture();
+  const tray = part("Practice slide-away tray", "plytanium-703", [4, 0.703, 8],
+    [-6, 2.5, shelf.position[2]], shelf.stepId, "");
+  const withMotion = saveMotionPlan({ ...project, pieces: [...project.pieces, tray] }, {
+    label: "Slide-away tray", memberIds: [tray.id], mechanism: { kind: "slide", axis: [1, 0, 0], travel: 8 },
+  }).project;
+  const prepared = addMeasuredOffcut(withMotion, shelf.stepId, "plytanium-703", [26, 18, 0.703], "Practice plywood remainder");
+  const center = previewShelfDivider(prepared, shelf.id, "plytanium-703", true);
+  assert.equal(center.offset, 17.25);
+  assert.ok(center.motion.includes("Slide-away tray"));
+  assert.ok(runMotionTest(center.project, center.project.motionPlans![0]).review!.playbackLimit(0, 8).travel < 8);
+  const moved = previewShelfDivider(prepared, shelf.id, "plytanium-703", true, { method: "find-clear" });
+  assert.ok(moved.offset > 21.5 && moved.offset < 24);
+  assert.deepEqual(moved.motion, []);
+  assert.equal(runMotionTest(moved.project, moved.project.motionPlans![0]).review!.playbackLimit(0, 8).travel, 8);
+  assert.ok(moved.after.withinTarget);
+  assert.ok(moved.after.deflection > center.after.deflection);
+  assert.ok(moved.reusedId);
+  assert.ok(moved.project.history.some(({ offcutCut }) => offcutCut?.targetId === moved.divider.id &&
+    offcutCut.inputId === moved.reusedId));
+  assert.equal(moved.project.shelfDividerPlans?.[0].offset, moved.offset);
+  assert.match(guideMarkdown(moved.project), /## Fitted shelf dividers/);
+  assert.match(guideMarkdown(moved.project), /if it is removed/);
+  assert.doesNotMatch(guideMarkdown(moved.project), /Saved movement contacts this divider/);
+
+  assert.throws(() => previewShelfDivider(prepared, shelf.id, "plytanium-703", true,
+    { method: "measured", offset: 1.6 }), /full thickness fits/);
+  const measured = previewShelfDivider(prepared, shelf.id, "plytanium-703", true, { method: "measured", offset: 24 });
+  assert.equal(measured.offset, 24);
+  assert.deepEqual(measured.motion, []);
+  const shifted = { ...moved.project, pieces: moved.project.pieces.map((piece) => piece.id === moved.divider.id
+    ? { ...piece, position: [piece.position[0] + 0.5, piece.position[1], piece.position[2]] as typeof piece.position } : piece) };
+  assert.match(validate(shifted).find(({ id }) => id === `shelf-divider-${moved.divider.id}`)!.detail, /marked offset/);
+  assert.match(guideMarkdown(shifted), /installation mark or base changed/);
+
+  const yaw: V3 = [0, Math.PI / 3, 0];
+  const oldStockMoved = { ...moved.project, pieces: moved.project.pieces.map((piece) => ({
+    ...piece, position: rotate(piece.position, yaw), rotation: composeRotation(yaw, piece.rotation),
+  })) };
+  assert.ok(!validate(oldStockMoved).some(({ id }) => id === `shelf-divider-${moved.divider.id}`));
 });

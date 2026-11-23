@@ -5,6 +5,62 @@ import { reviewMotion, saveMotionPlan } from "../../src/mechanismMotion";
 import { blank, part, projectSchema, uid } from "../../src/model";
 import { applyIdeaPlan, localIdeaPlan } from "../../src/planning";
 
+test("a door held against trim blocks drawer playback until the held angle clears", async ({ page }) => {
+  const base = blank("Drawer with an obstructed held door");
+  const step = base.steps[0].id;
+  const drawer = part("Test drawer", "plywood", [4, 4, 4], [0, 10, -2], step, "Cabinet");
+  const door = part("Neighbor door", "plywood", [12, 12, 0.75], [30, 12, 0], step, "Cabinet");
+  const trim = part("Wall trim", "plywood", [1, 8, 2], [24, 12, -6], step, "Wall");
+  const slide = saveMotionPlan({ ...base, pieces: [drawer, door, trim] }, {
+    label: drawer.name, memberIds: [drawer.id],
+    mechanism: { kind: "slide", axis: [1, 0, 0], travel: 16 },
+  });
+  const swing = saveMotionPlan(slide.project, {
+    label: door.name, memberIds: [door.id],
+    mechanism: { kind: "hinge", axis: [0, -1, 0], pivot: [24, 12, 0], travel: 90 },
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").setInputFiles({
+    name: "held-door-trim.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(swing.project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Test movement", exact: true }).click();
+  const panel = page.getByRole("region", { name: "Motion and clearance" });
+  await panel.getByRole("button", { name: "Test motion", exact: true }).click();
+  await expect(panel.getByText("No modeled interference found along this travel.")).toBeVisible();
+  await panel.getByText("Hold other parts open", { exact: true }).click();
+  await panel.getByLabel("Add a motion to hold").selectOption(swing.plan.id);
+  await expect(panel.getByRole("button", { name: "Collision at held position", exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: "Play opening", exact: true }).click();
+  const preview = page.getByTestId("motion-preview-label");
+  await expect(preview).toHaveAttribute("data-pose", "0");
+  await panel.getByRole("button", { name: "Inspect opening stop", exact: true }).click();
+  await expect(preview).toContainText("Wall trim");
+  await expect(preview).toContainText("Interfering parts in red");
+  await expect(preview).toContainText("Focused on P002 and P003");
+
+  await panel.getByText("Keep this test under a name", { exact: true }).click();
+  await panel.getByRole("textbox", { name: "Clearance test name", exact: true }).fill("Door held at 90 degrees");
+  await panel.getByRole("button", { name: "Save named test", exact: true }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/Named clearance test · Door held at 90 degrees[\s\S]+Interference at held position · P002 against P003/);
+  await page.keyboard.press("Escape");
+
+  const slider = panel.getByRole("slider", { name: "Neighbor door held position", exact: true });
+  if (!(await slider.isVisible())) await panel.getByText("Hold other parts open (1)", { exact: true }).click();
+  await slider.fill("30");
+  await expect(panel.getByText("No modeled interference found along this travel.")).toBeVisible();
+  await panel.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(preview).toHaveAttribute("data-pose", "16");
+});
+
 test("edit a drawer obstruction and retest with the same unsaved motion setup", async ({ page }) => {
   const base = blank("Retest drawer clearance");
   const step = base.steps[0].id;
@@ -479,7 +535,18 @@ test("two linked motions stop in both directions at a collision between clear en
   );
   await expect(pose).toContainText("Contact ahead · Parts in red");
   await expect(pose).toContainText("Tray");
+  const openingApproach = linked.contactApproach(linked.playbackLimit(0, 12))!;
+  await panel.getByRole("button", { name: "Show opening approach", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", String(openingApproach.travel));
+  await expect(page.getByTestId("motion-approach-marker")).toHaveText("Closest surfaces before contact");
+  await expect(panel.getByText(/Approximate local marks from modeled part centers/)).toContainText("P001 (X");
+  await page.getByRole("button", { name: "Show part axes", exact: true }).click();
+  await expect(page.getByTestId("motion-approach-axes")).toHaveText(["P001", "P002"]);
+  await page.getByRole("button", { name: "Show full project", exact: true }).click();
+  await expect(page.getByTestId("motion-approach-axes")).toHaveCount(0);
+  await expect(page.getByTestId("motion-approach-marker")).toBeVisible();
   await panel.getByRole("slider", { name: "Extension" }).fill("6");
+  await expect(page.getByTestId("motion-approach-marker")).toHaveCount(0);
   await expect(pose).toContainText("Interfering parts in red");
   await expect(panel.getByText("Tray · 10 in", { exact: true })).toBeVisible();
   await panel
@@ -495,6 +562,10 @@ test("two linked motions stop in both directions at a collision between clear en
     String(linked.playbackLimit(12, 0).travel),
   );
   await expect(pose).toContainText("Contact ahead · Parts in red");
+  const closingApproach = linked.contactApproach(linked.playbackLimit(12, 0))!;
+  await panel.getByRole("button", { name: "Show closing approach", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", String(closingApproach.travel));
+  await expect(page.getByTestId("motion-approach-marker")).toBeVisible();
   await companion.selectOption("");
   await expect(
     panel.getByText("No modeled interference found along this travel."),
@@ -504,6 +575,15 @@ test("two linked motions stop in both directions at a collision between clear en
   await expect(panel.getByText("Saved test setup", { exact: true })).toBeVisible();
   await expect(page.locator(".print-guide")).toContainText("Saved clearance test · Drawer · moves with Tray");
   await page.getByRole("button", { name: "Export", exact: true }).click();
+  const printed = page.locator(".print-guide");
+  await expect(printed).toContainText(/Opening approach at .+ · Approximate local marks from modeled part centers \(in\) · P001 \(X .+\) · P002 \(X .+\)/);
+  await expect(printed).toContainText("Closing approach at");
+  const markdownDownload = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const markdown = await readFile((await (await markdownDownload).path())!, "utf8");
+  expect(markdown).toContain("Saved clearance test · Drawer · moves with Tray");
+  expect(markdown).toMatch(/Opening approach at .+ · Approximate local marks from modeled part centers \(in\) · P001 \(X .+\) · P002 \(X .+\)/);
+  expect(markdown).toMatch(/Closing approach at .+ · Approximate local marks from modeled part centers \(in\) · P001 \(X .+\) · P002 \(X .+\)/);
   const pending = page.waitForEvent("download");
   await page.getByRole("button", { name: /^Editable project/ }).click();
   const path = await (await pending).path();
@@ -539,13 +619,29 @@ test("save a door-first drawer sequence and inspect the collision when the order
     buffer: Buffer.from(JSON.stringify(swing.project)),
   });
   await expect(dialog).toHaveCount(0);
-  await page.getByRole("button", { name: "Test movement", exact: true }).click();
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Should I open the cabinet door or drawer first?");
+  await dialog.getByRole("button", { name: "Explore idea" }).click();
+  const answer = dialog.getByRole("region", { name: "Door and drawer opening order" });
+  await expect(answer).toContainText("Cabinet door first");
+  await answer.getByRole("button", { name: "Open order comparison" }).click();
   const panel = page.getByRole("region", { name: "Motion and clearance", exact: true });
   const pose = page.getByTestId("motion-preview-label");
-  await panel.getByRole("combobox", { name: "Second motion", exact: true }).selectOption(swing.plan.id);
+  await expect(panel.getByRole("combobox", { name: "Second motion", exact: true })).toHaveValue(swing.plan.id);
   const order = panel.getByRole("combobox", { name: /Opening order/ });
-  await order.selectOption("companion-first");
-  await panel.getByRole("button", { name: "Test motion", exact: true }).click();
+  await panel.getByRole("button", { name: "Check all three orders" }).click();
+  const compared = panel.getByRole("list", { name: "Opening order results" }).getByRole("listitem");
+  await expect(compared).toHaveCount(3);
+  const drawerFirst = compared.filter({ hasText: "Pull-out drawer first" });
+  await expect(drawerFirst).toContainText("Opening stop");
+  await expect(drawerFirst).toContainText(/Contact.*Pull-out drawer.*Cabinet door/);
+  await expect(drawerFirst).toContainText("Closing stop");
+  await drawerFirst.getByRole("button", { name: "Inspect first stop" }).click();
+  await expect(pose).toContainText("Contact ahead");
+  const doorFirst = compared.filter({ hasText: "Cabinet door first" });
+  await expect(doorFirst).toContainText("Clear through opening and closing");
+  await doorFirst.getByRole("button", { name: "Preview order" }).click();
+  await expect(order).toHaveValue("companion-first");
   const progress = panel.getByRole("slider", { name: "Sequence progress", exact: true });
   await expect(progress).toHaveAttribute("aria-valuetext", "Cabinet door · 0°");
   await expect(panel.getByText("No modeled interference found along this travel.", { exact: true })).toBeVisible();
@@ -668,6 +764,24 @@ test("named clearance tests save both door and drawer orders and reopen from bui
   await expect(pose).toHaveAttribute("data-pose", "100");
   await panel.getByRole("button", { name: "Play closing", exact: true }).click();
   await expect(pose).toHaveAttribute("data-pose", "0");
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  const question = dialog.getByRole("textbox", { name: "Describe your idea" });
+  const explore = dialog.getByRole("button", { name: /^(Explore idea|Explore with built-in layout)$/ });
+  const answer = dialog.getByRole("region", { name: "Where movement meets an obstruction", exact: true });
+  await question.fill('Where does P1 hit on opening in "Door first"?');
+  await explore.click();
+  await expect(answer).toContainText("Opening path · Door first");
+  await expect(answer).toContainText("Modeled path clears");
+  await expect(answer.getByRole("button", { name: "Show opening approach", exact: true })).toHaveCount(0);
+  await question.fill('Where does the pull-out drawer hit on opening in "Drawer first"?');
+  await explore.click();
+  await expect(answer).toContainText("Opening path · Drawer first");
+  await expect(answer).toContainText("Approximate local marks from modeled part centers");
+  await answer.getByRole("button", { name: "Show opening approach", exact: true }).click();
+  await expect(picker.locator("option:checked")).toHaveText("Drawer first");
+  await expect(order).toHaveValue("selected-first");
+  await expect(page.getByTestId("motion-approach-marker")).toBeVisible();
 
   await page.evaluate(() => window.dispatchEvent(new Event("beforeprint")));
   await expect(page.locator(".print-guide")).toContainText("Named clearance test · Door first");

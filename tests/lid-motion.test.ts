@@ -2,13 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { blank, part, projectSchema, type Project, type V3 } from "../src/model";
 import { applyIdeaPlan, localIdeaPlan } from "../src/planning";
-import { cutPiece, bom, validate } from "../src/engine";
+import { cutPiece, bom, validate, guideMarkdown } from "../src/engine";
 import { endCutPlane } from "../src/cutProfiles";
 import { composeRotation, rotate } from "../src/spatial";
 import { transformSection, setSectionLidOpen } from "../src/sections";
 import { lidPreview, reviewLidTravel } from "../src/lidMotion";
 import { LID_OPEN_ANGLE_DEGREES } from "../src/motionConstants";
 import { pieceOverlap } from "../src/solidCollision";
+import { measuredHingeFixture } from "./fixtures/measuredHinge";
+import { selectHingeMotion } from "../src/hinges";
+import { saveSeatLidTest } from "../src/seatLidMotions";
+import { motionReviewTravel, runMotionTest, saveMotionPlan } from "../src/mechanismMotion";
 
 function seating() {
   return applyIdeaPlan(blank("Lid motion"), localIdeaPlan({
@@ -194,4 +198,73 @@ test("schema-valid tiny stock remains readable and reports incomplete collision 
   const findings = validate(accepted);
   assert.ok(findings.some((finding) => finding.id === `collision-geometry-${tiny.id}`));
   assert.equal(JSON.stringify(accepted), before);
+});
+
+test("linked storage lids replay from closed while keeping an intentionally saved open pose", () => {
+  const initial = seating();
+  const [one, two] = initial.sections;
+  const actual = setSectionLidOpen(initial, one.id, true);
+  const saved = saveSeatLidTest(actual, one.id, 75, two.id);
+  const project = projectSchema.parse(JSON.parse(JSON.stringify(saved.project)));
+  const motion = project.motionPlans!.find(({ id }) => id === saved.plan.id)!;
+  const before = JSON.stringify(project);
+  const result = runMotionTest(project, motion, motion.testScenarios![0].setup);
+  assert(result.review, result.error);
+  for (const angle of [0, 30, 75]) {
+    const { pieces } = result.review.preview(angle);
+    for (const seat of [one, two]) {
+      const existing = lidPreview(initial, seat.id, angle).piece;
+      const modeled = pieces.find(({ id }) => id === existing.id)!;
+      modeled.position.forEach((n, axis) => near(n, existing.position[axis]));
+      modeled.rotation.forEach((n, axis) => near(n, existing.rotation[axis]));
+    }
+  }
+  assert.equal(result.review.playbackLimit(0, 75).travel, 75);
+  assert.equal(result.review.playbackLimit(75, 0).travel, 0);
+  assert.equal(JSON.stringify(project), before);
+  assert.equal(project.sections[0].recipe?.lidOpen, true);
+  assert.match(guideMarkdown(project), /Named clearance test · Both lids/);
+});
+
+test("a linked lid uses the selected measured hinge and requires review after it changes", () => {
+  const fixture = measuredHingeFixture();
+  const selected = selectHingeMotion(fixture, fixture.lidHingePlans[0].id, true);
+  const { id } = selected.sections[0];
+  const linked = saveSeatLidTest(selected, id, 75);
+  const open = setSectionLidOpen(linked.project, id, true);
+  const tested = runMotionTest(open, linked.plan);
+  assert(tested.review, tested.error);
+  const actual = tested.review.preview(39).pieces[0];
+  const expected = lidPreview(selected, id, 39).piece;
+  actual.position.forEach((n, axis) => near(n, expected.position[axis]));
+  actual.rotation.forEach((n, axis) => near(n, expected.rotation[axis]));
+
+  const changed = selectHingeMotion(linked.project, fixture.lidHingePlans[0].id, false);
+  assert.match(runMotionTest(changed, linked.plan).error!, /hinge selection changed/);
+  const reconnected = saveSeatLidTest(changed, id, 75);
+  assert.equal(reconnected.plan.id, linked.plan.id);
+  assert(runMotionTest(reconnected.project, reconnected.plan).review);
+});
+
+test("linked lid and side pull-out can clear at endpoints and collide while moving together", () => {
+  const initial = seating();
+  const section = initial.sections[0];
+  const lid = lidPreview(initial, section.id, 0).piece;
+  const tray = part("Side pull-out", "plywood", [14, 0.75, 9], [lid.position[0] - 22, 28, 2],
+    initial.steps[0].id, "Pull-out");
+  const linked = saveSeatLidTest({ ...initial, pieces: [...initial.pieces, tray] }, section.id, 75);
+  const slide = saveMotionPlan(linked.project, { label: tray.name, memberIds: [tray.id],
+    mechanism: { kind: "slide", axis: [1, 0, 0], travel: 14 } });
+  const setup = { linkedId: slide.plan.id, held: [] };
+  const together = runMotionTest(slide.project, linked.plan, setup);
+  assert(together.review, together.error);
+  assert.deepEqual(together.review.preview(0).interferenceIds, []);
+  assert.deepEqual(together.review.preview(75).interferenceIds, []);
+  const limit = together.review.playbackLimit(0, 75);
+  assert(limit.travel > 0 && limit.travel < 75 && limit.inspectAt !== undefined);
+  assert(together.review.preview(limit.travel, limit.inspectAt).interferenceIds.includes(tray.id));
+  const ordered = runMotionTest(slide.project, linked.plan, { ...setup, openingOrder: "selected-first" });
+  assert(ordered.review, ordered.error);
+  assert.equal(ordered.review.playbackLimit(0, motionReviewTravel(ordered.review)).inspectAt, undefined);
+  assert.equal(ordered.review.playbackLimit(motionReviewTravel(ordered.review), 0).inspectAt, undefined);
 });

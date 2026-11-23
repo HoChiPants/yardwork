@@ -14,6 +14,9 @@ import { findRetailerProduct } from "../src/retailerCatalog";
 import { toolChecklist } from "../src/tools";
 import type { OpeningFlashingMeasurements, WindowFlashingTape } from "../src/openingFlashingSchema";
 import { composeRotation, rotate } from "../src/spatial";
+import { windowSealOrderStudy } from "./helpers/windowSealOrderStudy";
+import { reviewAssemblyOrder } from "../src/assemblyOrder";
+import { windowFlashingPhaseKinds, windowFlashingSchedule } from "../src/windowFlashingGuide";
 
 function frame(project = blank(), x = 0, depth = 5.5) {
   const board = (name: string, width: number, height: number, dx: number, y: number) =>
@@ -31,6 +34,38 @@ const measured: OpeningFlashingMeasurements = {
   frameDepth: 4.5, tapeWidth: 9, faceLap: 2.5, jambReturn: 6,
   pan: { kind: "back-dam", rise: 0.5 }, drainage: { kind: "gaps", centers: [33, 3, 13, 23] },
 };
+
+test("window flashing phases follow the framing and warn only on lining that masks the interior seal", () => {
+  assert.deepEqual(windowFlashingSchedule(windowSealOrderStudy(false).project)[0].covers, []);
+  const { project, members, interior, exterior, target } = windowSealOrderStudy(true, Math.PI / 6);
+  assert.deepEqual(windowFlashingSchedule(project)[0].covers, [{ id: interior.id, name: interior.name, pieceIds: [target.id] }]);
+  const [record] = project.openingFlashings!;
+  const opposite = saveOpeningFlashing(project, members, { ...record.measurements, exterior: "negative" });
+  assert.deepEqual(windowFlashingSchedule(opposite)[0].covers, []);
+  const guide = generateBuildGuide(project);
+  const [pan, fitted, seal] = windowFlashingPhaseKinds.map((kind) => guide.steps.find(({ generated }) =>
+    generated?.kind === kind && generated.planId === members.sill)!);
+  const coverId = guide.pieces.find(({ id }) => id === target.id)!.stepId;
+  const cover = guide.steps.find(({ id }) => id === coverId)!;
+  const sequence = [pan, fitted, seal, cover].map((phase) => guide.steps.indexOf(phase));
+  assert.deepEqual(sequence, [...sequence].sort((a, b) => a - b));
+  assert.deepEqual(reviewAssemblyOrder(guide), []);
+  assert.match(pan.notes, /Cut 4 ft from 9 in FlexWrap/);
+  assert.match(fitted.notes, /drainage gaps centered at 3 in, 13 in, 23 in, 33 in/);
+  assert.match(seal.notes, /Keep access at the marked perimeter before installing Drywall · back/);
+  assert.ok(!seal.notes.includes(exterior.name));
+  assert.ok(guideIsCurrent(guide));
+
+  const early = { ...guide, steps: guide.steps.filter((phase) => phase !== cover)
+    .flatMap((phase) => phase === seal ? [cover, seal] : [phase]) };
+  assert.deepEqual(reviewAssemblyOrder(early).map(({ current, prerequisites }) =>
+    [current.step.id, ...prerequisites.map(({ step }) => step.id)]), [[cover.id, seal.id]]);
+  const answer = answerBuildQuestion(early, buildQuestion("When should I seal the window?")!, []);
+  assert.deepEqual(answer.rows?.[0].link?.action, { kind: "guide-step", id: cover.id });
+  const old = projectSchema.parse({ ...guide, schemaVersion: 171, steps: guide.steps.filter((phase) => ![pan, fitted, seal].includes(phase)) });
+  assert.equal(guideIsCurrent(old), false);
+  assert.equal(guideIsCurrent(generateBuildGuide(old)), true);
+});
 
 test("the installed frame depth, pan folds and exterior drainage are checked on actual geometry", () => {
   const { project, members } = frame();
@@ -236,7 +271,10 @@ test("rod sizes follow each measured side and silicone is estimated from the bou
   assert.match(guideMarkdown(saved), /## Backer rod cut plan[\s\S]+156.625 in/);
   assert.ok(toolChecklist(saved).requirements.some(({ capability }) => capability === "apply-window-sealant"));
   assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...airSeal, sealDepth: 0.125 } }), /sealant above the rod/);
-  assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...airSeal, head: 0.5 } }), /needs a closed-cell rod/);
+  const wider = checkOpeningFlashing(project, members, { ...measured, airSeal: { ...airSeal, head: 0.5 } });
+  assert.deepEqual(wider.airSeal?.issues, []);
+  assert.equal(wider.airSeal?.edges.find(({ edge }) => edge === "Head")?.rod?.model, "C23H");
+  assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...airSeal, head: 0.501 } }), /wider than this silicone option/);
   assert.throws(() => saveOpeningFlashing(project, members, { ...measured, airSeal: { ...airSeal, availableDepth: 0.625 } }), /Right jamb needs room/);
 });
 

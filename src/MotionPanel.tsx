@@ -1,3 +1,5 @@
+import { SeatLidMotionEditor } from "./SeatLidMotionEditor";
+import { removeSeatLidMotion, type saveSeatLidTest, type SeatLidTestStart } from "./seatLidMotions";
 import { DrawerSlideMountPanel } from "./DrawerSlideMountPanel";
 import { clearDrawerSlideMount } from "./drawerSlideMounts";
 import { DrawerBoxPanel } from "./DrawerBoxPanel";
@@ -24,6 +26,10 @@ import { MotionPairClearanceFields } from "./MotionPairClearanceFields";
 import { ClosestMotionGap } from "./ClosestMotionGap";
 import { MeasuredHingePathFields } from "./MeasuredHingePathFields";
 import { MotionTravelTargetsFields } from "./MotionTravelTargetsFields";
+import { MotionObstacleOffsetPanel } from "./MotionObstacleOffsetPanel";
+import { MotionInteractionAuditPanel } from "./MotionInteractionAuditPanel";
+import { MotionOrderComparison } from "./MotionOrderComparison";
+import { offsettableMotionObstacles } from "./motionObstacleOffset";
 import {
   GreenhouseDoorDetails,
   GreenhouseDoorEditor,
@@ -31,7 +37,11 @@ import {
 import { addMissingDoorKits, greenhouseDoorChoices } from "./greenhouseDoors";
 import {
   canParkMotion,
+  inspectMotionApproach,
+  inspectMotionStop,
+  motionApproachMarksLine,
   motionDirections as directions,
+  motionDirectionStops,
   motionDistance,
   motionPairClearanceLine,
   motionPivotPreset,
@@ -39,14 +49,17 @@ import {
   motionGapSearch,
   motionReviewTravel,
   motionReviewHasLimits,
+  motionStopLine,
   motionSetup,
   removeMotionTestScenario,
   runMotionTest,
   saveMotionPlan,
   saveMotionTestScenario,
   saveMotionTestSetup,
+  shorterMotionTrial,
   type HeldMotion,
   type MotionPhase,
+  type MotionPlaybackLimit,
   type MotionPreview,
   type MotionReferenceFrame,
   type MotionReview,
@@ -56,6 +69,8 @@ import {
 import type { Project, V3 } from "./model";
 import {
   drawerSideLabels,
+  motionGapPairKey,
+  motionTestGapRequirements,
   motionTestNameLength,
   motionTestScenarioLimit,
   type DrawerSlideSetup,
@@ -542,7 +557,8 @@ function heldMotions(
   return held;
 }
 
-function testSetupFrom(linkedId: string, positions: ReadonlyMap<string, number>, openingOrder?: MotionOpeningOrder, clearance?: MotionPairClearance, sequenceTargets?: MotionSequenceTargets): MotionTestSetup | undefined {
+function testSetupFrom(linkedId: string, positions: ReadonlyMap<string, number>, openingOrder?: MotionOpeningOrder, gaps: readonly MotionPairClearance[] = [], sequenceTargets?: MotionSequenceTargets): MotionTestSetup | undefined {
+  const [clearance, ...additionalClearances] = gaps;
   const targets = linkedId ? sequenceTargets
     : sequenceTargets?.selected ? { selected: sequenceTargets.selected } : undefined;
   if (!linkedId && !positions.size && !clearance && !targets) return undefined;
@@ -550,6 +566,7 @@ function testSetupFrom(linkedId: string, positions: ReadonlyMap<string, number>,
     ...(linkedId && { linkedId }),
     ...(linkedId && openingOrder && { openingOrder }),
     ...(clearance && { clearance }),
+    ...(additionalClearances.length && { additionalClearances }),
     ...(targets && { sequenceTargets: targets }),
     held: [...positions].map(([motionId, percent]) => ({ motionId, percent })),
   };
@@ -572,6 +589,8 @@ export function MotionPanel({
   initialTest,
   drawerRequest,
   onDrawerRequestHandled,
+  seatLidRequest,
+  onSeatLidRequestHandled,
   onEditDoorway,
   onPreview,
   onChange,
@@ -582,6 +601,8 @@ export function MotionPanel({
   initialTest?: MotionTestSelection;
   drawerRequest?: { panelIds: [string, string]; spacers?: DrawerSpacerLayers; barPull?: boolean };
   onDrawerRequestHandled?: () => void;
+  seatLidRequest?: SeatLidTestStart;
+  onSeatLidRequestHandled?: () => void;
   onEditDoorway: (sectionId: string) => void;
   onPreview: (preview: MotionPreview | null, source?: Project) => void;
   ventBacking: readonly VentBackingReview[];
@@ -593,19 +614,21 @@ export function MotionPanel({
   onChange: (project: Project) => Project;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
+  const [seatLidStart, setSeatLidStart] = useState<SeatLidTestStart>();
   const [drawerPanels, setDrawerPanels] = useState<string[]>([]);
   const [drawerSpacers, setDrawerSpacers] = useState<DrawerSpacerLayers>();
   const [drawerBarPull, setDrawerBarPull] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(initialTest?.plan.id ?? "");
   const [scenarioId, setScenarioId] = useState(initialTest?.scenarioId ?? "");
   const [scenarioName, setScenarioName] = useState(() =>
-    initialTest?.plan.testScenarios?.find(({ id }) => id === initialTest.scenarioId)?.name ?? "",
+    initialTest?.inspection?.name.slice(0, motionTestNameLength) ??
+      initialTest?.plan.testScenarios?.find(({ id }) => id === initialTest.scenarioId)?.name ?? "",
   );
   const [setupDraft, setSetupDraft] = useState<{
     motionId: string;
     linkedId: string;
     openingOrder?: MotionOpeningOrder;
-    clearance?: MotionPairClearance;
+    gaps: MotionPairClearance[];
     sequenceTargets?: MotionSequenceTargets;
     positions: Map<string, number>;
   } | null>(() =>
@@ -613,7 +636,7 @@ export function MotionPanel({
       motionId: initialTest.plan.id,
       linkedId: initialTest.setup?.linkedId ?? "",
       openingOrder: initialTest.setup?.openingOrder,
-      clearance: initialTest.setup?.clearance,
+      gaps: motionTestGapRequirements(initialTest.setup),
       sequenceTargets: initialTest.setup?.sequenceTargets,
       positions: heldPositionsFrom(initialTest.setup),
     } : null,
@@ -640,11 +663,13 @@ export function MotionPanel({
   const heldPositions = draft?.positions ?? savedPositions;
   const linkedId = draft ? draft.linkedId : savedSetup?.linkedId ?? "";
   const openingOrder = draft ? draft.openingOrder : savedSetup?.openingOrder;
-  const clearance = draft ? draft.clearance : savedSetup?.clearance;
+  const savedGaps = motionTestGapRequirements(savedSetup);
+  const gaps = draft?.gaps ?? savedGaps;
+  const [gapEditorIndex, setGapEditorIndex] = useState(0);
   const sequenceTargets = draft ? draft.sequenceTargets : savedSetup?.sequenceTargets;
-  const testSetup = testSetupFrom(linkedId, heldPositions, openingOrder, clearance, sequenceTargets);
+  const testSetup = testSetupFrom(linkedId, heldPositions, openingOrder, gaps, sequenceTargets);
   const sameSetup = JSON.stringify(testSetup) === JSON.stringify(
-    testSetupFrom(savedSetup?.linkedId ?? "", savedPositions, savedSetup?.openingOrder, savedSetup?.clearance, savedSetup?.sequenceTargets),
+    testSetupFrom(savedSetup?.linkedId ?? "", savedPositions, savedSetup?.openingOrder, savedGaps, savedSetup?.sequenceTargets),
   );
   const trimmedName = scenarioName.trim();
   const nameMatch = scenarios.find(({ name }) => name.toLowerCase() === trimmedName.toLowerCase());
@@ -685,11 +710,33 @@ export function MotionPanel({
     activeReview.value.plan.id === selected?.id
       ? activeReview.value
       : null;
+  const directionStops = useMemo(() => review ? motionDirectionStops(review) : [], [review]);
   const requestedGap = review && review === initialTest?.result.review ? initialTest?.gapPair : undefined;
   const requestedSearch = useMemo(
     () => review && requestedGap ? motionGapSearch(review, requestedGap) : undefined,
     [review, requestedGap],
   );
+  const [shorterResult, setShorterResult] = useState<{ review: MotionReview; text: string }>();
+  const [offsetRequest, setOffsetRequest] = useState<{
+    review: MotionReview;
+    obstacleId: string;
+    travel: number;
+    phase?: MotionPhase;
+  }>();
+  const offset = offsetRequest?.review === review ? offsetRequest : undefined;
+  const offsetOptions = useMemo(() => {
+    if (!review) return new Set<string>();
+    const ids = review.hits.map(({ obstacleId }) => obstacleId);
+    for (const { result, requirement } of review.clearances ?? [])
+      if (result.status === "short") ids.push(requirement.otherId);
+    return new Set(offsettableMotionObstacles(project, ids).map(({ id }) => id));
+  }, [project, review]);
+
+  function startOffset(obstacleId: string, travel: number, phase?: MotionPhase) {
+    if (!review || !offsetOptions.has(obstacleId)) return;
+    show(travel, undefined, phase);
+    setOffsetRequest({ review, obstacleId, travel, phase });
+  }
 
   function test(
     plan: MotionPlan,
@@ -713,9 +760,38 @@ export function MotionPanel({
   function loadTestSetup(plan: MotionPlan, setup?: MotionTestSetup, startClosed = false, prepared?: MotionTestSelection["result"]) {
     const positions = heldPositionsFrom(setup);
     const companion = setup?.linkedId ?? "";
-    setSetupDraft({ motionId: plan.id, linkedId: companion, positions, openingOrder: setup?.openingOrder, clearance: setup?.clearance, sequenceTargets: setup?.sequenceTargets });
+    setGapEditorIndex(0);
+    setSetupDraft({ motionId: plan.id, linkedId: companion, positions, openingOrder: setup?.openingOrder, gaps: motionTestGapRequirements(setup), sequenceTargets: setup?.sequenceTargets });
     const restart = startClosed || openingOrder !== setup?.openingOrder || (openingOrder && linkedId !== companion);
     test(plan, project, restart ? 0 : preview?.travel ?? 0, setup ?? null, prepared);
+  }
+
+  function inspectOpeningOrder(
+    plan: MotionPlan, setup: MotionTestSetup, result: MotionTestSelection["result"], stop?: MotionPlaybackLimit, name = "",
+    source?: { scenarioId?: string; approach?: true },
+  ) {
+    setSelectedPlanId(plan.id);
+    setScenarioId(source?.scenarioId ?? "");
+    setScenarioName(name.slice(0, motionTestNameLength));
+    loadTestSetup(plan, setup, true, result);
+    if (stop && result.review) {
+      const test = { planId: plan.id, setup, scenarioId: source?.scenarioId };
+      onPreview(source?.approach ? inspectMotionApproach(result.review, stop, test) : inspectMotionStop(result.review, stop, test), project);
+    }
+  }
+
+  function tryShorterTravel() {
+    if (!review) return;
+    const trial = shorterMotionTrial(project, review, activeReview?.setup);
+    if (!trial?.result.review) {
+      setShorterResult({ review, text: "No shorter travel could be verified for this setup. Inspect the first obstruction or test a different setup." });
+      return;
+    }
+    loadTestSetup(review.plan, trial.setup, true, trial.result);
+    setShorterResult({
+      review: trial.result.review,
+      text: `${trial.targets} cleared the modeled opening and closing paths.`,
+    });
   }
 
   function selectScenario(id: string) {
@@ -769,8 +845,8 @@ export function MotionPanel({
     const next = new Map(heldPositions);
     if (percent === undefined) next.delete(id);
     else next.set(id, percent);
-    setSetupDraft({ motionId: selected.id, linkedId, positions: next, openingOrder, clearance, sequenceTargets });
-    if (preview) test(selected, project, preview.travel, testSetupFrom(linkedId, next, openingOrder, clearance, sequenceTargets) ?? null);
+    setSetupDraft({ motionId: selected.id, linkedId, positions: next, openingOrder, gaps, sequenceTargets });
+    if (preview) test(selected, project, preview.travel, testSetupFrom(linkedId, next, openingOrder, gaps, sequenceTargets) ?? null);
     else {
       setActiveReview(null);
       setError("");
@@ -799,9 +875,9 @@ export function MotionPanel({
     const nextOrder = id ? order ?? undefined : undefined;
     const targets = id && id === linkedId ? sequenceTargets
       : sequenceTargets?.selected ? { selected: sequenceTargets.selected } : undefined;
-    setSetupDraft({ motionId: selected.id, linkedId: id, positions: heldPositions, openingOrder: nextOrder, clearance, sequenceTargets: targets });
+    setSetupDraft({ motionId: selected.id, linkedId: id, positions: heldPositions, openingOrder: nextOrder, gaps, sequenceTargets: targets });
     if (preview)
-      test(selected, project, openingOrder || nextOrder ? 0 : preview.travel, testSetupFrom(id, heldPositions, nextOrder, clearance, targets) ?? null);
+      test(selected, project, openingOrder || nextOrder ? 0 : preview.travel, testSetupFrom(id, heldPositions, nextOrder, gaps, targets) ?? null);
     else {
       setActiveReview(null);
       setError("");
@@ -848,9 +924,15 @@ export function MotionPanel({
   };
   const testRequest = useRef(initialTest);
   useEffect(() => {
-    if ((!initialTest?.focusDrawerOpening && !initialTest?.gapPair) || testRequest.current === initialTest) return;
+    if ((!initialTest?.focusDrawerOpening && !initialTest?.focusShorterTravel && !initialTest?.focusOrderComparison && !initialTest?.gapPair && !initialTest?.inspection) || testRequest.current === initialTest) return;
     testRequest.current = initialTest;
     edit(null);
+    if (initialTest.inspection && initialTest.setup) {
+      inspectOpeningOrder(initialTest.plan, initialTest.setup, initialTest.result, initialTest.inspection.stop, initialTest.inspection.name, {
+        scenarioId: initialTest.scenarioId, approach: initialTest.inspection.approach,
+      });
+      return;
+    }
     setSelectedPlanId(initialTest.plan.id);
     setScenarioId(initialTest.scenarioId ?? "");
     setScenarioName(initialTest.plan.testScenarios?.find(({ id }) => id === initialTest.scenarioId)?.name ?? "");
@@ -865,6 +947,12 @@ export function MotionPanel({
       onDrawerRequestHandled?.();
     }
   }, [drawerRequest]);
+  useEffect(() => {
+    if (!seatLidRequest) return;
+    setSeatLidStart(seatLidRequest);
+    edit("seat-lid-new");
+    onSeatLidRequestHandled?.();
+  }, [seatLidRequest]);
   const kind = selected?.mechanism.kind ?? "hinge";
   const distance = (value: number, phase?: MotionPhase) =>
     review ? motionReviewDistance(review, value, phase) : motionDistance(value, kind);
@@ -874,6 +962,8 @@ export function MotionPanel({
     [project, selected],
   );
   const existing = plans.find((plan) => plan.id === editing);
+  const seatLidEditor = editing === "seat-lid-new" ||
+    (existing?.mechanism.kind === "hinge" && !!existing.mechanism.seatLid);
   const greenhouseEditor =
     editing === "greenhouse-new" ||
     (existing?.mechanism.kind === "hinge" &&
@@ -898,6 +988,26 @@ export function MotionPanel({
     setSetupDraft(null);
     setEditing(null);
     test(plan, saved, 0, plan.testSetup ?? null);
+  }
+
+  function addSeatLid(result: ReturnType<typeof saveSeatLidTest>) {
+    const { plan, scenario } = result;
+    const saved = onChange(result.project);
+    setSelectedPlanId(plan.id);
+    setScenarioId(scenario?.id ?? "");
+    setScenarioName(scenario?.name ?? "");
+    setSetupDraft(null);
+    setEditing(null);
+    test(plan, saved, 0, scenario?.setup ?? null);
+  }
+
+  function removeLinkedLid(plan: MotionPlan) {
+    onChange(removeSeatLidMotion(project, plan));
+    setSelectedPlanId("");
+    setScenarioId("");
+    setScenarioName("");
+    setSetupDraft(null);
+    edit(null);
   }
 
   function saveDraft(draft: MotionPlanInput) {
@@ -988,8 +1098,13 @@ export function MotionPanel({
           <a className="text-button" href={workshopAsset("/examples/motion/limited-linked-travel.yardwork.json")} download>
             Download shared travel practice plan
           </a>
+          <a className="text-button" href={workshopAsset("/examples/motion/cabinet-two-gaps.yardwork.json")} download>
+            Download door and drawer gap practice plan
+          </a>
         </div>
       )}
+      {plans.length > 1 && editing === null && <MotionInteractionAuditPanel project={project} describe={describe}
+        onInspect={(plan, setup, result, name, stop) => inspectOpeningOrder(plan, setup, result, stop, name)} />}
       {plans.length > 0 && editing === null && (
         <label className="field">
           Saved motion
@@ -1057,6 +1172,13 @@ export function MotionPanel({
           </span>
         </label>
       )}
+      {selected && linked && testSetup && editing === null && (
+        <MotionOrderComparison key={JSON.stringify([selected.id, linked.id, testSetup.held, gaps, sequenceTargets])}
+          project={project} selected={selected} companion={linked} setup={testSetup} describe={describe}
+          expanded={initialTest?.focusOrderComparison}
+          onPreview={(setup, result, stop) => inspectOpeningOrder(selected, setup, result, stop)}
+        />
+      )}
       {selected && editing === null && (
         <MotionTravelTargetsFields
           key={JSON.stringify(["travel targets", selected.id, linked?.id, sequenceTargets])}
@@ -1064,12 +1186,12 @@ export function MotionPanel({
           companion={linked}
           current={sequenceTargets}
           sequential={!!openingOrder}
-          onTest={(targets) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, clearance, targets), true)}
+          onTest={(targets) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, gaps, targets), true)}
         />
       )}
       {selected && linked && testSetup && drawerOpeningPair && editing === null && (
         <DrawerOpeningPanel
-          key={JSON.stringify([selected.id, linked.id, testSetup.held, clearance, drawerOpeningExtension, requestedDrawerStop])}
+          key={JSON.stringify([selected.id, linked.id, testSetup.held, gaps, drawerOpeningExtension, requestedDrawerStop])}
           project={project}
           selected={selected}
           linked={linked}
@@ -1137,12 +1259,16 @@ export function MotionPanel({
       )}
       {selected && editing === null && (
         <MotionPairClearanceFields
-          key={JSON.stringify(["minimum gap", selected.id, linked?.id, clearance])}
+          key={JSON.stringify(["minimum gap", selected.id, linked?.id, selectedScenario?.id, gaps])}
           pieces={project.pieces}
           movingIds={[...selected.memberIds, ...linked?.memberIds ?? []]}
           labels={labels}
-          current={clearance}
-          onTest={(next) => loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, next, sequenceTargets))}
+          current={gaps}
+          activeIndex={Math.min(gapEditorIndex, Math.max(0, gaps.length - 1))}
+          onTest={(next, index) => {
+            loadTestSetup(selected, testSetupFrom(linkedId, heldPositions, openingOrder, next, sequenceTargets));
+            setGapEditorIndex(index);
+          }}
         />
       )}
       {selected && editing === null && (testSetup || savedSetup) && (
@@ -1191,6 +1317,10 @@ export function MotionPanel({
         <DrawerBoxPanel key={JSON.stringify([drawerPanels, drawerSpacers, drawerBarPull])} project={project}
           initialPanels={drawerPanels} initialSpacers={drawerSpacers} initialBarPull={drawerBarPull} onPreview={onPreview}
           onSave={addDrawer} onCancel={() => edit(null)} />
+      ) : seatLidEditor ? (
+        <SeatLidMotionEditor key={existing?.id ?? "new-seat-lid"} project={project}
+          selectedIds={selectedIds} existing={existing} start={existing ? undefined : seatLidStart} onSaved={addSeatLid}
+          onCancel={() => edit(null)} onRemove={removeLinkedLid} />
       ) : saunaEditor ? (
         <SaunaDoorEditor
           project={project}
@@ -1231,6 +1361,11 @@ export function MotionPanel({
           >
             New motion
           </button>
+          {project.sections.some(({ recipe }) => recipe?.openingLid) && (
+            <button type="button" className="button secondary" onClick={() => { setSeatLidStart(undefined); edit("seat-lid-new"); }}>
+              Use storage lids in a test
+            </button>
+          )}
           {drawerCabinetPanels(project).length >= 2 && (
             <button type="button" className="button secondary" onClick={() => {
               setDrawerPanels(selectedIds);
@@ -1312,8 +1447,36 @@ export function MotionPanel({
           {error}
         </p>
       )}
-      {review && preview && editing === null && (
+      {review && offset && editing === null && (
+        <MotionObstacleOffsetPanel key={offset.obstacleId} project={project} plan={review.plan} setup={activeReview?.setup}
+          obstacleId={offset.obstacleId} label={describe(offset.obstacleId)} onPreview={onPreview}
+          onReset={() => show(offset.travel, undefined, offset.phase)}
+          onClose={() => {
+            setOffsetRequest(undefined);
+            show(offset.travel, undefined, offset.phase);
+          }}
+          onApply={(trial) => {
+            try {
+              if (trial.source !== project || !trial.clear) throw Error("Check the offset again for the current project.");
+              const saved = onChange(trial.project);
+              const plan = saved.motionPlans!.find(({ id }) => id === review.plan.id)!;
+              setOffsetRequest(undefined);
+              test(plan, saved, 0, activeReview?.setup ?? null);
+            } catch (problem) {
+              setError(problem instanceof Error ? problem.message : "Could not apply this offset.");
+            }
+          }} />
+      )}
+      {review && preview && !offset && editing === null && (
         <div className="field-section">
+          {shorterResult?.review === review && <p className="small-note" role="status">{shorterResult.text}</p>}
+          {(review.hits.some(({ held }) => !held) || review.zone.some(({ held }) => !held) ||
+            review.siteFindings.some(({ held }) => !held) ||
+            review.clearances?.some(({ result }) => result.status === "short")) && (
+            <button type="button" className="button secondary small" onClick={tryShorterTravel}>
+              Try shorter travel
+            </button>
+          )}
           <label className="field">
             {sliderLabel} ·{" "}
             <output>{preview.positionText ?? distance(preview.travel)}</output>
@@ -1353,6 +1516,39 @@ export function MotionPanel({
               Play closing
             </button>
           </div>
+          {!!directionStops.length && (
+            <ul className="motion-findings" aria-label="Travel stops">
+              {directionStops.map(({ direction, stop }) => (
+                <li key={direction}>
+                  <p className="small-note">{motionStopLine(project, review, direction, stop, describe)}</p>
+                  <button type="button" className="text-button" onClick={() => {
+                    cancel();
+                    onPreview(inspectMotionStop(review, stop, {
+                      planId: review.plan.id, setup: activeReview?.setup, scenarioId: selectedScenario?.id,
+                    }), project);
+                  }}>Inspect {direction.toLowerCase()} stop</button>
+                  {stop.contact?.kind === "solid" && stop.approachFrom !== undefined && (
+                    <button type="button" className="text-button" onClick={() => {
+                      cancel();
+                      try {
+                        onPreview(inspectMotionApproach(review, stop, {
+                          planId: review.plan.id, setup: activeReview?.setup, scenarioId: selectedScenario?.id,
+                        }), project);
+                        setError("");
+                      } catch (cause) {
+                        setError(cause instanceof Error ? cause.message : "Could not mark the approaching surfaces.");
+                      }
+                    }}>Show {direction.toLowerCase()} approach</button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {preview.contactApproachLocalMarks && preview.focusPair && (
+            <p className="small-note" aria-label="Approach marks">
+              {motionApproachMarksLine(project, preview.focusPair, preview.contactApproachLocalMarks)}
+            </p>
+          )}
           <div className="motion-actions">
             <button
               type="button"
@@ -1375,27 +1571,36 @@ export function MotionPanel({
               </button>
             )}
           </div>
-          {review.clearance && (
-            <section aria-label="Minimum gap result" className="field-section">
-              <p className="small-note" role="status">{motionPairClearanceLine(project, review)}</p>
-              {review.clearance.result.status === "short" && (() => {
-                const { requirement, result, phase } = review.clearance;
-                return (
-                  <button type="button" className="text-button"
-                    onClick={() => show(result.at, undefined, phase, { pair: [requirement.movingId, requirement.otherId] })}>
-                    Inspect the gap
-                  </button>
-                );
-              })()}
-              <ClosestMotionGap review={review} search={review.clearance.findClosest} onInspect={({ at, phase, endpoints }) => {
-                const requirement = review.clearance?.requirement;
-                if (requirement) show(at, undefined, phase, { pair: [requirement.movingId, requirement.otherId], endpoints });
-              }} />
-            </section>
-          )}
+          {review.clearances?.map((finding) => {
+            const { requirement, result, phase, findClosest } = finding;
+            const pair: MotionCollisionFocus = [requirement.movingId, requirement.otherId];
+            return (
+              <section key={motionGapPairKey(requirement)} aria-label="Minimum gap result" className="field-section">
+                <p className="small-note" role="status">{motionPairClearanceLine(project, review, finding)}</p>
+                {result.status === "short" && (
+                  <div className="motion-actions">
+                    <button type="button" className="text-button"
+                      onClick={() => show(result.at, undefined, phase, { pair })}>
+                      Inspect the gap
+                    </button>
+                    {offsetOptions.has(requirement.otherId) && (
+                      <button type="button" className="text-button"
+                        onClick={() => startOffset(requirement.otherId, result.at, phase)}>
+                        Try moving nearby part
+                      </button>
+                    )}
+                  </div>
+                )}
+                <ClosestMotionGap review={review} search={findClosest} onInspect={({ at, phase, endpoints }) => {
+                  show(at, undefined, phase, { pair, endpoints });
+                }} />
+              </section>
+            );
+          })}
           {!review.hits.length &&
             !review.zone.length &&
             !review.siteFindings.length &&
+            !directionStops.length &&
             !review.unresolvedIds.length && (
               <p className="small-note">
                 No modeled interference found along this travel.
@@ -1417,9 +1622,9 @@ export function MotionPanel({
                       : hit.kind === "envelope"
                         ? "Possible collision · part envelope"
                         : "Clearance needs review"}{" "}
-                    near {distance(hit.first, hit.phase)}
+                    {hit.held ? "at held position" : `near ${distance(hit.first, hit.phase)}`}
                   </button>
-                  {hit.kind !== "uncertain" &&
+                  {!hit.held && hit.kind !== "uncertain" &&
                     distance(hit.closingAt, hit.phase) !== distance(hit.inspectAt, hit.phase) && (
                       <button
                         type="button"
@@ -1440,6 +1645,12 @@ export function MotionPanel({
                     )}>
                     Focus these parts
                   </button>
+                  {offsetOptions.has(hit.obstacleId) && (
+                    <button type="button" className="text-button"
+                      onClick={() => startOffset(hit.obstacleId, hit.inspectAt, hit.phase)}>
+                      Try moving obstruction
+                    </button>
+                  )}
                 </li>
               ))}
               {review.zone.map((hit) => (
@@ -1451,11 +1662,11 @@ export function MotionPanel({
                   >
                     Inspect {hit.label} work-zone limit
                   </button>
-                  <p className="small-note">{describe(hit.movingId)}</p>
+                  <p className="small-note">{describe(hit.movingId)}{hit.held && " · Held position"}</p>
                 </li>
               ))}
               {review.siteFindings.map(
-                ({ movingId, plane, status, inspectAt, phase }) => (
+                ({ movingId, plane, status, inspectAt, phase, held }) => (
                   <li key={`${movingId}/${plane.id}/${phase ?? ""}`}>
                     <button
                       type="button"
@@ -1469,7 +1680,7 @@ export function MotionPanel({
                         : "Review close pass"}{" "}
                       · {plane.label}
                     </button>
-                    <p className="small-note">{describe(movingId)}</p>
+                    <p className="small-note">{describe(movingId)}{held && " · Held position"}</p>
                   </li>
                 ),
               )}
@@ -1617,7 +1828,7 @@ export function MotionPanel({
             onChange(next);
           }} />
       )}
-      {selected && editing === selected.id && (
+      {selected && editing === selected.id && !seatLidEditor && (
         <button
           type="button"
           className="text-button"

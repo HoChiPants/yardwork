@@ -17,7 +17,8 @@ import {
   type V3,
 } from "./model";
 import { composeRotation, inverseRotation, rotate } from "./spatial";
-import { clearWaterBores, removeWaterRun, waterRunMembers } from "./wallWater";
+import { clearWaterBores, removeWaterRun } from "./wallWater";
+import { movingSections, motionsUsingParts } from "./sectionAttachments";
 import { planOffcutReuse } from "./offcutReusePlan";
 import { persistLidPose, transformRecordedLidMotion } from "./lidMotion";
 import {
@@ -43,10 +44,7 @@ export function reconcileSections(p: Project): Project {
   });
 }
 export function movingSectionIds(project: Project, section: Section) {
-  const runs = (project.waterRuns ?? []).filter((run) => run.sectionId === section.id);
-  const runIds = new Set(runs.map(({ id }) => id));
-  return new Set([...section.pieceIds, ...runs.flatMap(waterRunMembers),
-    ...(project.waterStops ?? []).filter(({ port }) => runIds.has(port.runId)).map(({ pieceId }) => pieceId)]);
+  return movingSections(project, [section]).pieceIds;
 }
 
 export function transformSection(
@@ -74,7 +72,7 @@ export function transformSection(
       (value, axis) => value + origin[axis],
     ) as V3;
   };
-  const ids = movingSectionIds(p, section);
+  const { pieceIds: ids, sections: moving } = movingSections(p, [section]);
   const next = {
     ...p,
     pieces: p.pieces.map((a) => {
@@ -104,7 +102,9 @@ export function transformSection(
               ? { ...s.recipe, position: origin, yaw: normalYaw(rotation[1]) }
               : null,
           }
-        : s,
+        : moving.has(s.id)
+          ? { ...s, origin: movePoint(s.origin), rotation: translating ? s.rotation : composeRotation(delta, s.rotation) }
+          : s,
     ),
   };
   return projectSchema.parse(updateBoundSectionPose(next, id));
@@ -121,6 +121,10 @@ export function removeSection(p: Project, id: string): Project {
         pieces: p.pieces.filter((a) => !ids.has(a.id)),
         joints: p.joints.filter((j) => !ids.has(j.a) && !ids.has(j.b)),
         sections: p.sections.filter((s) => s.id !== id),
+        ...(section.cabinetDoors && {
+          motionPlans: p.motionPlans?.filter(({ memberIds }) => !memberIds.every((memberId) => ids.has(memberId))),
+          guideFingerprint: null,
+        }),
       },
       id,
     ), id),
@@ -132,6 +136,8 @@ export function duplicateSection(
 ): { project: Project; sectionId: string } {
   const section = p.sections.find((s) => s.id === id);
   if (!section) throw Error("Choose a section first.");
+  if (section.cabinetDoors) throw Error("Fit new cabinet doors at the other opening, or copy the individual panels.");
+  if (section.doorFloorStop) throw Error("Use Plan a floor door stop to fit a stop for another doorway.");
   if (section.recordedLidMotion) throw Error("Close the measured lid before duplicating its section. Select actual members for a new hinge plan afterward.");
   const members = new Set(section.pieceIds),
     ids = new Map(section.pieceIds.map((id) => [id, uid()]));
@@ -156,6 +162,8 @@ export function duplicateSection(
       }));
   const clone: Section = {
     ...structuredClone(section),
+    wallDrywall: undefined,
+    doorCasing: undefined,
     id: uid(),
     name,
     pieceIds: pieces.map((a) => a.id),
@@ -202,19 +210,67 @@ export function duplicateSection(
   );
   return { project, sectionId: clone.id };
 }
+export function looseSectionParts(p: Project): Piece[] {
+  const owned = new Set(p.sections.flatMap((section) => section.pieceIds));
+  return p.pieces.filter((part) => !part.offcut && !owned.has(part.id));
+}
+export function isSimpleSection(section: Section): boolean {
+  return !section.recipe && !section.generator && !section.floorHangerPlan &&
+    !section.recordedLidMotion && !section.wallDrywall && !section.doorFloorStop &&
+    !section.cabinetDoors && !section.doorCasing && !section.roomFraming;
+}
+
+/** Removing a group must preserve references that belong to physical parts. */
+export function ungroupSectionBlocker(project: Project, section: Section): string | undefined {
+  const { id } = section;
+  if (!isSimpleSection(section)) return "The section has a fitted assembly or a recipe.";
+  if (project.ideaBindings.some(({ entries }) =>
+    entries.some(({ sections }) => sections.some(({ sectionId }) => sectionId === id)))) {
+    return "This section belongs to a planned build.";
+  }
+  if (project.pieces.some(({ guidePlacement }) => guidePlacement?.ownerId === id))
+    return "Move the linked parts to another task in the Guide before ungrouping.";
+  if (project.waterRuns?.some(({ sectionId }) => sectionId === id) ||
+      project.sections.some((other) => other.wallDrywall?.wallId === id ||
+        other.doorCasing?.wallId === id || other.doorFloorStop?.wallId === id) ||
+      project.cabinetBacking?.some(({ input }) => input.wallId === id) ||
+      project.rimAirSeals?.some(({ input }) => input.sectionId === id)) {
+    return "A saved installation uses this section.";
+  }
+  if (project.motionPlans?.some(({ mechanism }) => mechanism.kind === "hinge" &&
+        (mechanism.doorway?.sectionId === id || mechanism.seatLid?.sectionId === id)) ||
+      project.lidHingePlans.some(({ sectionId }) => sectionId === id) ||
+      project.lidWeightPlans?.some(({ sectionId }) => sectionId === id) ||
+      project.lidStayFits?.some(({ sectionId }) => sectionId === id) ||
+      project.drawerBalancePlans?.some(({ input }) => input.sectionId === id)) {
+    return "A saved motion or weight review uses this section.";
+  }
+  if (project.attachmentPlans.some(({ points }) =>
+    points.some(({ shelf, mount }) => shelf.sectionId === id || mount.sectionId === id))) {
+    return "A saved attachment layout uses this section.";
+  }
+}
+
+export function ungroupSection(project: Project, id: string): Project {
+  const section = project.sections.find((row) => row.id === id);
+  if (!section) throw Error("Choose a section first.");
+  const blocker = ungroupSectionBlocker(project, section);
+  if (blocker) throw Error(blocker);
+  return projectSchema.parse({
+    ...project,
+    sections: project.sections.filter((row) => row.id !== id),
+  });
+}
+
 export function createSection(
   p: Project,
   pieceIds: string[],
   name: string,
 ): { project: Project; sectionId: string } {
   if (!pieceIds.length) throw Error("Choose at least one part.");
-  const used = new Set(p.sections.flatMap((s) => s.pieceIds));
   const ids = new Set(pieceIds),
-    members = p.pieces.filter((a) => ids.has(a.id));
-  if (
-    members.length !== ids.size ||
-    members.some((a) => a.offcut || used.has(a.id))
-  )
+    members = looseSectionParts(p).filter((part) => ids.has(part.id));
+  if (members.length !== ids.size)
     throw Error("Sections can only contain existing, ungrouped build parts.");
   const boxes = members.map(bounds);
   const origin = [0, 1, 2].map(
@@ -463,6 +519,7 @@ export function previewRecipeResize(
     newParts: changed.pieceIds.length,
     removedConnections: project.joints.length - candidate.joints.length,
     manualEdits: recipeModified(project, section),
+    affectedMotions: motionsUsingParts(project, new Set(section.pieceIds)).map(({ label }) => label),
     incompleteEstimate: rows.some((r) => r.oversize > 0),
     findings: validate(candidate).filter((f) => f.severity !== "info"),
   };

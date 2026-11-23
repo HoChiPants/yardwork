@@ -13,6 +13,9 @@ import { rotate } from "./spatial";
 import { stockAxes } from "./stockAxes";
 import { attachmentGeometryFingerprint } from "./attachments";
 import { getWoodFastenerProduct } from "./fastenerProducts";
+import { compareFastenerReceiverDistances, type FastenerEntryDistance } from "./fastenerEntryDistances";
+import { findFastenerPathConflicts } from "./fastenerPathConflicts";
+import { partLabel } from "./partLabels";
 import {
   fastenerPlanSchema,
   emptyFastenerMeasurements,
@@ -53,6 +56,16 @@ export type ReviewedFastenerLocation = {
   gap: number | null;
   penetration: number | null;
   availableReceiverDepth: number | null;
+  entryDistances?: {
+    head?: FastenerEntryDistance;
+    receiver?: FastenerEntryDistance;
+    receiverCases?: ReturnType<typeof compareFastenerReceiverDistances>;
+  };
+  pathDimensions?: {
+    screwDepth: number | null;
+    pilotDepth: number | null;
+    pilotDiameter: number | null;
+  };
 };
 export type FastenerReview = {
   plan: FastenerPlan;
@@ -555,6 +568,30 @@ function distinctFaces(faces: ReturnType<typeof planes>) {
         ),
   );
 }
+function entryDistances(solid: Solid, point: V3) {
+  const { piece, retained } = solid;
+  const stock = material(piece.material);
+  if (!stock.wood || stock.stockKind !== "linear") return;
+  const reference = piece.cutStock?.size ?? piece.size;
+  const { length: grain } = stockAxes(piece, reference);
+  const stockWidth = [...(stock.stockSize ?? stock.size)].sort((a, b) => a - b)[1];
+  if (!piece.cutStock?.sourceAxes && piece.stockLengthAxis === null && reference[grain] <= stockWidth + EPS) return;
+  const faces = distinctFaces(retained.filter((plane) => Math.abs(plane.constant - dot(plane.normal, point)) <= EPS));
+  if (faces.length !== 1) return;
+  const [face] = faces;
+  const axis = ([0, 1, 2] as const).find((i) => Math.abs(face.normal[i]) >= 1 - EPS &&
+    face.normal.every((component, j) => j === i || Math.abs(component) <= EPS));
+  if (axis === undefined || axis === grain) return;
+  const side = ([0, 1, 2] as const).find((i) => i !== axis && i !== grain)!;
+  const distance = (i: 0 | 1 | 2) => {
+    const direction: V3 = [0, 0, 0];
+    direction[i] = 1;
+    const range = interval(piece, point, direction, retained);
+    return range ? Math.max(0, Math.min(-range.enter, range.exit)) : undefined;
+  };
+  const edge = distance(side), end = distance(grain);
+  if (edge !== undefined && end !== undefined) return { measured: { edge, end }, normal: face.normal };
+}
 
 /** Test a conservative cylindrical pilot envelope against the receiver's retained faces. */
 function receiverPilotCrossesEdge(
@@ -963,6 +1000,21 @@ function reviewPlan(
         reviewed.receiverExitWorld = add(entrance, scale(drive, r.exit));
         reviewed.gap = Math.abs(r.enter - h.exit) < EPS ? 0 : r.enter - h.exit;
         reviewed.availableReceiverDepth = r.exit - r.enter;
+        if (r.enter >= h.exit - EPS) {
+          const headEntry = entryDistances(headSolid, origin);
+          const receiverEntry = entryDistances(receiverSolid, add(rOrigin, scale(rDrive, r.enter)));
+          const receiverCases = headEntry && receiverEntry && reviewed.gap === 0 &&
+            !head.cutPlanes.length && !receiver.cutPlanes.length &&
+            dot(headEntry.normal, direction) <= -1 + EPS && dot(receiverEntry.normal, rDrive) <= -1 + EPS
+            ? compareFastenerReceiverDistances(plan.productId, receiverEntry.measured) : [];
+          if (headEntry || receiverEntry) reviewed.entryDistances = {
+            head: headEntry?.measured, receiver: receiverEntry?.measured,
+            ...(receiverCases.length && { receiverCases }),
+          };
+          if (receiverCases.length && receiverCases.every(({ short }) => short.length))
+            localIssue("receiver-distance-short", "review",
+              "The modeled receiver edge or end distance falls short in every listed ER-192 load case. Review the location or connection detail before using it.");
+        }
         if (r.enter < h.exit - EPS)
           localIssue(
             "member-overlap",
@@ -1013,6 +1065,9 @@ function reviewPlan(
             drive,
             end,
           );
+        if (surfaceDepth !== null || pilotDepth !== null) reviewed.pathDimensions = {
+          screwDepth: surfaceDepth, pilotDepth, pilotDiameter: measured.pilotDiameter,
+        };
         if (blocked)
           localIssue(
             "unselected-layer",
@@ -1188,6 +1243,25 @@ export function fastenerReviews(
         duplicate.add(index);
       }
     }
+  }
+  const memberLabels = new Map<string, string>();
+  for (const { entry, other, memberId, crossing } of findFastenerPathConflicts(reviews)) {
+    const { review, location } = entry;
+    const label = qualifiedFastenerLabel(other.review.plan, other.location.location);
+    const memberLabel = memberLabels.get(memberId) ?? partLabel(project, memberId);
+    memberLabels.set(memberId, memberLabel);
+    const message = (crossing ? "The entered screw or pilot centerline crosses "
+      : "The conservative pilot clearance envelope overlaps ") + label +
+      " in " + memberLabel + ". Review the positions and proposed depths before drilling.";
+    const issue: FastenerIssue = {
+      code: crossing ? "crossing-fastener-path" : "overlapping-pilot-path",
+      severity: "error", message, locationId: location.location.id, pieceIds: [memberId],
+    };
+    location.issues.push(issue);
+    review.issues.push(issue);
+    location.state = "conflict";
+    location.includedInDemand = false;
+    review.state = "conflict";
   }
   for (const review of reviews)
     review.activePointCount = review.locations.filter(

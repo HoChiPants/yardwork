@@ -10,7 +10,7 @@ import type { ConnectionIntent } from "./connectionCoverage";
 import { connectionStateText } from "./GuideConnections";
 import { partLabel } from "./partLabels";
 import { recordedRemovalText } from "./recordedRemoval";
-import type { Project } from "./model";
+import { material, type Project } from "./model";
 
 function recordGroups(records: BearingConnection["records"]) {
   const groups = new Map<string, ConnectionIntent[]>();
@@ -81,7 +81,9 @@ export function BearingConnectionsPanel({
   pairs,
   withoutContact,
   focused,
+  siteNote,
   onPlan,
+  onPlanConnector,
   onReview,
   onSaveDecision,
   onClearDecision,
@@ -91,7 +93,9 @@ export function BearingConnectionsPanel({
   pairs: readonly BearingConnection[];
   withoutContact: readonly BearingDecision[];
   focused: boolean;
+  siteNote?: string;
   onPlan: (topId: string, baseId: string) => void;
+  onPlanConnector?: (baseId: string, postId: string) => void;
   onReview: (record: ConnectionIntent) => void;
   onSaveDecision: (topId: string, baseId: string, note: string) => void;
   onClearDecision: (topId: string, baseId: string) => void;
@@ -113,6 +117,7 @@ export function BearingConnectionsPanel({
       <div className="field-section">
         <p className="small-note">{summarizeBearingConnections(pairs)}.</p>
         <p className="small-note">{bearingConnectionScope}</p>
+        {siteNote && <p className="small-note">{siteNote}</p>}
         {pairs.slice(0, limit).map(({ top, base, area, records, decision }) => (
           <div
             className="field-section"
@@ -178,6 +183,11 @@ export function BearingConnectionsPanel({
               Plan wood screws for {partLabel(project, top.id)} and{" "}
               {partLabel(project, base.id)}
             </button>
+            {onPlanConnector && [top, base].every((piece) => material(piece.material).stockKind === "linear") && (
+              <button type="button" className="text-button" onClick={() => onPlanConnector(base.id, top.id)}>
+                Check connector fit for {partLabel(project, top.id)} and {partLabel(project, base.id)}
+              </button>
+            )}
             <RemovableContactEditor
               key={decision?.saved.note ?? ""}
               pairLabel={`${partLabel(project, top.id)} on ${partLabel(project, base.id)}`}

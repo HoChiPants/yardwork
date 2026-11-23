@@ -52,12 +52,37 @@ import {
 import { makeConnectorPlan, saveConnectorPlan } from "../src/connectors";
 import { connectorPurchaseSummary } from "../src/connectorPurchases";
 import { connectorPlanSchema } from "../src/connectorSchema";
+import { fastenerDistanceStudy } from "./helpers/fastenerDistanceStudy";
+import { compareFastenerReceiverDistances } from "../src/fastenerEntryDistances";
 
 const ids = ["simpson-csvz3r70", "simpson-dsvt3r70"] as const;
 const productRows = [
   { id: ids[0], mpn: "CSVZ3R70", hd: "321563361", lowes: "1002623380" },
   { id: ids[1], mpn: "DSVT3R70", hd: "321563400", lowes: "1002623434" },
 ] as const;
+
+test("Simpson SDWS compares receiver edge and end distance even when the screw path fits", () => {
+  const { project } = fastenerDistanceStudy();
+  const [location] = fastenerReviews(project)[0].locations;
+  assert.equal(location.state, "path-reviewed");
+  assert.ok(location.includedInDemand);
+  assert.ok(location.issues.some(({ code }) => code === "receiver-distance-short"));
+  assert.deepEqual(location.entryDistances?.head, { edge: 0.25, end: 1 });
+  assert.deepEqual(location.entryDistances?.receiver, { edge: 0.25, end: 1 });
+  assert.deepEqual(location.entryDistances?.receiverCases?.map(({ short }) => short), Array(3).fill(["edge", "end"]));
+  assert.match(fastenerGuideText(project), /Receiver center to nearest edge 0\.25 in · nearest end 1 in/);
+  assert.match(fastenerScheduleCsv(project), /Receiver center-to-end \(in\)/);
+
+  const passingSome = fastenerDistanceStudy([6, 0.75, 0]);
+  const [different] = fastenerReviews(passingSome.project)[0].locations;
+  assert.deepEqual(different.entryDistances?.receiverCases?.map(({ short }) => short), [[], ["end"], []]);
+  const shortened = fastenerDistanceStudy([8, 0.75, 1.5], true);
+  const [trimmed] = fastenerReviews(shortened.project)[0].locations;
+  assert.deepEqual(trimmed.entryDistances?.receiver, { edge: 0.25, end: 0.5 });
+  assert.equal(trimmed.entryDistances?.receiverCases, undefined);
+  assert.deepEqual(compareFastenerReceiverDistances("simpson-sdws16212qr50", { edge: 0.5, end: 2 })
+    .map(({ short }) => short), [[], ["edge", "end"], ["edge", "end"]]);
+});
 function fixture(): Project {
   const p = blank("SYNTHETIC three-inch screw software test");
   p.store = "SYNTHETIC-store";

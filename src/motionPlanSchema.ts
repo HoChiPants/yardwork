@@ -96,10 +96,11 @@ const motionMechanism = z.discriminatedUnion("kind", [
       greenhouseVent: greenhouseVentMotionSchema.optional(),
       saunaDoor: saunaDoorSetupSchema.optional(),
       doorway: z.strictObject({ sectionId: z.uuid() }).optional(),
+      seatLid: z.strictObject({ sectionId: z.uuid(), hingePlanId: z.uuid().optional() }).optional(),
     })
     .refine(
       (setup) =>
-        [setup.greenhouseDoor, setup.greenhouseVent, setup.saunaDoor, setup.doorway, setup.hingePath].filter(
+        [setup.greenhouseDoor, setup.greenhouseVent, setup.saunaDoor, setup.doorway, setup.seatLid, setup.hingePath].filter(
           Boolean,
         ).length <= 1,
       "Choose one moving assembly path.",
@@ -107,7 +108,8 @@ const motionMechanism = z.discriminatedUnion("kind", [
     .refine(
       ({ hingePath, travel }) => !hingePath || hingePath[hingePath.length - 1].angle === travel,
       { path: ["hingePath"], message: "Measure the hinge path at the maximum opening angle." },
-    ),
+    )
+    .refine(({ seatLid, travel }) => !seatLid || travel <= 90, "Choose a seat lid opening of 90 degrees or less."),
   z
     .strictObject({
       kind: z.literal("slide"),
@@ -150,6 +152,16 @@ const motionPairClearanceSchema = z.strictObject({
   minimum: z.number().finite().min(0.001).max(24),
 }).refine(({ movingId, otherId }) => movingId !== otherId, "Choose two different parts.");
 export type MotionPairClearance = z.infer<typeof motionPairClearanceSchema>;
+type MotionClearanceFields = { clearance?: MotionPairClearance; additionalClearances?: MotionPairClearance[] };
+export const motionGapCheckLimit = 8;
+
+export function motionGapPairKey({ movingId, otherId }: Pick<MotionPairClearance, "movingId" | "otherId">) {
+  return [movingId, otherId].sort().join("/");
+}
+
+export function motionTestGapRequirements(setup?: MotionClearanceFields) {
+  return [...(setup?.clearance ? [setup.clearance] : []), ...(setup?.additionalClearances ?? [])];
+}
 
 export const motionTestSetupSchema = z
   .strictObject({
@@ -157,6 +169,7 @@ export const motionTestSetupSchema = z
     openingOrder: motionOpeningOrder.optional(),
     sequenceTargets: motionSequenceTargetsSchema.optional(),
     clearance: motionPairClearanceSchema.optional(),
+    additionalClearances: z.array(motionPairClearanceSchema).min(1).max(motionGapCheckLimit - 1).optional(),
     held: z
       .array(
         z.strictObject({
@@ -177,6 +190,13 @@ export const motionTestSetupSchema = z
   .refine(
     ({ linkedId, sequenceTargets }) => !sequenceTargets?.companion || !!linkedId,
     { path: ["sequenceTargets"], message: "Choose a second motion before setting its travel target." },
+  )
+  .refine(
+    (setup) => {
+      const gaps = motionTestGapRequirements(setup);
+      return (!setup.additionalClearances || !!setup.clearance) && new Set(gaps.map(motionGapPairKey)).size === gaps.length;
+    },
+    { path: ["additionalClearances"], message: "Each minimum gap must check a different pair of parts." },
   );
 
 export const motionTestScenarioLimit = 8;

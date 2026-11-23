@@ -180,13 +180,13 @@ test("all original32 stock definitions and44 reviewed/candidate records remain d
     retailerCatalog.slice(0, 44).map((p) => p.id),
     Object.keys(baseline.products),
   );
-  assert.equal(catalog.length, 84);
-  assert.equal(retailerCatalog.length, 169);
+  assert.equal(catalog.length, 93);
+  assert.equal(retailerCatalog.length, 185);
   assert.equal(
     retailerCatalog.reduce((n, p) => n + p.offers.length, 0),
-    187,
+    203,
   );
-  assert.equal(retailerCatalog.filter((p) => p.category === "tool").length, 25);
+  assert.equal(retailerCatalog.filter((p) => p.category === "tool").length, 26);
 });
 
 test("thin sheets bind exact actual dimensions and per-sheet retailer units without invented manufacturer identities or roles", () => {

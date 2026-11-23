@@ -1,12 +1,12 @@
 import {
-  motionReviewTravel, motionTestFindings, resolveMotionTestSetup, reviewMotion, runMotionTest,
+  motionReviewPasses, motionReviewTravel, motionTestFindings, resolveMotionTestSetup, reviewMotion, runMotionTest,
   type MotionReview,
 } from "./mechanismMotion";
 import type { Project } from "./model";
 import type { MotionPlan, MotionTestSetup } from "./motionPlanSchema";
 import { partLabel } from "./partLabels";
 
-type SearchSetup = Pick<MotionTestSetup, "held" | "clearance">;
+type SearchSetup = Pick<MotionTestSetup, "held" | "clearance" | "additionalClearances">;
 export type DrawerStopRequest = { extension?: number } &
   ({ angle: number; angles?: never } | { angles: number[]; angle?: never });
 
@@ -67,15 +67,6 @@ function doorFirstSetup(
   };
 }
 
-function reviewPasses(review: MotionReview, end = motionReviewTravel(review)) {
-  if (review.hits.length || review.zone.length || review.siteFindings.length ||
-      review.unresolvedIds.length || (review.clearance && review.clearance.result.status !== "met")) return false;
-  const opening = review.playbackLimit(0, end);
-  const closing = review.playbackLimit(end, 0);
-  return opening.inspectAt === undefined && opening.travel === end &&
-    closing.inspectAt === undefined && closing.travel === 0;
-}
-
 const yieldToPage = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 function stopSetup(selected: MotionPlan, companion: MotionPlan, drawerTravel: number, angle: number, test: SearchSetup) {
@@ -86,11 +77,10 @@ function stopSetup(selected: MotionPlan, companion: MotionPlan, drawerTravel: nu
 }
 
 function canShortenDrawerTravel(review: MotionReview, extension: number) {
-  const clearance = review.clearance;
   // The door leg and all closed positions stay the same when the drawer target changes.
   return extension > drawerTravelIncrement && !review.unresolvedIds.length &&
     ![...review.hits, ...review.zone, ...review.siteFindings].some(({ phase }) => phase === 0) &&
-    (clearance?.result.status !== "short" || clearance.phase !== 0) &&
+    !review.clearances?.some(({ result, phase }) => result.status === "short" && phase === 0) &&
     review.playbackLimit(0, motionReviewTravel(review)).phase !== 0;
 }
 
@@ -105,7 +95,7 @@ export function checkDrawerStop(
 ): StopCheck {
   const setup = stopSetup(selected, companion, drawerTravel, angle, test);
   const result = runMotionTest(project, selected, setup);
-  if (result.review && reviewPasses(result.review))
+  if (result.review && motionReviewPasses(result.review))
     return { status: "clear", angle, setup, findings: [], canTryShorter: false };
   const describePart = (project: Project, id: string) => {
     const label = partLabel(project, id);
@@ -113,7 +103,7 @@ export function checkDrawerStop(
     return piece ? `${label} · ${piece.name}` : label;
   };
   const findings = motionTestFindings(project, result, false, describePart)
-    .filter(({ id }) => id !== "pair-clearance" || result.review?.clearance?.result.status !== "met")
+    .filter(({ gapStatus }) => gapStatus !== "met")
     .map(({ detail }) => detail);
   if (!findings.length) findings.push("Playback could not verify the whole opening and closing sequence at this stop.");
   return { status: "review", angle, setup, findings, canTryShorter: !!result.review && canShortenDrawerTravel(result.review, drawerTravel) };
@@ -132,7 +122,7 @@ export async function findShorterDrawerTravel(
   await yieldToPage();
   signal?.throwIfAborted();
   const { review } = runMotionTest(project, selected, stopSetup(selected, companion, drawerTravel, angle, test));
-  if (!review || reviewPasses(review) || !canShortenDrawerTravel(review, drawerTravel)) return;
+  if (!review || motionReviewPasses(review) || !canShortenDrawerTravel(review, drawerTravel)) return;
   return searchShorterDrawerTravel(project, selected, companion, drawerTravel, angle, test, signal);
 }
 
@@ -155,7 +145,7 @@ async function searchShorterDrawerTravel(
     const extension = index * drawerTravelIncrement;
     const setup = stopSetup(selected, companion, extension, angle, test);
     const { review: candidate } = runMotionTest(project, selected, setup);
-    if (candidate && reviewPasses(candidate)) {
+    if (candidate && motionReviewPasses(candidate)) {
       verified = { extension, setup };
       first = index + 1;
     } else {
@@ -227,10 +217,10 @@ export async function findDrawerOpening(
   for (const [index, angle] of angles.entries()) {
     options.signal?.throwIfAborted();
     const drawerPath = reviewMotion(project, drawer, [...held, { plan: door, travel: angle }], undefined, drawerTravel);
-    if (reviewPasses(drawerPath, drawerTravel)) {
+    if (motionReviewPasses(drawerPath, drawerTravel)) {
       const setup = makeSetup(angle);
       const result = runMotionTest(project, selected, setup);
-      if (result.review && reviewPasses(result.review))
+      if (result.review && motionReviewPasses(result.review))
         return { status: "clear", angle, maximum, setup, tried: index + 1, total: angles.length };
     }
     if (performance.now() >= nextYield) {

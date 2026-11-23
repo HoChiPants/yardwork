@@ -1,0 +1,445 @@
+{
+  "schemaVersion": 154,
+  "id": "04d93076-0d0b-46e4-a488-b367ff2f4591",
+  "name": "Kitchen wall cabinet backing",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "39b7548a-a971-42f8-83fe-6d2627208389"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T00:40:02.784Z",
+  "pieces": [
+    {
+      "id": "11a0d5db-a370-4729-8ce4-b310cbd0cf1b",
+      "name": "Wall 1 · bottom plate",
+      "material": "stud",
+      "size": [
+        96,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "405e35bb-9cfa-402d-8935-c900553ec759",
+      "name": "Wall 1 · top plate",
+      "material": "stud",
+      "size": [
+        96,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        95.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6ec88c54-6360-4010-aeec-d6547ed5329c",
+      "name": "Wall 1 · stud 1",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -47.25,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "eacea7ad-cf4a-4964-b59b-905cbc009234",
+      "name": "Wall 1 · stud 2",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -32,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "beb92c97-1f0a-47dd-93b4-2b5f3fcae40c",
+      "name": "Wall 1 · stud 3",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -16,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "019e732f-01c8-4257-bc12-ac2634cca6ec",
+      "name": "Wall 1 · stud 4",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        0,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c277d810-07bc-4c21-bdca-9e809ca348c9",
+      "name": "Wall 1 · stud 5",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        16,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "be25a3e2-ce48-4d2b-b9c2-de9eb6586788",
+      "name": "Wall 1 · stud 6",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        32,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "49de508b-ae87-428b-910d-d87e829a353e",
+      "name": "Wall 1 · stud 7",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        47.25,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "960e2949-ba0e-4df6-81bc-8928cb633d83",
+      "name": "Offcut · 20 in framing remnant",
+      "material": "two-six",
+      "size": [
+        5.5,
+        1.5,
+        20
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e0c69571-85b7-4273-ae3b-7241198931f0",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "39b7548a-a971-42f8-83fe-6d2627208389",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          5.5,
+          1.5,
+          20
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+      "name": "Drywall row 1 panel 1",
+      "material": "hd-usg-drywall-half-8",
+      "size": [
+        96,
+        0.5,
+        48
+      ],
+      "position": [
+        0,
+        72,
+        2
+      ],
+      "rotation": [
+        1.5707963267948963,
+        0,
+        0
+      ],
+      "stepId": "4aa75829-5f56-4725-bcce-007ffdb9970d",
+      "assembly": "Drywall · front · Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "e88534a6-8760-443f-84e7-a84af89aa0a1",
+      "name": "Drywall row 2 panel 1",
+      "material": "hd-usg-drywall-half-8",
+      "size": [
+        96,
+        0.5,
+        47.5
+      ],
+      "position": [
+        0,
+        24.25,
+        2
+      ],
+      "rotation": [
+        1.5707963267948963,
+        0,
+        0
+      ],
+      "stepId": "4aa75829-5f56-4725-bcce-007ffdb9970d",
+      "assembly": "Drywall · front · Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "e0c69571-85b7-4273-ae3b-7241198931f0",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    },
+    {
+      "id": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "title": "Frame a 8′ × 8′ wall",
+      "notes": "Generated concept. Review connections, support, bracing, and stock dimensions.",
+      "complete": false
+    },
+    {
+      "id": "4aa75829-5f56-4725-bcce-007ffdb9970d",
+      "title": "Hang drywall",
+      "notes": "",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [
+    {
+      "id": "da637131-c059-4405-9893-fa6d73e5e6cf",
+      "name": "Wall 1",
+      "pieceIds": [
+        "11a0d5db-a370-4729-8ce4-b310cbd0cf1b",
+        "405e35bb-9cfa-402d-8935-c900553ec759",
+        "6ec88c54-6360-4010-aeec-d6547ed5329c",
+        "eacea7ad-cf4a-4964-b59b-905cbc009234",
+        "beb92c97-1f0a-47dd-93b4-2b5f3fcae40c",
+        "019e732f-01c8-4257-bc12-ac2634cca6ec",
+        "c277d810-07bc-4c21-bdca-9e809ca348c9",
+        "be25a3e2-ce48-4d2b-b9c2-de9eb6586788",
+        "49de508b-ae87-428b-910d-d87e829a353e"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": {
+        "type": "wall",
+        "width": 96,
+        "height": 96,
+        "depth": 48,
+        "spacing": 16
+      },
+      "recipe": null
+    },
+    {
+      "id": "d8d56ee1-f96a-4d6f-a5bf-3c38265f9fa1",
+      "name": "Drywall · front · Wall 1",
+      "pieceIds": [
+        "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+        "e88534a6-8760-443f-84e7-a84af89aa0a1"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null,
+      "wallDrywall": {
+        "wallId": "da637131-c059-4405-9893-fa6d73e5e6cf",
+        "side": "front",
+        "layoutKey": "binding-v1-b5eddcec95333e1a"
+      }
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

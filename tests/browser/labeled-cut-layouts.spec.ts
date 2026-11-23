@@ -2,14 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { applyCommand, blank, part, projectSchema, uid, type Project } from "../../src/model";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
-import { bom } from "../../src/engine";
+import { bom, guideMarkdown } from "../../src/engine";
 import { partLabel } from "../../src/partLabels";
 import { SAVED_PROJECT_NOTES_CONTEXT } from "../../src/projectNotes";
 import { inspectCutStock } from "../../src/cutStock";
 import { createBuildFixture } from "../../src/buildFixtures";
 import { addMeasuredOffcut } from "../../src/measuredOffcuts";
 import { planOffcutReuse } from "../../src/offcutReusePlan";
-import { recordStockCutLayout } from "../../src/recordStockCutLayout";
+import { planDedicatedBoardCuts, recordStockCutLayout } from "../../src/recordStockCutLayout";
 import { stockCutSequences } from "../../src/stockCutSequence";
 import { addSupply } from "../../src/supplies";
 
@@ -109,7 +109,7 @@ test("record floor-base joist boards together, undo once, and keep the offcuts a
   await dialog.getByRole("button", { name: /^Build guide/ }).click();
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("## Stock on hand");
-  expect(guide).toMatch(/Stock cut order for P\d+.*Crosscut 45 in/);
+  expect(guide).toMatch(/## Recorded stock cuts[\s\S]+Crosscut 45 in/);
   await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
   const save = page.waitForResponse((response) =>
     response.url().endsWith(`/api/projects/${current.id}`) && response.request().method() === "PUT");
@@ -636,6 +636,49 @@ test("assign a shop offcut to a planned shelf part without replacing its design"
   await page.locator(".project-list > button").filter({ hasText: before.name }).click();
   const reopened = await draft(page, (project) => project.pieces.some(({ id }) => id === shelf.id) && project.pieces[0].cutStock?.id === sourceId);
   expect(reopened.pieces).toEqual(used.pieces);
+});
+
+test("find a planned remnant for a part and return it to its original stock selection", async ({ page }) => {
+  const project = blank(`Different stock lengths ${uid().slice(0, 8)}`);
+  const step = project.steps[0].id;
+  const main = part("Long rail", "hd-syp-2x8-10", [1.5, 60, 7.25], [-12, 30, 0], step, "Rails");
+  const target = part("Short rail", "two-eight", [1.5, 42, 7.25], [12, 21, 0], step, "Rails");
+  project.pieces = [main, target];
+  const planned = planDedicatedBoardCuts(project, [main.id]);
+  const stocked = addMeasuredOffcut(planned, step, "hd-treated-2x8-10", [58, 7.25, 1.5], "Treated leftover");
+  const before = await importProject(page, stocked);
+  const remnant = before.pieces.find(({ offcut, material }) => offcut && material === main.material)!;
+  const label = partLabel(before, target.id);
+  const remnantLabel = partLabel(before, remnant.id);
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(`Which offcuts fit ${label}?`);
+  await dialog.getByRole("button", { name: /^(Explore idea|Explore with built-in layout)$/ }).click();
+  const answer = dialog.getByRole("region", { name: `Offcuts for ${label}` });
+  await expect(answer).toContainText(`${remnantLabel}`);
+  await expect(answer).not.toContainText("Treated leftover");
+  await answer.getByRole("button", { name: "Review this offcut", exact: true }).click();
+  await expect(dialog.getByRole("combobox", { name: "Matching offcut" })).toHaveValue(remnant.id);
+  await expect(dialog).toContainText("Crosscut to 42 in");
+  await dialog.getByText(/Source cuts to do first/).click();
+  await expect(dialog.getByRole("list", { name: "Source cuts to do first" })).toContainText("5 ft");
+  await dialog.getByRole("button", { name: "Use offcut for this part", exact: true }).click();
+  const used = await draft(page, (p) => p.pieces.find(({ id }) => id === target.id)?.cutStock?.id === remnant.cutStock?.id);
+  const finished = used.pieces.find(({ id }) => id === target.id)!;
+  expect(finished.material).toBe(main.material);
+  expect(finished.position).toEqual(target.position);
+  expect(finished.size).toEqual(target.size);
+  expect(bom(used).find(({ id }) => id === target.material)?.quantity ?? 0).toBe(0);
+  expect(bom(used).find(({ id }) => id === main.material)?.quantity).toBe(1);
+  expect(guideMarkdown(used)).toMatch(/Complete the source stock cut order before using this blank.*under Planned stock cuts/);
+  await dialog.getByRole("button", { name: "Review offcut assignment", exact: true }).click();
+  await expect(dialog).toContainText(/Stock to buy.*2 × 8 framing lumber.*0 → 1 board/);
+  await dialog.getByRole("button", { name: "Return uncut offcut", exact: true }).click();
+  const returned = await draft(page, (p) => p.pieces.some(({ id, offcut }) => id === remnant.id && offcut));
+  expect(returned.pieces.find(({ id }) => id === target.id)).toMatchObject({
+    material: target.material, position: target.position, size: target.size, cutStock: null,
+  });
+  expect(inspectCutStock(returned).valid.has(remnant.cutStock!.id)).toBe(true);
 });
 
 test("review several parts against one measured offcut and apply them together", async ({ page }) => {

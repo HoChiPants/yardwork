@@ -4,6 +4,7 @@ import { blank, material, projectSchema, type V3 } from "../src/model";
 import {
   localIdeaPlan,
   previewIdeaPlan,
+  workspacePlanningResult,
   ideaPlanSchema,
   type IdeaPlan,
 } from "../src/planning";
@@ -84,6 +85,41 @@ test("named section changes only its width and keeps neighboring dimensions, pro
       old.modules[i],
     );
   assert.equal(next.modules[1].openingLid, true);
+});
+
+test("straighten a rotated L-shaped seating run and resolve removal at its actual end", () => {
+  const previous = localIdeaPlan({
+    prompt: "An L-shaped storage banquette, three sections, 7 feet along the back, 5 feet overall return, 24 inches deep, opening lids and no back.",
+  });
+  const yaw = 35;
+  const origin: V3 = [70, 0, -18];
+  previous.modules = previous.modules.map((seat) => ({
+    ...seat, yaw: seat.yaw + yaw,
+    position: rotate(seat.position, [0, yaw * Math.PI / 180, 0]).map((value, i) => value + origin[i]) as V3,
+  }));
+  const prompt = "Make it a straight banquette.";
+  const { plan, provider } = workspacePlanningResult({ prompt, previousPlan: previous })!;
+  assert.equal(provider, "Workspace revisions");
+  assert.deepEqual(plan.questions, []);
+  assert.deepEqual(plan.modules.slice(0, 2), previous.modules.slice(0, 2));
+  const branch = plan.modules[2], oldBranch = previous.modules[2];
+  assert.equal(branch.yaw, yaw);
+  assert.deepEqual({ ...branch, position: oldBranch.position, yaw: oldBranch.yaw }, oldBranch);
+  const local = rotate(branch.position.map((value, i) => value - origin[i]) as V3, [0, -yaw * Math.PI / 180, 0]);
+  near(local[0], -60);
+  near(local[2], -18);
+
+  const resized = localIdeaPlan({ prompt: "Make it straight and make it 84 inches wide.", previousPlan: previous });
+  assert.deepEqual(resized.questions, []);
+  near(resized.modules.reduce((sum, seat) => sum + seat.width, 0), 84);
+  const removed = localIdeaPlan({ prompt: "Remove the left return.", previousPlan: previous });
+  assert.deepEqual(removed.modules, previous.modules.slice(0, 2));
+  const wrongSide = localIdeaPlan({ prompt: "Remove the right return.", previousPlan: previous });
+  assert.deepEqual(wrongSide.modules, previous.modules);
+  assert.match(wrongSide.questions[0], /left return/);
+  const unclear = localIdeaPlan({ prompt: "Make it straight and make it 84 wide.", previousPlan: previous });
+  assert.deepEqual(unclear.modules, previous.modules);
+  assert.match(unclear.questions[0], /dimension/);
 });
 test("rotated translated run preserves pose while width changes in its own local axis", () => {
   const old = seed(),

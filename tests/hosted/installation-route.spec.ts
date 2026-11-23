@@ -1,0 +1,66 @@
+import { readFile } from "node:fs/promises";
+import { expect, test } from "@playwright/test";
+import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { projectSchema } from "../../src/model";
+
+test("a saved cabinet route replays its turn and retains a reviewed blocker in the guide", async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const fixture = await page.request.get(new URL("./examples/interior/vanity-installation-route.yardwork.json", page.url()).href);
+  expect(fixture.ok()).toBe(true);
+  const original = projectSchema.parse(await fixture.json());
+  const name = `${original.name} · ${crypto.randomUUID().slice(0, 6)}`;
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "vanity-installation-route.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...original, name })),
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Will the vanity fit through the doorway?");
+  await dialog.getByRole("button", { name: "Explore idea" }).click();
+  await dialog.getByRole("button", { name: "Open saved installation route" }).click();
+  const inspector = page.getByRole("dialog", { name: "Inspector" });
+  const result = inspector.getByRole("region", { name: "Installation route result" });
+  await expect(result).toContainText("Route clears");
+  await expect(result).toContainText("Turn at waypoint 1");
+  await expect(result).toContainText("Fit after placement:");
+  await result.screenshot({ path: info.outputPath("clear-installation-route.png") });
+  await result.getByRole("button", { name: "Play step 3", exact: true }).click();
+  await expect(page.getByTestId("motion-preview-label")).toContainText("Turn at waypoint 1");
+  await expect(page.getByTestId("motion-preview-label")).toHaveAttribute("data-pose", "90");
+  await page.getByRole("button", { name: "Return to installation route", exact: true }).click();
+  await inspector.getByRole("button", { name: "Edit route", exact: true }).click();
+  await inspector.getByRole("combobox", { name: "Door to hold open" }).selectOption("");
+  await inspector.getByRole("button", { name: "Preview installation route", exact: true }).click();
+  await expect(result).toContainText("Route blocked");
+  await expect(result).toContainText("Practice entry door");
+  await result.getByRole("button", { name: "Show obstruction" }).click();
+  await expect(page.getByTestId("motion-preview-label")).toContainText("Practice entry door");
+  await expect(page.getByRole("button", { name: "Return to installation route", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Return to installation route", exact: true }).click();
+  await result.getByRole("button", { name: "Try Entry door open", exact: true }).click();
+  await expect(result).toContainText("Route clears");
+  await inspector.getByRole("combobox", { name: "Door to hold open" }).selectOption("");
+  await inspector.getByRole("spinbutton", { name: "Start Z offset", exact: true }).fill("-105");
+  await inspector.getByRole("button", { name: "Preview installation route", exact: true }).click();
+  await expect(result).toContainText("stops at 28.32 in");
+  await result.getByRole("button", { name: "Save installation route", exact: true }).click();
+  await inspector.getByRole("button", { name: "Back to workspace" }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  expect(projectSchema.parse((await draft()).project).installationRoutes?.[0].door).toBeUndefined();
+  expect(projectSchema.parse((await draft()).project).installationRoutes?.[0].waypoints[0].z).toBe(-105);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: name }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const text = await readFile((await (await download).path())!, "utf8");
+  expect(text).toContain("## Carry and installation routes");
+  expect(text).toContain("stops at 28.32 in · Practice entry door");
+  expect(text).toContain("Separate worktop");
+});

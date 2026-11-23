@@ -1,0 +1,11 @@
+.drawer-balance-load { border: 1px solid #d7dfd3; border-radius: 6px; margin: 0 0 0.75rem; padding: 0.5rem 0.75rem; }
+.drawer-balance-results { margin-block: 0.75rem; }
+.drawer-balance-results div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.75rem; padding: 0.35rem 0; border-bottom: 1px solid #d7dfd3; }
+.drawer-balance-results dd { margin: 0; font-weight: 600; }
+.drawer-balance-diagram { margin: 1rem 0; }
+.drawer-balance-diagram figcaption { margin-top: 0.4rem; font-size: 0.8em; }
+.drawer-balance-axis { position: relative; height: 1.5rem; border-radius: 4px; background: linear-gradient(90deg, #e0e9de 50%, #f3dfd1 50%); }
+.drawer-balance-pivot { position: absolute; inset: 0 auto 0 50%; width: 2px; background: #273c33; }
+.drawer-balance-dot { position: absolute; top: 50%; width: 0.7rem; height: 0.7rem; border: 1px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
+.drawer-balance-dot.closed { background: #59665e; }
+.drawer-balance-dot.requested { background: #c34c20; }

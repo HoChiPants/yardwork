@@ -46,6 +46,7 @@ const stateOrder: ConnectionIntentState[] = [
 const kindText: Record<ConnectionIntent["kind"], string> = {
   "legacy-joint": "Quantity record",
   "wood-fastener": "Wood-screw plan",
+  "wood-glue": "Nonstructural glue plan",
   "angle-connector": "A21Z connector plan",
   "lid-hinge": "Lid-hinge plan",
   "shelf-pin": "Shelf support plan",

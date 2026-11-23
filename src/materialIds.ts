@@ -5,6 +5,10 @@ import { waterStop } from "./waterStopReference";
 import { subfloorPanel } from "./bottomPlateSealReference";
 import { sinkTrap } from "./sinkDrainReference";
 import { drywallStock } from "./drywallReference";
+import { flatCasing } from "./doorCasingReference";
+import { doorFloorStopMaterial } from "./doorFloorStopReference";
+import { doorHardwareMaterial } from "./doorHardwareReference";
+import { sdConnectorScrews } from "./simpsonConnectorReference";
 
 export const materialIds = [
   "stud",
@@ -38,6 +42,7 @@ export const materialIds = [
   "hd-pine-1x4",
   "lowes-pine-1x4",
   "plytanium-703",
+  "hd-hevea-worktop-74",
   "lowes-syp-2x4-8",
   "lowes-treated-post-4x4-8",
   "lowes-whitewood-1x6",
@@ -49,6 +54,8 @@ export const materialIds = [
   "cedarbrook-sauna-door-24x76",
   "measured-interior-door",
   "interior-door-jamb",
+  doorHardwareMaterial,
+  doorFloorStopMaterial,
   "hd-pex-u860w10",
   "hd-pex-u870w10",
   "hd-nail-shield-ns1",
@@ -82,5 +89,10 @@ export const materialIds = [
   "hd-treated-2x8-10",
   subfloorPanel.id,
   ...drywallStock.map(({ id }) => id),
+  flatCasing.id,
   libertyBarPull.id,
+  ...sdConnectorScrews.map(({ id }) => id),
+  "hd-spf-2x6-10",
+  "hd-syp-2x8-10",
+  "hd-syp-2x8-12",
 ] as const;

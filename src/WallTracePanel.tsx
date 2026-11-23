@@ -2,9 +2,7 @@ import { LengthInput } from "./LengthInput";
 import { formatStockLength } from "./measurement";
 import { framingStockDimensions, material } from "./model";
 import type { PlanOutline } from "./planOutlines";
-import { partitionCodeSource, partitionFramingSource, type OutlineFace, type reviewWallTrace, type WallTrace } from "./wallTrace";
-
-const stockChoices = ["hd-kdht-2x4-8", "hd-spf-2x4-10", "hd-spf-2x4-12", "hd-spf-2x6-8", "hd-spf-2x6-12"] as const;
+import { partitionCodeSource, partitionFramingSource, wallTraceStockChoices, type OutlineFace, type reviewWallTrace, type WallTrace } from "./wallTrace";
 
 export function WallTracePanel({ trace, onChange, review, error, onAdd, onClose, onPick, outline }: {
   trace: WallTrace;
@@ -83,7 +81,7 @@ export function WallTracePanel({ trace, onChange, review, error, onAdd, onClose,
       <label className="field">
         <span>Framing lumber</span>
         <select value={trace.stock} onChange={(event) => onChange({ ...trace, stock: event.target.value as WallTrace["stock"] })}>
-          {stockChoices.map((id) => {
+          {wallTraceStockChoices.map((id) => {
             const { length, depth } = framingStockDimensions(id);
             return <option key={id} value={id}>{depth === 3.5 ? "2 × 4" : "2 × 6"} · {formatStockLength(length)} · {material(id).name.includes("KD-HT") ? "KD-HT" : "SPF"}</option>;
           })}

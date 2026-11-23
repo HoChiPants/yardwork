@@ -12,7 +12,7 @@ import { bom, guideMarkdown, validate } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import { homeDepotShoppingList } from "../src/handoff";
 import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
-import { projectSchema, type Project } from "../src/model";
+import { blank, part, projectSchema, type Piece, type Project, type V3 } from "../src/model";
 import { rotate } from "../src/spatial";
 import { toolChecklist } from "../src/tools";
 
@@ -61,6 +61,36 @@ test("measured spans stay with the actual parts after rotation and stale runs st
   assert.equal(updated.record.id, record.id);
   assert.equal(updated.layout.clearLength, 87.875);
   assert.ok(validate(updated.project).some(({ id, detail }) => id === `bottom-plate-${record.id}` && detail.includes("Subfloor")));
+});
+
+test("only the part of a subfloor cutout inside the full bead band interrupts the seal", () => {
+  const project = blank("Bottom plate over a cutout");
+  const id = project.steps[0].id;
+  const plate = part("Bottom plate", "stud", [88, 1.5, 3.5], [0, 1.5, 0], id, "Wall");
+  const floor = part("Subfloor", "plywood", [96, 0.75, 12], [0, 0.375, 0], id, "Floor");
+  const input: BottomPlateInput = {
+    plateId: plate.id, side: "a", gap: 0, depth: 0.125, bead: "3/8",
+    session: "Wall air sealing", dryExposedWood: true,
+  };
+  const clear = previewBottomPlateSeal({ ...project, pieces: [plate, floor] }, input);
+  const cases: [Partial<Piece>, number[][]][] = [
+    [{ rectangularOpenings: [{ axis: 1, center: [-1.75, 0], spans: [0.125, 6] }] }, [[41, 47]]],
+    [{ rectangularOpenings: [{ axis: 1, center: [-2.01, 0], spans: [0.125, 6] }] }, []],
+    [{ roundOpenings: [{ axis: 1, center: [-1.75, 0], diameter: 0.25 }] }, [[43.875, 44.125]]],
+  ];
+  for (const [profile, expected] of cases) {
+    const rotation: V3 = [0, Math.PI / 4, 0];
+    const pieces = [plate, { ...floor, ...profile }].map((piece) =>
+      ({ ...piece, rotation, position: rotate(piece.position, rotation) }));
+    const edited = { ...clear.project, pieces };
+    assert.equal(reviewBottomPlateSeal(edited, clear.record).outdated, expected.length > 0);
+    const plan = previewBottomPlateSeal(edited, input, clear.record.id);
+    const breaks = bottomPlateDisplayRuns(plan.layout).filter(({ problem }) => problem);
+    assert.deepEqual(breaks.map(({ start, end }) => [start, end]), expected);
+    const supported = 88 - expected.reduce((sum, [start, end]) => sum + end - start, 0);
+    assert.equal(plan.layout.clearLength, supported);
+    assert.equal(bottomPlateSealTakeoff(plan.project).batches[0].use, supported / (38 * 12));
+  }
 });
 
 test("compare the entered gap and product limits, pool cartridges only within a work session", () => {

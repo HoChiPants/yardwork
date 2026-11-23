@@ -53,6 +53,8 @@ Without `OLLAMA_URL`, local presets cover storage bench/banquette, L-shaped seat
 
 `casework-shelves` uses outside `width`, `depth`, `height`, integer `shelfCount` (1–6), `shelfClearance` (front setback), origin/yaw and the `caseworkPanels` source selection. Actual selected sheet thickness is fixed, with stable semantic panel roles and equal clear openings. Relative count follow-ups compose with explicit outside dimensions; invalid or unitless combined dimensions retain the prior design and request clarification. Source choices and pose are not inferred from a count change. Legacy independent panel entries remain valid and are not silently converted.
 
+An inline span such as “a 72 in storage banquette” sets the run width. “Three 24 in sections” sizes the individual sections. Phrases such as “a finished seat height of 18 in” stay with that item when a prompt is split into separate designs. In follow-ups, “middle seat” and “right-hand seat” refer to the front of a single straight run. Use a section name or number for a corner or disconnected seats.
+
 The broader module model path has protocol coverage, but requires real-inference qualification separately from the older wall/base smoke. Local presets are immediately available without an AI service.
 
 After either planner produces an editable proposal, **Cuts and stock** uses the actual candidate geometry and available Cut pool stock in the browser. Requests such as “Show cuts for this proposal” and “Use O001 for this proposal” use that local preview. The cut check keeps the selected stock and its grain orientation, accounts for the listed or measured kerf, and shows what the project would still buy. Applying saves the previewed assignments with their original stock lineage. Confirm panel markings and the saw’s actual cutting loss before making cuts. [APA plywood orientation](https://www.apawood.org/engineered-wood-products/plywood-osb/plywood/) · [Freud saw blade catalog](https://www.freudtools.com/public/catalog/freud-catalog/docs/Freud_GPCatalog_2020_LOWRES.pdf)
@@ -66,7 +68,9 @@ node --import tsx scripts/planner-smoke.ts
 node --import tsx scripts/planner-families-smoke.ts
 ```
 
-Use `SMOKE_URL` to target an isolated test instance. Both scripts require the response provider to be Ollama. The first checks a novel 7 × 5 ft L-shaped banquette with 24 in seat depth and 18 in seat height and verifies the footprint/work-zone fit. The second tests the five families plus storage-height follow-up with exact measurements/features, real geometry, profile/guide checks and API save/reopen; it retains six synthetic projects for persistence inspection and emits JSONL receipts. Any failed or skipped dependent case exits nonzero. The manual **Real AI qualification** workflow includes both after the older wall/base smoke. Earlier public workflow results are not qualification of this local, unpushed iteration.
+Use `SMOKE_URL` to target an isolated test instance. The first script checks an Ollama-generated 7 × 5 ft L-shaped banquette with 24 in seat depth and 18 in seat height against the work zone. The second checks the planner used for each case, including workspace-only revisions. It tests the five representative families, a low greenhouse, a standing work surface and scoped revisions. It saves successful synthetic projects in the test library and emits JSONL receipts for geometry, stock cuts, the guide and save/reopen. Any failed or skipped dependent case exits nonzero.
+
+The planner treats “lift-up seats” and “seats that lift up” as opening storage lids, and “no backrest” keeps a seat backless. For greenhouse and sauna layouts, give the measured door opening and overall room or eave dimensions separately. Phrases like “a 30 in wide door” apply to the opening.
 
 
 ## Project storage format

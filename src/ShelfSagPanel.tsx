@@ -112,6 +112,7 @@ export function ShelfSagPanel({
   divider,
   onPreviewDivider,
   onCommitDivider,
+  focus,
 }: {
   project: Project;
   pieceId: string;
@@ -120,12 +121,13 @@ export function ShelfSagPanel({
   divider: ShelfDividerPreview | null;
   onPreviewDivider: (fit: ShelfDividerPreview | null) => void;
   onCommitDivider: (fit: ShelfDividerPreview) => void;
+  focus?: boolean;
 }) {
   const plan = project.shelfSagPlans?.find((item) => item.pieceId === pieceId);
   const geometry = row && shelfSagGeometry(row);
   const result = row && plan && reviewShelfSag(row, plan);
   return (
-    <details className="connection-settings">
+    <details className="connection-settings shelf-sag-options" open={focus || undefined}>
       <summary>Shelf sag estimate</summary>
       <div className="field-section">
         {result && !divider && (
@@ -146,6 +148,7 @@ export function ShelfSagPanel({
             project={project}
             shelfId={pieceId}
             material={row.piece.material}
+            geometry={result.geometry}
             preview={divider}
             onPreview={onPreviewDivider}
             onCommit={onCommitDivider}

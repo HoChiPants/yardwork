@@ -1,9 +1,12 @@
-import { useId, useMemo } from "react";
+import { useId, useMemo, useState } from "react";
 import { material, type Project } from "./model";
 import { formatPreciseInches } from "./measurement";
 import { fitLayoutLabel } from "./layoutLabels";
-import { cutPlanCanRelease, type PlannedStockCutOrder } from "./plannedCutSources";
+import { recordedStockCutOrderView, type StockCutOrderView } from "./plannedCutSources";
 import { SavedStockCutSteps } from "./PlannedStockCutOrder";
+import { previewUncutStockRelease, previewUncutStockReuse, type UncutStockRelease } from "./offcutReleasePlan";
+import { OffcutReusePlanDetails } from "./OffcutReuseReview";
+import { purchaseUnitLabel } from "./purchaseUnits";
 import {
   cutStockLayout,
   type CutStockGap,
@@ -33,11 +36,11 @@ export function CutStockLayout({
   onSelectPart?: (pieceId: string) => void;
   onStockOnHand?: (onHand: boolean) => void;
   onCompleteCut?: () => void;
-  onReleaseCut?: () => void;
+  onReleaseCut?: (review: UncutStockRelease) => void;
   focusedId?: string;
   printable?: boolean;
   inspection?: CutStockInspection;
-  savedOrder?: PlannedStockCutOrder;
+  savedOrder?: StockCutOrderView;
 }) {
   const layout = useMemo(
     () => cutStockLayout(project, sourceId, inspection),
@@ -46,9 +49,26 @@ export function CutStockLayout({
   const patternId = `source-gap-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const onHand = project.onHandCutSources?.includes(sourceId) ?? false;
   const plan = project.plannedCutSources?.find((item) => item.sourceId === sourceId);
-  const canRelease = plan && onReleaseCut
-    ? cutPlanCanRelease(plan, inspection?.groups.get(sourceId) ?? project.pieces.filter((piece) => piece.cutStock?.id === sourceId))
-    : false;
+  const recorded = project.recordedStockCutOrders?.find((order) => order.sourceId === sourceId);
+  const [release, setRelease] = useState<{ source: Project; sourceId: string; useScraps: boolean } &
+    ({ plan: UncutStockRelease } | { error: string })>();
+  const review = release?.source === project && release.sourceId === sourceId ? release : undefined;
+
+  function reviewRelease(useScraps = false) {
+    const context = { source: project, sourceId, useScraps };
+    try {
+      const plan = previewUncutStockRelease(project, sourceId);
+      const reuse = useScraps ? previewUncutStockReuse(plan) : undefined;
+      if (useScraps && !reuse) {
+        setRelease({ ...context, error: "No plan found that covers every part with on-hand offcuts and reduces what you need to buy." });
+        return;
+      }
+      setRelease({ ...context, plan: reuse ? { ...plan, reuse } : plan });
+    } catch (problem) {
+      setRelease({ ...context, error: problem instanceof Error ? problem.message : "Review this cut source before releasing it." });
+    }
+  }
+
   if (layout.state === "invalid" || layout.state === "missing")
     return (
       <section
@@ -83,6 +103,10 @@ export function CutStockLayout({
       ? { x: r.y, y: r.x, width: r.length, height: r.width }
       : { x: r.x, y: r.y, width: r.width, height: r.length };
   const hasProfiles = layout.regions.some((region) => region.hasProfile);
+  const hasOnHandOffcuts = !printable && plan && onReleaseCut && !onHand && project.pieces.some((piece) =>
+    piece.offcut && piece.material === layout.materialId && piece.cutStock &&
+    project.onHandCutSources?.includes(piece.cutStock.id),
+  );
   return (
     <section
       className="cut-stock-layout"
@@ -113,21 +137,60 @@ export function CutStockLayout({
             <h5>Saved cutting order</h5>
             <SavedStockCutSteps order={savedOrder} />
           </>}
-          {!printable && onCompleteCut && (
+          {!printable && !review && (onCompleteCut || onReleaseCut) && (
             <div className="button-row">
-              <button type="button" className="button secondary small" onClick={onCompleteCut}>Mark cuts complete</button>
+              {onCompleteCut && <button type="button" className="button secondary small" onClick={onCompleteCut}>Mark cuts complete</button>}
+              {onReleaseCut && hasOnHandOffcuts && (
+                <button type="button" className="button secondary small" onClick={() => reviewRelease(true)}>
+                  Check on-hand offcuts
+                </button>
+              )}
               {onReleaseCut && (
-                <button type="button" className="button secondary small" disabled={!canRelease} onClick={onReleaseCut}>
+                <button type="button" className="button secondary small" onClick={() => reviewRelease()}>
                   Release uncut stock plan
                 </button>
               )}
             </div>
           )}
-          {!printable && onReleaseCut && !canRelease && (
-            <p className="small-note">This planned stock has changed. Review its cuts and release dependent offcut assignments before releasing it.</p>
-          )}
+          {!printable && onReleaseCut && review && <section className="field-section"
+            aria-label={review.useScraps ? "Review replacement with offcuts" : "Review uncut stock release"}>
+            {"error" in review ? <p role="alert" className="form-error">{review.error}</p> : review.plan.reuse ? <>
+              <p>Apply this change only if the original board or sheet is still uncut. These offcuts will supply every part from that stock.</p>
+              <OffcutReusePlanDetails plan={review.plan.reuse} />
+            </> : <>
+              <p>Release the plan only if the whole board or sheet is still uncut.</p>
+              {!!review.plan.assignments && <p className="small-note">
+                {review.plan.assignments} planned offcut {review.plan.assignments === 1 ? "assignment" : "assignments"} will be released.
+              </p>}
+              <ul aria-label="Parts that will need stock">
+                {review.plan.parts.map(({ id, label, name }) => <li key={id}>{label} · {name}</li>)}
+              </ul>
+              <p className="small-note">{review.plan.restored
+                ? `Return the full blank to Cut pool as ${review.plan.restored.label} · ${review.plan.restored.size}.`
+                : "The released parts can be repacked into available stock lengths."}</p>
+              {review.plan.purchase && <p className="small-note">
+                Stock to buy · {review.plan.purchase.before} → {review.plan.purchase.after}{" "}
+                {purchaseUnitLabel(review.plan.purchase.unit, review.plan.purchase.after)}
+              </p>}
+            </>}
+            <div className="button-row">
+              {"plan" in review && <button type="button" className="button primary small" onClick={() => onReleaseCut(review.plan)}>
+                {review.useScraps ? "Use these offcuts" : "Apply release"}
+              </button>}
+              <button type="button" className="button secondary small" onClick={() => setRelease(undefined)}>
+                {review.useScraps ? "Cancel replacement" : "Cancel release"}
+              </button>
+            </div>
+          </section>}
         </div>
       )}
+      {recorded && !printable && <div className="field-section">
+        <h5>{recorded.completedAt ? "Completed cutting order" : "Recorded cutting order"}</h5>
+        <SavedStockCutSteps order={recordedStockCutOrderView(recorded)} />
+        {!recorded.completedAt && onCompleteCut && (
+          <button type="button" className="button secondary small" onClick={onCompleteCut}>Mark cuts complete</button>
+        )}
+      </div>}
       <p className="small-note">
         Source-local length: {axisName(axes.length)} · width:{" "}
         {axisName(axes.width)} · thickness: {axisName(axes.thickness)}. Starts

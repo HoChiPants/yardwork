@@ -1,6 +1,78 @@
 # Project format and recovery
 
-New exports use **format 136**. Yardwork reads valid formats 1–135 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+New exports use **format 173**. Yardwork reads valid formats 1–172 and upgrades known data in memory. Geometry, cuts, source lineage, saved designs, guides, measurements, store settings and observations are preserved. Format-6 fastener baselines and review history remain exact. Earlier fastener references retain unknown baselines and initially empty history.
+
+Format 173 records when a released offcut assignment used a starting piece that is now unavailable. Its label and measured size stay in the cut history, and affected parts return to stock planning. Earlier releases keep their existing meaning.
+
+Format 172 adds generated guide steps for saved window flashing plans. Regenerate an earlier guide to place sill flashing, window installation, and the interior air seal in order. Saved flashing measurements and cut lists retain their existing records.
+
+Format 171 lets the builder confirm a saved offcut cutting operation. Existing recorded operations can be confirmed after verifying the physical cuts. Measured offcuts and previously completed stock orders keep their existing stock records.
+
+Format 170 records a part’s previous material when it is explicitly assigned a remnant from a compatible stock length. Returning the uncut remnant restores that previous material.
+
+Format 169 recognizes the 10 ft SPF 2 × 6 and the 10 and 12 ft Southern Yellow Pine 2 × 8 as separate stock IDs. Saved cuts, offcuts and store observations retain the exact material selected.
+
+Format 168 can link either endpoint of a saved dimension to a wood part by ID and part-local coordinates. A link resolves against the retained wood at its current position and rotation and asks for a fresh pick if that surface disappears. Fixed marks from format 167 keep their existing workspace coordinates.
+
+Format 167 stores named dimensions with two fixed workspace points in inches. The guide displays their derived lengths and exact point coordinates. Earlier projects open without invented measurements.
+
+Format 165 adds a generated work step for each saved pipe air seal. Regenerate an earlier guide to place the seal after its opening is fitted, ahead of any modeled drywall or casing that would cover it.
+
+Format 164 adds drywall-to-bottom-plate measurements and a guide phase for the bead before hanging drywall. Top-plate and plate-to-subfloor plans keep their existing fields.
+
+Format 163 can record the usable rectangle inside a physical wood or drywall offcut. The new label keeps the original material source and records the measured start and usable dimensions for later cuts.
+
+Format 162 records optional air seals at modeled round openings, their measured pipe fit, the facing side and any backing. It also records backing cut allocations for these seals. Review is required when the opening or its backing changes.
+
+Format 161 saves an optional drawer balance comparison per cabinet section. It retains the entered fully loaded weight, closed balance point, and the weight and requested extension of each attached drawer. Changes to the cabinet or drawers send the inputs back for review. Changes in nearby geometry are checked against the same requested openings.
+
+Format 160 can record one straight cut with two loose outputs. The two offcut labels share the same physical stock source. Later cuts can reference either label, and the guide verifies both outputs against the remaining stock or their recorded downstream cuts.
+
+Format 159 saves vertical cabinet pull positions from the finished free edge and selected top or bottom edge. The placed pulls travel with their own leaves in the saved hinge tests. The guide rechecks those mounting positions against the current doors. Earlier designs open with their original hardware and tests.
+
+Format 158 stores a countertop’s splash joint by its worktop edge, finished wall, marked runs and work session. Each run records its seal detail, coverage basis and any dry-fitted backing. A change in the modeled seam requires fresh measurements before the saved runs count toward shopping. The existing backer-rod ledger also records these cuts and retains physical remnants.
+
+Format 157 saves installation routes for a section or design. A route stores the starting pose, intermediate translations and level turns, optional measured ceiling, optional saved hinge and held angle, and the parts fitted later. The replay and guide recheck the current model and final pose. No preview pose is stored on the parts.
+
+Format 156 can record a fitted shelf divider’s shelf, edited part, base and center mark measured from the shelf’s local start. The guide rechecks the mark, physical bearing and movement using the saved model. Earlier divider parts remain editable and open without an inferred installation mark.
+
+Format 155 lets a wall cabinet mounting row save measured screw reach. It records the seated length, shank diameter, measured stack ahead of the wood, specified minimum depth, any excluded tip length, and the modeled drywall intervals at the marked locations. The current model recalculates wood depth and possible obstructions. Changed finish intervals send the stack measurement back for review.
+
+Format 154 saves wall cabinet mounting rows. Each row stores the wall, face, wall-local height and offsets, the parts behind the mounting points, and both stud IDs for each added block. Blocks remain editable stock parts with normal cut-source records. Reopening compares the saved fit with the current wall.
+
+Format 153 associates a fitted furniture diagonal brace with its two posts, mounting face and cut marks. The brace remains an editable stock part and the guide flags changed post contacts.
+
+Format 152 records cabinet scribe fillers, their measured gaps, and the cabinet side's pose and dimensions at measurement. The actual cut filler remains a separate editable part. The guide flags changed fit references.
+
+Format 151 records the measured rectangular wood cutout recovered from a saved opening. The record keeps the original panel marks and the detached offcut's stock source, so later assignments can reference the opening in the guide.
+
+Format 150 can store selected glue faces, the parts to coat, and a coverage allowance on a recorded glue joint. A changed fit requires reviewing the selected faces before they contribute to bottle totals.
+
+Format 149 adds optional measured installed veneer thickness to edge banding. Fitted cabinet doors can size their cut blanks for veneer around all four edges. Earlier edge entries continue to supply strip lengths and roll counts.
+
+Format 148 allows a movement test to link to a storage lid section and its selected measured hinge. The test resolves the actual panel at its closed pose. Saved open or closed design poses remain independent of playback.
+
+Format 147 links a fitted cabinet door or pair to the four face-frame members. It stores the reveals, selected stock, hinge layout and optional product reference. The opening and closing tests use saved motion records. Moving the whole face frame carries the fitted panels.
+
+Format 146 links a fixed, measured floor stop to a fitted interior door. It stores the target angle, offset from the latch edge, stop dimensions and optional purchase reference. The stop stays on the floor when the wall moves, and changed geometry can require a new fit review.
+
+Format 145 stores measured knob and lever geometry on both faces of a fitted door, including the bore position, projection and offset. The modeled handles move with the door during clearance checks. A referenced passage set counts once for the whole installation.
+
+Format 144 adds a measured finish seal to saved door casing. It keeps the selected outer edges, leave-open spans, bead measurements, coverage basis, and trim work session. Changed fits and interrupted runs need review before they contribute to the purchase estimate.
+
+Format 143 links fitted door casing to the parent wall and its finished face. The parts carry the miter geometry and stock source. The guide checks for changes to the jamb, fitted finish and casing, and the trim travels with the wall.
+
+Format 142 links generated drywall sections to a framed wall and face. The sheets carry their own cuts and stock records. The link lets the sheets travel with wall edits to its position and rotation, and identifies when changes to the framing or panels require a new fit review.
+
+Format 141 allows the framed wall generator to retain a rough doorway and a rough window in the same wall section.
+
+Format 140 keeps recorded stock orders with their source, original blank size, cutting allowance and numbered instructions. Explicit completion records when the cuts were marked complete. The record survives subsequent changes to the originating parts and stays independent of the general edit history. Older files keep their existing history and pending orders.
+
+Format 139 records completed backer rod cuts from measured stock and their measured remnants. A record keeps the source, the cut spans and their fit measurements. Matching completed runs stay out of new cut estimates. A change to a recorded run's fit leaves the earlier cut in the guide and returns the revised run to planning.
+
+Format 138 adds optional measured backer rod offcuts. Each record keeps a physical label, an exact stock model and the measured usable length in inches. Cut plans reuse matching pieces across trim seams and interior opening seals. Earlier projects start with an empty backer rod pool.
+
+Format 137 adds optional additional minimum-gap checks to motion tests. A test can store up to eight distinct pairs. Earlier tests keep their original single gap and replay as before.
 
 Format 136 adds optional work session names to modeled trim seams. Earlier seams without a name use the shared Trim work session. Session names are compared without regard to capitalization.
 

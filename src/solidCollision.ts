@@ -485,10 +485,10 @@ function convexOverlap(
   return true;
 }
 
-/** Check continuous coverage as the segment crosses cells of a retained solid. */
-export function solidContainsSegment(shape: CollisionSolid, start: V3, finish: V3) {
+/** Occupied intervals in segment coordinates, where 0 is start and 1 is finish. */
+export function solidSegmentRanges(shape: CollisionSolid, start: V3, finish: V3) {
   const delta = subtract(finish, start);
-  const ranges = (shape.cells ?? [shape]).flatMap((cell): [number, number][] => {
+  return (shape.cells ?? [shape]).flatMap((cell): [number, number][] => {
     let from = 0, to = 1;
     for (const axis of cell.faceNormals) {
       const { min, max } = projection(cell, axis, start);
@@ -505,8 +505,12 @@ export function solidContainsSegment(shape: CollisionSolid, start: V3, finish: V
     }
     return [[from, to]];
   }).sort(([a], [b]) => a - b);
+}
+
+/** Check continuous coverage as the segment crosses cells of a retained solid. */
+export function solidContainsSegment(shape: CollisionSolid, start: V3, finish: V3) {
   let reached = 0;
-  for (const [from, to] of ranges) {
+  for (const [from, to] of solidSegmentRanges(shape, start, finish)) {
     if (from > reached) return false;
     reached = Math.max(reached, to);
     if (reached === 1) return true;

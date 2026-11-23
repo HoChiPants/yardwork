@@ -21,7 +21,7 @@ const frameSizes = [
   homeDepotFraming.stud10,
   homeDepotFraming.stud12,
 ];
-const ridgeSizes = [homeDepotFraming.ridge8, homeDepotFraming.ridge12];
+const ridgeSizes = [homeDepotFraming.ridge8, homeDepotFraming.ridge10, homeDepotFraming.ridge12];
 const perimeterSizes = [greenhouseBaseTimber, greenhouseBaseTimber12];
 
 function canTrim(stock: number, keep: number, kerf: number) {

@@ -1,12 +1,143 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
-import { blank, part } from "../../src/model";
+import { blank, part, uid } from "../../src/model";
+import { rotate } from "../../src/spatial";
+import { addMeasuredOffcut } from "../../src/measuredOffcuts";
 import { blankProjectCode } from "../../src/projectCodeSchema";
 import {
   gafRoofShingle,
   shingleEdgeProducts,
 } from "../../src/shingleRoofReference";
+
+test("preview multiple roof deck bays from the planner and carry scrap cuts into the guide", async ({ page }) => {
+  const base = blank("Roof backing bay");
+  const step = base.steps[0].id;
+  const rotation: [number, number, number] = [Math.atan(3 / 12), 0, 0];
+  const make = (name: string, stock: "plywood" | "stud", size: [number, number, number], position: [number, number, number]) => {
+    const [x, y, z] = rotate(position, rotation);
+    return { ...part(name, stock, size, [x, 48 + y, z], step, "Roof"), rotation };
+  };
+  const decks = [make("Lower roof deck", "plywood", [96, 0.75, 48], [0, 0, 0]),
+    make("Upper roof deck", "plywood", [96, 0.75, 48], [0, 0, 48.125])];
+  base.pieces.push(...decks, ...[-24, 0, 24].map((x) => make(`Rafter ${x}`, "stud", [1.5, 3.5, 96], [x, -2.125, 24])));
+  base.projectCode = { ...blankProjectCode(), trades: ["roofing"], shingleRoof: {
+    productId: null, coveragePerBundle: null, wastePercent: null, coverageBasis: "",
+    planes: decks.map(({ id, name }) => ({ id: uid(), label: name, basis: { kind: "panel", pieceId: id }, underlayment: "unknown" })),
+  } };
+  const project = addMeasuredOffcut(base, step, "stud", [60, 3.5, 1.5], "On-hand framing scrap");
+  await page.goto("/");
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "roof-blocking.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  const prompt = dialog.getByRole("textbox", { name: "Describe your idea" });
+  const explore = dialog.getByRole("button", { name: /^(Explore idea|Explore with built-in layout)$/ });
+  await prompt.fill("Fit roof deck blocking between P001 and P009.");
+  await explore.click();
+  const answer = dialog.getByRole("region", { name: "Fit roof deck blocking", exact: true });
+  const startPreview = answer.getByRole("button", { name: "Preview blocking for all bays", exact: true });
+  await expect(answer).toContainText("No modeled roof deck joint matches those panel labels.");
+  await expect(startPreview).toHaveCount(0);
+  await prompt.fill("Fit roof deck blocking for P1 from new stock.");
+  await explore.click();
+  await expect(answer).toContainText("2 candidate framing bays.");
+  await startPreview.click();
+  const fit = page.getByRole("region", { name: "Fit roof deck blocking", exact: true });
+  const preview = fit.getByRole("region", { name: "Roof blocking preview", exact: true });
+  await expect(fit.getByLabel("Framing bay")).toHaveValue("all-bays");
+  await expect(fit.getByLabel("Use matching on-hand offcuts")).not.toBeChecked();
+  await expect(preview).toContainText("2 of 2 bays ready · 1 new board · 0 on-hand offcuts");
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await prompt.fill("Fit roof deck blocking between P001 and P002 using scraps.");
+  await explore.click();
+  await startPreview.click();
+  await expect(fit.getByLabel("Use matching on-hand offcuts")).toBeChecked();
+  await expect(page.getByTestId("support-block-preview-marker")).toContainText("Roof deck blocking preview · 2 bays");
+  await expect(preview).toContainText("2 of 2 bays ready · 0 new boards · 1 on-hand offcut");
+  await expect(preview).toContainText("Use O001 from the Cut pool. Crosscut to 22.5 in");
+  await expect(preview).toContainText("Use O002 from the preceding cuts. Crosscut to 22.5 in");
+  await expect(preview).toContainText("Keep O003 · 14.75 in");
+  await expect(preview).toContainText("22.5 in and 22.5 in of contact");
+  await preview.getByRole("button", { name: "Add roof blocking", exact: true }).click();
+  await expect(page.getByText("2 roof blocks added. The cuts are in the build guide.", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  const cutOrder = guide.split("## Recorded offcut cut order")[1]?.split("\n## ")[0] ?? "";
+  expect(cutOrder).toContain("O001 → P006 · Roof deck blocking");
+  expect(cutOrder).toContain("O002 → P007 · Roof deck blocking");
+  expect(cutOrder).toContain("remnant from cut 1");
+  expect(cutOrder.match(/Crosscut to 22\.5 in/g)).toHaveLength(2);
+  expect(cutOrder).toContain("Keep O003 · 14.75 in");
+});
+
+test("show the modeled roof deck joint requested in the planner and export its reference", async ({ page }) => {
+  const project = blank("Roof deck joint spacing");
+  const stepId = project.steps[0].id;
+  const west = part("West deck sheet", "plywood", [96, 0.75, 48], [0, 48, 0], stepId, "Roof");
+  const east = part("East deck sheet", "plywood", [96, 0.75, 48], [96.0625, 48, 0], stepId, "Roof");
+  west.rotation = east.rotation = [Math.atan(3 / 12), 0, 0];
+  const [x, y, z] = rotate([48.03125, -2.125, -9], west.rotation);
+  const backing = part("Partial joint support", "stud", [1.5, 3.5, 30], [x, 48 + y, z], stepId, "Roof");
+  backing.rotation = [...west.rotation];
+  project.pieces.push(west, east, backing);
+  project.projectCode = {
+    ...blankProjectCode(), trades: ["roofing"],
+    shingleRoof: {
+      productId: null, coveragePerBundle: null, wastePercent: null, coverageBasis: "",
+      planes: [west, east].map(({ id, name }) => ({
+        id: uid(), label: name, basis: { kind: "panel", pieceId: id }, underlayment: "unknown",
+      })),
+    },
+  };
+  await page.goto("/");
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "roof-joint.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Check roof deck backing.");
+  await dialog.getByRole("button", { name: /^(Explore idea|Explore with built-in layout)$/ }).click();
+  const result = dialog.getByRole("region", { name: "Roof deck joint spacing" });
+  await expect(result).toContainText("0.0625 in gap along 4 ft");
+  await expect(result).toContainText("0.0625 in below the APA ⅛ in installation reference");
+  await expect(result).toContainText("P002 has 18 in of 4 ft without modeled framing under its fastener line");
+  await result.getByRole("button", { name: "Show joint in 3D", exact: true }).click();
+  await expect(page.getByTestId("roof-deck-joint-marker")).toHaveText("Roof deck joint · P001 and P002 · 0.0625 in gap");
+  await page.getByRole("button", { name: "Hide highlighted area", exact: true }).click();
+
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Check roof deck end bearing.");
+  await dialog.getByRole("button", { name: /^(Explore idea|Explore with built-in layout)$/ }).click();
+  const ends = dialog.getByRole("region", { name: "Roof deck end bearing" });
+  await expect(ends).toContainText("Checked 4 panel ends against the modeled framing.");
+  await expect(ends).toContainText("4 ft of 4 ft at the end edge lacks modeled bearing.");
+  await ends.getByRole("button", { name: "Show end in 3D", exact: true }).first().click();
+  await expect(page.getByTestId("roof-deck-end-marker")).toHaveText("Roof deck end · P001 · end 1");
+  await page.getByRole("button", { name: "Hide highlighted area", exact: true }).click();
+
+  const inspector = page.locator(".inspector-scroll");
+  await inspector.getByText("Project code references", { exact: true }).click();
+  await expect(inspector.getByRole("link", { name: "APA Rated Sheathing roof installation · N335" })).toBeVisible();
+  await expect(page.locator(".print-guide")).toContainText("Roof deck joint · P001 and P002");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Roof deck joint · P001 and P002 · 0.0625 in gap along 4 ft");
+  expect(guide).toContain("P001 has 18 in of 4 ft without modeled framing under its fastener line");
+  expect(guide).toContain("Roof deck end · P001 · end 1 · 4 ft of 4 ft at the end edge lacks modeled bearing.");
+  expect(guide).toContain("APA Rated Sheathing roof installation · N335");
+});
 
 test("roof pitch follows the model and field, starter and cap bundles reach the Home Depot list", async ({
   page,

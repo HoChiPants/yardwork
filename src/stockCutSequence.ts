@@ -466,8 +466,8 @@ const markdownLine = (value: string) =>
 export function stockCutSequenceMarkdown(
   project: Project,
   rows: readonly BomRow[],
+  groups = stockCutSequences(project, rows),
 ) {
-  const groups = stockCutSequences(project, rows);
   if (!groups.size) return "";
   const sections = [...groups].flatMap(([id, sequences]) => {
     const notes = stockCutMaterialNotes(id);

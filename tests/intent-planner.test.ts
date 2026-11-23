@@ -5,8 +5,20 @@ import {
   modelIntentSchema,
   intentMessages,
 } from "../server/intentPlanner";
-import { applyIdeaPlan, previewIdeaPlan } from "../src/planning";
+import { applyIdeaPlan, localIdeaPlan, previewIdeaPlan, workspacePlanningResult } from "../src/planning";
 import { blank, projectSchema } from "../src/model";
+
+test("typed seat widths and explicit seat references take priority over model guesses", () => {
+  const base = intentToPlan({
+    prompt: "Build a straight 72 in storage banquette with three sections, a finished seat height of 18 in, opening lids, and no back.",
+  }, { family: "banquette", operation: "create", width: 48, height: 23, sectionCount: 2 });
+  assert.deepEqual(base.modules.map(({ width, height }) => [width, height]), [[24, 18], [24, 18], [24, 18]]);
+  const result = intentToPlan({ prompt: "Remove the opening lid from the right-hand seat.", previousPlan: base }, {
+    family: "banquette", operation: "revise", targetSection: 1, depth: 35, storage: false, openingLid: false,
+  });
+  assert.deepEqual(result.modules, [base.modules[0], base.modules[1], { ...base.modules[2], openingLid: false }]);
+});
+
 test("compact AI intent expands the exact storage request into three actual closed seats", () => {
   const request = {
     prompt:
@@ -37,6 +49,82 @@ test("compact AI intent expands the exact storage request into three actual clos
     refined.modules.every((m) => m.height === 20 && m.storage && m.openingLid),
   );
 });
+test("lift-up window seats preserve separate storage compartments and no backrest", () => {
+  const request = {
+    prompt: "A 72 in wide window seat with three separate sections, seats that lift up, and enclosed storage underneath. No backrest.",
+  };
+  for (const plan of [
+    localIdeaPlan(request),
+    intentToPlan(request, { family: "bench", sectionCount: 1, storage: false, openingLid: false, backHeight: 16 }),
+  ]) {
+    assert.deepEqual(plan.modules.map((seat) =>
+      [seat.width, seat.storage, seat.openingLid, seat.lidOpen, seat.backHeight]),
+    Array.from({ length: 3 }, () => [24, true, true, false, 0]));
+    assert.equal(applyIdeaPlan(blank(), plan).pieces.length, 42);
+  }
+  const fixed = intentToPlan({ prompt: "A backless window seat without under-seat storage." },
+    { family: "bench", storage: true, openingLid: true });
+  assert.deepEqual(fixed.modules.map(({ storage, openingLid }) => [storage, openingLid]), [[false, false]]);
+});
+
+test("lid preview commands move only the selected opening seats and clarify ambiguous requests", () => {
+  const previousPlan = localIdeaPlan({
+    prompt: "Three-section storage banquette with opening lids and no back",
+  });
+  const pose = (prompt: string, previous = previousPlan) =>
+    workspacePlanningResult({ prompt, previousPlan: previous })?.plan;
+  const middle = pose("Open the middle seat lid.");
+  assert.deepEqual(middle?.modules, [
+    previousPlan.modules[0],
+    { ...previousPlan.modules[1], lidOpen: true },
+    previousPlan.modules[2],
+  ]);
+  assert.deepEqual(pose("Open the middle lid.")?.modules, middle?.modules);
+  const revised = pose("Make section 2 two inches taller and close its lid.", middle);
+  assert.deepEqual(revised?.modules, [
+    previousPlan.modules[0],
+    { ...previousPlan.modules[1], height: 20 },
+    previousPlan.modules[2],
+  ]);
+  const fixed = pose("Remove section 2's lid.")!;
+  assert.deepEqual(pose("Open all lids.", fixed)?.modules.map((seat) => seat.lidOpen), [true, false, true]);
+  assert.match(pose("Open the lid on section 2.", fixed)?.questions[0] ?? "", /fixed top/);
+  for (const prompt of ["Open the lid.", "Open the middle seat lid and close its lid."]) {
+    const unchanged = pose(prompt);
+    assert.ok(unchanged?.questions.length);
+    assert.deepEqual(unchanged.modules, previousPlan.modules);
+  }
+  assert.equal(pose("Open the cabinet door."), undefined);
+});
+
+test("a greenhouse door dimension stays separate from the wall envelope", () => {
+  const request = {
+    prompt: "Plan a greenhouse six feet wide and eight feet deep, with a 30 in wide door and 72 in high door. Eave height is 7 feet, roof rise 24 in.",
+  };
+  for (const plan of [
+    localIdeaPlan(request),
+    intentToPlan(request, { family: "greenhouse", width: 30, height: 72 }),
+  ]) {
+    const greenhouse = plan.structures[0];
+    assert.equal(greenhouse.kind, "greenhouse");
+    if (greenhouse.kind !== "greenhouse") throw Error("Expected a greenhouse.");
+    assert.deepEqual(
+      [greenhouse.parameters.width, greenhouse.parameters.depth, greenhouse.parameters.eaveHeight,
+        greenhouse.parameters.doorWidth, greenhouse.parameters.doorHeight],
+      [72, 96, 84, 30, 72],
+    );
+    assert.throws(() => previewIdeaPlan(blank(), plan), /modeled opening can be up to 71\.25 in high/);
+    const taller = localIdeaPlan({ prompt: "Set the eave height to 90 inches.", previousPlan: plan });
+    assert.ok(previewIdeaPlan(blank(), taller).addedParts > 5);
+    assert.deepEqual(taller.structures[0].parameters, { ...greenhouse.parameters, eaveHeight: 90 });
+    const edit = intentToPlan({
+      prompt: "Make the greenhouse door 34 in wide. Keep the rest of the greenhouse.",
+      previousPlan: plan,
+    }, { family: "greenhouse", operation: "revise", width: 34 });
+    assert.deepEqual(edit.structures[0].parameters, { ...greenhouse.parameters, doorWidth: 34 });
+  }
+});
+
 test("compact L intent counts its corner once and fits the explicit measured space", () => {
   const zone = { width: 84, depth: 60, height: 84 },
     plan = intentToPlan(

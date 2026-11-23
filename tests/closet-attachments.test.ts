@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { projectSchema, uid, part, type Project, type V3 } from "../src/model";
 import { createBuildStudy } from "../src/buildFixtures";
-import { localIdeaPlan, applyIdeaPlan } from "../src/planning";
+import { localIdeaPlan, applyIdeaPlan, workspacePlanningResult } from "../src/planning";
 import {
   attachmentReviews,
   makeShelfPinPlan,
@@ -18,8 +18,10 @@ import {
   bindingPlan,
   bindingToken,
   applyIdeaRevision,
+  previewIdeaRevision,
   bindingReview,
 } from "../src/ideaBindings";
+import { everbiltClosetRod } from "../src/closetRodReference";
 import { cutPiece, connect } from "../src/engine";
 import { reconcileSections } from "../src/sections";
 import { composeRotation, rotate } from "../src/spatial";
@@ -453,6 +455,44 @@ test("closet resize and shelf-count removal keep saved support intentions stale 
   );
   assert.equal(refreshed.attachmentPlans[0].id, plan.id);
   assert.equal(attachmentReviews(refreshed)[0].state, "geometry-checked");
+});
+
+test("a closet tower shelf revision keeps the fitted carcass and rods and reviews the old supports", () => {
+  const project = planned(createBuildStudy("closet-insert", undefined, undefined, {
+    closetRod: { materialId: everbiltClosetRod.materialId, productRegistryRef: everbiltClosetRod.productId },
+  }).project);
+  const id = project.ideaBindings[0].id;
+  const before = bindingPlan(project, id);
+  const result = workspacePlanningResult({ prompt: "Remove one shelf from the closet tower", previousPlan: before });
+  assert.equal(result?.provider, "Workspace revisions");
+  assert.ok(result);
+  const expected = structuredClone(before);
+  const structure = expected.structures[0];
+  assert.equal(structure.kind, "closet-insert");
+  assert.ok(structure.kind === "closet-insert");
+  structure.parameters.shelfCount--;
+  assert.deepEqual(result.plan.structures, expected.structures);
+
+  const preview = previewIdeaRevision(project, id, result.plan, bindingToken(project, id));
+  assert.equal(preview.impact.replacedParts, 4);
+  assert.equal(preview.impact.newParts, 3);
+  const preserved = project.pieces.filter((piece) => !piece.designRole?.startsWith("tower-shelf-"));
+  assert.equal(preserved.filter(({ material }) => material === everbiltClosetRod.materialId).length, 2);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(preview.project)));
+  assert.deepEqual(reopened.pieces.filter(({ id }) => preserved.some((piece) => piece.id === id)), preserved);
+  assert.deepEqual(reopened.attachmentPlans, project.attachmentPlans);
+  assert.equal(attachmentReviews(reopened)[0].state, "stale");
+  assert.deepEqual(shelfSupportEntries(reopened)[0].shelves.map(({ role }) => role),
+    ["tower-shelf-1", "tower-shelf-2", "tower-shelf-3"]);
+  assert.equal(bindingReview(reopened, id).manualEdits, 0);
+
+  assert.deepEqual(localIdeaPlan({ prompt: "Add a shelf", previousPlan: bindingPlan(reopened, id) }).structures,
+    before.structures);
+  for (const prompt of ["Remove all shelves", "Don't add a shelf", "Add a shelf and raise the rod"]) {
+    const unchanged = localIdeaPlan({ prompt, previousPlan: before });
+    assert.deepEqual(unchanged.structures, before.structures);
+    assert.ok(unchanged.questions.length);
+  }
 });
 
 test("casework and closet support purchases aggregate explicit pin demand once while old casework references stay valid", () => {

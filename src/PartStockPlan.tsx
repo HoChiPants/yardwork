@@ -3,12 +3,14 @@ import { CutStockLayout } from "./CutStockLayoutView";
 import type { CutStockInspection } from "./cutStockLayout";
 import type { BomRow } from "./engine";
 import { material, type MaterialId, type Piece, type Project } from "./model";
-import { partStockOptions, previewPartStockReplacement } from "./partStockReplacement";
+import { partOffcutOptions, partStockOptions, previewPartStockReplacement } from "./partStockReplacement";
 import { purchaseUnitLabel } from "./purchaseUnits";
 import { reviewedOfferForMaterial } from "./retailerCatalog";
 import { partLabel } from "./partLabels";
 import { formatStockLength } from "./measurement";
-import { fittingOffcuts } from "./offcutAssignment";
+import { plannedStockCutOrders } from "./plannedCutSources";
+import { materialStockDisplayName } from "./materialGroups";
+import type { UncutStockRelease } from "./offcutReleasePlan";
 import { MaterialCutNote, StockCutUnit, WoodStockKerf } from "./StockCutSequenceList";
 import {
   stockCutSequenceContext,
@@ -22,6 +24,7 @@ export function PartStockPlan({
   row,
   sequences,
   inspection,
+  initialOffcutId,
   onRecord,
   onStockOnHand,
   onCompleteCut,
@@ -37,28 +40,34 @@ export function PartStockPlan({
   row?: BomRow;
   sequences?: readonly StockCutSequence[];
   inspection: CutStockInspection;
+  initialOffcutId?: string;
   onRecord: (layout: StockCutLayout, onHand: boolean) => void;
   onStockOnHand: (sourceId: string, onHand: boolean) => void;
   onCompleteCut: (sourceId: string) => void;
-  onReleaseCut: (sourceId: string) => void;
+  onReleaseCut: (review: UncutStockRelease) => void;
   onSaveLoss: (layout: StockCutLayout) => void;
   onApplyWoodKerf: (source: Project, next: Project) => void;
   onAssignOffcut: (pieceId: string, offcutId: string) => void;
   onReviewOffcut: (historyId: string) => void;
   onReplaceStock: (pieceId: string, stockId: MaterialId) => void;
 }) {
-  const [offcutId, setOffcutId] = useState("");
+  const [offcutId, setOffcutId] = useState(initialOffcutId ?? "");
   const [replacementId, setReplacementId] = useState("");
   const label = partLabel(project, piece.id);
   const sequence = sequences?.find(({ partIds }) => partIds.includes(piece.id));
-  const offcuts = fittingOffcuts(project, piece, inspection);
+  const offcuts = useMemo(() => partOffcutOptions(project, piece, inspection), [project, piece, inspection]);
+  const scheduled = useMemo(() => new Set(project.plannedCutSources?.map(({ sourceId }) => sourceId)), [project.plannedCutSources]);
   const assignment = project.history.find(
     ({ offcutCut }) =>
-      offcutCut?.targetId === piece.id && !offcutCut.releasedAt && !offcutCut.retainedTrim,
+      offcutCut?.targetId === piece.id && !offcutCut.releasedAt && !offcutCut.retainedTrim && !offcutCut.usableMeasurement,
   );
   const chosen =
     offcuts.find(({ piece }) => piece.id === offcutId) ??
     (offcuts.length === 1 ? offcuts[0] : undefined);
+  const sourceId = chosen?.piece.cutStock?.id;
+  const sourceOrder = sourceId && scheduled.has(sourceId)
+    ? plannedStockCutOrders(project, inspection).find((order) => order.sourceId === sourceId)
+    : undefined;
   const choices = partStockOptions(project, piece);
   const replacement = choices.find(({ id }) => id === replacementId);
   const replacementPreview = useMemo(() => {
@@ -131,7 +140,7 @@ export function PartStockPlan({
         </button>
       )}
       {offcuts.length > 0 && (
-        <details className="field-section">
+        <details className="field-section" open={initialOffcutId ? true : undefined}>
           <summary>Use an offcut from the Cut pool ({offcuts.length})</summary>
           <label className="field">
             Matching offcut
@@ -147,7 +156,7 @@ export function PartStockPlan({
                     .reverse()
                     .map(formatStockLength)
                     .join(" × ")}
-                  {entry.onHand ? " · on hand" : ""}
+                  {entry.sourceCutPending ? " · expected after source cuts" : entry.onHand ? " · on hand" : ""}
                 </option>
               ))}
             </select>
@@ -157,8 +166,20 @@ export function PartStockPlan({
               <p className="small-note">
                 {chosen.operations.length
                   ? chosen.operations.map(({ text }) => text).join(" · ")
-                  : "Fits as measured."}
+                  : chosen.sourceCutPending ? "Fits at the planned size." : "Fits as measured."}
               </p>
+              {chosen.piece.material !== piece.material && <p className="small-note">
+                Use the remnant’s {materialStockDisplayName(chosen.piece.material)} source for this part. Confirm the grade and treatment. The finished dimensions and position stay the same.
+              </p>}
+              {sourceOrder && <details className="field-section">
+                <summary>Source cuts to do first · {sourceOrder.anchorLabel ?? "Saved stock plan"}</summary>
+                {sourceOrder.issue ? <p role="status">{sourceOrder.issue}</p> : <ol aria-label="Source cuts to do first">
+                  {sourceOrder.steps.map((step, i) => <li key={i}>{step}</li>)}
+                </ol>}
+              </details>}
+              {chosen.sourceCutPending && !sourceOrder && <p className="small-note">
+                Check the offcut cut order for the cuts that produce this remnant.
+              </p>}
               <button
                 type="button"
                 className="button secondary full"
@@ -179,7 +200,7 @@ export function PartStockPlan({
           focusedId={piece.id}
           onStockOnHand={(onHand) => onStockOnHand(piece.cutStock!.id, onHand)}
           onCompleteCut={() => onCompleteCut(piece.cutStock!.id)}
-          onReleaseCut={() => onReleaseCut(piece.cutStock!.id)}
+          onReleaseCut={onReleaseCut}
         />
       ) : row && sequence ? (
         <div className="stock-cut-order">

@@ -67,6 +67,7 @@ Work from top to bottom. Match the starting piece to its label and measured size
    Starting size 19.75 in × 3.5 in × 1.5 in.
    Complete the source stock cut order before using this blank. Find P001 under Planned stock cuts.
    Crosscut to 16 in.
+   Cuts to do.
    Keep O003 · 3.625 in × 3.5 in × 1.5 in.
 
 

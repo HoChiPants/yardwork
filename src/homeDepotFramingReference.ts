@@ -2,6 +2,9 @@ export const framingStudsCategory =
   "https://www.homedepot.com/b/Lumber-Composites-Dimensional-Lumber-Framing-Studs/N-5yc1vZc562";
 export const spfBoardUnitSource =
   "https://www.homedepot.com/p/questions/2-in-x-6-in-x-12-ft-Premium-SPF-Dimensional-Lumber-058445/312528843/2";
+const longerBoardReviewedAt = "2026-11-23T09:18:18.000Z";
+const twoEightBoardUnitSource =
+  "https://www.homedepot.com/b/Lumber-Composites-Dimensional-Lumber/2-in-x-8-in/N-5yc1vZc3tcZ1z0n4w4";
 
 export const homeDepotFraming = {
   stud: {
@@ -80,6 +83,23 @@ export const homeDepotFraming = {
     unitNote:
       "One board is inferred from the individual 8 ft configuration linked from the 12 ft product page and the retailer associate’s distinction between a single-piece price and a shipping bundle on the related 12 ft listing.",
   },
+  ridge10: {
+    materialId: "hd-spf-2x6-10",
+    registryId: "hd-spf-2x6x120-312528837",
+    reviewedAt: longerBoardReviewedAt,
+    internetNumber: "312528837",
+    model: "058444",
+    storeSku: "161721",
+    listing: "https://www.homedepot.com/p/312528837",
+    stockSize: [1.5, 120, 5.5],
+    name: "SPF 2 × 6 · Home Depot",
+    subtitle: "1½ × 5½ in actual · 10 ft · untreated",
+    finish: "Untreated premium SPF as listed. Species may vary.",
+    role: "ridgeLumber",
+    sourceNote: "The listing specifies a 1.5 × 5.5 × 120 in untreated board, model 058444 and store SKU 161721.",
+    unitSource: "https://www.homedepot.com/b/Lumber-Composites-Dimensional-Lumber/10-ft/2-in-x-6-in/2/N-5yc1vZc3tcZ1z0mcqtZ1z0n4w1Z1z1rkse",
+    unitNote: "The retailer category prices the individual model with a separate volume discount. The modeled purchase unit is one board.",
+  },
   ridge12: {
     materialId: "hd-spf-2x6-12",
     registryId: "hd-spf-2x6x144-312528843",
@@ -97,6 +117,38 @@ export const homeDepotFraming = {
     unitSource: spfBoardUnitSource,
     unitNote:
       "The retailer associate confirms an individual-board selling unit for this listing. The supplier’s wholesale bundle count is separate.",
+  },
+  twoEight10: {
+    materialId: "hd-syp-2x8-10",
+    registryId: "home-depot-syp-2x8x120-202085942",
+    reviewedAt: longerBoardReviewedAt,
+    internetNumber: "202085942",
+    model: "689246",
+    storeSku: "689246",
+    listing: "https://www.homedepot.com/p/202085942",
+    stockSize: [1.5, 120, 7.25],
+    name: "SYP 2 × 8 · Home Depot",
+    subtitle: "1½ × 7¼ in actual · 10 ft · dimensional lumber",
+    finish: "#2 Prime kiln-dried Southern Yellow Pine as listed. Verify the delivered stamp.",
+    sourceNote: "Model and store SKU 689246. The retailer lists actual 1.5 × 7.25 × 120 in dimensions.",
+    unitSource: twoEightBoardUnitSource,
+    unitNote: "The retailer prices model 689246 individually with a separate quantity discount. The modeled purchase unit is one board.",
+  },
+  twoEight12: {
+    materialId: "hd-syp-2x8-12",
+    registryId: "home-depot-syp-2x8x144-202085927",
+    reviewedAt: longerBoardReviewedAt,
+    internetNumber: "202085927",
+    model: "560499",
+    storeSku: "560499",
+    listing: "https://www.homedepot.com/p/202085927",
+    stockSize: [1.5, 144, 7.25],
+    name: "SYP 2 × 8 · Home Depot",
+    subtitle: "1½ × 7¼ in actual · 12 ft · dimensional lumber",
+    finish: "#2 Prime kiln-dried Southern Yellow Pine as listed. Verify the delivered stamp.",
+    sourceNote: "Model and store SKU 560499. The retailer lists actual 1.5 × 7.25 × 144 in dimensions.",
+    unitSource: twoEightBoardUnitSource,
+    unitNote: "The retailer prices the 12 ft premium listing individually with a separate quantity discount. The modeled purchase unit is one board.",
   },
 } as const;
 

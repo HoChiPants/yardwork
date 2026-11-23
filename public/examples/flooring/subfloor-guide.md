@@ -69,11 +69,13 @@ Work from top to bottom. Match the starting piece to its label and measured size
 1. Trim P010 · 72 × 32 in OSB deck
    Starting size 95.875 in × 47.875 in × 0.703 in.
    Crosscut to 6 ft · Rip to 32 in.
+   Cuts to do.
    Keep O001 · 23.75 in × 47.875 in × 0.703 in and O002 · 6 ft × 15.75 in × 0.703 in.
 
 2. Trim P001 · Joist 1
    Starting size 56.125 in × 7.25 in × 1.5 in.
    Crosscut to 33.5 in.
+   Cuts to do.
    Keep O003 · 22.5 in × 7.25 in × 1.5 in.
 
 
@@ -182,15 +184,15 @@ Check every intended joint, bracing, anchorage, edges and clearances. Resolve ou
 
 Modeled remnants; review dimensions, profiles and source lineage before reuse.
 
-- O001 · Offcut · 72 × 32 in OSB deck: 47.875 in × 0.703 in × 23.75 in (23/32 in T&G OSB subfloor)
+- O001 · Offcut · 72 × 32 in OSB deck: 47.875 in × 0.703 in × 23.75 in (23/32 in T&G OSB subfloor) · Expected after cutting
   - Blank before profiles: X 47.875 in × Y 0.703 in × Z 23.75 in; local length Z, width X, thickness Y (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 3eb1aa4d-1872-45f7-b84e-36caeae819f0: original blank X 47.875 in × Y 0.703 in × Z 95.875 in. Reusable offcut source-local region X 0 to 47.875 in, Y 0 to 0.703 in, Z 72.125 to 95.875 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0.125 in; profile-face saw kerf is not reconstructed.
-- O002 · Offcut · 72 × 32 in OSB deck: 15.75 in × 0.703 in × 72 in (23/32 in T&G OSB subfloor)
+- O002 · Offcut · 72 × 32 in OSB deck: 15.75 in × 0.703 in × 72 in (23/32 in T&G OSB subfloor) · Expected after cutting
   - Blank before profiles: X 15.75 in × Y 0.703 in × Z 72 in; local length Z, width X, thickness Y (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 3eb1aa4d-1872-45f7-b84e-36caeae819f0: original blank X 47.875 in × Y 0.703 in × Z 95.875 in. Reusable offcut source-local region X 32.125 to 47.875 in, Y 0 to 0.703 in, Z 0 to 72 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0.125 in; profile-face saw kerf is not reconstructed.
-- O003 · Offcut · Joist 1: 1.5 in × 7.25 in × 22.5 in (2 × 8 framing lumber)
+- O003 · Offcut · Joist 1: 1.5 in × 7.25 in × 22.5 in (2 × 8 framing lumber) · Expected after cutting
   - Blank before profiles: X 1.5 in × Y 7.25 in × Z 22.5 in; local length Z, width Y, thickness X (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 6312ddd8-05f4-4f1c-b826-42f2063f69c1: original blank X 1.5 in × Y 7.25 in × Z 56.125 in. Reusable offcut source-local region X 0 to 1.5 in, Y 0 to 7.25 in, Z 33.625 to 56.125 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0.125 in; profile-face saw kerf is not reconstructed.

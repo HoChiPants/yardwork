@@ -11,6 +11,7 @@ export const edgeBandingTrim = z
   .finite()
   .min(0)
   .max(edgeBandingMaxLength);
+export const measuredBandingThickness = z.number().finite().min(0.001).max(0.125);
 export const edgeBandingProduct = z.enum(edgeBandingProductIds);
 
 const edgeBandingEntry = z.strictObject({
@@ -20,6 +21,7 @@ const edgeBandingEntry = z.strictObject({
   fingerprint: z.string().min(1).max(100),
   label: z.string().min(1).max(160),
   trim: edgeBandingTrim,
+  installedThickness: measuredBandingThickness.optional(),
 });
 export type EdgeBandingEntry = z.infer<typeof edgeBandingEntry>;
 export const edgeBandingSchema = z

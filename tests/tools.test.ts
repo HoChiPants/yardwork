@@ -5,6 +5,7 @@ import { bom, connect, cutPiece, recordChanges } from "../src/engine";
 import { resizeByCuts } from "../src/cutPlan";
 import { applyIdeaPlan, localIdeaPlan } from "../src/planning";
 import { toolChecklist, type SelectedTool } from "../src/tools";
+import { selectedToolsForProject } from "../src/toolGuide";
 function frame() {
   const p = blank();
   p.pieces = [
@@ -145,6 +146,38 @@ test("screw, nail and connector processes remain distinct and pre-drilling stays
     connector.referenceUrls.some((url) => url.includes("strongtie.com")),
   );
   assert.ok(connector.sources.some((source) => source.kind === "joint"));
+});
+
+test("only exact SD connector screws trigger the matching nut driver review", () => {
+  const p = frame();
+  const step = p.steps[0].id;
+  const generic = part("Generic connector screw", "connector-screw", [0.35, 1.5, 0.35], [0, 1, 0], step, "Frame");
+  const nail = part("Connector nail", "n10dhdg-r", [0.3, 1.5, 0.3], [1, 1, 0], step, "Frame");
+  p.pieces.push(generic, nail);
+  const withJoint = connect(p, p.pieces[0].id, p.pieces[1].id, step, 2, 2.5, "screw", "sd9212r100-r");
+  const legacy = { ...withJoint.joints[0], material: undefined };
+  p.joints = [legacy];
+  assert.equal(toolChecklist(p).requirements.find((row) => row.capability === "drive-quarter-hex"), undefined);
+
+  const short = part("Short #9 screw", "sd9112r100", [0.37, 1.5, 0.37], [2, 1, 0], step, "Frame");
+  const thick = part("Short #10 screw", "sd10112r100", [0.37, 1.5, 0.37], [3, 1, 0], step, "Frame");
+  const project = { ...withJoint, pieces: [...withJoint.pieces, short, thick] };
+  const findReview = (tools: SelectedTool[] = [], now = Date.now()) =>
+    toolChecklist(project, tools, now).requirements.find((row) => row.capability === "drive-quarter-hex");
+  const review = findReview();
+  assert.equal(review?.status, "unknown");
+  assert.equal(review?.necessity, "conditional");
+  assert.deepEqual(review?.sources.map(({ id }) => id), [project.joints[0].id, short.id, thick.id]);
+  for (const model of ["SD9212R100", "SD9112R100", "SD10112R100"])
+    assert.ok(review?.sources.some(({ reason }) => reason.includes(model)), model);
+
+  const checkedAt = "2026-11-23T06:00:00.000Z";
+  const now = Date.parse(checkedAt);
+  const selected = selectedToolsForProject({
+    ...project, toolSelections: [{ productId: "milwaukee-49-66-4502", checkedAt }],
+  }, now);
+  assert.equal(findReview(selected.tools, now)?.status, "supported");
+  assert.equal(toolChecklist(project, selected.tools, now).requirements.find((row) => row.capability === "drive-screw")?.status, "unknown");
 });
 
 test("selected names, unchecked tools and undocumented capability claims never establish support", () => {

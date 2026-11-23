@@ -1,4 +1,5 @@
 import { runMotionTest } from "./mechanismMotion";
+import { bounds } from "./engine";
 import type { Command, Project, SectionCommand } from "./model";
 import { previewSectionCommand } from "./sections";
 import { prepareCollisionSolid, solidOverlap } from "./solidCollision";
@@ -20,6 +21,14 @@ export function previewDoorway(project: Project, command: SectionCommand, sectio
     return solid ? [{ piece, solid }] : [];
   });
   const blockers = new Set<string>();
+  const zone = candidate.workZone;
+  if (zone && candidate.pieces.some((piece) => {
+    if (!changed.has(piece.id)) return false;
+    const { min, max } = bounds(piece);
+    return min[0] < -zone.width / 2 - 0.001 || max[0] > zone.width / 2 + 0.001 ||
+      min[1] < -0.001 || max[1] > zone.height + 0.001 ||
+      min[2] < -zone.depth / 2 - 0.001 || max[2] > zone.depth / 2 + 0.001;
+  })) blockers.add("the work-zone boundary");
   for (const { piece, solid } of active) {
     if (!changed.has(piece.id)) continue;
     for (const neighbor of active) {
@@ -44,5 +53,5 @@ export function previewDoorway(project: Project, command: SectionCommand, sectio
 }
 
 export function acceptsDoorway(command?: Command | null) {
-  return command?.type === "wall" && !command.windowOpening;
+  return command?.type === "wall";
 }

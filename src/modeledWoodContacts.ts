@@ -16,6 +16,16 @@ export type ModeledWoodContact = {
 export const modeledWoodContactScope =
   "These are modeled touching wood faces. Review how each pair is supported or joined. Hardware fit, loads and capacity require their own review.";
 
+export function modeledWoodContactState(
+  records: readonly ConnectionIntent[], decision?: "current" | "changed" | "hardware", detail?: WoodJointDecisionEntry,
+): ModeledWoodContact["state"] {
+  const hasOpenRecord = records.some(({ current, state }) => !current || state !== "geometry-reviewed");
+  if (hasOpenRecord || decision === "changed" || decision === "hardware" || (detail && detail.status !== "current")) return "pending";
+  if (records.length) return "reviewed";
+  if (decision === "current") return "removable";
+  return detail ? "documented" : "unplanned";
+}
+
 export function reviewModeledWoodContacts(
   project: Project,
   coverage: Pick<ConnectionCoverage, "parts" | "intents">,
@@ -47,14 +57,7 @@ export function reviewModeledWoodContacts(
     const decision = decisions.get(id);
     const detail = jointDetails.get(id);
     jointDetails.delete(id);
-    const hasOpenRecord = records.some(({ current, state }) => !current || state !== "geometry-reviewed");
-    const changedBearing = decision === "changed" || decision === "hardware";
-    const changedDetail = detail && detail.status !== "current";
-    let state: ModeledWoodContact["state"] = "unplanned";
-    if (hasOpenRecord || changedBearing || changedDetail) state = "pending";
-    else if (records.length) state = "reviewed";
-    else if (decision === "current") state = "removable";
-    else if (detail) state = "documented";
+    const state = modeledWoodContactState(records, decision, detail);
     const memberIds: [string, string] = [aId, bId];
     memberIds.sort((a, b) => (parts.get(a)?.label ?? a).localeCompare(parts.get(b)?.label ?? b, undefined, { numeric: true }));
     return {
@@ -88,7 +91,7 @@ export function reviewModeledWoodContacts(
 
 export type ModeledWoodContactReview = ReturnType<typeof reviewModeledWoodContacts>;
 
-export function modeledWoodContactDetail({ state, planLabels, detail }: ModeledWoodContact) {
+export function modeledWoodContactDetail({ state, planLabels, detail }: Pick<ModeledWoodContact, "state" | "planLabels" | "detail">) {
   switch (state) {
     case "unplanned": return "No pair plan recorded.";
     case "removable": return "A removable bearing decision is recorded.";

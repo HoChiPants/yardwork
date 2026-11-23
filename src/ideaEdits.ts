@@ -47,7 +47,7 @@ export function normalizeIdeaText(input: string) {
       /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen)\b/g,
       (w) => String(ones[w]),
     )
-    .replace(/(\d)-(foot|feet|inch|inches)\b/g, "$1 $2");
+    .replace(/(\d)-(foot|feet|ft|inch|inches|in)\b/g, "$1 $2");
 }
 export function requestsBanquetteReturn(input: string) {
   const text = input.toLowerCase().replace(
@@ -126,10 +126,11 @@ export function requestedShelfCount(input: string): number | undefined {
       );
   return match ? Number(match[1]) : undefined;
 }
-/** Shelf additions inside a saved bookcase are relative count edits, not new furniture. */
+/** Shelf-count changes operate on the selected bookcase or closet tower. */
 export function editCaseworkShelfCount(
   previous: IdeaPlan | undefined,
   input: string,
+  closetOnly = false,
 ): IdeaPlan | null {
   if (!previous) return null;
   const text = normalizeIdeaText(input);
@@ -145,24 +146,33 @@ export function editCaseworkShelfCount(
     ),
   ];
   if (!changes.length) return null;
+  const closetNamed = /\bcloset(?: insert| tower)?\b|\btower\b/.test(text);
+  const bookcaseNamed = /\bbookcases?\b|\bcasework\b/.test(text);
   const targets = previous.structures
-    .map((s, i) => (s.kind === "casework-shelves" ? i : -1))
-    .filter((i) => i >= 0);
+    .flatMap((s, i) => (
+      (s.kind === "casework-shelves" && !closetNamed) ||
+      (s.kind === "closet-insert" && !bookcaseNamed)
+    ) ? [i] : []);
+  if (closetOnly && !targets.some((index) => previous.structures[index].kind === "closet-insert"))
+    return null;
   if (!targets.length) return null;
+  if (changes.some(({ index }) => /\b(?:do not|don't|never)\s+$/.test(text.slice(0, index))))
+    return retainWithQuestion(previous, "The shelf count is unchanged. Specify the count or a shelf change to preview.");
   if (changes.length !== 1 || targets.length !== 1)
     return retainWithQuestion(
       previous,
-      "Select one saved bookcase and specify one shelf-count change before adding or removing shelves.",
+      "Select one saved bookcase or closet insert and specify one shelf-count change.",
     );
-  const explicit = /\bbookcases?\b|\bcasework\b/.test(text);
+  const explicit = closetNamed || bookcaseNamed;
   if (previous.modules.length + previous.structures.length > 1 && !explicit)
     return retainWithQuestion(
       previous,
-      "Should the shelf go inside the bookcase or be a separate item? Select the design or name the bookcase.",
+      "Where should the shelf change go? Select or name the bookcase or closet insert.",
     );
   const change = changes[0],
     target = previous.structures[targets[0]];
-  if (target.kind !== "casework-shelves") return null;
+  if (target.kind !== "casework-shelves" && target.kind !== "closet-insert") return null;
+  const design = target.kind === "closet-insert" ? "closet tower" : "bookcase";
   const removing = /^(remove|delete|take out)$/.test(change[1]);
   const quantity =
     change[2] === "all"
@@ -177,15 +187,24 @@ export function editCaseworkShelfCount(
   if (!Number.isInteger(quantity) || quantity < 1)
     return retainWithQuestion(
       previous,
-      "How many shelves should be added or removed? Give a positive whole number; the current bookcase is retained.",
+      `How many shelves should change? Give a positive whole number; the current ${design} is retained.`,
     );
   const count =
     target.parameters.shelfCount + (removing ? -quantity : quantity);
   if (count < 1 || count > 6)
     return retainWithQuestion(
       previous,
-      "This recipe supports one to six adjustable shelves. Choose a count in that range; the current bookcase is retained.",
+      `Choose one to six adjustable shelves. The current ${design} is retained.`,
     );
+  if (target.kind === "closet-insert") {
+    const tail = text.slice(change.index + change[0].length).trim().replace(/[.!?]+$/, "");
+    if (tail && !/^(?:in|inside|to|from|for)\s+(?:the |this |my )?(?:closet(?: insert| tower)?|tower)$/.test(tail))
+      return retainWithQuestion(previous, "Give the closet shelf-count change on its own, then request other dimensions or placement.");
+    const next = structuredClone(previous);
+    next.structures[targets[0]] = { ...target, parameters: { ...target.parameters, shelfCount: count } };
+    next.summary = `The closet tower now has ${count} adjustable shelves spaced evenly in the existing opening.`;
+    return next;
+  }
   const dimensions: Partial<Record<"width" | "depth" | "height", number>> = {};
   for (const [key, labels] of [
     ["width", "wide|width"],
@@ -298,6 +317,45 @@ export function namedMeasurement(
   return { inches: measuredInches(match), raw: match[0], unitExplicit: !!match[2] };
 }
 
+const seatingSection = "(?:sections?|compartments?|modules?)";
+const sectionQualifier = "(?:(?:equal|separate|independent)[ -]+)?";
+// “Three 24-inch sections” specifies both a count and the width of each seat.
+const measuredSeatingSections = new RegExp(
+  `\\b(\\d{1,2})\\s+${sectionQualifier}(${numeric})\\s*(${units})(?:[ -]+wide)?[ -]+${seatingSection}\\b`,
+);
+const plainSeatingSections = new RegExp(`\\b(\\d{1,2})[ -]*${sectionQualifier}${seatingSection}\\b`);
+
+export function requestedSeatingSections(input: string) {
+  const text = normalizeIdeaText(input);
+  const sized = measuredSeatingSections.exec(text);
+  if (sized) return { count: Number(sized[1]), widthEach: measuredInches(sized, 2) ?? undefined, raw: sized[0] };
+  const counted = plainSeatingSections.exec(text);
+  if (counted) return { count: Number(counted[1]), widthEach: undefined };
+}
+
+export function requestedSeatFeatures(input: string) {
+  const text = input.toLowerCase();
+  const noStorage = /\b(?:no|without|remove)\s+(?:the\s+)?(?:enclosed\s+|closed\s+|under[ -]seat\s+)?storage\b/.test(text);
+  const noLid = /\b(?:no|without|remove)\s+(?:(?:an?|the)\s+)?(?:(?:opening|openable|hinged|lift[ -]up)\s+)?(?:seat\s+)?lids?\b/.test(text);
+  const wantsLid = !noLid && (
+    /\b(?:openable|opening|hinged|lift[ -]?up)\s+(?:seat\s+)?(?:lids?|seats?|tops?)\b/.test(text) ||
+    /\b(?:lids?|seats?|tops?)\s+(?:(?:that|can|should|will|must|be|able|to)\s+)*(?:opens?|lift(?:s)?[ -]+up)\b/.test(text)
+  );
+  return {
+    noBack: /\bbackless\b|\b(?:no|without|remove)\s+(?:(?:an?|the)\s+)?(?:seat\s+)?(?:back|backrest)s?\b|wall.{0,32}(?:as|be)(?: the| a)? back\b/.test(text),
+    wantsStorage: !noStorage && /\bstorage\b|closed off|space underneath/.test(text),
+    wantsLid,
+    noLid,
+    noStorage,
+  };
+}
+
+const inlineSeatRun = new RegExp(`${measure}\\s+(?:(?:straight|storage|backless|kitchenette)\\s+)*(?:banquette|bench)\\b`);
+export function inlineSeatRunWidth(input: string) {
+  const size = inlineSeatRun.exec(normalizeIdeaText(input));
+  return size ? measuredInches(size) ?? undefined : undefined;
+}
+
 export function closetMeasurements(input: string) {
   const text = normalizeIdeaText(input);
   const bay = (side: "left" | "right") => {
@@ -317,6 +375,26 @@ export function closetMeasurements(input: string) {
   return { facts, envelope };
 }
 
+export function doorMeasurements(input: string) {
+  const text = normalizeIdeaText(input);
+  const door = "door(?: opening)?";
+  const dimension = (noun: string, adjective: string) => {
+    const named = namedMeasurement(text, `${door} ${noun}|(?:${noun}|${adjective}) (?:for (?:the )?)?${door}`);
+    if (named) return named;
+    const match = new RegExp(`\\b${door}\\s+(?:(?:is|at|to|should be)\\s+)?${measure}\\s*(?:${adjective})\\b`).exec(text);
+    return match && { inches: measuredInches(match), raw: match[0], unitExplicit: !!match[2] };
+  };
+  const facts = {
+    doorWidth: dimension("width", "wide"),
+    doorHeight: dimension("height", "high|tall"),
+  };
+  let envelope = text;
+  for (const fact of Object.values(facts)) {
+    if (fact) envelope = envelope.replace(fact.raw, " ");
+  }
+  return { facts, envelope };
+}
+
 const comparisons = {
   wider: ["width", 1], narrower: ["width", -1],
   deeper: ["depth", 1], shallower: ["depth", -1],
@@ -327,18 +405,53 @@ const dimensionWords = "width|depth|height|roof rise";
 const amountPattern = new RegExp(`^${measure}$`);
 const comparisonPattern = new RegExp(`^(?:(.*?)\\s+)?${measure}\\s+(${comparison})$`);
 const comparisonByPattern = new RegExp(`^(?:(.*?)\\s+)?(${comparison})\\s+by\\s+(.+)$`);
-const adjustmentPattern = new RegExp(`^(increase|decrease|reduce)\\s+(.+?)\\s+by\\s+(.+)$`);
+const adjustmentPattern = /^(increase|decrease|reduce)\s+(.+?)\s+by\s+(.+)$/;
+const exactResizePattern = /^(.*?)\s+(?:to|at)\s+(.+)$/;
+const bareExactResize = new RegExp(`^(.*?)\\s+(${measure})$`);
+const exactResizeField = new RegExp(`\\b(${dimensionWords})(?:\\s+of\\s+[^,;]+)?$`);
+const describedDimensions = { wide: "width", deep: "depth", tall: "height", high: "height" } as const;
+const describedResizePattern = new RegExp(`^(?:(.*?)\\s+)?${measure}\\s+(${Object.keys(describedDimensions).join("|")})$`);
 
 type ResizeField = "width" | "depth" | "height" | "roof rise";
-export type RelativeResize = { scope: string; field: ResizeField; delta: number };
-function readRelativeResize(text: string): RelativeResize | { question: string } | null {
+const resizeEdgeFields = { left: "width", right: "width", back: "depth", rear: "depth", front: "depth" } as const;
+export type ResizeEdge = keyof typeof resizeEdgeFields;
+export type DimensionEdit = { scope: string; field: ResizeField; fixedEdge?: ResizeEdge } &
+  ({ delta: number } | { target: number });
+type ParsedDimension = DimensionEdit | { question: string } | null;
+
+function readExactResize(text: string, inherited = false, anchored = false, allowBare = true): ParsedDimension {
+  const verb = /^(?:set|make)\s+/.exec(text);
+  if (!verb && !inherited) return null;
+  const body = verb ? text.slice(verb[0].length) : text;
+  if (verb?.[0].startsWith("make") && /^(?:me\s+)?(?:a|an)\s+/.test(body) && !anchored) return null;
+  const [, namedScope = "", value = ""] = exactResizePattern.exec(body) ?? (allowBare ? bareExactResize.exec(body) : null) ?? [];
+  const namedField = exactResizeField.exec(namedScope)?.[1];
+  const described = namedField ? null : describedResizePattern.exec(body);
+  const scope = namedField ? namedScope : (described?.[1] ?? "").replace(/\s+to$/, "");
+  const adjective = described ? described.at(-1) as keyof typeof describedDimensions : undefined;
+  const field = namedField ?? (adjective && describedDimensions[adjective]);
+  if (!field || (!namedField && !inherited && !anchored && !numberedModulePattern.test(scope) &&
+    !positionedModulePattern.test(scope) && !endModulePattern.test(scope)))
+    return null;
+  const question = "Give an exact size with inches or feet for each dimension you want to set.";
+  const amount = namedField ? amountPattern.exec(value) : described;
+  if (!amount || /[,;]|\b(?:and|then|but|or)\b/.test(scope)) return { question };
+  try {
+    const target = measuredInches(amount, namedField ? 1 : 2);
+    return target === null ? { question } : { scope, field: field as ResizeField, target };
+  } catch (error) {
+    return { question: (error as Error).message };
+  }
+}
+
+function readRelativeResize(text: string): ParsedDimension {
   const sizeText = text.replace(/^make\s+/, "");
   const comparative = sizeText.match(comparisonPattern);
   const comparativeBy = sizeText.match(comparisonByPattern);
   const adjustment = text.match(adjustmentPattern);
-  const fieldMatch = adjustment?.[2].match(new RegExp(`\\b(${dimensionWords})\\b`));
+  const adjustedField = adjustment?.[2].match(new RegExp(`\\b(${dimensionWords})\\b`))?.[1];
   const match = comparative ?? comparativeBy;
-  if (!match && !fieldMatch) {
+  if (!match && !adjustedField) {
     if (/^make\b/.test(text) &&
         new RegExp(`(?:${numeric}\\s*(?:${units})?\\s+(?:${comparison})\\b|\\b(?:${comparison})$)`).test(text))
       return { question: "Give one amount, with inches or feet, and name the dimension or section to resize." };
@@ -347,7 +460,7 @@ function readRelativeResize(text: string): RelativeResize | { question: string }
   const scope = match?.[1] ?? adjustment?.[2] ?? "";
   const adjective = (comparative?.at(-1) ?? comparativeBy?.[2]) as keyof typeof comparisons | undefined;
   const [field, sign] = adjective ? comparisons[adjective] :
-    [fieldMatch![1] as ResizeField, adjustment![1] === "increase" ? 1 : -1] as const;
+    [adjustedField as ResizeField, adjustment![1] === "increase" ? 1 : -1] as const;
   const amount = comparative ?? (comparativeBy?.[3] ?? adjustment?.[3])?.match(amountPattern);
   const question = "Give one positive resize amount, with inches or feet, such as “make section 2 two inches taller.”";
   if (!amount) return { question };
@@ -360,44 +473,81 @@ function readRelativeResize(text: string): RelativeResize | { question: string }
     return { question: (error as Error).message };
   }
 }
-const resizeSeparator = /\s*(?:[,;]\s*(?:and(?:\s+then)?\b)?|\s+(?:and(?:\s+then)?|then)\s+|[.!?](?=\s|$))\s*/;
+const resizeSeparator = /\s*(?:[,;]\s*(?:(?:and(?:\s+then)?|then)\b)?|\s+(?:and(?:\s+then)?|then)\s+|[.!?](?=\s|$))\s*/;
 const joinedFeetAndInches = new RegExp(
   `(${numeric}\\s*(?:feet|foot|ft|[′']))\\s+and\\s+(?=${numeric}\\s*(?:inches|inch|in\\b|[″"]))`,
   "g",
 );
 const implicitResizeScope = /^(?:the\s+|its?\s+|this\s+)?(?:(?:overall|finished|clear)\s+)?(?:width|depth|height|roof rise)?$/;
+const implicitSeatDimension = /^(?:(?:the|its)\s+)?(?:finished\s+)?seat\s+(?:height|width|depth)$/;
+export function trimPreservationClause(text: string) {
+  return text.replace(/(?:[.,]\s*|\s+)(?:(?:(?:and|but)\s+)?(?:keep|leave|preserve|retain)\s+(?:everything else|(?:all\s+)?(?:the\s+)?other (?:sections|seats|modules|benches|parts)|the others|the rest)(?:\s+(?:unchanged|the same|as[- ]is|as they are))?|without changing anything else)$/, "");
+}
 
-/** Read every dimension before changing a proposal, including clauses with an inherited target. */
-export function requestedRelativeResizes(input: string): RelativeResize[] | { question: string } | null {
-  const text = normalizeIdeaText(input)
-    .trim()
-    .replace(/^please\s+/, "")
-    .replace(/[.!?]+$/, "")
-    .replace(/,?\s+(?:(?:and|but)\s+keep\s+everything\s+else\s+the\s+same|without\s+changing\s+anything\s+else)$/, "");
-  const single = readRelativeResize(text);
+export function splitIdeaEdits(text: string) {
+  return text.replace(joinedFeetAndInches, "$1 ").split(resizeSeparator).filter(Boolean);
+}
+
+function readDimensionClauses(text: string, anchored: boolean): DimensionEdit[] | { question: string } | null {
+  const single = readExactResize(text, false, anchored) ?? readRelativeResize(text);
   if (single && !("question" in single)) return [single];
-  const clauses = text.replace(joinedFeetAndInches, "$1 ").split(resizeSeparator);
+  const clauses = splitIdeaEdits(text);
   if (clauses.length < 2) return single;
   let adjustmentVerb: string | undefined;
-  const parsed = clauses.map((clause) => {
+  const parsed = clauses.map((clause, index) => {
     const text = clause.trim();
     const explicitVerb = /^(increase|decrease|reduce)\s+/.exec(text)?.[1];
-    const direct = readRelativeResize(text);
+    const direct = readExactResize(text, index > 0 && !!single, anchored, anchored) ?? readRelativeResize(text);
     const implicit = !direct && adjustmentVerb && readRelativeResize(`${adjustmentVerb} ${text}`);
     if (!implicit) adjustmentVerb = explicitVerb;
     return direct ?? (implicit || null);
   });
   if (!parsed.some(Boolean)) return single;
-  const edits: RelativeResize[] = [];
+  const edits: DimensionEdit[] = [];
   for (const change of parsed) {
     if (!change)
       return { question: "Name a dimension and an amount with inches or feet for each requested change." };
     if ("question" in change) return change;
     const prior = edits.at(-1);
     const implicit = /^(?:it|this)$/.test(change.scope) || implicitResizeScope.test(change.scope);
-    edits.push(prior && implicit ? { ...change, scope: prior.scope } : change);
+    const scope = prior && implicit ? prior.scope
+      : prior && implicitSeatDimension.test(change.scope) ? `${prior.scope} ${change.scope}`
+      : change.scope;
+    edits.push({ ...change, scope });
   }
   return edits;
+}
+
+const fixedEdgeSuffix = /(?:[,;]\s*|\s+)(?:(?:and|then)\s+)?(?:(?:keep|hold|leave)\s+)?(?:the\s+)?(left|right|back|rear|front)(?:[ -]hand)?\s+(?:edge|end|face)\s+(?:fixed|anchored|in place|where it is|against the wall)$/;
+const unsupportedFixedEdge = /\b(?:keep|hold|leave)\s+(?:the\s+)?(?:both|(?:left|right|front|back|rear|top|bottom)\s+(?:edge|end|face))\b/;
+
+/** Read the whole resize request before proposing changes so edge constraints apply with the dimensions. */
+export function requestedDimensionEdits(input: string): DimensionEdit[] | { question: string } | null {
+  let text = trimPreservationClause(normalizeIdeaText(input).trim().replace(/^please\s+/, "").replace(/[.!?]+$/, ""));
+  const anchors = new Map<ResizeField, ResizeEdge>();
+  let match: RegExpExecArray | null;
+  while ((match = fixedEdgeSuffix.exec(text))) {
+    const edge = match[1] as ResizeEdge;
+    const field = resizeEdgeFields[edge];
+    const previous = anchors.get(field);
+    const canonical = edge === "rear" ? "back" : edge;
+    if (previous && previous !== canonical)
+      return { question: `Choose one fixed edge for ${field} so the opposite edge has room to move.` };
+    anchors.set(field, canonical);
+    text = text.slice(0, match.index).trimEnd();
+  }
+  if (unsupportedFixedEdge.test(text) && /\b(?:width|depth|height|wider|narrower|deeper|shallower|wide|deep|bigger|smaller|resize)\b/.test(text))
+    return { question: "Name one fixed edge for each horizontal dimension, such as “keep the left end fixed” or “keep the back edge against the wall.”" };
+  const edits = readDimensionClauses(text, anchors.size > 0);
+  if (!edits) return anchors.size ? { question: "Name the dimension and its size or change in inches or feet before choosing the fixed edge." } : null;
+  if ("question" in edits) return edits;
+  for (const field of anchors.keys())
+    if (!edits.some((edit) => edit.field === field))
+      return { question: `Name the ${field} change for the edge you want to hold in place.` };
+  return edits.map((edit) => {
+    const fixedEdge = anchors.get(edit.field);
+    return fixedEdge ? { ...edit, fixedEdge } : edit;
+  });
 }
 
 /** Scope words must qualify the width measurement, not an unrelated sentence about each seat. */
@@ -493,10 +643,66 @@ export function straightRun(modules: PlanModule[]): Run | null {
     center = first.position.map((n, i) => n + axis[i] * shift) as V3;
   return { order, center, axis, gaps };
 }
+
+const numberedModule = String.raw`\b(?:section|compartment|module)\s*#?\s*(\d+)\b(?!\s*(?:feet|foot|ft|inches|inch|in\b|[′'″"]))`;
+const positionedModule = String.raw`\b(left(?:[- ]hand)?|right(?:[- ]hand)?|middle|center|centre|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|last)\s+(?:(?:storage|banquette)\s+)?(section|compartment|seat|bench|cabinet|module)\b`;
+const endModule = String.raw`\b(section|compartment|seat|bench|cabinet|module)\s+(?:on|at|in)\s+(?:the\s+)?(left|right|middle|center|centre)\b`;
+const numberedModulePattern = new RegExp(numberedModule);
+const positionedModulePattern = new RegExp(positionedModule);
+const endModulePattern = new RegExp(endModule);
+const ordinals = "first second third fourth fifth sixth seventh eighth ninth tenth eleventh twelfth".split(" ");
+
+/** Resolve explicit labels or one seat in a single aligned run. An ambiguous target never means all. */
+export function requestedModule(previous: IdeaPlan, text: string): number | "ambiguous" | undefined {
+  const scope = normalizeIdeaText(text);
+  const indices = new Set<number>();
+  const matches = previous.modules.flatMap(({ name }, index) => {
+    const escaped = normalizeIdeaText(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return [...scope.matchAll(new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, "g"))]
+      .map((match) => ({ index, start: match.index, end: match.index + match[0].length }));
+  });
+  for (const match of matches) {
+    if (!matches.some(({ start, end }) => start <= match.start && end >= match.end && end - start > match.end - match.start))
+      indices.add(match.index);
+  }
+  for (const match of scope.matchAll(new RegExp(numberedModule, "g"))) {
+    if (matches.some(({ start, end }) => start <= match.index && end >= match.index + match[0].length)) continue;
+    const index = Number(match[1]) - 1;
+    if (!previous.modules[index]) return "ambiguous";
+    indices.add(index);
+  }
+  const positions = [
+    ...[...scope.matchAll(new RegExp(positionedModule, "g"))].map(([, place, noun]) => ({ place, noun })),
+    ...[...scope.matchAll(new RegExp(endModule, "g"))].map(([, noun, place]) => ({ place, noun })),
+  ];
+  for (const { place, noun } of positions) {
+    const family = /^(?:seat|bench)$/.test(noun) ? "bench" : noun === "cabinet" ? "cabinet" : undefined;
+    const options = previous.modules.flatMap((module, index) => !family || family === module.kind ? [{ module, index }] : []);
+    if (!options.length || new Set(options.map(({ module }) => module.kind)).size !== 1 ||
+      (!family && previous.structures.length)) return "ambiguous";
+    const ordinal = ordinals.indexOf(place);
+    if (ordinal >= 0 || place === "last") {
+      const chosen = options[place === "last" ? options.length - 1 : ordinal];
+      if (!chosen) return "ambiguous";
+      indices.add(chosen.index);
+      continue;
+    }
+    const order = straightRun(options.map(({ module }) => module))?.order;
+    if (!order || order.length < 2) return "ambiguous";
+    const ends = place.startsWith("left") ? 0 : place.startsWith("right") ? order.length - 1 : undefined;
+    const at = ends ?? (order.length % 2 ? Math.floor(order.length / 2) : undefined);
+    if (at === undefined) return "ambiguous";
+    indices.add(options[order[at]].index);
+  }
+  return indices.size > 1 ? "ambiguous" : [...indices][0];
+}
+
+export function straightRunWidth(modules: PlanModule[], run: Run) {
+  return modules.reduce((sum, module) => sum + module.width, 0) + run.gaps.reduce((sum, gap) => sum + gap, 0);
+}
+
 export function reflow(modules: PlanModule[], run: Run): PlanModule[] {
-  const total =
-    modules.reduce((n, m) => n + m.width, 0) +
-    run.gaps.reduce((a, b) => a + b, 0);
+  const total = straightRunWidth(modules, run);
   let cursor = -total / 2;
   const next = modules.map((m) => ({ ...m }));
   for (const [i, index] of run.order.entries()) {
@@ -526,33 +732,25 @@ function sameSectionConfiguration(modules: PlanModule[]) {
 }
 /** Pure, scoped furniture edits. Unrelated furniture and every structure survive. */
 export function editFurniturePlan(previous: IdeaPlan, input: string): IdeaPlan {
-  const text = normalizeIdeaText(input),
-    facts = furnitureMeasurements(text),
+  const text = trimPreservationClause(normalizeIdeaText(input).trim().replace(/[.!?]+$/, "")),
     family = mentionedFamily(text),
-    numbered = text.match(
-      /\b(?:section|compartment|module)\s*#?\s*(\d{1,2})\b(?!\s*(?:feet|foot|ft|inches|inch|in|[′'″"]))/,
-    ),
-    exact = previous.modules.findIndex((m) =>
-      text.includes(m.name.toLowerCase()),
-    ),
-    targetIndex = numbered
-      ? Number(numbered[1]) - 1
-      : exact >= 0
-        ? exact
-        : undefined;
+    targetIndex = requestedModule(previous, text),
+    count = requestedSeatingSections(text),
+    facts = furnitureMeasurements(count?.raw ? text.replace(count.raw, " ") : text);
+  if (targetIndex === "ambiguous")
+    return retainWithQuestion(previous, "Name or number one section. Left, right and middle refer to a single straight run.");
   if (Object.values(facts).some((f) => f && f.inches === null))
     return retainWithQuestion(
       previous,
       "Should the measurement be in inches or feet? Add the unit; the previous dimensions are retained.",
     );
-  if (
-    targetIndex !== undefined &&
-    (targetIndex < 0 || targetIndex >= previous.modules.length)
-  )
-    return retainWithQuestion(
-      previous,
-      "Which existing section should change? The requested section number is not in this proposal.",
-    );
+  if (count?.widthEach !== undefined) {
+    if (!straightRun(previous.modules.filter(({ kind }) => kind === "bench")))
+      return retainWithQuestion(previous, "Give the measured width of each run to change individually sized sections on a corner.");
+    if (facts.width && Math.abs(facts.width.inches! - count.widthEach * count.count) > 0.001)
+      return retainWithQuestion(previous, "The overall width and individual seat widths disagree. Which measurement should take priority?");
+    facts.width = { raw: "", unitExplicit: true, inches: count.widthEach };
+  }
   let indices =
     targetIndex !== undefined
       ? [targetIndex]
@@ -570,27 +768,16 @@ export function editFurniturePlan(previous: IdeaPlan, input: string): IdeaPlan {
       previous,
       "Should this change affect the benches, cabinets or another named section? The mixed proposal is retained.",
     );
-  const count = text.match(
-      /\b(\d{1,2})[ -]*(?:sections?|compartments?|modules?)\b/,
-    ),
-    noBack =
-      /\b(backless|(?:no|without)(?: a)? back)\b|wall.{0,32}(?:as|be)(?: the| a)? back/.test(
-        text,
-      ),
-    wantsLid =
-      /\b(?:openable|opening|hinged|lift[ -]?up)\s+(?:seat\s+)?lids?\b|\b(?:lids?|seats?|tops?)\b.{0,28}\bopen\b/.test(
-        text,
-      ),
-    wantsStorage = /\bstorage\b|closed off|space underneath/.test(text),
-    noStorage = /\b(?:no|without) storage\b/.test(text),
-    removeLid = /\b(?:no|without|remove) (?:opening )?lid/.test(text);
+  const { noBack, wantsLid, wantsStorage, noStorage, noLid } = requestedSeatFeatures(text);
+  if (noStorage && wantsLid)
+    return retainWithQuestion(previous, "Should the opening lid cover enclosed storage, or are you planning a different hinged top?");
   const changed =
     Object.values(facts).some(Boolean) ||
     noBack ||
     wantsLid ||
     wantsStorage ||
     noStorage ||
-    removeLid ||
+    noLid ||
     !!count;
   if (!changed)
     return retainWithQuestion(
@@ -606,7 +793,7 @@ export function editFurniturePlan(previous: IdeaPlan, input: string): IdeaPlan {
       "Which straight run should change: the back run or the return? A whole width cannot be applied independently to perpendicular or separate sections.",
     );
   if (count) {
-    const total = Number(count[1]);
+    const total = count.count;
     if (total < 1 || total > 12)
       return retainWithQuestion(
         previous,
@@ -664,7 +851,7 @@ export function editFurniturePlan(previous: IdeaPlan, input: string): IdeaPlan {
           );
         const first = original[0],
           overall = original.reduce((n, m) => n + m.width, 0),
-          width = facts.width?.inches ?? overall;
+          width = count.widthEach !== undefined ? count.widthEach * total : facts.width?.inches ?? overall;
         if (width / total < 8)
           return retainWithQuestion(
             previous,
@@ -691,7 +878,7 @@ export function editFurniturePlan(previous: IdeaPlan, input: string): IdeaPlan {
   const active = indices.map((i) => next.modules[i]),
     currentRun = straightRun(active);
   if (facts.width && indices.length > 1 && currentRun) {
-    const each = widthAppliesToEach(text),
+    const each = count?.widthEach !== undefined || widthAppliesToEach(text),
       usable = facts.width.inches! - currentRun.gaps.reduce((a, b) => a + b, 0),
       sum = active.reduce((n, m) => n + m.width, 0),
       members = active.map((m) => ({
@@ -717,7 +904,7 @@ export function editFurniturePlan(previous: IdeaPlan, input: string): IdeaPlan {
       if (facts.backHeight) m.backHeight = facts.backHeight.inches!;
       if (wantsStorage || wantsLid) m.storage = true;
       if (wantsLid) m.openingLid = true;
-      if (removeLid) {
+      if (noLid) {
         m.openingLid = false;
         m.lidOpen = false;
       }

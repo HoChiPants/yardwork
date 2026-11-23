@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { restoreWorkshopArchive } from "../../server/workshopArchive";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { drawerSlideReference } from "../../src/drawerSlideReference";
-import { applyCommand, blank, part, type Project } from "../../src/model";
+import { applyCommand, blank, part, projectSchema, type Project } from "../../src/model";
 import { saveFastenerPlan, suggestCenteredFastener } from "../../src/fastenings";
 import { saveWoodJointDecision } from "../../src/woodJointDecisions";
 import { bounds, cutPiece } from "../../src/engine";
@@ -440,6 +440,123 @@ test("trim sessions stay separate in saved seams, answers and the shopping hando
   await expect(page.locator(".print-guide .trim-sealant-sessions-print")).toContainText("Cabinet second visit");
 });
 
+test("a cabinet cover changes seam access, while a later installation keeps its backing cut in the guide", async ({ page }) => {
+  await page.goto("./");
+  const response = await page.request.get(new URL("./examples/air-sealing/trim-before-cover.yardwork.json", page.url()).href);
+  expect(response.ok()).toBe(true);
+  const plan = projectSchema.parse(await response.json());
+  const dialog = page.getByRole("dialog");
+  const cover = plan.pieces.find(({ name }) => name === "Face trim cover")!;
+  async function openSeam(project: Project) {
+    await page.getByRole("button", { name: "Open project", exact: true }).click();
+    await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+    await dialog.locator("input[type=file]").first().setInputFiles({
+      name: "trim-before-cover.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+    });
+    await expect(dialog).toHaveCount(0);
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill("Review trim seam between P001 and P002");
+    await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+    await dialog.getByRole("button", { name: "Inspect joint", exact: true }).click();
+    const seam = page.getByRole("region", { name: "Selected wood contact" });
+    await seam.getByText("Plan trim sealant", { exact: true }).click();
+    return seam;
+  }
+  const early = { ...plan, pieces: plan.pieces.map((piece) =>
+    piece.id === cover.id ? { ...piece, stepId: plan.pieces[0].stepId } : piece) };
+  const blocked = await openSeam(early);
+  const blockedEdge = blocked.getByRole("listitem").filter({ hasText: /Face trim cover covers the seam 8 in to 12 in/ });
+  await blockedEdge.getByRole("button", { name: /Show edge.*in 3D/ }).click();
+  await expect(page.getByTestId("trim-seam-marker")).toContainText("Covered");
+  await blocked.getByRole("button", { name: "Save measured seam", exact: true }).click();
+  await expect(blocked.getByRole("alert")).toContainText("Review access or place the cover in a later build step.");
+
+  const scheduled = await openSeam(plan);
+  const scheduledEdge = scheduled.getByRole("listitem").filter({ hasText: /Seal 8 in to 12 in from Start before Step 3/ });
+  await scheduledEdge.getByRole("button", { name: /Show edge.*in 3D/ }).click();
+  await expect(page.getByTestId("trim-seam-marker")).toContainText("Seal before covering");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const exported = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await exported).path())!, "utf8");
+  expect(guide).toMatch(/from P00[12]'s center.*Seal 8 in to 12 in from Start before Step 3 installs Face trim cover/);
+  expect(guide).toMatch(/Offcut Closet backing tail · 28 in on hand · Cut 24 in.*Keep 4 in/);
+  expect(guide).not.toContain("keep open  ·");
+});
+
+test("backer rod offcuts replace a new roll and record the measured remainder", async ({ page }) => {
+  await page.goto("./");
+  const fixture = await page.request.get(new URL("./examples/air-sealing/trim-rod-offcuts.yardwork.json", page.url()).href);
+  expect(fixture.ok()).toBe(true);
+  const source = projectSchema.parse(await fixture.json());
+  const name = `Closet backing cuts ${crypto.randomUUID().slice(0, 8)}`;
+  const project = { ...source, name, backerRodOffcuts: undefined };
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "closet-backing-cuts.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const handoff = page.getByRole("button", { name: "Prepare Home Depot list", exact: true });
+  await handoff.click();
+  const addRoll = dialog.getByRole("button", { name: "Add 1 roll of Frost King C21H 3/8 in backer rod", exact: true });
+  await expect(addRoll).toBeVisible();
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: /^Cut pool \(\d+\)$/, exact: true }).click();
+  const pool = page.getByRole("region", { name: "Cut pool", exact: true });
+  await pool.getByText("Backer rod offcuts (0)", { exact: true }).click();
+  for (const { label, length } of source.backerRodOffcuts!.slice(0, 2)) {
+    await pool.getByRole("button", { name: "Add measured backer rod offcut", exact: true }).click();
+    await pool.getByRole("textbox", { name: "Offcut label", exact: true }).fill(label);
+    await pool.getByRole("spinbutton", { name: "Measured usable length", exact: true }).fill(String(length));
+    await pool.getByRole("button", { name: "Save backer rod offcut", exact: true }).click();
+  }
+  await expect(pool.getByRole("article", { name: "Short closet tail" })).toContainText("1 planned cut · 8 in expected left");
+  await expect(pool.getByRole("article", { name: "Long closet tail" })).toContainText("1 planned cut · 4 in expected left");
+  await handoff.click();
+  await expect(addRoll).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft()).revision).toBe(1);
+  const saved = projectSchema.parse((await draft()).project);
+  expect(saved.backerRodOffcuts?.map(({ label, length }) => [label, length])).toEqual([
+    ["Short closet tail", 14], ["Long closet tail", 28],
+  ]);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: name }).click();
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Can I reuse my backer rod offcuts?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await expect(dialog.getByRole("region", { name: "Backer rod offcut matches", exact: true })).toContainText("0 new rolls for the reviewed runs.");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: /^Cut pool \(\d+\)$/ }).click();
+  await pool.getByText("Backer rod offcuts (2)", { exact: true }).click();
+  await pool.getByRole("button", { name: "Record cuts from Long closet tail", exact: true }).click();
+  const cut = pool.getByRole("article", { name: "Long closet tail", exact: true });
+  await expect(cut).toContainText("Up to 4 in");
+  await cut.getByRole("spinbutton", { name: "Measured remainder length (optional)", exact: true }).fill("3.75");
+  await cut.getByRole("textbox", { name: "Remainder label (optional)", exact: true }).fill("Closet remainder");
+  await cut.getByRole("button", { name: "Save recorded backer rod cuts", exact: true }).click();
+  await expect(pool.getByRole("article", { name: "Long closet tail", exact: true })).toHaveCount(0);
+  await expect(pool.getByRole("article", { name: "Closet remainder", exact: true })).toContainText("3.75 in on hand");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft()).revision).toBe(2);
+  const recorded = projectSchema.parse((await draft()).project);
+  expect(recorded.backerRodCutRecords?.[0].cuts.map(({ length }) => length)).toEqual([24]);
+  expect(recorded.backerRodCutRecords?.[0].remnant?.length).toBe(3.75);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const exported = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await exported).path())!, "utf8");
+  expect(guide).toMatch(/Trim backer rod cut plan[\s\S]+Recorded cuts from Long closet tail[\s\S]+24 in[\s\S]+Measured remainder Closet remainder · 3\.75 in[\s\S]+Offcut Short closet tail[\s\S]+Keep 8 in/);
+  expect(guide).not.toContain("Offcut Long closet tail · 28 in on hand");
+});
+
 test("an interrupted trim seam leaves access open and adds one exact backer rod roll", async ({ page }) => {
   const project = blank("Interrupted trim opening");
   const step = project.steps[0].id;
@@ -831,7 +948,56 @@ test("wood glue takeoff shows modeled contact and saves a confirmed bottle estim
   expect(guide).toContain("Dry-fit before using glue.");
 });
 
-test("a compound relative revision changes one banquette section and preserves the other cuts", async ({ page }) => {
+test("measured glue faces save around a cutout and carry into the guide and Home Depot list", async ({ page }) => {
+  const fixture = JSON.parse(await readFile("public/examples/wood-stock/laminated-access-plate.yardwork.json", "utf8"));
+  fixture.schemaVersion = 149;
+  delete fixture.woodJointDecisions[0].glueFaces;
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "laminated-access-plate.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(fixture)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByText("Estimate wood glue", { exact: true }).click();
+  await page.getByText("Plan glue on actual faces", { exact: true }).click();
+  const area = page.getByLabel("Modeled glue area");
+  await expect(area).toHaveText("92 sq in");
+  await page.getByRole("combobox", { name: "Apply glue to" }).selectOption("both");
+  await expect(area).toHaveText("184 sq in");
+  await page.getByRole("button", { name: "Show glue face in 3D" }).click();
+  await expect(page.getByTestId("glue-face-marker")).toContainText("92 sq in contact");
+  await page.getByLabel("Glue allowance (%)").fill("10");
+  await page.getByRole("button", { name: "Save glue faces" }).click();
+  await expect(page.getByRole("region", { name: "Saved glue faces" })).toContainText("202.4 sq in with allowance");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: "Plywood glue faces practice" }).click();
+  await page.getByRole("button", { name: "Guide", exact: true }).click();
+  await page.getByRole("button", { name: "Review connection decisions" }).click();
+  await page.getByRole("button", { name: "Review Glue faces", exact: true }).click();
+  await expect(page.getByLabel("Modeled glue area")).toHaveText("184 sq in");
+  await page.getByRole("button", { name: "Prepare Home Depot list" }).click();
+  await dialog.getByRole("button", { name: /Add 1 bottle of Titebond III/ }).click();
+  await expect(dialog.getByRole("listitem").filter({ hasText: /#100522343/ })).toContainText("1 bottle");
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("184 sq in of selected faces · 202.4 sq in with allowance");
+  expect(guide).toMatch(/Matching scrap for a glue trial · O\d+/);
+});
+
+test("a compound exact and relative revision changes one banquette section and preserves the other cuts", async ({ page }) => {
   const baseline = applyIdeaPlan(blank("Two dimensions in one revision"), localIdeaPlan({
     prompt: "Build a three-section storage banquette, each section 24 inches wide, 24 inches deep, 18 inches seat height, opening lids and no back",
   }));
@@ -843,6 +1009,10 @@ test("a compound relative revision changes one banquette section and preserves t
   const [keptSource] = original.plannedCutSources!;
   const unrelated = part("Spare board", "one-four", [0.75, 12, 3.5], [60, 8, 0], original.steps[0].id, "Loose stock");
   original.pieces.push(unrelated);
+  const plannerCalls: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/planner") plannerCalls.push(request.url());
+  });
   await page.goto("./");
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -859,7 +1029,11 @@ test("a compound relative revision changes one banquette section and preserves t
     await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(prompt);
     await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
   };
-  await ask("Make section 2 two inches taller and one inch deeper");
+  await ask("Make section 2 20 inches tall and section 3 19 inches tall");
+  await expect(dialog.getByRole("spinbutton", { name: "Banquette section 2 height", exact: true })).toHaveValue("20");
+  await expect(dialog.getByRole("spinbutton", { name: "Banquette section 3 height", exact: true })).toHaveValue("19");
+  await ask("Set section 3 seat height to 18 inches and make section 2 one inch deeper");
+  await expect(dialog.locator(".planner-provider")).toContainText("Workspace dimensions");
   for (const [seat, height, depth] of [[1, 18, 24], [2, 20, 25], [3, 18, 24]]) {
     await expect(dialog.getByRole("spinbutton", {
       name: `Banquette section ${seat} height`, exact: true,
@@ -869,6 +1043,7 @@ test("a compound relative revision changes one banquette section and preserves t
     })).toHaveValue(String(depth));
   }
   await ask("Save the cut order with this proposal");
+  expect(plannerCalls).toEqual([]);
   const stock = dialog.getByRole("region", { name: "Proposal cuts and stock" });
   await expect(stock.getByRole("combobox", { name: "Wood cut orders to save" })).toHaveValue("proposal");
   await expect(stock.getByRole("status")).toContainText(/Save \d+ stock units? with this design/);
@@ -934,7 +1109,9 @@ test("a drawer can pass without touching and still fail a saved minimum gap test
   await panel.getByRole("button", { name: "Check gap through travel", exact: true }).click();
   const result = panel.getByRole("region", { name: "Minimum gap result" });
   await expect(result.getByRole("status")).toContainText("Shortfall. Observed 0.0625 in near 6 in.");
-  await expect(panel.getByText("No modeled interference found along this travel.")).toBeVisible();
+  const stops = panel.getByRole("list", { name: "Travel stops", exact: true });
+  await expect(stops).toContainText("Opening pauses near 4.39 in for the minimum gap.");
+  await expect(stops).toContainText("Closing pauses near 7.61 in for the minimum gap.");
   await result.getByRole("button", { name: "Inspect the gap", exact: true }).click();
   await expect(page.getByTestId("motion-preview-label")).toHaveAttribute("data-pose", "6");
   await panel.getByText("Keep this test under a name", { exact: true }).click();
@@ -997,6 +1174,49 @@ test("a drawer can pass without touching and still fail a saved minimum gap test
   await panel.getByRole("button", { name: "Check gap through travel", exact: true }).click();
   await expect(result.getByRole("button", { name: "Find closest gap", exact: true })).toBeVisible();
   await expect(result.getByText(/Closest checked gap/)).toHaveCount(0);
+
+  await panel.getByRole("combobox", { name: "Clearance test", exact: true }).selectOption({ label: "Drawer lip check" });
+  const beforeOffset = (await readDraft()).project;
+  await result.getByRole("button", { name: "Try moving nearby part", exact: true }).click();
+  const offset = panel.getByRole("region", { name: "Try an obstruction offset", exact: true });
+  await expect(offset.getByRole("heading")).toContainText("Cabinet lip");
+  await expect(pose).toHaveAttribute("data-pose", "6");
+  await offset.getByRole("combobox", { name: "Offset direction" }).selectOption({ label: "+Y · Up" });
+  const offsetDistance = offset.getByRole("spinbutton", { name: "Offset distance or search limit" });
+  const gapResults = offset.getByRole("list", { name: "Minimum gaps in this offset" });
+  const applyOffset = offset.getByRole("button", { name: "Apply offset", exact: true });
+  await offsetDistance.fill("0.025");
+  await offset.getByRole("button", { name: "Check this offset", exact: true }).click();
+  await expect(gapResults).toContainText("Shortfall");
+  await expect(applyOffset).toHaveCount(0);
+  await offsetDistance.fill("0.25");
+  await offset.getByRole("button", { name: "Find a clear offset", exact: true }).click();
+  await expect(offset.getByRole("status")).toContainText("0.125 in +Y · Up");
+  await expect(gapResults).toContainText("Met throughout the modeled travel");
+  await offset.getByRole("button", { name: "Play trial opening", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "12");
+  await offset.getByRole("button", { name: "Play trial closing", exact: true }).click();
+  await expect(pose).toHaveAttribute("data-pose", "0");
+  expect((await readDraft()).project).toEqual(beforeOffset);
+  await applyOffset.click();
+  await expect(result).toContainText("Met throughout the modeled travel");
+  await expect.poll(async () => (await readDraft()).project.pieces.find((piece: { id: string }) => piece.id === lip.id)?.position)
+    .toEqual([0, 6.1875, 6]);
+  expect((await readDraft()).project.motionPlans).toEqual(beforeOffset.motionPlans);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await readDraft())?.revision).toBe(2);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: "Cabinet lip clearance" }).click();
+  await openMotion();
+  await panel.getByRole("combobox", { name: "Clearance test", exact: true }).selectOption({ label: "Drawer lip check" });
+  await expect(result).toContainText("Met throughout the modeled travel");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const updatedDownload = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const updatedGuide = await readFile((await (await updatedDownload).path())!, "utf8");
+  expect(updatedGuide).toContain("Named clearance test · Drawer lip check");
+  expect(updatedGuide).toContain("0.125 in minimum gap · P001 and P002 · Met throughout the modeled travel.");
 });
 
 test("a door can stop short of a wall while a drawer opens to a saved target", async ({ page }) => {
@@ -1140,9 +1360,10 @@ test("rip first preserves a long scrap and applies both cuts as one saved plan",
   await expect(printOrder).toContainText("Recorded blade kerf 0.059 in per cut");
 });
 
-test("a measured sill gasket checks support, shows its footprint and exports exact rolls", async ({ page }) => {
+test("a measured sill gasket checks support, shows bore marks and exports exact rolls", async ({ page }) => {
   const project = applyCommand(blank("Gasket wall"), { type: "wall", width: 96, height: 72, depth: 48, spacing: 16 });
   const plate = project.pieces.find(({ name }) => name.endsWith("bottom plate"))!;
+  plate.roundOpenings = [{ axis: 1, center: [0, -24], diameter: 0.625 }, { axis: 1, center: [0.5, 24], diameter: 0.625 }];
   await page.goto("./");
   await page.getByRole("button", { name: "Open project", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -1153,11 +1374,13 @@ test("a measured sill gasket checks support, shows its footprint and exports exa
     buffer: Buffer.from(JSON.stringify({ ...project, schemaVersion: 84 })),
   });
   await expect(dialog).toHaveCount(0);
-  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("How do I seal the sill plate on concrete for P001?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await dialog.getByRole("button", { name: "Open sill gasket planner", exact: true }).click();
   const title = page.getByText("Plan sill gaskets", { exact: true });
-  await title.click();
   const fields = page.locator("details.field-section").filter({ has: title });
-  await fields.getByRole("combobox", { name: "Wood sill plate", exact: true }).selectOption(plate.id);
+  await expect(fields.getByRole("combobox", { name: "Wood sill plate", exact: true })).toHaveValue(plate.id);
   await fields.getByRole("spinbutton", { name: "Measured top elevation", exact: true }).fill("0");
   await fields.getByRole("spinbutton", { name: "Continuous support length under this sill", exact: true }).fill("96");
   const width = fields.getByRole("spinbutton", { name: "Measured support width", exact: true });
@@ -1171,8 +1394,10 @@ test("a measured sill gasket checks support, shows its footprint and exports exa
   await width.fill("6");
   await save.click();
   await expect(fields.getByRole("list", { name: "Measured sill gasket runs" })).toContainText("One 98 in strip");
+  await fields.getByText("Modeled bolt-hole marks (2)", { exact: true }).click();
+  await expect(fields.getByRole("list", { name: "Modeled bolt-hole marks", exact: true })).toContainText("2 ft along from Start · 1.75 in from the marked edge");
   await fields.getByRole("button", { name: "Show gasket footprint", exact: true }).click();
-  await expect(page.getByTestId("sill-gasket-marker")).toContainText("Sill gasket footprint");
+  await expect(page.getByTestId("sill-gasket-marker")).toContainText("Sill gasket footprint · Start · 2 bore marks");
   await buy.click();
 
   await page.getByRole("button", { name: "Save project", exact: true }).click();
@@ -1194,6 +1419,8 @@ test("a measured sill gasket checks support, shows its footprint and exports exa
   const guide = await readFile((await (await download).path())!, "utf8");
   expect(guide).toContain("## Sill gasket cut plan");
   expect(guide).toContain("Cut 98 in including 2 in for overlaps and trimming.");
+  expect(guide).toContain("Bore 2 · 6 ft along from Start · 2.25 in from the marked edge");
+  await expect(page.locator(".print-guide .sill-gaskets-print")).toContainText("Transfer the actual anchor locations on site");
   await expect(page.locator(".print-guide .sill-gaskets-print")).toContainText("502 in remaining");
 });
 
@@ -1301,8 +1528,126 @@ test("a seat support warning fits a scrap block and records the cut in its guide
   expect(guide).toMatch(/Recorded offcut cut order[\s\S]*Support block · Right rail/);
 });
 
-test("the store checklist sorts recorded aisles and keeps partial pickups with the selected store", async ({ page }) => {
-  const initial = blank("Hardware for the bench");
+test("the support review fits a block beneath a rail's shorter leg", async ({ page }, info) => {
+  await page.goto("./");
+  const fixture = await page.request.get(new URL("./examples/wood-stock/workstand-support.yardwork.json", page.url()).href);
+  expect(fixture.ok()).toBe(true);
+  const bytes = await fixture.body();
+  const original = projectSchema.parse(JSON.parse(bytes.toString("utf8")));
+  const [rail, , short, offcut] = original.pieces;
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "workstand-support.yardwork.json", mimeType: "application/json", buffer: bytes,
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Where does support stop for P001?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Wood support to floor", exact: true });
+  await expect(answer).toContainText("P003 · Short leg");
+  await answer.getByRole("button", { name: "Open support review", exact: true }).click();
+  await expect(page.getByRole("toolbar", { name: "Selected part tools" })).toContainText(rail.name);
+  const details = page.locator(".wood-support");
+  await expect(details.getByRole("region", { name: "Contact breaks", exact: true })).toContainText("P003 · Short leg");
+  const form = details.getByRole("region", { name: "Fit a support block", exact: true });
+  await expect(form.getByRole("combobox", { name: "Part to support", exact: true })).toHaveValue(short.id);
+  await form.getByRole("button", { name: "Preview support block", exact: true }).click();
+  const fit = form.getByRole("region", { name: "Support block fit", exact: true });
+  await expect(fit).toContainText("2.5 in support block from the modeled floor to P003.");
+  await expect(fit).toContainText("Use O001 from the Cut pool.");
+  await expect(page.getByTestId("support-block-preview-marker")).toContainText("Support block preview");
+  await page.screenshot({ path: info.outputPath("rail-support-preview.png") });
+  await fit.getByRole("button", { name: "Add support block", exact: true }).click();
+  await expect(details.getByRole("region", { name: "Contact breaks", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft()).revision).toBe(1);
+  const saved = projectSchema.parse((await draft()).project);
+  expect(saved.history.some(({ offcutCut }) => offcutCut?.inputId === offcut.id)).toBe(true);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const exported = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await exported).path())!, "utf8");
+  expect(guide).toMatch(/O001 → P004 · Support block · Short leg[\s\S]+Keep O002 · 7\.375 in/);
+  expect(guide).toContain("4 of 4 modeled wood parts have a face-contact path to the floor.");
+});
+
+test("a nearby support block clears the obstruction and opens its exact bearing joint", async ({ page }) => {
+  const project = blank("Offset support block");
+  const step = project.steps[0].id;
+  const rail = part("Unsupported rail", "stud", [4, 2, 8], [6, 5, 0], step, "Stand");
+  const obstruction = part("Center obstruction", "stud", [4, 1, 1], [6, 2, 0], step, "Other parts");
+  project.pieces = [rail, obstruction];
+  const source = addMeasuredOffcut(project, step, "stud", [20, 3.5, 1.5], "Shop scrap");
+  const scrap = source.pieces.at(-1)!;
+  await page.goto("./");
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "offset-block.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(source)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Where does support stop for P001?");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await dialog.getByRole("button", { name: "Open support review", exact: true }).click();
+  const form = page.getByRole("region", { name: "Fit a support block", exact: true });
+  await form.getByRole("button", { name: "Preview support block", exact: true }).click();
+  await expect(form.getByRole("alert")).toContainText("No centered fit");
+  await form.getByRole("button", { name: "Find nearby fit", exact: true }).click();
+  let fit = form.getByRole("region", { name: "Support block fit", exact: true });
+  await expect(fit).toContainText("Offset from underside center");
+  await expect(page.getByTestId("support-block-preview-marker")).toContainText("Support block preview");
+  await fit.getByRole("button", { name: "Cancel preview", exact: true }).click();
+  await form.getByText("Offset from center", { exact: true }).click();
+  await form.getByRole("spinbutton", { name: "Block Z offset", exact: true }).fill("2.5");
+  await form.getByRole("button", { name: "Preview support block", exact: true }).click();
+  fit = form.getByRole("region", { name: "Support block fit", exact: true });
+  await expect(fit).toContainText("Z 2.5 in");
+  await expect(fit).toContainText("Use O001 from the Cut pool");
+  await fit.getByRole("button", { name: "Add and review joints", exact: true }).click();
+  const bearing = page.locator("details.bearing-connections");
+  await expect(bearing).toContainText("Check bearing and restraint at the actual floor.");
+  await expect(bearing).toContainText("Unsupported rail on P003 · Support block");
+  await expect(bearing.getByRole("button", { name: "Check connector fit for P001 and P003", exact: true })).toBeVisible();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft()).project.pieces.some(({ designRole }: { designRole?: string }) =>
+    designRole === "fitted-support-block")).toBe(true);
+  const added = projectSchema.parse((await draft()).project);
+  const addedBlock = added.pieces.find(({ designRole }) => designRole === "fitted-support-block")!;
+  await bearing.getByRole("button", { name: "Plan wood screws for P001 and P003", exact: true }).click();
+  const fasteners = page.getByRole("region", { name: "Wood fastener plans" });
+  await expect(fasteners.getByRole("combobox", { name: "Fastener receiving member" })).toHaveValue(addedBlock.id);
+  await fasteners.getByRole("button", { name: "Back to connections", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft()).revision).toBe(1);
+  const saved = projectSchema.parse((await draft()).project);
+  const block = saved.pieces.find(({ designRole }) => designRole === "fitted-support-block")!;
+  expect(block.position).toEqual([6, 2, 2.5]);
+  expect(block.cutStock?.id).toBe(scrap.cutStock?.id);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: saved.name }).click();
+  await page.getByRole("button", { name: "Guide", exact: true }).click();
+  await page.getByRole("button", { name: "Review build preparation", exact: true }).click();
+  const blockGroup = page.getByRole("region", { name: "Build preparation" })
+    .locator("details.preparation-group").filter({ hasText: "Fitted support-block joints" });
+  await blockGroup.locator(":scope > summary").click();
+  await blockGroup.getByRole("button", { name: /P003 · Support block.+Upper joint with P001/ }).click();
+  await expect(bearing.getByRole("button", { name: "Plan wood screws for P001 and P003", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const downloaded = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await downloaded).path())!, "utf8");
+  expect(guide).toContain("Center X 6 in, Z 2.5 in · from the modeled floor to P001.");
+  expect(guide).toContain("Upper joint with P001. No pair plan recorded. Check bearing and restraint at the actual floor.");
+  expect(guide).toMatch(/Recorded offcut cut order[\s\S]+Crosscut to 4 in[\s\S]+15\.875 in/);
+});
+
+test("the store checklist sorts recorded aisles and carries partial pickups across stores", async ({ page }) => {
+  const initial = blank("Hardware for split store pickup");
   initial.pieces.push(part("Bench rail", "stud", [3.5, 1.5, 32], [0, 0.75, 0], initial.steps[0].id, "Bench"));
   const project = addSupply(addSupply(initial, "everbilt-29256-continuous-hinge", 3), "paslode-515500", 1);
   const board = homeDepotShoppingList(project).items.find(({ source }) => source.kind === "stock")!.productId;
@@ -1344,11 +1689,17 @@ test("the store checklist sorts recorded aisles and keeps partial pickups with t
   await expect(dialog.getByRole("heading", { name: "Shop in store", exact: true })).toBeVisible();
   await expect(dialog.locator(".shop-aisle h3")).toHaveText(["Aisle 2", "Aisle 10", "Find in store"]);
   await expect(dialog.getByRole("region", { name: "Aisle 2", exact: true })).toContainText("Bay 8");
+  await dialog.getByRole("button", { name: "Check stock (2)", exact: true }).click();
+  await expect(dialog.getByRole("region", { name: "Aisle 10", exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("region", { name: "Aisle 2", exact: true })).toContainText("Short by 1");
+  await expect(dialog.getByRole("region", { name: "Find in store", exact: true })).toContainText("No recent store snapshot");
+  await dialog.getByRole("button", { name: "Check stock (2)", exact: true }).click();
 
   const hingeCount = dialog.getByRole("spinbutton", { name: `Picked purchase units for product ${hinge}`, exact: true });
   await hingeCount.fill("1");
   await hingeCount.press("Tab");
   await expect(dialog.getByRole("region", { name: "Aisle 2", exact: true })).toContainText("2 remaining");
+  await expect(dialog.getByRole("button", { name: "Check stock (1)", exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: `Mark picked for product ${board}`, exact: true }).click();
   await expect(dialog.getByRole("status")).toContainText("1 of 3 product lines picked");
   await dialog.getByRole("checkbox", { name: "Show remaining only", exact: true }).check();
@@ -1361,6 +1712,7 @@ test("the store checklist sorts recorded aisles and keeps partial pickups with t
   expect(text).toContain("1 picked · 2 remaining · Aisle 2 · Bay 8");
   expect(text).toContain(`Internet #${board}`);
   expect(text).toMatch(/\[x\] 1 board/);
+  expect(text).toContain("No recent store snapshot");
 
   await dialog.getByRole("button", { name: "Back to purchase list", exact: true }).click();
   const lineQuantities = (value: string) => value.split("\n").map((line) => line.split(" — ")[0]);
@@ -1385,6 +1737,36 @@ test("the store checklist sorts recorded aisles and keeps partial pickups with t
   await expect(dialog.getByRole("region", { name: "Aisle 7", exact: true })).toContainText("Bay 1");
   await expect(dialog.getByRole("region", { name: "Aisle 2", exact: true })).toHaveCount(0);
   await expect(hingeCount).toHaveValue("0");
+  await expect(hingeCount).toHaveAttribute("max", "2");
+  await expect(dialog.getByRole("region", { name: "Aisle 7", exact: true }))
+    .toContainText("1 picked elsewhere");
+  await expect(dialog.getByRole("status")).toContainText("1 of 3 product lines picked");
+  await dialog.getByText("Compare recorded stores", { exact: true }).click();
+  const comparison = dialog.getByRole("list", { name: "Stock comparison by store" });
+  await expect(comparison.getByRole("listitem").filter({ hasText: "Store 4408" })).toContainText("1 covered · 0 short · 1 unchecked");
+  await expect(comparison.getByRole("listitem").filter({ hasText: "Store 4409" })).toContainText("1 covered · 0 short · 1 unchecked");
+  await dialog.getByRole("button", { name: `Mark picked for product ${hinge}`, exact: true }).click();
+  await expect(hingeCount).toHaveValue("2");
+  await expect(dialog.getByRole("status")).toContainText("2 of 3 product lines picked");
+  await comparison.getByRole("button", { name: "Use store 4409", exact: true }).click();
+  await expect(hingeCount).toHaveValue("1");
+  const firstAisle = dialog.getByRole("region", { name: "Aisle 2", exact: true });
+  await expect(firstAisle).toContainText("Bay 8");
+  await expect(firstAisle).toContainText("2 picked elsewhere");
+  await expect(firstAisle).toContainText("0 remaining");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft()).revision).toBe(2);
+  const updated = (await draft()).project;
+  expect(updated.store).toBe("4409");
+  expect(updated.homeDepotPickup).toContainEqual({ store: "4408", zip: "84121", productId: hinge, picked: 2 });
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: initial.name }).click();
+  await openHandoff();
+  await openShop();
+  await expect(firstAisle).toContainText("2 picked elsewhere");
+  await expect(firstAisle).toContainText("0 remaining");
 });
 
 test("treated wood field cuts and scraps follow the model through build questions and guide export", async ({ page }) => {
@@ -1811,6 +2193,10 @@ test("a design revision releases uncut plans and preserves completed stock", asy
   await cutSource.getByRole("button", { name: "Mark cuts complete", exact: true }).click();
   await expect(cutSource.getByRole("button", { name: "Mark cuts complete", exact: true })).toHaveCount(0);
   await expect.poll(async () => (await draft())?.project.onHandCutSources).toContain(finished.sourceId);
+  await expect(cutSource).toContainText("Completed cutting order");
+  await expect(cutSource.getByRole("list").first()).toContainText(/Crosscut|Rip/);
+  const [receipt] = ((await draft()).project as Project).recordedStockCutOrders!;
+  expect(receipt.completedAt).toBeTruthy();
 
   const purchasedSource = page.locator(".recorded-source-layout").filter({
     has: page.locator(`[data-source-id="${purchased.sourceId}"]`),
@@ -1818,6 +2204,7 @@ test("a design revision releases uncut plans and preserves completed stock", asy
   await purchasedSource.locator("summary").click();
   await purchasedSource.getByRole("checkbox", { name: "I already have this stock", exact: true }).check();
   await purchasedSource.getByRole("button", { name: "Release uncut stock plan", exact: true }).click();
+  await purchasedSource.getByRole("button", { name: "Apply release", exact: true }).click();
   await expect.poll(async () => (await draft())?.project.pieces.filter((p: Project["pieces"][number]) =>
     p.cutStock?.id === purchased.sourceId).length).toBe(1);
 
@@ -1837,6 +2224,299 @@ test("a design revision releases uncut plans and preserves completed stock", asy
   const [full] = after.pieces.filter(({ cutStock }) => cutStock?.id === purchased.sourceId);
   expect(full.offcut).toBe(true);
   expect(full.size).toEqual(full.cutStock?.size);
+  expect(after.recordedStockCutOrders).toEqual([receipt]);
+
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: after.name }).click();
+  await expect.poll(async () => (await draft())?.project.recordedStockCutOrders).toEqual([receipt]);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("## Recorded stock cuts");
+  expect(guide).toContain(`1. ${receipt.steps[0].instruction}`);
+  expect(guide).not.toContain("Operation: Stock cut order for");
+  const print = page.locator(".print-guide .recorded-stock-cut-order-print");
+  await expect(print).toContainText("Cuts marked complete");
+  await expect(print).toContainText(receipt.steps[0].instruction);
+});
+
+test("one nonbearing wall carries a doorway, window, shared cuts and fitted door swing", async ({ page }) => {
+  const base = blank("Partition with two rough openings");
+  const source = addMeasuredOffcut(base, base.steps[0].id, homeDepotFraming.stud10.materialId, [37, 3.5, 1.5], "SPF shop remnant");
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "partition-stock.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(source)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(
+    "Build a nonbearing wall 10 ft wide and 8 ft tall with a 32 by 82 in rough doorway, finished floor 0.375 in, and a 36 by 48 in rough window opening, sill 32 in above the wall base",
+  );
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await dialog.getByRole("button", { name: "Preview both openings", exact: true }).click();
+  const elevation = dialog.getByRole("img", { name: "Framed wall front view", exact: true });
+  await expect(elevation.getByTitle("Rough doorway", { exact: true })).toBeVisible();
+  await expect(elevation.getByTitle("Rough window", { exact: true })).toBeVisible();
+  const windowOffset = dialog.getByRole("spinbutton", { name: "Window offset from wall center", exact: true });
+  const validOffset = await windowOffset.inputValue();
+  await windowOffset.fill("-25");
+  await expect(dialog.getByRole("alert")).toContainText("Leave at least 6 in between rough openings");
+  await expect(dialog.getByRole("button", { name: "Add to workspace", exact: true })).toBeDisabled();
+  await windowOffset.fill(validOffset);
+  await dialog.getByText("Wall cuts and scraps", { exact: true }).click();
+  await expect(dialog.getByRole("list", { name: "Wall board cuts", exact: true })).toContainText("top plate, 10 ft");
+  await dialog.getByRole("checkbox", { name: "Use matching Cut pool scraps for new members", exact: true }).check();
+  await expect(dialog.getByRole("list", { name: "Matching wall scraps", exact: true })).toContainText("SPF shop remnant");
+  await dialog.getByRole("button", { name: "Add to workspace", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Plan flashing for this opening", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Plan an interior doorway", exact: true }).click();
+  await dialog.getByRole("checkbox", { name: "Fit a measured door and test its swing" }).check();
+  await dialog.getByRole("combobox", { name: "Door kit", exact: true }).selectOption("hd-masonite-75777");
+  for (const [name, value] of Object.entries({
+    "Finished wall thickness": "4.5", "Outside frame width": "31.5", "Outside frame height": "81.5",
+    "Installed jamb depth": "4.375", "Side jamb thickness": "0.625", "Head jamb thickness": "0.625",
+    "Door leaf width": "30", "Door leaf height": "80", "Door leaf thickness": "1.375",
+    "Gap below closed leaf": "0.5", "Pin offset beyond hinge edge": "0.0625", "Pin offset beyond swing face": "0.125",
+  })) await dialog.getByRole("spinbutton", { name, exact: true }).fill(value);
+  await dialog.getByText("Adjust closed door placement", { exact: true }).click();
+  await dialog.getByRole("spinbutton", { name: "Leaf depth offset from wall center", exact: true }).fill("1.4375");
+  await dialog.getByRole("button", { name: "Preview doorway", exact: true }).click();
+  await expect(dialog.getByLabel("Door swing result")).toContainText(/90°/);
+  await dialog.getByRole("button", { name: "Apply doorway", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = projectSchema.parse((await draft()).project);
+  expect(saved.sections).toHaveLength(1);
+  expect(saved.sections[0].generator?.windowOpening?.width).toBe(36);
+  expect(saved.sections[0].generator?.doorOpening?.width).toBe(32);
+  expect(saved.pieces.filter(({ designRole }) => designRole === "wall-top-plate")).toHaveLength(1);
+  expect(saved.motionPlans).toHaveLength(1);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("continuous top plate");
+  expect(guide).toContain("rough window sill");
+  expect(guide).toContain("Recorded offcut cut order");
+  expect(guide).toContain("Fit and swing-test the door");
+});
+
+test("an idea previews new contact with existing motions and clears it after repositioning", async ({ page }) => {
+  const base = blank("Room additions and existing drawers");
+  const tray = part("Existing sliding tray", "plywood", [10, 2, 4], [0, 7, -15], base.steps[0].id, "Tray");
+  const other = part("Already obstructed drawer", "plywood", [10, 2, 4], [40, 7, -15], base.steps[0].id, "Other drawer");
+  const trim = part("Existing trim", "plywood", [10, 3, 0.75], [40, 7, -5], base.steps[0].id, "Trim");
+  base.pieces.push(tray, other, trim);
+  const mechanism = { kind: "slide", axis: [0, 0, 1], travel: 22 };
+  const first = saveMotionPlan(base, { label: "Pull-out tray", memberIds: [tray.id], mechanism });
+  const second = saveMotionPlan(first.project, { label: "Already obstructed drawer", memberIds: [other.id], mechanism });
+  const { project } = saveMotionTestScenario(second.project, first.plan.id, "Tray with other drawer held closed", {
+    held: [{ motionId: second.plan.id, percent: 0 }],
+  });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "room-addition.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Build a cabinet 18 in wide, 18 in deep, 18 in tall");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const changes = dialog.getByRole("region", { name: "Changes to saved movement", exact: true });
+  await expect(changes).toContainText("Cabinet box · back infill");
+  await expect(changes).toContainText("Tray with other drawer held closed");
+  await expect(changes).not.toContainText("Already obstructed drawer");
+  await changes.getByRole("listitem").filter({ hasText: "Cabinet box · back infill" })
+    .getByRole("button", { name: "Show in 3D", exact: true }).first().click();
+  await expect(dialog.getByText("Pull-out tray · Movement preview", { exact: true })).toBeVisible();
+  await expect(dialog.getByLabel("Proposed layout preview").locator("canvas")).toBeVisible();
+  await dialog.getByRole("button", { name: "Return to closed layout", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).project, CURRENT_DRAFT_KEY);
+  expect((await readDraft()).pieces).toHaveLength(3);
+
+  await dialog.getByText("Position and rotation", { exact: true }).click();
+  await dialog.getByRole("spinbutton", { name: "Cabinet box position Z", exact: true }).fill("30");
+  await expect(changes).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Add proposed layout", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(async () => (await readDraft()).sections[0]?.origin[2]).toBe(30);
+  expect((await readDraft()).motionPlans).toEqual(project.motionPlans);
+});
+
+test("one cabinet prompt builds a drawer stack with separate travel tests and shared placement", async ({ page }) => {
+  const base = blank("Stacked cabinet drawers from a prompt");
+  const obstruction = part("Counter overhang", "plywood", [16, 5, 0.75], [0, 28, 17], base.steps[0].id, "Counter");
+  base.pieces.push(obstruction);
+  const source = addMeasuredOffcut(base, base.steps[0].id, "plywood", [20, 15, 0.75], "Existing plywood scrap");
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "cabinet-start.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(source)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(async () => (await draft())?.project.name).toContain(base.name);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" })
+    .fill("Build an 18 in wide, 2 ft deep, 34 in tall cabinet with two drawers, 5 in and 8 in high and bar pulls");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await dialog.getByRole("button", { name: "Set up cabinet and drawer", exact: true }).click();
+  await expect(dialog.getByRole("spinbutton", { name: "Cabinet depth", exact: true })).toHaveValue("24");
+  await expect(dialog.getByRole("combobox", { name: "Number of drawers", exact: true })).toHaveValue("2");
+  await expect(dialog.getByRole("spinbutton", { name: "Drawer 1 height", exact: true })).toHaveValue("5");
+  await expect(dialog.getByRole("spinbutton", { name: "Drawer 2 height", exact: true })).toHaveValue("8");
+  await expect(dialog.getByRole("checkbox", { name: "Add a centered pull to each drawer" })).toBeChecked();
+  await dialog.getByRole("button", { name: "Preview cabinet and drawer", exact: true }).click();
+  await expect(dialog.getByLabel("Cabinet and drawer preview").locator("canvas")).toBeVisible();
+  await expect(dialog.getByText("An obstruction or clearance limit stops the modeled drawer")).toBeVisible();
+  await dialog.getByRole("button", { name: "Show opening limit", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Show opening limit", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await dialog.getByLabel("Drawer to preview").selectOption({ label: "Cabinet drawer 2" });
+  await expect(dialog.getByText("The modeled drawer clears its full 14 in of travel.")).toBeVisible();
+  await dialog.getByRole("button", { name: "Show fully open drawer", exact: true }).click();
+  await dialog.getByLabel("Drawer to preview").selectOption({ label: "Cabinet drawer 1" });
+  expect((await draft()).project.pieces).toHaveLength(source.pieces.length);
+  await dialog.locator("summary").filter({ hasText: /^Cuts and stock/ }).click();
+  await dialog.getByRole("checkbox", { name: "Use matching scraps for the new parts" }).check();
+  await expect(dialog.getByRole("list", { name: "Proposed cuts in order" })).toContainText("Existing plywood scrap");
+  await dialog.getByLabel("Wood cut orders to save").selectOption("proposal");
+  await dialog.getByRole("button", { name: "Add cabinet and test movement", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const motion = page.getByRole("region", { name: "Motion and clearance" });
+  await motion.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(page.getByTestId("motion-preview-label")).toContainText("Counter overhang");
+  await expect.poll(async () => (await draft())?.project.motionPlans?.length).toBe(2);
+  const beforeMove = (await draft()).project;
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("combobox", { name: "Current section", exact: true }).selectOption(beforeMove.sections[0].id);
+  const cabinetX = page.getByRole("spinbutton", { name: "Section X", exact: true });
+  await cabinetX.fill("20");
+  await cabinetX.press("Enter");
+  await expect.poll(async () => (await draft())?.project.sections[0].origin[0]).toBe(20);
+  const afterMove = (await draft()).project;
+  for (const plan of beforeMove.motionPlans) {
+    for (const id of plan.memberIds) {
+      const old = beforeMove.pieces.find((piece: { id: string }) => piece.id === id);
+      const moved = afterMove.pieces.find((piece: { id: string }) => piece.id === id);
+      expect(moved.position).toEqual([old.position[0] + 20, old.position[1], old.position[2]]);
+    }
+  }
+  const revise = page.getByRole("button", { name: `Revise design ${afterMove.ideaBindings[0].title}`, exact: true });
+  await revise.click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Move the whole cabinet 6 inches along +X");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await expect(dialog.getByText("14 fitted parts move with the revised design.")).toBeVisible();
+  await dialog.getByRole("button", { name: "Apply design changes", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(async () => (await draft())?.project.sections[0].origin[0]).toBe(26);
+  const afterRevision = (await draft()).project;
+  for (const plan of afterMove.motionPlans) {
+    for (const id of plan.memberIds) {
+      const old = afterMove.pieces.find((piece: { id: string }) => piece.id === id);
+      const moved = afterRevision.pieces.find((piece: { id: string }) => piece.id === id);
+      expect(moved.position).toEqual([old.position[0] + 6, old.position[1], old.position[2]]);
+      expect(moved.cutStock).toEqual(old.cutStock);
+    }
+  }
+  expect(afterRevision.motionPlans).toEqual(afterMove.motionPlans);
+  expect(afterRevision.plannedCutSources).toEqual(afterMove.plannedCutSources);
+  await revise.click();
+  await dialog.getByRole("spinbutton", { name: "Drawer cabinet width", exact: true }).fill("19");
+  await expect(dialog.getByRole("region", { name: "Changes to saved movement", exact: true }))
+    .toContainText("Drawer slide fit needs review");
+  await expect(dialog.getByRole("button", { name: "Apply design changes", exact: true })).toBeDisabled();
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = (await draft()).project;
+  expect(saved.motionPlans.map(({ memberIds }: { memberIds: string[] }) => memberIds.length)).toEqual([7, 7]);
+  expect(saved.sections.map(({ name }: { name: string }) => name)).toEqual(["Drawer cabinet", "Cabinet drawer 1", "Cabinet drawer 2"]);
+  expect(saved.supplies).toMatchObject([{ productId: "accuride-t46322g14", quantity: 2 }]);
+  expect(saved.plannedCutSources.length).toBeGreaterThan(0);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: base.name }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Recorded offcut cut order");
+  expect(guide).toContain("T46322G14");
+  expect(guide).toContain("Drawer cabinet");
+  expect(guide).toContain("Cabinet drawer 1");
+  expect(guide).toContain("Cabinet drawer 2");
+  expect(guide).toContain("secure the cabinet frame to suitable structural backing");
+});
+
+test("a wide cabinet run fits four drawers and reuses stock across two bays", async ({ page }) => {
+  const base = blank("Wide kitchenette drawer run");
+  const trim = part("Counter trim", "plywood", [12, 5, 0.75], [-9, 28, 17], base.steps[0].id, "Counter");
+  base.pieces.push(trim);
+  const source = addMeasuredOffcut(base, base.steps[0].id, "plywood", [25, 17, 0.75], "Kitchen plywood remnant");
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "wide-kitchenette.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(source)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" })
+    .fill("Build a 36 in wide, 2 ft deep, 34 in tall cabinet run with two bays and two drawers per bay, 5 in and 8 in high and bar pulls");
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await expect(dialog.getByRole("region", { name: "Cabinet run with drawers" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Set up cabinet and drawer", exact: true }).click();
+  await expect(dialog.getByRole("spinbutton", { name: "Total run width" })).toHaveValue("36");
+  await expect(dialog.getByLabel("Cabinet bays")).toHaveValue("2");
+  await expect(dialog.getByLabel("Drawers per bay")).toHaveValue("2");
+  await dialog.getByLabel("Cabinet bays").selectOption("1");
+  await dialog.getByRole("button", { name: "Preview cabinet and drawer" }).click();
+  await expect(dialog.getByText("Choose more bays or reduce the total width.")).toBeVisible();
+  await dialog.getByLabel("Cabinet bays").selectOption("2");
+  await dialog.getByRole("button", { name: "Preview cabinet and drawer" }).click();
+  await expect(dialog.getByText("An obstruction or clearance limit stops the modeled drawer")).toBeVisible();
+  await dialog.getByLabel("Drawer to preview").selectOption({ label: "Bay 2 · Drawer 2" });
+  await expect(dialog.getByText("The modeled drawer clears its full 14 in of travel.")).toBeVisible();
+  await dialog.locator("summary").filter({ hasText: /^Cuts and stock/ }).click();
+  await dialog.getByRole("checkbox", { name: "Use matching scraps for the new parts" }).check();
+  await expect(dialog.getByRole("list", { name: "Proposed cuts in order" })).toContainText("Kitchen plywood remnant");
+  await dialog.getByLabel("Wood cut orders to save").selectOption("proposal");
+  await dialog.getByRole("button", { name: "Add cabinet and test movement" }).click();
+  await expect(dialog).toHaveCount(0);
+  const selected = page.getByRole("region", { name: "Motion and clearance" }).getByLabel("Saved motion");
+  await expect(selected.locator("option:checked")).toHaveText("Bay 2 · Drawer 2");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = (await draft()).project;
+  expect(saved.sections.slice(0, 2).map(({ origin }: { origin: number[] }) => origin[0])).toEqual([-9, 9]);
+  expect(saved.motionPlans).toHaveLength(4);
+  expect(saved.supplies).toMatchObject([{ productId: "accuride-t46322g14", quantity: 4 }]);
+  expect(saved.plannedCutSources.length).toBeGreaterThan(0);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Align adjacent cabinet faces");
+  expect(guide).toContain("Bay 2 · Drawer 2");
+  expect(guide).toContain("Recorded offcut cut order");
 });
 
 test("a named cabinet opening produces a drawer cut list and stops the saved slide at an obstruction", async ({ page }) => {
@@ -2276,4 +2956,82 @@ test("linked and single travel limits survive reopening and keep the original do
   expect(guide).toContain("Limited shared access · moves with Pull-out tray · Test targets · Cabinet door 70°, Pull-out tray 8.5 in.");
   expect(guide).toContain("Door only to 70° · Test targets · Cabinet door 70°.");
   expect(guide).toContain("Planned stock cuts");
+});
+
+test("a door and drawer share two gap checks and stop at different pairs", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const example = await page.request.get(new URL("./examples/motion/cabinet-two-gaps.yardwork.json", page.url()).href);
+  expect(example.ok()).toBe(true);
+  const bytes = await example.body();
+  const source: Project = JSON.parse(bytes.toString("utf8"));
+  const [door, drawer, doorTrim, drawerTrim] = source.pieces;
+  const initial = source.motionPlans![0].testScenarios![0].setup;
+  const testName = `Two required gaps ${crypto.randomUUID().slice(0, 8)}`;
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "cabinet-two-gaps.yardwork.json", mimeType: "application/json", buffer: bytes,
+  });
+  const openMotion = () => page.getByRole("button", { name: "Test movement", exact: true }).click();
+  await openMotion();
+  const panel = page.getByRole("region", { name: "Motion and clearance", exact: true });
+  await panel.getByRole("combobox", { name: "Second motion", exact: true }).selectOption(source.motionPlans![1].id);
+  await panel.getByRole("combobox", { name: /^Opening order/ }).selectOption("selected-first");
+  await panel.getByText("Check a minimum gap", { exact: true }).click();
+  const moving = panel.getByRole("combobox", { name: "Moving part for gap" });
+  const obstacle = panel.getByRole("combobox", { name: "Part to clear", exact: true });
+  const minimum = panel.getByRole("spinbutton", { name: "Required minimum gap", exact: true });
+  const check = panel.getByRole("button", { name: "Check gap through travel", exact: true });
+  await moving.selectOption(door.id);
+  await obstacle.selectOption(doorTrim.id);
+  await minimum.fill("0.125");
+  await check.click();
+  await panel.getByRole("button", { name: "Add another minimum gap", exact: true }).click();
+  await moving.selectOption(door.id);
+  await obstacle.selectOption(doorTrim.id);
+  await expect(panel.getByText("This pair already has a minimum gap.")).toBeVisible();
+  await expect(check).toBeDisabled();
+  await moving.selectOption(drawer.id);
+  await obstacle.selectOption(drawerTrim.id);
+  await minimum.fill("0.125");
+  await check.click();
+  const results = panel.getByRole("region", { name: "Minimum gap result", exact: true });
+  await expect(moving).toHaveValue(drawer.id);
+  await expect(obstacle).toHaveValue(drawerTrim.id);
+  await expect(results).toHaveCount(2);
+  await expect(results.nth(0)).toContainText("P001 and P003 · Shortfall");
+  await expect(results.nth(1)).toContainText("P002 and P004 · Shortfall");
+  const pose = page.getByTestId("motion-preview-label");
+  await panel.getByRole("button", { name: "Play opening", exact: true }).click();
+  await expect(pose).toContainText("0.125 in required between P001 and P003");
+  expect(Number(await pose.getAttribute("data-pose"))).toBeLessThan(50);
+  await panel.getByRole("button", { name: "Inspect fully open", exact: true }).click();
+  await panel.getByRole("button", { name: "Play closing", exact: true }).click();
+  await expect(pose).toContainText("0.125 in required between P002 and P004");
+  expect(Number(await pose.getAttribute("data-pose"))).toBeGreaterThan(50);
+  await panel.getByText("Keep this test under a name", { exact: true }).click();
+  await panel.getByRole("textbox", { name: "Clearance test name", exact: true }).fill(testName);
+  await panel.getByRole("button", { name: "Save named test", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft()).revision).toBe(1);
+  const saved = (await readDraft()).project as Project;
+  expect(saved.motionPlans![0].testScenarios!.find(({ name }) => name === testName)?.setup).toEqual(initial);
+  expect(saved.plannedCutSources).toEqual(source.plannedCutSources);
+  expect(saved.pieces).toEqual(source.pieces);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: saved.name }).first().click();
+  await openMotion();
+  await panel.getByRole("combobox", { name: "Clearance test", exact: true }).selectOption({ label: testName });
+  await expect(results).toHaveCount(2);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toMatch(/Named clearance test · Two required gaps[\s\S]+Opening pauses near .* for the minimum gap between P001 and P003\.[\s\S]+Closing pauses near .* for the minimum gap between P002 and P004\./);
+  expect(guide).toContain("## Planned stock cuts");
 });

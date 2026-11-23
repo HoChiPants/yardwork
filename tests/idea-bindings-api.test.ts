@@ -46,7 +46,7 @@ test("planner API accepts reopened persisted entries and returns a targeted prop
         prompt: "Make section 2 width 30 inches",
         previousPlan: bindingPlan(p, b.id),
       });
-    assert.equal(proposal.provider, "Local planning presets");
+    assert.equal(proposal.provider, "Workspace dimensions");
     assert.deepEqual(
       proposal.plan.modules.map((m) => m.entryId),
       b.entries.map((e) => e.id),

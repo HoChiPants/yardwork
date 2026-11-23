@@ -14,6 +14,7 @@ import type { IdeaPlan } from "./planning";
 import {
   referencedFamily,
   closetMeasurements,
+  doorMeasurements,
   namedMeasurement,
   normalizeIdeaText,
   requestedShelfCount,
@@ -80,7 +81,8 @@ export function localStructureIdea(request: {
     };
   const kind = namedKind ?? previous!.kind;
   const closet = kind === "closet-insert" ? closetMeasurements(text) : null;
-  const envelope = closet?.envelope ?? text;
+  const opening = kind === "greenhouse" || kind === "sauna" ? doorMeasurements(text) : null;
+  const envelope = closet?.envelope ?? opening?.envelope ?? text;
   const unitValue = (n: string, unit: string | undefined, extra?: string) =>
     Number(n) * (/^(in|[″"])/.test(unit ?? "") ? 1 : 12) + Number(extra ?? 0);
   const dimension = (labels: string, overall = false) =>
@@ -119,7 +121,7 @@ export function localStructureIdea(request: {
       "deep|depth|long|length",
       "high|height|tall|eave height",
     ].some((labels) => namedMeasurement(envelope, labels)?.inches === null) ||
-    Object.values(closet?.facts ?? {}).some((fact) => fact?.inches === null)
+    Object.values(closet?.facts ?? opening?.facts ?? {}).some((fact) => fact?.inches === null)
   )
     return clarify(
       "Should the measurement be in inches or feet? Existing dimensions are retained.",
@@ -171,22 +173,13 @@ export function localStructureIdea(request: {
   if (w !== undefined) parameters[widthKey] = w;
   if (d !== undefined) parameters[depthKey] = d;
   if (h !== undefined) parameters[heightKey] = h;
-  for (const [key, labels] of [
-    ["doorWidth", "door width"],
-    ["doorHeight", "door height"],
-  ]) {
-    const value = dimension(labels);
-    if (
-      value !== undefined &&
-      kind !== "casework-shelves" &&
-      kind !== "closet-insert"
-    )
-      parameters[key] = value;
+  for (const [key, fact] of Object.entries(opening?.facts ?? {})) {
+    if (fact?.inches != null) parameters[key] = fact.inches;
   }
   const rise = dimension("roof rise|rise");
   if (kind === "greenhouse" && rise !== undefined) parameters.roofRise = rise;
   let doorAssumption: string | undefined;
-  if (kind === "greenhouse" && !prior && dimension("door height") === undefined) {
+  if (kind === "greenhouse" && !prior && opening?.facts.doorHeight == null) {
     const dimensions = greenhouseParamsSchema.parse(parameters);
     const doorHeight = greenhouseStudyDoorHeight(dimensions);
     if (doorHeight < dimensions.doorHeight) {

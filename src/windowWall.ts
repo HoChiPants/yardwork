@@ -7,7 +7,7 @@ export const windowWallScope =
   "This layout uses a flat head for a nonbearing wall. Verify wall function, the unit's specified rough opening, bracing and connections before building.";
 export const wallFramingStockIds = [
   "stud", "stud-10", "stud-12", "hd-kdht-2x4-8", "hd-spf-2x4-10", "hd-spf-2x4-12",
-  "two-six", "hd-spf-2x6-8", "hd-spf-2x6-12",
+  "two-six", "hd-spf-2x6-8", "hd-spf-2x6-10", "hd-spf-2x6-12",
 ] as const satisfies readonly MaterialId[];
 
 export const windowOpeningSchema = z.strictObject({

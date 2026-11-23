@@ -481,11 +481,17 @@ function frontWithDoor(
 ) {
   const { a, b } = stockCross(id),
     headerBottom = baseY + doorHeight,
-    headerTop = headerBottom + b;
-  if (doorWidth + 4 * a >= width - 2 * a || headerTop > wallTop - a + 0.001)
-    throw Error(
-      "The requested door does not fit its jamb framing, header and plates. Increase the wall width or height, or revise the opening.",
-    );
+    headerTop = headerBottom + b,
+    widthLimit = width - 6 * a,
+    heightLimit = wallTop - a - b - baseY;
+  const widthFails = doorWidth >= widthLimit;
+  const heightFails = headerTop > wallTop - a + 0.001;
+  if (widthFails || heightFails) {
+    const limits = [];
+    if (widthFails) limits.push(`Use an opening narrower than ${Math.floor(widthLimit * 8) / 8} in or widen the wall.`);
+    if (heightFails) limits.push(`The modeled opening can be up to ${Math.floor(heightLimit * 8) / 8} in high. Lower the opening height or raise the wall.`);
+    throw Error(`The requested door does not fit its jamb framing, header and plates. ${limits.join(" ")}`);
+  }
   const top = add("top plate", id, [width, a, b], [0, wallTop - a / 2, z]);
   const run = (width - doorWidth) / 2;
   const plateTop = baseY + a;

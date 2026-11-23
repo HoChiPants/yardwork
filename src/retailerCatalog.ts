@@ -1,4 +1,5 @@
 import { libertyBarPull } from "./cabinetPullReference";
+import { sdConnectorScrews, simpsonConnectorReviewedAt, simpsonFramingAngles, simpsonFramingAnglesSource } from "./simpsonConnectorReference";
 import { subfloorAdhesive, subfloorNails } from "./subfloorReference";
 import { openingFoam, openingSealMaterials, openingAirSealReviewedAt } from "./openingAirSealReference";
 import { sdwsFramingName, sdwsFramingPacks, sdwsFramingReview, sdwsFramingSources } from "./sdwsFramingReference";
@@ -43,13 +44,18 @@ import { gibraltarDripEdge, wissSnips } from "./dripEdgeReference";
 import { edgeBandingProductIds, edgeBandingProducts, edgeBandingReviewedAt, edgeTrimmer } from "./edgeBandingReference";
 import { paslodeFinishNailer, paslodeFinishNails, paslodeFinishReviewedAt } from "./paslodeFinishReference";
 import { bottomPlateSealant, subfloorPanel } from "./bottomPlateSealReference";
-import { drywallInstallation, drywallReviewedAt, drywallSpecification, drywallStock } from "./drywallReference";
+import { drywallInstallation, drywallJointTape, drywallReviewedAt, drywallScrewScope, drywallScrews, drywallSpecification, drywallStock } from "./drywallReference";
+import { doorCasingInstallation, flatCasing } from "./doorCasingReference";
+import { libertyFlushHinge } from "./cabinetDoorsReference";
+import { everbiltFloorStop } from "./doorFloorStopReference";
+import { georgianPassage } from "./doorHardwareReference";
 import { rimEdgeSealant, rimFoam } from "./rimAirSealReference";
 import { weatherWatch } from "./roofValleyReference";
 import { oateyRoofVentBoot } from "./roofVentFlashingReference";
 import { floorRegisterBoot } from "./floorRegisterReference";
 import { roundDuctElbowStock, roundDuctMastic, roundDuctStock } from "./roundDuctReference";
 import { trimSealant } from "./trimSealantReference";
+import { countertopSealant, heveaWorktop } from "./countertopSealReference";
 import { flashingKnife, flexWrap, windowFlashingTape, windowFlashingSequence } from "./openingFlashingReference";
 import { trimBackerRodInstructions, trimBackerRodReviewedAt, trimBackerRodSpecification, trimBackerRods } from "./trimBackerRodReference";
 import { doorSeal } from "./greenhouseDoorSealReference";
@@ -59,6 +65,10 @@ import { sillGasketInstructions, sillGasketListing, sillGasketReviewedAt, sillGa
 export const retailerSchema = z.enum(["home-depot", "lowes"]);
 export type Retailer = z.infer<typeof retailerSchema>;
 const sourceHosts = new Set([
+  "gesealants.com",
+  "hardwoodreflections.com",
+  "www.schlage.com",
+  "assets.schlage.com",
   "www.frostking.com",
   "www.dupont.com",
   "www.greatstuff.dupont.com",
@@ -4229,8 +4239,8 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
         ...(sameSource ? [] : [{ url: record.unitSource, verifiedAt, note: record.unitNote }]),
       ],
       purchaseSpec: { kind: "counted", count: 1, sourceRefs: [...new Set([record.listing, record.unitSource])] },
-      limitToQualifiedRoles: true,
-      roleQualifications: [{
+      ...("role" in record && { limitToQualifiedRoles: true }),
+      roleQualifications: "role" in record ? [{
         role: record.role,
         scope: "Listed stock dimensions for the editable framing study.",
         sourceRefs: [record.listing],
@@ -4238,7 +4248,7 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
           "Measure delivered stock and confirm its grade stamp, species and treatment at your store.",
           "Review member sizes, spans, bearings, fasteners, loads and exposure for your actual build.",
         ],
-      }],
+      }] : [],
       discrepancies: [],
       capabilities: [],
     };
@@ -4352,6 +4362,24 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     capabilities: [],
   },
   {
+    id: countertopSealant.id,
+    name: countertopSealant.name,
+    manufacturer: "GE Sealants",
+    manufacturerPartNumber: countertopSealant.model,
+    category: "consumable",
+    status: "reviewed-specs",
+    verifiedAt: countertopSealant.reviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "neutral-cure kitchen and bath silicone", finish: "Clear" }),
+    offers: [hd(countertopSealant.internetNumber, countertopSealant.model, countertopSealant.storeSku)],
+    sources: [
+      { url: countertopSealant.listing, verifiedAt: countertopSealant.reviewedAt, note: "Exact 2812562 single 10.1 fl oz clear cartridge." },
+      { url: countertopSealant.specification, verifiedAt: countertopSealant.reviewedAt, note: "Countertop splash use, joint shape and reference coverage from the manufacturer." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [countertopSealant.listing, countertopSealant.specification] },
+    discrepancies: ["Use trial coverage for the measured joint shapes that differ from the published reference bead."],
+    capabilities: [],
+  },
+  {
     id: trimSealant.id,
     name: trimSealant.name,
     manufacturer: "DAP",
@@ -4370,6 +4398,93 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     ],
     purchaseSpec: { kind: "counted", count: 1, sourceRefs: [trimSealant.listing, trimSealant.specification] },
     discrepancies: ["Home Depot lists both 1 in and 2 in maximum widths. Yardwork screens at 1 in. Check the delivered label and gap preparation."],
+    capabilities: [],
+  },
+  {
+    id: drywallScrews.id,
+    name: drywallScrews.name,
+    manufacturer: "Grip-Rite",
+    manufacturerPartNumber: drywallScrews.model,
+    category: "fastener",
+    status: "reviewed-specs",
+    verifiedAt: drywallScrews.reviewedAt,
+    profile: profile("fastener", null, null, { fastenerLength: drywallScrews.length, finish: "Black phosphate", drive: "#2 Phillips" }),
+    offers: [hd(drywallScrews.internet, drywallScrews.model, drywallScrews.sku)],
+    purchaseSpec: { kind: "mass", amount: 1, unit: "lb", qualifier: "advertised", exactCount: null,
+      sourceRefs: [drywallScrews.listing, drywallScrews.specification] },
+    sources: [
+      { url: drywallScrews.listing, verifiedAt: drywallScrews.reviewedAt, note: "Exact 114CDWS1 1-lb package, black phosphate coarse-thread #6 × 1¼ in screws with #2 Phillips bugle heads. Retailer lists about 238 per box." },
+      { url: drywallScrews.specification, verifiedAt: drywallScrews.reviewedAt, note: "Grip-Rite lists ASTM C1002 and 258 pieces for the same model." },
+      { url: drywallSpecification, verifiedAt: drywallScrews.reviewedAt, note: drywallScrewScope },
+    ],
+    discrepancies: ["Yardwork estimates at 238 per 1-lb box using the lower published count. Check the delivered count and intended application."],
+    capabilities: [],
+  },
+  {
+    id: drywallJointTape.id, name: drywallJointTape.name, manufacturer: "USG",
+    manufacturerPartNumber: drywallJointTape.model,
+    category: "consumable", status: "reviewed-specs", verifiedAt: drywallJointTape.reviewedAt,
+    profile: profile("consumable", null, 1, { materialFamily: "paper drywall joint tape" }),
+    offers: [hd(drywallJointTape.internet, drywallJointTape.model, drywallJointTape.sku)],
+    sources: [
+      { url: drywallJointTape.listing, verifiedAt: drywallJointTape.reviewedAt, note: "One 2-1/16 in × 250 ft roll of USG Sheetrock paper joint tape, model 382175." },
+      { url: drywallJointTape.specification, verifiedAt: drywallJointTape.reviewedAt, note: "USG lists this roll size for hand application and specifies embedding the tape in joint compound." },
+    ],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [drywallJointTape.listing, drywallJointTape.specification] },
+    discrepancies: [], capabilities: [],
+  },
+  {
+    id: flatCasing.id, name: flatCasing.name, manufacturer: "Unbranded retailer listing",
+    manufacturerPartNumber: null, identityBasis: "retailer-specification",
+    category: "lumber", status: "reviewed-specs", verifiedAt: flatCasing.reviewedAt,
+    profile: profile("linear", [...flatCasing.size], 1, { wood: true, finish: "Unfinished" }),
+    offers: [hd(flatCasing.internet, flatCasing.model, flatCasing.sku)],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [flatCasing.listing] },
+    sources: [
+      { url: flatCasing.listing, verifiedAt: flatCasing.reviewedAt, note: "Single unfinished square-edge board. Actual stock is ¾ × 2½ × 96 in." },
+      { url: doorCasingInstallation, verifiedAt: flatCasing.reviewedAt, note: "Interior door casing layout with a jamb reveal and matching 45° miters." },
+    ],
+    discrepancies: [], capabilities: [],
+  },
+  {
+    id: libertyFlushHinge.id, name: libertyFlushHinge.name, manufacturer: "Liberty",
+    manufacturerPartNumber: libertyFlushHinge.model, category: "equipment", status: "reviewed-specs",
+    verifiedAt: libertyFlushHinge.reviewedAt,
+    profile: profile("equipment", null, libertyFlushHinge.packCount, { dimensionMeaning: "unverified", finish: "Matte black" }),
+    offers: [hd(libertyFlushHinge.internet, libertyFlushHinge.model, libertyFlushHinge.sku)],
+    purchaseSpec: { kind: "counted", count: libertyFlushHinge.packCount, sourceRefs: [libertyFlushHinge.listing] },
+    sources: [
+      { url: libertyFlushHinge.listing, verifiedAt: libertyFlushHinge.reviewedAt,
+        note: "One retail pack contains two hinges with mounting hardware. Listed for flush mounting on a face-frame cabinet." },
+      { url: libertyFlushHinge.manufacturerGuide, verifiedAt: libertyFlushHinge.reviewedAt,
+        note: "Liberty shows the H09000 flush door mount separately from the H09050 offset door hinge." },
+    ],
+    discrepancies: [], capabilities: [],
+  },
+  {
+    id: everbiltFloorStop.id, name: everbiltFloorStop.name, manufacturer: "Everbilt",
+    manufacturerPartNumber: everbiltFloorStop.model, category: "equipment", status: "reviewed-specs",
+    verifiedAt: everbiltFloorStop.reviewedAt,
+    profile: profile("equipment", null, 1, { dimensionMeaning: "unverified", finish: "Satin chrome" }),
+    offers: [hd(everbiltFloorStop.internet, everbiltFloorStop.model, everbiltFloorStop.sku)],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [everbiltFloorStop.listing] },
+    sources: [{ url: everbiltFloorStop.listing, verifiedAt: everbiltFloorStop.reviewedAt,
+      note: "Single adjustable floor door stop, exact satin chrome model and retailer identifiers. Use measured geometry for the installed configuration." }],
+    discrepancies: [], capabilities: [],
+  },
+  {
+    id: georgianPassage.id, name: georgianPassage.name, manufacturer: "Schlage",
+    manufacturerPartNumber: georgianPassage.model, category: "equipment", status: "reviewed-specs",
+    verifiedAt: georgianPassage.reviewedAt,
+    profile: profile("equipment", null, 1, { dimensionMeaning: "unverified", finish: "Satin nickel" }),
+    offers: [hd(georgianPassage.internet, georgianPassage.model, georgianPassage.sku)],
+    purchaseSpec: { kind: "counted", count: 1, sourceRefs: [georgianPassage.listing] },
+    sources: [
+      { url: georgianPassage.listing, verifiedAt: georgianPassage.reviewedAt, note: "Exact one-set satin nickel F10 passage model with both knobs, latch and mounting hardware." },
+      { url: georgianPassage.specification, verifiedAt: georgianPassage.reviewedAt, note: "F-series Georgian passage reference with a 2⅜ or 2¾ in backset, 1⅜–1¾ in door thickness and 2⅛ in cross bore." },
+      { url: georgianPassage.preparation, verifiedAt: georgianPassage.reviewedAt, note: "Schlage door preparation drawing. Measure projection, rosette and installed hardware for the clearance model." },
+    ],
+    discrepancies: ["Use the manufacturer preparation drawing for bore dimensions. The retailer lists a different cross-bore value. Measure the installed projection on each face."],
     capabilities: [],
   },
   ...drywallStock.map(({ id, length, model, internet, sku }): z.input<typeof retailerProductSchema> => ({
@@ -4892,9 +5007,9 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     id: floorHangerFasteners.joist.id,
     name: "Simpson SD #9 × 2½ in connector screws · 100",
     manufacturer: "Simpson Strong-Tie", manufacturerPartNumber: "SD9212R100",
-    category: "fastener", status: "reviewed-specs", verifiedAt: floorHangerReviewedAt,
+    category: "fastener", status: "reviewed-specs", verifiedAt: simpsonConnectorReviewedAt,
     profile: profile("fastener", [0.37, 2.5, 0.37], 100, {
-      dimensionMeaning: "fastener-head-envelope", fastenerLength: 2.5, headDiameter: 0.37,
+      dimensionMeaning: "fastener-head-envelope", fastenerLength: 2.5, headDiameter: 0.37, shankDiameter: 0.13,
       finish: "Mechanically galvanized, Class 55", drive: "1/4 in hex",
     }),
     offers: [hd(floorHangerFasteners.joist.internetNumber, floorHangerFasteners.joist.merchantModel, floorHangerFasteners.joist.sku)],
@@ -4902,6 +5017,7 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     sources: [
       { url: floorHangerFasteners.joist.url, verifiedAt: floorHangerReviewedAt, note: "Retail model SD9212R100-R identifies the 100-count #9 × 2½ in pack with ¼ in hex drive." },
       { url: floorHangerFasteners.joist.specification, verifiedAt: floorHangerReviewedAt, note: "SD9212 fastener identification and dimensions. The source does not locate holes or give a measured installed tip position for this build." },
+      { url: sdManufacturerUrl, verifiedAt: simpsonConnectorReviewedAt, note: "The manufacturer table lists SD9212R100-R with a .370 in head, .130 in shank and 100 pieces for the pack." },
     ],
     discrepancies: [], capabilities: [],
   },
@@ -4944,6 +5060,88 @@ export const retailerCatalog: RetailerProduct[] = retailerCatalogSchema.parse([
     offers: [hd("100049292", "689238", "689238")],
     sources: [{ url: "https://www.homedepot.com/p/100049292", verifiedAt: "2026-11-21T17:56:00.000Z",
       note: "Single board listed at actual 1.5 × 7.25 × 96 in. Verify the delivered grade, species and treatment. The listing gives a mill item number in the description that differs from the store model." }],
+    discrepancies: [],
+    capabilities: [],
+  },
+  ...sdConnectorScrews.filter(({ registryId }) => registryId !== floorHangerFasteners.joist.id).map((screw) => {
+    const offer = hd(screw.internet, screw.model, screw.sku);
+    return {
+      id: screw.registryId, name: `Simpson SD ${screw.label} connector screws · 100`,
+      manufacturer: "Simpson Strong-Tie", manufacturerPartNumber: screw.model,
+      category: "fastener", status: "reviewed-specs", verifiedAt: simpsonConnectorReviewedAt,
+      profile: profile("fastener", [0.37, screw.length, 0.37], 100, {
+        dimensionMeaning: "fastener-head-envelope", fastenerLength: screw.length, headDiameter: 0.37,
+        shankDiameter: screw.shank, finish: "Mechanically galvanized, Class 55", drive: "1/4 in hex",
+      }),
+      purchaseSpec: { kind: "counted", count: 100, sourceRefs: [sdManufacturerUrl, offer.url] },
+      offers: [offer],
+      sources: [
+        { url: sdManufacturerUrl, verifiedAt: simpsonConnectorReviewedAt,
+          note: `Manufacturer lists ${screw.model} as ${screw.label}, .370 in head, ${screw.shank} in shank, Class 55 galvanizing and ¼ in hex drive. Dimensions describe the nominal fastener, before measuring seated reach.` },
+        { url: offer.url, verifiedAt: simpsonConnectorReviewedAt,
+          note: `Exact ${screw.model} 100-count purchase. Lookup uses Internet number ${screw.internet} and Store SKU ${screw.sku}.` },
+      ],
+      discrepancies: [], capabilities: [],
+    };
+  }),
+  ...simpsonFramingAngles.map((angle) => {
+    const offer = hd(angle.internet, angle.model, angle.sku);
+    return {
+      id: angle.id, name: `Simpson ${angle.model} angle · ${angle.label}`,
+      manufacturer: "Simpson Strong-Tie", manufacturerPartNumber: angle.model,
+      category: "connector", status: "reviewed-specs", verifiedAt: simpsonConnectorReviewedAt,
+      profile: profile("connector", [...angle.size], 1, { dimensionMeaning: "nominal-flanges", finish: angle.finish }),
+      purchaseSpec: { kind: "counted", count: 1, sourceRefs: [simpsonFramingAnglesSource, offer.url] },
+      offers: [offer],
+      sources: [
+        { url: simpsonFramingAnglesSource, verifiedAt: simpsonConnectorReviewedAt,
+          note: `Manufacturer lists ${angle.model} at ${angle.label} nominal flange dimensions, ${angle.finish}, one angle per package. Use the product-specific fastening schedule.` },
+        { url: offer.url, verifiedAt: simpsonConnectorReviewedAt,
+          note: `Exact ${angle.model} angle, Internet number ${angle.internet} and Store SKU ${angle.sku}.` },
+      ],
+      discrepancies: [], capabilities: [],
+    };
+  }),
+  (() => {
+    const verifiedAt = "2026-11-23T05:42:00.000Z";
+    const manufacturerUrl = "https://www.milwaukeetool.com/products/details/shockwave-impact-duty-1-4-x-1-7-8-magnetic-nut-driver/49-66-4502";
+    const offer = hd("203114969", "49-66-4502", "1005696237");
+    return {
+      ...toolReference({
+        id: "milwaukee-49-66-4502",
+        name: "Milwaukee ¼ in magnetic nut driver",
+        manufacturer: "Milwaukee Tool",
+        manufacturerPartNumber: "49-66-4502",
+        verifiedAt,
+        offers: [offer],
+        sources: [
+          { url: manufacturerUrl, verifiedAt, note: "Milwaukee lists one ¼ in magnetic hex nut driver, 1⅞ in long, for impact drivers and drill drivers." },
+          { url: offer.url, verifiedAt, note: "Home Depot lists the same model as a one-pack, Internet #203114969, Store SKU #1005696237." },
+        ],
+        toolCapabilityEvidence: [toolEvidence(
+          ["drive-quarter-hex"], "manufacturer-product-specification", [manufacturerUrl],
+          "The ¼ in socket fits a corresponding external hex head. A compatible driver provides the driving function.",
+          ["Check head seating and available reach with the nut driver fitted in your actual tool."],
+        )],
+      }),
+      profile: profile("tool", null, 1, { drive: "1/4 in hex socket" }),
+    };
+  })(),
+  {
+    id: heveaWorktop.productId,
+    name: heveaWorktop.name,
+    manufacturer: "Hardwood Reflections",
+    manufacturerPartNumber: heveaWorktop.model,
+    category: "panel",
+    status: "reviewed-specs",
+    verifiedAt: heveaWorktop.reviewedAt,
+    profile: profile("sheet", [74, 1.5, 25], 1, { wood: true, materialFamily: "hevea butcher block", finish: "Unfinished, square edge" }),
+    offers: [hd(heveaWorktop.internetNumber, heveaWorktop.model, heveaWorktop.storeSku)],
+    sources: [
+      { url: heveaWorktop.listing, verifiedAt: heveaWorktop.reviewedAt, note: "The nominal 6 ft title is supplied as this exact 74 × 25 × 1.5 in model." },
+      { url: heveaWorktop.specification, verifiedAt: heveaWorktop.reviewedAt, note: "Hardwood Reflections identifies solid hevea, the square unfinished edge and actual thickness." },
+      { url: heveaWorktop.finishing, verifiedAt: heveaWorktop.reviewedAt, note: "Use the specified finish on the actual worktop and sample offcuts." },
+    ],
     discrepancies: [],
     capabilities: [],
   },
@@ -5049,7 +5247,7 @@ const homeDepotFramingReferences: Partial<Record<Material["id"], string>> = {
   stud: "home-depot-kd-ht-2x4x96-338861827",
   "stud-10": "hd-spf-2x4x120-100077951",
   "stud-12": "hd-spf-2x4x144-312528815",
-  "two-six": "home-depot-spf-2x6x96-100083274",
+  "two-six": homeDepotFraming.ridge8.registryId,
   "two-eight": "home-depot-syp-2x8x96-100049292",
 };
 

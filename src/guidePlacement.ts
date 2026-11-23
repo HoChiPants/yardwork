@@ -67,7 +67,7 @@ export function assignGuidePlacement(
   });
 }
 
-/** Intentional project cloning/import rekeys only its known outer owner identity. */
+/** Intentional project cloning/import rekeys the known project-owned guide references. */
 export function rekeyGuidePlacements(
   project: Project,
   newProjectId: string,
@@ -77,6 +77,11 @@ export function rekeyGuidePlacements(
   return projectSchema.parse({
     ...project,
     id: newProjectId,
+    steps: project.steps.map((entry) =>
+      entry.generated?.planId === project.id
+        ? { ...entry, generated: { ...entry.generated, planId: newProjectId } }
+        : entry,
+    ),
     pieces: project.pieces.map((piece) =>
       piece.guidePlacement?.ownerId === project.id
         ? {

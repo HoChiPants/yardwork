@@ -1,7 +1,8 @@
-import { plannedStockCutOrderTitle, type PlannedStockCutOrder } from "./plannedCutSources";
+import { plannedStockCutOrderContext, plannedStockCutOrderTitle, recordedStockCutOrderContext, recordedStockCutOrderTitle, type StockCutOrderView } from "./plannedCutSources";
 
-export function SavedStockCutSteps({ order }: { order: PlannedStockCutOrder }) {
+export function SavedStockCutSteps({ order }: { order: StockCutOrderView }) {
   return order.issue ? <p className="small-note"><strong>Review needed.</strong> {order.issue}</p> : <>
+    {order.status && <p className="small-note">{order.status}</p>}
     {order.bladeAllowance && <p className="small-note">{order.bladeAllowance}</p>}
     {order.review && <p className="small-note">{order.review}</p>}
     <ol>
@@ -10,11 +11,11 @@ export function SavedStockCutSteps({ order }: { order: PlannedStockCutOrder }) {
   </>;
 }
 
-export function PrintPlannedStockCutOrder({ orders }: { orders: readonly PlannedStockCutOrder[] }) {
+export function PrintStockCutOrders({ orders, recorded = false }: { orders: readonly StockCutOrderView[]; recorded?: boolean }) {
   if (!orders.length) return null;
-  return <section className="planned-stock-cut-order-print">
-    <h2>{plannedStockCutOrderTitle}</h2>
-    <p>Use the saved board or sheet order before cutting any offcuts it supplies.</p>
+  return <section className={recorded ? "recorded-stock-cut-order-print" : "planned-stock-cut-order-print"}>
+    <h2>{recorded ? recordedStockCutOrderTitle : plannedStockCutOrderTitle}</h2>
+    <p>{recorded ? recordedStockCutOrderContext : plannedStockCutOrderContext}</p>
     {orders.map((order) => <section key={order.sourceId}>
       <h3>{order.title}</h3>
       {order.size && <p>Starting stock · {order.size} (length × width × thickness).</p>}

@@ -1,0 +1,750 @@
+{
+  "schemaVersion": 156,
+  "id": "3b0ede70-abf3-4342-9a9c-46783afb83ec",
+  "name": "Shelf divider and sliding tray",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "e3507ae9-10a4-4914-a63f-606ddbbcae2a",
+      "label": "P001"
+    },
+    {
+      "partId": "fc0790b1-d2a1-406b-a5b4-3e542f05664e",
+      "label": "P002"
+    },
+    {
+      "partId": "0e76e4d4-8efe-4d52-a16b-9348b768ded2",
+      "label": "P003"
+    },
+    {
+      "partId": "689de6aa-ab15-40d3-9276-836ee66fd112",
+      "label": "P004"
+    },
+    {
+      "partId": "3cb8bfd0-34f7-4c80-9345-4d39ac272868",
+      "label": "P005"
+    },
+    {
+      "partId": "34bf3613-6a34-4a2a-a0bf-7e9ea50ef125",
+      "label": "P006"
+    },
+    {
+      "partId": "68b408b2-4291-4954-9790-e25d0066ec7c",
+      "label": "P007"
+    },
+    {
+      "partId": "43d482c2-1f91-43f5-b495-7cc0af9c96bb",
+      "label": "P008"
+    },
+    {
+      "partId": "699f99a4-5a5d-404b-8587-66f6244b43a0",
+      "label": "P009"
+    },
+    {
+      "partId": "be0daab2-b3ee-41d4-a0da-f548b6326242",
+      "label": "P010"
+    },
+    {
+      "partId": "cd1c328c-f0e6-477c-9e8d-52758e79f7d7",
+      "label": "P011"
+    },
+    {
+      "partId": "6ac94f77-a38e-439c-84e2-13c20ac9b261",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T01:00:07.590Z",
+  "pieces": [
+    {
+      "id": "e3507ae9-10a4-4914-a63f-606ddbbcae2a",
+      "name": "Left side · panel",
+      "material": "plywood",
+      "size": [
+        0.75,
+        72,
+        15.25
+      ],
+      "position": [
+        -17.625,
+        36,
+        0.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "cbde740c-73ad-4311-8266-760871edbd24",
+      "assembly": "Left side",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "fc0790b1-d2a1-406b-a5b4-3e542f05664e",
+      "name": "Right side · panel",
+      "material": "plywood",
+      "size": [
+        0.75,
+        72,
+        15.25
+      ],
+      "position": [
+        17.625,
+        36,
+        0.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "558521a8-955a-495c-8296-74420de5e6ad",
+      "assembly": "Right side",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "0e76e4d4-8efe-4d52-a16b-9348b768ded2",
+      "name": "Back · panel",
+      "material": "plywood",
+      "size": [
+        36,
+        72,
+        0.75
+      ],
+      "position": [
+        0,
+        36,
+        -7.625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "8ea28c55-fc38-45e5-8d3b-b54fcbc4296e",
+      "assembly": "Back",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "689de6aa-ab15-40d3-9276-836ee66fd112",
+      "name": "Top · panel",
+      "material": "plywood",
+      "size": [
+        34.5,
+        0.75,
+        15.25
+      ],
+      "position": [
+        0,
+        71.625,
+        0.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "57e71d31-1336-4d41-8a7a-1cb4edab4a23",
+      "assembly": "Top",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3cb8bfd0-34f7-4c80-9345-4d39ac272868",
+      "name": "Bottom · panel",
+      "material": "plywood",
+      "size": [
+        34.5,
+        0.75,
+        15.25
+      ],
+      "position": [
+        0,
+        0.375,
+        0.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "49aa0768-ea8d-438c-9f0d-9a79ce7f8d88",
+      "assembly": "Bottom",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "34bf3613-6a34-4a2a-a0bf-7e9ea50ef125",
+      "name": "Adjustable shelf 1 · panel",
+      "material": "plywood",
+      "size": [
+        34.5,
+        0.75,
+        15
+      ],
+      "position": [
+        0,
+        18.1875,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6bbef2a2-a909-4288-abf7-624cdbe50b70",
+      "assembly": "Adjustable shelf 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "68b408b2-4291-4954-9790-e25d0066ec7c",
+      "name": "Adjustable shelf 2 · panel",
+      "material": "plywood",
+      "size": [
+        34.5,
+        0.75,
+        15
+      ],
+      "position": [
+        0,
+        36,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "40aa3e5f-f8c6-4244-b9be-6a34a9059180",
+      "assembly": "Adjustable shelf 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "43d482c2-1f91-43f5-b495-7cc0af9c96bb",
+      "name": "Adjustable shelf 3 · panel",
+      "material": "plywood",
+      "size": [
+        34.5,
+        0.75,
+        15
+      ],
+      "position": [
+        0,
+        53.8125,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e066a1b3-4782-4b9e-9a68-e5dba311b9e6",
+      "assembly": "Adjustable shelf 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "699f99a4-5a5d-404b-8587-66f6244b43a0",
+      "name": "Full-depth end cleat",
+      "material": "stud",
+      "size": [
+        1.5,
+        1.5,
+        15
+      ],
+      "position": [
+        -16.5,
+        17.0625,
+        0.25
+      ],
+      "stepId": "6bbef2a2-a909-4288-abf7-624cdbe50b70",
+      "assembly": "Adjustable shelf 1",
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stockLengthAxis": null,
+      "offcut": false,
+      "cutStock": null,
+      "cutPlanes": []
+    },
+    {
+      "id": "be0daab2-b3ee-41d4-a0da-f548b6326242",
+      "name": "Full-depth end cleat",
+      "material": "stud",
+      "size": [
+        1.5,
+        1.5,
+        15
+      ],
+      "position": [
+        16.5,
+        17.0625,
+        0.25
+      ],
+      "stepId": "6bbef2a2-a909-4288-abf7-624cdbe50b70",
+      "assembly": "Adjustable shelf 1",
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stockLengthAxis": null,
+      "offcut": false,
+      "cutStock": null,
+      "cutPlanes": []
+    },
+    {
+      "id": "cd1c328c-f0e6-477c-9e8d-52758e79f7d7",
+      "name": "Slide-away tray",
+      "material": "plytanium-703",
+      "size": [
+        4,
+        0.703,
+        8
+      ],
+      "position": [
+        -6,
+        2.5,
+        0.25
+      ],
+      "stepId": "6bbef2a2-a909-4288-abf7-624cdbe50b70",
+      "assembly": "",
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stockLengthAxis": null,
+      "offcut": false,
+      "cutStock": null,
+      "cutPlanes": []
+    },
+    {
+      "id": "6ac94f77-a38e-439c-84e2-13c20ac9b261",
+      "name": "Offcut · Practice plywood remainder",
+      "material": "plytanium-703",
+      "size": [
+        18,
+        0.703,
+        26
+      ],
+      "position": [
+        0,
+        0.3515,
+        0
+      ],
+      "stepId": "6bbef2a2-a909-4288-abf7-624cdbe50b70",
+      "assembly": "",
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stockLengthAxis": 2,
+      "offcut": true,
+      "cutStock": {
+        "id": "4af658a7-7785-4f90-9c5c-99d30147a460",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          18,
+          0.703,
+          26
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "cutPlanes": []
+    }
+  ],
+  "steps": [
+    {
+      "id": "e27b9b1e-6d3e-440e-869d-638fa5d0225d",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    },
+    {
+      "id": "cbde740c-73ad-4311-8266-760871edbd24",
+      "title": "Assemble Left side",
+      "notes": "Dimensional design study. Resolve material qualification, all intended attachments, support and installation details before building.",
+      "complete": false
+    },
+    {
+      "id": "558521a8-955a-495c-8296-74420de5e6ad",
+      "title": "Assemble Right side",
+      "notes": "Dimensional design study. Resolve material qualification, all intended attachments, support and installation details before building.",
+      "complete": false
+    },
+    {
+      "id": "8ea28c55-fc38-45e5-8d3b-b54fcbc4296e",
+      "title": "Assemble Back",
+      "notes": "Dimensional design study. Resolve material qualification, all intended attachments, support and installation details before building.",
+      "complete": false
+    },
+    {
+      "id": "57e71d31-1336-4d41-8a7a-1cb4edab4a23",
+      "title": "Assemble Top",
+      "notes": "Dimensional design study. Resolve material qualification, all intended attachments, support and installation details before building.",
+      "complete": false
+    },
+    {
+      "id": "49aa0768-ea8d-438c-9f0d-9a79ce7f8d88",
+      "title": "Assemble Bottom",
+      "notes": "Dimensional design study. Resolve material qualification, all intended attachments, support and installation details before building.",
+      "complete": false
+    },
+    {
+      "id": "6bbef2a2-a909-4288-abf7-624cdbe50b70",
+      "title": "Assemble Adjustable shelf 1",
+      "notes": "Dimensional design study. Resolve material qualification, all intended attachments, support and installation details before building.",
+      "complete": false
+    },
+    {
+      "id": "40aa3e5f-f8c6-4244-b9be-6a34a9059180",
+      "title": "Assemble Adjustable shelf 2",
+      "notes": "Dimensional design study. Resolve material qualification, all intended attachments, support and installation details before building.",
+      "complete": false
+    },
+    {
+      "id": "e066a1b3-4782-4b9e-9a68-e5dba311b9e6",
+      "title": "Assemble Adjustable shelf 3",
+      "notes": "Dimensional design study. Resolve material qualification, all intended attachments, support and installation details before building.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice comparison under an evenly spread load. The stiffness is an illustrative input and must be replaced with data for the delivered sheet and span direction. The tray records measured practice travel.",
+  "sections": [
+    {
+      "id": "90cf2975-fd0f-445c-9a63-7b22bbd45522",
+      "name": "Left side",
+      "pieceIds": [
+        "e3507ae9-10a4-4914-a63f-606ddbbcae2a"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "94fb6e6f-21ea-451f-9c97-358b76584790",
+      "name": "Right side",
+      "pieceIds": [
+        "fc0790b1-d2a1-406b-a5b4-3e542f05664e"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "7aceb0e7-f2d8-4a89-b094-ea2012535efb",
+      "name": "Back",
+      "pieceIds": [
+        "0e76e4d4-8efe-4d52-a16b-9348b768ded2"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "1f631334-a826-463e-9bb2-678d6f51c0c5",
+      "name": "Top",
+      "pieceIds": [
+        "689de6aa-ab15-40d3-9276-836ee66fd112"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "c5f426cb-6771-4688-a563-da59850433a6",
+      "name": "Bottom",
+      "pieceIds": [
+        "3cb8bfd0-34f7-4c80-9345-4d39ac272868"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "cde6dbc3-7fa9-418e-aaed-d8c308972ca8",
+      "name": "Adjustable shelf 1",
+      "pieceIds": [
+        "34bf3613-6a34-4a2a-a0bf-7e9ea50ef125"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "4454a191-2406-4188-9b3e-ccf689949402",
+      "name": "Adjustable shelf 2",
+      "pieceIds": [
+        "68b408b2-4291-4954-9790-e25d0066ec7c"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "3b4c6fa0-7afb-4a60-80b8-99d47a2c2a15",
+      "name": "Adjustable shelf 3",
+      "pieceIds": [
+        "43d482c2-1f91-43f5-b495-7cc0af9c96bb"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [
+    {
+      "version": 1,
+      "id": "53aca423-931f-4d41-a101-77e086269023",
+      "revision": 1,
+      "currentFingerprint": "binding-v1-81b65de04f0aa242",
+      "reviewBlock": "Casework shelves — PARTIAL DIMENSIONAL STUDY\nMissing material: hardware.shelf-pins: Check the support plan for the selected pin, purchase quantities and measurements needed for installation.\nMissing material: hardware.anti-tip: Substrate-compatible anti-tip hardware and its attachment details have not been selected or priced.\nMissing material: hardware.assembly-fasteners: Carcass/back-panel fastening hardware and purchase quantities have not been selected or priced.\nMissing material: material.caseworkPanels: Using generic ¾ in exterior plywood dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nUnresolved: casework-shelf-supports: Review the selected supports, row spacing, edge distances, engagement and drilling setup on the actual side panels.\nUnresolved: casework-joinery: Carcass joints, rear-panel fixing, fastener quantities, edge treatment, backing/racking resistance and wall/anti-tip anchoring require design. No hardware is inferred as installed.\nUnresolved: casework-fit-loads: Panel grade, shelf spans, intended loads and measured wall/baseboard/door obstructions remain unresolved. Shelf front setback is a provisional layout dimension, and zero lateral clearance is nominal geometry, not a fitted joinery or capacity approval.",
+      "generatedNotes": "Casework shelves — PARTIAL DIMENSIONAL STUDY\nMissing material: hardware.shelf-pins: Check the support plan for the selected pin, purchase quantities and measurements needed for installation.\nMissing material: hardware.anti-tip: Substrate-compatible anti-tip hardware and its attachment details have not been selected or priced.\nMissing material: hardware.assembly-fasteners: Carcass/back-panel fastening hardware and purchase quantities have not been selected or priced.\nMissing material: material.caseworkPanels: Using generic ¾ in exterior plywood dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nUnresolved: casework-shelf-supports: Review the selected supports, row spacing, edge distances, engagement and drilling setup on the actual side panels.\nUnresolved: casework-joinery: Carcass joints, rear-panel fixing, fastener quantities, edge treatment, backing/racking resistance and wall/anti-tip anchoring require design. No hardware is inferred as installed.\nUnresolved: casework-fit-loads: Panel grade, shelf spans, intended loads and measured wall/baseboard/door obstructions remain unresolved. Shelf front setback is a provisional layout dimension, and zero lateral clearance is nominal geometry, not a fitted joinery or capacity approval.",
+      "title": "Freestanding adjustable shelf carcass",
+      "summary": "Eight real carcass/shelf panels; support holes, pins, joints and anti-tip anchoring are not represented.",
+      "assumptions": [],
+      "questions": [],
+      "suggestions": [],
+      "entries": [
+        {
+          "id": "2bd1eb7c-f802-4296-a8d7-bc4891691d17",
+          "spec": {
+            "type": "structure",
+            "structure": {
+              "entryId": "2bd1eb7c-f802-4296-a8d7-bc4891691d17",
+              "kind": "casework-shelves",
+              "parameters": {
+                "width": 36,
+                "depth": 16,
+                "height": 72,
+                "shelfCount": 3,
+                "shelfClearance": 0.25,
+                "origin": [
+                  0,
+                  0,
+                  0
+                ],
+                "yaw": 0
+              },
+              "selections": {}
+            }
+          },
+          "generatedNotes": "Casework shelves — PARTIAL DIMENSIONAL STUDY\nMissing material: hardware.shelf-pins: Check the support plan for the selected pin, purchase quantities and measurements needed for installation.\nMissing material: hardware.anti-tip: Substrate-compatible anti-tip hardware and its attachment details have not been selected or priced.\nMissing material: hardware.assembly-fasteners: Carcass/back-panel fastening hardware and purchase quantities have not been selected or priced.\nMissing material: material.caseworkPanels: Using generic ¾ in exterior plywood dimensions for geometry only. Exact product, grade/species, exposure and installation suitability are unresolved.\nUnresolved: casework-shelf-supports: Review the selected supports, row spacing, edge distances, engagement and drilling setup on the actual side panels.\nUnresolved: casework-joinery: Carcass joints, rear-panel fixing, fastener quantities, edge treatment, backing/racking resistance and wall/anti-tip anchoring require design. No hardware is inferred as installed.\nUnresolved: casework-fit-loads: Panel grade, shelf spans, intended loads and measured wall/baseboard/door obstructions remain unresolved. Shelf front setback is a provisional layout dimension, and zero lateral clearance is nominal geometry, not a fitted joinery or capacity approval.",
+          "pose": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "side-left",
+              "sectionId": "90cf2975-fd0f-445c-9a63-7b22bbd45522",
+              "stepId": "cbde740c-73ad-4311-8266-760871edbd24"
+            },
+            {
+              "role": "side-right",
+              "sectionId": "94fb6e6f-21ea-451f-9c97-358b76584790",
+              "stepId": "558521a8-955a-495c-8296-74420de5e6ad"
+            },
+            {
+              "role": "back",
+              "sectionId": "7aceb0e7-f2d8-4a89-b094-ea2012535efb",
+              "stepId": "8ea28c55-fc38-45e5-8d3b-b54fcbc4296e"
+            },
+            {
+              "role": "top",
+              "sectionId": "1f631334-a826-463e-9bb2-678d6f51c0c5",
+              "stepId": "57e71d31-1336-4d41-8a7a-1cb4edab4a23"
+            },
+            {
+              "role": "bottom",
+              "sectionId": "c5f426cb-6771-4688-a563-da59850433a6",
+              "stepId": "49aa0768-ea8d-438c-9f0d-9a79ce7f8d88"
+            },
+            {
+              "role": "shelf-1",
+              "sectionId": "cde6dbc3-7fa9-418e-aaed-d8c308972ca8",
+              "stepId": "6bbef2a2-a909-4288-abf7-624cdbe50b70"
+            },
+            {
+              "role": "shelf-2",
+              "sectionId": "4454a191-2406-4188-9b3e-ccf689949402",
+              "stepId": "40aa3e5f-f8c6-4244-b9be-6a34a9059180"
+            },
+            {
+              "role": "shelf-3",
+              "sectionId": "3b4c6fa0-7afb-4a60-80b8-99d47a2c2a15",
+              "stepId": "e066a1b3-4782-4b9e-9a68-e5dba311b9e6"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": [],
+  "motionPlans": [
+    {
+      "label": "Slide-away tray",
+      "memberIds": [
+        "cd1c328c-f0e6-477c-9e8d-52758e79f7d7"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "travel": 8
+      },
+      "id": "5bfd6087-1a51-4a8d-8753-61b476704f63"
+    }
+  ],
+  "onHandCutSources": [
+    "4af658a7-7785-4f90-9c5c-99d30147a460"
+  ],
+  "shelfSagPlans": [
+    {
+      "pieceId": "34bf3613-6a34-4a2a-a0bf-7e9ea50ef125",
+      "material": "plywood",
+      "thickness": 0.75,
+      "spanAxis": 0,
+      "stockLengthAxis": 0,
+      "weight": 120,
+      "stiffness": 200000,
+      "target": 0.06,
+      "basis": "Illustrative 200,000 lbf·in² per ft for this comparison. Verify the applicable panel data."
+    }
+  ]
+}

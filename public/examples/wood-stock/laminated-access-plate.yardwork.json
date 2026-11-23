@@ -1,0 +1,495 @@
+{
+  "schemaVersion": 150,
+  "id": "5ac74f9d-a0f5-490e-ac48-52dfa5e2bafa",
+  "name": "Plywood glue faces practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "899cece6-420d-47b2-ba0f-afbc0e4cea51"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "woodJointDecisions": [
+    {
+      "firstId": "20911bdf-25cb-44fb-8dce-2a849b73302f",
+      "secondId": "51526ea9-8331-4ddf-a88c-380c5f35777f",
+      "method": "glue",
+      "note": "Dry-fit the two 10 in plates. Check that the access openings align before gluing.",
+      "contactSignature": "[\"attachment-geometry-v1-7956b3ec2fd60358\",\"attachment-geometry-v1-9e3cb3ff789ab779\",[0,-0.75,0],[[1,0,0],[0,1,0],[0,0,1]]]",
+      "glueFaces": {
+        "faceIds": [
+          "0/-1/0/0.375"
+        ],
+        "coat": "second",
+        "extraPercent": 10,
+        "contactSignature": "[\"attachment-geometry-v1-7956b3ec2fd60358\",\"attachment-geometry-v1-9e3cb3ff789ab779\",[0,-0.75,0],[[1,0,0],[0,1,0],[0,0,1]]]"
+      }
+    }
+  ],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "4086a92c-c009-4f76-bc5a-18be1de53d4a",
+      "label": "O001"
+    },
+    {
+      "partId": "51526ea9-8331-4ddf-a88c-380c5f35777f",
+      "label": "P001"
+    },
+    {
+      "partId": "20911bdf-25cb-44fb-8dce-2a849b73302f",
+      "label": "P002"
+    },
+    {
+      "partId": "828ac206-8e6b-4c75-80d2-515a3ddab6e8",
+      "label": "O002"
+    },
+    {
+      "partId": "94e77585-cd30-4d29-8725-cd24df4da6ba",
+      "label": "O003"
+    },
+    {
+      "partId": "fc4f0ebf-7cf9-4a77-95ac-589b73a807af",
+      "label": "O004"
+    },
+    {
+      "partId": "74c64ba2-2b42-4353-8b59-df4a3c209f80",
+      "label": "O005"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T23:39:02.537Z",
+  "pieces": [
+    {
+      "id": "51526ea9-8331-4ddf-a88c-380c5f35777f",
+      "name": "Lower face plate",
+      "material": "plywood",
+      "size": [
+        10,
+        0.75,
+        10
+      ],
+      "position": [
+        0,
+        0.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "24a4efa9-e688-404a-9048-6e139e48f276",
+      "assembly": "Laminated access plate",
+      "offcut": false,
+      "cutPlanes": [],
+      "rectangularOpenings": [
+        {
+          "axis": 1,
+          "center": [
+            0,
+            0
+          ],
+          "spans": [
+            2,
+            4
+          ]
+        }
+      ],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "899cece6-420d-47b2-ba0f-afbc0e4cea51",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          11,
+          0.75,
+          22
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "20911bdf-25cb-44fb-8dce-2a849b73302f",
+      "name": "Upper face plate",
+      "material": "plywood",
+      "size": [
+        10,
+        0.75,
+        10
+      ],
+      "position": [
+        0,
+        1.125,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "24a4efa9-e688-404a-9048-6e139e48f276",
+      "assembly": "Laminated access plate",
+      "offcut": false,
+      "cutPlanes": [],
+      "rectangularOpenings": [
+        {
+          "axis": 1,
+          "center": [
+            0,
+            0
+          ],
+          "spans": [
+            2,
+            4
+          ]
+        }
+      ],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "899cece6-420d-47b2-ba0f-afbc0e4cea51",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          11,
+          0.75,
+          22
+        ],
+        "offset": [
+          0,
+          0,
+          10.125
+        ]
+      }
+    },
+    {
+      "id": "94e77585-cd30-4d29-8725-cd24df4da6ba",
+      "name": "Offcut · Plywood left over from a shelf",
+      "material": "plywood",
+      "size": [
+        0.875,
+        0.75,
+        10
+      ],
+      "position": [
+        5.0625,
+        0.375,
+        -6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "09a93806-f429-41bf-b2cb-2b3e896ff2df",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "899cece6-420d-47b2-ba0f-afbc0e4cea51",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          11,
+          0.75,
+          22
+        ],
+        "offset": [
+          10.125,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "fc4f0ebf-7cf9-4a77-95ac-589b73a807af",
+      "name": "Offcut · Plywood left over from a shelf",
+      "material": "plywood",
+      "size": [
+        11,
+        0.75,
+        1.75
+      ],
+      "position": [
+        0,
+        0.375,
+        10.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "09a93806-f429-41bf-b2cb-2b3e896ff2df",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "899cece6-420d-47b2-ba0f-afbc0e4cea51",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          11,
+          0.75,
+          22
+        ],
+        "offset": [
+          0,
+          0,
+          20.25
+        ]
+      }
+    },
+    {
+      "id": "74c64ba2-2b42-4353-8b59-df4a3c209f80",
+      "name": "Offcut · Plywood left over from a shelf",
+      "material": "plywood",
+      "size": [
+        0.875,
+        0.75,
+        10
+      ],
+      "position": [
+        5.0625,
+        0.375,
+        4.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "09a93806-f429-41bf-b2cb-2b3e896ff2df",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "899cece6-420d-47b2-ba0f-afbc0e4cea51",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          11,
+          0.75,
+          22
+        ],
+        "offset": [
+          10.125,
+          0,
+          10.125
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "09a93806-f429-41bf-b2cb-2b3e896ff2df",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "5ac74f9d-a0f5-490e-ac48-52dfa5e2bafa",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-9ab4848",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "24a4efa9-e688-404a-9048-6e139e48f276",
+      "title": "Assemble Laminated access plate",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details. Dry-fit the parts and arrange clamps before spreading glue. Coat the marked faces, bring the joint together promptly, and follow the product instructions for assembly and cure. Use the Measured glue faces table for the 1 joint assigned to this step.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "5ac74f9d-a0f5-490e-ac48-52dfa5e2bafa",
+        "stageKey": "assembly:Laminated access plate",
+        "memberIds": [
+          "20911bdf-25cb-44fb-8dce-2a849b73302f",
+          "51526ea9-8331-4ddf-a88c-380c5f35777f"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details. Dry-fit the parts and arrange clamps before spreading glue. Coat the marked faces, bring the joint together promptly, and follow the product instructions for assembly and cure. Use the Measured glue faces table for the 1 joint assigned to this step.",
+        "fingerprint": "phase-v1-1d4f35c5",
+        "title": "Assemble Laminated access plate"
+      }
+    },
+    {
+      "id": "01592be5-b4d6-4a63-ae4a-58377bea52f4",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "5ac74f9d-a0f5-490e-ac48-52dfa5e2bafa",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-2522993f",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-336bdedb",
+  "history": [
+    {
+      "id": "d85fc148-7cfa-44d4-b619-d0c0c0b2426d",
+      "at": "2026-11-22T23:39:02.539Z",
+      "stepId": "09a93806-f429-41bf-b2cb-2b3e896ff2df",
+      "message": "Assigned O001 · Offcut · Plywood left over from a shelf to P001 · Lower face plate.",
+      "offcutCut": {
+        "sourceId": "899cece6-420d-47b2-ba0f-afbc0e4cea51",
+        "inputId": "4086a92c-c009-4f76-bc5a-18be1de53d4a",
+        "targetId": "51526ea9-8331-4ddf-a88c-380c5f35777f",
+        "inputSize": [
+          0.75,
+          11,
+          22
+        ],
+        "result": {
+          "size": [
+            0.75,
+            10,
+            10
+          ],
+          "sourceSize": [
+            0.75,
+            11,
+            22
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "inputName": "Offcut · Plywood left over from a shelf",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 10
+          },
+          {
+            "kind": "rip",
+            "size": 10
+          }
+        ],
+        "remnants": [
+          {
+            "id": "828ac206-8e6b-4c75-80d2-515a3ddab6e8",
+            "size": [
+              0.75,
+              11,
+              11.875
+            ]
+          },
+          {
+            "id": "94e77585-cd30-4d29-8725-cd24df4da6ba",
+            "size": [
+              0.75,
+              0.875,
+              10
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "0b4c9448-b16b-4dff-a792-4c83d7ecf878",
+      "at": "2026-11-22T23:39:02.546Z",
+      "stepId": "09a93806-f429-41bf-b2cb-2b3e896ff2df",
+      "message": "Assigned O002 · Offcut · Plywood left over from a shelf to P002 · Upper face plate.",
+      "offcutCut": {
+        "sourceId": "899cece6-420d-47b2-ba0f-afbc0e4cea51",
+        "inputId": "828ac206-8e6b-4c75-80d2-515a3ddab6e8",
+        "targetId": "20911bdf-25cb-44fb-8dce-2a849b73302f",
+        "inputSize": [
+          0.75,
+          11,
+          11.875
+        ],
+        "result": {
+          "size": [
+            0.75,
+            10,
+            10
+          ],
+          "sourceSize": [
+            0.75,
+            11,
+            22
+          ],
+          "offset": [
+            0,
+            0,
+            10.125
+          ]
+        },
+        "inputName": "Offcut · Plywood left over from a shelf",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 10
+          },
+          {
+            "kind": "rip",
+            "size": 10
+          }
+        ],
+        "remnants": [
+          {
+            "id": "fc4f0ebf-7cf9-4a77-95ac-589b73a807af",
+            "size": [
+              0.75,
+              11,
+              1.75
+            ]
+          },
+          {
+            "id": "74c64ba2-2b42-4353-8b59-df4a3c209f80",
+            "size": [
+              0.75,
+              0.875,
+              10
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

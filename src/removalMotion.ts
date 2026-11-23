@@ -78,6 +78,7 @@ export function reviewRemovalPath(
             ...limit,
             travel: limit.travel + start,
             inspectAt: limit.inspectAt + start,
+            ...(limit.approachFrom !== undefined ? { approachFrom: limit.approachFrom + start } : {}),
           };
       }
       return { travel: to };

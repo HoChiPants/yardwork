@@ -5,6 +5,8 @@ import {
 } from "./connectionContacts";
 import { material, type Piece, type Project, type V3 } from "./model";
 import { ensurePartLabels } from "./partLabels";
+import { formatPreciseInches } from "./measurement";
+import { stockAxes } from "./stockAxes";
 
 const EPSILON = 1e-7;
 
@@ -19,6 +21,7 @@ type WoodSupportPart = {
 
 export const woodSupportScope =
   "Checks follow positive-area wood contact down to the modeled floor. Review the actual substrate, hardware, stability and load capacity separately.";
+export const fittedSupportBlockRole = "fitted-support-block";
 
 function prepare(piece: Piece) {
   const faces = retainedWoodFaces(piece);
@@ -38,13 +41,18 @@ function prepare(piece: Piece) {
   };
 }
 
-function floorContact(underside: WoodFace[], floorHeight: number) {
-  if (Math.abs(floorHeight) > EPSILON) return false;
-  return underside.some(
-    ({ normal, points }) =>
-      Math.hypot(normal[0], normal[1] + 1, normal[2]) <= EPSILON &&
-      points.every((point) => Math.abs(point[1]) <= EPSILON),
-  );
+function floorFace({ normal, points }: WoodFace) {
+  return Math.hypot(normal[0], normal[1] + 1, normal[2]) <= EPSILON &&
+    points.every((point) => Math.abs(point[1]) <= EPSILON);
+}
+
+function* bearingPatches(top: ReturnType<typeof prepare>, base: ReturnType<typeof prepare>) {
+  for (const first of top.underside) {
+    for (const second of base.facingUp) {
+      const patch = faceContactPatch(first, second);
+      if (patch) yield patch;
+    }
+  }
 }
 
 export function reviewWoodSupport(project: Project) {
@@ -64,7 +72,7 @@ export function reviewWoodSupport(project: Project) {
       const ready = prepare(piece);
       if (ready.min.some((value, axis) => value >= ready.max[axis])) return [];
       current.geometryAvailable = true;
-      current.onFloor = floorContact(ready.underside, ready.min[1]);
+      current.onFloor = Math.abs(ready.min[1]) <= EPSILON && ready.underside.some(floorFace);
       if (current.onFloor) floor.push(piece.id);
       return [ready];
     } catch {
@@ -91,9 +99,7 @@ export function reviewWoodSupport(project: Project) {
       )
         continue;
       let area = 0;
-      for (const a of top.underside)
-        for (const b of base.facingUp)
-          area += faceContactPatch(a, b)?.area ?? 0;
+      for (const patch of bearingPatches(top, base)) area += patch.area;
       if (!area) continue;
       current.supports.push({ pieceId: base.piece.id, area });
       const above = children.get(base.piece.id) ?? [];
@@ -145,6 +151,67 @@ export function woodSupportBreaks(review: WoodSupportReview, pieceId: string) {
   return breaks.length ? breaks : ungrounded.slice(0, 1);
 }
 
+export function woodSupportTrace(project: Project, review: WoodSupportReview, pieceId: string) {
+  const faces = new Map<string, ReturnType<typeof prepare>>();
+  const geometry = (piece: Piece) => {
+    const ready = faces.get(piece.id) ?? prepare(piece);
+    faces.set(piece.id, ready);
+    return ready;
+  };
+  const patches: { outline: V3[]; kind: "grounded" | "open" | "floor" }[] = [];
+  const pending = new Set([pieceId]);
+  for (const id of pending) {
+    const row = review.get(id);
+    if (!row?.geometryAvailable) continue;
+    const top = geometry(row.piece);
+    if (row.onFloor) {
+      for (const face of top.underside.filter(floorFace)) {
+        patches.push({ outline: face.points, kind: "floor" });
+      }
+      continue;
+    }
+    for (const { pieceId: baseId } of row.supports) {
+      const base = review.get(baseId)!;
+      const kind = base.onFloor || base.next ? "grounded" : "open";
+      for (const { outline } of bearingPatches(top, geometry(base.piece))) {
+        patches.push({ outline, kind });
+      }
+      pending.add(baseId);
+    }
+  }
+  const labels = new Map(project.partLabels?.map(({ partId, label }) => [partId, label]));
+  const stops = woodSupportBreaks(review, pieceId).flatMap((id) => {
+    const row = review.get(id);
+    if (!row) return [];
+    const [x, y, z] = row.piece.position;
+    const position: V3 = [x, row.geometryAvailable ? geometry(row.piece).min[1] : y, z];
+    return [{
+      id,
+      position,
+      label: labels.get(id) ?? row.piece.name,
+      reason: row.geometryAvailable ? "Check below" : "Check geometry",
+    }];
+  });
+  return { patches, stops };
+}
+
+export type WoodSupportTrace = ReturnType<typeof woodSupportTrace>;
+
+export function fittedSupportBlockEnds(support: WoodSupportReview) {
+  return [...support.values()].flatMap(({ piece, geometryAvailable, onFloor, next, supports }) => {
+    if (piece.designRole !== fittedSupportBlockRole) return [];
+    const { width, thickness } = stockAxes(piece);
+    const endArea = piece.size[width] * piece.size[thickness];
+    const aboveIds = [...support.values()].flatMap((row) => row.supports.some(({ pieceId, area }) =>
+      pieceId === piece.id && area >= endArea - EPSILON) ? [row.piece.id] : []);
+    const baseId = next && supports.some(({ pieceId, area }) =>
+      pieceId === next && area >= endArea - EPSILON) ? next : undefined;
+    const fit = geometryAvailable && !piece.cutPlanes.length && !piece.roundOpenings?.length &&
+      !piece.rectangularOpenings?.length && aboveIds.length > 0 && (onFloor || !!baseId);
+    return [{ block: piece, aboveIds, baseId, onFloor, fit }];
+  });
+}
+
 export function woodSupportGuideLines(
   project: Project,
   support: WoodSupportReview,
@@ -154,8 +221,16 @@ export function woodSupportGuideLines(
     ensurePartLabels(project).partLabels.map((row) => [row.partId, row.label]),
   );
   const open = [...support.values()].filter((row) => !row.onFloor && !row.next);
+  const placements = fittedSupportBlockEnds(support).map(({ block, aboveIds, baseId, onFloor, fit }) => {
+    const title = `${labels.get(block.id)} · ${block.name}`;
+    if (!fit) return `${title} · Review the fitted block's current bearing at both ends.`;
+    const [x, , z] = block.position;
+    const supportBelow = onFloor ? "the modeled floor" : labels.get(baseId!);
+    return `${title} · Center X ${formatPreciseInches(x)}, Z ${formatPreciseInches(z)} · from ${supportBelow} to ${aboveIds.map((id) => labels.get(id)).join(", ")}.`;
+  });
   return [
     `${support.size - open.length} of ${support.size} modeled wood parts have a face-contact path to the floor.`,
+    ...placements,
     ...open.map(
       ({ piece, geometryAvailable, supports }) =>
         `${labels.get(piece.id)} · ${piece.name} · ${

@@ -4,6 +4,7 @@ import { browserWorkshopRequest } from "./browserWorkshop";
 import { formatPreciseInches } from "./measurement";
 import {
   Component,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -29,6 +30,7 @@ import { format, material, type Project, type V3 } from "./model";
 import { isPressureTreated } from "./treatedWood";
 import { bounds, type Finding } from "./engine";
 import { Scene } from "./Scene";
+import { proposalMotionChanges } from "./motionImpact";
 import { LengthInput } from "./LengthInput";
 import { PricingSummary } from "./PricingSummary";
 import { PlannerConnection } from "./PlannerConnection";
@@ -40,13 +42,18 @@ import { ProposalStockReview } from "./ProposalStockReview";
 import { previewProposalStock, proposalStockRequest, type ProposalCutScope } from "./proposalStock";
 import { planStockCutLayouts } from "./recordStockCutLayout";
 import { partLabel } from "./partLabels";
+import { compoundIdeaRequest } from "./compositeIdea";
 import { updateStructureParameter } from "./structureIdeas";
 import { closetBaySummary } from "./closetBayLayout";
-import { editFurniturePlan, straightRun } from "./ideaEdits";
+import { editFurniturePlan, straightRun, straightRunWidth } from "./ideaEdits";
+import { localDimensionEditPlan } from "./relativeIdeaResize";
 import {
   ideaPlanSchema,
+  plannerRequestSchema,
   previewIdeaPlan,
+  workspacePlanningResult,
   type IdeaPlan,
+  type PlannerRequest,
   type PlanningZone,
 } from "./planning";
 
@@ -54,8 +61,7 @@ const noop = () => {};
 type PlannerChoice = "server" | "built-in";
 type PlannerResult = { plan: IdeaPlan; provider: string; message: string };
 type PlanSubmission = {
-  prompt: string;
-  body: string;
+  request: PlannerRequest;
   previous: IdeaPlan | null;
   previousResult: PlannerResult | null;
 };
@@ -103,7 +109,7 @@ function PlacementFields({
     </details>
   );
 }
-class PreviewBoundary extends Component<
+export class PreviewBoundary extends Component<
   { children: ReactNode },
   { failed: boolean }
 > {
@@ -127,6 +133,7 @@ export default function IdeaPlanner({
   project,
   connectedPlanner,
   initialTarget = null,
+  selectedSectionId,
   onApply,
   onConnectionAction,
   findings,
@@ -136,6 +143,7 @@ export default function IdeaPlanner({
   project: Project;
   connectedPlanner: boolean;
   initialTarget?: { bindingId: string; entryIds?: string[] } | null;
+  selectedSectionId?: string | null;
   onApply: (next: Project, source: Project) => void;
   onConnectionAction: (action: ConnectionQuestionAction) => void;
   findings: readonly Finding[];
@@ -146,6 +154,7 @@ export default function IdeaPlanner({
   const originalPlan = useRef<IdeaPlan | null>(null);
   const [target, setTarget] = useState(initialTarget);
   const [targetToken, setTargetToken] = useState<string | null>(null);
+  const [runWidthAnchor, setRunWidthAnchor] = useState<"center" | "left" | "right">("center");
   const [stockOpen, setStockOpen] = useState(false);
   const [cutScope, setCutScope] = useState<ProposalCutScope | null>(null);
   const [offcutLabels, setOffcutLabels] = useState<string[] | null>(null);
@@ -162,6 +171,8 @@ export default function IdeaPlanner({
     submission: PlanSubmission;
   } | null>(null);
   const [plannerChoice, setPlannerChoice] = useState<PlannerChoice>("server");
+  const [modelUnavailable, setModelUnavailable] = useState(false);
+  const exploreWithBuiltIn = connectedPlanner && plannerChoice === "server" && modelUnavailable;
   const [pendingPlanner, setPendingPlanner] = useState<PlannerChoice | null>(null);
   const busy = pendingPlanner !== null;
   const [planningStatus, setPlanningStatus] = useState("");
@@ -177,8 +188,8 @@ export default function IdeaPlanner({
     ? answerConnectionQuestion(project, workspaceRequest.question) : null,
   [workspaceRequest, project, prompt]);
   const buildAnswer = useMemo(() => workspaceRequest?.kind === "build" && workspaceRequest.prompt === prompt
-    ? answerBuildQuestion(project, workspaceRequest.question, findings) : null,
-  [workspaceRequest, project, findings, prompt]);
+    ? answerBuildQuestion(project, workspaceRequest.question, findings, selectedSectionId) : null,
+  [workspaceRequest, project, findings, prompt, selectedSectionId]);
   const hasWorkspaceAnswer = !!(jointAnswer || buildAnswer);
   const sampleWood = project.pieces.find((piece) => !piece.offcut && material(piece.material).wood);
   function loadTarget(next: typeof target) {
@@ -187,6 +198,7 @@ export default function IdeaPlanner({
     active?.controller.abort();
     setTarget(next);
     setTargetToken(null);
+    setRunWidthAnchor("center");
     setStockOpen(false);
     setCutScope(null);
     setOffcutLabels(null);
@@ -275,10 +287,22 @@ export default function IdeaPlanner({
     }
   }, [project, result, target, targetToken]);
   const shouldReviewStock = stockOpen || offcutLabels !== null || cutScope !== null;
+  const candidate = preview?.value?.project;
+  const deferredCandidate = useDeferredValue(candidate);
+  const movementChanges = useMemo(() =>
+    deferredCandidate && deferredCandidate.id === project.id ? proposalMotionChanges(project, deferredCandidate) : [],
+  [project, deferredCandidate]);
+  const [shownMotionChange, setShownMotionChange] = useState<{ candidate: Project; id: string }>();
+  const layoutPreview = useRef<HTMLDivElement>(null);
+  const currentChanges = deferredCandidate === candidate ? movementChanges : [];
+  const movementPose = shownMotionChange && shownMotionChange.candidate === candidate
+    ? currentChanges.find(({ id }) => id === shownMotionChange.id)?.show?.()
+    : undefined;
+  const checkingMovement = !!(candidate && project.motionPlans?.length && deferredCandidate !== candidate);
   const stock = useMemo(() => {
     if (!preview?.value || !shouldReviewStock) return {};
     try {
-      return { value: previewProposalStock(project, preview.value.project, offcutLabels) };
+      return { value: previewProposalStock(project, preview.value.project, offcutLabels, preview.revision?.impact.replannedPartIds) };
     } catch (issue) {
       return { error: issue instanceof Error ? issue.message : "Could not check the cuts for this proposal." };
     }
@@ -351,8 +375,10 @@ export default function IdeaPlanner({
       setPlanningStatus("");
       return null;
     }
-    const joint = connectionQuestion(project, prompt);
-    const review = joint ? null : buildQuestion(prompt);
+    const previous = result?.plan ?? previousPlan.current;
+    const combined = compoundIdeaRequest({ prompt, previousPlan: previous ?? undefined });
+    const joint = combined ? null : connectionQuestion(project, prompt);
+    const review = joint || combined ? null : buildQuestion(prompt);
     const workspace = joint ? { prompt, kind: "joint" as const, question: joint }
       : review ? { prompt, kind: "build" as const, question: review } : null;
     if (workspace) {
@@ -362,7 +388,6 @@ export default function IdeaPlanner({
       return null;
     }
     setWorkspaceRequest(null);
-    const previous = result?.plan ?? previousPlan.current;
     const targetSections = new Set(
       target ? (project.ideaBindings
         .find((binding) => binding.id === target.bindingId)
@@ -375,14 +400,14 @@ export default function IdeaPlanner({
         const boxes = project.pieces.filter((piece) => s.pieceIds.includes(piece.id)).map(bounds);
         return {
           name: s.name,
-          min: [0, 1, 2].map((i) => Math.min(...boxes.map((box) => box.min[i]))),
-          max: [0, 1, 2].map((i) => Math.max(...boxes.map((box) => box.max[i]))),
+          min: [0, 1, 2].map((i) => Math.min(...boxes.map((box) => box.min[i]))) as V3,
+          max: [0, 1, 2].map((i) => Math.max(...boxes.map((box) => box.max[i]))) as V3,
         };
       })
       .filter((s) => s.min.every(Number.isFinite) && s.max.every(Number.isFinite));
     return {
-      prompt, previous, previousResult: result,
-      body: JSON.stringify({ prompt, workZone: zone ?? null, existingSections, previousPlan: previous ?? undefined }),
+      previous, previousResult: result,
+      request: { prompt, workZone: zone ?? null, existingSections, previousPlan: previous ?? undefined },
     };
   }
   async function generate(choice = plannerChoice) {
@@ -409,30 +434,31 @@ export default function IdeaPlanner({
     setPlanningStatus("");
     setResult(null);
     try {
-      const requestPlan = choice === "built-in" ? browserWorkshopRequest : workshopRequest;
-      const response = await requestPlan("/api/planner", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: submission.body,
-        signal: AbortSignal.any([request.controller.signal, request.timeout]),
-      });
-      const data = await response.json();
+      const input = plannerRequestSchema.parse(submission.request);
+      let data = workspacePlanningResult(input);
+      if (!data) {
+        const requestPlan = choice === "built-in" ? browserWorkshopRequest : workshopRequest;
+        const response = await requestPlan("/api/planner", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(input),
+          signal: AbortSignal.any([request.controller.signal, request.timeout]),
+        });
+        const reply = await response.json();
+        if (!response.ok) throw Error(reply.error ?? "The planner could not make a proposal. Your workspace has not changed.");
+        data = reply as PlannerResult;
+      }
       if (activeRequest.current !== request) return;
       if (request.controller.signal.aborted || request.timeout.aborted)
         throw Error("Planning request ended.");
-      if (!response.ok)
-        throw Error(
-          data.error ??
-            "The planner could not make a proposal. Your workspace has not changed.",
-        );
       const plan = ideaPlanSchema.parse(data.plan);
       previousPlan.current = plan;
-      setExploredPrompt(submission.prompt);
+      setExploredPrompt(submission.request.prompt);
       setResult({ plan, provider: data.provider, message: data.message });
     } catch (error) {
       if (activeRequest.current !== request) return;
       setResult(previousResult);
-      if (!request.cancelled && choice === "server" && !browserWorkshop) setUnavailablePrompt(submission.prompt);
+      if (!request.cancelled && choice === "server" && !browserWorkshop) setUnavailablePrompt(submission.request.prompt);
       if (request.cancelled)
         setPlanningStatus(
           previous
@@ -554,6 +580,7 @@ export default function IdeaPlanner({
             "Three-section storage banquette with opening lids and no back",
             "Workbench 6 ft wide, 2 ft deep, 36 inches high",
             "Shelving 4 ft wide, 16 inches deep, 5 ft tall",
+            "Framed wall 8 ft wide, 6 ft 6 in tall",
           ].map((example) => (
             <button
               key={example}
@@ -582,6 +609,7 @@ export default function IdeaPlanner({
               : "Plan 2x4 cuts of 60 in, 48 in, 46 in, and 40 in."],
             ...(project.pieces.length ? [["Review weak spots", "What looks weak in this build?"]] : []),
             ...(sampleWood ? [["Review a joint", `Review screw joints for ${partLabel(project, sampleWood.id)}`]] : []),
+            ...(project.fastenerPlans.length ? [["Check driver clearance", "Check driver clearance"]] : []),
             ...((project.motionPlans?.length || project.sections.some((section) => section.recipe?.openingLid))
               ? [["Check movement", `Check motion for "${project.motionPlans?.[0]?.label ?? project.sections.find((section) => section.recipe?.openingLid)?.name}"`]] : []),
             ...(project.pieces.some(({ offcut }) => offcut) ? [["Find uses for scraps", "What scraps can I reuse?"]] : []),
@@ -608,25 +636,25 @@ export default function IdeaPlanner({
             <option value="built-in">Built-in layout</option>
           </select>
         </label>
-        <PlannerConnection />
+        <PlannerConnection onUnavailableChange={setModelUnavailable} />
       </>}
       <button
         className="button primary full"
         disabled={busy || !prompt.trim()}
-        onClick={() => void generate()}
+        onClick={() => void generate(exploreWithBuiltIn ? "built-in" : plannerChoice)}
       >
         {busy ? (
           <Loader2 size={16} className="spin" />
         ) : (
           <Lightbulb size={16} />
         )}{" "}
-        {busy ? "Planning your layout…" : "Explore idea"}
+        {busy ? "Planning your layout…" : exploreWithBuiltIn ? "Explore with built-in layout" : "Explore idea"}
       </button>
       {busy && (
         <>
           {connectedPlanner && pendingPlanner === "server" && <>
             <p className="small-note" role="status">
-              A cold local model may take up to three minutes. {activeRequest.current?.submission.prompt !== prompt
+              A cold local model may take up to three minutes. {activeRequest.current?.submission.request.prompt !== prompt
                 ? "Switching uses the idea already submitted." : ""}
             </p>
             <button type="button" className="button secondary full" onClick={() => void generate("built-in")}>Use built-in layout</button>
@@ -686,7 +714,7 @@ export default function IdeaPlanner({
             {result.provider} · {result.message}
           </small>
           {preview?.value && (
-            <div className="idea-preview" aria-label="Proposed layout preview">
+            <div className="idea-preview" aria-label="Proposed layout preview" ref={layoutPreview}>
               <PreviewBoundary>
                 <Scene
                   project={stock.value?.project ?? preview.value.project}
@@ -703,8 +731,15 @@ export default function IdeaPlanner({
                   view={previewView}
                   onCamera={noop}
                   fitToView
+                  motionPreview={movementPose}
                 />
               </PreviewBoundary>
+            </div>
+          )}
+          {movementPose && (
+            <div className="button-row">
+              <small role="status">{movementPose.label} · {movementPose.positionText ?? "Movement preview"}</small>
+              <button type="button" className="text-button" onClick={() => setShownMotionChange(undefined)}>Return to closed layout</button>
             </div>
           )}
           {result.plan.assumptions.length > 0 && (
@@ -955,35 +990,37 @@ export default function IdeaPlanner({
           ))}
           {seatingRun && seatingModules.length > 1 && (
             <div className="planner-run-control">
-              <LengthInput
-                label="Overall seating run width"
-                ariaLabel="Overall seating run width"
-                value={
-                  seatingModules.reduce((sum, m) => sum + m.width, 0) +
-                  seatingRun.gaps.reduce((a, b) => a + b, 0)
-                }
-                min={8 * seatingModules.length}
-                max={240}
-                onChange={(value) => {
-                  if (Number.isFinite(value))
-                    setResult((r) =>
-                      r
-                        ? {
-                            ...r,
-                            plan: editFurniturePlan(
-                              r.plan,
-                              `Make overall bench width ${value} inches`,
-                            ),
-                          }
-                        : r,
-                    );
-                }}
-              />
-              <p>
-                Changes the full run around its existing center. Individual
-                widths below change only that compartment; adjacent seats
-                reflow.
-              </p>
+              <div className="two-col">
+                <LengthInput
+                  label="Overall seating run width"
+                  ariaLabel="Overall seating run width"
+                  value={straightRunWidth(seatingModules, seatingRun)}
+                  min={8 * seatingModules.length + seatingRun.gaps.reduce((sum, gap) => sum + gap, 0)}
+                  max={240 * seatingModules.length + seatingRun.gaps.reduce((sum, gap) => sum + gap, 0)}
+                  onChange={(value) => {
+                    if (!Number.isFinite(value)) return;
+                    const edge = runWidthAnchor === "center" ? "" : ` and keep the ${runWidthAnchor} end fixed`;
+                    setResult((current) => {
+                      if (!current) return current;
+                      const plan = localDimensionEditPlan({
+                        prompt: `Set the overall bench width to ${value} inches${edge}`,
+                        previousPlan: current.plan,
+                      });
+                      return plan ? { ...current, plan } : current;
+                    });
+                  }}
+                />
+                <label className="field">Keep in place
+                  <select value={runWidthAnchor} onChange={({ currentTarget }) => {
+                    const edge = currentTarget.value;
+                    setRunWidthAnchor(edge === "left" || edge === "right" ? edge : "center");
+                  }}>
+                    <option value="center">Run center</option>
+                    <option value="left">Local left end</option>
+                    <option value="right">Local right end</option>
+                  </select>
+                </label>
+              </div>
             </div>
           )}
           {result.plan.modules.map((module, i) => (
@@ -1189,18 +1226,28 @@ export default function IdeaPlanner({
               </p>
               {preview.revision && (
                 <>
-                  <p>
-                    Replace {preview.revision.impact.replacedParts} parts;
-                    remove {preview.revision.impact.removedConnections}{" "}
-                    connections. {preview.revision.impact.offcuts} cut parts
-                    retained for reuse.
-                  </p>
+                  {preview.revision.impact.movedAttachedParts > 0 && (
+                    <p>{preview.revision.impact.movedAttachedParts} fitted parts move with the revised design.</p>
+                  )}
+                  {preview.revision.impact.removedEntries > 0 && (
+                    <p>Remove {preview.revision.impact.removedEntries} {preview.revision.impact.removedEntries === 1 ? "assembly" : "assemblies"} from this design.</p>
+                  )}
+                  {(preview.revision.impact.replacedParts > 0 || preview.revision.impact.offcuts > 0) && (
+                    <p>
+                      {preview.revision.impact.removedEntries > 0 && !preview.revision.impact.newParts ? "Remove" : "Replace"}{" "}
+                      {preview.revision.impact.replacedParts} parts. Remove {preview.revision.impact.removedConnections}{" "}
+                      connections. {preview.revision.impact.offcuts} cut parts retained for reuse.
+                    </p>
+                  )}
                   {preview.revision.impact.releasedStockUnits > 0 && (
                     <p>
                       Return {preview.revision.impact.releasedStockUnits} uncut{" "}
                       {preview.revision.impact.releasedStockUnits === 1 ? "stock unit" : "stock units"} to planning.
                       Full blanks you marked on hand go to the Cut pool.
                     </p>
+                  )}
+                  {preview.revision.impact.replannedPartIds.length > 0 && (
+                    <p>The revised cut plan includes {preview.revision.impact.replannedPartIds.length} other parts that shared those blanks.</p>
                   )}
                   {preview.revision.impact.affectedFastenerPlans > 0 && (
                     <p>
@@ -1216,6 +1263,13 @@ export default function IdeaPlanner({
                       hinge plan(s) keep their exact old references and history.
                       Review replacement members and remeasure before using
                       motion or drilling coordinates.
+                    </p>
+                  )}
+                  {preview.revision.impact.affectedMotionPlans > 0 && (
+                    <p>
+                      {preview.revision.impact.affectedMotionPlans} saved movement
+                      {preview.revision.impact.affectedMotionPlans === 1 ? " uses" : "s use"} parts being replaced.
+                      Review the moving parts and mounting faces after rebuilding.
                     </p>
                   )}
                   {(preview.revision.impact.manualEdits > 0 ||
@@ -1236,8 +1290,7 @@ export default function IdeaPlanner({
                           setRebuildReviewed(event.target.checked)
                         }
                       />
-                      Replace the reviewed manual edits and affected
-                      connections. Existing offcuts stay available.
+                      Apply the reviewed rebuild. Existing offcuts stay available.
                     </label>
                   )}
                 </>
@@ -1253,6 +1306,29 @@ export default function IdeaPlanner({
                   This layout extends outside your work zone. Adjust the
                   proposal or the available space before adding it.
                 </p>
+              )}
+              {checkingMovement ? (
+                <p className="small-note" role="status">Checking saved movements…</p>
+              ) : !!currentChanges.length && (
+                <section className="field-section" aria-label="Changes to saved movement">
+                  <h3>Changes to saved movement</h3>
+                  <ul>
+                    {currentChanges.map((change) => (
+                      <li key={change.id}>
+                        <strong>{change.label}</strong> · {change.detail}{" "}
+                        {change.show && <button type="button" className="text-button"
+                          aria-pressed={!!movementPose && shownMotionChange?.id === change.id}
+                          onClick={() => {
+                            const clear = shownMotionChange?.candidate === candidate && shownMotionChange?.id === change.id;
+                            setShownMotionChange(candidate && !clear ? { candidate, id: change.id } : undefined);
+                            if (!clear) layoutPreview.current?.scrollIntoView({ block: "nearest" });
+                          }}>
+                          {movementPose && shownMotionChange?.id === change.id ? "Show closed layout" : "Show in 3D"}
+                        </button>}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               )}
               {!!preview.revision?.clearanceConflicts.length && (
                 <p className="form-error" role="alert">
@@ -1282,6 +1358,7 @@ export default function IdeaPlanner({
               disabled={
                 !preview?.value ||
                 !preview.value.workZoneFits ||
+                checkingMovement ||
                 (offcutLabels !== null && !!stock.error) ||
                 (cutScope !== null && (selectedCutUnits.length === 0 || !!stock.error)) ||
                 !!preview.revision?.clearanceConflicts.length ||

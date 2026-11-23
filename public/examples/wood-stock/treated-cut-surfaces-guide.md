@@ -61,6 +61,7 @@ Work from top to bottom. Match the starting piece to its label and measured size
 1. O001 → P002 · Scrap setup block
    Starting size 35.875 in × 5.5 in × 1.5 in.
    Crosscut to 1 ft.
+   Cuts to do.
    Keep O002 · 23.75 in × 5.5 in × 1.5 in.
 
 
@@ -129,7 +130,7 @@ Check every intended joint, bracing, anchorage, edges and clearances. Resolve ou
 
 Modeled remnants; review dimensions, profiles and source lineage before reuse.
 
-- O002 · Offcut · Practice rail: 5.5 in × 1.5 in × 23.75 in (Brown-stain Western Wood 2 × 6 · Home Depot · 8 ft)
+- O002 · Offcut · Practice rail: 5.5 in × 1.5 in × 23.75 in (Brown-stain Western Wood 2 × 6 · Home Depot · 8 ft) · Expected after cutting
   - Blank before profiles: X 5.5 in × Y 1.5 in × Z 23.75 in; local length Z, width X, thickness Y (original source stock axes). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 949253a9-e139-4f75-9e33-7b7fede2e9d6: original blank X 5.5 in × Y 1.5 in × Z 96 in. Reusable offcut source-local region X 0 to 5.5 in, Y 0 to 1.5 in, Z 72.25 to 96 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0.125 in; profile-face saw kerf is not reconstructed.

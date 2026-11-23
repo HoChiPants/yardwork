@@ -10,7 +10,11 @@ test("mark a bottom plate seam on a phone, keep the breaks and shop the cut-back
     "../../public/examples/air-sealing/bottom-plate.yardwork.json", import.meta.url,
   ), "utf8")));
   const record = sample.bottomPlateSeals![0];
-  const project = removeBottomPlateSeal(sample, record.id);
+  const base = removeBottomPlateSeal(sample, record.id);
+  const project = projectSchema.parse({ ...base, pieces: base.pieces.map((part) =>
+    part.name === "Left subfloor blank" ? {
+      ...part, rectangularOpenings: [{ axis: 1, center: [-1.75, 0], spans: [0.5, 5.5] }],
+    } : part) });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("./");
   await page.getByRole("button", { name: "Open project", exact: true }).click();
@@ -31,7 +35,8 @@ test("mark a bottom plate seam on a phone, keep the breaks and shop the cut-back
   await dialog.getByRole("checkbox", { name: "This is an exposed, dry wood seam in an unrated assembly" }).check();
   await dialog.getByRole("button", { name: "Preview air seal", exact: true }).click();
   const preview = dialog.getByRole("region", { name: "Bottom plate seal preview" });
-  await expect(preview).toContainText("75.875 in clear for a bead");
+  await expect(preview).toContainText("70.375 in clear for a bead");
+  await expect(preview).toContainText("19.1875 in to 24.6875 in from start · Subfloor backing or edge room is missing.");
   await expect(preview).toContainText("43.9375 in to 44.0625 in from start · Subfloor backing or edge room is missing.");
   await expect(preview).toContainText("56 in to 68 in from start · Bead access is blocked by Access mockup block.");
   await preview.getByRole("button", { name: "Save air seal and show in 3D", exact: true }).click();
@@ -66,6 +71,7 @@ test("mark a bottom plate seam on a phone, keep the breaks and shop the cut-back
   await dialog.getByRole("button", { name: /^Build guide/ }).click();
   const guide = await readFile((await (await downloadable).path())!, "utf8");
   expect(guide).toMatch(/Bottom plate air seals[\s\S]*56 in to 68 in.+Access mockup block/);
+  expect(guide).toContain("19.1875 in to 24.6875 in from the marked start · Subfloor backing or edge room is missing.");
   expect(guide).toMatch(/matching Cut pool pieces O\d+/);
   expect(guide).toContain("202768254");
   await expect(page.locator(".print-guide .bottom-plate-seal-print")).toContainText("1 cartridge of OSI SC175");

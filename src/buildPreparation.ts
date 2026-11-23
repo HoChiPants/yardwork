@@ -1,4 +1,5 @@
 import type { ConnectionCoverage } from "./connectionCoverage";
+import type { FittedSupportBlockJointReview } from "./bearingConnections";
 import { describeAssemblyOrder, reviewAssemblyOrder } from "./assemblyOrder";
 import { inspectCutStock } from "./cutStock";
 import type { BomRow, Finding } from "./engine";
@@ -25,6 +26,7 @@ export type BuildPreparationAction =
   | { kind: "field-treatment"; id: string }
   | { kind: "guide-step"; id: string }
   | { kind: "connections"; scope: ConnectionReviewScope }
+  | { kind: "driver-access"; findingId: string }
   | { kind: "stock"; id: MaterialId }
   | { kind: "offcut-cut"; id: string }
   | { kind: "motion"; planId: string; variant: MotionTestVariant; findingId: string; scenarioId?: string }
@@ -39,7 +41,7 @@ export type BuildPreparationItem = {
 };
 
 export type BuildPreparationGroup = {
-  id: "order" | "cuts" | "treated-wood" | "connections" | "wood-contacts" | "motion" | "shopping" | "tools" | "checks";
+  id: "order" | "cuts" | "treated-wood" | "connections" | "driver-access" | "support-blocks" | "wood-contacts" | "motion" | "shopping" | "tools" | "checks";
   title: string;
   empty: string;
   intro?: string;
@@ -57,6 +59,7 @@ type PreparationInputs = {
   motions: ProjectMotionReviews;
   lids: ProjectLidTravelChecks;
   woodContacts?: ModeledWoodContactReview;
+  supportBlockJoints?: readonly FittedSupportBlockJointReview[];
   handoff?: ReturnType<typeof homeDepotShoppingList>;
 };
 
@@ -82,6 +85,19 @@ export function assemblyOrderPreparation(
 
 const count = (n: number, singular: string, plural = `${singular}s`) =>
   `${n} ${n === 1 ? singular : plural}`;
+
+export function driverAccessPreparation(findings: readonly Finding[]): BuildPreparationGroup[] {
+  const items = findings.filter(({ driverApproach }) => driverApproach)
+    .map(({ id, title, detail }): BuildPreparationItem => ({
+      id, title, detail, action: { kind: "driver-access", findingId: id },
+    }));
+  return items.length ? [{
+    id: "driver-access",
+    title: "Driver clearance",
+    empty: "The measured tool approaches have no listed clearance issues.",
+    items,
+  }] : [];
+}
 
 export function connectionPreparationItems(coverage: Pick<ConnectionCoverage, "stages" | "gaps">) {
   const pending: BuildPreparationItem[] = coverage.stages.flatMap((stage) => {
@@ -203,7 +219,8 @@ export function buildPreparation(
 ): BuildPreparationGroup[] {
   const hasMotion = input.motions.length > 0 || input.lids.length > 0;
   const hasBuild = project.pieces.some(({ offcut }) => !offcut) ||
-    project.supplies.length > 0 || hasMotion || !!project.woodJointDecisions?.length;
+    project.supplies.length > 0 || hasMotion || !!project.woodJointDecisions?.length ||
+    project.history.some(({ offcutCut }) => offcutCut?.looseSplit && !offcutCut.releasedAt);
   if (!hasBuild && !project.pieces.some(({ material: id }) => isPressureTreated(id)))
     return [];
   const labels = new Map(
@@ -421,6 +438,21 @@ export function buildPreparation(
       empty: "The current assembly rows have no listed plan gaps.",
       items: connectionPreparationItems(input.connections),
     },
+    ...driverAccessPreparation(input.findings),
+    ...(input.supportBlockJoints?.length ? [{
+      id: "support-blocks" as const,
+      title: "Fitted support-block joints",
+      empty: "There are no fitted support blocks to review.",
+      reviewCount: input.supportBlockJoints.filter(({ needsReview }) => needsReview).length,
+      items: input.supportBlockJoints.map(({ block, fit, detail }): BuildPreparationItem => {
+        const title = `${labels.get(block.id)} · ${block.name}`;
+        return {
+          id: block.id, title, detail,
+          action: fit ? { kind: "connections", scope: { title, memberIds: [block.id], bearingPartId: block.id } }
+            : { kind: "part", id: block.id },
+        };
+      }),
+    }] : []),
     ...woodContactPreparation(project, input),
     ...(hasMotion ? [motionGroup] : []),
     {

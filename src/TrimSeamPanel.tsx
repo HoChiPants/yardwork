@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { formatPreciseInches } from "./measurement";
 import type { Project } from "./model";
 import { trimBackerRodInstructions, trimBackerRodMinRecess, trimBackerRods, trimBackerRodScope } from "./trimBackerRodReference";
-import { modeledTrimSeamEdges, trimSeamMarker, type TrimSeamMarker } from "./trimSeamGeometry";
+import { modeledTrimSeamEdges, trimSeamCoverLine, trimSeamCovers, trimSeamEdgeRuns, trimSeamMarker, trimSeamRunCovers, type TrimSeamMarker } from "./trimSeamGeometry";
 import { defaultTrimSealantSession, trimSealant } from "./trimSealantReference";
 import { trimSeamLine, type WoodJointDecisionEntry } from "./woodJointDecisions";
 import { trimSeamOpenSpanLimit, type TrimSeamInput, type TrimSeamOpenSpan } from "./woodJointDecisionSchema";
@@ -14,7 +14,8 @@ export function TrimSeamPanel({ project, entry, onSave, onShow }: {
   onShow: (marker: TrimSeamMarker | null) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const plan = entry.trimSeam?.estimate ? entry.decision.trimSeam : undefined;
+  const saved = entry.decision.trimSeam;
+  const plan = entry.status === "current" && saved?.contactSignature === entry.decision.contactSignature ? saved : undefined;
   const [edgeIds, setEdgeIds] = useState<string[]>(plan?.edgeIds ?? []);
   const [openSpans, setOpenSpans] = useState<TrimSeamOpenSpan[]>(plan?.openSpans ?? []);
   const [backerRodId, setBackerRodId] = useState<TrimSeamInput["backerRodId"]>(plan?.backerRodId);
@@ -22,9 +23,11 @@ export function TrimSeamPanel({ project, entry, onSave, onShow }: {
   const [trial, setTrial] = useState(plan?.fieldCoverageFeet !== undefined);
   const [error, setError] = useState("");
   const [first, second] = entry.memberIds.map((id) => project.pieces.find((piece) => piece.id === id));
-  const shape = open && entry.status === "current" && first && second
+  const shape = useMemo(() => open && entry.status === "current" && first && second
     ? modeledTrimSeamEdges(first, second)
-    : null;
+    : null, [open, entry.status, first, second]);
+  const covers = useMemo(() => shape && first && second
+    ? trimSeamCovers(project, first, second, shape.edges) : [], [project, shape, first, second]);
 
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,6 +68,12 @@ export function TrimSeamPanel({ project, entry, onSave, onShow }: {
             <ul className="motion-findings">
               {shape.edges.map((edge) => {
                 const title = `${edge.label} · ${formatPreciseInches(edge.length)}`;
+                let covered = covers.filter(({ edgeId }) => edgeId === edge.id);
+                try {
+                  covered = trimSeamRunCovers(edge.id, trimSeamEdgeRuns(edge, openSpans).sealedSpans, covered);
+                } catch {
+                  // Show the modeled covers while the user is still entering a range.
+                }
                 return (
                   <li key={edge.id}>
                     <label className="checkbox-field"><input type="checkbox" checked={edgeIds.includes(edge.id)}
@@ -78,13 +87,16 @@ export function TrimSeamPanel({ project, entry, onSave, onShow }: {
                     </label>
                     <button type="button" className="text-button" onClick={() => {
                       try {
-                        onShow(trimSeamMarker(edge, `Trim seam · ${title}`, openSpans));
+                        onShow(trimSeamMarker(edge, `Trim seam · ${title}`, openSpans, covers));
                         setError("");
                       } catch (issue) {
                         onShow(null);
                         setError((issue as Error).message);
                       }
                     }}>Show {edge.label.toLowerCase()} in 3D</button>
+                    {covered.map((cover) => (
+                      <p className="small-note" key={`${cover.partId}/${cover.start}`}>{trimSeamCoverLine(cover)}</p>
+                    ))}
                     {edgeIds.includes(edge.id) && (
                       <details>
                         <summary>Keep part of {edge.label.toLowerCase()} open</summary>

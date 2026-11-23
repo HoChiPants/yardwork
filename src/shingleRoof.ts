@@ -11,6 +11,7 @@ import { material, type Piece, type Project, type V3 } from "./model";
 import { partLabel } from "./partLabels";
 import type { CodeReviewRow } from "./projectCode";
 import { gafRoofShingle, shingleEdgeProducts } from "./shingleRoofReference";
+import { reviewRoofDeckSpacing, roofDeckBackingDetail, roofDeckEndDetail, roofDeckEndTitle, roofDeckJointDetail, roofDeckJointName, roofDeckSpacingLimits, roofDeckSpacingReference } from "./roofDeckSpacing";
 import {
   roofEdgeKinds,
   roofUnderlaymentChoices,
@@ -117,7 +118,7 @@ export function reviewShingleRoofPlane(
 }
 
 export function reviewShingleRoof(
-  project: Pick<Project, "pieces" | "supplies">,
+  project: Pick<Project, "pieces" | "supplies" | "motionPlans">,
   plan: ShingleRoof,
 ) {
   const planes = plan.planes.map((plane) => reviewShingleRoofPlane(project, plane));
@@ -229,6 +230,7 @@ export function reviewShingleRoof(
   });
   return {
     planes,
+    deckSpacing: reviewRoofDeckSpacing(project, planes),
     area,
     overlaps,
     bundles,
@@ -427,7 +429,7 @@ export function shingleRoofGuideLines(project: Project) {
     project.projectCode?.trades.includes("roofing") &&
     project.projectCode.shingleRoof;
   if (!plan) return [];
-  const { planes, overlaps, bundles, selected, edges, dripEdge } =
+  const { planes, deckSpacing, overlaps, bundles, selected, edges, dripEdge } =
     reviewShingleRoof(project, plan);
   return [
     ...planes.map(({ plane, pieceId, pitch, area, reason }) => {
@@ -444,6 +446,16 @@ export function shingleRoofGuideLines(project: Project) {
           "Modeled deck faces overlap. Review the selected areas before estimating shingles.",
         ]
       : []),
+    ...(deckSpacing.modeled > 0 ? [
+      ...deckSpacing.joints.map((joint) => `Roof deck joint · ${roofDeckJointName(project, joint)} · ${roofDeckJointDetail(joint)} ${roofDeckBackingDetail(project, joint)}`),
+      ...deckSpacing.ends.map((end) => `${roofDeckEndTitle(project, end)} · ${roofDeckEndDetail(end)}`),
+      ...deckSpacing.ambiguousEnds.map((id) => `${partLabel(project, id)} · Set the stock length axis to match the panel stamp so the deck ends can be checked.`),
+      ...roofDeckSpacingLimits(deckSpacing),
+      roofDeckSpacingReference.scope,
+      ...(deckSpacing.joints.some(({ backing }) => backing) ? [roofDeckSpacingReference.backingScope] : []),
+      ...((deckSpacing.ends.length || deckSpacing.ambiguousEnds.length) ? [roofDeckSpacingReference.endScope] : []),
+      `Reference · ${roofDeckSpacingReference.title} · ${roofDeckSpacingReference.url}`,
+    ] : []),
     ...(bundles === null
       ? []
       : [

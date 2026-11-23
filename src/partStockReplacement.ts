@@ -4,6 +4,9 @@ import { material, type Material, type MaterialId, type Piece, type Project } fr
 import { reviewedOfferForMaterial } from "./retailerCatalog";
 import { orientedStockSize } from "./stockAxes";
 import { stockCutSequences } from "./stockCutSequence";
+import { maxMixedBoardCuts, planMixedBoardCuts } from "./mixedBoardCuts";
+import { inspectCutStock } from "./cutStock";
+import { assignOffcutToPart, fittingOffcuts } from "./offcutAssignment";
 
 const dryCasework = ["plytanium-703", "hd-purebond-birch-703"] as const;
 const sizeOf = (stock: Material) => [...(stock.stockSize ?? stock.size)].sort((a, b) => a - b);
@@ -40,6 +43,37 @@ export function previewPartStockReplacement(project: Project, pieceId: string, r
   return previewReplacement(project, piece.material, [piece], replacement);
 }
 
+export function partOffcutOptions(project: Project, piece: Piece, inspection = inspectCutStock(project)) {
+  const exact = fittingOffcuts(project, piece, inspection);
+  const original = material(piece.material);
+  if (original.stockKind !== "linear") return exact;
+  const originalLength = sizeOf(original)[2];
+  const alternatives = partStockOptions(project, piece).filter((stock) => sizeOf(stock)[2] !== originalLength);
+  return [
+    ...exact,
+    ...alternatives.flatMap(({ id }) => fittingOffcuts(project, { ...piece, material: id }, inspection)),
+  ];
+}
+
+/** A selected remnant can supply an existing part without changing its finished geometry. */
+export function assignPartStockOffcut(project: Project, pieceId: string, offcutId: string) {
+  const piece = project.pieces.find(({ id }) => id === pieceId);
+  const remnant = project.pieces.find(({ id }) => id === offcutId);
+  if (!piece || !remnant?.offcut) throw Error("Choose a current part and offcut.");
+  if (piece.material === remnant.material) return assignOffcutToPart(project, pieceId, offcutId);
+  if (!partOffcutOptions(project, piece).some(({ piece }) => piece.id === offcutId))
+    throw Error("This offcut no longer fits the part from a matching stock length.");
+  const next = assignOffcutToPart({
+    ...project,
+    pieces: project.pieces.map((part) => part.id === pieceId ? { ...part, material: remnant.material } : part),
+  }, pieceId, offcutId);
+  const last = next.history.at(-1)!;
+  return {
+    ...next,
+    history: [...next.history.slice(0, -1), { ...last, offcutCut: { ...last.offcutCut!, previousMaterial: piece.material } }],
+  };
+}
+
 export function stockReplacementGroup(project: Project, source: MaterialId) {
   const active = project.pieces.filter((piece) => piece.material === source && !piece.offcut);
   const parts = active.filter((piece) => !piece.cutStock);
@@ -57,6 +91,70 @@ export function previewGroupStockReplacement(project: Project, source: MaterialI
   if (!group.options.some(({ id }) => id === replacement))
     throw Error("Choose a stock blank that fits every part without a recorded source on this line.");
   return previewReplacement(project, source, group.parts, replacement, now);
+}
+
+export function canCompareMixedStock(project: Project, source: MaterialId, parts: readonly Piece[]) {
+  const stock = material(source);
+  return project.retailer === "home-depot" && stock.unit === "board" &&
+    parts.length >= 2 && parts.length <= maxMixedBoardCuts &&
+    parts.some((piece) => partStockOptions(project, piece).some((other) =>
+      other.unit === "board" && sizeOf(other)[2] !== sizeOf(stock)[2] &&
+      reviewedOfferForMaterial(other, project.retailer)?.seller === "The Home Depot"));
+}
+
+/** Solve a mixed-length proposal, then verify the purchases and cuts produced by the actual project. */
+export function previewMixedGroupStockReplacement(project: Project, source: MaterialId) {
+  const parts = project.pieces.filter((piece) => piece.material === source && !piece.offcut && !piece.cutStock);
+  if (!canCompareMixedStock(project, source, parts)) return null;
+  const choices = new Map(parts.map((part) => [part.id, new Set([
+    source,
+    ...partStockOptions(project, part).filter((stock) => stock.unit === "board" &&
+      reviewedOfferForMaterial(stock, project.retailer)?.seller === "The Home Depot").map(({ id }) => id),
+  ])]));
+  const ids = [...new Set([...choices.values()].flatMap((row) => [...row]))];
+  const options = ids.map((id) => ({ id, value: sizeOf(material(id))[2] }));
+  const lengths = parts.map((part) => orientedStockSize(part)[2]);
+  const mixed = planMixedBoardCuts(project, options, lengths);
+  if (!mixed || new Set(mixed.boards.map(({ length }) => length)).size < 2) return null;
+  const remaining = parts.map((part, index) => ({ part, length: lengths[index] }));
+  const assignments = new Map<string, MaterialId>();
+  for (const board of mixed.boards) {
+    for (const length of board.cuts) {
+      const index = remaining.findIndex((row) => row.length === length && choices.get(row.part.id)?.has(board.stock));
+      if (index < 0) return null;
+      const [{ part }] = remaining.splice(index, 1);
+      assignments.set(part.id, board.stock);
+    }
+  }
+  if (remaining.length) return null;
+  const next = {
+    ...project,
+    pieces: project.pieces.map((part) => {
+      const stock = assignments.get(part.id);
+      return stock && stock !== part.material ? { ...part, material: stock } : part;
+    }),
+  };
+  const affected = new Set([source, ...assignments.values()]);
+  const before = bom(project).filter(({ id }) => affected.has(id));
+  const after = bom(next).filter(({ id }) => affected.has(id));
+  if (before.some(({ oversize }) => oversize) || after.some(({ oversize }) => oversize)) return null;
+  const ordered = stockCutSequences(next, after);
+  const cutOrders = [...ordered.values()].flat().filter((sequence) =>
+    sequence.partIds.some((id) => assignments.has(id)));
+  const fitted = new Set(cutOrders.flatMap((sequence) =>
+    sequence.review ? [] : sequence.layout.kept.map(({ id }) => id)));
+  if (parts.some(({ id }) => !fitted.has(id))) return null;
+  const purchasedLength = { before: totalBoardLength(before), after: totalBoardLength(after) };
+  if (purchasedLength.after >= purchasedLength.before - 0.001) return null;
+  const purchase = [...affected].map((id) => ({
+    id, before: before.find((row) => row.id === id)?.quantity ?? 0,
+    after: after.find((row) => row.id === id)?.quantity ?? 0,
+  }));
+  return { source: project, project: next, cutOrders, purchase, purchasedLength };
+}
+
+function totalBoardLength(rows: readonly BomRow[]) {
+  return rows.reduce((total, row) => total + row.purchasedStockUnits * sizeOf(material(row.id))[2], 0);
 }
 
 function previewReplacement(project: Project, source: MaterialId, parts: Piece[], replacement: MaterialId, now = Date.now()) {

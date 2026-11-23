@@ -21,8 +21,8 @@ test("an installed-model recheck preserves the description and the built-in plan
   const prompt = dialog.getByRole("textbox", { name: "Describe your idea" });
   const idea = "A 60 inch wide storage banquette with a lift-up lid";
   await prompt.fill(idea);
-  await dialog.getByRole("combobox", { name: "Planner", exact: true }).selectOption("built-in");
-  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  await expect(dialog.getByRole("combobox", { name: "Planner", exact: true })).toHaveValue("server");
+  await dialog.getByRole("button", { name: "Explore with built-in layout", exact: true }).click();
   await expect(dialog.getByText(/Local planning presets · Rule-based starter layouts/)).toBeVisible();
   expect(remotePlans).toEqual([]);
 

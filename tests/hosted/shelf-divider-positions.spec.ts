@@ -1,0 +1,55 @@
+import { readFile } from "node:fs/promises";
+import { expect, test } from "@playwright/test";
+import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { projectSchema } from "../../src/model";
+
+test("an offset shelf divider keeps the saved tray travel and its reused cut in the guide", async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const fixture = await page.request.get(new URL("./examples/wood-stock/shelf-divider-sliding-tray.yardwork.json", page.url()).href);
+  expect(fixture.ok()).toBe(true);
+  const original = projectSchema.parse(await fixture.json());
+  const name = `${original.name} · ${crypto.randomUUID().slice(0, 6)}`;
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "shelf-divider-sliding-tray.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify({ ...original, name })),
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Plan a shelf divider for P006");
+  await dialog.getByRole("button", { name: "Explore idea" }).click();
+  await dialog.getByRole("button", { name: "Open shelf support" }).click();
+  const inspector = page.getByRole("dialog", { name: "Inspector" });
+  await inspector.getByRole("combobox", { name: "Divider sheet stock" }).selectOption("plytanium-703");
+  await inspector.getByText("Set a measured position", { exact: true }).click();
+  await inspector.getByRole("spinbutton", { name: "Divider center from shelf start" }).fill("17.25");
+  await inspector.getByRole("button", { name: "Preview measured position" }).click();
+  const preview = inspector.getByRole("region", { name: "Shelf divider fit" });
+  await expect(preview).toContainText("Saved movement contacts the divider in Slide-away tray");
+  await inspector.getByRole("button", { name: "Find a clear divider position" }).click();
+  await expect(preview).toContainText("21.875 in from the shelf’s local start");
+  await expect(preview).toContainText("Within your sag target");
+  await expect(preview).toContainText("saved movement tests found no contact");
+  await expect(preview).toContainText("Reuses O001");
+  await preview.screenshot({ path: info.outputPath("shelf-divider-preview.png") });
+  await preview.getByRole("button", { name: "Add shelf divider" }).click();
+  await inspector.getByRole("button", { name: "Back to workspace" }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const readDraft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await readDraft())?.revision).toBe(1);
+  const saved = projectSchema.parse((await readDraft()).project);
+  expect(saved.shelfDividerPlans?.[0].offset).toBe(21.875);
+  expect(saved.history.some(({ offcutCut }) => offcutCut?.targetId === saved.shelfDividerPlans![0].dividerId)).toBe(true);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: name }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const text = await readFile((await (await download).path())!, "utf8");
+  expect(text).toContain("## Fitted shelf dividers");
+  expect(text).toContain("center 21.875 in from the shelf’s local start");
+  expect(text).toContain("0.03608 in immediate sag");
+  expect(text).not.toContain("Saved movement contacts this divider");
+});

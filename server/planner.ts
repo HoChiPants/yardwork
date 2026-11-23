@@ -9,15 +9,17 @@ import {
   type OllamaTimingReceipt,
 } from "./ollamaResponse";
 import { catalog } from "../src/model";
+import { assembleCompoundIdea, componentRequest, compoundIdeaRequest } from "../src/compositeIdea";
 import { groundUnsupportedPlan } from "../src/unsupportedIntent";
 import { carryPlacementQuestions } from "../src/placementEdits";
-import { localRelativeResizePlan } from "../src/relativeIdeaResize";
 import { closetMeasurements, referencedFamily } from "../src/ideaEdits";
 import {
   ideaPlanSchema,
   localIdeaPlan,
-  localPlacementPlan,
   plannerRequestSchema,
+  workspacePlanningResult,
+  type PlannerRequest,
+  type IdeaPlan,
 } from "../src/planning";
 
 /** Typed planning only: neither models nor presets execute code or mutate stored projects. */
@@ -39,40 +41,60 @@ async function plannerResponse(
   parentSignal: AbortSignal,
 ) {
   const request = plannerRequestSchema.parse(req.body);
-  const placement = localPlacementPlan(request);
-  if (placement)
-    return res.json({
-      plan: placement,
-      provider: "Workspace placement",
-      message:
-        "Review the requested moves and remaining questions before applying.",
-    });
-  const resize = localRelativeResizePlan(request);
-  if (resize)
-    return res.json({
-      plan: resize,
-      provider: "Workspace dimensions",
-      message: "Review the resize and resulting fit before applying.",
-    });
+  const compound = compoundIdeaRequest(request);
+  if (!compound) return res.json(await singlePlannerResult(request, res, parentSignal));
+  if (!process.env.OLLAMA_URL) return res.json({
+    plan: localIdeaPlan(request),
+    provider: "Local planning presets",
+    message: "Separate project items are planned together. Review the placement, dimensions and construction details.",
+  });
+
+  const signal = AbortSignal.any([parentSignal, AbortSignal.timeout(ollamaTimeoutMs())]);
+  const results = [];
+  for (const [index] of compound.components.entries()) {
+    signal.throwIfAborted();
+    results.push(await singlePlannerResult(componentRequest(request, compound, index), res, signal));
+  }
+  signal.throwIfAborted();
+  const plan = assembleCompoundIdea(request, compound, results.map(({ plan }) => plan));
+  const usedModel = results.some(({ provider }) => provider === "Ollama");
+  return res.json({
+    plan,
+    provider: usedModel ? "Ollama" : results[0].provider,
+    message: usedModel
+      ? "The model interpreted each item separately. Yardwork checked the combined placement using the resulting geometry."
+      : "Review the combined layout before applying.",
+    components: results.map(({ plan, provider, timing }) => ({ title: plan.title, provider, timing })),
+  });
+}
+
+async function singlePlannerResult(request: PlannerRequest, res: Response, parentSignal: AbortSignal): Promise<{
+  plan: IdeaPlan;
+  provider: string;
+  message: string;
+  timing?: OllamaTimingReceipt;
+}> {
+  const workspace = workspacePlanningResult(request);
+  if (workspace) return workspace;
   const family = referencedFamily(request.prompt, request.previousPlan);
   const closet = family === "closet-insert" ||
     (!family && request.previousPlan?.structures.some(({ kind }) => kind === "closet-insert"));
   if (closet) {
     const { leftBayWidth, rightBayWidth, rodHeight } = closetMeasurements(request.prompt).facts;
     if (leftBayWidth || rightBayWidth || rodHeight)
-      return res.json({
+      return {
         plan: localIdeaPlan(request),
         provider: "Workspace dimensions",
         message: "Review the measured closet openings and rod position before applying.",
-      });
+      };
   }
   if (!process.env.OLLAMA_URL)
-    return res.json({
+    return {
       plan: localIdeaPlan(request),
       provider: "Local planning presets",
       message:
         "Rule-based starter layouts. No AI model is connected; review provisional dimensions and design details.",
-    });
+    };
   const mode = z
     .enum(["compact", "json", "schema"])
     .parse(process.env.OLLAMA_PLANNER_FORMAT ?? "compact");
@@ -82,7 +104,7 @@ async function plannerResponse(
       timing = receipt;
       (res.locals ??= {}).plannerTiming = receipt;
     });
-    return res.json({
+    return {
       plan: ideaPlanSchema.parse(
         carryPlacementQuestions(plan, request.previousPlan),
       ),
@@ -90,7 +112,7 @@ async function plannerResponse(
       provider: "Ollama",
       message:
         "AI idea interpretation. Review the generated dimensions, assumptions, materials and connection details before applying.",
-    });
+    };
   }
   const schema = toOllamaSchema(ideaPlanSchema.toJSONSchema()),
     inventory = catalog.map((m) => ({
@@ -148,10 +170,10 @@ async function plannerResponse(
       request.previousPlan,
     ),
   );
-  return res.json({
+  return {
     plan,
     provider: "Ollama",
     message:
       "AI layout proposal. Review assumptions, dimensions, work-zone fit, connections and construction details before applying.",
-  });
+  };
 }

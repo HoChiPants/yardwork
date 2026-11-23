@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 139,
+  "id": "4b791d49-972d-4424-8c5d-0c833f81a4c2",
+  "name": "Workstand rail with a short leg",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "37661837-67f2-4e9a-a9f6-497972f8ced8"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "17ccc969-06ea-4a5d-9624-908b17958774",
+      "label": "P001"
+    },
+    {
+      "partId": "460f5821-716f-4ebf-bf44-cf91c28f655d",
+      "label": "P002"
+    },
+    {
+      "partId": "b56d1004-8725-4a8d-af35-1fda4fda231a",
+      "label": "P003"
+    },
+    {
+      "partId": "59115e2a-fec6-4b2e-a569-dcf643817ae8",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T19:37:48.384Z",
+  "pieces": [
+    {
+      "id": "17ccc969-06ea-4a5d-9624-908b17958774",
+      "name": "Top rail",
+      "material": "stud",
+      "size": [
+        20,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        12.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6b3a57b6-43a1-46c0-8dc2-561377cb4253",
+      "assembly": "Practice workstand",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "460f5821-716f-4ebf-bf44-cf91c28f655d",
+      "name": "Full leg",
+      "material": "hd-treated-4x4-8",
+      "size": [
+        3.5,
+        12,
+        3.5
+      ],
+      "position": [
+        -7,
+        6,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6b3a57b6-43a1-46c0-8dc2-561377cb4253",
+      "assembly": "Practice workstand",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "b56d1004-8725-4a8d-af35-1fda4fda231a",
+      "name": "Short leg",
+      "material": "hd-treated-4x4-8",
+      "size": [
+        3.5,
+        9.5,
+        3.5
+      ],
+      "position": [
+        7,
+        7.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6b3a57b6-43a1-46c0-8dc2-561377cb4253",
+      "assembly": "Practice workstand",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "59115e2a-fec6-4b2e-a569-dcf643817ae8",
+      "name": "Offcut · Dry 2 × 4 shop scrap",
+      "material": "stud",
+      "size": [
+        3.5,
+        1.5,
+        10
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "620f0a67-8795-4b29-974d-16746a678dd6",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "37661837-67f2-4e9a-a9f6-497972f8ced8",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3.5,
+          1.5,
+          10
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "620f0a67-8795-4b29-974d-16746a678dd6",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "4b791d49-972d-4424-8c5d-0c833f81a4c2",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-3e02d6",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "6b3a57b6-43a1-46c0-8dc2-561377cb4253",
+      "title": "Assemble Practice workstand",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4b791d49-972d-4424-8c5d-0c833f81a4c2",
+        "stageKey": "assembly:Practice workstand",
+        "memberIds": [
+          "17ccc969-06ea-4a5d-9624-908b17958774",
+          "460f5821-716f-4ebf-bf44-cf91c28f655d",
+          "b56d1004-8725-4a8d-af35-1fda4fda231a"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-c0d0a9ba",
+        "title": "Assemble Practice workstand"
+      }
+    },
+    {
+      "id": "7d490c91-6f09-45c0-89fe-595f9ca58393",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "4b791d49-972d-4424-8c5d-0c833f81a4c2",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-31ae186c",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "The top rail touches both legs. The right leg stops 2.5 in above the modeled floor. Open the support review for P001 and fit a block beneath P003. The 10 in measured 2 × 4 offcut is intended as practice stock. Review material condition and support connections before building.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-a0617900",
+  "history": []
+}

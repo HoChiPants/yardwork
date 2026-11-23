@@ -10,7 +10,9 @@ import type { BearingDecision } from "./bearingDecisionSchema";
 import type { Piece, Project } from "./model";
 import { partLabel } from "./partLabels";
 import { recordedRemovalText, removalGeometryKey } from "./recordedRemoval";
-import type { WoodSupportReview } from "./woodSupport";
+import { fittedSupportBlockEnds, type WoodSupportReview } from "./woodSupport";
+import { modeledWoodContactDetail, modeledWoodContactState } from "./modeledWoodContacts";
+import { woodJointDecisionEntries, woodPairKey } from "./woodJointDecisions";
 
 export type BearingConnection = {
   top: Piece;
@@ -122,6 +124,42 @@ export function summarizeBearingConnections(
   ).length;
   return `${rows.length} touching wood ${rows.length === 1 ? "pair" : "pairs"} · ${without} without pair records · ${pending} with detail to review · ${reviewed} with geometry-reviewed locations${removable ? ` · ${removable} marked removable` : ""}${revisit ? ` · ${revisit} removable decisions to review` : ""}`;
 }
+
+export function fittedSupportBlockJoints(
+  project: Project, wood: WoodSupportReview, bearing: BearingConnectionReview,
+  woodDetails = woodJointDecisionEntries(project),
+) {
+  const blocks = fittedSupportBlockEnds(wood);
+  if (!blocks.length) return [];
+  const pairByEnds = new Map(bearing.pairs.map((pair) => [bearingDecisionKey(pair.top.id, pair.base.id), pair]));
+  const details = new Map(woodDetails.filter(({ decision }) => decision.method !== "sealant").map((detail) => [detail.id, detail]));
+  return blocks.map(({ block, aboveIds, baseId, fit, onFloor }) => {
+    const readEnd = (topId: string, lowerId: string, upper: boolean) => {
+      const pair = pairByEnds.get(bearingDecisionKey(topId, lowerId));
+      const records = pair?.records ?? [];
+      const detail = details.get(woodPairKey(topId, lowerId));
+      const state = modeledWoodContactState(records, pair?.decision?.state, detail);
+      const label = partLabel(project, upper ? topId : lowerId);
+      return {
+        text: `${upper ? "Upper" : "Lower"} joint with ${label}. ${modeledWoodContactDetail({ state, detail,
+          planLabels: [...new Set(records.map(({ label }) => label.split("/")[0]))] })}`,
+        needsReview: state === "unplanned" || state === "pending",
+      };
+    };
+    const ends = fit ? [...aboveIds.map((id) => readEnd(id, block.id, true)),
+      ...(baseId ? [readEnd(block.id, baseId, false)] : []),
+    ] : [];
+    const siteNote = onFloor ? "Check bearing and restraint at the actual floor." : "";
+    return {
+      block, fit, siteNote,
+      detail: fit ? [...ends.map(({ text }) => text), siteNote].filter(Boolean).join(" ")
+        : "The modeled fit changed. Check bearing at both ends before choosing a joint.",
+      needsReview: !fit || ends.some((end) => end.needsReview),
+    };
+  });
+}
+
+export type FittedSupportBlockJointReview = ReturnType<typeof fittedSupportBlockJoints>[number];
 
 export const bearingDecisionStateText: Record<
   NonNullable<BearingConnection["decision"]>["state"],

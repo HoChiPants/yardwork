@@ -1,16 +1,18 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { inspectCutStock, setCutSourceOnHand } from "../src/cutStock";
 import { bom, guideMarkdown } from "../src/engine";
 import { acceptIdeaRevisionPreview, bindingPlan, bindingReview, bindingToken, previewIdeaRevision } from "../src/ideaBindings";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
-import { blank, part, projectSchema } from "../src/model";
+import { blank, part, projectSchema, type Piece } from "../src/model";
 import { assignOffcutToPart, fittingOffcuts } from "../src/offcutAssignment";
-import { planOffcutRelease } from "../src/offcutReleasePlan";
-import { completePlannedCutSource, releasePlannedCutSources } from "../src/plannedCutSources";
+import { planOffcutRelease, previewUncutStockRelease, previewUncutStockReuse } from "../src/offcutReleasePlan";
+import { completeStockCutSource, releasePlannedCutSources } from "../src/plannedCutSources";
 import { localIdeaPlan, previewIdeaPlan } from "../src/planning";
 import { previewProposalStock, proposalStockRequest } from "../src/proposalStock";
 import { planStockCutLayouts, recordStockCutLayouts } from "../src/recordStockCutLayout";
+import { partLabel } from "../src/partLabels";
 
 const prompt = "Build a workbench 48 inches wide, 20 inches deep and 36 inches tall";
 
@@ -98,7 +100,7 @@ test("saving proposal wood orders uses the previewed sources and makes labeled o
   const reopened = projectSchema.parse(JSON.parse(JSON.stringify(recorded.project)));
   const demand = (project: typeof current) => bom(project).map(({ id, quantity }) => [id, quantity]);
   assert.deepEqual(demand(reopened), demand(candidate));
-  assert.match(guideMarkdown(reopened), /Stock cut order for P\d+ · 1\. Crosscut/);
+  assert.match(guideMarkdown(reopened), /## Recorded stock cuts[\s\S]+### P\d+[\s\S]+1\. Crosscut/);
   const [match] = fittingOffcuts(reopened, existing);
   assert.ok(match);
   const reused = assignOffcutToPart(reopened, existing.id, match.piece.id);
@@ -123,7 +125,7 @@ test("a revision releases its untouched planned stock and retains purchased blan
   assert.ok(pending);
   assert.equal(bindingReview(planned.project, planned.project.ideaBindings[0].id).manualEdits, 0);
   const originalPurchase = setCutSourceOnHand(planned.project, purchased, true);
-  const completed = completePlannedCutSource(originalPurchase, cut);
+  const completed = completeStockCutSource(originalPurchase, cut);
   const reopened = projectSchema.parse(JSON.parse(JSON.stringify(completed)));
   assert.ok(!reopened.plannedCutSources?.some(({ sourceId }) => sourceId === cut));
   assert.ok(reopened.onHandCutSources?.includes(cut));
@@ -133,6 +135,7 @@ test("a revision releases its untouched planned stock and retains purchased blan
   const revision = previewIdeaRevision(reopened, id, next, bindingToken(reopened, id));
   assert.equal(revision.impact.releasedStockUnits, planned.sourceIds.length - 1);
   assert.equal(revision.project.plannedCutSources, undefined);
+  assert.deepEqual(revision.project.recordedStockCutOrders, completed.recordedStockCutOrders);
   assert.deepEqual(revision.project.pieces.find(({ id }) => id === existing.id), existing);
   assert.ok(reopened.pieces.some(({ cutStock }) => cutStock?.id === pending));
   assert.ok(!revision.project.pieces.some(({ cutStock }) => cutStock?.id === pending));
@@ -176,15 +179,46 @@ test("a planned unit stays reserved when a scrap is assigned until that assignme
     plan.historyIds.includes(id) && message.startsWith("Stock cut order for "))!;
   const incomplete = guideMarkdown({ ...used, history: used.history.filter(({ id }) => id !== missing.id) });
   assert.match(incomplete, /The saved cut order is incomplete\. Review the layout before cutting\./);
-  const completedGuide = guideMarkdown(completePlannedCutSource(used, sourceId));
+  const completed = completeStockCutSource(used, sourceId);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(completed)));
+  const receipt = reopened.recordedStockCutOrders![0];
+  assert.equal(receipt.sourceId, sourceId);
+  assert.ok(receipt.completedAt);
+  assert.equal(completeStockCutSource(reopened, sourceId), reopened);
+  assert.throws(() => completeStockCutSource({ ...used, history: used.history.filter(({ id }) => id !== missing.id) }, sourceId),
+    /Review the saved cut order/);
+  const completedGuide = guideMarkdown(reopened);
   assert.doesNotMatch(completedGuide, /## Planned stock cuts/);
   assert.doesNotMatch(completedGuide, /Complete the source stock cut order before using this blank/);
-  const receipt = used.history.at(-1)!;
-  const returned = planOffcutRelease(used, receipt.id);
+  assert.match(completedGuide, /## Recorded stock cuts[\s\S]+Cuts marked complete[\s\S]+1\. Crosscut/);
+  assert.match(completedGuide, /Original stock order · P\d+ under Recorded stock cuts\./);
+  assert.doesNotMatch(completedGuide, /Operation: Stock cut order for/);
+  assert.match(guideMarkdown({ ...reopened, history: [] }), /## Recorded stock cuts[\s\S]+1\. Crosscut/);
+  const offcutRecord = used.history.at(-1)!;
+  const returned = planOffcutRelease(used, offcutRecord.id);
   const released = releasePlannedCutSources(returned.project, [sourceId]);
   assert.equal(released.project.plannedCutSources, undefined);
   assert.ok(!released.project.pieces.some(({ cutStock }) => cutStock?.id === sourceId));
   assert.deepEqual(released.project.pieces.find(({ id }) => id === existing.id), existing);
+
+  const onHand = setCutSourceOnHand(used, sourceId, true);
+  const before = structuredClone(onHand);
+  const preview = previewUncutStockRelease(onHand, sourceId);
+  assert.equal(preview.assignments, 1);
+  assert.ok(preview.parts.some(({ id }) => id === existing.id));
+  assert.deepEqual(onHand, before);
+  const actual = preview.project.pieces.find(({ cutStock }) => cutStock?.id === sourceId)!;
+  assert.equal(actual.offcut, true);
+  assert.deepEqual(actual.size, [3.5, 1.5, 96]);
+  assert.match(preview.restored!.size, /8 ft/);
+  assert.equal(preview.project.plannedCutSources, undefined);
+  assert.ok(preview.project.history.find(({ id }) => id === offcutRecord.id)?.offcutCut?.releasedAt);
+  assert.doesNotMatch(guideMarkdown(preview.project), /## Planned stock cuts|## Recorded offcut cut order/);
+  assert.throws(() => previewUncutStockRelease(completeStockCutSource(onHand, sourceId), sourceId), /still uncut/);
+  const changed = { ...onHand, pieces: onHand.pieces.map((piece) =>
+    piece.cutStock?.id === sourceId && piece.id !== existing.id && !piece.offcut
+      ? { ...piece, name: "Changed original blank" } : piece) };
+  assert.throws(() => previewUncutStockRelease(changed, sourceId), /planned stock has changed/);
 });
 
 
@@ -203,5 +237,63 @@ test("a revision keeps stock shared with a part outside the design", () => {
   assert.equal(review.impact.releasedStockUnits, 0);
   assert.deepEqual(review.project.plannedCutSources, pending.project.plannedCutSources);
   assert.deepEqual(review.project.pieces.find(({ id }) => id === existing.id), before);
+  assert.equal(review.requiresRebuild, true);
   assert.throws(() => acceptIdeaRevisionPreview(review), /explicitly allow the rebuild/);
+});
+
+test("one uncut sheet release rewinds independent scraps and pieces cut from their remnants", () => {
+  const fixture = new URL("../public/examples/motion/cabinet-two-gaps.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(readFileSync(fixture, "utf8")));
+  const sourceId = project.plannedCutSources![0].sourceId;
+  const [first, second] = ["O002", "O003"].map((label) =>
+    project.pieces.find((piece) => partLabel(project, piece.id) === label)!);
+  const blanks = ([[4, 6, 0.75], [2, 4, 0.75], [4, 5, 0.75]] as const).map((size, index) => ({
+    ...part(`Cabinet filler ${index + 1}`, "plywood", [...size], [index * 8, 0, 0], project.steps[0].id, "Cabinet"),
+    stockLengthAxis: 1 as const,
+  }));
+  const supplied = assignOffcutToPart({ ...project, pieces: [...project.pieces, ...blanks] }, blanks[0].id, first.id);
+  const tail = supplied.history.at(-1)!.offcutCut!.remnants.find(({ size }) => size[2] === 6)!;
+  const followed = assignOffcutToPart(supplied, blanks[1].id, tail.id);
+  const staged = assignOffcutToPart(followed, blanks[2].id, second.id);
+  const preview = previewUncutStockRelease(staged, sourceId);
+  assert.equal(preview.assignments, 3);
+  assert.equal(preview.restored, null);
+  assert.equal(preview.project.history.filter(({ offcutCut }) =>
+    offcutCut?.sourceId === sourceId && !!offcutCut.releasedAt).length, 3);
+  assert.deepEqual(preview.project.pieces.filter(({ id }) => blanks.some((blank) => blank.id === id)), blanks);
+  assert.ok(preview.project.pieces.every(({ cutStock }) => cutStock?.id !== sourceId));
+  assert.doesNotMatch(guideMarkdown(preview.project), /## Planned stock cuts|## Recorded offcut cut order/);
+});
+
+test("on-hand offcuts can replace an uncut board only when they supply its entire plan", () => {
+  const project = blank("Replace a board");
+  const step = project.steps[0].id;
+  const rails = [30, 24].map((length, index) =>
+    part(`Rail ${index + 1}`, "stud", [3.5, 1.5, length], [index * 6, 0.75, 0], step, "Frame"));
+  project.pieces.push(...rails);
+  const stock = previewProposalStock(blank(), project, null);
+  const planned = planStockCutLayouts(stock.project, stock.recordable.map(({ layout }) => layout));
+  const [sourceId] = planned.sourceIds;
+  const tooShort = addMeasuredOffcut(planned.project, step, "stud", [32, 3.5, 1.5], "Small offcut");
+  assert.equal(previewUncutStockReuse(previewUncutStockRelease(tooShort, sourceId)), null);
+
+  const withScrap = addMeasuredOffcut(planned.project, step, "stud", [60, 3.5, 1.5], "Shelf offcut");
+  const scrap = withScrap.pieces.at(-1)!;
+  const original = JSON.stringify(withScrap);
+  const review = previewUncutStockReuse(previewUncutStockRelease(withScrap, sourceId));
+  assert.ok(review);
+  assert.equal(review.source, withScrap);
+  assert.equal(JSON.stringify(withScrap), original);
+  assert.deepEqual(review.purchases.map(({ before, after }) => [before, after]), [[1, 0]]);
+  assert.deepEqual(review.assignments.map(({ partId }) => partId), rails.map(({ id }) => id));
+  assert.equal(review.assignments[1].fromEarlierCut, true);
+  assert.equal(review.project.plannedCutSources, undefined);
+  for (const rail of rails) {
+    const result: Piece = review.project.pieces.find(({ id }) => id === rail.id)!;
+    assert.deepEqual({ ...result, cutStock: null }, rail);
+    assert.equal(result.cutStock?.id, scrap.cutStock?.id);
+  }
+  assert.match(guideMarkdown(review.project), /## Recorded offcut cut order[\s\S]+Rail 1[\s\S]+Rail 2/);
+  assert.equal(previewUncutStockReuse(previewUncutStockRelease(setCutSourceOnHand(withScrap, sourceId, true), sourceId)), null);
+  assert.equal(previewUncutStockReuse(previewUncutStockRelease(setCutSourceOnHand(withScrap, scrap.cutStock!.id, false), sourceId)), null);
 });

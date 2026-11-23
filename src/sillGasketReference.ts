@@ -2,6 +2,8 @@ export const sillGasketInstructions = "https://images.thdstatic.com/catalog/pdfI
 export const sillGasketBuildingGuide = "https://basc.pnnl.gov/resource-guides/air-sealing-sill-plates";
 export const sillGasketReviewedAt = "2026-11-21T00:41:08.000Z";
 export const sillGasketRollLength = 600;
+export const sillGasketPiercingNote = "Use the marked sill end as Start and measure across from the highlighted long gasket edge. Transfer the actual anchor locations on site, then pierce the gasket at those marks. The listed diameters describe the wood bores.";
+export const sillGasketCuttingTools = "Use scissors or a utility knife to cut the strip. Overlap end joints and corners before setting the plate.";
 export const sillGasketScope =
   "Plan the gasket beneath a new wood sill on concrete or masonry. Confirm site fit, overlap at joints, penetrations, anchor details and drainage before covering the joint.";
 

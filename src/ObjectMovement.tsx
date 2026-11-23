@@ -1,4 +1,31 @@
-import { formatStockLength } from "./measurement";
+import { useEffect, useState } from "react";
+import { LengthInput } from "./LengthInput";
+import { formatStockLength, preferredLengthUnit } from "./measurement";
+
+function Elevation({ bottom, top, onSetBottom }: {
+  bottom: number;
+  top: number;
+  onSetBottom: (value: number) => void;
+}) {
+  const [target, setTarget] = useState<number>();
+  useEffect(() => setTarget(undefined), [bottom]);
+  const canSet = target !== undefined && Number.isFinite(target) && target >= 0 &&
+    target <= 12000 && Math.abs(target - bottom) > 1e-7;
+  return <>
+    <form className="object-elevation" onSubmit={(event) => {
+      event.preventDefault();
+      if (!canSet) return;
+      onSetBottom(target);
+      setTarget(undefined);
+    }}>
+      <LengthInput label="Bottom above floor" value={target ?? bottom} defaultUnit={preferredLengthUnit(bottom)}
+        min={0} max={12000} onChange={setTarget} />
+      <button type="submit" className="button secondary" disabled={!canSet}>Set height</button>
+    </form>
+    <p className="small-note">Top above floor · {formatStockLength(top)}</p>
+  </>;
+}
+
 export function ObjectMovement({
   onMove,
   onLift,
@@ -9,7 +36,8 @@ export function ObjectMovement({
   hasClipboard,
   increment,
   onIncrement,
-  bottom,
+  elevation,
+  onSetBottom,
   lifting,
 }: {
   onMove: () => void;
@@ -21,7 +49,8 @@ export function ObjectMovement({
   hasClipboard: boolean;
   increment: number;
   onIncrement: (n: number) => void;
-  bottom?: number;
+  elevation?: { bottom: number; top: number };
+  onSetBottom: (value: number) => void;
   lifting: boolean;
 }) {
   return (
@@ -66,13 +95,8 @@ export function ObjectMovement({
           ↑ Raise
         </button>
       </div>
-      <p className="small-note">
-        {bottom !== undefined
-          ? `Bottom elevation: ${formatStockLength(bottom)}. `
-          : ""}
-        Lift-drag or Alt-drag up/down. Alt + ↑ / ↓ nudges by the chosen
-        increment.
-      </p>
+      {elevation && <Elevation {...elevation} onSetBottom={onSetBottom} />}
+      <p className="small-note">Lift-drag or Alt-drag up/down. Alt + ↑ / ↓ uses the move increment.</p>
       <div className="button-row">
         <button className="text-button" onClick={onCopy}>
           Copy object

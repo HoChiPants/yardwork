@@ -1,5 +1,7 @@
 import { reviewConnectionContact } from "./connectionContacts";
-import type { Piece, V3 } from "./model";
+import { material, type Piece, type Project, type V3 } from "./model";
+import { formatPreciseInches } from "./measurement";
+import { prepareCollisionBox, prepareCollisionSolid, solidSegmentRanges } from "./solidCollision";
 import { inverseRotation, rotate } from "./spatial";
 import { pieceThroughOpenings } from "./throughOpenings";
 import { estimateTrimSealant } from "./trimSealantTakeoff";
@@ -18,8 +20,20 @@ type TrimSeamEdge = {
 export type TrimSeamMarker = {
   points: [V3, V3];
   label: string;
-  segments: { points: [V3, V3]; open: boolean }[];
+  closed?: boolean;
+  segments: { points: V3[]; open: boolean; cover?: "blocked" | "later" }[];
 };
+type TrimSeamCover = {
+  edgeId: string;
+  partId: string;
+  name: string;
+  step: number;
+  later: boolean;
+  possible: boolean;
+  start: number;
+  end: number;
+};
+const minimumCover = 0.00001;
 
 export function modeledTrimSeamEdges(first: Piece, second: Piece) {
   // An opening can split a retained face into separate patches with artificial boundaries.
@@ -64,15 +78,77 @@ export function trimSeamEdgeRuns(edge: TrimSeamEdge, spans: TrimSeamOpenSpan[]) 
   return { openSpans, sealedSpans };
 }
 
-export function trimSeamMarker(edge: TrimSeamEdge, label: string, spans: TrimSeamOpenSpan[]): TrimSeamMarker {
+export function trimSeamCovers(project: Project, first: Piece, second: Piece, edges: readonly TrimSeamEdge[]) {
+  const steps = new Map(project.steps.map(({ id }, i) => [id, i + 1]));
+  const fittedBy = Math.max(steps.get(first.stepId) ?? 0, steps.get(second.stepId) ?? 0);
+  const hits: TrimSeamCover[] = [];
+  for (const piece of project.pieces) {
+    if (piece.offcut || piece.id === first.id || piece.id === second.id ||
+        material(piece.material).stockKind === "fastener") continue;
+    const radius = Math.hypot(...piece.size) / 2;
+    const nearby = edges.filter(({ points: [a, b] }) => piece.position.every((x, axis) =>
+      Math.min(a[axis], b[axis]) <= x + radius && Math.max(a[axis], b[axis]) >= x - radius));
+    if (!nearby.length) continue;
+    // Use an envelope if the catalog part has no retained solid to resolve.
+    let shape;
+    try {
+      shape = prepareCollisionSolid(piece);
+    } catch {
+      // Review the envelope when a catalog part's profile cannot be resolved.
+    }
+    shape ??= prepareCollisionBox(piece.size, piece.position, piece.rotation);
+    const step = steps.get(piece.stepId) ?? 0;
+    for (const edge of nearby) {
+      const ranges: { start: number; end: number }[] = [];
+      for (const [from, to] of solidSegmentRanges(shape, ...edge.points)) {
+        const start = from * edge.length;
+        const end = to * edge.length;
+        const previous = ranges.at(-1);
+        if (previous && start <= previous.end + minimumCover) previous.end = Math.max(previous.end, end);
+        else ranges.push({ start, end });
+      }
+      for (const range of ranges) {
+        if (range.end - range.start > minimumCover) hits.push({
+          ...range, edgeId: edge.id, partId: piece.id, name: piece.name, step,
+          possible: shape.kind === "envelope", later: fittedBy > 0 && step > fittedBy,
+        });
+      }
+    }
+  }
+  return hits;
+}
+
+export function trimSeamRunCovers(
+  edgeId: string, runs: readonly { start: number; end: number }[], covers: readonly TrimSeamCover[],
+) {
+  return covers.filter((cover) => cover.edgeId === edgeId).flatMap((cover) => runs.flatMap((run) => {
+    const start = Math.max(cover.start, run.start), end = Math.min(cover.end, run.end);
+    return end - start > minimumCover ? [{ ...cover, start, end }] : [];
+  }));
+}
+
+export function trimSeamCoverLine({ name, start, end, step, later, possible }: TrimSeamCover) {
+  const range = `${formatPreciseInches(start)} to ${formatPreciseInches(end)} from Start`;
+  if (later) return `Seal ${range} before Step ${step} installs ${name}.`;
+  return `${name} ${possible ? "may cover" : "covers"} the seam ${range}${step ? ` in Step ${step}` : ""}.`;
+}
+
+export function trimSeamMarker(
+  edge: TrimSeamEdge, label: string, spans: TrimSeamOpenSpan[], covers: readonly TrimSeamCover[] = [],
+): TrimSeamMarker {
   const { openSpans, sealedSpans } = trimSeamEdgeRuns(edge, spans);
   const [a, b] = edge.points;
   const at = (offset: number) => a.map((n, i) => n + (b[i] - n) * (offset / edge.length)) as V3;
+  const hits = trimSeamRunCovers(edge.id, sealedSpans, covers);
   return {
-    label, points: edge.points,
+    label: label + (hits.some(({ later }) => !later) ? " · Covered" : hits.length ? " · Seal before covering" : ""),
+    points: edge.points,
     segments: [
       ...sealedSpans.map(({ start, end }) => ({ points: [at(start), at(end)] as [V3, V3], open: false })),
       ...openSpans.map(({ start, end }) => ({ points: [at(start), at(end)] as [V3, V3], open: true })),
+      ...hits.map(({ start, end, later }) => ({
+        points: [at(start), at(end)] as [V3, V3], open: false, cover: later ? "later" as const : "blocked" as const,
+      })),
     ],
   };
 }

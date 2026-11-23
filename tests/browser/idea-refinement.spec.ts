@@ -2,8 +2,45 @@ import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { test, expect, type Page } from "@playwright/test";
 import { projectSchema, type Project } from "../../src/model";
 import { bounds } from "../../src/engine";
+import { createBuildStudy } from "../../src/buildFixtures";
+import { everbiltClosetRod } from "../../src/closetRodReference";
 const request =
   "Three-section storage banquette 72 inches wide, 24 inches deep, 18 inches seat height, opening lids and no back";
+
+test("a closet shelf request preserves the fitted panels and rods through save and reopen", async ({ page }) => {
+  const original = createBuildStudy("closet-insert", undefined, undefined, {
+    closetRod: { materialId: everbiltClosetRod.materialId, productRegistryRef: everbiltClosetRod.productId },
+  }).project;
+  const binding = original.ideaBindings[0];
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "fitted-closet.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(original)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("button", { name: `Revise design ${binding.title}`, exact: true }).click();
+  await explore(page, "Add a shelf to the closet tower");
+  await expect(dialog.locator(".planner-provider")).toContainText("Workspace revisions");
+  await expect(dialog.getByRole("spinbutton", { name: "closet-insert shelfCount", exact: true })).toHaveValue("5");
+  await expect(dialog.getByText(/Replace 4 parts/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Apply design changes", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect.poll(async () => (await draft()).revision).toBe(1);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: original.name }).click();
+  const preserved = original.pieces.filter((piece) => !piece.designRole?.startsWith("tower-shelf-"));
+  const reopened = projectSchema.parse((await draft()).project);
+  expect(reopened.pieces.filter((piece) => !piece.designRole?.startsWith("tower-shelf-"))).toEqual(preserved);
+  expect(reopened.pieces.filter((piece) => piece.designRole?.startsWith("tower-shelf-"))).toHaveLength(5);
+});
+
 async function begin(page: Page) {
   await page.goto("/");
   await page

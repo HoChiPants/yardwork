@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 160,
+  "id": "a46f9799-71dc-4ef2-9009-f0b5f2c3bca5",
+  "name": "Practice split for a finish sample",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "f89f1455-7ab0-4924-a4d8-10344e09e352"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "c5162c4b-d37b-4392-adf4-3c26b529f44b",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T01:56:56.036Z",
+  "pieces": [
+    {
+      "id": "c5162c4b-d37b-4392-adf4-3c26b529f44b",
+      "name": "Offcut · Measured 2×4 scrap",
+      "material": "hd-kdht-2x4-8",
+      "size": [
+        3.5,
+        1.5,
+        42.25
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "932d9415-4794-48e6-a7bb-540ee563e26b",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "f89f1455-7ab0-4924-a4d8-10344e09e352",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3.5,
+          1.5,
+          42.25
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "932d9415-4794-48e6-a7bb-540ee563e26b",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "The plan starts with one measured 42.25 in 2×4 scrap. Set aside 6 in of matching wood for a finish sample and keep the second blank for a later part.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

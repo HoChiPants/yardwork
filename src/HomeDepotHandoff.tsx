@@ -29,6 +29,7 @@ type HandoffProps = {
   onDownload: (text: string) => void;
   onDownloadStoreChecklist: (text: string) => void;
   onPick: (target: PickupTarget, quantity: number) => void;
+  onSelectStore: (store: string) => void;
   onAddPurchase: (productId: string) => void;
   onRecordSnapshots: (batch: HomeDepotSnapshotBatch) => void;
   onReview: (area: "list" | "tools" | "assembly") => void;
@@ -48,6 +49,7 @@ function HomeDepotShoppingHandoff({
   onDownload,
   onDownloadStoreChecklist,
   onPick,
+  onSelectStore,
   onAddPurchase,
   onRecordSnapshots,
   onReview,
@@ -82,6 +84,10 @@ function HomeDepotShoppingHandoff({
   if (view === "in-store")
     return <HomeDepotInStorePanel project={project} items={items} recorded={recorded}
       onPick={onPick} onDownload={onDownloadStoreChecklist}
+      onSelectStore={(store) => {
+        onSelectStore(store);
+        setRecorded(0);
+      }}
       onRecord={() => record("in-store")} onBack={() => setView("purchase")} />;
   return (
     <>

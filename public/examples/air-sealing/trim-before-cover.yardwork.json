@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 139,
+  "id": "4bcde38f-57f3-48a7-a722-74f7c8dde483",
+  "name": "Cabinet seam before the cover",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "woodJointDecisions": [
+    {
+      "firstId": "aff5dbf6-ffba-44c9-8893-a4a79aa28b35",
+      "secondId": "eb8ccc04-79c6-4261-9866-c93e5132c08b",
+      "method": "sealant",
+      "note": "Inspect and tool the bead while the cabinet seam is still exposed.",
+      "contactSignature": "[\"attachment-geometry-v1-975546448a771c55\",\"attachment-geometry-v1-42f7f834bfd68706\",[-0.5,0,1.6875],[[1,0,0],[0,1,0],[0,0,1]]]",
+      "trimSeam": {
+        "edgeIds": [
+          "[0.75,-12,1.15625]/[0.75,12,1.15625]"
+        ],
+        "gapWidth": 0.3125,
+        "gapDepth": 0.25,
+        "fieldCoverageFeet": 20,
+        "backerRodId": "frost-king-c21h",
+        "session": "Cabinet trim",
+        "contactSignature": "[\"attachment-geometry-v1-975546448a771c55\",\"attachment-geometry-v1-42f7f834bfd68706\",[-0.5,0,1.6875],[[1,0,0],[0,1,0],[0,0,1]]]"
+      }
+    }
+  ],
+  "backerRodOffcuts": [
+    {
+      "label": "Closet backing tail",
+      "productId": "frost-king-c21h",
+      "length": 28,
+      "id": "3963a860-c4a2-410e-b640-406803340f8e"
+    }
+  ],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "eb8ccc04-79c6-4261-9866-c93e5132c08b",
+      "label": "P001"
+    },
+    {
+      "partId": "aff5dbf6-ffba-44c9-8893-a4a79aa28b35",
+      "label": "P002"
+    },
+    {
+      "partId": "f5a6164a-a7b1-441e-8641-1b562281b704",
+      "label": "P003"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T20:09:09.110Z",
+  "pieces": [
+    {
+      "id": "eb8ccc04-79c6-4261-9866-c93e5132c08b",
+      "name": "Cabinet panel",
+      "material": "plywood",
+      "size": [
+        18,
+        24,
+        0.75
+      ],
+      "position": [
+        0,
+        14,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0546fd20-f4e6-4e69-8b5b-6c1133a7fdbb",
+      "assembly": "Cabinet carcass",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "aff5dbf6-ffba-44c9-8893-a4a79aa28b35",
+      "name": "Trim rail",
+      "material": "stud",
+      "size": [
+        1.5,
+        24,
+        2
+      ],
+      "position": [
+        0.5,
+        14,
+        -1.6875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "0546fd20-f4e6-4e69-8b5b-6c1133a7fdbb",
+      "assembly": "Cabinet carcass",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f5a6164a-a7b1-441e-8641-1b562281b704",
+      "name": "Face trim cover",
+      "material": "hd-purebond-birch-188",
+      "size": [
+        0.75,
+        4,
+        0.188
+      ],
+      "position": [
+        1.25,
+        12,
+        -0.53125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "fdff0888-6b9e-4b4c-bde5-6fe511d8add1",
+      "assembly": "Face trim",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "492cc999-4897-4d2b-be58-4cd4e986e9d5",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "4bcde38f-57f3-48a7-a722-74f7c8dde483",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-613f78ec",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "0546fd20-f4e6-4e69-8b5b-6c1133a7fdbb",
+      "title": "Assemble Cabinet carcass",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4bcde38f-57f3-48a7-a722-74f7c8dde483",
+        "stageKey": "assembly:Cabinet carcass",
+        "memberIds": [
+          "aff5dbf6-ffba-44c9-8893-a4a79aa28b35",
+          "eb8ccc04-79c6-4261-9866-c93e5132c08b"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-157f7ca2",
+        "title": "Assemble Cabinet carcass"
+      }
+    },
+    {
+      "id": "fdff0888-6b9e-4b4c-bde5-6fe511d8add1",
+      "title": "Assemble Face trim",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "4bcde38f-57f3-48a7-a722-74f7c8dde483",
+        "stageKey": "assembly:Face trim",
+        "memberIds": [
+          "f5a6164a-a7b1-441e-8641-1b562281b704"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-8051221d",
+        "title": "Assemble Face trim"
+      }
+    },
+    {
+      "id": "d85456b0-99ca-4d0d-a99e-592ae3b51098",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "4bcde38f-57f3-48a7-a722-74f7c8dde483",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-84d8c503",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-8fab0b6",
+  "history": []
+}

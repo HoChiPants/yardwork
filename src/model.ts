@@ -1,8 +1,15 @@
+import { cabinetDoorsInputSchema } from "./cabinetDoorsSchema";
+import { drawerBalancePlansSchema } from "./drawerBalanceSchema";
 import { libertyBarPull } from "./cabinetPullReference";
 import { drawingReferenceSchema } from "./drawingReference";
 import { caseworkTipUpSchema } from "./caseworkTipUpSchema";
+import { heveaWorktop } from "./countertopSealReference";
+import { pipeAirSealsSchema } from "./pipeAirSealSchema";
+import { countertopSealsSchema } from "./countertopSealSchema";
+import { installationRoutesSchema } from "./installationRouteSchema";
 import { pureBondCasework } from "./homeDepotCaseworkReference";
 import { homeDepotFraming } from "./homeDepotFramingReference";
+import { sdConnectorScrews } from "./simpsonConnectorReference";
 import { baseBoardDepth, baseBoardIds, baseBoards, baseMemberLengths, baseMembers, floorBaseJoistCenters, floorBaseRoles, homeDepotTreatedLumber, treatedLumberProductId } from "./homeDepotTreatedLumber";
 import { floorHangerPlanSchema } from "./floorHangerSchema";
 import { rimAirSealPlansSchema, rimFoamCutRecordsSchema, rimFoamOffcutPoolSchema } from "./rimAirSealSchema";
@@ -17,10 +24,18 @@ import { siteClearanceSchema } from "./siteClearanceSchema";
 import { z } from "zod";
 import { cutSourceAxesSchema, tubeCutPlansSchema, tubeKerfSchema, woodKerfSchema } from "./cutSourceAxes";
 import { offcutCutSchema } from "./offcutCutSchema";
+import { openingCutoutRecordsSchema } from "./openingCutoutSchema";
+import { scribeFillersSchema } from "./scribeFillerSchema";
+import { furnitureBracesSchema } from "./furnitureBraceSchema";
+import { cabinetBackingSchema } from "./cabinetBackingSchema";
 import { greenhouseDoorSealsSchema } from "./greenhouseDoorSealSchema";
 import { openingFlashingPlansSchema } from "./openingFlashingSchema";
 import { wallFramingStockIds, windowOpeningSchema, windowWallPrompt, windowWallScope, windowWallTemplate } from "./windowWall";
 import { doorJambMaterial, doorOpeningSchema, doorUnitSchema, doorwayGuideNote, doorwayHinge, doorwayLeafRole, doorwayTemplate, interiorDoor, measuredDoorMaterial, wallStudPositions, doorWallPrompt } from "./doorWall";
+import { doorFloorStopMaterial } from "./doorFloorStopReference";
+import { doorFloorStopSchema } from "./doorFloorStopSchema";
+import { doorHardwareMaterial, doorHardwareRoles } from "./doorHardwareReference";
+import { doorAndWindowGuideNote, doorAndWindowPrompt, doorAndWindowTemplate, placeWallOpenings } from "./wallOpenings";
 import { nailShield, pexPipes, pexStockLength, type PexPipeId } from "./wallWaterReference";
 import { waterRunSchema } from "./wallWaterSchema";
 import { waterPressureTestsSchema } from "./waterPressureSchema";
@@ -32,9 +47,12 @@ import { waterStopsSchema } from "./waterStopSchema";
 import { sinkTrap } from "./sinkDrainReference";
 import { subfloorPanel } from "./bottomPlateSealReference";
 import { drywallStock } from "./drywallReference";
+import { flatCasing } from "./doorCasingReference";
+import { casingSealSchema } from "./casingSealSchema";
 import { subfloorAdhesivePlansSchema, subfloorChecksSchema, subfloorJoistPlansSchema, subfloorNailPlansSchema } from "./subfloorSchema";
 import { bottomPlateSealsSchema } from "./bottomPlateSealSchema";
 import { topPlateSealsSchema } from "./topPlateSealSchema";
+import { backerRodCutRecordsSchema, backerRodOffcutsSchema } from "./trimBackerRodOffcuts";
 import { sinkDrainsSchema } from "./sinkDrainSchema";
 import { materialIds } from "./materialIds";
 export { materialIds } from "./materialIds";
@@ -50,6 +68,7 @@ import { retailerSchema, retailerFromUrl } from "./retailers";
 import { composeRotation, rotate } from "./spatial";
 import { projectCodeSchema } from "./projectCodeSchema";
 import { shelfSagPlansSchema } from "./shelfSagSchema";
+import { shelfDividerPlansSchema } from "./shelfDividerSchema";
 import { saunaHeaterPlanSchema } from "./saunaHeaterSchema";
 import { drawerSlideMountsSchema } from "./drawerSlideMountSchema";
 import { greenhouseLatchSchema } from "./greenhouseLatchSchema";
@@ -96,6 +115,20 @@ export const vec = z.tuple([
   z.number().finite().min(-12000).max(12000),
 ]);
 const id = z.string().uuid();
+const dimensionAnchorSchema = z.strictObject({ pieceId: id, local: vec });
+export type WorkspaceDimensionAnchor = z.infer<typeof dimensionAnchorSchema>;
+const workspaceDimensionSchema = z.strictObject({
+  id,
+  name: z.string().trim().min(1).max(80).regex(/^[^\r\n]+$/, "Use a single-line dimension name."),
+  a: vec,
+  b: vec,
+  anchors: z.strictObject({
+    a: dimensionAnchorSchema.optional(),
+    b: dimensionAnchorSchema.optional(),
+  }).refine(({ a, b }) => !!(a || b), "Link at least one dimension point.").optional(),
+}).refine(({ a, b }) => Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) > 1e-6,
+  "Choose two different points for a saved dimension.");
+export type WorkspaceDimension = z.infer<typeof workspaceDimensionSchema>;
 export const maxPartDimension = 240;
 export const maxProjectPieces = 2000;
 export const pieceSchema = z
@@ -276,6 +309,12 @@ export const stepSchema = z.object({
           "water-pressure-review",
           "bottom-plate-air-seal",
           "top-plate-air-seal",
+          "drywall-bottom-plate-air-seal",
+          "pipe-air-seal",
+          "window-sill-pan",
+          "window-unit-flashing",
+          "window-interior-air-seal",
+          "casing-finish-seal",
           "subfloor-support-review",
         ]),
         planId: id,
@@ -429,11 +468,13 @@ const sectionCommandSchema = commandSchema.extend({
     }
   }
   if (((command.doorOpening || command.doorUnit) && command.type !== "wall") ||
-      (command.doorUnit && !command.doorOpening) || (command.doorOpening && command.windowOpening)) {
-    ctx.addIssue({ code: "custom", message: "Plan one doorway or one window per generated wall panel. A fitted door needs its rough doorway.", path: ["doorOpening"] });
+      (command.doorUnit && !command.doorOpening)) {
+    ctx.addIssue({ code: "custom", message: "A doorway belongs in a wall section. A fitted door needs its rough doorway.", path: ["doorOpening"] });
   } else if (command.doorOpening) {
     try {
-      doorwayTemplate(command, command.doorOpening, framingStockDimensions(command.wallStock ?? "stud").depth, command.doorUnit);
+      const depth = framingStockDimensions(command.windowOpening?.stock ?? command.wallStock ?? "stud").depth;
+      if (command.windowOpening) doorAndWindowTemplate(command, command.doorOpening, command.windowOpening, depth, command.doorUnit);
+      else doorwayTemplate(command, command.doorOpening, depth, command.doorUnit);
     } catch (issue) {
       ctx.addIssue({ code: "custom", message: (issue as Error).message, path: ["doorOpening"] });
     }
@@ -471,6 +512,20 @@ export const sectionSchema = z.object({
   floorHangerPlan: floorHangerPlanSchema.optional(),
   recipe: moduleRecipeSchema.nullable().default(null),
   recordedLidMotion: recordedLidMotionSchema.optional(),
+  wallDrywall: z.strictObject({
+    wallId: id,
+    side: z.enum(["front", "back"]),
+    layoutKey: z.string().min(1).max(80),
+  }).optional(),
+  doorFloorStop: doorFloorStopSchema.optional(),
+  cabinetDoors: cabinetDoorsInputSchema.optional(),
+  doorCasing: z.strictObject({
+    wallId: id,
+    side: z.enum(["front", "back"]),
+    reveal: z.number().min(0).max(1),
+    layoutKey: z.string().min(1).max(80),
+    seal: casingSealSchema.optional(),
+  }).optional(),
   roomFraming: z.strictObject({
     id,
     wall: z.number().int().min(1).max(300),
@@ -484,12 +539,19 @@ export type Section = z.infer<typeof sectionSchema>;
 export const currentProjectSchema = z
   .strictObject({
     schemaVersion: z.literal(PROJECT_FORMAT_VERSION),
+    workspaceDimensions: z.array(workspaceDimensionSchema).max(100)
+      .refine((marks) => new Set(marks.map(({ id }) => id)).size === marks.length, "Keep one entry per dimension.")
+      .optional(),
     rimAirSeals: rimAirSealPlansSchema.optional(),
     rimFoamOffcuts: rimFoamOffcutPoolSchema.optional(),
     rimFoamCutRecords: rimFoamCutRecordsSchema.optional(),
     roofValleys: roofValleysSchema.optional(),
     roofVentFlashings: roofVentFlashingsSchema.optional(),
     floorRegisterPlans: floorRegisterPlansSchema.optional(),
+    openingCutoutRecords: openingCutoutRecordsSchema.optional(),
+    scribeFillers: scribeFillersSchema.optional(),
+    furnitureBraces: furnitureBracesSchema.optional(),
+    cabinetBacking: cabinetBackingSchema.optional(),
     roundDuctRuns: roundDuctRunsSchema.optional(),
     roundDuctOffcuts: roundDuctOffcutsSchema.optional(),
     roundDuctElbows: roundDuctElbowsSchema.optional(),
@@ -525,6 +587,28 @@ export const currentProjectSchema = z
       .refine((plans) => new Set(plans.map(({ sourceId }) => sourceId)).size === plans.length,
         "Keep one cut plan per stock source.")
       .optional(),
+    recordedStockCutOrders: z.array(z.strictObject({
+      sourceId: id,
+      materialId: z.enum(materialIds),
+      anchorLabel: z.string().regex(/^[PO]\d{1,32}$/),
+      sourceSize: z.tuple([
+        z.number().finite().positive().max(240),
+        z.number().finite().positive().max(240),
+        z.number().finite().positive().max(240),
+      ]),
+      cuttingAllowance: z.number().finite().min(0).max(240),
+      recordedAt: z.iso.datetime(),
+      completedAt: z.iso.datetime().optional(),
+      steps: z.array(z.strictObject({
+        id,
+        instruction: z.string().trim().min(1).max(500),
+      })).min(1).max(2000)
+        .refine((steps) => new Set(steps.map(({ id }) => id)).size === steps.length,
+          "Keep one entry per recorded cut instruction."),
+    })).max(2000)
+      .refine((orders) => new Set(orders.map(({ sourceId }) => sourceId)).size === orders.length,
+        "Keep one recorded cut order per stock source.")
+      .optional(),
     projectCode: projectCodeSchema.optional(),
     waterPressureTests: waterPressureTestsSchema.optional(),
     waterRuns: z.array(waterRunSchema).max(32)
@@ -542,22 +626,28 @@ export const currentProjectSchema = z
     sinkDrains: sinkDrainsSchema.optional(),
     bottomPlateSeals: bottomPlateSealsSchema.optional(),
     topPlateSeals: topPlateSealsSchema.optional(),
+    drywallBottomPlateSeals: topPlateSealsSchema.optional(),
     subfloorChecks: subfloorChecksSchema.optional(),
     subfloorAdhesivePlans: subfloorAdhesivePlansSchema.optional(),
     subfloorNailPlans: subfloorNailPlansSchema.optional(),
     subfloorJoistPlans: subfloorJoistPlansSchema.optional(),
     shelfSagPlans: shelfSagPlansSchema.optional(),
+    shelfDividerPlans: shelfDividerPlansSchema.optional(),
     saunaHeaterPlans: z.array(saunaHeaterPlanSchema).max(50).refine(
       (plans) => new Set(plans.map((plan) => plan.roomId)).size === plans.length,
       "Retain one heater review per sauna.",
     ).optional(),
     drawerSlideMounts: drawerSlideMountsSchema.optional(),
+    drawerBalancePlans: drawerBalancePlansSchema.optional(),
     greenhouseDoorSeals: greenhouseDoorSealsSchema.optional(),
     openingFlashings: openingFlashingPlansSchema.optional(),
     greenhouseLatchPlans: z.array(greenhouseLatchSchema).max(50).refine(
       (plans) => new Set(plans.map(({ motionId }) => motionId)).size === plans.length,
       "Keep one latch layout per door swing.",
     ).optional(),
+    installationRoutes: installationRoutesSchema.optional(),
+    countertopSeals: countertopSealsSchema.optional(),
+    pipeAirSeals: pipeAirSealsSchema.optional(),
     caseworkTipUpPlans: z.array(caseworkTipUpSchema).max(50).refine(
       (plans) => new Set(plans.map(({ entryId }) => entryId)).size === plans.length,
       "Keep one tip-up plan per carcass.",
@@ -603,6 +693,8 @@ export const currentProjectSchema = z
     connectorPlans: z.array(connectorPlanSchema).max(100).default([]),
     bearingDecisions: bearingDecisionsSchema.optional(),
     woodJointDecisions: woodJointDecisionsSchema.optional(),
+    backerRodOffcuts: backerRodOffcutsSchema.optional(),
+    backerRodCutRecords: backerRodCutRecordsSchema.optional(),
     sillGaskets: sillGasketPlansSchema.optional(),
     connectorPlanLabels: z.array(z.strictObject({ planId: id, label: z.string().regex(/^C[0-9]{3,6}$/) })).max(10000).default([]),
     hingePlanLabels: z.array(z.strictObject({ planId: id, label: z.string().regex(/^H[0-9]{3,6}$/) })).max(10000).default([]),
@@ -658,6 +750,19 @@ export const currentProjectSchema = z
       .default([]),
   })
   .superRefine((p, ctx) => {
+    const drywallPlateSides = new Set(p.topPlateSeals?.map(({ plateId, side }) => `${plateId}/${side}`));
+    if (p.drywallBottomPlateSeals?.some(({ plateId, side }) => drywallPlateSides.has(`${plateId}/${side}`)))
+      ctx.addIssue({ code: "custom", path: ["drywallBottomPlateSeals"], message: "Save one drywall seal per physical plate side." });
+    if (p.recordedStockCutOrders?.length && p.plannedCutSources?.length) {
+      const planned = new Set(p.plannedCutSources.map(({ sourceId }) => sourceId));
+      if (p.recordedStockCutOrders.some(({ sourceId }) => planned.has(sourceId)))
+        ctx.addIssue({ code: "custom", path: ["recordedStockCutOrders"], message: "A recorded stock order cannot also be a pending cut plan." });
+    }
+    if (p.backerRodCutRecords?.length && p.backerRodOffcuts?.length) {
+      const consumed = new Set(p.backerRodCutRecords.map(({ source }) => source.id));
+      if (p.backerRodOffcuts.some(({ id }) => consumed.has(id)))
+        ctx.addIssue({ code: "custom", path: ["backerRodOffcuts"], message: "A cut backer rod source cannot also be available stock." });
+    }
     if (p.waterStops?.length) {
       const occupied = new Set((p.waterFittings ?? []).flatMap(waterFittingPorts).map(({ runId, end }) => `${runId}/${end}`));
       if (p.waterStops.some(({ port }) => occupied.has(`${port.runId}/${port.end}`)))
@@ -672,6 +777,13 @@ export const currentProjectSchema = z
         });
     const pieceIds = new Set(p.pieces.map((x) => x.id)),
       stepIds = new Set(p.steps.map((x) => x.id));
+    const unavailableOffcuts = new Set<string>();
+    for (const [index, { offcutCut }] of p.history.entries()) {
+      if (!offcutCut?.inputUnavailable) continue;
+      if (pieceIds.has(offcutCut.inputId) || unavailableOffcuts.has(offcutCut.inputId))
+        ctx.addIssue({ code: "custom", path: ["history", index, "offcutCut"], message: "An unavailable offcut has one record and cannot also be a live piece." });
+      unavailableOffcuts.add(offcutCut.inputId);
+    }
     if (p.siteClearances && new Set(p.siteClearances.map((plane) => plane.id)).size !== p.siteClearances.length)
       ctx.addIssue({ code: "custom", path: ["siteClearances"], message: "Site clearance identifiers must be unique." });
     if (p.greenhouseFoundations && new Set(p.greenhouseFoundations.map(({ entryId }) => entryId)).size !== p.greenhouseFoundations.length)
@@ -1416,6 +1528,18 @@ export const catalog: Material[] = [
     search: cedarbrookDoor.productCode,
   },
   {
+    id: doorFloorStopMaterial, name: "Floor-mounted door stop", subtitle: "Measured floor stop clearance",
+    includedComponent: true, placementOnly: true, measuredEquipment: true, category: "Hardware", stockKind: "equipment",
+    wood: false, cuttable: false, packCount: 1, size: [1.75, 1.25, 1.75],
+    color: "#475761", price: 0, priceKind: "unpriced", unit: "each", search: "floor mounted door stop",
+  },
+  {
+    id: doorHardwareMaterial, name: "Measured door hardware", subtitle: "Installed handle clearance",
+    includedComponent: true, placementOnly: true, measuredEquipment: true, category: "Hardware", stockKind: "equipment",
+    wood: false, cuttable: false, packCount: 1, size: [2.75, 2.75, 2.5],
+    color: "#9ba8aa", price: 0, priceKind: "unpriced", unit: "each", search: "measured knob lever door hardware",
+  },
+  {
     id: measuredDoorMaterial,
     name: "Field-measured prehung door",
     subtitle: "Measure the unit and hinge line in the doorway planner",
@@ -1675,6 +1799,7 @@ export const catalog: Material[] = [
     size: [...record.stockSize],
     color: "#cda77c",
     productReference: record.registryId,
+    ...(!("role" in record) && { placementOnly: true }),
     priceKind: "unpriced",
     price: 0,
     unit: "board",
@@ -1706,6 +1831,12 @@ export const catalog: Material[] = [
     size: subfloorPanel.size, color: "#ba9160", productReference: subfloorPanel.id,
     price: 0, priceKind: "unpriced", unit: "sheet", search: "osb subfloor tongue groove t&g sturd-i-floor 486701",
   },
+  {
+    id: flatCasing.id, name: flatCasing.name, subtitle: "Square-edge unfinished pine",
+    category: "Lumber", stockKind: "linear", wood: true, cuttable: true, packCount: 1,
+    size: [...flatCasing.size], color: "#dec099", productReference: flatCasing.id,
+    price: 0, priceKind: "unpriced", unit: "board", search: "door casing trim moulding molding pine 922022 202535803",
+  },
   ...drywallStock.map(({ id, length, model, internet }): Material => ({
     id,
     name: `½ in drywall · ${length / 12} ft`,
@@ -1732,6 +1863,35 @@ export const catalog: Material[] = [
     size: [...libertyBarPull.size], color: "#a9b2ba",
     price: 0, priceKind: "unpriced", unit: "each",
     search: "handle drawer cabinet pull 96 mm liberty solid bar P01012-PC-C",
+  },
+  ...sdConnectorScrews.map((screw): Material => ({
+    id: screw.id,
+    name: `Simpson SD ${screw.label} connector screws`,
+    subtitle: `${screw.model} · 100 count · ¼ in hex drive`,
+    category: "Fasteners", stockKind: "fastener", fastenerType: "screw",
+    connectorFastener: true, placementOnly: true, wood: false, cuttable: false,
+    packCount: 100, fastenerLength: screw.length, headDiameter: 0.37, shankDiameter: screw.shank,
+    size: [0.37, screw.length, 0.37], productReference: screw.registryId,
+    color: "#89918a", price: 0, priceKind: "unpriced", unit: "100 pack",
+    search: `Simpson SD ${screw.model} ${screw.internet} ${screw.sku}`,
+  })),
+  {
+    id: heveaWorktop.id,
+    name: heveaWorktop.name,
+    subtitle: "74 × 25 × 1½ in · square edge",
+    category: "Panels",
+    stockKind: "sheet",
+    placementOnly: true,
+    wood: true,
+    cuttable: true,
+    packCount: 1,
+    size: [74, 1.5, 25],
+    color: "#ceac7d",
+    productReference: heveaWorktop.productId,
+    priceKind: "unpriced",
+    price: 0,
+    unit: "worktop",
+    search: heveaWorktop.model,
   },
 ];
 export const material = (id: MaterialId) => catalog.find((m) => m.id === id)!;
@@ -2133,9 +2293,12 @@ export function sectionParts(
 ): Piece[] {
   let pieces: Piece[] = [];
   if (command.type === "wall" && command.doorOpening) {
-    const stock = command.wallStock ?? "stud";
+    const stock = command.windowOpening?.stock ?? command.wallStock ?? "stud";
     const { depth } = framingStockDimensions(stock);
-    pieces = doorwayTemplate(command, command.doorOpening, depth, command.doorUnit).map((member) => ({
+    const framing = command.windowOpening
+      ? doorAndWindowTemplate(command, command.doorOpening, command.windowOpening, depth, command.doorUnit)
+      : doorwayTemplate(command, command.doorOpening, depth, command.doorUnit);
+    pieces = framing.map((member) => ({
       ...part(`${name} · ${member.name}`, member.material ?? stock, member.size, member.position, stepId, name),
       designRole: member.role,
     }));
@@ -2197,7 +2360,8 @@ export function sectionParts(
 }
 export function commandStepTitle(command: Command) {
   return command.type === "wall"
-    ? `Frame a ${format(command.width)} × ${format(command.height)} wall${command.windowOpening ? " with a window opening" : command.doorOpening ? " with a doorway" : ""}`
+    ? `Frame a ${format(command.width)} × ${format(command.height)} wall${command.windowOpening && command.doorOpening
+      ? " with a doorway and window opening" : command.windowOpening ? " with a window opening" : command.doorOpening ? " with a doorway" : ""}`
     : `Lay a ${format(command.width)} × ${format(command.depth)} base`;
 }
 export function syncDoorwayMotion(project: Project, sectionId: string): Project {
@@ -2207,12 +2371,15 @@ export function syncDoorwayMotion(project: Project, sectionId: string): Project 
   if (!unit) return existing ? { ...project, motionPlans: project.motionPlans?.filter(({ id }) => id !== existing.id) } : project;
   const leaf = project.pieces.find(({ id, designRole }) => designRole === doorwayLeafRole && section.pieceIds.includes(id));
   if (!leaf) throw Error("The fitted door has no active leaf.");
+  const hardware = unit.hardware ? doorHardwareRoles.map((role) => project.pieces.find(({ id, designRole, offcut }) =>
+    !offcut && designRole === role && section.pieceIds.includes(id))) : [];
+  if (hardware.some((body) => !body)) throw Error("Refit the hardware before updating the door swing.");
   if (!existing && (project.motionPlans?.length ?? 0) >= 50) throw Error("The project already has 50 motion plans. Remove an unused motion before adding the door swing.");
   const plan = motionPlanSchema.parse({
     ...existing,
     id: existing?.id ?? uid(),
     label: `${section.name}: interior door swing`.slice(0, 100),
-    memberIds: [leaf.id],
+    memberIds: [leaf.id, ...hardware.flatMap((body) => body ? [body.id] : [])],
     mechanism: { ...doorwayHinge(unit), doorway: { sectionId } },
   });
   return { ...project, motionPlans: existing
@@ -2238,9 +2405,9 @@ export function applyCommand(
       command = sectionCommandSchema.parse({ ...command, baseStock: section.generator.baseStock });
     }
     if (command.type === "wall") {
-      const wallStock = command.wallStock ?? section.generator.wallStock;
       const windowOpening = command.windowOpening === undefined ? section.generator.windowOpening : command.windowOpening;
       const doorOpening = command.doorOpening === undefined ? section.generator.doorOpening : command.doorOpening;
+      const wallStock = (doorOpening ? windowOpening?.stock : undefined) ?? command.wallStock ?? section.generator.wallStock;
       const doorUnit = doorOpening && (command.doorUnit === undefined ? section.generator.doorUnit : command.doorUnit);
       command = sectionCommandSchema.parse({
         ...command,
@@ -2288,7 +2455,9 @@ export function applyCommand(
           .filter((a) => a.stepId === stepId)
           .every((a) => oldIds.has(a.id))
           ? { ...step, title: commandStepTitle(command),
-            notes: command.doorOpening && !step.notes.includes(doorwayGuideNote) ? `${step.notes}\n\n${doorwayGuideNote}`.trim()
+            notes: command.doorOpening && command.windowOpening
+              ? [step.notes.replace(doorwayGuideNote, "").replace(windowWallScope, "").replace(doorAndWindowGuideNote, "").trim(), doorAndWindowGuideNote].filter(Boolean).join("\n\n")
+              : command.doorOpening && !step.notes.includes(doorwayGuideNote) ? `${step.notes.replace(doorAndWindowGuideNote, "").trim()}\n\n${doorwayGuideNote}`.trim()
               : !command.doorOpening && section.generator?.doorOpening ? step.notes.replace(doorwayGuideNote, "").trim() : step.notes }
           : step,
       ),
@@ -2299,6 +2468,7 @@ export function applyCommand(
       ),
     }, section.id);
   }
+  if (command.doorOpening && command.windowOpening?.stock) command = { ...command, wallStock: command.windowOpening.stock };
   if (command.type === "coop") {
     const p = coop();
     p.id = project.id;
@@ -2311,12 +2481,13 @@ export function applyCommand(
   const p = structuredClone(project),
     s = step(
       commandStepTitle(command),
-      placement?.stepNotes ?? (command.windowOpening ? windowWallScope : command.doorOpening ? doorwayGuideNote
+      placement?.stepNotes ?? (command.windowOpening && command.doorOpening ? doorAndWindowGuideNote : command.windowOpening ? windowWallScope : command.doorOpening ? doorwayGuideNote
         : "Generated concept. Review connections, support, bracing, and stock dimensions."),
     );
   p.steps.push(s);
-  // Rotated parts need their world bounds when finding free ground beside the project.
-  const maxX = placement ? 0 : p.pieces.reduce(
+  // Rotated build parts need their world bounds when finding free ground.
+  const placed = p.pieces.filter(({ offcut }) => !offcut);
+  const maxX = placement ? 0 : placed.reduce(
     (max, a) =>
       Math.max(
         max,
@@ -2340,7 +2511,7 @@ export function applyCommand(
     -command.width / 2 - 12,
   );
   const origin: V3 = placement?.origin ?? [
-    p.pieces.length ? maxX + command.width / 2 + 12 : 0,
+    placed.length ? maxX + command.width / 2 + 12 : 0,
     0,
     0,
   ];
@@ -2372,8 +2543,9 @@ export function format(inches: number) {
 }
 export function parsePrompt(prompt: string, context?: Command): Command {
   const text = prompt.toLowerCase();
-  const door = doorWallPrompt(text, context?.doorOpening);
-  const window = windowWallPrompt(door.wallText, context?.windowOpening);
+  const combined = doorAndWindowPrompt(text);
+  const door = combined ? { wallText: combined.wallText, opening: combined.door } : doorWallPrompt(text, context?.doorOpening);
+  const window = combined ? { wallText: combined.wallText, opening: combined.window } : windowWallPrompt(door.wallText, context?.windowOpening);
   const wallText = window.wallText;
   let type: Command["type"];
   if (/\b(coop|chicken)\b/.test(text)) type = "coop";
@@ -2439,9 +2611,11 @@ export function parsePrompt(prompt: string, context?: Command): Command {
       context?.spacing ||
       16,
   );
+  const width = w ?? context?.width ?? 72;
+  const placed = combined && placeWallOpenings(width, combined.door, combined.window, combined.firstIsDoor);
   return commandSchema.parse({
     type,
-    width: w ?? context?.width ?? 72,
+    width,
     height: h ?? context?.height ?? 48,
     depth: d ?? context?.depth ?? 48,
     spacing,
@@ -2449,5 +2623,6 @@ export function parsePrompt(prompt: string, context?: Command): Command {
     ...(window.opening === undefined && context?.windowOpening && { windowOpening: context.windowOpening }),
     ...(door.opening !== undefined && { doorOpening: door.opening }),
     ...(door.opening === undefined && context?.doorOpening && { doorOpening: context.doorOpening }),
+    ...(placed && { doorOpening: placed.door, windowOpening: placed.window }),
   });
 }

@@ -5,10 +5,14 @@ import type { Piece, Project, V3 } from "./model";
 import { ensurePartLabels } from "./partLabels";
 import { inverseRotation, rotate } from "./spatial";
 import { formatPreciseInches, formatStockLength } from "./measurement";
-import { packRuns } from "./stockRunPacking";
-import { trimBackerRodLength, trimBackerRods } from "./trimBackerRodReference";
-import { estimateModeledTrimSeam, modeledTrimSeamEdges } from "./trimSeamGeometry";
+import { backerRodAllocationKey, backerRodCutRecordsSchema, packBackerRodRuns, removeBackerRodOffcut,
+  saveBackerRodOffcut, type BackerRodRun } from "./trimBackerRodOffcuts";
+import { trimBackerRods } from "./trimBackerRodReference";
+import { estimateModeledTrimSeam, modeledTrimSeamEdges, trimSeamCoverLine, trimSeamCovers, trimSeamRunCovers } from "./trimSeamGeometry";
 import { defaultTrimSealantSession, trimSealant } from "./trimSealantReference";
+import { casingSealReviews } from "./casingSeal";
+import { pipeAirSealRodRuns } from "./pipeAirSeal";
+import { countertopBackerRuns } from "./countertopSeal";
 import { maxSupplyQuantity } from "./supplySchema";
 import {
   trimSeamInputSchema,
@@ -75,6 +79,7 @@ export function saveWoodJointDecision(
   const decision = woodJointDecisionSchema.parse({
     firstId, secondId, method, note, contactSignature: signature(first, second),
     ...(method === "sealant" && prior?.trimSeam && { trimSeam: prior.trimSeam }),
+    ...(method === "glue" && prior?.glueFaces && { glueFaces: prior.glueFaces }),
   });
   const rest = (project.woodJointDecisions ?? []).filter((row) =>
     row.firstId !== firstId || row.secondId !== secondId);
@@ -96,7 +101,7 @@ export function saveTrimSeam(project: Project, aId: string, bId: string, draft: 
     const shape = modeledTrimSeamEdges(first, second);
     if (!shape) throw Error("Measure this joint in the field to estimate its sealant.");
     const input = trimSeamInputSchema.parse(draft);
-    estimateModeledTrimSeam(shape, input);
+    checkedTrimSeam(project, first, second, shape, input);
     return {
       ...project,
       woodJointDecisions: decisions.map((row) => row === decision
@@ -117,7 +122,26 @@ export function clearWoodJointDecision(project: Project, aId: string, bId: strin
   return next;
 }
 
+function checkedTrimSeam(
+  project: Project, first: Piece, second: Piece,
+  shape: NonNullable<ReturnType<typeof modeledTrimSeamEdges>>, plan: TrimSeamInput,
+) {
+  const estimate = estimateModeledTrimSeam(shape, plan);
+  const covers = trimSeamCovers(project, first, second, estimate.edges);
+  const coverNotes = [];
+  for (const edge of estimate.edges) {
+    for (const cover of trimSeamRunCovers(edge.id, edge.sealedSpans, covers)) {
+      const detail = `${edge.label} · ${trimSeamCoverLine(cover)}`;
+      if (!cover.later)
+        throw Error(`${detail} Review access or place the cover in a later build step.`);
+      coverNotes.push({ edgeId: edge.id, detail });
+    }
+  }
+  return { ...estimate, coverNotes };
+}
+
 function reviewTrimSeam(
+  project: Project,
   decision: WoodJointDecision,
   status: ReturnType<typeof woodJointDecisionStatus>,
   first: Piece | undefined,
@@ -130,7 +154,7 @@ function reviewTrimSeam(
   const shape = modeledTrimSeamEdges(first, second);
   if (!shape) return { issue: "The current edge geometry needs measurement in the field." } as const;
   try {
-    return { estimate: estimateModeledTrimSeam(shape, plan) } as const;
+    return { estimate: checkedTrimSeam(project, first, second, shape, plan) } as const;
   } catch (issue) {
     return { issue: issue instanceof Error ? issue.message : "Review the saved seam measurements." } as const;
   }
@@ -142,7 +166,7 @@ export function woodJointDecisionEntries(project: Project) {
   const labels = new Map(ensurePartLabels(project).partLabels.map(({ partId, label }) => [partId, label]));
   const stepNumbers = new Map(project.steps.map((step, i) => [step.id, i + 1]));
   const scrapsBySource = new Map<string, Piece>();
-  if (project.woodJointDecisions.some(({ trimSeam }) => trimSeam)) {
+  if (project.woodJointDecisions.some(({ trimSeam, method }) => trimSeam || method === "glue")) {
     for (const scrap of project.pieces) {
       if (scrap.offcut && scrap.cutStock && !scrapsBySource.has(scrap.cutStock.id))
         scrapsBySource.set(scrap.cutStock.id, scrap);
@@ -161,9 +185,9 @@ export function woodJointDecisionEntries(project: Project) {
       const part = parts.get(id);
       return part && !part.offcut ? `${label} · ${part.name}` : `${label} (unavailable)`;
     }).join(" ↔ ");
-    const trimSeam = reviewTrimSeam(decision, status, first, second);
+    const trimSeam = reviewTrimSeam(project, decision, status, first, second);
     const trialScraps = new Set<string>();
-    if (trimSeam?.estimate) {
+    if (trimSeam?.estimate || (decision.method === "glue" && status === "current")) {
       for (const member of [first, second]) {
         const scrap = member?.cutStock && scrapsBySource.get(member.cutStock.id);
         if (scrap && scrap.material === member.material) trialScraps.add(labels.get(scrap.id)!);
@@ -182,16 +206,17 @@ export function trimSeamLine(entry: WoodJointDecisionEntry) {
   const { trimSeam } = entry;
   if (!trimSeam) return "";
   if ("issue" in trimSeam) return trimSeam.issue;
-  const { edges, note, backerRod } = trimSeam.estimate;
+  const { edges, note, backerRod, coverNotes } = trimSeam.estimate;
   const ranges = (spans: { start: number; end: number }[]) => spans
     .map(({ start, end }) => `${formatPreciseInches(start)} to ${formatPreciseInches(end)}`).join(", ");
-  const spans = edges.map(({ label, length, openSpans, sealedSpans, localStart }) => {
-    if (!openSpans.length) return `${label} (${formatPreciseInches(length)})`;
+  const spans = edges.map(({ id, label, length, openSpans, sealedSpans, localStart }) => {
+    if (!openSpans.length && !coverNotes.some(({ edgeId }) => edgeId === id))
+      return `${label} (${formatPreciseInches(length)})`;
     const start = localStart.map((value, i) => `${"XYZ"[i]} ${formatPreciseInches(value)}`).join(", ");
     return [
       `${label} from ${entry.firstLabel}'s center (local ${start})`,
       sealedSpans.length ? `seal ${ranges(sealedSpans)}` : "",
-      `keep open ${ranges(openSpans)}`,
+      openSpans.length ? `keep open ${ranges(openSpans)}` : "",
     ].filter(Boolean).join(" · ");
   }).join(", ");
   const trial = entry.trialScraps.length
@@ -200,50 +225,111 @@ export function trimSeamLine(entry: WoodJointDecisionEntry) {
   const backing = backerRod
     ? ` Fit ${backerRod.name} along the seal runs before caulking.` : "";
   const session = entry.decision.trimSeam?.session;
-  return `Trim sealant · ${spans}${session ? ` · ${session}` : ""} · ${note}${backing} Use a compatible cartridge gun.${trial}`;
+  const order = coverNotes.length ? ` ${coverNotes.map(({ detail }) => detail).join(" ")}` : "";
+  return `Trim sealant · ${spans}${session ? ` · ${session}` : ""} · ${note}${backing} Use a compatible cartridge gun.${order}${trial}`;
 }
 
 export function trimBackerRodCutPlan(project: Project, entries = woodJointDecisionEntries(project)) {
   const openingRuns = project.openingFlashings?.some(({ measurements }) => measurements.airSeal?.method === "silicone")
     ? openingAirSealRodRuns(reviewOpeningFlashings(project)) : [];
+  const countertopRuns = countertopBackerRuns(project);
+  const pipeRuns = pipeAirSealRodRuns(project);
+  const records = project.backerRodCutRecords ?? [];
+  const completedKeys = new Set(records.flatMap(({ cuts }) => cuts.map(({ key }) => key)));
   return trimBackerRods.flatMap((product) => {
-    const runs = entries.flatMap(({ title, trimSeam }) => {
+    const runs: BackerRodRun[] = entries.flatMap(({ id, decision, title, trimSeam }) => {
       const estimate = trimSeam?.estimate;
-      if (estimate?.backerRod?.id !== product.id) return [];
-      return estimate.edges.flatMap(({ label, sealedSpans }) =>
-        sealedSpans.map((span) => ({ ...span, title: `${title} · ${label}` })),
+      const measured = decision.trimSeam;
+      if (!measured || estimate?.backerRod?.id !== product.id) return [];
+      return estimate.edges.flatMap(({ id: edge, label, sealedSpans }) =>
+        sealedSpans.map((span) => ({
+          ...span, kind: "trim" as const, title: `${title} · ${label}`,
+          key: JSON.stringify(["trim", id, measured.contactSignature, product.id, measured.gapWidth,
+            measured.gapDepth, edge, span.start, span.end]),
+        })),
       );
     });
-    const airSealRuns = openingRuns.filter(({ productId }) => productId === product.id);
-    if (!runs.length && !airSealRuns.length) return [];
-    const { bins } = packRuns([...runs, ...airSealRuns], trimBackerRodLength);
-    return [{ product, rolls: bins, hasAirSeal: airSealRuns.length > 0 }];
+    const airSealRuns = openingRuns.filter(({ productId }) => productId === product.id)
+      .map(({ productId: _productId, ...run }) => run);
+    const counterRuns = countertopRuns.filter(({ productId }) => productId === product.id)
+      .map(({ productId: _productId, ...run }) => run);
+    const pipeSealRuns = pipeRuns.filter(({ productId }) => productId === product.id)
+      .map(({ productId: _productId, ...run }) => run);
+    const allRuns = [...runs, ...airSealRuns, ...counterRuns, ...pipeSealRuns];
+    const currentKeys = new Set(allRuns.map(({ key }) => key));
+    const completed = records.filter(({ source }) => source.productId === product.id)
+      .map((record) => ({ record, changed: record.cuts.filter(({ key }) => !currentKeys.has(key)).length }));
+    if (!allRuns.length && !completed.length) return [];
+    const stock = (project.backerRodOffcuts ?? []).filter(({ productId }) => productId === product.id);
+    return [{
+      product, completed, ...packBackerRodRuns(allRuns.filter(({ key }) => !completedKeys.has(key)), stock),
+      hasAirSeal: airSealRuns.length > 0 || completed.some(({ record }) => record.cuts.some(({ kind }) => kind === "opening")),
+      hasPipeSeal: pipeSealRuns.length > 0 || completed.some(({ record }) => record.cuts.some(({ kind }) => kind === "pipe-seal")),
+      hasCountertop: counterRuns.length > 0 || completed.some(({ record }) => record.cuts.some(({ kind }) => kind === "countertop")),
+    }];
   });
 }
 
+export function recordBackerRodCuts(
+  project: Project, sourceId: string, expected: string, remnant?: { length: number; label: string },
+) {
+  const allocation = trimBackerRodCutPlan(project).flatMap(({ offcuts }) => offcuts)
+    .find(({ source }) => source.id === sourceId);
+  if (!allocation || backerRodAllocationKey(allocation.source, allocation.runs) !== expected)
+    throw Error("The planned cuts changed. Open the current cut list again.");
+  const { source, runs, left } = allocation;
+  if (remnant && (!Number.isFinite(remnant.length) || remnant.length <= 0 || remnant.length > left + 1e-7))
+    throw Error("Enter a measured remainder within the unused length of this piece.");
+  let next = removeBackerRodOffcut(project, sourceId);
+  if (remnant) next = saveBackerRodOffcut(next, {
+    label: remnant.label.trim() || `${source.label.slice(0, 50)} tail`,
+    productId: source.productId, length: Math.min(remnant.length, left),
+  });
+  const retained = remnant ? next.backerRodOffcuts?.at(-1) : undefined;
+  return { ...next, backerRodCutRecords: backerRodCutRecordsSchema.parse([
+    ...(project.backerRodCutRecords ?? []), { source, cuts: runs, ...(retained && { remnant: retained }) },
+  ]) };
+}
+
 export function trimBackerRodGuideLines(groups: ReturnType<typeof trimBackerRodCutPlan>) {
-  return groups.flatMap(({ product, rolls }) => rolls.map(({ runs, left }, index) => {
-    const cuts = runs.map(({ title, start, end, length }) =>
+  return groups.flatMap(({ product, offcuts, rolls, completed }) => {
+    const cutLine = (runs: BackerRodRun[]) => runs.map(({ title, start, end, length }) =>
       `${formatPreciseInches(length)} for ${title} (${formatPreciseInches(start)} to ${formatPreciseInches(end)})`,
-    );
-    return `${product.name} · Roll ${index + 1} · Cut ${cuts.join(" / ")}. ${left > 0 ? `Keep ${formatPreciseInches(left)} for a future matching run.` : "Full roll used."}`;
-  }));
+    ).join(" / ");
+    const tail = (left: number, exhausted: string) =>
+      left > 0 ? `Keep ${formatPreciseInches(left)} for a future matching run.` : exhausted;
+    return [
+      ...completed.map(({ record, changed }) => [
+        `${product.name} · Recorded cuts from ${record.source.label} · ${cutLine(record.cuts)}.`,
+        record.remnant ? `Measured remainder ${record.remnant.label} · ${formatPreciseInches(record.remnant.length)}.` : "No remainder saved.",
+        changed ? `${changed} ${changed === 1 ? "run has" : "runs have"} changed or been removed since this cut was recorded.` : "",
+      ].filter(Boolean).join(" ")),
+      ...offcuts.map((bin) =>
+        `${product.name} · Offcut ${bin.source.label} · ${formatPreciseInches(bin.source.length)} on hand · Cut ${cutLine(bin.runs)}. ${tail(bin.left, "Full offcut used.")}`),
+      ...rolls.map((bin, index) =>
+        `${product.name} · Roll ${index + 1} · Cut ${cutLine(bin.runs)}. ${tail(bin.left, "Full roll used.")}`),
+    ];
+  });
 }
 
 export function trimSeamPurchaseSummary(
   project: Project,
   entries = woodJointDecisionEntries(project),
 ) {
-  const sealed = entries.filter(({ trimSeam }) => !!trimSeam);
+  const sealed = [
+    ...entries.flatMap(({ decision, title, trimSeam }) => trimSeam ? [{
+      title, session: decision.trimSeam?.session ?? defaultTrimSealantSession, estimate: trimSeam.estimate,
+    }] : []),
+    ...casingSealReviews(project).map(({ section, session, estimate }) => ({ title: section.name, session, estimate })),
+  ];
   if (!sealed.length) return null;
   const sessions = new Map<string, { name: string; use: number; lengthInches: number; joints: string[] }>();
-  for (const { decision, title, trimSeam } of sealed) {
-    if (!trimSeam?.estimate) continue;
-    const name = decision.trimSeam?.session ?? defaultTrimSealantSession;
+  for (const { title, session: name, estimate } of sealed) {
+    if (!estimate) continue;
     const key = name.toLowerCase();
     const row = sessions.get(key) ?? { name, use: 0, lengthInches: 0, joints: [] };
-    row.use += trimSeam.estimate.cartridgeUse;
-    row.lengthInches += trimSeam.estimate.lengthInches;
+    row.use += estimate.cartridgeUse;
+    row.lengthInches += estimate.lengthInches;
     row.joints.push(title);
     sessions.set(key, row);
   }

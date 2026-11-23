@@ -1,5 +1,26 @@
 # Catalog coverage and evidence audit
 
+## 8, 10 and 12 ft framing lumber
+
+The 2 × 6 and 2 × 8 tiles offer the same three stock lengths. These longer boards use exact Home Depot references and a one-board purchase unit. The 10 ft 2 × 6 is also eligible for dimensional wall layouts and greenhouse ridge stock comparisons. The longer 2 × 8s are available for manual layout, cuts and offcuts. Prices and quantities come from store snapshots.
+
+| Added size | Listed actual dimensions | Home Depot listing | Model / store SKU |
+|---|---|---|---|
+| 2 × 6, 10 ft | 1½ × 5½ × 120 in | [312528837](https://www.homedepot.com/p/312528837) | 058444 / 161721 |
+| 2 × 8, 10 ft | 1½ × 7¼ × 120 in | [202085942](https://www.homedepot.com/p/202085942) | 689246 / 689246 |
+| 2 × 8, 12 ft | 1½ × 7¼ × 144 in | [202085927](https://www.homedepot.com/p/202085927) | 560499 / 560499 |
+
+## Simpson connector hardware
+
+**Connector screws** offers separately selectable #9 × 1½ in, #10 × 1½ in, and #9 × 2½ in stock. The two added sizes are individual modeled screws with nominal head and shank references. Each exact Home Depot listing counts one 100-screw box. Angle models A23Z and A33 are available through **Hardware and supplies**, one angle per purchase. Choose the fastening schedule for the actual connector and members. [Simpson SD screw specifications](https://www.strongtie.com/strongdrive_exteriorwoodscrews/sd_screw/p/strong-drive-sd-connector-screw) · [Simpson angle specifications](https://www.strongtie.com/framinganglesandplates_anglesandplates/a_angle/p/a)
+
+| Model | Reviewed purchase unit | Home Depot product |
+|---|---|---|
+| SD10112R100 | 100 screws, #10 × 1½ in, ¼ in hex | [202071154](https://www.homedepot.com/p/202071154), SKU 479710 |
+| SD9212R100-R | 100 screws, #9 × 2½ in, ¼ in hex | [206101818](https://www.homedepot.com/p/206101818), SKU 478811 |
+| A23Z | One ZMAX angle, 2 × 1½ × 2¾ in nominal flanges | [100375310](https://www.homedepot.com/p/100375310), SKU 208105 |
+| A33 | One G90 angle, 3 × 3 × 1½ in nominal flanges | [100374962](https://www.homedepot.com/p/100374962), SKU 461458 |
+
 ## Ground-contact lumber
 
 Reviewed November 20, 2026. The Materials palette groups pressure-treated boards by nominal 2 × 4 and 2 × 6. Each length keeps its own Home Depot Internet number, model and store SKU. The new options bring the catalog to 60 editable stocks, with 39 product bindings.

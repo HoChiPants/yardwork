@@ -94,6 +94,24 @@
             },
             "held": []
           }
+        },
+        {
+          "id": "166b1db2-e505-44a5-85b5-cb36f2b1c1af",
+          "name": "Door first, full travel",
+          "setup": {
+            "linkedId": "cf8500ca-7674-4fea-9bb0-5297da72f2df",
+            "openingOrder": "selected-first",
+            "held": []
+          }
+        },
+        {
+          "id": "1de6d277-c25f-4403-9a74-3c9f96673904",
+          "name": "Tray first, full travel",
+          "setup": {
+            "linkedId": "cf8500ca-7674-4fea-9bb0-5297da72f2df",
+            "openingOrder": "companion-first",
+            "held": []
+          }
         }
       ]
     },

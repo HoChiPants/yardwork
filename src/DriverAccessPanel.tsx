@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import {
+  driverAccessOrderName,
   driverAccessScope,
+  driverAccessStateName,
   reviewDriverAccess,
   type DriverAccessLocation,
 } from "./fastenerAccess";
@@ -16,14 +18,6 @@ const fields = [
   ["bodyWidth", "Widest part of tool body", 0.001],
   ["approachTravel", "Straight travel before seating", 0],
 ] as const;
-
-const driverAccessStateName = {
-  clear: "Clear",
-  "before-stage": "Fasten before adding a later part",
-  "within-stage": "Fasten before another part in this step",
-  blocked: "Approach blocked",
-  pending: "Path needs review",
-} as const;
 
 export function DriverAccessPanel({
   project,
@@ -108,7 +102,9 @@ export function DriverAccessPanel({
               ? "Input changed. Check the tool approach again."
               : result.order === "saved"
                 ? "Using saved guide order."
-                : "Using suggested assembly order."}
+                : result.order === "suggested"
+                  ? "Using suggested assembly order."
+                  : "Check the assembly order shown for each approach."}
           </p>
           {result.locations.length === 0 && (
             <p className="small-note">
@@ -123,6 +119,7 @@ export function DriverAccessPanel({
                     {row.label} · {driverAccessStateName[row.state]}
                   </strong>
                   <br />
+                  {result.order === "mixed" && `${driverAccessOrderName[row.order]} · `}
                   {row.detail}
                 </p>
                 {onShow && row.envelopes.length > 0 && (

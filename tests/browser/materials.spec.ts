@@ -7,6 +7,46 @@ import { greenhouseDoorChoices, greenhouseDoorMotionInput } from "../../src/gree
 import { saveMotionPlan } from "../../src/mechanismMotion";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
 import { everbiltClosetRod, everbiltRodBracket } from "../../src/closetRodReference";
+
+test("choose grouped framing board lengths and reopen a cut with its exact Home Depot reference", async ({ page }) => {
+  const project = blank("Long framing stock check");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "long-framing.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  for (const family of ["2 × 6 framing lumber", "2 × 8 framing lumber"]) {
+    await expect(page.getByRole("button", { name: `Add ${family}`, exact: true })).toHaveCount(1);
+    await page.getByRole("button", { name: `Add ${family}`, exact: true }).click();
+    await expect(dialog.getByRole("radio")).toHaveCount(3);
+    await expect(dialog.getByRole("radio", { name: "10 ft", exact: true })).toBeVisible();
+    if (family.startsWith("2 × 6")) await page.keyboard.press("Escape");
+  }
+  await dialog.getByRole("radio", { name: "12 ft", exact: true }).check();
+  await dialog.getByRole("spinbutton", { name: "Needed finished length" }).fill("108");
+  await expect(dialog).toContainText("10 ft stock fits this cut with 2 ft less length to buy.");
+  await dialog.getByRole("button", { name: "Use 10 ft", exact: true }).click();
+  await dialog.getByRole("button", { name: "Plan cut and place", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Saved to your self-hosted project library" })).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await page.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  await expect(dialog.getByRole("textbox", { name: "Home Depot paste list", exact: true })).toHaveValue(/1 board.*Internet #202085942/);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("10 ft");
+  expect(guide).toContain("9 ft");
+  expect(guide).toContain("11.875 in");
+});
+
 async function meshStudy(
   page: Page,
   sizes: [number, number][],

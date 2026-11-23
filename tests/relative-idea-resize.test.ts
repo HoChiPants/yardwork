@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { blank, projectSchema } from "../src/model";
 import { guideMarkdown } from "../src/engine";
-import { localIdeaPlan, previewIdeaPlan, type IdeaPlan } from "../src/planning";
+import { localIdeaPlan, previewIdeaPlan, workspacePlanningResult, type IdeaPlan } from "../src/planning";
 
 const seats = () =>
   localIdeaPlan({
@@ -123,6 +123,31 @@ test("a malformed or out-of-range clause retains the whole design revision", () 
   }
 });
 
+test("a revision checks every exact and relative dimension against its own target", () => {
+  const original = seats();
+  original.modules[1].panelMaterial = "plytanium-703";
+  const snapshot = structuredClone(original);
+  const prompt = "Set the seat height of section 2 to 21 inches and seat depth to 19 inches; set section 3 seat height to 22 inches and make it one inch deeper.";
+  const result = workspacePlanningResult({ prompt, previousPlan: original });
+  assert.equal(result?.provider, "Workspace dimensions");
+  assert.deepEqual(result?.plan.questions, []);
+  assert.deepEqual(result?.plan.modules, [
+    original.modules[0],
+    { ...original.modules[1], height: 21, depth: 19 },
+    { ...original.modules[2], height: 22, depth: 25 },
+  ]);
+  assert.deepEqual(original, snapshot);
+  const described = revise(original, "Make section 2 21 inches tall and section 3 22 inches high.");
+  assert.deepEqual(described.modules.map(({ height }) => height), [18, 21, 22]);
+  const width = revise(original, "Set the whole run width to 6 feet and 3 inches");
+  assert.deepEqual(width.modules.map(({ width }) => width), [25, 25, 25]);
+  for (const last of ["set section 9 seat height to 21 inches", "set section 3 depth to 20", "set section 3 depth to 300 inches"]) {
+    const refused = revise(original, `Set section 2 height to 21 inches and ${last}`);
+    assert.deepEqual(refused.modules, original.modules);
+    assert.equal(refused.questions.length, 1);
+  }
+});
+
 test("relative structural edits use the requested parameter and keep the rest of the recipe", () => {
   const greenhouse = localIdeaPlan({
     prompt: "Build a greenhouse 72 inches wide",
@@ -173,7 +198,7 @@ test("missing units, invalid results and ambiguous targets retain the prior desi
     ["Make it 1/0 inch wider", /denominator/],
     ["Make it 99 inches narrower", /supported dimensions/],
     ["Make section 7 two inches taller", /existing design/],
-    ["Make the left seat two inches taller", /existing design/],
+    ["Make the fifth seat two inches taller", /existing design/],
     ["Make the cabinet section 2 two inches taller", /existing design/],
     ["Make the seat back 2 inches taller", /existing seat back/],
     ["Make the banquette lid 2 inches wider", /supported dimension/],
@@ -197,6 +222,36 @@ test("missing units, invalid results and ambiguous targets retain the prior desi
   );
 });
 
+test("distinct seat references scope compound edits by the facing direction of the run", () => {
+  const original = seats();
+  original.modules = original.modules.map((module): IdeaPlan["modules"][number] => ({
+    ...module,
+    position: [0, 0, -module.position[0]],
+    yaw: 90,
+  })).reverse();
+  original.modules[1].panelMaterial = "plytanium-703";
+  const request = {
+    prompt: "Make the left seat 2 inches taller and the middle seat 1 inch deeper. Leave everything else unchanged.",
+    previousPlan: original,
+  };
+  const result = workspacePlanningResult(request);
+  assert.equal(result?.provider, "Workspace dimensions");
+  assert.deepEqual(result?.plan.modules, [
+    original.modules[0], { ...original.modules[1], depth: 25 }, { ...original.modules[2], height: 20 },
+  ]);
+  assert.deepEqual(revise(original, "Set the right-hand seat to 20 in tall and leave the others unchanged.").modules, [
+    { ...original.modules[0], height: 20 }, original.modules[1], original.modules[2],
+  ]);
+  assert.deepEqual(revise(original, "Set the seat on the right to 20 in tall.").modules, [
+    { ...original.modules[0], height: 20 }, original.modules[1], original.modules[2],
+  ]);
+  const corner = structuredClone(original);
+  corner.modules[2].yaw = 0;
+  const unclear = revise(corner, "Set the right-hand seat height to 20 inches.");
+  assert.deepEqual(unclear.modules, corner.modules);
+  assert.match(unclear.questions[0], /single straight run/);
+});
+
 test("the editable banquette practice plan includes the revised center and recorded cut orders", () => {
   const asset = (extension: string) => readFileSync(new URL(`../public/examples/wood-stock/banquette-compound-revision${extension}`, import.meta.url), "utf8");
   const project = projectSchema.parse(JSON.parse(asset(".yardwork.json")));
@@ -207,4 +262,52 @@ test("the editable banquette practice plan includes the revised center and recor
   const guide = guideMarkdown(project);
   assert.equal(guide.trimEnd() + "\n", asset("-guide.md"));
   assert.match(guide, /69.75 in/);
+});
+
+test("a fixed-edge edit preserves an installed run's local alignment and the measured module gaps", () => {
+  const original = seats();
+  original.modules.forEach((module, index) => {
+    module.position = [100, 0, 40 - module.position[0] - (index - 1)];
+    module.yaw = 90;
+  });
+  original.modules[1].panelMaterial = "plytanium-703";
+  const baseline = structuredClone(original);
+  const result = workspacePlanningResult({
+    prompt: "Make the banquette 96 inches wide and two inches deeper, keep the left end fixed and the rear edge against the wall.",
+    previousPlan: original,
+  });
+  assert.equal(result?.provider, "Workspace dimensions");
+  const next = result!.plan;
+  assert.deepEqual(next.questions, []);
+  const [left, middle, right] = next.modules;
+  assert.ok(Math.abs(left.position[2] + left.width / 2 - 77) < 1e-7);
+  assert.ok(Math.abs(right.position[2] - right.width / 2 - (77 - 96)) < 1e-7);
+  assert.ok(Math.abs(left.position[2] - left.width / 2 - middle.position[2] - middle.width / 2 - 1) < 1e-7);
+  for (const module of next.modules) {
+    assert.equal(module.position[0] - module.depth / 2, 88);
+    assert.equal(module.depth, 26);
+    assert.equal(module.yaw, 90);
+    assert.ok(module.storage && module.openingLid);
+  }
+  assert.equal(middle.panelMaterial, "plytanium-703");
+  assert.deepEqual(original, baseline);
+  const narrower = revise(next, "Make the whole banquette 4 inches narrower and keep the right end fixed");
+  const [newLeft, , newRight] = narrower.modules;
+  assert.ok(Math.abs(newRight.position[2] - newRight.width / 2 - (77 - 96)) < 1e-7);
+  assert.ok(Math.abs(newLeft.position[2] + newLeft.width / 2 - 73) < 1e-7);
+});
+
+test("conflicting and incompatible fixed edges preserve the saved geometry", () => {
+  const original = seats();
+  const wider = revise(original, "Make section 2 width 30 inches and hold the right end in place");
+  assert.deepEqual(wider.modules.map(({ width, position }) => [width, position[0]]), [[24, -30], [30, -3], [24, 24]]);
+  for (const [prompt, reason] of [
+    ["Make the banquette two inches wider and keep the left end fixed and the right end fixed", /choose one fixed edge/i],
+    ["Make the banquette two inches deeper and keep the left edge fixed", /name the width change/i],
+    ["Make the banquette two inches wider and keep both ends fixed", /name one fixed edge/i],
+  ] as const) {
+    const next = revise(original, prompt);
+    assert.deepEqual(next.modules, original.modules);
+    assert.match(next.questions[0], reason);
+  }
 });

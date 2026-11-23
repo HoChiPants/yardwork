@@ -3,6 +3,7 @@ import { material, type Project } from "./model";
 import { planOffcutReuse } from "./offcutReusePlan";
 import { ensurePartLabels } from "./partLabels";
 import { stockCutSequences } from "./stockCutSequence";
+import { isDrywall } from "./drywallReference";
 
 export type ProposalCutScope = "proposal" | "shared";
 
@@ -34,15 +35,17 @@ export function proposalStockRequest(prompt: string): ProposalStockRequest | nul
   return { kind: "reuse", labels: [...new Set(labels)] };
 }
 
-/** Reuse is scoped to fresh blanks in the proposed change and stock the user already has in the pool. */
+/** Reuse covers blanks introduced by the proposal and those released by its revision. */
 export function previewProposalStock(
   current: Project,
   candidate: Project,
   offcutLabels: readonly string[] | null,
+  replannedPartIds: readonly string[] = [],
 ) {
   const sourcePartIds = new Set(current.pieces.map(({ id }) => id));
-  const newPartIds = new Set(candidate.pieces
-    .filter((part) => !part.offcut && !sourcePartIds.has(part.id) && material(part.material).cuttable)
+  const replanned = new Set(replannedPartIds);
+  const cutPartIds = new Set(candidate.pieces
+    .filter((part) => !part.offcut && (!sourcePartIds.has(part.id) || replanned.has(part.id)) && material(part.material).cuttable)
     .map(({ id }) => id));
   const pendingSources = new Set(candidate.plannedCutSources?.map(({ sourceId }) => sourceId));
   const returned = new Set(current.plannedCutSources?.flatMap(({ sourceId }) =>
@@ -62,31 +65,32 @@ export function previewProposalStock(
         return id;
       });
     }
-    plan = planOffcutReuse(candidate, available, newPartIds);
+    plan = planOffcutReuse(candidate, available, cutPartIds);
     if (plan.assignments.length) project = plan.project;
   }
   const rows = bom(project);
-  const materials = new Set(project.pieces.filter(({ id }) => newPartIds.has(id)).map(({ material }) => material));
+  const materials = new Set(project.pieces.filter(({ id }) => cutPartIds.has(id)).map(({ material }) => material));
   const stockRows = rows.filter(({ id }) => materials.has(id));
   const cutSequences = stockCutSequences(project, stockRows);
   const cutMaterials = stockRows.map((row) => ({
     row,
-    oversized: row.oversizedParts.filter(({ id }) => newPartIds.has(id)),
+    oversized: row.oversizedParts.filter(({ id }) => cutPartIds.has(id)),
     sequences: (cutSequences.get(row.id) ?? []).filter((sequence) =>
-      sequence.partIds.some((id) => newPartIds.has(id))),
+      sequence.partIds.some((id) => cutPartIds.has(id))),
   }));
   const recordable = cutMaterials.flatMap(({ row, sequences }) => {
-    if (!material(row.id).wood) return [];
+    if (!material(row.id).wood && !isDrywall(row.id)) return [];
     return sequences.flatMap(({ title, layout, review }) => review || !layout.kept.length ? [] : [{
       title,
       layout,
-      existingPartIds: layout.kept.filter(({ id }) => sourcePartIds.has(id)).map(({ id }) => id),
+      existingPartIds: layout.kept.filter(({ id }) => !cutPartIds.has(id)).map(({ id }) => id),
     }]);
   });
   return {
     project,
     plan,
-    newPartCount: newPartIds.size,
+    partCount: cutPartIds.size,
+    replannedPartCount: replanned.size,
     availableOffcuts: scraps.size,
     materials: cutMaterials,
     recordable,

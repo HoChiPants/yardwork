@@ -5,7 +5,7 @@ import { buildQuestion, answerBuildQuestion } from "../src/buildQuestions";
 import { checkDrawerStop, compareDrawerStops, findDrawerOpening, findShorterDrawerTravel } from "../src/drawerOpening";
 import { guideMarkdown } from "../src/engine";
 import { blank, part, projectSchema } from "../src/model";
-import { runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
+import { runMotionTest, saveMotionPlan, saveMotionTestScenario, shorterMotionTrial } from "../src/mechanismMotion";
 
 function cabinet() {
   const project = blank("Drawer behind a cabinet door");
@@ -102,6 +102,14 @@ test("a smaller opening can clear an adjacent pull-out even when the fully open 
     held, linkedId: swing.plan.id, openingOrder: "companion-first",
   }).review!;
   assert.ok(fullDoor.hits.some(({ phase, obstacleId }) => phase === 1 && obstacleId === door.id));
+  const trial = shorterMotionTrial(parked.project, fullDoor, {
+    held, linkedId: swing.plan.id, openingOrder: "companion-first",
+  });
+  assert.ok(trial?.result.review);
+  assert.equal(trial.result.review.sequence?.[0].travel, 90);
+  assert.ok(trial.result.review.sequence![1].travel < 12);
+  assert.deepEqual(trial.setup.held, held);
+  assert.deepEqual(trial.result.review.playbackLimit(100, 0), { travel: 0 });
   const result = await findDrawerOpening(parked.project, slide.plan, swing.plan, 12, { held });
   assert.equal(result.status, "clear");
   assert.equal(result.angle, 1);

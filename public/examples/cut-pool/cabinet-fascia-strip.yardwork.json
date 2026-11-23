@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 150,
+  "id": "a21b4d45-1615-461f-b3d1-641e53bf0efe",
+  "name": "Plywood scrap for two cabinet parts",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "fe9274fc-cc6c-4318-bade-a744ad86b27f"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "7c0bb9cb-9be5-4309-9f16-01ff4a6bfa1c",
+      "label": "P001"
+    },
+    {
+      "partId": "a3217541-4450-4d95-afdd-345ba726f245",
+      "label": "P002"
+    },
+    {
+      "partId": "82c5d517-f445-49d2-8202-859dd7d0299d",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T23:55:00.102Z",
+  "pieces": [
+    {
+      "id": "7c0bb9cb-9be5-4309-9f16-01ff4a6bfa1c",
+      "name": "Cabinet divider blank",
+      "material": "plytanium-703",
+      "size": [
+        12,
+        0.703,
+        14
+      ],
+      "position": [
+        0,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5b36f5cb-356f-43a1-ae4c-c600829013b2",
+      "assembly": "Cabinet parts",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "a3217541-4450-4d95-afdd-345ba726f245",
+      "name": "Long cabinet fascia",
+      "material": "plytanium-703",
+      "size": [
+        7,
+        0.703,
+        22
+      ],
+      "position": [
+        11,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5b36f5cb-356f-43a1-ae4c-c600829013b2",
+      "assembly": "Cabinet parts",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "82c5d517-f445-49d2-8202-859dd7d0299d",
+      "name": "Offcut · Plywood from an earlier cabinet",
+      "material": "plytanium-703",
+      "size": [
+        20,
+        0.703,
+        22
+      ],
+      "position": [
+        0,
+        0.3515,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5b36f5cb-356f-43a1-ae4c-c600829013b2",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "fe9274fc-cc6c-4318-bade-a744ad86b27f",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          20,
+          0.703,
+          22
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "5b36f5cb-356f-43a1-ae4c-c600829013b2",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

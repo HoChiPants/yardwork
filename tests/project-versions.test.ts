@@ -4,7 +4,7 @@ import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { blank, projectSchema } from "../src/model";
+import { blank, part, projectSchema, uid, type WorkspaceDimension } from "../src/model";
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import {
   createBuildStudy,
@@ -12,6 +12,28 @@ import {
 } from "../src/buildFixtures";
 import { cutPiece } from "../src/engine";
 import { ProjectStore } from "../server/storage";
+import { resolveWorkspaceDimension, workspaceDimensionSummary } from "../src/workspaceDimensions";
+
+test("linked dimensions follow a rigid move and flag a surface removed by a through-cut", () => {
+  const project = blank();
+  const board = part("Shelf", "plywood", [24, 0.75, 12], [0, 3, 0], project.steps[0].id, "Casework");
+  const fixed: WorkspaceDimension = { id: uid(), name: "Fixed opening", a: [0, 3.375, 2], b: [24, 3.375, 2] };
+  const previous = projectSchema.parse({ ...project, schemaVersion: 167, workspaceDimensions: [fixed] });
+  assert.deepEqual(previous.workspaceDimensions, [fixed]);
+  const moving: WorkspaceDimension = { ...fixed, id: uid(), anchors: { a: { pieceId: board.id, local: [0, 0.375, 2] } } };
+  project.pieces.push(board);
+  assert.equal(workspaceDimensionSummary(project, moving).length, "2 ft");
+  board.position = [6, 3, 0];
+  board.rotation = [0, Math.PI / 2, 0];
+  assert.deepEqual(resolveWorkspaceDimension(project, moving), { a: [8, 3.375, 0], b: fixed.b, issues: [] });
+  assert.equal(workspaceDimensionSummary(project, moving).length, "16.12452 in");
+  assert.equal(workspaceDimensionSummary(project, fixed).length, "2 ft");
+  board.rectangularOpenings = [{ axis: 1, center: [2, 0], spans: [2, 2] }];
+  assert.equal(workspaceDimensionSummary(project, moving).length, null);
+  assert.match(workspaceDimensionSummary(project, moving).detail, /Point A needs a new pick/);
+  project.pieces = [];
+  assert.equal(workspaceDimensionSummary(project, moving).length, null);
+});
 
 function legacy() {
   let project = createBuildStudy(

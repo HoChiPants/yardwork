@@ -32,6 +32,7 @@ export function reviewBottomPlateSeal(project: Project, record: BottomPlateSeal)
     const layout = bottomPlateLayout(project, record);
     const outdated = layout.signature !== record.signature;
     const problem = outdated ? "The modeled backing or access changed. Reopen the plan and review the seam." :
+      layout.runs.some(({ woodMissing }) => woodMissing) ? "Review the plate cutout seal before ordering sealant for this side." :
       !layout.clearLength ? "Check the subfloor, gap and access before ordering sealant for this side." : "";
     return { layout, problem, outdated };
   } catch (issue) {

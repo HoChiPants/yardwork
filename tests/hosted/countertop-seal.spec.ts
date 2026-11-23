@@ -1,0 +1,61 @@
+import { readFile } from "node:fs/promises";
+import { expect, test } from "@playwright/test";
+import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { projectSchema } from "../../src/model";
+
+test("marked countertop runs show the tapered seam, reuse backing and export the saved detail", async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("./");
+  const fixture = await page.request.get(new URL("./examples/interior/vanity-countertop-seal.yardwork.json", page.url()).href);
+  expect(fixture.ok()).toBe(true);
+  const original = projectSchema.parse(await fixture.json());
+  const name = `${original.name} · ${crypto.randomUUID().slice(0, 6)}`;
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "vanity-countertop-seal.yardwork.json", mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify({ ...original, name })),
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  await dialog.getByRole("textbox", { name: "Describe your idea" }).fill("Plan a countertop seal for P001");
+  await dialog.getByRole("button", { name: "Explore idea" }).click();
+  await dialog.getByRole("button", { name: "Open saved countertop seam" }).click();
+  const inspector = page.getByRole("dialog", { name: "Inspector" });
+  const result = inspector.getByRole("region", { name: "Countertop seal review" });
+  await expect(result).toContainText("modeled gap 0.125 in to 0.18611 in");
+  await expect(result).toContainText("Frost King C23H");
+  await result.screenshot({ path: info.outputPath("countertop-runs.png") });
+  await inspector.getByRole("spinbutton", { name: "Run 1 widest opening" }).fill("0.1");
+  await inspector.getByRole("button", { name: "Check countertop runs", exact: true }).click();
+  await expect(result).toContainText("narrower than the modeled gap");
+  await expect(result.getByRole("button", { name: "Save countertop seal" })).toHaveCount(0);
+  await inspector.getByRole("spinbutton", { name: "Run 1 widest opening" }).fill("0.1875");
+  await inspector.getByRole("button", { name: "Check countertop runs", exact: true }).click();
+  await result.getByRole("button", { name: "Show marks in 3D", exact: true }).click();
+  await expect(page.getByTestId("trim-seam-marker")).toContainText("Countertop seal");
+  await page.getByRole("button", { name: "Return to countertop seal", exact: true }).click();
+  await result.getByRole("button", { name: "Save countertop seal", exact: true }).click();
+  await inspector.getByText("Backer rod cuts and leftovers", { exact: true }).click();
+  await expect(inspector.getByText("Keep 22 in for a future matching run.", { exact: false })).toBeVisible();
+  const shopping = inspector.getByRole("region", { name: "Countertop seal shopping" });
+  await shopping.getByRole("button", { name: "Add missing sealant to List" }).click();
+  await expect(shopping).toContainText("1 planned cartridge · 1 in List");
+  await inspector.getByRole("button", { name: "Back to workspace" }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), CURRENT_DRAFT_KEY);
+  await expect.poll(async () => (await draft())?.revision).toBe(1);
+  const saved = projectSchema.parse((await draft()).project);
+  expect(saved.countertopSeals?.[0].spans).toHaveLength(4);
+  expect(saved.supplies.some(({ productId }) => productId === "ge-2812562-kitchen-bath-clear")).toBe(true);
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: name }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const text = await readFile((await (await download).path())!, "utf8");
+  expect(text).toContain("## Countertop splash seals");
+  expect(text).toContain("Keep 22 in for a future matching run");
+  expect(text).toContain("Leave open for the separate detail");
+});

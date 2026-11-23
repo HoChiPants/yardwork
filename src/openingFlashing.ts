@@ -76,7 +76,7 @@ export function roughOpeningFrame(project: Project, members: OpeningMembers) {
   const z1 = Math.min(...frame.map(({ max }) => max[2]));
   if (z1 - z0 <= epsilon) throw Error("The four members need shared wall depth behind the opening.");
   return {
-    x0, x1, y0, y1, z0, z1,
+    x0, x1, y0, y1, z0, z1, across,
     width: clean(x1 - x0), height: clean(y1 - y0), depth: clean(z1 - z0),
     exteriorPlanes: {
       positive: Math.max(...frame.map(({ max }) => max[2])) - z1 <= epsilon,
@@ -202,7 +202,8 @@ export function checkOpeningFlashing(project: Project, members: OpeningMembers, 
     jambHead: jambHead?.outlines,
     interiorSeal: sealLine,
   };
-  return { frame, length, bed, issues, preview, jambHead, airSeal };
+  const interiorDirection = scale(frame.across, -sign);
+  return { frame, length, bed, issues, preview, jambHead, airSeal, interiorDirection };
 }
 
 export function saveOpeningFlashing(project: Project, members: OpeningMembers, proposed: OpeningFlashingMeasurements) {
@@ -300,9 +301,16 @@ export function openingAirSealBatchLines({ airSealBatches }: ReturnType<typeof r
 }
 
 export function openingAirSealRodRuns(review: ReturnType<typeof reviewOpeningFlashings>) {
-  return review.rows.flatMap(({ title, result, issues }) =>
-    result?.airSeal && !issues.length ? result.airSeal.edges.flatMap(({ edge, rod, length }) => rod
-      ? [{ productId: rod.id, title: `${title} · interior ${edge.toLowerCase()}`, length, start: 0, end: length }] : []) : []);
+  return review.rows.flatMap(({ plan, title, result, issues }) => {
+    const measured = plan.measurements.airSeal;
+    if (!measured || !result?.airSeal || issues.length) return [];
+    return result.airSeal.edges.flatMap(({ edge, rod, length, width }) => rod ? [{
+      key: JSON.stringify(["opening", plan.members.sill, plan.signature, rod.id, edge, width,
+        measured.availableDepth, measured.sealDepth, length]),
+      kind: "opening" as const,
+      productId: rod.id, title: `${title} · interior ${edge.toLowerCase()}`, length, start: 0, end: length,
+    }] : []);
+  });
 }
 
 export function openingFlashingGuideLines(review: ReturnType<typeof reviewOpeningFlashings>) {
@@ -311,31 +319,43 @@ export function openingFlashingGuideLines(review: ReturnType<typeof reviewOpenin
       if (issues.length || !result) return `${title} · Review required. ${issues.join(" ")}`;
       const measured = plan.measurements;
       const setting = `before setting the ${measured.unit}`;
+      const instructions = openingFlashingInstructions(plan, result);
       return [title, step ? `After framing in step ${step}, ${setting}` : setting,
-        `Cut ${formatStockLength(result.length)} from ${measured.tapeWidth} in FlexWrap for the ${formatStockLength(result.frame.width)} opening. Turn ${formatPreciseInches(measured.jambReturn)} up each jamb and lap ${formatPreciseInches(measured.faceLap)} over the exterior drainage plane.`,
-        measured.pan.kind === "back-dam"
-          ? `Verify the measured ${formatPreciseInches(measured.pan.rise)} back dam on the interior side.`
-          : "Verify the sill slopes toward the exterior.",
+        ...instructions.pan,
         "Apply compatible sealant at the head and jambs before setting the unit.",
         openingDrainageNote(measured),
-        ...(result.jambHead ? [
-          `After setting the window, cut ${result.jambHead.cuts.map(({ edge, length }) => `${edge.toLowerCase()} ${formatStockLength(length)}`).join(", ")} from ${measured.jambHead!.tapeWidth} in DuPont Flashing Tape.`,
-          "Lap the jambs over the sill pan and onto the wall wrap below. Apply the head across both jamb strips and onto the exposed backing.",
-          "Fold down the wall-wrap flap and seal its horizontal and diagonal seams. Check the flap trim and drip cap against the installation instructions.",
-        ] : []),
+        ...instructions.exterior,
         "After setting the unit, air-seal its entire interior perimeter before installing trim.",
-        ...(result.airSeal ? [
-          openingAirSealSummary(result.airSeal),
-          ...result.airSeal.edges.map(openingAirSealEdgeLine),
-          ...(result.airSeal.material.id === openingFoam.id
-            ? ["Follow the foam label for ventilation and protection. Use the included dispenser and leave space for expansion."]
-            : ["Dry-fit the closed-cell rod with a blunt tool. Use a cartridge gun and tool the sealant against the two joint faces."]),
-        ] : []),
+        ...instructions.interior,
       ].join(" · ");
     }),
     ...openingFlashingRollLines(review),
     ...openingAirSealBatchLines(review),
   ];
+}
+
+export function openingFlashingInstructions(plan: OpeningFlashingPlan, result: ReturnType<typeof checkOpeningFlashing>) {
+  const measured = plan.measurements;
+  return {
+    pan: [
+      `Cut ${formatStockLength(result.length)} from ${measured.tapeWidth} in FlexWrap for the ${formatStockLength(result.frame.width)} opening. Turn ${formatPreciseInches(measured.jambReturn)} up each jamb and lap ${formatPreciseInches(measured.faceLap)} over the exterior drainage plane.`,
+      measured.pan.kind === "back-dam"
+        ? `Verify the measured ${formatPreciseInches(measured.pan.rise)} back dam on the interior side.`
+        : "Verify the sill slopes toward the exterior.",
+    ],
+    exterior: result.jambHead ? [
+      `After setting the window, cut ${result.jambHead.cuts.map(({ edge, length }) => `${edge.toLowerCase()} ${formatStockLength(length)}`).join(", ")} from ${measured.jambHead!.tapeWidth} in DuPont Flashing Tape.`,
+      "Lap the jambs over the sill pan and onto the wall wrap below. Apply the head across both jamb strips and onto the exposed backing.",
+      "Fold down the wall-wrap flap and seal its horizontal and diagonal seams. Check the flap trim and drip cap against the installation instructions.",
+    ] : [],
+    interior: result.airSeal ? [
+      openingAirSealSummary(result.airSeal),
+      ...result.airSeal.edges.map(openingAirSealEdgeLine),
+      ...(result.airSeal.material.id === openingFoam.id
+        ? ["Follow the foam label for ventilation and protection. Use the included dispenser and leave space for expansion."]
+        : ["Dry-fit the closed-cell rod with a blunt tool. Use a cartridge gun and tool the sealant against the two joint faces."]),
+    ] : [],
+  };
 }
 
 export function reviewGeneratedWindowWalls(project: Project) {

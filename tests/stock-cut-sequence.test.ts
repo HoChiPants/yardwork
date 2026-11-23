@@ -22,6 +22,7 @@ import {
 } from "../src/model";
 import { stockCutSequences } from "../src/stockCutSequence";
 import { planBoardCutGroups, planDedicatedBoardCuts, planStockCutLayouts, recordStockCutLayout, recordStockCutLayouts } from "../src/recordStockCutLayout";
+import { completeStockCutSource } from "../src/plannedCutSources";
 import { inspectCutStock, pieceCutKerf, setCutSourceOnHand, setPlannedWoodKerf } from "../src/cutStock";
 import { homeDepotHandoff, homeDepotShoppingList } from "../src/handoff";
 import { reviewedOfferForMaterial } from "../src/retailerCatalog";
@@ -36,8 +37,9 @@ import { materialFamilyVariants } from "../src/materialGroups";
 import { cutSourceRegion } from "../src/cutSourceAxes";
 import { partLabel } from "../src/partLabels";
 import { planOffcutReuse } from "../src/offcutReusePlan";
-import { offcutCutRows } from "../src/offcutCutGuide";
+import { completeOffcutCut, offcutCutRows, unavailableOffcutLines } from "../src/offcutCutGuide";
 import { planOffcutRelease } from "../src/offcutReleasePlan";
+import { fitPanelOffcut, previewPanelOffcut } from "../src/panelOffcut";
 import { generateBuildGuide } from "../src/guide";
 import { makeLabeledCutPreview } from "../src/CutStudio";
 import { drywallStock } from "../src/drywallReference";
@@ -151,7 +153,7 @@ test("a saved cut plan is pending even when its parent stock is owned, and a mea
   const owned = setCutSourceOnHand(planned, sourceId, true);
   const family = materialFamilyVariants("stud");
   const [expected] = fittingBoardOffcuts(owned, family, 48, inspectCutStock(owned));
-  assert.equal(expected.onHand, true);
+  assert.equal(expected.onHand, false);
   assert.equal(expected.sourceCutPending, true);
 
   const stocked = addMeasuredOffcut(owned, project.steps[0].id, "stud", [64, 3.5, 1.5]);
@@ -215,7 +217,7 @@ test("a floor base can record a batch of ready stock units without repacking or 
   assert.deepEqual(recorded.project.onHandCutSources, marked.sourceIds);
   assert.equal(inspectCutStock(recorded.project).valid.size, 6);
   assert.equal(stockCutSequences(recorded.project, bom(recorded.project)).size, 0);
-  assert.match(guideMarkdown(recorded.project), /Stock cut order for P\d+.*Crosscut 45 in/);
+  assert.match(guideMarkdown(recorded.project), /## Recorded stock cuts[\s\S]+Crosscut 45 in/);
   assert.throws(() => recordStockCutLayouts(recorded.project, rims), /cut layout changed/);
   assert.deepEqual(initial, before);
 });
@@ -332,8 +334,15 @@ test("recording a board joins differently oriented parts without changing their 
   );
   assert.match(
     guideMarkdown(result.project),
-    /Stock cut order for P001 · 1. Crosscut 5 ft/,
+    /## Recorded stock cuts[\s\S]+### P001[\s\S]+1\. Crosscut 5 ft/,
   );
+  const [receipt] = result.project.recordedStockCutOrders!;
+  assert.equal(receipt.completedAt, undefined);
+  assert.deepEqual(receipt.sourceSize, [1.5, 3.5, 96]);
+  const finished = completeStockCutSource(result.project, result.sourceId);
+  assert.ok(finished.recordedStockCutOrders?.[0].completedAt);
+  assert.deepEqual(finished.recordedStockCutOrders?.[0].steps, receipt.steps);
+  assert.equal(bom(finished)[0].quantity, 0);
   assert.equal(stockCutSequences(result.project, bom(result.project)).size, 0);
   const layout = cutStockLayout(result.project, result.sourceId);
   assert.equal(layout.state, "planar");
@@ -487,7 +496,7 @@ test("the glazed greenhouse records every panel without changing shapes, flutes 
   }
   assert.match(
     guideMarkdown(recorded),
-    /Stock cut order for.*across the flutes/,
+    /## Recorded stock cuts[\s\S]+across the flutes/,
   );
 });
 
@@ -694,6 +703,52 @@ test("batch reuse compares whole-board purchases before cutting smaller parts fr
   assert.equal(JSON.stringify(stocked), original);
 });
 
+test("batch reuse rips plywood first when a crosscut would lose the fascia strip", () => {
+  const fixture = new URL("../public/examples/cut-pool/cabinet-fascia-strip.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(readFileSync(fixture, "utf8")));
+  const [divider, fascia, scrap] = project.pieces;
+  const original = structuredClone(project);
+  const crosscut = assignOffcutToPart(project, divider.id, scrap.id);
+  assert.deepEqual(fittingOffcuts(crosscut, fascia), []);
+  assert.equal(bom(crosscut).find(({ id }) => id === divider.material)?.quantity, 1);
+
+  const plan = planOffcutReuse(project, [scrap.id]);
+  assert.deepEqual(plan.ripFirstMaterials, [divider.material]);
+  assert.deepEqual(plan.assignments.map(({ partId }) => partId), [divider.id, fascia.id]);
+  assert.deepEqual(plan.purchases.map(({ before, after }) => [before, after]), [[1, 0]]);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(plan.project)));
+  const rows = offcutCutRows(reopened);
+  assert.deepEqual(rows.map(({ cuts, prior }) => ({ cuts, prior })), [
+    { cuts: ["Rip to 1 ft", "Crosscut to 14 in"], prior: undefined },
+    { cuts: ["Rip to 7 in"], prior: 1 },
+  ]);
+  assert.ok(inspectCutStock(reopened).valid.has(scrap.cutStock!.id));
+  assert.deepEqual(project, original);
+});
+
+test("batch reuse can crosscut one plywood scrap first and rip another", () => {
+  const id = "plytanium-703";
+  const base = cutProject(id, [22, 0.703, 18], [26, 0.703, 5.5], [12, 0.703, 14], [7, 0.703, 22]);
+  base.pieces = base.pieces.map((piece) => ({ ...piece, stockLengthAxis: 2 }));
+  const [widePanel, shelf, divider, fascia] = base.pieces;
+  const step = base.steps[0].id;
+  const first = addMeasuredOffcut(base, step, id, [24, 26, 0.703], "Wide plywood scrap");
+  const project = addMeasuredOffcut(first, step, id, [22, 20, 0.703], "Long plywood scrap");
+  const original = structuredClone(project);
+  assert.equal(bom(project).find(({ id: stock }) => stock === id)?.quantity, 1);
+  const plan = planOffcutReuse(project);
+  assert.equal(plan.assignments.length, 4);
+  assert.deepEqual(plan.assignments.map(({ partId }) => partId), [widePanel.id, shelf.id, divider.id, fascia.id]);
+  assert.match(plan.assignments[0].operations[0], /^Crosscut/);
+  assert.match(plan.assignments[2].operations[0], /^Rip/);
+  assert.deepEqual(plan.purchases.map(({ before, after }) => [before, after]), [[1, 0]]);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(plan.project)));
+  assert.deepEqual(offcutCutRows(reopened).map(({ prior }) => prior), [undefined, 1, undefined, 3]);
+  assert.equal(inspectCutStock(reopened).valid.size, 2);
+  assert.equal(bom(reopened).find(({ id: stock }) => stock === id)?.quantity, 0);
+  assert.deepEqual(project, original);
+});
+
 test("the purchase comparison keeps the original cut order for other stock with tied quantities", () => {
   let project = cutProject("stud", ...[29, 36, 37, 34, 51, 51, 77].map((length): V3 => [1.5, length, 3.5]));
   const [long, short] = [43, 20].map((length) => part("Shelf support", "two-six", [1.5, length, 5.5], [0, length / 2, 0], project.steps[0].id, ""));
@@ -734,6 +789,40 @@ test("an exact blade-width tail can finish a second cleat while leaving no lefto
   assert.deepEqual(restored.map((part) => [part.id, orientedStockSize(part)]), [[stock.id, orientedStockSize(stock)]]);
   assert.equal(bom(release.project).find(({ id }) => id === "stud")?.quantity, 1);
   assert.equal(JSON.stringify(project), original);
+});
+
+test("missing scrap restores stock demand without returning the offcut or losing completed cuts", () => {
+  const base = cutProject("stud", [24, 1.5, 3.5], [3.5, 1.5, 20]);
+  const stocked = addMeasuredOffcut(base, base.steps[0].id, "stud", [44.25, 3.5, 1.5], "Shop scrap");
+  const assigned = planOffcutReuse(stocked).project;
+  const [parent, child] = offcutCutRows(assigned);
+  assert.throws(() => planOffcutRelease(assigned, child.id, "unavailable"), /depends on a planned cut/);
+  const whole = planOffcutRelease(assigned, parent.id, "unavailable");
+  assert.equal(whole.targets.length, 2);
+  assert.ok(whole.project.pieces.every(({ cutStock }) => !cutStock));
+  assert.equal(whole.project.pieces.length, base.pieces.length);
+  assert.equal(offcutCutRows(whole.project).length, 0);
+  assert.match(unavailableOffcutLines(whole.project)[0], /^O001 · Offcut · Shop scrap/);
+
+  const cut = completeOffcutCut(assigned, parent.id);
+  const release = planOffcutRelease(cut, child.id, "unavailable");
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(release.project)));
+  const childInput = assigned.history.find(({ id }) => id === child.id)!.offcutCut!.inputId;
+  assert.ok(!reopened.pieces.some(({ id }) => id === childInput));
+  assert.deepEqual(reopened.pieces.map(({ id, size, position }) => [id, size, position]),
+    base.pieces.map(({ id, size, position }) => [id, size, position]));
+  assert.ok(reopened.pieces[0].cutStock);
+  assert.equal(reopened.pieces[1].cutStock, null);
+  assert.equal(bom(reopened).find(({ id }) => id === "stud")?.quantity, 1);
+  const [completed] = offcutCutRows(reopened);
+  assert.deepEqual(completed.issues, []);
+  assert.ok(completed.completedAt);
+  assert.deepEqual(completed.remnants, []);
+  assert.deepEqual(completed.unavailableRemnants, [partLabel(assigned, childInput)]);
+  const guide = guideMarkdown(reopened);
+  assert.match(guide, /Unavailable remnant · O002/);
+  assert.doesNotMatch(guide, /Keep O002/);
+  assert.match(guide, /Unavailable offcuts[\s\S]*O002/);
 });
 
 test("a straight trim can record a full blade pass without an offcut and rejects a smaller allowance", () => {
@@ -816,8 +905,8 @@ test("returning uncut stock preserves edited design geometry and only releases i
   assert.deepEqual(reopened.pieces.find(({ id }) => id === long.id), { ...edited, cutStock: null });
   assert.equal(reopened.pieces.find(({ id }) => id === short.id)?.cutStock, null);
   assert.ok(reopened.onHandCutSources?.includes(input.cutStock!.id));
-  assert.equal(release.purchase?.before, 0);
-  assert.equal(release.purchase?.after, 1);
+  assert.equal(release.purchases[0]?.before, 0);
+  assert.equal(release.purchases[0]?.after, 1);
   assert.deepEqual(offcutCutRows(reopened).map(({ id }) => id), [independent.id]);
   assert.equal(reopened.history.filter(({ offcutCut }) => offcutCut?.releasedAt).length, 2);
   assert.equal(planOffcutReuse(reopened).assignments.length, 2);
@@ -977,4 +1066,28 @@ test("the mixed rail practice keeps exact board purchases and its saved offcut g
     [["hd-kdht-2x4-8", 1], ["hd-spf-2x4-10", 1]]);
   assert.equal(inspectCutStock(practice).valid.size, 2);
   assert.equal(guideMarkdown(practice), readFileSync(guideUrl, "utf8"));
+});
+
+test("cutting a plywood panel from a planned offcut keeps the grain axis, two remnants and one sheet purchase", () => {
+  const planUrl = new URL("../public/examples/motion/cabinet-two-gaps.yardwork.json", import.meta.url);
+  const source = projectSchema.parse(JSON.parse(readFileSync(planUrl, "utf8")));
+  const offcut = source.pieces.find((piece) => partLabel(source, piece.id) === "O005")!;
+  const copy = structuredClone(source);
+  assert.equal(fitPanelOffcut(source, offcut, 16, 12), undefined);
+  assert.equal(fitPanelOffcut(source, offcut, 15.8, 16), undefined);
+  const { next, panel, pending, remnants } = previewPanelOffcut(source, offcut, 12, 16, "Drawer divider", source.steps[0].id, [36, 0, -18]);
+  assert.equal(pending, true);
+  assert.deepEqual(source, copy);
+  const placed = next.pieces.find(({ id }) => id === panel.id)!;
+  assert.equal(stockAxes(placed).length, stockAxes(offcut).length);
+  assert.equal(placed.cutStock?.id, offcut.cutStock?.id);
+  assert.equal(next.pieces.some(({ id }) => id === offcut.id), false);
+  assert.deepEqual(remnants.map(({ size }) => size), [[0.75, 15.875, 1.875], [0.75, 3.75, 16]]);
+  assert.deepEqual(bom(next).map(({ id, quantity }) => [id, quantity]), [["plywood", 1]]);
+  assert.equal(inspectCutStock(next).invalid.length, 0);
+  assert.match(guideMarkdown(next), /## Planned stock cuts[\s\S]*## Recorded offcut cut order[\s\S]*O005 → P006 · Drawer divider[\s\S]*Crosscut to 16 in · Rip to 1 ft/);
+  const rip = previewPanelOffcut(source, offcut, 12, 16, "Drawer divider", source.steps[0].id, [36, 0, -18], "rip-first");
+  assert.deepEqual(rip.cuts.map(({ kind }) => kind), ["rip", "crosscut"]);
+  assert.deepEqual(rip.remnants.map(({ size }) => size), [[0.75, 3.75, 18], [0.75, 12, 1.875]]);
+  assert.equal(inspectCutStock(rip.next).invalid.length, 0);
 });

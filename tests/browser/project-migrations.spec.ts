@@ -22,7 +22,7 @@ async function stableDraft(page: Page) {
     currentKey,
   );
 }
-for (const sourceVersion of [1, 2, 3, 4, 5, 6, 7, 8, 9])
+for (const sourceVersion of [1, 2, 3, 4, 5, 6, 7, 8, 9, PROJECT_FORMAT_VERSION - 1])
   test(`legacy browser format ${sourceVersion} opens explicitly, saves in the current format and keeps original bytes`, async ({
     page,
   }) => {

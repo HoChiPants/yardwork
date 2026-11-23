@@ -4,6 +4,7 @@ import {
   type CutSourceAxes,
 } from "./cutSourceAxes";
 import { inspectCutStock, pieceCutKerf } from "./cutStock";
+import type { TrimOrder } from "./cutPlan";
 import { cutPiece } from "./engine";
 import { formatStockLength } from "./measurement";
 import {
@@ -20,6 +21,7 @@ import { ensurePartLabels, partLabel } from "./partLabels";
 import { stockAxes } from "./stockAxes";
 import { isDrywall } from "./drywallReference";
 import { cutConsumesTail, stockSplitState } from "./packing";
+import { offcutAvailability } from "./offcutAvailability";
 
 const epsilon = 1e-7;
 type OffcutTarget = Pick<Piece, "material" | "size" | "stockLengthAxis"> &
@@ -46,31 +48,44 @@ function axesOf({
   return [thickness, width, length];
 }
 
+export function isAssignableOffcut(
+  piece: Piece,
+  inspection: ReturnType<typeof inspectCutStock>,
+): piece is Piece & { cutStock: NonNullable<Piece["cutStock"]> } {
+  const stock = material(piece.material);
+  return (stock.wood || isDrywall(stock.id)) && stock.cuttable &&
+    piece.offcut && !!piece.cutStock && inspection.valid.has(piece.cutStock.id) &&
+    !piece.cutPlanes.length && !piece.roundOpenings?.length && !piece.rectangularOpenings?.length;
+}
+
+export function onHandOffcuts(project: Project, inspection = inspectCutStock(project)) {
+  const availability = offcutAvailability(project);
+  return project.pieces.filter((piece) => isAssignableOffcut(piece, inspection) &&
+    availability(piece) === "on-hand");
+}
+
 export function fittingOffcuts(
   project: Project,
   target: OffcutTarget,
   inspection = inspectCutStock(project),
   allowedOffcutIds?: ReadonlySet<string>,
+  order: TrimOrder = "crosscut-first",
 ) {
   const stock = material(target.material);
   if (target.offcut || target.cutStock || (!stock.wood && !isDrywall(target.material)) || !stock.cuttable)
     return [];
   const targetAxes = axesOf(stockAxes(target));
   const desired = sizeAlong(target, targetAxes);
+  const availability = offcutAvailability(project);
   return project.pieces
     .flatMap((piece) => {
-      const source = piece.cutStock;
       if (
-        !piece.offcut ||
         (allowedOffcutIds && !allowedOffcutIds.has(piece.id)) ||
         piece.material !== target.material ||
-        !source ||
-        !inspection.valid.has(source.id) ||
-        piece.cutPlanes.length ||
-        piece.roundOpenings?.length ||
-        piece.rectangularOpenings?.length
+        !isAssignableOffcut(piece, inspection)
       )
         return [];
+      const source = piece.cutStock;
       const axes = axesOf(stockAxes(piece, source.size));
       if (
         !source.sourceAxes &&
@@ -111,19 +126,22 @@ export function fittingOffcuts(
             ]
           : []),
       ];
+      const status = availability(piece);
       return [
         {
           piece,
           axes: targetAxes,
           desired,
           available,
-          operations,
-          onHand: project.onHandCutSources?.includes(source.id) ?? false,
+          operations: order === "rip-first" ? operations.reverse() : operations,
+          onHand: status === "on-hand",
+          sourceCutPending: status === "expected",
         },
       ];
     })
     .sort(
       (a, b) =>
+        Number(a.sourceCutPending) - Number(b.sourceCutPending) ||
         Number(b.onHand) - Number(a.onHand) ||
         a.available[1] * a.available[2] - b.available[1] * b.available[2] ||
         a.piece.name.localeCompare(b.piece.name),
@@ -136,7 +154,6 @@ export function fittingBoardOffcuts(
   length: number,
   inspection: ReturnType<typeof inspectCutStock>,
 ) {
-  const plannedSources = new Set(project.plannedCutSources?.map(({ sourceId }) => sourceId));
   const available = new Set(project.pieces
     .filter((piece) => piece.offcut && family.includes(piece.material))
     .map((piece) => piece.material));
@@ -156,7 +173,6 @@ export function fittingBoardOffcuts(
         return [{
           ...match,
           stockLengthAxis: target.stockLengthAxis,
-          sourceCutPending: plannedSources.has(match.piece.cutStock!.id),
         }];
       }));
   }).sort((a, b) => Number(a.sourceCutPending) - Number(b.sourceCutPending) ||
@@ -168,12 +184,13 @@ export function assignOffcutToPart(
   input: Project,
   targetId: string,
   offcutId: string,
+  order: TrimOrder = "crosscut-first",
 ) {
   const project = ensurePartLabels(input);
   const target = project.pieces.find(({ id }) => id === targetId);
   const candidate =
     target &&
-    fittingOffcuts(project, target).find(({ piece }) => piece.id === offcutId);
+    fittingOffcuts(project, target, inspectCutStock(project), new Set([offcutId]), order)[0];
   if (!target || !candidate)
     throw Error(
       "This offcut no longer fits the planned part. Choose matching stock and allow room for the saw cut.",

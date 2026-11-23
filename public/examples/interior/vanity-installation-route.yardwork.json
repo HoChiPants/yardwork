@@ -1,0 +1,423 @@
+{
+  "schemaVersion": 157,
+  "id": "e234aa4a-12df-4d7b-ab59-8c73469cb2fd",
+  "name": "Vanity installation through a narrow doorway",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "installationRoutes": [
+    {
+      "id": "ff474a05-e890-429c-a39a-855f4008f342",
+      "name": "Vanity via the entry door",
+      "target": {
+        "kind": "section",
+        "id": "6c9a1713-7548-4f7b-aa0c-bfa5aa064048"
+      },
+      "waypoints": [
+        {
+          "x": -24,
+          "y": 0.375,
+          "z": -104,
+          "yaw": 90
+        },
+        {
+          "x": -24,
+          "y": 0.375,
+          "z": 0,
+          "yaw": 0
+        }
+      ],
+      "defer": [
+        "6b4e250b-b042-4b13-8fdf-f2a36ae1c5fe"
+      ],
+      "ceiling": 90,
+      "door": {
+        "id": "57b28f04-6719-4254-853a-bb703c4efeb2",
+        "angle": 90
+      }
+    }
+  ],
+  "motionPlans": [
+    {
+      "label": "Entry door",
+      "memberIds": [
+        "1a91b2b4-41b0-4afd-b98f-f6818a35962a"
+      ],
+      "mechanism": {
+        "kind": "hinge",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "pivot": [
+          -14.875,
+          0,
+          0.875
+        ],
+        "travel": 90
+      },
+      "id": "57b28f04-6719-4254-853a-bb703c4efeb2"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "dcb90b17-4622-41af-81ff-15a189940c64",
+      "label": "P001"
+    },
+    {
+      "partId": "79428496-b799-4419-8aef-3253ff3504f9",
+      "label": "P002"
+    },
+    {
+      "partId": "9278a4e9-99f7-4de4-b545-bb584c2a2b1c",
+      "label": "P003"
+    },
+    {
+      "partId": "6e13c69f-3a56-485a-bce7-843333ea6776",
+      "label": "P004"
+    },
+    {
+      "partId": "6dd34c93-fd28-4540-aa58-a86a67178138",
+      "label": "P005"
+    },
+    {
+      "partId": "6b4e250b-b042-4b13-8fdf-f2a36ae1c5fe",
+      "label": "P006"
+    },
+    {
+      "partId": "f17ee754-5b84-40a2-9e65-db4f49cb8f4f",
+      "label": "P007"
+    },
+    {
+      "partId": "277e4fd0-d7f5-46e3-a45d-80e3f984b004",
+      "label": "P008"
+    },
+    {
+      "partId": "69a7d70e-6c09-4a41-82dc-6b73d711192e",
+      "label": "P009"
+    },
+    {
+      "partId": "1a91b2b4-41b0-4afd-b98f-f6818a35962a",
+      "label": "P010"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T01:15:20.272Z",
+  "pieces": [
+    {
+      "id": "dcb90b17-4622-41af-81ff-15a189940c64",
+      "name": "Left side",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        35,
+        22
+      ],
+      "position": [
+        4.3515,
+        17.5,
+        56
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Utility vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "79428496-b799-4419-8aef-3253ff3504f9",
+      "name": "Right side",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        35,
+        22
+      ],
+      "position": [
+        43.6485,
+        17.5,
+        56
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Utility vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9278a4e9-99f7-4de4-b545-bb584c2a2b1c",
+      "name": "Bottom",
+      "material": "plytanium-703",
+      "size": [
+        38.594,
+        0.703,
+        22
+      ],
+      "position": [
+        24,
+        0.3515,
+        56
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Utility vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6e13c69f-3a56-485a-bce7-843333ea6776",
+      "name": "Back",
+      "material": "plytanium-703",
+      "size": [
+        38.594,
+        34.297,
+        0.703
+      ],
+      "position": [
+        24,
+        17.8515,
+        45.3515
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Utility vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6dd34c93-fd28-4540-aa58-a86a67178138",
+      "name": "Top stretcher",
+      "material": "plytanium-703",
+      "size": [
+        38.594,
+        0.703,
+        4
+      ],
+      "position": [
+        24,
+        34.6485,
+        65
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Utility vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6b4e250b-b042-4b13-8fdf-f2a36ae1c5fe",
+      "name": "Separate worktop",
+      "material": "plytanium-703",
+      "size": [
+        46,
+        0.703,
+        34
+      ],
+      "position": [
+        24,
+        35.3515,
+        56
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Utility vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f17ee754-5b84-40a2-9e65-db4f49cb8f4f",
+      "name": "Existing partition · left of opening",
+      "material": "plywood",
+      "size": [
+        48,
+        86,
+        1.5
+      ],
+      "position": [
+        -39,
+        43,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Existing surfaces",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "277e4fd0-d7f5-46e3-a45d-80e3f984b004",
+      "name": "Existing partition · right of opening",
+      "material": "plywood",
+      "size": [
+        48,
+        86,
+        1.5
+      ],
+      "position": [
+        39,
+        43,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Existing surfaces",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "69a7d70e-6c09-4a41-82dc-6b73d711192e",
+      "name": "Existing partition · above opening",
+      "material": "plywood",
+      "size": [
+        30,
+        6,
+        1.5
+      ],
+      "position": [
+        0,
+        89,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Existing surfaces",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "1a91b2b4-41b0-4afd-b98f-f6818a35962a",
+      "name": "Practice entry door",
+      "material": "plywood",
+      "size": [
+        29.75,
+        84,
+        1.375
+      ],
+      "position": [
+        0,
+        42.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "assembly": "Existing surfaces",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "1829963f-2d0d-42e0-abc4-0491273b0ce6",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice route through a modeled 30 in opening. The partition and door are site mockups. Use measured room geometry and allow space for the people moving the actual cabinet.",
+  "sections": [
+    {
+      "id": "6c9a1713-7548-4f7b-aa0c-bfa5aa064048",
+      "name": "Utility vanity",
+      "pieceIds": [
+        "dcb90b17-4622-41af-81ff-15a189940c64",
+        "79428496-b799-4419-8aef-3253ff3504f9",
+        "9278a4e9-99f7-4de4-b545-bb584c2a2b1c",
+        "6e13c69f-3a56-485a-bce7-843333ea6776",
+        "6dd34c93-fd28-4540-aa58-a86a67178138",
+        "6b4e250b-b042-4b13-8fdf-f2a36ae1c5fe"
+      ],
+      "origin": [
+        24,
+        0,
+        56
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

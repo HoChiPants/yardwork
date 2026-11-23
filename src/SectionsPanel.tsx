@@ -9,18 +9,23 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { material, type Project, type Section, type V3 } from "./model";
+import { material, type Piece, type Project, type Section, type V3 } from "./model";
 import { LidMotionPanel } from "./LidMotionPanel";
 import type { LidPreview } from "./lidMotion";
 import { LidHingesPanel } from "./LidHingesPanel";
 import { removeLidHingePlan } from "./hinges";
+import { CheckedSectionMove } from "./CheckedSectionMove";
+import type { SectionTranslationPreview } from "./sectionTranslation";
 import {
   createSection,
   duplicateSection,
+  isSimpleSection,
+  looseSectionParts,
   removeSection,
   sectionModified,
   sectionSummary,
   transformSection,
+  ungroupSectionBlocker,
   previewRecipeResize,
   setSectionLidOpen,
 } from "./sections";
@@ -192,6 +197,8 @@ function RecipeEditor({
             {preview.value.incompleteEstimate
               ? "Some cuts exceed available stock. "
               : ""}
+            {preview.value.affectedMotions.length > 0 &&
+              `After rebuilding, retest ${preview.value.affectedMotions.join(", ")} and review the new mounting faces. `}
             Undo is available.
           </p>
         </div>
@@ -277,6 +284,76 @@ function RecipeEditor({
   );
 }
 
+export function SectionPartPicker({
+  project,
+  parts,
+  selectedIds,
+  onToggle,
+  onCreate,
+  onCancel,
+  onPickInWorkspace,
+}: {
+  project: Project;
+  parts: readonly Piece[];
+  selectedIds: ReadonlySet<string>;
+  onToggle: (id: string) => void;
+  onCreate: (name: string) => void;
+  onCancel: () => void;
+  onPickInWorkspace?: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [filter, setFilter] = useState("");
+  const [limit, setLimit] = useState(25);
+  const rows = useMemo(() => {
+    const labels = new Map(project.partLabels.map(({ partId, label }) => [partId, label]));
+    return parts.map(({ id, name }) => ({
+      id,
+      label: [labels.get(id), name].filter(Boolean).join(" · "),
+    }));
+  }, [parts, project.partLabels]);
+  const matches = rows.filter(({ label }) => label.toLowerCase().includes(filter.trim().toLowerCase()));
+  return (
+    <section className="group-parts-picker" aria-label="Group loose parts">
+      <div className="panel-intro">
+        <h2>Group loose parts</h2>
+        <p>Select pieces in the workspace or from the list.</p>
+      </div>
+      {onPickInWorkspace && <button type="button" className="button secondary full" onClick={onPickInWorkspace}>Pick in 3D</button>}
+      <label className="field">
+        Section name
+        <input value={name} maxLength={80} placeholder="My section" onChange={(event) => setName(event.target.value)} />
+      </label>
+      <p className="small-note" role="status">{selectedIds.size} selected · Choose at least two</p>
+      <button type="button" className="button primary full" disabled={selectedIds.size < 2} onClick={() => onCreate(name)}>
+        <Layers3 size={15} /> Create section
+      </button>
+      <button type="button" className="text-button full" onClick={onCancel}>Cancel grouping</button>
+      {rows.length > 8 && (
+        <label className="field">
+          Find loose parts
+          <input type="search" value={filter} onChange={(event) => {
+            setFilter(event.target.value);
+            setLimit(25);
+          }} />
+        </label>
+      )}
+      <fieldset className="group-part-list">
+        <legend>Loose parts</legend>
+        {matches.slice(0, limit).map(({ id, label }) => (
+          <label key={id}>
+            <input type="checkbox" checked={selectedIds.has(id)} onChange={() => onToggle(id)} />
+            <span>{label}</span>
+          </label>
+        ))}
+        {!matches.length && <p className="small-note">No matching parts.</p>}
+        {matches.length > limit && (
+          <button type="button" className="text-button" onClick={() => setLimit(limit + 25)}>Show more parts</button>
+        )}
+      </fieldset>
+    </section>
+  );
+}
+
 export function SectionsPanel({
   project,
   selectedId,
@@ -285,8 +362,13 @@ export function SectionsPanel({
   onGenerate,
   onReviewFloorBase,
   onReviewWindowOpening,
+  onEditCabinetPulls,
   onMoveTool,
+  translationPreview,
+  onTranslationPreview,
+  onApplyTranslation,
   onPartTool,
+  onUngroup,
   onLidPreview,
   lidPreviewSectionId,
 }: {
@@ -297,8 +379,13 @@ export function SectionsPanel({
   onGenerate: (id: string) => void;
   onReviewFloorBase: (section: Section) => void;
   onReviewWindowOpening: (section: Section) => void;
+  onEditCabinetPulls: (section: Section) => void;
   onMoveTool: () => void;
+  translationPreview: SectionTranslationPreview | null;
+  onTranslationPreview: (value: SectionTranslationPreview | null) => void;
+  onApplyTranslation: (value: SectionTranslationPreview) => void;
   onPartTool: () => void;
+  onUngroup: (id: string) => void;
   onLidPreview?: (preview: LidPreview | null) => void;
   lidPreviewSectionId?: string | null;
 }) {
@@ -311,15 +398,11 @@ export function SectionsPanel({
       setError(e instanceof Error ? e.message : "Section edit failed");
     }
   };
-  const section = project.sections.find((s) => s.id === selectedId),
-    owned = new Set(project.sections.flatMap((s) => s.pieceIds));
-  const labels = [
-    ...new Set(
-      project.pieces
-        .filter((p) => !p.offcut && !owned.has(p.id))
-        .map((p) => p.assembly),
-    ),
-  ];
+  const section = project.sections.find((s) => s.id === selectedId);
+  const canShowUngroup = !!section && isSimpleSection(section);
+  const ungroupBlocker = canShowUngroup ? ungroupSectionBlocker(project, section) : undefined;
+  const loose = looseSectionParts(project);
+  const labels = [...new Set(loose.map((part) => part.assembly))];
   const orphanedHinges = project.lidHingePlans.filter(
     (plan) =>
       !project.sections.some(
@@ -452,6 +535,9 @@ export function SectionsPanel({
               }}
             />
           </label>
+          {section.cabinetDoors && <button type="button" className="button secondary full" onClick={() => onEditCabinetPulls(section)}>
+            Edit cabinet pulls
+          </button>}
           {section.recipe ? (
             <RecipeEditor
               key={`${project.id}/${section.id}`}
@@ -556,9 +642,20 @@ export function SectionsPanel({
               <Move3D size={14} />
               Move section in 3D
             </button>
+            <CheckedSectionMove key={section.id} project={project} section={section} preview={translationPreview}
+              onPreview={onTranslationPreview} onApply={onApplyTranslation} />
             <button className="text-button full" onClick={onPartTool}>
               Select individual parts
             </button>
+            {canShowUngroup && (
+              <>
+                <button type="button" className="button secondary full" disabled={!!ungroupBlocker}
+                  onClick={() => onUngroup(section.id)}>
+                  Ungroup parts
+                </button>
+                {ungroupBlocker && <p className="small-note">{ungroupBlocker}</p>}
+              </>
+            )}
           </div>
           <div className="field-section">
             <h4>
@@ -620,12 +717,7 @@ export function SectionsPanel({
               className="step-part"
               onClick={() =>
                 attempt(() => {
-                  const ids = project.pieces
-                    .filter(
-                      (p) =>
-                        !p.offcut && !owned.has(p.id) && p.assembly === label,
-                    )
-                    .map((p) => p.id);
+                  const ids = loose.filter((part) => part.assembly === label).map((part) => part.id);
                   const result = createSection(
                     project,
                     ids,

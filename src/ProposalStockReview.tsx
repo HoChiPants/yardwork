@@ -10,7 +10,7 @@ import { partLabel } from "./partLabels";
 type StockReview = ReturnType<typeof previewProposalStock>;
 
 export function ProposalStockReview({
-  project, open, setOpen, offcuts, setOffcuts, review, error, cutScope, setCutScope, selectedCutUnits,
+  project, open, setOpen, offcuts, setOffcuts, review, error, cutScope, setCutScope, selectedCutUnits, cutOrderLabel = "Wood cut orders to save",
 }: {
   project: Project;
   open: boolean;
@@ -22,6 +22,7 @@ export function ProposalStockReview({
   cutScope: ProposalCutScope | null;
   setCutScope: (scope: ProposalCutScope | null) => void;
   selectedCutUnits: StockReview["recordable"];
+  cutOrderLabel?: string;
 }) {
   const hasOffcuts = review ? review.availableOffcuts > 0 : project.pieces.some(({ offcut }) => offcut);
   const shared = review?.recordable.filter(({ existingPartIds }) => existingPartIds.length) ?? [];
@@ -40,7 +41,7 @@ export function ProposalStockReview({
                 <input type="checkbox" checked={offcuts !== null}
                   onChange={(e) => setOffcuts(e.target.checked ? [] : null)}
                   disabled={!hasOffcuts && offcuts === null} />
-                Use matching scraps for the new parts
+                {review?.replannedPartCount ? "Use matching scraps for the revised cuts" : "Use matching scraps for the new parts"}
               </label>
               {!!offcuts?.length && (
                 <p className="small-note">
@@ -56,7 +57,7 @@ export function ProposalStockReview({
           {review && (!!review.recordable.length || cutScope) && (
             <div className="field-section">
               <label className="field">
-                Wood cut orders to save
+                {cutOrderLabel}
                 <select value={cutScope ?? ""} onChange={(event) => {
                   const value = event.target.value;
                   setCutScope(value === "proposal" || value === "shared" ? value : null);
@@ -75,7 +76,7 @@ export function ProposalStockReview({
               {cutScope && !selectedCutUnits.length && (
                 <p className="small-note" role="status">
                   {shared.length ? "The available cut orders share stock with existing parts. Choose whether to include them."
-                    : "This proposal has no wood stock units ready to save. Review the cuts or keep the layouts flexible."}
+                    : "This proposal has no stock units ready to save. Review the cuts or keep the layouts flexible."}
                 </p>
               )}
               {cutScope === "shared" && shared.length > 0 && (
@@ -92,8 +93,8 @@ export function ProposalStockReview({
           )}
           {review && (
             <>
-              {!review.newPartCount ? (
-                <p className="small-note">This change has no new cuttable parts.</p>
+              {!review.partCount ? (
+                <p className="small-note">This change has no cuts to plan.</p>
               ) : (
                 <>
                   {review.plan && <OffcutReusePlanDetails plan={review.plan} />}

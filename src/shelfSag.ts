@@ -62,6 +62,8 @@ export function shelfSagGeometry(row: PanelBearingReview) {
       start: strips[index].center,
       end: strip.center,
       length: strip.center - strips[index].center,
+      clearStart: strips[index].high,
+      clearEnd: strip.low,
     }));
     const longest = spans.reduce((a, b) => (a.length >= b.length ? a : b));
     const world = (value: number) => {

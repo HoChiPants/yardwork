@@ -8,9 +8,12 @@ import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorJoistReviews } from "./subfloorJoists";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
-import { topPlateSealReviews } from "./topPlateSeal";
+import { drywallPlateSealReviews } from "./topPlateSeal";
 import { sinkDrainStageKey } from "./sinkDrain";
 import { waterFittingPorts } from "./waterFittingSchema";
+import { pipeAirSealCoveringSections } from "./pipeAirSeal";
+import { waterPressureReviewStep, waterRoughInLinings } from "./waterPressure";
+import { windowFlashingPhaseKinds, windowFlashingSchedule } from "./windowFlashingGuide";
 
 type NumberedStep = { step: Step; number: number };
 type ReviewKind = Exclude<NonNullable<Step["generated"]>["kind"], "assembly-stage">;
@@ -28,11 +31,13 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
   const byOwner = new Map<string, Map<string, NumberedStep>>();
   const stageByMember = new Map<string, NumberedStep>();
   const reviewSteps = new Map<string, NumberedStep>();
+  const numberedSteps = new Map<string, NumberedStep>();
   const reviewKey = (kind: ReviewKind, planId: string) => `${kind}/${planId}`;
   project.steps.forEach((step, index) => {
+    const numbered = { step, number: index + 1 };
+    numberedSteps.set(step.id, numbered);
     const stage = step.generated;
     if (!stage) return;
-    const numbered = { step, number: index + 1 };
     if (stage.kind !== "assembly-stage") {
       reviewSteps.set(reviewKey(stage.kind, stage.planId), numbered);
       return;
@@ -86,6 +91,23 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
     const stages = byOwner.get(id);
     requireBefore(stages?.get("section"), stages?.get("fit-door"));
   }
+  for (const { id, cabinetDoors } of project.sections) {
+    if (!cabinetDoors) continue;
+    const stage = byOwner.get(id)?.get("fit-cabinet-doors");
+    for (const frameId of cabinetDoors.frameIds) requireBefore(stageByMember.get(frameId), stage);
+  }
+  for (const plan of project.cabinetBacking ?? []) {
+    const backing = byOwner.get(plan.id)?.get("cabinet-backing");
+    if (!backing) continue;
+    for (const { first, second } of plan.blocks) {
+      requireBefore(stageByMember.get(first), backing);
+      requireBefore(stageByMember.get(second), backing);
+    }
+    for (const { pieceIds, wallDrywall } of project.sections) {
+      if (wallDrywall?.wallId !== plan.input.wallId) continue;
+      for (const id of pieceIds) requireBefore(backing, stageByMember.get(id));
+    }
+  }
   for (const run of project.waterRuns ?? [])
     requireBefore(byOwner.get(run.sectionId)?.get("section"), byOwner.get(run.id)?.get(waterRunStageKey));
   for (const fitting of project.waterFittings ?? []) {
@@ -124,12 +146,19 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
     requireBefore(review, moving);
   }
   const finish = reviewSteps.get(reviewKey("project-finish", project.id));
-  const waterReview = reviewSteps.get(reviewKey("water-pressure-review", project.id));
+  const pressureStep = waterPressureReviewStep(project);
+  const waterReview = pressureStep && numberedSteps.get(pressureStep.id);
   if (waterReview) {
     for (const run of project.waterRuns ?? [])
       requireBefore(byOwner.get(run.id)?.get(waterRunStageKey), waterReview);
     for (const fitting of project.waterFittings ?? [])
       requireBefore(byOwner.get(fitting.id)?.get(waterFittingStageKey), waterReview);
+    for (const { pieceIds } of waterRoughInLinings(project)) {
+      for (const id of pieceIds) {
+        const stepId = activeStepsByMember.get(id);
+        if (stepId) requireBefore(waterReview, numberedSteps.get(stepId));
+      }
+    }
     requireBefore(waterReview, finish);
     for (const stop of project.waterStops ?? []) {
       const fixture = byOwner.get(stop.id)?.get(waterStopStageKey);
@@ -160,8 +189,10 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
       requireBefore(stageByMember.get(id), stageByMember.get(panelId));
     }
   }
+  const plateToSubfloorSteps = new Map<string, NumberedStep>();
   for (const { record, layout } of bottomPlateSealReviews(project)) {
     const seal = reviewSteps.get(reviewKey("bottom-plate-air-seal", record.id));
+    if (seal) plateToSubfloorSteps.set(`${record.plateId}/${record.side}`, seal);
     requireBefore(stageByMember.get(record.plateId), seal);
     const supportIds = new Set(layout?.runs.flatMap(({ panelId }) => panelId ? [panelId] : []));
     for (const id of supportIds) {
@@ -170,12 +201,29 @@ export function reviewAssemblyOrder(project: Project): AssemblyOrderFinding[] {
     }
     requireBefore(seal, finish);
   }
-  for (const { record, layout } of topPlateSealReviews(project)) {
-    const seal = reviewSteps.get(reviewKey("top-plate-air-seal", record.id));
+  for (const { record, layout, face } of drywallPlateSealReviews(project)) {
+    const seal = reviewSteps.get(reviewKey(face === "bottom" ? "drywall-bottom-plate-air-seal" : "top-plate-air-seal", record.id));
+    if (face === "bottom") requireBefore(plateToSubfloorSteps.get(`${record.plateId}/${record.side}`), seal);
     requireBefore(stageByMember.get(record.plateId), seal);
     const panels = new Set(layout?.runs.flatMap(({ panelId }) => panelId ? [panelId] : []));
     for (const id of panels) requireBefore(seal, stageByMember.get(id));
     requireBefore(seal, finish);
+  }
+  for (const { id, partId } of project.pipeAirSeals ?? []) {
+    const seal = reviewSteps.get(reviewKey("pipe-air-seal", id));
+    requireBefore(stageByMember.get(partId), seal);
+    for (const { pieceIds } of pipeAirSealCoveringSections(project, partId))
+      for (const coverId of pieceIds) requireBefore(seal, stageByMember.get(coverId));
+    requireBefore(seal, finish);
+  }
+  for (const { plan, memberIds, covers } of windowFlashingSchedule(project)) {
+    const [pan, exterior, interior] = windowFlashingPhaseKinds.map((kind) => reviewSteps.get(reviewKey(kind, plan.members.sill)));
+    for (const id of memberIds) requireBefore(numberedSteps.get(activeStepsByMember.get(id) ?? ""), pan);
+    requireBefore(pan, exterior);
+    requireBefore(exterior, interior);
+    for (const { pieceIds } of covers)
+      for (const id of pieceIds) requireBefore(interior, numberedSteps.get(activeStepsByMember.get(id) ?? ""));
+    requireBefore(interior, finish);
   }
   for (const plan of project.restraintPlans) {
     if (plan.receiver && stageByMember.has(plan.receiver.pieceId))

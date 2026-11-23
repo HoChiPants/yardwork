@@ -1,5 +1,9 @@
 # Yardwork
 
+Yardwork is a local 3D project planner for home builds. Arrange editable parts, compare stock and scraps, test moving hardware, and generate a build guide and shopping list.
+
+[Run locally](#run-locally) · [Settings](#settings) · [Design workflow](#design-first) · [AI planner](#ai) · [Import and export](#plan-import-and-export)
+
 Use **Sections → Review lid travel** to play or scrub a storage-seat lid. Playback stops at a detected obstruction, work-zone boundary, or measured clearance limit. See [lid motion and clearance](docs/lid-motion.md) for the workflow and its geometry boundaries.
 
 For a storage lid, **Lid travel → Fit a folding lid stay** lets you enter the measured pin positions and arm lengths. Preview the linkage, test for a reach limit up to 90°, and add a separately selected handed Everbilt model to the Home Depot list. The fit and pin marks appear in the build guide.
@@ -38,15 +42,25 @@ For wood boards, entering a finished length also checks the Cut pool for matchin
 
 In **Plan an idea**, ask **“Can I make a 4 ft 2x4 from scrap?”** to check one board against the current Cut pool. Ask **“Can I cut a 4 ft 2x4 from O002?”** to check that specific offcut. **Review board placement** opens the finished dimension and lets you compare compatible offcuts before choosing which to use.
 
+Ask **“What can I make from scraps I already have?”** or turn on **Use only on-hand offcuts** in **Cut pool → Review offcut reuse** to plan cuts from measured scraps and completed stock cuts marked on hand. The full review also shows expected offcuts and flags which source cuts need to happen first.
+
+If a reserved scrap is missing or was used elsewhere, open **Cut pool → View offcut cut order → Review starting offcut**. Choose **Missing or used elsewhere** to preview the affected parts and updated purchase quantities. Applying the change keeps their dimensions and records the missing piece in the guide.
+
+If you change your mind before cutting a board or sheet, open **List → Recorded cut source → Release uncut stock plan**. Preview every part affected and return the whole blank to the Cut pool if you already own it. [Revising recorded stock](docs/recorded-cut-sources.md)
+
 **Checks → Fit stock between faces** previews a real board between selected retained faces, with independent end-clearance units, cross-section roll and an explicit datum. Review its cut and genuine remnant, then Add through ordinary Undo or Cancel without changing the project. The new part opens two end-connection actions and shares one physical stock source with its remnant. [Fitted-stock workflow](docs/fitted-stock.md).
 
 Early working release. Not affiliated with The Home Depot or Lowe’s. See [product readiness and remaining work](docs/product-readiness.md) for the distinction between editable studies and complete builds.
 
 [Sealing wood joints and openings](docs/sealing-and-air-barrier.md) records construction references for air seals, drainage, panel spacing, and adhesive details.
 
+In **Connections → Plan trim sealant**, the edge preview shows where another part covers the bead and when the seam needs to be sealed before the cover goes on. [Cabinet practice plan](public/examples/air-sealing/trim-before-cover.yardwork.json) · [Build guide](public/examples/air-sealing/trim-before-cover-guide.md)
+
 **Checks → Review connection decisions → Banquette construction** separates current closed-seat contacts from exact frame/shell connection pairs. Start a screw/connector plan for the actual members or resume its existing W/C record, then include the findings in Markdown and print. Small screens can **Expand inspector** without replacing the editor or resetting the workspace. [Banquette review workflow](docs/banquette-construction.md).
 
 The canvas starts with the assembly; **Show offcut stock** or select an O-labeled remnant to inspect retained stock, then **Back to assembly**. Successful fitted-stock previews bring Add/Cancel/Inspect into view. **Part → Build stage** keeps a custom part in its chosen task through guide regeneration; the guide also preserves deliberate Earlier/Later ordering. [Build stages and stock inspection](docs/guide-placement.md).
+
+Open **Stock for this step** in the Guide to find the boards, sheets and offcut operations used by that step. If a verified offcut assignment supplies a later step, the earlier stock row says which labeled scrap to keep, its starting size and the part it will supply. Open a row to review its exact cut layout or mark the source cuts complete. Workshop guide exports carry these reminders and put cutting orders before assembly.
 
 **Guide → Review build preparation** lists assembly stages or hardware reviews scheduled ahead of their modeled prerequisites. For example, it checks that a banquette hinge review sits between the shell and lid tasks and that shelf-pin drilling review comes before shelf placement. Select a finding to open that step, then use **Earlier** or **Later** to adjust the order. The findings also appear in the Markdown and print guides.
 
@@ -76,7 +90,45 @@ Before the first cut on a wood board, sheet or measured offcut, open **Cut part 
 
 **Cut part → Rectangular cut** models a rectangular opening or an edge notch. Set the two starting marks and cut dimensions on the labeled face. Motion and contact checks follow the retained shape, and the guide gives the marks on the actual blank.
 
+**Sections → Plan wall drywall** lays out ½ in sheets on a framed interior wall. Pick the wall face, sheet length and bottom gap. Preview the door and window cutouts, check matching scraps, and save sheet cut orders. The sheets move with the wall, and the build guide carries the opening marks and flags changes to the framing or fitted panels. Confirm backing, tapered edges and rough-in before hanging. [USG installation guide](https://www.usg.com/content/dam/USG/pdpmovedocuments/sheetrock-gypsum-panels-installation-guide-en-J371.pdf)
+
+Open **Screws and backing** in the drywall preview or on an existing lined face. Each sheet shows screw locations measured from its installed left and bottom edges. If the layout lacks backing above the window, **Try adding backing above the window** previews short studs and their cuts. With clear paths, **List** estimates the exact drywall screw model by 1-lb box. The build guide includes the marks and the tool checklist calls for a #2 Phillips depth-control driver. Locate services in the actual wall before driving. [USG panel specifications](https://www.usg.com/content/dam/USG/pdpmovedocuments/sheetrock-ultralight-panels-submittal-en-wb2501.pdf) · [Grip-Rite screw specifications](https://grip-rite.com/product/fasteners/hand-drive/screws/drywall-screws/coarse-thread-screw/)
+
+Open **Joint tape** to see the flat seams and their coordinates on the installed face. The takeoff skips door and window openings and groups net lengths by 250 ft roll. The guide lists the tape cuts and unallocated length, and **Prepare Home Depot list** offers the exact roll. Ask **“How much drywall joint tape do I need for this wall?”** to find the review. Add tape for overlaps, corners, repairs and waste. [USG paper tape instructions](https://www.usg.com/content/dam/USG_Marketing_Communications/united_states/product_promotional_materials/finished_assets/sheetrock-paper-joint-tape-submittal-J1736.pdf) · [Home Depot 382175](https://www.homedepot.com/p/100321613)
+
+In **Plan an idea**, try **“Hang drywall on both sides of this wall using 12-foot sheets, a quarter-inch bottom gap, and matching scraps. Add backing above the window.”** Select a framed wall first or put its section name in quotes. Review one combined preview before adding both faces. After saving, ask **“How many drywall screws do I need for this wall?”** to find the current marks or backing issues.
+
+For a fitted interior door, choose **Sections → Plan door casing**. Preview the reveal, square leg ends, matched 45° miters and swing with the trim installed. If the trim limits movement, Yardwork checks whether a wider reveal can recover the earlier travel. **Cuts and stock** can reuse rectangular pine scraps and save cut orders. Confirm the finished wall plane, attachment backing and delivered wood before cutting. [Door casing installation](https://www.homedepot.com/c/ah/how-to-trim-a-doorway/9ba683603be9fa5395fab9012a369cf0) · [Flat pine stock reference](https://www.homedepot.com/p/202535803)
+
+Choose **Sections → Seal fitted casing** or ask **“How much sealant do I need around this casing?”** Measure the outer trim-to-drywall seam and mark stretches to leave open. Yardwork flags gaps in nearby drywall or objects that cover the planned bead. It groups sealant with other measured trim work in the same session and puts the marks after casing installation in the guide. Test the bead and finish on matching scrap. [DAP application and coverage](https://es.dap.com/media/12322/dynaflex-230-white-colors_tds_2-9-19.pdf)
+
+Choose **Sections → Check door hardware** or ask **“Will the door knob hit the wall?”** Measure the knobs or levers on both faces of the fitted door. The preview compares the bare leaf against the installed hardware and identifies contact with nearby objects. The clearance boxes conservatively cover the measured hardware. The build guide carries the bore and hardware measurements. Choose the Georgian passage reference to include one set in the Home Depot list. [Schlage preparation drawing](https://www.schlage.com/content/dam/sch-us/documents/pdf/installation-manuals/RF103.pdf) · [Georgian passage set](https://www.homedepot.com/p/100062093)
+
+Choose **Sections → Plan a floor door stop** or ask **“Where should I put a door stop?”** Set an opening angle and enter the stop’s measured footprint and bumper height. Compare the swing with and without the fixed stop, then inspect first contact in 3D. A confirmed placement adds an approximate floor mark to the build guide. Try the mark with the actual stop and finished door before fastening. [Everbilt 28367](https://www.homedepot.com/p/314151894) · [Ives floor layout example](https://us.allegion.com/content/dam/allegion-us-2/web-files/ives/installation-documents/Ives_438_Floor_Door_Stop_Installation_Instructions_106702.pdf)
+
+Choose **Sections → Fit cabinet doors** or ask **“Fit cabinet doors to this face frame.”** Pick the two stiles and two rails for a single or double flush inset door. Enter the hinge pin measurements, inspect opening and closing clearance, and open **Cuts and stock** to try matching scraps. A pair comes with tests for opening together, left first and right first. The build guide shows panel sizes, along-grain orientation and hinge center marks. [Liberty flush mounting reference](https://images.thdstatic.com/catalog/pdfImages/47/474cf7e9-c242-4b18-9320-78ff64c8df1b.pdf) · [Liberty hinge pack at Home Depot](https://www.homedepot.com/p/100192240)
+
+Turn on **Add vertical cabinet pulls**, or include “with matching pulls” in the request. Position each pull from the finished free edge and the top or bottom. The pulls travel with the doors, and a possible handle contact appears at the limiting pose. The practice plan repositions the pulls to clear an adjacent lip and cuts both doors from one offcut. [Editable practice plan](public/examples/interior/cabinet-doors-with-pulls.yardwork.json) · [Build guide](public/examples/interior/cabinet-doors-with-pulls-guide.md) · [Liberty installation instructions](https://www.libertyhardware.com/cdn/shop/files/CP4474.pdf?v=14578238542477775481)
+
+On a fitted door section, choose **Edit cabinet pulls** or ask “Move the cabinet pulls to 3.5 in from the free edge.” Preview the saved swings and open any new contact in 3D before applying. The same door panels, cut sources, banding, and named tests are used for the revised placement.
+
+Choose **Sections → Fit cabinet scribe filler** or ask **“Plan a scribe filler for P001.”** Measure the wall gap at the bottom, middle and top of the selected side. Preview a straight taper, try matching pine scraps, and check doors or drawers before fitting the strip. If the midpoint reading calls for a curved cut, trace the installed wall contour. The practice plan compares a flush filler against a ⅞ in setback that clears a nearby sliding door. [Editable plan](public/examples/wood-stock/cabinet-scribe-filler.yardwork.json) · [Build guide](public/examples/wood-stock/cabinet-scribe-filler-guide.md) · [Cabinet filler installation reference](https://cardellcabinetry.s3.amazonaws.com/Literature/2212_CAR_InstallationGuide_1014850420.pdf#page=27)
+
+From a furniture-frame bracing check, open the **diagonal brace planner** or ask **“Plan a diagonal brace between P001 and P002.”** Choose aligned post faces, measure up from each post bottom, and preview the board length and face contact. Use matching scrap or save a new board cut order. After applying, **Brace connections** opens screw planning for each actual pair. The example uses a 62 in scrap for a 48 in brace and keeps the remaining 13⅞ in. [Editable workbench frame](public/examples/wood-stock/workbench-diagonal-brace.yardwork.json) · [Build guide](public/examples/wood-stock/workbench-diagonal-brace-guide.md)
+
+Choose **Sections → Plan wall cabinet backing** or ask **“Plan cabinet backing at 54 in.”** Enter cabinet mounting offsets from the wall’s start and preview where they land. The planner uses existing studs at measured points, fits backing in clear bays, and records square cuts from matching scraps and new boards. The guide places backing before drywall. Confirm the mounting row and fastening detail with the cabinet maker’s instructions. [Editable practice wall](public/examples/interior/wall-cabinet-backing.yardwork.json) · [Build guide](public/examples/interior/wall-cabinet-backing-guide.md) · [IKEA ENHET wall preparation guide](https://www.ikea.com/us/en/files/pdf/da/86/da86abe2/enhet_kitchen_install_guide_apr_2023.pdf#page=4) · [Home Depot 2 × 6 reference](https://www.homedepot.com/p/334216730)
+
+From a saved mounting row or a selected backing block, open **Check cabinet screw reach**, or ask **“Will my cabinet screws go through the backing?”** Compare your measured hardware and wall stack. The model distinguishes full stud depth from thin blocking, shows breakthrough, and checks the straight path for modeled obstructions. Changed drywall geometry calls for remeasurement. [Practice screw check](public/examples/interior/wall-cabinet-screw-reach.yardwork.json) · [Build guide](public/examples/interior/wall-cabinet-screw-reach-guide.md) · [IKEA ENHET wall cabinet installation guide](https://www.ikea.com/us/en/files/pdf/da/86/da86abe2/enhet_kitchen_install_guide_apr_2023.pdf#page=8)
+
+From a shelf’s **Shelf sag estimate**, try a measured divider position or choose **Find a clear divider position**. You can also ask **“Plan a shelf divider for P006.”** The preview compares two opening widths, estimated immediate sag, and contact in saved movement tests. Small position changes can retain drawer travel while bringing sag within your entered target. The guide records the chosen center mark, base, saw cuts and matching offcut assignment. [Practice shelf with a sliding tray](public/examples/wood-stock/shelf-divider-sliding-tray.yardwork.json) · [Build guide](public/examples/wood-stock/shelf-divider-sliding-tray-guide.md) · [Kreg offset divider example](https://learn.kregtool.com/plans/easy-to-build-bookcase/)
+
+Use **Sections → Test installation route**, or ask **“Will the vanity fit through the doorway?”** Choose the parts to carry together, mark the starting pose and the places to turn, and select any saved door to hold open. The preview plays each reachable move and highlights the first obstruction. The build guide records the route and which parts to fit after placement. [Practice vanity route](public/examples/interior/vanity-installation-route.yardwork.json) · [Build guide](public/examples/interior/vanity-installation-route-guide.md) · [Thomasville cabinet installation reference](https://www.thomasvillecabinetry.com/-/media/thomasville/pages/resources/literature/2023/tvlinstallguideupdate31423.pdf)
+
+Use **Sections → Plan countertop splash seal**, or ask **“Plan a countertop seal for P001.”** Choose a worktop edge and the modeled finished wall. Mark the runs for a corner bead, dry-fitted backing or a separate detail. Yardwork checks the modeled gap and interruptions, highlights the starts in 3D, and estimates the clear kitchen-and-bath silicone from the reference bead or your trial coverage. The guide and Cut pool record backing cuts and measured leftovers. [Practice vanity countertop](public/examples/interior/vanity-countertop-seal.yardwork.json) · [Build guide](public/examples/interior/vanity-countertop-seal-guide.md) · [GE application and coverage](https://gesealants.com/wp-content/uploads/2024/12/TD-GE-Advanced-Silicone-2-KB-June-1-2024-1.pdf)
+
 After following a board or sheet’s **Stock cut order**, choose **Record this stock unit**. Yardwork links the existing parts to one source, keeps the cut order in the guide, and puts rectangular leftovers in the **Cut pool**. Reusing one of those leftovers keeps the original material source and purchase count.
+
+For a physical wood or drywall offcut with a chipped or split edge, use **Cut pool → Measure O…** to mark the usable rectangle. The old label stays in the cut history. Mark the new label on the reduced blank so subsequent stock matches use the measured dimensions.
 
 Import the [crosscut practice plan](public/examples/cut-pool/crosscut-practice.yardwork.json), then choose **Cut pool → Review offcut reuse**. The 18 in jig blank and 12 in finish test blank come from the remnant of the first 36 in cut. The stock estimate drops from two boards to one and leaves a 29⅝ in remnant. [Completed cut guide](public/examples/cut-pool/crosscut-practice-guide.md)
 
@@ -84,15 +136,17 @@ The [closet cleat practice plan](public/examples/cut-pool/closet-cleats.yardwork
 
 When trimming both dimensions of a rectangular wood part, compare **Crosscut first** and **Rip first**. Choose **Find uses for these offcuts** to preview fitted parts and the change in stock to buy. **Apply cuts and reuse** saves the trim and assignments together. The build guide lists the original trim before the parts cut from its remnants. The preview follows the modeled grain direction. Confirm the actual sheet markings where panel orientation matters. [APA plywood reference](https://www.apawood.org/engineered-wood-products/plywood-osb/plywood/)
 
+To make a new part from a rectangular wood sheet scrap, choose **Cut panel** in the Cut pool or ask **“Can I cut a 12 by 16 in plywood panel from O005?”** Enter width across the grain and length along it. If both dimensions need trimming, switch between **Crosscut first** and **Rip first** to see which remnants each order keeps. The worked cabinet plan uses O005 for a drawer divider blank and keeps two smaller scraps. [Editable cabinet divider plan](public/examples/cut-pool/cabinet-divider-offcut.yardwork.json) · [Build guide](public/examples/cut-pool/cabinet-divider-offcut-guide.md)
+
+**Review offcut reuse** also compares both orders when the crosscut-first layout leaves a fitting sheet part unassigned. In the cabinet practice plan, ripping first keeps the whole length of the fascia strip, so the divider and fascia come from one scrap. The build guide records the dependent cut and names the leftovers. The planner keeps the recorded grain direction. [Editable practice plan](public/examples/cut-pool/cabinet-fascia-strip.yardwork.json) · [Guide after applying](public/examples/cut-pool/cabinet-fascia-strip-guide.md) · [APA plywood properties and strength axis](https://www.apawood.org/engineered-wood-products/plywood-osb/plywood/)
+
+After cutting a rectangular opening through a wood sheet, reopen **Cut part → Rectangular cut**, select the saved opening, and choose **Record recovered cutout**. Measure the rectangle left inside the blade path, starter holes and damaged edges. Yardwork adds it to the Cut pool as on-hand stock with the same material, thickness and grain direction. The cabinet practice plan reuses the access cutout for a test blank. [Editable practice plan](public/examples/cut-pool/cabinet-access-cutout.yardwork.json) · [Guide after reuse](public/examples/cut-pool/cabinet-access-cutout-guide.md) · [Makita instructions for internal cutouts](https://cdn.makitatools.com/apps/cms/doc/prod/XVJ/791dd413-af4d-43f3-b65c-a91da986df6a_XVJ03Z_IM.pdf)
+
 For board crosscuts, Yardwork can move or swap pieces between planned boards to leave room for the blade while keeping the board count. A unit with an unresolved edge trim stays marked for review.
 
 ![Blank Yardwork workspace](docs/blank-workspace.png)
 
 [See an idea proposal](docs/banquette-proposal.png) · [See the editable banquette](docs/banquette-workspace.png)
-
-## Use Yardwork online
-
-[Open the browser workshop](https://hochipants.github.io/yardwork/) to edit plans, use local planning presets, test movement, and export cut lists and guides. **Save project** keeps a library on the current device with up to three earlier saves. Export editable projects to move them between devices, or download a workshop backup to restore with the self-hosted app.
 
 ## Run locally
 
@@ -111,6 +165,7 @@ Choose **Open project → Download workshop backup** to take every saved project
 
 ```sh
 npm run restore-workshop -- ./yardwork-backup.gz ./restored-workshop
+npm run build
 NODE_ENV=production DATA_DIR="$PWD/restored-workshop" PORT=4178 npm run start
 ```
 
@@ -135,6 +190,39 @@ Visit [localhost:4173](http://localhost:4173). The named `projects` volume survi
 
 Ports bind only to the local machine. This release has no user authentication; add authentication through a reverse proxy before deliberately exposing it beyond localhost.
 
+## Settings
+
+### Server environment
+
+Set these variables in the shell that starts Yardwork, in your process manager, or under the `yardwork` service’s `environment` in Compose. [`.env.example`](.env.example) is a reference file. For Compose, a variable in a local `.env` file reaches the app when the Compose configuration passes it through.
+
+| Setting | Default | What it controls |
+| --- | --- | --- |
+| `HOST` | `127.0.0.1` locally | Listen address. The container listens on `0.0.0.0` internally, with Compose publishing its port on host loopback. |
+| `PORT` | `4173` | Local server port. For containers, adjust the published host port in Compose if the default is in use. |
+| `DATA_DIR` | `data/` in the checkout | Saved project files and previous revisions. The container uses `/app/data` with the `projects` volume. Use a separate directory for each running development copy. |
+| `NODE_ENV` | Development locally | Set to `production` after running `npm run build` to serve the built client. The container sets this automatically. |
+| `OLLAMA_URL` | Unset | URL of an accessible Ollama server, such as `http://127.0.0.1:11434` for a locally installed model. With this unset, Yardwork offers built-in planning presets. |
+| `OLLAMA_MODEL` | `qwen2.5:3b` | Installed Ollama model to use. |
+| `OLLAMA_PLANNER_FORMAT` | `compact` | Model response format. Use `compact` for the default intent grammar, `json` for JSON intent responses, or `schema` for the full plan schema. |
+| `OLLAMA_TIMEOUT_MS` | `180000` | Maximum model request time in milliseconds. Accepted range is `1000` to `180000`. |
+| `CATALOG_URL` | Unset | Optional authorized inventory adapter. Store snapshots work without an adapter. |
+| `CATALOG_TOKEN` | Unset | Optional server-side token for the inventory adapter. Keep it in your local environment. |
+
+The optional `compose.ai.yaml` overlay accepts `YARDWORK_AI_MODEL` (default `qwen2.5:3b`) and `YARDWORK_AI_TIMEOUT_MS` (default `180000`). It connects Yardwork to the bundled Ollama service and stores model weights in `ai-models`. Local smoke-check scripts accept `SMOKE_URL`, which defaults to `http://127.0.0.1:4173`.
+
+### In the app
+
+| Setting | Where to find it |
+| --- | --- |
+| **Retailer, ZIP, store ID and project notes** | Open the **Project settings** gear. New projects start with Home Depot and ZIP `84121`. Select the exact store and enter or import its snapshots for inventory checks. |
+| **Available width, depth and height** | Open **Set work zone**. Set each dimension with its own feet or inches selector. |
+| **Snapping, X-ray, exploded view and camera** | Use the workspace toolbar. Snapping starts on. Use the perspective, front and top controls for inspection. |
+| **Saw kerf** | Open **Cut part → Blade kerf** for the stock you’re cutting or **List → Blade kerf for this material** to preview the allowance on new stock. |
+| **Planner and model connection** | Open **Plan an idea**. Select the built-in planner or the configured Ollama model and check the connection there. |
+| **Jurisdiction and measured site conditions** | Use **Checks → Project code references** for the jurisdiction and project date. Use **Measured site clearances** to record faces that affect fit and movement. |
+| **Project library, recovery and backups** | Use **Open project** to reopen saved designs, restore an earlier save as a copy, or download the workshop backup. Use **Import a plan** or drop a ZIP or multiple JSON files to add copies in one batch. |
+
 ## Design first
 
 Every launch starts with an **empty project**. Choose **Open project** to load saved work or explicitly resume a browser draft. Starting the app does not overwrite the previous draft; the preceding draft is also retained locally when a new design begins. Old coop plans remain loadable, but the coop is no longer offered as a starting point or generator.
@@ -147,8 +235,18 @@ Every launch starts with an **empty project**. Choose **Open project** to load s
    The **Shelf bearing** and **Seat bearing** checks mark the actual contact patches under shelf studies and closed seats. Look for a green patch at each expected cleat or rail. The check flags a panel whose center lies outside its wood contacts, and lists saved shelf-pin geometry reviews when there is a pin plan. The build guide carries the result alongside the remaining load and attachment decisions.
 6. **Plan an idea** accepts storage banquettes, straight/L-shaped benches, workbenches, cabinets, framed shelves, plywood bookcases, frames, greenhouses, sauna framing and closet inserts through disclosed local presets. Follow-ups preserve unspecified settings. Preview the dimensions, assumptions, suggestions, stock fit and work-zone fit before adding editable parts. Unsupported ideas return useful questions. Connected Ollama supports a broader module-based proposal grammar.
 
+   For a fitted furniture revision, try “Make the banquette 96 inches wide and keep the left end fixed” or “Make the banquette two inches deeper and keep the back edge against the wall.” The edge is measured in the furniture’s local orientation. For a straight seating run, **Keep in place** also lets you set the overall width from its left end, right end, or center. Existing gaps count toward the overall width.
+
+   For a saved L-shaped banquette, **“Make it a straight banquette”** moves the return alongside the other seats and keeps their sizes. **“Remove the return”** previews taking out that assembly while keeping the main run in place. Review the layout, cuts and stock before applying either change.
+
    In **Plan an idea → Questions about this build**, try “What looks weak in this build?”, “Can the cabinet door open?” or “What can I use O001 for?” Yardwork reads the open project locally. The answers link to the current checks, named motion tests or offcut cut order. Use the exact motion name or part label if several parts match. Review physical loads, hardware and site conditions for the finished build. [APA plywood design guidance](https://www.apawood.org/engineered-wood-products/plywood-osb/plywood/) · [Blum hinge planning reference](https://publications.blum.com/2026/catalogue/en/78/)
 7. When the layout is ready, choose **Generate build guide**. Stages follow the saved assembly: carcass and shelves, storage bottom/frame and shell/lid, or greenhouse/sauna framing and actual coverings. No manual step setup is required. Every active part is assigned once. Stage identities, custom titles/notes, explicit part-stage choices, deliberate order of surviving steps and history survive regeneration; changed assemblies reset their review marks while unchanged assemblies retain them. Recorded cuts/connections and anchored manual steps remain. Design, assignment, sourcing or tool changes mark the guide stale. Review inferred assembly order and connection details. Guide exports can generate the sequence automatically. Missing fastening schedules stay explicit; connection records list actual endpoints, hardware and nominal lengths without inventing holes or engagement.
+
+Use **Measure (D)** to pick two points, adjust their exact coordinates, and **Save dimension** with a name. Enable **Follow picked wood parts** to keep clicked wood surfaces linked as parts move or rotate. Floor points and manually entered coordinates stay fixed. Open **Saved dimensions** to show or update a mark after reopening a project. The build guide shows the current lengths and marks any linked surfaces that need a new pick after a cut or removal.
+
+Select a mark in **Saved dimensions** and choose **Plan cut from saved mark** to compare lumber lengths and matching scraps. The measured distance fills the finished length, which you can adjust for fit before placing the part. In **Plan an idea**, try **“Cut a 2x4 to saved dimension ‘Cabinet opening’.”** Matching one-piece scraps and new-stock cuts use the existing blade allowances and record the result in the guide.
+
+In that cut preview, choose **Along saved mark** to align one board to the two points. Floor marks lay the board flat, and other marks align the end centers. A shorter piece is centered along the mark. Yardwork checks the resulting position for overlaps, work-zone limits, and interference with recorded movement.
 
 ## Sections and whole assemblies
 
@@ -157,6 +255,12 @@ Sections group editable parts into units. Use numeric anchors/rotations or **Mov
 Generated wall/base sections retain dimensions for **Revise this section**. Targeted regeneration replaces only their parts and removes connections involving them; placement, unrelated parts, settings, and custom notes remain. Furniture recipes expose dimensions and stock choices in the section editor. Regeneration replaces affected parts/connections with a disclosed preview. Storage lid access preserves actual cuts and manual edits around its provisional rear pivot; hardware and pinch protection still need design. Offcuts remain loose for reuse and are hidden from the default assembly view; selecting a remnant or Show offcut stock reveals it without changing cuts, purchases or exports.
 
 Applied ideas now retain their saved design identity. In **Sections → Saved designs**, revise the whole design or an individual assembly after saving/reopening. Unchanged assemblies keep their actual parts, cuts, stock provenance and connections. The preview counts replacements and affected connections; destructive revisions require an explicit review, while original custom cut stock remains available as loose reusable parts. Stale proposals cannot overwrite a changed design. **Position and rotation** moves a furniture module or an entire structure family without rebuilding parts; coordinates have independent length units and rotation uses degrees.
+
+Moving a saved cabinet in the planner carries drawers mounted to its two side panels. The drawer parts, slide tests, and cut records keep their identities. If a rebuild replaces the mounting panels, the preview flags the slide fit for review against the new parts.
+
+For a saved closet insert, ask **“Add a shelf to the closet tower”** or **“Remove one shelf from the closet tower.”** A shelf-count-only revision spaces the shelves evenly and keeps the fitted carcass and hanging rods. Review any shelf-pin plan against the new shelf heights before using its drilling marks.
+
+For field measurements, try **“Set the right hanging bay width to 28 inches and rod center height to 62 inches.”** The outside cabinet dimensions stay fixed. The opposite bay absorbs the width change, and the preview shows the resulting layout before you apply it.
 
 In **Checks → Measured site clearances**, record a wall or baseboard face, its signed grid coordinate, and the minimum gap. Enter the measured height for a low face. Select **Entire project** to apply a measurement to hand-built and generated parts, or choose a saved design to limit its scope. **Show face** draws the measurement and minimum gap in 3D. For a face assigned to one design, **Move** can shift that design to meet the gap after checking the work zone, nearby wood, and other measured faces. **Test movement** and **Review lid travel** include the corresponding face checks, and the build guide lists the measurements and results.
 
@@ -208,9 +312,21 @@ Choose **Source-matched stock options → Freestanding sauna bench** to place a 
 
 Use **Test movement** in the workspace toolbar or **Sections → Test door or drawer movement** to group the parts of a door, lid, drawer or sliding panel. Choose a swing axis and pivot or the slide direction and maximum extension. The blue line shows your hinge axis or slide path. Play opening or closing to stop at the first detected obstruction or work-zone limit in that direction. Use the slider or the **Inspect fully open** and **Inspect fully closed** controls to examine an individual pose. Choose **Hold other parts open** to set several nearby mechanisms to independent positions and watch the clearance results update. All preview positions are temporary. The guide records checks against the saved project geometry. Use real hardware dimensions and travel limits when setting up the plan. Verify loads, mounting and hardware behavior separately.
 
-Choose **Focus these parts** in a door, drawer or lid collision result to frame the two pieces involved. **Show full project** restores the surrounding model at the same preview position.
+When the motion pauses, **Inspect opening stop** or **Inspect closing stop** jumps to the first obstruction or clearance limit from that end of travel. A part collision frames the two pieces involved. **Show full project** restores the surroundings at the same preview position. The exported build guide records the stopping positions from the saved test.
+
+A door, drawer or lid held at a conflicting position blocks playback before the selected part moves. Inspect the held position to see which parts touch, then adjust the held position or move the obstruction and retest. The check also covers work-zone limits and measured clearances assigned to the held part.
+
+For a loose wood obstruction, choose **Try moving obstruction → Find a clear offset**. The default search tries the four horizontal directions in ⅛ in steps. It checks the active opening and closing paths and screens the move for new or worse problems in saved movement tests. Choose a direction to check a specific offset and inspect any affected test. Apply the move after reviewing it in 3D.
 
 In **Test movement → Check a minimum gap**, choose the moving part, a nearby modeled part and your required spacing. The check covers the whole tested path, including linked motions and saved opening orders. A shortfall shows an observed gap and opens that pose in 3D. Save the test setup or name the test to include it in the build guide. Choose hardware spacing from its own instructions and model accessories you want to check. [Accuride 3732 installation reference](https://www.accuride.com/media/amasty/amfile/attach/a3bcba75b0b82de060a661de95ce9f44.pdf)
+
+At a confirmed solid contact, choose **Show opening approach** or **Show closing approach** under **Travel stops**. Yardwork isolates the two parts and marks their nearest surfaces at a nearby pose before contact. **Show full project** restores the context around the mark. The approach uses the modeled shapes.
+
+The printed and Markdown build guides include approach marks for confirmed opening and closing stops in saved movement tests. The X, Y and Z offsets are in inches from each modeled part’s own center. In the 3D approach view, choose **Show part axes** to match those directions to the two parts.
+
+In **Plan an idea**, ask **“Where does the pull-out drawer hit on closing?”** or name a specific test, as in `Where does P001 hit on opening in "Drawer first"?` Use the saved test’s exact name. A confirmed solid contact shows the part marks and opens that approach in 3D.
+
+Choose **Add another minimum gap** to check up to eight pairs in the same motion test. Opening and closing stop at the first gap each direction reaches. Save a named test to keep each required gap, observed shortfalls, and the stopping pairs in the guide. The cabinet practice plan tests door trim and a drawer rail in one sequence, with a plywood cut order and six reusable remnants. Use the delivered hardware and field measurements to set gaps. [Cabinet practice plan](public/examples/motion/cabinet-two-gaps.yardwork.json) · [Build guide](public/examples/motion/cabinet-two-gaps-guide.md) · [Blum front-gap planning reference](https://publications.blum.com/2026/catalogue/en/79/)
 
 Choose **Edit obstruction** from that view to open the obstructing piece in the Part inspector. After moving or resizing it, choose **Retest clearance**. The motion starts closed with the same held parts and opening order, using your current layout.
 
@@ -235,9 +351,19 @@ For a frameless drawer, open **Test movement → Compare slide fit** in a slidin
 
 In **Test movement**, choose a **Second motion** and set the **Opening order** to test both. To check a drawer behind a door, select the door first. Yardwork tests the door swing with the drawer closed, then the drawer travel with the door open. Closing reverses the order. You can also move both together or hold additional parts at fixed positions. Play the test to stop before a modeled collision, use the slider to inspect a pose, and save the setup to include its results in the guide. The preview leaves the saved part positions intact.
 
+Use **Test movement → Scan interacting motions** to find nearby pairs across the project, or ask **“Which doors or drawers collide?”** in **Plan an idea**. The scan checks both opening orders and moving together at full saved travel. Open a result to inspect its stopping position in 3D, then keep that path under a name to include it in the generated guide.
+
+Once a motion is saved, ask **“Open the drawer”** or **“Close the cabinet door”** in **Plan an idea**. Use the motion’s name or moving part’s label to select one when names are similar. Open the result to inspect the first stop or the requested endpoint in 3D. Other parts stay in their saved positions.
+
+For two saved motions, try **“Open the cabinet door to 75°, then extend the drawer 12.5 inches.”** Review the stop or endpoint, play the path in either direction, and save it under a name for the build guide. You can also specify a closing order and starting positions with **“Close the drawer from 12.5 inches, then close the door from 75°.”** Measurements omitted from the request use the corresponding saved motion limits.
+
+Open **Compare opening orders** to check both sequences and moving together with the same travel targets and gap requirements. Inspect a stopping position in 3D, or preview a clear order and save it as your working setup or a named test. Use the delivered hinge and slide dimensions to set up the movement. For example, Blum documents the front protrusion for hinges used with inner drawers and pull-out shelves. [Blum hinge planning reference](https://publications.blum.com/2026/catalogue/en/78/)
+
+In **Plan an idea**, ask **“Should I open the cabinet door or drawer first?”** to compare the saved motions on your model.
+
 Open **Set travel targets for this test** to limit a single motion or give linked parts separate endpoints. With **Move together**, both parts reach their targets at the same time. Yardwork checks the shared path in both directions and records the numbers in the guide. Use the delivered hardware's instructions and measured installation to choose angles and extensions. [Blum opening angle stops](https://ea.blum.com/en/opening-angle-stops-155-hinges/) · [Accuride 3732 travel specifications](https://www.accuride.com/media/amasty/amfile/attach/a3bcba75b0b82de060a661de95ce9f44.pdf)
 
-The [cabinet and tray practice plan](public/examples/motion/limited-linked-travel.yardwork.json) compares a full shared movement that strikes the tray with a 70° door and 8.5 in tray test that clears the modeled parts. It also has a door-only test, plywood cut orders and reusable sheet remnants. [Build guide](public/examples/motion/limited-linked-travel-guide.md)
+The [cabinet and tray practice plan](public/examples/motion/limited-linked-travel.yardwork.json) clears the full 90° swing and 18 in tray extension when the door opens first. It also clears a shared 70° door and 8.5 in tray movement. Both options are saved as named tests alongside the plywood cut orders and reusable sheet remnants. [Build guide](public/examples/motion/limited-linked-travel-guide.md)
 
 For a hinge that shifts as it opens, edit its swing under **Test movement → Measured hinge path**. Set the closed hinge axis through a reference mark on the door. At each measured angle, enter the mark’s signed X, Y and Z movement from closed. Yardwork uses the readings for opening, closing, room and clearance checks, and tests with drawers. Match the final reading to the maximum opening. The preview interpolates between readings, so measure where the door passes trim or another part. Use the delivered hinge and mounting arrangement to determine the actual path and opening stop. [Blum planning reference on front protrusion and opening stops](https://publications.blum.com/2026/catalogue/en/79/)
 
@@ -246,6 +372,18 @@ For a cabinet beside a wall or trim, open **Set travel targets for this test** a
 After fitting greenhouse door stops, open **Test movement → Plan door weatherseal** or ask **“How should I weatherstrip the greenhouse door?”** in Plan an idea. Yardwork checks all three wood runs for the listed gap, mounting width and minimum-gap swing. Save the reviewed cut plan and use **List** to add the exact Home Depot pack. The guide groups cuts and leftovers by the two 8½ ft strips in each pack. [Frost King instructions](https://www.frostking.com/attachments/Product/144/documents/Instruction-Sheet-EPDM.pdf) · [Home Depot V25GA](https://www.homedepot.com/p/100081207)
 
 **Checks → Project code references** records the build jurisdiction and project date separately from the shopping ZIP. The reviewed Utah sources cover selected trades, with a measurement comparison for through-wall plumbing vent distance and elbow direction. Other entries help identify sources and review questions for the local authority.
+
+Save adjacent rectangular wood sheets as modeled roof areas under **Roofing → Asphalt shingle roof**. Select a **Roof deck joint** finding or ask **“Check roof deck spacing”** to see the measured gap on the slope. The guide compares it with APA’s ⅛ in installation reference and identifies the panels by label. Confirm the delivered panel’s instructions and required edge support. [APA roof sheathing guide](https://www.apawood.org/guides-tools-training/technical-document-library/builder-tips/proper-installation-of-apa-rated-sheathing-for-roof-applications/) · [Weyerhaeuser square-edge sheathing instructions](https://www.weyerhaeuser.com/woodproducts/document-library/document_library_detail/osb-4004/)
+
+Ask **“Check roof deck backing”** to see where wood framing reaches each panel’s fastener line, ⅜ in inside the joint. The 3D view and build guide show which lengths still need a support review. Confirm that panel ends land on framing and check the panel span rating and instructions for edge clips or blocking. [APA fastening and edge support detail](https://stage.apawood.org/buildertips/pages/N335.html)
+
+Ask **“Check roof deck end bearing”** to mark missing framing along each modeled panel end and its inset fastener line, including ends without an adjacent sheet. The guide records both checks. Set **Stock length / grain or flute axis** on the part to match the panel stamp. Without a saved direction, Yardwork uses the longer stock dimension and labels the assumption. Confirm bearing width and attachment before fastening. [APA roof sheathing installation guide](https://www.apawood.org/guides-tools-training/technical-document-library/builder-tips/proper-installation-of-apa-rated-sheathing-for-roof-applications/)
+
+Open a **Roof deck joint** finding with a framing gap and choose **Preview roof blocking**. Yardwork fits a flat 2 × 4 between opposing framing faces, checks contact beneath both panels, and offers matching on-hand scrap. Add the block to keep the cut and remainder in the guide, or open the connection review for both ends. Confirm framing grade and the attachment detail for the roof assembly. [Weyerhaeuser roof panel blocking detail](https://www.weyerhaeuser.com/application/files/2917/6463/0597/OSB-4004_Master_November2025.pdf#page=6)
+
+Choose **All framing bays** to fit the joint in one preview. Longer cuts are planned first, and each feasible fit can use a remainder from the preceding cuts. The preview lists skipped bays, new boards, on-hand offcuts, and what remains in the Cut pool. The guide traces cuts that share the same board.
+
+In **Plan an idea**, ask **“Fit roof deck blocking”** to choose a joint and open its fitted bay preview. Include panel labels to narrow the request, as in **“Fit roof deck blocking between P001 and P002 using scraps.”** Add **“from new stock”** to start with new boards. Review the fit and choose **Add roof blocking** when ready.
 
 For a ducted dryer, open **Checks → Project code references**, select **HVAC**, and add straight runs under **3D fixed duct layout**. Enter their endpoints or add a run from an active workspace measurement. Save and choose **Show dryer duct layout in 3D** to see where the square planning envelopes overlap the model. Review the lengths, endpoints, and overlaps in the guide. The dated Utah IRC length comparison uses the entered fixed run and fitting allowances. [2021 IRC dryer exhaust provisions](https://codes.iccsafe.org/content/IRC2021P3/chapter-15-exhaust-systems)
 
@@ -273,7 +411,9 @@ Use **Sections → Plan shelf supports** on a bookcase or closet tower to choose
 
 In **Explore whole builds**, enable **Plan supports for all adjustable shelves** for the bookcase or closet insert. Choose the shelf support pack and set the front and rear insets. The preview shows the number of whole packs and spare pins. Opening the project saves the support plan and generates its guide. Use **List** to add the exact missing packs and record a store snapshot. The two angled options keep drilling marks pending until you confirm the delivered pin fits a 5 mm test bore in matching stock. [Everbilt 802064 8-pack](https://www.homedepot.com/p/204273378) · [Everbilt 802424 24-pack](https://www.homedepot.com/p/204273814)
 
-Use **List → Panel edge banding** to mark the straight panel edges you want to finish. Inspect individual edges in 3D or start with the available front-facing edges, then enter the total end trim for each strip. The planner checks retained edge length, panel thickness and contact with nearby wood. Saved strips share whole rolls, and the build guide lists their labels, lengths and application tools. Measure the installed veneer thickness when checking fits and clearances. [EDGEMATE 13/16 in × 25 ft](https://www.homedepot.com/p/314095455) · [PureEdge 2 in × 8 ft](https://www.homedepot.com/p/323974629)
+Use **List → Panel edge banding** to mark the straight panel edges you want to finish. Inspect individual edges in 3D or start with the available front-facing edges, then enter the total end trim for each strip. The planner checks retained edge length, panel thickness and contact with nearby wood. Saved strips share whole rolls, and the build guide lists their labels, lengths and application tools. For rectangular panels, **Include measured thickness in fit and movement** adds the installed veneer to the clearance model and shows cut and finished sizes separately. In **Fit cabinet doors**, use **Allow for edge banding on all four edges** to size a smaller blank while keeping the intended finished reveals. Apply and measure a test strip on matching scrap first. [Edgemate application instructions](https://shop.edgemate.com/pages/faq) · [EDGEMATE 13/16 in × 25 ft](https://www.homedepot.com/p/314095455) · [PureEdge 2 in × 8 ft](https://www.homedepot.com/p/323974629)
+
+With a measured veneer thickness and a saved motion, choose **Check finished movement** to compare the proposed edges against the current build before saving them. Open a finding in 3D to see where the added thickness interferes with a door, drawer or pull-out.
 
 The **Tools** checklist tracks heat application and flush trimming separately. The PureEdge 902738 is a selectable tool purchase for trimming firmly bonded, cooled edging. [PureEdge trimmer](https://www.homedepot.com/p/313359487) · [Package instructions](https://images.thdstatic.com/catalog/pdfImages/5a/5a30ab43-15af-4693-9297-f33fbc527090.pdf)
 
@@ -301,7 +441,11 @@ Removing an assembly keeps its hinge intent. **Sections → Hinge plans without 
 
 In **Part → Connect parts → Plan wood-fastener locations**, choose the actual wood members and an exact GRK or Simpson CSV/DSV reference. Plans start empty. Add a location, pick its entrance on the retained 3D face, then edit exact local coordinates or drive direction. Save explicitly; picking does not change the parts or create a drilled hole.
 
+Open **Entry edge and end distances** on a screw location to see the modeled center-to-edge and center-to-end measurements on the lumber faces. For the exact Simpson SDWS Framing references, a square path through two touching rectangular lumber pieces also compares the receiving face against the published load cases. The guide and screw schedule carry those measurements. Choose the applicable load case and check actual wood grade, screw spacing, and joint capacity before fastening. [IAPMO UES ER-192 Tables 26 and 39](https://forms.iapmo.org/ues_reports/reports/er_0192.pdf#page=24)
+
 Stable labels such as **W001/F001** identify the plan and location through saves, deletion and Undo. Enter the measured surface-to-tip depth after seating and any pilot data with basis/date. Nominal product length never supplies that depth. Current retained-solid checks identify short paths, breakthrough, sharp-edge entrances, intervening materials and duplicate locations; they do not qualify thread engagement, pilot requirements, strength or code compliance.
+
+When entered screw or pilot paths cross within the same wood member, each affected location identifies the other by its W/F label. The check uses the entered pilot diameter as a conservative clearance envelope. Conflicting entries are withheld from guide and CSV coordinates and excluded from provisional screw demand. Review actual fastening, pilot and spacing requirements before drilling. [USDA Wood Handbook on fastenings](https://research.fs.usda.gov/treesearch/62253)
 
 Explicit locations request provisional screws. Add missing whole packs only on review (100 per reviewed GRK box, 70 per CSV/DSV box); selected supply rows alone purchase them. Existing pairwise joint quantities stay separate with duplicate-representation warnings. Changed parts leave locations stale until reviewed; missing members are retained without automatic rebinding. Guides and the separate location CSV retain candidate, pending and excluded states.
 
@@ -317,11 +461,19 @@ When a rebuild removes an original member, open **Replace actual members** in th
 
 Open **Checks → Review connection decisions**, **Part → Review nearby connections**, or **Guide → Connections and supports → Review connections for this stage**. The review follows actual part IDs and live assembly stages even while the guide needs regeneration. Inspect nearby retained wood faces, choose a pair, review the entry side and product, then explicitly create an empty screw plan. Face contact never supplies a hole, fastening direction or purchase.
 
+For panel bookcases and closet inserts, open **Casework screw rows** in the connection review. Select the permanent panel joints, choose a cabinet screw reference, and enter the mark count and end inset. Preview each straight row against the retained parts, then save the ready rows together. Review floor-side access before assembling a closet body. Adjustable shelf supports, existing connection records, actual seating and pilot measurements, and purchases have their own controls. Use the actual joint design and panel edge properties to choose fasteners. [USDA Wood Handbook chapter on fastenings](https://research.fs.usda.gov/treesearch/62253) · [Kreg bookcase assembly example](https://learn.kregtool.com/plans/built-in-bookcase/)
+
 In a new wood-screw plan, **Compare screw entry sides** traces a centerline from each exposed face and shows where it enters and exits the receiving wood. Enter an optional trial depth to compare reach and breakthrough. If a direction is blocked, review the modeled floor or covering part. **Preview from** shows the selected direction in 3D. **Use centered entry** retains the direction and the modeled depth range in the guide. The trial value stays in the preview. Match the seating datum to the delivered fastener and review spacing, grain, driver access and joint strength for the actual assembly. [USDA Wood Handbook chapter on fastenings](https://research.fs.usda.gov/treesearch/62253) · [GRK cabinet screw references](docs/grk114069-materials.md)
+
+After saving measured tool dimensions on a screw plan, open **Guide → Review build preparation → Driver clearance** to review blocked approaches and steps that need an access check. Select a row to show the tool path in 3D. The review uses saved steps when it can establish the order for that approach. Approaches based on suggested assembly steps are labeled in the guide.
+
+In **Plan an idea**, ask **“Can my drill reach W001/F001?”** to check one screw or **“Which screws should I drive before adding P019?”** to check approaches around a part. Use the labels from your build. These questions read the current project and open the relevant screw plan in 3D.
 
 In **Plan an idea**, ask “Screw P001 into P002” or “What can I screw P001 to?” Use the labels from your own project or the parts’ exact names. For names containing words like “and” or “to,” use quotation marks. Joint questions run in the workspace and show modeled contact, nearby parts, and existing screw plans. Choose a result to inspect the joint or compare entry sides. Confirm a direction in 3D to create a plan for the guide.
 
 In **Guide → Review build preparation → Modeled wood contacts**, review touching pairs one at a time. A recorded plan for one joint leaves other pairs visible. Current removable bearing decisions and geometry-reviewed plan locations reduce the queue. Changed references and unfinished plan locations stay on it. Each row opens the exact two parts, and the guide includes the same initial shortlist. The scan reports its search limit when reached. Review the actual connections and load path for the intended use. [USDA Wood Handbook chapter on fastenings](https://research.fs.usda.gov/treesearch/62253) · [AWC load path workbook](https://web-media.awc.org/wp-content/uploads/2021/12/17210707/AWC-WFCM2018-Workbook-181128.pdf)
+
+For a rail or frame, open **Part → Support to floor** or ask **“Where does support stop for P001?”**. Choose **Show support paths in 3D** to highlight actual contact faces. Green outlines follow contact to the modeled floor. Dashed orange outlines identify branches that stop above it, with a label below the last part. Select a stationary part where the path stops and preview a centered square-ended support block. Yardwork checks face contact, stock fit and modeled movement before adding the piece. The [workstand practice plan](public/examples/wood-stock/workstand-support.yardwork.json) fits a 2½ in block from O001 under its short leg. Its [completed guide](public/examples/wood-stock/workstand-support-guide.md) records the cut and the 7⅜ in scrap to keep. Verify loads, bearing faces and connections for the intended build. [AWC load and bearing guidance](https://awc.org/resource-hub/span-table-tutorial)
 
 Open **Joint detail** on a touching pair to record glue, fitted joinery, a seam to seal, or intentional contact. Write down the faces, materials or assembly order you need in the guide. The detail follows the same two members into the print and Markdown guides, with a step reference. A change to their shape, stock or fit brings the detail back for review. Choose and verify the adhesive or sealant for the actual surfaces and exposure. [USDA Wood Handbook chapter on bonding](https://research.fs.usda.gov/treesearch/62250) · [Sealing details](docs/sealing-and-air-barrier.md)
 
@@ -339,7 +491,7 @@ Assign measured seams a **Work session** when scheduling separate visits. The ap
 
 **Sections → Plan a window wall** previews an editable nonbearing wall with one rough window opening, cut lengths and matching scraps. You can also ask **“Build a wall 8 ft wide and 8 ft tall with a 36 by 48 in rough window opening, sill 32 in above floor.”** After adding the wall, **Plan flashing for this opening** selects the modeled rough sill, jack studs and head. [Window framing references](docs/sealing-and-air-barrier.md#rough-opening-pans-and-drainage)
 
-**Sections → Trace an interior wall** turns two floor points, calibrated drawing marks, or imported DXF points into editable nonbearing wood framing. Click the ends in the top view or enter their X and Z coordinates. Align to a face or center and trim the ends at an adjoining wall. The preview checks existing solid geometry, splits long runs against the chosen board length, and shows purchase cuts and matching saved offcuts. List retains the project cut layouts and Guide retains the panel order. Verify fireblocking, backing and connections on site. [PNNL framing](https://basc.pnnl.gov/resource-guides/advanced-framing-minimum-wall-studs) · [2024 IRC R602.5](https://codes.iccsafe.org/content/IRC2024P2/chapter-6-wall-construction)
+From **Plan an idea**, try **“Give me a framed wall eight feet wide and six feet six inches tall, studs twenty-four inches on center.”** Choose **Preview framed wall** to open editable interior nonbearing framing with the requested dimensions, spacing, and cut list. **Sections → Trace an interior wall** opens the same preview from two floor points, calibrated drawing marks or imported DXF points. Adjust the endpoints, alignment or trim before adding it. The preview checks existing geometry, splits long runs by stock length, and shows cuts and matching offcuts. Verify fireblocking, backing and connections on site. [PNNL framing](https://basc.pnnl.gov/resource-guides/advanced-framing-minimum-wall-studs) · [2024 IRC R602.5](https://codes.iccsafe.org/content/IRC2024P2/chapter-6-wall-construction)
 
 **Sections → Frame a room from PDF or DXF** finds closed right-angle outlines in the selected plan. PDF line ends also provide snap targets when marking a known calibration span. Pick an outline and choose whether its lines mark the framing center or the inside or outside framing face. Preview the panels, corner joints and cuts together, then add them in one edit. The guide puts the through-walls before the adjoining butt walls. Use individual traces for scanned sheets, open plans or walls adjoining existing framing. [PNNL intersection details](https://basc.pnnl.gov/resource-guides/advanced-framing-insulated-interiorexterior-wall-intersections)
 
@@ -355,7 +507,9 @@ The wall water-line schedule records each bore center, pipe cut and shield face.
 
 **Sections → Plan opening flashing** sizes a DuPont FlexWrap sill cut from any matching modeled frame. Check the exterior lap, interior depth, back dam and drainage in 3D. The guide groups cuts and leftovers by roll width, and List can add the reviewed 9 in Home Depot roll. Ask **“How should I flash the window opening?”** or **“Review flashing for P001.”** [Opening flashing references](docs/sealing-and-air-barrier.md#rough-opening-pans-and-drainage) Rectangular flanged windows can add measured jamb and head tape cuts, roll leftovers and the exact four-roll Home Depot boxes. The interior seal option estimates foam or silicone and closed-cell backing from four measured gaps and the available depth.
 
-**List → Estimate wood glue** lists the largest modeled overlap for each current glue joint. Confirm the total area you will coat across your nonstructural joints and preview the quantity of 16 oz bottles. Save or replace the estimate in the shopping list and build guide after checking the fit. [Titebond product and application instructions](https://titebond.com/print/product/e8d40b45-0ab3-49f7-8a9c-b53970f736af)
+In **List → Estimate wood glue → Plan glue on actual faces**, select the contact faces of a recorded nonstructural joint. The model follows the retained wood around cutouts and totals the area for the part or parts you chose to coat. Save the face plan to include the marks and bottle estimate in the guide and Home Depot handoff. You can also enter a field-measured total. [Titebond product and application instructions](https://titebond.com/print/product/e8d40b45-0ab3-49f7-8a9c-b53970f736af)
+
+The laminated access plate example cuts two 10 in plywood blanks from one shelf offcut, leaves 92 sq in of contact around the opening, and lists matching scrap for a glue trial. [Editable practice plan](public/examples/wood-stock/laminated-access-plate.yardwork.json) · [Build guide](public/examples/wood-stock/laminated-access-plate-guide.md)
 
 The SD9112R100 purchase is an exact 100-screw box. Grip-Rite 16C5 is an advertised 5-lb box with unknown exact nail count; approximate source counts never determine required boxes, nail coverage or spares. Its former Lowe’s reference is retired/conflicting, so no current substitute is inferred. Purchases create no installed hardware or connector schedule. See [fastener purchase sources](docs/common-fastener-purchases.md).
 
@@ -375,7 +529,9 @@ Changing retailer, store or ZIP excludes mismatched observations from current pr
 
 Choose **Record store snapshots** in the Home Depot handoff to enter the prices and quantities you checked for matched materials, hardware, and tools at the same store. Leave unchecked rows blank. Yardwork applies the entered rows together and keeps observations for other locations. For a build study with generic panels, choose **Source-matched stock options → Use Home Depot stock** before opening the project to recalculate the cuts for the reviewed stock.
 
-Add an optional aisle or area and bay when you record a store snapshot. **Shop in store** groups exact products by recent location, then lists products whose locations you still need to find. Record picked purchase units, hide completed lines, or download the checklist for that store. Pickup counts are saved with the Yardwork project by store, ZIP and product number. Snapshot JSON includes the recorded locations when you export observations for the selected store. Home Depot’s app can show the current location and stock for the store you select. [Home Depot Product Locator](https://www.homedepot.com/c/ai/find-everything-you-need-inside-the-home-depot-store/9ba683603be9fa5395fab901c3a65572)
+Add an optional aisle or area and bay when you record a store snapshot. **Shop in store** groups exact products by recent location, then lists products whose locations you still need to find. Record picked purchase units, hide completed lines, or download the checklist for that store. Each pickup is saved by store, ZIP and product number. The remaining quantity credits the same product picked up at any store in the project. Snapshot JSON includes the recorded locations when you export observations for the selected store. Home Depot’s app can show the current location and stock for the store you select. [Home Depot Product Locator](https://www.homedepot.com/c/ai/find-everything-you-need-inside-the-home-depot-store/9ba683603be9fa5395fab901c3a65572)
+
+**Check stock** filters the remaining shopping list to shortages and products without a recent snapshot. **Compare recorded stores** checks the quantities you still need against recent snapshots of the exact products in the project's ZIP. Select a store to see its aisle locations and edit the units picked up there. The comparison uses recorded observations within the last 24 hours.
 
 The handoff also shows hardware still to select from your saved plans. Add an exact Home Depot pack when the count is clear, or review overlapping quantities, measurements, and unavailable product matches in **List**. **Review tools** opens the tool checklist for capabilities that still need review.
 
@@ -407,7 +563,15 @@ The compact native intent grammar passed seven warm real-model checks on Qwen2.5
 
 When refining a proposal or a saved design, try “make section 2 two inches taller,” “make the whole run 6 inches wider,” or “increase the greenhouse roof rise by 6 inches.” Yardwork calculates these changes from the current measurements with or without Ollama. In a straight run, an overall width change is shared proportionally. Say “each section” to apply the amount to every member. Review the resulting fit and rebuild before applying.
 
-Give several exact changes in one revision, such as **“Make section 2 two inches taller and one inch deeper.”** Both dimensions apply to section 2. To change another section in the same request, name it explicitly. An unclear amount or target keeps the existing dimensions until clarified. A new request like **“three sections, each 24 inches wide”** gives a 72 in seating run. The [editable banquette practice plan](public/examples/wood-stock/banquette-compound-revision.yardwork.json) shows the resized center module, recorded cuts for the revision and an earlier board order retained on the left section. [Build guide](public/examples/wood-stock/banquette-compound-revision-guide.md)
+You can set exact dimensions and request relative changes together. Try **“Set section 2 seat height to 20 inches and make it one inch deeper,”** or name each section to set different seat heights. Yardwork checks these dimensions locally before showing a preview. An unclear amount or target keeps the existing plan until clarified. A new request like **“three sections, each 24 inches wide”** gives a 72 in seating run. The [editable banquette practice plan](public/examples/wood-stock/banquette-compound-revision.yardwork.json) shows the resized center module, recorded cuts for the revision and an earlier board order retained on the left section. [Build guide](public/examples/wood-stock/banquette-compound-revision-guide.md)
+
+In **Plan an idea**, try **“Build an 18 in wide, 2 ft deep, 34 in tall cabinet with two drawers, 5 in and 8 in high and bar pulls.”** Set one to four inset drawers from top to bottom. Check each drawer's opening, try matching scraps, and save board and sheet cut orders under **Cuts and stock**. Adding the design records a motion and a fitted slide pair for each drawer. Move or rotate **Drawer cabinet** under **Sections** to carry its fitted drawers together. The Accuride 3732 family covers boxes up to 16 in wide. [Accuride installation reference](https://www.accuride.com/media/amasty/amfile/attach/a3bcba75b0b82de060a661de95ce9f44.pdf) · [Home Depot kitchen cabinet installation guide](https://www.homedepot.com/c/ah/how-to-install-kitchen-cabinets/9ba683603be9fa5395fab9039ac0c70)
+
+For a wider wall, try **“Build a 36 in wide, 2 ft deep, 34 in tall cabinet run with two bays and two drawers per bay, 5 in and 8 in high.”** The total width is split equally across up to three side-by-side cabinets. Each has its own frame and drawers, with a shared shopping list and stock layout for the entire run.
+
+For a nonbearing partition, try **“Build a nonbearing wall 10 ft wide and 8 ft tall with a 32 by 82 in rough doorway and a 36 by 48 in rough window opening, sill 32 in above the wall base.”** Review both openings in the same wall elevation, adjust their offsets, and check the shared cut list and reusable wood. The doorway remains available for a measured door and swing test. Confirm the wall function and both manufacturers’ rough dimensions before building. [PNNL framing reference](https://basc.pnnl.gov/resource-guides/advanced-framing-insulated-headers)
+
+When an idea changes a saved hinge or slide test, **Changes to saved movement** identifies new obstructions or earlier contact. Choose **Show in 3D** to inspect the changed pose, or adjust the proposal's position and test it again before adding it. This also compares named tests such as a drawer opening with another door held in place.
 
 For natural-language interpretation with a local model, run Ollama separately and configure:
 
@@ -417,7 +581,7 @@ OLLAMA_URL=http://127.0.0.1:11434 OLLAMA_MODEL=qwen2.5:3b npm run dev
 
 The model must already be installed in your Ollama instance. In Docker Desktop, use a host reachable by the container, commonly `http://host.docker.internal:11434`; Podman commonly uses `host.containers.internal`. Configure the environment in compose. Do not use `127.0.0.1` to reach a host service from inside a container.
 
-Open **Plan an idea** to check whether the configured Ollama model is installed. After starting the service or pulling the model, use **Check model again** in the same planner. Your description stays in place, and **Built-in layout** remains available. For dimensioned wall and floor plans, use **Use built-in template**. The check reads the model list without loading weights or sending the project. [Ollama model-list API](https://docs.ollama.com/api/tags)
+Open **Plan an idea** to check whether the configured Ollama model is installed. When the check finds the model unavailable, **Explore with built-in layout** runs the current description through the presets. After starting Ollama or pulling the model, use **Check model again** and choose **Ollama model**. For dimensioned wall and floor plans, use **Use built-in template**. The check reads the model list without loading weights or sending the project. [Ollama model-list API](https://docs.ollama.com/api/tags)
 
 For a Docker-managed local model, use the optional overlay:
 
@@ -429,11 +593,21 @@ This starts the application, an Ollama CPU service, and a one-time model pull. T
 
 Use the same `-f compose.yaml -f compose.ai.yaml` options for stop/restart/down. Adding `-v` deletes the model and project volumes. This uses the official [Ollama Docker service](https://docs.ollama.com/docker); structured commands require a local engine that supports [JSON-schema outputs](https://docs.ollama.com/capabilities/structured-outputs).
 
-The selected section summary (name, dimensions, spacing, part count and section identifier) is sent with targeted requests. Targeted wall and base AI revisions use the existing command schema. General ideas use a bounded module plan schema that asks for fields relevant to the requested build. When the build type is unclear, the model can still choose among supported types or ask a question. Dimensions are validated and proposals require an explicit Apply action. AI cannot execute arbitrary code, purchase materials, or certify construction. No hosted AI service is called by default. The optional Ollama path has protocol-level mock coverage. The manually dispatched **Real AI qualification** workflow runs the actual engine/model, checks novel word-number wall/base prompts and targeted dimension retention, and saves/restores the generated geometry. Check that workflow’s latest result for real-model qualification; green mock tests alone do not prove inference works.
+For a combined layout, give each item its own instruction. For example, **“Build a 72 in wide, 24 in deep, 18 in tall storage banquette with three sections and lift-up lids. No back. Add a 30 in wide, 14 in deep, 66 in tall plywood bookcase with four shelves to its right, with a 3 in gap.”** The connected model reads the items separately. Yardwork checks the actual parts together in the work zone and preserves the requested sizes and spacing. Review the shared cuts and apply the proposal together.
+
+Open **Sections → Revise design** to adjust a saved banquette. Try **“Make section 2 two inches taller and remove the lid.”** Both changes apply to section 2. It keeps its enclosed storage under a fixed seat. Review the changes together before applying. Name a section or say **“all seats”** when changing lids, backs, or storage across a run.
+
+Say **“Open the middle seat lid”** or **“Close all lids”** to preview existing lids in a draft or saved design. Use **Test movement** to check the full swing.
+
+The selected section summary (name, dimensions, spacing, part count and section identifier) is sent with targeted requests. Targeted wall and base AI revisions use the existing command schema. General ideas use a bounded module plan schema that asks for fields relevant to the requested build. When the build type is unclear, the model can still choose among supported types or ask a question. Dimensions are validated and proposals require an explicit Apply action. AI cannot execute arbitrary code, purchase materials, or certify construction. No hosted AI service is called by default.
+
+Run `node --import tsx scripts/planner-smoke.ts` against the configured app to check a real model response and its banquette geometry. To verify the five build families, dimension edits, recorded cuts and save/reopen, point `SMOKE_URL` at a local test instance with a separate project directory, then run `node --import tsx scripts/planner-families-smoke.ts`. The family check saves its example projects on that instance.
 
 ## Plan import and export
 
 - **Yardwork JSON:** versioned, validated editable project files containing materials, transforms, offcuts, joints, ordered steps, history, inventory snapshots, and reference linework. Imports create a new project ID so they cannot overwrite saved originals.
+- **Several projects or a ZIP:** drop the files on the workspace, or choose **Open project → Import a plan → Choose project files**. Review the recognized projects and choose **Import** to save separate copies to the library. The ZIP can contain supporting files such as build guides and images. A single JSON file still opens as an editable draft.
+- **Rectangular cut list CSV:** open **Import a plan → Cut list · CSV** to download a template and map the stock names from your file. Use `name,stock,quantity,length,width,thickness,unit` with inches (`in`), feet (`ft`), or metric (`mm`, `cm`, `m`) per row. Leave the board cross section or sheet thickness blank to use the selected stock’s actual dimensions. Enter a finished width for sheets. Length follows the stock or grain direction. Imports create a new project of loose parts. **Export → Rectangular cut list** carries compatible blanks between plans. Use editable JSON to preserve assembly positions, cutouts and source history.
 - **PDF, PNG, JPEG and WebP drawing references:** choose a file under 20 MB, select the sheet if needed, mark two endpoints of a known dimension and enter the actual distance. Yardwork places the calibrated sheet on the ground while you build. Use **Drawing** near the viewport to adjust its center, angle, visibility or opacity. The selected sheet, calibration and eligible visible straight PDF linework stay in the editable project and workshop backup. On dense sheets, Yardwork keeps the longest eligible lines within its 3,000-line limit. Guides show the calibration when the sheet is visible. Files are read and rendered in the browser using the bundled [PDF.js renderer](https://mozilla.github.io/pdf.js/examples/index.html).
 - **ASCII DXF:** model-space `LINE` and straight planar `LWPOLYLINE` entities import as ground-plane references with explicit inches/feet/mm/meters selection. Use drawings near the origin. Closed right-angle outlines can seed editable room framing. [Example 6 × 4 ft outline](public/examples/base-plan.dxf) · [Autodesk DXF polyline reference](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-DXF/files/GUID-748FC305-F3F2-4F74-825A-61F04D757A50.htm).
 - **Shopping CSV:** quantities, sample/snapshot prices, availability evidence, product/search links, and excluded oversized-part counts. This is not a native Home Depot project file.
@@ -455,14 +629,26 @@ For a future authorized data source, configure `CATALOG_URL` and optionally `CAT
 
 ## Development and checks
 
+Use a separate branch or worktree for each parallel task. Give each running app its own port and data directory. For example, from an additional checkout:
+
 ```sh
-npm run test          # engine, schema, storage, and integration protocol tests
-npm run build         # strict TypeScript + production assets
-npx playwright install chromium # CI/Linux; local macOS tests use installed Chrome
-npm run test:e2e      # full browser flows, desktop and mobile
+npm ci
+PORT=4178 DATA_DIR="$PWD/data" npm run dev
 ```
 
-The browser test server uses port 4174 and a separate `test-results/server-data` directory. Tests do not alter normal `data/`. GitHub Actions also builds the container and verifies persistence after restart.
+For local app changes, run the build and check the behavior you changed. A cut or fit calculation can use its focused test. For an editor or save change, try the affected flow in the app or run its focused browser test. Docker and Podman builds run the production build without running the test suites.
+
+```sh
+npm run build
+npx tsx --test tests/wood-support.test.ts
+npm run test:e2e -- --grep "name of the affected browser test"
+```
+
+The full suites (`npm run check` and `npm run test:e2e`) are available on demand when a focused check cannot cover the affected behavior. Browser checks use port 4174 and a separate `test-results/server-data` directory. On Linux, install the test browser with `npx playwright install chromium`. Local macOS tests use installed Chrome.
+
+When testing against a separately started server, set `YARDWORK_E2E_DATA_DIR` to that server’s test-only `DATA_DIR` for the saved-project recovery tests. For the static viewer, run `npm run build:pages` before `npm run test:pages`, or set `YARDWORK_PAGES_TEST_URL` to an existing preview. The local preview uses port 4310. Set `CI=1` to use Playwright’s Chromium instead of installed Chrome.
+
+Checks run locally on demand. A Git push updates the source repository. A running Yardwork installation updates when you build and run the revision you want.
 
 React 19 · React Three Fiber / Three.js · TypeScript · Express · Zod · Vite. Persistence uses atomic JSON file replacement plus revision checks to prevent two tabs overwriting each other's saved work.
 

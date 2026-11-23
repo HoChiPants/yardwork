@@ -1,10 +1,11 @@
-import { bom } from "./engine";
+import { bom, bounds } from "./engine";
 import { formatStockLength } from "./measurement";
 import { applyCommand, framingStockDimensions, projectSchema, uid, type Project, type V3 } from "./model";
 import { planOffcutReuse } from "./offcutReusePlan";
 import { prepareCollisionSolid, solidOverlap, type CollisionSolid } from "./solidCollision";
 import type { PlanOutline } from "./planOutlines";
 import type { wallFramingStockIds } from "./windowWall";
+import type { FramedWallDimensions } from "./framedWallRequest";
 
 export type WallTracePoint = [x: number, z: number];
 export type OutlineFace = "center" | "inside" | "outside";
@@ -33,6 +34,19 @@ export const emptyWallTrace = (): WallTrace => ({
   a: null, b: null, height: 96, elevation: 0, startTrim: 0, endTrim: 0,
   alignment: "center", spacing: 16, stock: "hd-kdht-2x4-8", reuse: true,
 });
+
+export const wallTraceStockChoices = [
+  "hd-kdht-2x4-8", "hd-spf-2x4-10", "hd-spf-2x4-12", "hd-spf-2x6-8", "hd-spf-2x6-10", "hd-spf-2x6-12",
+] as const;
+
+export function wallTraceFromDimensions(project: Project, { width, height, spacing, lumber }: FramedWallDimensions): WallTrace {
+  const pieces = project.pieces.filter(({ offcut }) => !offcut);
+  const start = pieces.length ? Math.max(...pieces.map((piece) => bounds(piece).max[0])) + 12 : -width / 2;
+  const depth = lumber === "2x6" ? 5.5 : 3.5;
+  const choices = wallTraceStockChoices.filter((id) => framingStockDimensions(id).depth === depth);
+  const stock = choices.find((id) => framingStockDimensions(id).length >= Math.max(width, height - 3)) ?? choices.at(-1)!;
+  return { ...emptyWallTrace(), a: [start, 0], b: [start + width, 0], height, spacing, stock };
+}
 
 export function snapWallTracePoint(point: WallTracePoint, lines: Project["planLines"], enabled: boolean): WallTracePoint {
   if (!enabled) return point;

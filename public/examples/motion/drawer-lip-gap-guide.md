@@ -54,11 +54,14 @@ Work from top to bottom. Match the starting piece to its label and measured size
 1. O001 → P001 · Drawer test panel
    Starting size 8 in × 6 in × 0.75 in.
    Crosscut to 4 in · Rip to 2 in.
+   Cuts to do.
    Keep O002 · 3.875 in × 6 in × 0.75 in and O003 · 4 in × 3.875 in × 0.75 in.
+   Set aside O003 for cut 2.
 
 2. O003 → P002 · Cabinet lip
    Starting size 4 in × 3.875 in × 0.75 in · remnant from cut 1.
    Crosscut to 2 in · Rip to 1 in.
+   Mark cuts complete for operation 1 first.
    Keep O004 · 1.875 in × 3.875 in × 0.75 in and O005 · 2 in × 2.75 in × 0.75 in.
 
 
@@ -128,15 +131,15 @@ Check every intended joint, bracing, anchorage, edges and clearances. Resolve ou
 
 Modeled remnants; review dimensions, profiles and source lineage before reuse.
 
-- O002 · Offcut · Practice plywood scrap: 6 in × 0.75 in × 3.875 in (¾ in exterior plywood)
+- O002 · Offcut · Practice plywood scrap: 6 in × 0.75 in × 3.875 in (¾ in exterior plywood) · Expected after cutting
   - Blank before profiles: X 6 in × Y 0.75 in × Z 3.875 in; local length Z, width X, thickness Y (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 457591dd-107b-4dc8-9534-61ca05b6d028: original blank X 0.75 in × Y 6 in × Z 8 in. Reusable offcut source-local region X 0 to 0.75 in, Y 0 to 6 in, Z 4.125 to 8 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0.125 in; profile-face saw kerf is not reconstructed.
-- O004 · Offcut · Practice plywood scrap: 3.875 in × 0.75 in × 1.875 in (¾ in exterior plywood)
+- O004 · Offcut · Practice plywood scrap: 3.875 in × 0.75 in × 1.875 in (¾ in exterior plywood) · Expected after cutting
   - Blank before profiles: X 3.875 in × Y 0.75 in × Z 1.875 in; local length Z, width X, thickness Y (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 457591dd-107b-4dc8-9534-61ca05b6d028: original blank X 0.75 in × Y 6 in × Z 8 in. Reusable offcut source-local region X 0 to 0.75 in, Y 2.125 to 6 in, Z 2.125 to 4 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0.125 in; profile-face saw kerf is not reconstructed.
-- O005 · Offcut · Practice plywood scrap: 2.75 in × 0.75 in × 2 in (¾ in exterior plywood)
+- O005 · Offcut · Practice plywood scrap: 2.75 in × 0.75 in × 2 in (¾ in exterior plywood) · Expected after cutting
   - Blank before profiles: X 2.75 in × Y 0.75 in × Z 2 in; local length Z, width X, thickness Y (specified stock length / grain / flute direction). Displayed dimensions and angles round to 0.001 in and 0.001°, respectively.
   - No active profiled faces recorded; the modeled blank is rectangular.
   - Cut source 457591dd-107b-4dc8-9534-61ca05b6d028: original blank X 0.75 in × Y 6 in × Z 8 in. Reusable offcut source-local region X 0 to 0.75 in, Y 3.25 to 6 in, Z 0 to 2 in. Source regions passed modeled size/overlap/kerf checks; this does not reconstruct the cut sequence. Modeled straight-trim kerf: 0.125 in; profile-face saw kerf is not reconstructed.

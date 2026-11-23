@@ -74,7 +74,7 @@ From the fitted cedar stops, **Plan door weatherseal** checks where the 5/16 in 
 
 ## November 20, 2026 · Revise an uncut stock plan
 
-A saved proposal marks its stock layouts and expected offcuts as planned. **List → Recorded cut source** can confirm completed cuts or release an unchanged uncut source. Release returns a stock unit marked on hand to the Cut pool as one full blank. Revision previews release untouched uncut sources used only by the parts being replaced. Shared layouts and downstream scrap assignments keep their source until reviewed. Markdown and print show when an offcut assignment depends on a planned stock cut.
+A saved proposal marks its stock layouts and expected offcuts as planned. **List → Recorded cut source** can confirm completed cuts or release an unchanged uncut source. Release returns a stock unit marked on hand to the Cut pool as one full blank. Revision previews can release untouched uncut sources shared inside the same design. Surviving parts keep their identities and can use the returned stock in the revised cut plan. Sources shared outside the design and downstream scrap assignments have their own release review. Markdown and print show when an offcut assignment depends on a planned stock cut.
 
 ## November 20, 2026 · Save proposal cut orders
 
@@ -234,6 +234,8 @@ Mark a recorded board, sheet, rod or batt as on hand from its cut plan. The stoc
 Open **View stock cut plan** on a planned wood part to assign a compatible rectangular offcut. The picker checks the exact material, thickness, grain direction and room for saw loss. It shows the required trims, records them in the guide and keeps reusable remnants in the Cut pool. Earlier source records without an explicit axis mapping require matching local axes.
 
 **Cut pool → Review offcut reuse** suggests assignments across the project, starting with parts that have fewer fitting options. The preview lists cuts in order, including assignments that use a remnant from an earlier cut, and compares purchase quantities. Apply the plan as one undoable edit.
+
+For an uncut board or sheet with a saved cut plan, open **List → Recorded cut source → Check on-hand offcuts**. If Yardwork finds a cut order that covers every part with scraps and reduces the quantity to buy, the preview shows the cuts, the scraps to keep and the updated purchase quantity. Applying it replaces the saved cut plan in one edit and keeps the parts in place.
 
 The printed and Markdown guides include **Recorded offcut cut order** ahead of assembly. Each item lists the starting size, cuts and labeled remnants to keep. Editing a saved part or cut source can flag the affected instruction and its dependent cuts for review.
 

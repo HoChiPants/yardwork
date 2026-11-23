@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 151,
+  "id": "429e7b42-7b21-4a4b-904c-b84e0f36b432",
+  "name": "Cabinet access cutout reuse",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "e32cdb1b-e33d-4437-b513-656734ba42bb"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "1bb47a56-74cb-48e9-a41a-2c0db5a5acf5",
+      "label": "P001"
+    },
+    {
+      "partId": "1f5a3bef-eebf-4fa7-a7b8-92fa0d0f75ed",
+      "label": "P002"
+    },
+    {
+      "partId": "1ecbf96b-7700-4b97-8f34-5d451aa33d4b",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T00:05:35.895Z",
+  "pieces": [
+    {
+      "id": "1bb47a56-74cb-48e9-a41a-2c0db5a5acf5",
+      "name": "Plywood cabinet access panel",
+      "material": "plywood",
+      "size": [
+        24,
+        0.75,
+        32
+      ],
+      "position": [
+        0,
+        0.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3066c68-585a-46bd-89b5-2c2480570357",
+      "assembly": "Cabinet access",
+      "offcut": false,
+      "cutPlanes": [],
+      "rectangularOpenings": [
+        {
+          "axis": 1,
+          "center": [
+            -1,
+            0
+          ],
+          "spans": [
+            14,
+            12
+          ]
+        }
+      ],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "e32cdb1b-e33d-4437-b513-656734ba42bb",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          24,
+          0.75,
+          32
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "1f5a3bef-eebf-4fa7-a7b8-92fa0d0f75ed",
+      "name": "Mounting-hole test blank",
+      "material": "plywood",
+      "size": [
+        9,
+        0.75,
+        11
+      ],
+      "position": [
+        24,
+        0.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "a3066c68-585a-46bd-89b5-2c2480570357",
+      "assembly": "Test blank",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "a3066c68-585a-46bd-89b5-2c2480570357",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": [
+    {
+      "id": "6cdc6e78-bf2b-41b0-a46d-546bce04f573",
+      "at": "2026-11-23T00:05:35.900Z",
+      "stepId": "a3066c68-585a-46bd-89b5-2c2480570357",
+      "message": "Assigned O001 · Offcut · Saved cabinet plywood to P001 · Plywood cabinet access panel.",
+      "offcutCut": {
+        "sourceId": "e32cdb1b-e33d-4437-b513-656734ba42bb",
+        "inputId": "1ecbf96b-7700-4b97-8f34-5d451aa33d4b",
+        "targetId": "1bb47a56-74cb-48e9-a41a-2c0db5a5acf5",
+        "inputSize": [
+          0.75,
+          24,
+          32
+        ],
+        "result": {
+          "size": [
+            0.75,
+            24,
+            32
+          ],
+          "sourceSize": [
+            0.75,
+            24,
+            32
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "inputName": "Offcut · Saved cabinet plywood",
+        "cuts": [],
+        "remnants": []
+      }
+    }
+  ]
+}

@@ -17,7 +17,7 @@ export function BoardCutListReview({ name, plan, onApply }: {
           <p>{cuts.map(formatStockLength).join(" + ")}</p>
           <small>{formatStockLength(kerf)} blade allowance
             {offcut > 1e-8 && ` · ${formatStockLength(offcut)} offcut`}</small>
-          {source?.pending && <p className="small-note">Complete the source stock cut order first.</p>}
+          {source?.pending && <p className="small-note">Complete the cuts that produce this offcut first.</p>}
         </li>
       ))}
     </ol>

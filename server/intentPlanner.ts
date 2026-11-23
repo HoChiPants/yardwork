@@ -3,6 +3,8 @@ import { ollamaTimeoutMs } from "./ollamaTimeout";
 import { material, materialIds } from "../src/model";
 import { prepareIntentEdits, applyIntentEdits } from "./intentEdits";
 import { reconcileNarrative } from "./intentNarrative";
+import { localSeatFeaturePlan } from "../src/seatFeatureEdits";
+import { localDimensionEditPlan } from "../src/relativeIdeaResize";
 import { toOllamaSchema } from "./ollamaSchema";
 import { defaultOllamaModel } from "./plannerConnection";
 import { assessUnsupportedIntent } from "./unsupportedIntent";
@@ -16,10 +18,14 @@ import {
 import {
   referencedFamily,
   closetMeasurements,
+  doorMeasurements,
   namedMeasurement,
   editCaseworkShelfCount,
   normalizeIdeaText,
   requestsBanquetteReturn,
+  requestedSeatFeatures,
+  requestedSeatingSections,
+  inlineSeatRunWidth,
   type BuildFamily,
 } from "../src/ideaEdits";
 import {
@@ -300,6 +306,12 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
       structures: [],
     });
   }
+  const seatAdjustment = localSeatFeaturePlan(request);
+  if (seatAdjustment) return finalize(seatAdjustment);
+  if (request.previousPlan && namedMeasurement(request.prompt, "back height|backrest height")) {
+    const dimensions = localDimensionEditPlan(request);
+    if (dimensions) return finalize(dimensions);
+  }
   const shelfAdjustment = editCaseworkShelfCount(
     request.previousPlan,
     request.prompt,
@@ -363,6 +375,8 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
       delete intent.returnLength;
     }
     const normalized = normalizeIdeaText(request.prompt);
+    const seating = requestedSeatingSections(normalized);
+    if (seating?.widthEach !== undefined || inlineSeatRunWidth(normalized) !== undefined) delete intent.width;
     // Use the editable seating defaults when the request includes features but no measurements.
     if (!/\b\d+(?:\.\d+)?\s*(?:feet|foot|ft|inches|inch|in)\b|\d\s*[′'″"]|\b(?:counter|bar)[ -]height\b/.test(normalized)) {
       delete intent.width;
@@ -372,18 +386,7 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
     }
   }
   const text = request.prompt.toLowerCase(),
-    noStorage = /\b(?:no|without|remove)\s+(?:the\s+)?storage\b/.test(text),
-    noLid =
-      /\b(?:no|without|remove)\s+(?:an?\s+)?(?:opening\s+|openable\s+)?(?:seat\s+)?lids?\b/.test(
-        text,
-      );
-  const wantsStorage =
-      !noStorage && /\bstorage\b|closed off|space underneath/.test(text),
-    wantsLid =
-      !noLid &&
-      /\b(?:openable|opening|hinged|lift[ -]?up)\s+(?:seat\s+)?lids?\b|\bseats?\b.{0,25}\bopen\b/.test(
-        text,
-      );
+    { noBack, noStorage, noLid, wantsLid, wantsStorage } = requestedSeatFeatures(text);
   if (noStorage && wantsLid)
     return intentToPlan(request, {
       family: "clarify",
@@ -392,14 +395,16 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
         "Should the opening lid cover enclosed storage, or are you planning a different hinged top?",
       ],
     });
-  if (noStorage) intent.storage = false;
-  else if (wantsStorage) intent.storage = true;
+  if (noStorage) {
+    intent.storage = false;
+    intent.openingLid = false;
+  } else if (wantsStorage) intent.storage = true;
   if (noLid) intent.openingLid = false;
   else if (wantsLid) {
     intent.openingLid = true;
     intent.storage = true;
   }
-  if (/\b(?:no|without)\s+(?:a\s+)?back\b|\bbackless\b/.test(text))
+  if (noBack)
     intent.backHeight = 0;
   else {
     const back = namedMeasurement(
@@ -428,6 +433,14 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
       const value = facts[key]?.inches;
       if (value !== undefined && value !== null) intent[key] = value;
     }
+  }
+  if (intent.family === "greenhouse" || intent.family === "sauna") {
+    const { envelope, facts: { doorWidth, doorHeight } } = doorMeasurements(request.prompt);
+    // A requested opening dimension never fills in the structure's overall size.
+    if (doorWidth && !namedMeasurement(envelope, "wide|width")) delete intent.width;
+    if (doorHeight && !namedMeasurement(envelope, "high|height|tall|eave height")) delete intent.height;
+    if (doorWidth?.inches != null) intent.doorWidth = doorWidth.inches;
+    if (doorHeight?.inches != null) intent.doorHeight = doorHeight.inches;
   }
   const prepared = prepareIntentEdits(request, intent);
   intent = prepared.intent;
@@ -485,9 +498,13 @@ export function intentToPlan(request: PlannerRequest, raw: unknown): IdeaPlan {
           ? ""
           : `${family}. `
         : "";
+  // Structure revisions use the requested measurements directly. Repeating those
+  // facts as synthesized clauses can turn the revision into a separate item.
+  const structuredRevision = prepared.mode === "revise" &&
+    request.previousPlan?.structures.some(({ kind }) => kind === intent.family);
   let plan = localIdeaPlan({
     ...request,
-    prompt: [lead + reducerPrompt, ...additions].join(". "),
+    prompt: structuredRevision ? reducerPrompt : [lead + reducerPrompt, ...additions].join(". "),
   });
   plan = applyIntentEdits(plan, prepared, request);
   if (intent.summary)

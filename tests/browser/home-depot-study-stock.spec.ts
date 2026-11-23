@@ -205,7 +205,7 @@ test("a sourced greenhouse exports exact stock and carries a matching store snap
   ).toBe("hd-spf-2x6-8");
 });
 
-test("a deeper greenhouse selects three stock lengths and saves the exact perimeter cuts", async ({
+test("a deeper greenhouse selects a 10 ft ridge and saves the exact perimeter cuts", async ({
   page,
 }, info) => {
   const dialog = await studies(page);
@@ -232,12 +232,12 @@ test("a deeper greenhouse selects three stock lengths and saves the exact perime
   ).toHaveValue("hd-treated-4x4-12");
   await expect(
     dialog.getByRole("combobox", { name: "Study ridge stock" }),
-  ).toHaveValue("hd-spf-2x6-12");
+  ).toHaveValue("hd-spf-2x6-10");
   await dialog.getByText("Stock quantities", { exact: true }).click();
   const table = dialog.getByRole("table", {
     name: "Whole stock for this study",
   });
-  for (const id of ["100077951", "203982343", "312528843"])
+  for (const id of ["100077951", "203982343", "312528837"])
     await expect(
       table.getByRole("link", { name: `Product #${id}` }),
     ).toBeVisible();
@@ -260,6 +260,7 @@ test("a deeper greenhouse selects three stock lengths and saves the exact perime
   const response = await page.request.get(`/api/projects/${stored.id}`);
   expect(response.ok()).toBe(true);
   const project = projectSchema.parse((await response.json()).project);
+  expect(project.pieces.find(({ designRole }) => designRole === "greenhouse-ridge")?.material).toBe("hd-spf-2x6-10");
   const base = project.pieces.filter(
     ({ material }) => material === "hd-treated-4x4-12",
   );

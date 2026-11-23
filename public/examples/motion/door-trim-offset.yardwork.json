@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 140,
+  "id": "b06ea45b-d0ee-452c-8bf8-2f3a9ebbbbbb",
+  "name": "Cabinet door with offset trim",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "motionPlans": [
+    {
+      "label": "Cabinet door",
+      "memberIds": [
+        "050e899d-9bde-49dd-b4d9-5b48e7dfe765"
+      ],
+      "mechanism": {
+        "kind": "hinge",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "pivot": [
+          -12,
+          0,
+          0
+        ],
+        "travel": 90
+      },
+      "id": "46af1d56-d1b5-426d-96c9-e730e1b2fbea",
+      "testScenarios": [
+        {
+          "id": "b33ea2a4-c544-496f-bc07-9932fbd7efec",
+          "name": "Full opening after trim offset",
+          "setup": {
+            "sequenceTargets": {
+              "selected": {
+                "kind": "hinge",
+                "travel": 90
+              }
+            },
+            "held": []
+          }
+        }
+      ]
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "050e899d-9bde-49dd-b4d9-5b48e7dfe765",
+      "label": "P001"
+    },
+    {
+      "partId": "4e88252a-580e-429a-8597-292de6ef8fa1",
+      "label": "P002"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-22T14:34:09.134Z",
+  "pieces": [
+    {
+      "id": "050e899d-9bde-49dd-b4d9-5b48e7dfe765",
+      "name": "Cabinet door",
+      "material": "plywood",
+      "size": [
+        24,
+        30,
+        0.75
+      ],
+      "position": [
+        12,
+        18,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e31c984-f109-4357-8598-9a9a7489d39e",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4e88252a-580e-429a-8597-292de6ef8fa1",
+      "name": "Fixed trim",
+      "material": "plywood",
+      "size": [
+        0.75,
+        3,
+        0.75
+      ],
+      "position": [
+        20.4070028858828,
+        18,
+        13.506899814717375
+      ],
+      "rotation": [
+        0,
+        -0.5875097009912037,
+        0
+      ],
+      "stepId": "7e31c984-f109-4357-8598-9a9a7489d39e",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "595f500d-1aba-43ef-a133-b9718f0154e8",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "b06ea45b-d0ee-452c-8bf8-2f3a9ebbbbbb",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-c2787535",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "7e31c984-f109-4357-8598-9a9a7489d39e",
+      "title": "Assemble Cabinet",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "b06ea45b-d0ee-452c-8bf8-2f3a9ebbbbbb",
+        "stageKey": "assembly:Cabinet",
+        "memberIds": [
+          "050e899d-9bde-49dd-b4d9-5b48e7dfe765",
+          "4e88252a-580e-429a-8597-292de6ef8fa1"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-2b9a8de5",
+        "title": "Assemble Cabinet"
+      }
+    },
+    {
+      "id": "12ecf30c-217f-4657-b49c-7f79b5f8fc0f",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "b06ea45b-d0ee-452c-8bf8-2f3a9ebbbbbb",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-3257fd3a",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-729cbb5b",
+  "history": [
+    {
+      "id": "9e1678ab-044c-4f64-be80-e2eeb98b6ea2",
+      "at": "2026-11-22T20:24:50.027Z",
+      "stepId": "595f500d-1aba-43ef-a133-b9718f0154e8",
+      "message": "Positioned Fixed trim at 20.41 in, 18 in, 13.51 in (X, Y, Z)."
+    }
+  ]
+}

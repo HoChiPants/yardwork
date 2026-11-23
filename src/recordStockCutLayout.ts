@@ -4,7 +4,7 @@ import {
   tubeGroupKey,
   type CutSourceAxes,
 } from "./cutSourceAxes";
-import { inspectCutStock, plannedCutKerf, setCutSourcesOnHand } from "./cutStock";
+import { inspectCutStock, pieceCutKerf, plannedCutKerf, setCutSourcesOnHand } from "./cutStock";
 import { bom } from "./engine";
 import {
   material,
@@ -20,7 +20,7 @@ import { rotate } from "./spatial";
 import { orientedStockSize, stockAxes } from "./stockAxes";
 import { stockCutSequences, type StockCutLayout, type StockCutSequence } from "./stockCutSequence";
 import { formatStockLength } from "./measurement";
-import { cutPlanFingerprint } from "./plannedCutSources";
+import { cutPlanFingerprint, type RecordedStockCutOrder } from "./plannedCutSources";
 import { isDrywall } from "./drywallReference";
 import { stockSplitState } from "./packing";
 import { repeatedBoardCuts } from "./repeatedBoardCuts";
@@ -183,7 +183,10 @@ function prepareStockUnit(
         `Stock cut order for ${label} · ${i + 1}. ${instruction}`,
     ),
   ];
-  return { sourceId, remnantPieces, notes, stepId: anchor.stepId };
+  return {
+    sourceId, remnantPieces, notes, stepId: anchor.stepId,
+    materialId, anchorLabel: label, sourceSize, cuttingAllowance: pieceCutKerf(anchor),
+  };
 }
 
 function saveReviewedStockCuts(
@@ -224,6 +227,16 @@ function saveReviewedStockCuts(
       historyIds: stockHistory[index].map(({ id }) => id),
     })),
   ] : project.plannedCutSources;
+  const recordedStockCutOrders: RecordedStockCutOrder[] = [...(project.recordedStockCutOrders ?? [])];
+  if (!planned) recorded.forEach(({ sourceId, materialId, anchorLabel, sourceSize, cuttingAllowance }, i) => {
+    const instructions = current[i].steps;
+    if (!instructions.length) return;
+    const entries = stockHistory[i].slice(-instructions.length);
+    recordedStockCutOrders.push({
+      sourceId, materialId, anchorLabel, sourceSize, cuttingAllowance, recordedAt: at,
+      steps: instructions.map((instruction, index) => ({ instruction, id: entries[index].id })),
+    });
+  });
   const next = projectSchema.parse(
     ensurePartLabels({
       ...activeProject,
@@ -232,6 +245,7 @@ function saveReviewedStockCuts(
         ...remnants,
       ],
       ...(plannedCutSources ? { plannedCutSources } : {}),
+      ...(recordedStockCutOrders.length ? { recordedStockCutOrders } : {}),
       history: [...project.history, ...stockHistory.flat()].slice(-5000),
     }),
   );

@@ -21,7 +21,7 @@ test("local window wall requests keep wall dimensions separate from rough dimens
   assert.equal(parsePrompt(prompt + " with 2x6 studs").windowOpening?.stock, "two-six");
   assert.equal(parsePrompt(prompt + ", 6 in left of wall center").windowOpening?.offset, -6);
   assert.throws(() => parsePrompt("Build a wall 8 ft wide and 8 ft tall with two windows"), /one rough window/);
-  assert.throws(() => parsePrompt(prompt + " and a door"), /window and door/);
+  assert.throws(() => parsePrompt(prompt + " and a door"), /measured rough doorway/);
   assert.throws(() => parsePrompt("Build a wall 8 ft wide and 8 ft tall with a window"), /rough window width/);
   assert.throws(() => applyCommand(blank(), { ...command, windowOpening: { ...command.windowOpening!, sill: 75 } }), /top plate do not fit/);
   assert.throws(() => applyCommand(blank(), { ...command, windowOpening: { ...command.windowOpening!, height: 24 } }), /24 in from the head/);

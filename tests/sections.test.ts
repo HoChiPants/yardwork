@@ -19,6 +19,7 @@ import { toolChecklist } from "../src/tools";
 import { fittingBaseBoards } from "../src/homeDepotTreatedLumber";
 import { compareFloorBaseStock } from "../src/floorBaseStock";
 import { homeDepotShoppingList } from "../src/handoff";
+import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import {
   createSection,
   duplicateSection,
@@ -29,6 +30,7 @@ import {
   transformSection,
   snapSectionOrigin,
   sectionContext,
+  ungroupSection,
 } from "../src/sections";
 const wall: Command = {
   type: "wall",
@@ -515,6 +517,39 @@ test("legacy grouping prevents double ownership and empty groups are removed on 
     reconcileSections({ ...result.project, pieces: [] }).sections.length,
     0,
   );
+});
+test("ungrouping preserves labeled cut parts, offcuts and connections", () => {
+  const generated = twoSections();
+  const plate = generated.pieces[0];
+  const stud = generated.pieces.find((piece) =>
+    generated.sections[0].pieceIds.includes(piece.id) && piece.name.includes("stud"))!;
+  const cut = cutPiece({ ...generated, sections: [] }, stud.id, 24);
+  const connected = connect(cut, plate.id, stud.id, stud.stepId);
+  const { project, sectionId } = createSection(connected, [plate.id, stud.id], "Handmade");
+  const positioned = transformSection(project, sectionId, [0, 20, 0], [0, 0, 0]);
+  assert.ok(positioned.pieces.some((piece) => piece.offcut));
+  assert.ok(positioned.pieces.find((piece) => piece.id === stud.id)?.cutStock);
+  assert.ok(positioned.joints.some(({ a, b }) => a === plate.id && b === stud.id));
+  const withGuide = generateBuildGuide(positioned);
+  assert.ok(guideIsCurrent(withGuide));
+  assert.ok(withGuide.partLabels.some(({ partId }) => partId === stud.id));
+  const released = ungroupSection(withGuide, sectionId);
+  assert.deepEqual(released, { ...withGuide, sections: [] });
+  assert.ok(!guideIsCurrent(released));
+  const updated = generateBuildGuide(released);
+  assert.ok(guideIsCurrent(updated));
+  assert.ok(updated.steps.every(({ generated }) => generated?.planId !== sectionId));
+  assert.equal(updated.pieces.find(({ id }) => id === stud.id)?.cutStock?.id,
+    withGuide.pieces.find(({ id }) => id === stud.id)?.cutStock?.id);
+
+  const assigned = {
+    ...positioned,
+    pieces: positioned.pieces.map((piece) => piece.id === plate.id
+      ? { ...piece, guidePlacement: { ownerId: sectionId, stageKey: "assemble" } }
+      : piece),
+  };
+  assert.throws(() => ungroupSection(assigned, sectionId), /Move the linked parts/);
+  assert.throws(() => ungroupSection(generated, generated.sections[0].id), /fitted assembly or a recipe/);
 });
 test("recorded regeneration operations remain assigned to the original guide step", () => {
   const p = twoSections(),

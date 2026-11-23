@@ -1,5 +1,12 @@
 import type { Piece, Project } from "./model";
 import { doorwayGuideNote, doorwayLeafRole, doorJambMaterial } from "./doorWall";
+import { doorAndWindowGuideNote } from "./wallOpenings";
+import { drywallGuideNotes } from "./wallDrywall";
+import { doorCasingGuide } from "./doorCasing";
+import { cabinetDoorGuide } from "./cabinetDoors";
+import { floorStopGuide } from "./doorFloorStop";
+import { doorHardwareGuide } from "./doorHardware";
+import { doorHardwareRole } from "./doorHardwareReference";
 import { waterRunMembers, waterRunStageKey } from "./wallWater";
 import { waterFittingStageKey } from "./waterFittings";
 import { waterStopStageKey } from "./waterStops";
@@ -12,6 +19,7 @@ import { saunaCeilingFoilRole, saunaWallFoilRole } from "./saunaFoil";
 import { saunaCeilingBattRole } from "./saunaCeilingReference";
 import { ceilingCoverageText, saunaCeilingCoverage } from "./saunaCeilingCoverage";
 import { saunaWallCoverage, saunaWallCoverageText } from "./saunaWallCoverage";
+import { cabinetBackingReviews, cabinetBackingScope } from "./cabinetBacking";
 
 /** Physical ownership only. Missing systems are review text, never invented parts. */
 export type AssemblyStage = {
@@ -464,22 +472,33 @@ export function baseAssemblyStages(project: Project): AssemblyStage[] {
     const part = activeById.get(id);
     return part && (part.designRole === doorwayLeafRole || part.material === doorJambMaterial) ? [part] : [];
   });
+  const cabinetBacking = cabinetBackingReviews(project);
+  const backingBlocks = new Set(cabinetBacking.flatMap(({ plan }) => plan.blocks.map(({ id }) => id)));
   for (const section of orderedSections) {
+    if (section.wallDrywall || section.doorCasing || section.doorFloorStop || section.cabinetDoors) continue;
     const fitted = new Set(fittedDoorParts(section).map(({ id }) => id));
+    const openingsNote = section.generator?.doorOpening
+      ? section.generator.windowOpening ? doorAndWindowGuideNote : doorwayGuideNote
+      : "";
     append(
       section.id,
       "section",
       section.roomFraming ? `Frame ${section.name} · room wall ${section.roomFraming.wall}` : `Assemble ${section.name}`,
-      section.pieceIds.flatMap((id) => fitted.has(id) ? [] : activeById.get(id) ?? []),
+      section.pieceIds.flatMap((id) => {
+        const current = activeById.get(id);
+        return !current || fitted.has(id) || backingBlocks.has(id) || doorHardwareRole(current.designRole) ? [] : [current];
+      }),
       section.roomFraming
-        ? `Dry-fit panel ${section.roomFraming.panel} of ${section.roomFraming.panels} at the actual measured corner or panel joint. Verify both corner contacts, finish backing and fastening. ${connectionReview}${section.generator?.doorOpening ? ` ${doorwayGuideNote}` : ""}`
-        : section.generator?.doorOpening ? `${doorwayGuideNote} ${connectionReview}`
+        ? `Dry-fit panel ${section.roomFraming.panel} of ${section.roomFraming.panels} at the actual measured corner or panel joint. Verify both corner contacts, finish backing and fastening. ${connectionReview}${openingsNote ? ` ${openingsNote}` : ""}`
+        : openingsNote ? `${openingsNote} ${connectionReview}`
         : `Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. ${connectionReview}`,
     );
   }
-  for (const section of orderedSections.filter(({ generator }) => generator?.doorUnit))
+  const fitDoor = (section: Project["sections"][number]) =>
     append(section.id, "fit-door", `Fit and swing-test the door in ${section.name}`, fittedDoorParts(section),
       "Measure both diagonals and confirm the frame is plumb. Shim and fasten through actual backing per the selected manufacturer. Check the swing with handles, stops, casing and nearby obstructions in place.");
+  const linedWalls = new Set(orderedSections.flatMap(({ wallDrywall }) => wallDrywall ? [wallDrywall.wallId] : []));
+  for (const section of orderedSections.filter(({ id, generator }) => generator?.doorUnit && !linedWalls.has(id))) fitDoor(section);
   for (const run of project.waterRuns ?? [])
     append(run.id, waterRunStageKey, `Rough in ${run.name}`,
       waterRunMembers(run).flatMap((id) => activeById.get(id) ?? []),
@@ -498,14 +517,42 @@ export function baseAssemblyStages(project: Project): AssemblyStage[] {
     if (piece) append(stop.id, waterStopStageKey, `Fit ${stop.name}`, [piece],
       "Follow the recorded insertion mark and confirm handle and outlet access against the finished cabinet. Review the field test boundary and check the final fixture connections for leaks within their ratings.");
   }
+  for (const { plan, issue } of cabinetBacking) {
+    const wall = sections.get(plan.input.wallId);
+    append(plan.id, "cabinet-backing", `Fit cabinet backing${wall ? ` in ${wall.name}` : ""}`,
+      plan.blocks.flatMap(({ id }) => activeById.get(id) ?? []),
+      issue ? `Review the saved mounting marks before placing these blocks. ${issue}`
+        : `Match the labeled crosscuts and fit the blocks flush to the chosen wall face. See Wall cabinet backing for the mounting marks. ${cabinetBackingScope}`);
+  }
+  for (const section of orderedSections.filter(({ wallDrywall }) => wallDrywall)) {
+    const parts = section.pieceIds.flatMap((id) => activeById.get(id) ?? []);
+    append(section.id, "hang-drywall", `Hang ${section.name}`, parts, drywallGuideNotes(project, section, parts));
+  }
+  for (const section of orderedSections.filter(({ id, generator }) => generator?.doorUnit && linedWalls.has(id))) fitDoor(section);
+  for (const section of orderedSections.filter(({ doorCasing }) => doorCasing)) {
+    const trim = section.pieceIds.flatMap((id) => activeById.get(id) ?? []);
+    append(section.id, "fit-door-casing", `Fit ${section.name}`, trim, doorCasingGuide(project, section, trim));
+  }
+  for (const section of orderedSections.filter(({ generator }) => generator?.doorUnit?.hardware)) {
+    const parts = section.pieceIds.flatMap((id) => {
+      const piece = activeById.get(id);
+      return piece && doorHardwareRole(piece.designRole) ? [piece] : [];
+    });
+    append(section.id, "fit-door-hardware", `Fit hardware and check door travel in ${section.name}`, parts, doorHardwareGuide(section));
+  }
+  for (const section of orderedSections.filter(({ doorFloorStop }) => doorFloorStop)) {
+    const pieces = section.pieceIds.flatMap((id) => activeById.get(id) ?? []);
+    append(section.id, "fit-floor-door-stop", `Fit ${section.name}`, pieces, floorStopGuide(project, section));
+  }
   for (const drain of project.sinkDrains ?? []) {
     const members = [drain.bodyId, drain.tubeId].flatMap((id) => activeById.get(id) ?? []);
     append(drain.id, sinkDrainStageKey, `Fit ${drain.name}`, members,
       "Dry-fit the trap and confirm the marked wall-tube cut and retaining hardware. Check the measured vent path, removal clearance and finished connections. Water-test the drain for leaks.");
   }
+  const cabinetDoorIds = new Set(project.sections.flatMap(({ cabinetDoors, pieceIds }) => cabinetDoors ? pieceIds : []));
   const looseGroups = new Map<string, Piece[]>();
   for (const piece of active) {
-    if (claimed.has(piece.id)) continue;
+    if (claimed.has(piece.id) || cabinetDoorIds.has(piece.id)) continue;
     const group = looseGroups.get(piece.assembly) ?? [];
     group.push(piece);
     looseGroups.set(piece.assembly, group);
@@ -520,6 +567,10 @@ export function baseAssemblyStages(project: Project): AssemblyStage[] {
       members,
       `Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. ${connectionReview}`,
     );
+  for (const section of orderedSections.filter(({ cabinetDoors }) => cabinetDoors)) {
+    const leaves = section.pieceIds.flatMap((id) => activeById.get(id) ?? []);
+    append(section.id, "fit-cabinet-doors", `Fit ${section.name.toLowerCase()}`, leaves, cabinetDoorGuide(project, section));
+  }
   return stages;
 }
 

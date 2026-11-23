@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { Command, MaterialId, V3 } from "./model";
+import { doorHardwareMaterial, doorHardwareRoles, georgianPassage } from "./doorHardwareReference";
+import { doorHardwareSchema } from "./doorHardwareSchema";
 
 export const interiorDoor = {
   materialId: "hd-masonite-75777",
@@ -46,6 +48,7 @@ export const doorUnitSchema = z.strictObject({
   travel: z.number().positive().max(180),
   purchase: z.enum(["measured", interiorDoor.materialId]),
   finishedDepth: z.number().positive().max(18).optional(),
+  hardware: doorHardwareSchema.optional(),
 });
 export type DoorUnit = z.infer<typeof doorUnitSchema>;
 
@@ -115,6 +118,31 @@ export function doorwayTemplate(wall: Pick<Command, "width" | "height" | "spacin
     add(`door-jamb-${side}`, `${side} jamb`, [unit.sideJamb, unit.frameHeight, unit.jambDepth], [x, floor + unit.frameHeight / 2, 0], doorJambMaterial);
   add("door-jamb-head", "head jamb", [insideRight - insideLeft, unit.headJamb, unit.jambDepth], [frameX, floor + unit.frameHeight - unit.headJamb / 2, 0], doorJambMaterial);
   add(doorwayLeafRole, "door leaf", [unit.leafWidth, unit.leafHeight, unit.leafThickness], [leafX, floor + unit.floorGap + unit.leafHeight / 2, unit.leafDepthOffset], unit.purchase === "measured" ? measuredDoorMaterial : unit.purchase);
+  const hardware = unit.hardware;
+  if (hardware) {
+    const { backset, centerHeight } = hardware;
+    if (backset >= unit.leafWidth || centerHeight >= unit.leafHeight)
+      throw Error("Place the hardware bore center inside the door leaf.");
+    if (hardware.purchase === georgianPassage.id && (hardware.grip !== "knob" ||
+      !georgianPassage.backsets.some((value) => Math.abs(value - backset) <= 1 / 32) ||
+      unit.leafThickness < georgianPassage.thickness[0] || unit.leafThickness > georgianPassage.thickness[1]))
+      throw Error("The Georgian passage set needs a 2⅜ or 2¾ in backset and a 1⅜–1¾ in thick door.");
+    const hinge = unit.hingeSide === "left" ? -1 : 1;
+    const boreX = leafX - hinge * (unit.leafWidth / 2 - backset);
+    for (const [index, face] of (["front", "back"] as const).entries()) {
+      const { width, height, projection, towardHinge } = hardware[face];
+      if (Math.abs(towardHinge) > width / 2 + tolerance)
+        throw Error("The bore center must lie within the measured handle width.");
+      if (centerHeight - height / 2 < -tolerance || centerHeight + height / 2 > unit.leafHeight + tolerance)
+        throw Error("Check the bore height and the measured height of the complete hardware.");
+      const direction = face === "front" ? 1 : -1;
+      add(doorHardwareRoles[index], `${face} door ${hardware.grip}`, [width, height, projection], [
+        boreX + hinge * towardHinge,
+        floor + unit.floorGap + centerHeight,
+        unit.leafDepthOffset + direction * (unit.leafThickness + projection) / 2,
+      ], doorHardwareMaterial);
+    }
+  }
   return parts;
 }
 

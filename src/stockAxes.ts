@@ -59,3 +59,8 @@ export function orientedStockSize(
     piece.size[axes.length],
   ];
 }
+
+export function offcutStockSize(piece: StockDimensions): V3 {
+  const { thickness, width, length } = stockAxes(piece, piece.cutStock?.size);
+  return [piece.size[thickness], piece.size[width], piece.size[length]];
+}

@@ -1,4 +1,9 @@
 import { subfloorNails } from "./subfloorReference";
+import { simpsonFramingAngles } from "./simpsonConnectorReference";
+import { drywallJointTape, drywallJointTapeScope, drywallScrewScope, drywallScrews } from "./drywallReference";
+import { libertyFlushHinge } from "./cabinetDoorsReference";
+import { everbiltFloorStop } from "./doorFloorStopReference";
+import { georgianPassage } from "./doorHardwareReference";
 import { openingFoam, openingSilicone } from "./openingAirSealReference";
 import { sdwsFramingPacks } from "./sdwsFramingReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
@@ -23,6 +28,7 @@ import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference"
 import { roundDuctElbowScope, roundDuctElbowStock, roundDuctMastic, roundDuctScope, roundDuctSealScope, roundDuctStock } from "./roundDuctReference";
 import { subfloorAdhesive, subfloorAdhesiveScope } from "./subfloorReference";
 import { trimSealant } from "./trimSealantReference";
+import { countertopSealant, countertopSealScope } from "./countertopSealReference";
 import { flexWrap, openingFlashingScope, windowFlashingTape, windowFlashingTapeScope } from "./openingFlashingReference";
 import { trimBackerRodScope, trimBackerRods } from "./trimBackerRodReference";
 import { doorSeal } from "./greenhouseDoorSealReference";
@@ -398,6 +404,11 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     contents: [{ name: "28 fl oz subfloor adhesive cartridge", quantity: 1 }],
     requirements: [subfloorAdhesiveScope, "Check that the gun fits the delivered cartridge."],
   },
+  [countertopSealant.id]: {
+    purchaseUnit: "cartridge",
+    contents: [{ name: "10.1 fl oz clear silicone cartridge", quantity: 1 }],
+    requirements: [countertopSealScope],
+  },
   [trimSealant.id]: {
     purchaseUnit: "cartridge",
     contents: [{ name: "10.1 fl oz white sealant cartridge", quantity: 1 }],
@@ -504,8 +515,43 @@ export const supplyDefinitions: Record<string, SupplyDefinition> = {
     contents: [{ name: subfloorNails.name, quantity: 1, unit: "lb", qualifier: "advertised" }],
     requirements: ["Check the actual count, specified dimensions and acceptable finish before using this bright hand-drive nail in a dry, untreated wood floor assembly."],
   },
+  [drywallJointTape.id]: {
+    purchaseUnit: "roll",
+    contents: [{ name: "250 ft paper joint tape roll", quantity: 1, qualifier: "advertised" }],
+    requirements: [drywallJointTapeScope],
+  },
+  [drywallScrews.id]: {
+    purchaseUnit: "1-lb box",
+    contents: [{ name: drywallScrews.name, quantity: 1, unit: "lb", qualifier: "advertised" }],
+    requirements: [drywallScrewScope],
+  },
+  [libertyFlushHinge.id]: {
+    purchaseUnit: "hinge pack",
+    contents: [{ name: "Flush face-frame hinges with mounting hardware", quantity: libertyFlushHinge.packCount, unit: "count" }],
+    requirements: ["Match the delivered hinges and mounting hardware to a square flush face frame. Verify the hinge count, physical pin and leaf footprints and screw reach."],
+  },
+  [everbiltFloorStop.id]: {
+    purchaseUnit: "floor stop",
+    contents: [{ name: everbiltFloorStop.name, quantity: 1 }],
+    requirements: ["Confirm the delivered bumper height and footprint at the chosen adjustment and follow its mounting instructions."],
+  },
+  [georgianPassage.id]: {
+    purchaseUnit: "passage set",
+    contents: [{ name: "Georgian knobs, latch and installation hardware", quantity: 1 }],
+    requirements: ["Check the actual door thickness, existing cross bore and latch backset. Measure each face’s projection after installation."],
+  },
+  ...Object.fromEntries(simpsonFramingAngles.map((angle) => [angle.id, {
+    purchaseUnit: "angle",
+    contents: [{ name: `${angle.model} angle · ${angle.label}`, quantity: 1 }],
+    requirements: ["Use the exact model’s installation detail to choose compatible fasteners and verify attachment to the members."],
+  }])),
 };
 const toolPurchaseDefinitions: Record<string, SupplyDefinition> = {
+  "milwaukee-49-66-4502": {
+    purchaseUnit: "nut driver",
+    contents: [{ name: "49-66-4502 ¼ in magnetic nut driver", quantity: 1 }],
+    requirements: ["Check for an existing matching accessory before buying. Verify your driver's fit and clearance at the screw head."],
+  },
   [wissSnips.id]: {
     purchaseUnit: "aviation snip",
     contents: [{ name: wissSnips.label, quantity: 1 }],

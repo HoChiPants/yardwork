@@ -6,8 +6,231 @@ import { bom, bounds } from "../../src/engine";
 import { planStockCutLayouts } from "../../src/recordStockCutLayout";
 import { stockCutSequences } from "../../src/stockCutSequence";
 import { addMeasuredOffcut } from "../../src/measuredOffcuts";
+import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { setCutSourceOnHand } from "../../src/cutStock";
+import { Matrix4, Vector3 } from "three";
 
 const group = "2 × 4 framing lumber";
+
+test("choose connector screw sizes and exact angle supplies for a Home Depot list", async ({ page }) => {
+  await page.goto("./");
+  const search = page.getByRole("textbox", { name: "Find a material" });
+  const add = page.getByRole("button", { name: "Add Connector screws", exact: true });
+  const dialog = page.getByRole("dialog");
+  await search.fill("connector screws");
+  await expect(add).toHaveCount(1);
+  await add.click();
+  const sizes = dialog.getByRole("group", { name: "Screw size", exact: true });
+  await expect(sizes.getByRole("radio", { name: "#9 × 1½ in" })).toBeChecked();
+  await sizes.getByRole("radio", { name: "#10 × 1½ in" }).check();
+  await dialog.getByRole("button", { name: "Place material", exact: true }).click();
+  await search.fill("SD9212R100-R");
+  await add.click();
+  await expect(sizes.getByRole("radio", { name: "#9 × 2½ in" })).toBeChecked();
+  await dialog.getByRole("button", { name: "Place material", exact: true }).click();
+
+  await page.getByRole("button", { name: "Tools", exact: true }).click();
+  const driveReview = page.locator("details.section-description").filter({
+    hasText: "Review a ¼ in hex connector-screw driver accessory",
+  });
+  await driveReview.locator("summary").click();
+  await expect(driveReview).toContainText("SD10112R100 specifies a ¼ in hex head");
+  await expect(driveReview).toContainText("SD9212R100 specifies a ¼ in hex head");
+  const nutDriver = page.getByRole("checkbox", { name: "Reviewed 49-66-4502", exact: true });
+  await expect(nutDriver).not.toBeChecked();
+  await nutDriver.check();
+  await expect(driveReview).toContainText("documented capability supported");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const pendingGuide = page.waitForEvent("download");
+  await page.getByRole("button", { name: /Build guide Markdown/ }).click();
+  const stream = await (await pendingGuide).createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  const guide = Buffer.concat(chunks).toString();
+  expect(guide).toContain("SD10112R100 specifies a ¼ in hex head");
+  expect(guide).toContain("Milwaukee ¼ in magnetic nut driver");
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Add 49-66-4502 to shopping list", exact: true }).click();
+
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await page.getByText(/^Hardware and supplies ·/).click();
+  await page.getByRole("combobox", { name: "Choose a supply", exact: true }).selectOption("simpson-a23z");
+  await page.getByRole("spinbutton", { name: "Supply purchase packs to add", exact: true }).fill("2");
+  await page.getByRole("button", { name: "Add supply", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Added 2 purchase packs." })).toBeVisible();
+  await page.getByRole("button", { name: "Prepare Home Depot list", exact: true }).click();
+  const review = dialog.getByRole("list", { name: "Home Depot purchase review" });
+  for (const [id, count] of [["202071154", "1 100 pack"], ["206101818", "1 100 pack"], ["100375310", "2 angles"], ["203114969", "1 nut driver"]]) {
+    await expect(review.getByRole("listitem").filter({ hasText: "#" + id })).toContainText(count);
+  }
+  await dialog.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect(page.getByText("Saved to library", { exact: true })).toBeVisible();
+  const saved = projectSchema.parse(await page.evaluate((key) =>
+    JSON.parse(localStorage.getItem(key)!).project, CURRENT_DRAFT_KEY));
+  expect(saved.pieces.map(({ material }) => material)).toEqual(["sd10112r100", "sd9212r100-r"]);
+  expect(saved.supplies).toMatchObject([
+    { productId: "milwaukee-49-66-4502", quantity: 1 },
+    { productId: "simpson-a23z", quantity: 2 },
+  ]);
+  expect(saved.toolSelections).toMatchObject([{ productId: "milwaukee-49-66-4502" }]);
+  expect(saved.connectorPlans).toEqual([]);
+});
+
+test("place a rail flush on a labeled wood face and save the exact position", async ({ page }) => {
+  const project = blank("Face placement practice");
+  const base = part("Base panel", "plywood", [12, 0.75, 8], [0, 0.375, 0], project.steps[0].id, "Bench");
+  const rail = part("Short rail", "stud", [3.5, 1.5, 8], [15, 0.75, 0], project.steps[0].id, "Bench");
+  project.pieces = [base, rail];
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "face-placement.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Top", exact: true }).click();
+  const canvas = page.locator(".canvas-wrap canvas").first();
+  const camera = async () => JSON.parse(await canvas.getAttribute("data-workshop-camera") ?? "null");
+  await expect.poll(async () => {
+    const data = await camera();
+    return !!data?.settled && Math.abs(data.matrixWorldInverse[6]) > 0.99;
+  }).toBe(true);
+  const model = await camera();
+  const point = new Vector3(...rail.position).divideScalar(12)
+    .applyMatrix4(new Matrix4().fromArray(model.matrixWorldInverse))
+    .applyMatrix4(new Matrix4().fromArray(model.projectionMatrix));
+  await canvas.click({ position: {
+    x: (point.x + 1) * model.viewport.width / 2,
+    y: (1 - point.y) * model.viewport.height / 2,
+  } });
+  await page.getByText("Place against another part", { exact: true }).click();
+  await page.getByRole("combobox", { name: "Target part", exact: true }).selectOption(base.id);
+  const preview = page.getByRole("button", { name: "Preview placement", exact: true });
+  const center = page.getByRole("checkbox", { name: "Center across the face", exact: true });
+  await center.uncheck();
+  await preview.click();
+  await expect(page.getByRole("alert")).toContainText("The faces miss each other");
+  await center.check();
+  await preview.click();
+  const ghost = page.getByTestId("wood-face-placement-preview");
+  await expect(ghost).toHaveAttribute("data-position", "[0,1.5,0]");
+  const draft = async () => projectSchema.parse(await page.evaluate((key) =>
+    JSON.parse(localStorage.getItem(key)!).project, CURRENT_DRAFT_KEY));
+  expect((await draft()).pieces[1].position).toEqual(rail.position);
+  await page.getByRole("button", { name: "Cancel preview", exact: true }).click();
+  await expect(ghost).toHaveCount(0);
+  await preview.click();
+  await page.getByRole("button", { name: "Apply placement", exact: true }).click();
+  await expect.poll(async () => (await draft()).pieces[1].position).toEqual([0, 1.5, 0]);
+  expect((await draft()).pieces[0].position).toEqual(base.position);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect(page.getByText("Saved to library", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await expect.poll(async () => (await draft()).pieces[1].position).toEqual([0, 1.5, 0]);
+});
+
+test("show both floor-reaching and open wood support paths for the same part", async ({ page }) => {
+  const project = blank("Two shelf supports");
+  const stepId = project.steps[0].id;
+  const shelf = part("Shelf", "plywood", [24, 0.75, 8], [0, 3.375, 0], stepId, "Bench");
+  const grounded = part("Grounded block", "stud", [3.5, 3, 7], [-6, 1.5, 0], stepId, "Bench");
+  const floating = part("Floating block", "stud", [3.5, 2, 7], [6, 2, 0], stepId, "Bench");
+  project.pieces = [shelf, grounded, floating];
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "two-supports.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Top", exact: true }).click();
+  const canvas = page.locator(".canvas-wrap canvas").first();
+  const camera = async () => JSON.parse(await canvas.getAttribute("data-workshop-camera") ?? "null");
+  await expect.poll(async () => {
+    const data = await camera();
+    return !!data?.settled && Math.abs(data.matrixWorldInverse[6]) > 0.99;
+  }).toBe(true);
+  const model = await camera();
+  const point = new Vector3(...shelf.position).divideScalar(12)
+    .applyMatrix4(new Matrix4().fromArray(model.matrixWorldInverse))
+    .applyMatrix4(new Matrix4().fromArray(model.projectionMatrix));
+  await canvas.click({ position: {
+    x: (point.x + 1) * model.viewport.width / 2,
+    y: (1 - point.y) * model.viewport.height / 2,
+  } });
+  await page.getByText("Support to floor", { exact: true }).click();
+  const details = page.locator(".wood-support");
+  await expect(details.getByRole("region", { name: "Contact breaks" })).toContainText("Floating block");
+  await details.getByRole("button", { name: "Show support paths in 3D", exact: true }).click();
+  const trace = page.getByTestId("wood-support-trace");
+  await expect(trace).toHaveAttribute("data-grounded-patches", "1");
+  await expect(trace).toHaveAttribute("data-open-patches", "1");
+  await expect(trace).toHaveAttribute("data-floor-patches", "1");
+  await expect(page.getByTestId("wood-support-stop")).toHaveText("P003 · Check below");
+  await trace.getByRole("button", { name: "Hide support paths", exact: true }).click();
+  await expect(trace).toHaveCount(0);
+  await expect(page.getByTestId("wood-support-stop")).toHaveCount(0);
+});
+
+test("a mixed-length plan buys shorter stock for short rails and protects recorded stock", async ({ page }) => {
+  const source = "hd-spf-2x4-12";
+  const initial = blank("Mixed stock for three rails");
+  const rail = (name: string, length: number, x: number) =>
+    part(name, source, [3.5, 1.5, length], [x, 0.75, 0], initial.steps[0].id, "Rails");
+  initial.pieces = [rail("Rail with planned source", 38, -18)];
+  const [sequence] = stockCutSequences(initial, bom(initial)).get(source)!;
+  const recorded = planStockCutLayouts(initial, [sequence.layout]);
+  const onHand = setCutSourceOnHand(recorded.project, recorded.sourceIds[0], true);
+  const uncut = [rail("Long rail", 138, 0), rail("Middle rail", 110, 9), rail("Short rail", 42, 18)];
+  const project = projectSchema.parse({ ...onHand, pieces: [...onHand.pieces, ...uncut] });
+  await page.goto("./");
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await dialog.locator("input[type=file]").first().setInputFiles({
+    name: "mixed-stock.yardwork.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await expect(dialog).toHaveCount(0);
+  const draft = async () => projectSchema.parse(await page.evaluate((key) =>
+    JSON.parse(localStorage.getItem(key)!).project, CURRENT_DRAFT_KEY));
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const row = page.locator(`.bom-row[data-stock-material="${source}"]`);
+  await row.getByText("Compare stock for 3 parts", { exact: true }).click();
+  await expect(row).toContainText("1 already linked to recorded stock");
+  await expect(row.getByRole("combobox", { name: "Alternate stock", exact: true })).toHaveCount(0);
+  await row.getByRole("button", { name: "Compare mixed lengths", exact: true }).click();
+  const preview = row.getByRole("region", { name: "Mixed stock preview", exact: true });
+  await expect(preview).toContainText("36 ft → 30 ft");
+  await preview.getByText("Review cuts and expected offcuts", { exact: true }).click();
+  await expect(preview.getByRole("list", { name: "Mixed stock cut order" })).toContainText("Expected offcuts");
+  const before = await draft();
+  expect(before.pieces.filter((piece) => !piece.offcut).every(({ material }) => material === source)).toBe(true);
+  await preview.getByRole("button", { name: "Apply mixed stock lengths", exact: true }).click();
+  const expected = before.pieces.map((piece) => piece.id === uncut[1].id
+    ? { ...piece, material: "hd-spf-2x4-10" }
+    : piece.id === uncut[2].id ? { ...piece, material: "hd-kdht-2x4-8" } : piece);
+  await expect.poll(async () => (await draft()).pieces).toEqual(expected);
+  expect((await draft()).plannedCutSources).toEqual(before.plannedCutSources);
+  expect((await draft()).onHandCutSources).toEqual(before.onHandCutSources);
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await expect(page.getByText("Saved to library", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "Open project", exact: true }).click();
+  await dialog.locator(".project-list > button").filter({ hasText: project.name }).click();
+  await expect.poll(async () => (await draft()).pieces).toEqual(expected);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const instructions = await readFile((await (await download).path())!, "utf8");
+  expect(instructions).toContain("Changed stock for Middle rail");
+  expect(instructions).toContain("Changed stock for Short rail");
+  expect(instructions).toContain("Expected leftovers");
+});
 
 test("one material tile supports drop, length choice and a separate selected-part toolbar", async ({ page }, info) => {
   await page.goto("./");
@@ -46,6 +269,13 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(canvas).not.toHaveAttribute("data-material-drop-point");
   await expect(canvas).not.toHaveAttribute("data-material-placement-preview");
+  await dragToGround(art.x + art.width / 2, art.y + art.height / 2);
+  await expect(dropHint).toBeVisible();
+  await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+  await page.mouse.up();
+  await expect(dropHint).toHaveCount(0);
+  await expect(canvas).not.toHaveAttribute("data-material-drop-point");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await dragToGround(art.x + art.width / 2, art.y + art.height / 2);
   await expect(page.locator(".material-drag-preview.can-drop .material-art")).toBeVisible();
   const dropPoint = (await canvas.getAttribute("data-material-drop-point"))!;
@@ -140,7 +370,7 @@ test("one material tile supports drop, length choice and a separate selected-par
   await expect(page.getByRole("region", { name: "Pricing coverage" })).toBeVisible();
 });
 
-test("the length picker leaves the placed preview visible near the right edge", async ({ page }) => {
+test("the length picker fits the inspector column and leaves the preview and project controls visible", async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 800 });
   await page.goto("./");
   const canvas = page.locator("canvas").first();
@@ -151,7 +381,12 @@ test("the length picker leaves the placed preview visible near the right edge", 
   const placement = page.getByRole("dialog", { name: "4 × 4 treated post" });
   await expect(placement).toBeVisible();
   const picker = (await placement.boundingBox())!;
-  expect(picker.x + picker.width).toBeLessThan(view.x + target.x);
+  const inspector = (await page.locator("#workshop-inspector").boundingBox())!;
+  const projectSettings = (await page.getByRole("button", { name: "Rename project" }).boundingBox())!;
+  expect(picker.x).toBe(inspector.x);
+  expect(picker.width).toBe(inspector.width);
+  expect(picker.x).toBeGreaterThanOrEqual(view.x + view.width);
+  expect(picker.x).toBeGreaterThan(projectSettings.x + projectSettings.width);
   const point = JSON.parse((await canvas.getAttribute("data-material-drop-point"))!);
   await confirmMaterialPlacement(page, "12 ft");
   await expect(page.getByRole("spinbutton", { name: "X", exact: true })).toHaveValue(String(point[0]));
@@ -309,7 +544,42 @@ test("lay a board flat and use the available zone width to choose shorter stock"
   expect(saved.pieces.some(({ offcut }) => offcut)).toBe(true);
 });
 
-test("drag from the plus and lay a cut board flat on an existing surface", async ({ page }) => {
+test("lay two boards front to back and cut them from one stock length", async ({ page }) => {
+  await page.goto("./");
+  await page.locator(".project-heading").getByRole("button", { name: "Set work zone", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("combobox", { name: "Width units", exact: true }).selectOption("in");
+  await dialog.getByRole("spinbutton", { name: "Zone width", exact: true }).fill("36");
+  await dialog.getByRole("spinbutton", { name: "Zone depth", exact: true }).fill("54");
+  await dialog.getByRole("button", { name: "Apply work zone", exact: true }).click();
+  await page.getByRole("button", { name: `Add ${group}`, exact: true }).click();
+  await dialog.getByRole("button", { name: "Lay flat", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Use work zone clearance (3 ft)", exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Lay front to back", exact: true }).click();
+  await dialog.getByRole("button", { name: "Use work zone clearance (54 in)", exact: true }).click();
+  await dialog.getByRole("spinbutton", { name: "Pieces at this length", exact: true }).fill("2");
+  await dialog.getByRole("button", { name: "Use 10 ft", exact: true }).click();
+  await dialog.getByRole("button", { name: "Plan and place 2 pieces", exact: true }).click();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Editable project/ }).click();
+  const saved = projectSchema.parse(JSON.parse(await readFile((await (await download).path())!, "utf8")));
+  const parts = saved.pieces.filter(({ offcut }) => !offcut);
+  expect(parts).toHaveLength(2);
+  for (const piece of parts) {
+    expect(piece.material).toBe("stud-10");
+    expect(piece.stockLengthAxis).toBe(1);
+    expect(bounds(piece).min[1]).toBeCloseTo(0);
+    expect(bounds(piece).max[1]).toBeCloseTo(1.5);
+    expect(bounds(piece).min[2]).toBeCloseTo(-27);
+    expect(bounds(piece).max[2]).toBeCloseTo(27);
+  }
+  expect(bounds(parts[1]).min[0]).toBeGreaterThanOrEqual(bounds(parts[0]).max[0]);
+  expect(saved.plannedCutSources).toHaveLength(1);
+  expect(saved.pieces.filter(({ offcut }) => offcut)).toHaveLength(1);
+});
+
+test("place a rotated board on a surface and set its exact bottom elevation", async ({ page }) => {
   const project = blank("Landing on the work surface");
   project.pieces = [part("Work surface", "plywood", [36, 0.75, 36], [0, 12, 0], project.steps[0].id, "Bench")];
   await page.goto("./");
@@ -343,18 +613,59 @@ test("drag from the plus and lay a cut board flat on an existing surface", async
   await finished.fill("120");
   await expect(dialog.getByRole("button", { name: "Place material", exact: true })).toBeDisabled();
   await finished.fill("24");
-  await dialog.getByRole("button", { name: "Lay flat", exact: true }).click();
-  await expect(dialog.getByRole("button", { name: "Lay flat", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await dialog.getByRole("button", { name: "Lay front to back", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Lay front to back", exact: true })).toHaveAttribute("aria-pressed", "true");
   await dialog.getByRole("button", { name: "Plan cut and place", exact: true }).click();
   await expect(page.getByRole("spinbutton", { name: "Height Y", exact: true })).toHaveValue("24");
   await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("12.75");
+  const movement = page.getByRole("region", { name: "Move and copy objects" });
+  const bottom = movement.getByRole("spinbutton", { name: "Bottom above floor", exact: true });
+  await expect(bottom).toHaveValue("12.375");
+  await expect(movement).toContainText("Top above floor · 13.125 in");
+  await movement.getByRole("combobox", { name: "Bottom above floor units" }).selectOption("ft");
+  await bottom.fill("2");
+  await bottom.press("Enter");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("24.375");
+  await expect(movement).toContainText("Top above floor · 24.75 in");
+  await bottom.fill("0");
+  await movement.getByRole("button", { name: "Set height", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Stopped at Work surface" })).toBeVisible();
+  await expect(bottom).toHaveValue("1.03125");
+  await expect(page.getByRole("spinbutton", { name: "Y", exact: true })).toHaveValue("12.75");
+  const center = page.getByRole("spinbutton", { name: "Y", exact: true });
+  const openHeight = async (prompt: string) => {
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(prompt);
+    await dialog.getByRole("button", { name: /^(Explore idea|Explore with built-in layout)$/ }).click();
+    const answer = dialog.getByRole("region", { name: "Set the bottom height of P002", exact: true });
+    await expect(answer).toBeVisible();
+    await answer.getByRole("button", { name: "Review height in 3D", exact: true }).click();
+  };
+  await openHeight("Set the bottom of P002 to 2 feet above the floor");
+  const preview = page.getByRole("region", { name: "Part height preview" });
+  const marker = page.getByTestId("part-elevation-preview");
+  await expect(preview).toContainText("Bottom 12.375 in → 2 ft");
+  await expect(marker).toBeVisible();
+  await expect(center).toHaveValue("12.75");
+  await preview.getByRole("button", { name: "Apply height", exact: true }).click();
+  await expect(center).toHaveValue("24.375");
+  await openHeight("Move P002 so its bottom is 0 inches above the floor");
+  await expect(preview).toContainText("Stopped at Work surface");
+  await expect(center).toHaveValue("24.375");
+  await preview.getByRole("button", { name: "Cancel preview", exact: true }).click();
+  await expect(marker).toHaveCount(0);
+  await expect(center).toHaveValue("24.375");
+  await openHeight("Set P002's underside to 0 in");
+  await preview.getByRole("button", { name: "Move to stop", exact: true }).click();
+  await expect(center).toHaveValue("12.75");
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download");
   await dialog.getByRole("button", { name: /^Editable project/ }).click();
   const saved = projectSchema.parse(JSON.parse(await readFile((await (await download).path())!, "utf8")));
   const board = saved.pieces.find((piece) => !piece.offcut && piece.name === "1 × 2 board")!;
-  expect(board.rotation[2]).toBeCloseTo(Math.PI / 2);
-  expect(bounds(board).min[1]).toBeCloseTo(surface);
+  const installed = bounds(board);
+  expect(installed.max[2] - installed.min[2]).toBeCloseTo(24);
+  expect(installed.min[1]).toBeCloseTo(surface);
   expect(saved.pieces.filter((piece) => !piece.offcut)).toHaveLength(2);
 });
 

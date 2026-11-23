@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, ExternalLink } from "lucide-react";
 import type { HomeDepotPurchaseItem } from "./handoff";
 import {
+  compareHomeDepotStores,
   homeDepotStoreChecklist,
   homeDepotStoreList,
   type PickupTarget,
@@ -14,6 +15,7 @@ export function HomeDepotInStorePanel({
   items,
   recorded,
   onPick,
+  onSelectStore,
   onDownload,
   onRecord,
   onBack,
@@ -22,13 +24,16 @@ export function HomeDepotInStorePanel({
   items: HomeDepotPurchaseItem[];
   recorded: number;
   onPick: (target: PickupTarget, quantity: number) => void;
+  onSelectStore: (store: string) => void;
   onDownload: (text: string) => void;
   onRecord: () => void;
   onBack: () => void;
 }) {
   const [remainingOnly, setRemainingOnly] = useState(false);
+  const [stockOnly, setStockOnly] = useState(false);
   const [error, setError] = useState("");
   const list = homeDepotStoreList(project, items);
+  const stores = useMemo(() => compareHomeDepotStores(project, items), [project, items]);
   const { store, zip } = project;
   const canPick = !!store.trim();
   return (
@@ -56,6 +61,30 @@ export function HomeDepotInStorePanel({
           Match products in the purchase list to add them to this checklist.
         </p>
       )}
+      {!!items.length && stores.some(({ store: candidate }) => candidate !== store) && (
+        <details className="handoff-review">
+          <summary>Compare recorded stores</summary>
+          <p className="small-note">
+            Recent snapshots in ZIP {zip} for the quantities you still need.
+          </p>
+          <ul className="handoff-items" aria-label="Stock comparison by store">
+            {stores.map(({ store: candidate, covered, short, unchecked }) => (
+              <li key={candidate}>
+                <strong>Store {candidate}{candidate === store ? " · Selected" : ""}</strong>
+                <span>{list.pickedLines === list.totalLines
+                  ? "All listed products picked"
+                  : `${covered} covered · ${short} short · ${unchecked} unchecked`}</span>
+                {candidate !== store && (
+                  <button type="button" className="button secondary small" onClick={() => {
+                    onSelectStore(candidate);
+                    setError("");
+                  }}>Use store {candidate}</button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       <div className="inline">
         <button
           className="button secondary small"
@@ -73,11 +102,17 @@ export function HomeDepotInStorePanel({
           />
           Show remaining only
         </label>
+        {(list.stockChecks > 0 || stockOnly) && (
+          <button type="button" className="button secondary small" aria-pressed={stockOnly}
+            onClick={() => setStockOnly(!stockOnly)}>
+            Check stock ({list.stockChecks})
+          </button>
+        )}
       </div>
       {list.groups.map(({ key, title, rows }) => {
-        const shown = remainingOnly
-          ? rows.filter(({ remaining }) => remaining > 0)
-          : rows;
+        const shown = stockOnly ? rows.filter(({ availability }) =>
+          availability.state === "short" || availability.state === "unchecked")
+          : remainingOnly ? rows.filter(({ remaining }) => remaining > 0) : rows;
         if (!shown.length) return null;
         return (
           <section key={key} className="shop-aisle" aria-label={title}>
@@ -100,7 +135,7 @@ export function HomeDepotInStorePanel({
                   {row.snapshot && (
                     <span
                       className={
-                        row.snapshot.available < row.remaining
+                        row.availability.state === "short"
                           ? "handoff-short"
                           : ""
                       }
@@ -115,15 +150,18 @@ export function HomeDepotInStorePanel({
                       <time dateTime={row.snapshot.checkedAt}>
                         {new Date(row.snapshot.checkedAt).toLocaleDateString()}
                       </time>
+                      {row.availability.state === "short" && ` · Short by ${row.availability.units}`}
                     </span>
                   )}
-                  {canPick && (
-                    <div className="inline shop-pick">
+                  {row.availability.state === "unchecked" && <span>No recent store snapshot</span>}
+                  <div className="inline shop-pick">
+                    {canPick && row.editLimit > 0 && (
                       <PickupQuantity
                         key={JSON.stringify([store, zip, row.productId])}
                         productId={row.productId}
                         picked={row.picked}
-                        quantity={row.quantity}
+                        target={row.targetHere}
+                        limit={row.editLimit}
                         onPick={(picked) => {
                           try {
                             onPick(
@@ -140,16 +178,20 @@ export function HomeDepotInStorePanel({
                           }
                         }}
                       />
-                      <span>{row.remaining} remaining</span>
-                    </div>
-                  )}
+                    )}
+                    {row.pickedElsewhere > 0 && (
+                      <span>{row.pickedElsewhere} picked elsewhere</span>
+                    )}
+                    <span>{row.remaining} remaining</span>
+                  </div>
                 </li>
               ))}
             </ul>
           </section>
         );
       })}
-      {remainingOnly &&
+      {stockOnly && !list.stockChecks && <p>No outstanding stock checks in this view.</p>}
+      {!stockOnly && remainingOnly &&
         list.totalLines > 0 &&
         list.pickedLines === list.totalLines && (
           <p>All listed items are marked picked.</p>
@@ -188,26 +230,29 @@ export function HomeDepotInStorePanel({
 function PickupQuantity({
   productId,
   picked,
-  quantity,
+  target,
+  limit,
   onPick,
 }: {
   productId: string;
   picked: number;
-  quantity: number;
+  target: number;
+  limit: number;
   onPick: (quantity: number) => void;
 }) {
   const [draft, setDraft] = useState<string>();
   const label = `Picked purchase units for product ${productId}`;
+  const complete = picked >= target;
   return (
     <>
       <label>
-        Picked
+        Picked here
         <input
           aria-label={label}
           type="number"
           step={1}
           min={0}
-          max={quantity}
+          max={limit}
           value={draft ?? picked}
           inputMode="numeric"
           onChange={(event) => setDraft(event.target.value)}
@@ -225,13 +270,13 @@ function PickupQuantity({
       <button
         className="text-button"
         type="button"
-        aria-label={`${picked === quantity ? "Clear picked quantity" : "Mark picked"} for product ${productId}`}
+        aria-label={`${complete ? "Clear picked quantity" : "Mark picked"} for product ${productId}`}
         onClick={() => {
           setDraft(undefined);
-          onPick(picked === quantity ? 0 : quantity);
+          onPick(complete ? 0 : target);
         }}
       >
-        {picked === quantity ? "Clear" : "Mark picked"}
+        {complete ? "Clear" : "Mark picked"}
       </button>
     </>
   );

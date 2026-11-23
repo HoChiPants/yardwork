@@ -33,6 +33,51 @@ async function importCabinet(page: Page, project: Project) {
   return dialog;
 }
 
+test("check a requested door and drawer sequence and keep its travel in the guide", async ({ page }) => {
+  const { project, door, drawer } = cabinet("Ordered cabinet movement");
+  const dialog = await importCabinet(page, project);
+  const pose = page.getByTestId("motion-preview-label");
+  async function ask(prompt: string, finding: RegExp, button: string) {
+    await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+    await dialog.getByRole("textbox", { name: "Describe your idea" }).fill(prompt);
+    await dialog.getByRole("button", { name: /^(Explore idea|Explore with built-in layout)$/ }).click();
+    const review = dialog.getByRole("region", { name: "Ordered motion review", exact: true });
+    await expect(review).toContainText(finding);
+    await review.getByRole("button", { name: button, exact: true }).click();
+    await expect(pose).toBeVisible();
+  }
+
+  await ask("Open the cabinet door, then pull out the drawer.", /Opening pauses.*Wall return/, "Inspect opening stop");
+  await expect(pose).toContainText("Wall return");
+  expect(Number(await pose.getAttribute("data-pose"))).toBeLessThan(50);
+
+  await ask('Open "Cabinet door" to 75°, then extend P002 to 12.5".', /Cabinet door to 75°, then Pull-out drawer to 12.5 in/, "Preview open");
+  await expect(pose).toHaveAttribute("data-pose", "100");
+  await expect(pose).toContainText("Pull-out drawer · 12.5 in");
+
+  await ask("Close the door from 75°, then close the drawer from 12.5 in.", /Closing pauses.*Cabinet door.*Pull-out drawer/, "Inspect closing stop");
+  await expect(pose).toContainText("Contact ahead");
+  expect(Number(await pose.getAttribute("data-pose"))).toBeGreaterThan(50);
+
+  await ask("Close the drawer from 1 ft 0.5 in, then close the door from 75°.", /Modeled path clears to both closed positions/, "Preview closed");
+  await expect(pose).toHaveAttribute("data-pose", "0");
+  await page.getByRole("button", { name: "Return to motion controls", exact: true }).click();
+  const panel = page.getByRole("region", { name: "Motion and clearance", exact: true });
+  await expect(panel.getByRole("combobox", { name: "Saved motion", exact: true })).toHaveValue(drawer.id);
+  await expect(panel.getByRole("combobox", { name: "Second motion", exact: true })).toHaveValue(door.id);
+  await panel.getByText("Keep this test under a name", { exact: true }).click();
+  await panel.getByRole("textbox", { name: "Clearance test name", exact: true }).fill("Kitchenette cabinet route");
+  await panel.getByRole("button", { name: "Save named test", exact: true }).click();
+  await expect(panel.getByText("Named test setup saved", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("Named clearance test · Kitchenette cabinet route · opens in order: Cabinet door → Pull-out drawer. Closing reverses the order.");
+  expect(guide).toContain("Cabinet door 75°, Pull-out drawer 12.5 in");
+});
+
 test("find a door opening from an idea, then save and export the verified drawer sequence", async ({ page }) => {
   const { project, door, drawer } = cabinet("Find a working drawer opening");
   const dialog = await importCabinet(page, project);

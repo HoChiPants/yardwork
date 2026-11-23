@@ -1,0 +1,422 @@
+{
+  "schemaVersion": 153,
+  "id": "9c32c3ed-8073-407e-8aa4-a4cfbe4a27b0",
+  "name": "Workbench diagonal brace from scrap",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "016674d4-132f-4600-a8b7-57d1097df4ab"
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "71427b41-399d-4044-9178-af6b57bb0a32",
+      "label": "P001"
+    },
+    {
+      "partId": "dfb5019c-19a6-4c8d-97b3-5d45f10218c9",
+      "label": "P002"
+    },
+    {
+      "partId": "e52d55fe-e331-409b-886a-3e3913997ad2",
+      "label": "P003"
+    },
+    {
+      "partId": "06577b1c-6178-4e79-8a50-ec24b16039c9",
+      "label": "P004"
+    },
+    {
+      "partId": "0c5459f9-b4db-40e5-ac50-fd784f31428d",
+      "label": "P005"
+    },
+    {
+      "partId": "2ea4afda-748b-496e-9608-b788ea805766",
+      "label": "P006"
+    },
+    {
+      "partId": "e7222a17-c18b-43b7-947c-a20e8f8f94f0",
+      "label": "P007"
+    },
+    {
+      "partId": "ec9fcf7e-6d05-42e8-852e-f0ad73945d87",
+      "label": "P008"
+    },
+    {
+      "partId": "d645cf91-d40a-41ab-bde7-52902e060063",
+      "label": "P009"
+    },
+    {
+      "partId": "96bc31e4-6e88-4a13-b039-01115f8a1eff",
+      "label": "P010"
+    },
+    {
+      "partId": "54effdb8-4592-4e77-b56b-794ba273ad5a",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T00:25:21.578Z",
+  "pieces": [
+    {
+      "id": "71427b41-399d-4044-9178-af6b57bb0a32",
+      "name": "Rear left post",
+      "material": "stud",
+      "size": [
+        3.5,
+        34,
+        1.5
+      ],
+      "position": [
+        -18,
+        17,
+        -10
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "dfb5019c-19a6-4c8d-97b3-5d45f10218c9",
+      "name": "Rear right post",
+      "material": "stud",
+      "size": [
+        3.5,
+        34,
+        1.5
+      ],
+      "position": [
+        18,
+        17,
+        -10
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "e52d55fe-e331-409b-886a-3e3913997ad2",
+      "name": "Front left post",
+      "material": "stud",
+      "size": [
+        3.5,
+        34,
+        1.5
+      ],
+      "position": [
+        -18,
+        17,
+        10
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "06577b1c-6178-4e79-8a50-ec24b16039c9",
+      "name": "Front right post",
+      "material": "stud",
+      "size": [
+        3.5,
+        34,
+        1.5
+      ],
+      "position": [
+        18,
+        17,
+        10
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "0c5459f9-b4db-40e5-ac50-fd784f31428d",
+      "name": "Lower rear rail",
+      "material": "stud",
+      "size": [
+        32.5,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        2.25,
+        -10
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "2ea4afda-748b-496e-9608-b788ea805766",
+      "name": "Upper rear rail",
+      "material": "stud",
+      "size": [
+        32.5,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        32.25,
+        -10
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "e7222a17-c18b-43b7-947c-a20e8f8f94f0",
+      "name": "Upper front rail",
+      "material": "stud",
+      "size": [
+        32.5,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        32.25,
+        10
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "ec9fcf7e-6d05-42e8-852e-f0ad73945d87",
+      "name": "Side rail",
+      "material": "stud",
+      "size": [
+        1.5,
+        3.5,
+        18.5
+      ],
+      "position": [
+        -18,
+        32.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "d645cf91-d40a-41ab-bde7-52902e060063",
+      "name": "Side rail",
+      "material": "stud",
+      "size": [
+        1.5,
+        3.5,
+        18.5
+      ],
+      "position": [
+        18,
+        32.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "96bc31e4-6e88-4a13-b039-01115f8a1eff",
+      "name": "Workbench top",
+      "material": "plywood",
+      "size": [
+        48,
+        0.75,
+        27
+      ],
+      "position": [
+        0,
+        34.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "Workbench frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "54effdb8-4592-4e77-b56b-794ba273ad5a",
+      "name": "Offcut · Pine left over from the shop shelving",
+      "material": "hd-pine-1x4",
+      "size": [
+        3.5,
+        0.75,
+        62
+      ],
+      "position": [
+        0,
+        0.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "016674d4-132f-4600-a8b7-57d1097df4ab",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          3.5,
+          0.75,
+          62
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "e1c73030-e20a-4353-a5c3-1f0511ae01c7",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [
+    {
+      "id": "34160125-9939-4e52-9fac-4d33980b482c",
+      "name": "Workbench frame",
+      "pieceIds": [
+        "71427b41-399d-4044-9178-af6b57bb0a32",
+        "dfb5019c-19a6-4c8d-97b3-5d45f10218c9",
+        "e52d55fe-e331-409b-886a-3e3913997ad2",
+        "06577b1c-6178-4e79-8a50-ec24b16039c9",
+        "0c5459f9-b4db-40e5-ac50-fd784f31428d",
+        "2ea4afda-748b-496e-9608-b788ea805766",
+        "e7222a17-c18b-43b7-947c-a20e8f8f94f0",
+        "ec9fcf7e-6d05-42e8-852e-f0ad73945d87",
+        "d645cf91-d40a-41ab-bde7-52902e060063",
+        "96bc31e4-6e88-4a13-b039-01115f8a1eff"
+      ],
+      "origin": [
+        0,
+        17.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

@@ -14,7 +14,7 @@ function statusMessage(status: Status) {
   }
 }
 
-export function PlannerConnection() {
+export function PlannerConnection({ onUnavailableChange }: { onUnavailableChange?: (unavailable: boolean) => void }) {
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<Status>({ state: "checking" });
   useEffect(() => {
@@ -26,14 +26,20 @@ export function PlannerConnection() {
         });
         if (!response.ok) throw Error("Connection status unavailable.");
         const result = plannerConnectionSchema.parse(await response.json());
-        if (!controller.signal.aborted) setStatus(result);
+        if (!controller.signal.aborted) {
+          setStatus(result);
+          onUnavailableChange?.(result.state === "missing-model" || result.state === "unreachable");
+        }
       } catch {
-        if (!controller.signal.aborted) setStatus({ state: "unreachable" });
+        if (!controller.signal.aborted) {
+          setStatus({ state: "unreachable" });
+          onUnavailableChange?.(true);
+        }
       }
     }
     void check();
     return () => controller.abort();
-  }, [attempt]);
+  }, [attempt, onUnavailableChange]);
   return <div className="planner-connection">
     <span role="status">{statusMessage(status)}</span>
     <button type="button" className="text-button" disabled={status.state === "checking"} onClick={() => {

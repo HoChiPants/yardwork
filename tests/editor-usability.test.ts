@@ -15,9 +15,37 @@ import {
   separateWood,
 } from "../src/placement";
 import { pieceOverlap } from "../src/solidCollision";
+import { previewWoodFacePlacement } from "../src/facePlacement";
 import { snapPlacement } from "../src/editing";
 import { copyObjects, pasteObjects } from "../src/editorClipboard";
 import { catalog } from "../src/model";
+import { createSection } from "../src/sections";
+import { previewSectionTranslation } from "../src/sectionTranslation";
+
+test("face placement requires retained surface contact and a destination clear of solid wood", () => {
+  const project = blank("Stack wood");
+  const p = (name: string, size: V3, position: V3) => part(name, "stud", size, position, project.steps[0].id, "Wood");
+  const base = p("Base", [12, 1.5, 8], [0, 0.75, 0]);
+  const top = p("Top", [3.5, 1.5, 8], [15, 0.75, 0]);
+  project.pieces = [base, top];
+  assert.throws(() => previewWoodFacePlacement(project, top.id, base.id, 0, false), /faces miss/);
+  const fit = previewWoodFacePlacement(project, top.id, base.id, 0, true);
+  assert.deepEqual(fit.part.position, [0, 2.25, 0]);
+  assert.deepEqual(top.position, [15, 0.75, 0]);
+  assert.ok(Math.abs(fit.area - 28) < 1e-7);
+  const side = previewWoodFacePlacement(project, top.id, base.id, 2, false);
+  assert.deepEqual(side.part.position, [7.75, 0.75, 0]);
+  assert.ok(Math.abs(side.area - 12) < 1e-7);
+  const blocked = p("Obstruction", [3, 1, 2], [0, 2, 0]);
+  assert.throws(() => previewWoodFacePlacement({ ...project, pieces: [base, top, blocked] },
+    top.id, base.id, 0, true), /intersects solid wood/);
+  assert.throws(() => previewWoodFacePlacement({ ...project, workZone: { width: 48, depth: 48, height: 2.5 } },
+    top.id, base.id, 0, true), /outside the work zone/);
+  assert.throws(() => previewWoodFacePlacement(project, top.id, base.id, 1, true), /below the floor/);
+  const tilted = { ...base, rotation: [0, 0, Math.PI / 6] as V3 };
+  assert.throws(() => previewWoodFacePlacement({ ...project, pieces: [tilted, top] },
+    top.id, base.id, 0, true), /opposing flat faces/);
+});
 import { groupedMaterials, materialPlacementOptions, materialStockDisplayName } from "../src/materialGroups";
 import { formatStockLength, preferredLengthUnit } from "../src/measurement";
 import { liftDistanceInches } from "../src/editorMotion";
@@ -235,6 +263,25 @@ test("a section stops at its earliest member contact and keeps an external openi
     stop: { kind: "floor" },
   });
 });
+
+test("checked section offsets preview the first work-zone face and preserve the source", () => {
+  const project = blank("Section in a work zone");
+  const stepId = project.steps[0].id;
+  const first = part("First rail", "stud", [4, 2, 4], [3, 4, 0], stepId, "Rack");
+  const second = part("Second rail", "stud", [4, 2, 4], [10, 4, 5], stepId, "Rack");
+  project.pieces = [first, second];
+  project.workZone = { width: 40, depth: 40, height: 20 };
+  const { project: grouped, sectionId } = createSection(project, [first.id, second.id], "Rack");
+  const section = grouped.sections.find(({ id }) => id === sectionId)!;
+  const preview = previewSectionTranslation(grouped, section.id, [24, 6, 0]);
+  assert.equal(preview.stop, "Stopped at the right work-zone boundary");
+  assert.deepEqual(preview.position, [section.origin[0] + 8, section.origin[1] + 2, section.origin[2]]);
+  assert.deepEqual(preview.project.pieces.map(({ position }) => position), [[11, 6, 0], [18, 6, 5]]);
+  assert.deepEqual(grouped.pieces, [first, second]);
+  const clear = previewSectionTranslation(grouped, section.id, [0, 1, -2]);
+  assert.equal(clear.stop, "");
+  assert.deepEqual(clear.project.pieces.map(({ position }) => position), [[3, 5, -2], [10, 5, 3]]);
+});
 test("copy is a snapshot, paste allocates new identities and never duplicates physical source allocations or connections", () => {
   let p = fixture();
   p = cutPiece(p, p.pieces[1].id, 6, 1);
@@ -320,8 +367,12 @@ test("one palette card per family retains every exact catalog variant and separa
   assert.equal(materialStockDisplayName("hd-spf-2x4-10"), "2 × 4 framing lumber · 10 ft");
   assert.equal(materialStockDisplayName("hd-treated-4x4-12"), "4 × 4 treated post · 12 ft");
   const connectorScrews = groupedMaterials("Fasteners", "connector screws");
-  assert.deepEqual(connectorScrews.map(({ name }) => name), ["1½ in connector screws"]);
-  assert.deepEqual(materialPlacementOptions(connectorScrews[0]).options.map(({ id }) => id), ["sd9112r100"]);
+  assert.deepEqual(connectorScrews.map(({ name }) => name), ["Connector screws"]);
+  assert.deepEqual(materialPlacementOptions(connectorScrews[0]).options.map(({ id, label }) => [id, label]), [
+    ["sd9112r100", "#9 × 1½ in"], ["sd10112r100", "#10 × 1½ in"], ["sd9212r100-r", "#9 × 2½ in"],
+  ]);
+  const exactScrew = groupedMaterials("Fasteners", "SD10112R100")[0];
+  assert.equal(materialPlacementOptions(exactScrew).preferred.id, "sd10112r100");
   const nails = groupedMaterials("Fasteners", "Simpson n10dhdg-r");
   assert.deepEqual(nails.map(({ name }) => name), ["1½ in connector nails"]);
   assert.equal(materialPlacementOptions(nails[0]).preferred.id, "n10dhdg-r");

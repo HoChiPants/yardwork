@@ -49,6 +49,27 @@ test("interrupted or changed top plate backing remains visible and withholds the
   assert.equal(homeDepotPurchaseNeeds(moved).find(({ id }) => id === bottomPlateSealant.id)?.required, null);
 });
 
+test("the selected drywall bead detects the chord of a plate bore that reaches that face", () => {
+  const { project, plate, input } = topPlateStudy();
+  const original = previewTopPlateSeal(project, input);
+  const withBore = (center: [number, number]) => projectSchema.parse({
+    ...original.project,
+    pieces: original.project.pieces.map((piece) => piece.id === plate.id
+      ? { ...piece, roundOpenings: [{ axis: 0, center, diameter: 2 }] }
+      : piece),
+  });
+  assert.equal(reviewTopPlateSeal(withBore([-24, 0]), original.record).outdated, false);
+  const interrupted = withBore([-24, 1.15]);
+  const stale = reviewTopPlateSeal(interrupted, original.record);
+  assert.equal(stale.outdated, true);
+  const updated = previewTopPlateSeal(interrupted, input, original.record.id);
+  assert.deepEqual(updated.layout.runs.filter(({ woodMissing }) => woodMissing).map(({ start, end }) => [start, end]),
+    [[23.2, 24.8]]);
+  assert.ok(Math.abs(updated.layout.clearLength - 94.4) < 1e-6);
+  assert.match(topPlateSealGuide(updated.project).join("\n"), /plate cutout interrupts the bead/);
+  assert.equal(homeDepotPurchaseNeeds(updated.project).find(({ id }) => id === bottomPlateSealant.id)?.required, null);
+});
+
 test("moving the whole wall keeps the relative seal review and moves the 3D bead start", () => {
   const { project, input } = topPlateStudy();
   const draft = previewTopPlateSeal(project, input);

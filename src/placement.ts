@@ -1,5 +1,5 @@
 import { bounds } from "./engine";
-import { material, type Piece, type Project, type V3 } from "./model";
+import { material, vec, type Piece, type Project, type V3 } from "./model";
 import {
   prepareCollisionSolid,
   slideOverlapInterval,
@@ -177,6 +177,31 @@ export function woodSlideStopLabel(project: Project, stop: SlideStop | null) {
 export function createWoodSlide(project: Project, piece: Piece) {
   return createWoodGroupSlide(project, [piece], piece.position);
 }
+
+export function previewPartElevation(source: Project, piece: Piece, requested: number) {
+  if (!Number.isFinite(requested) || requested < 0 || requested > 12000)
+    throw Error("Enter a height above the floor between 0 and 12,000 inches.");
+  const start = bounds(piece);
+  if (!Number.isFinite(start.min[1]) || !Number.isFinite(start.max[1]))
+    throw Error("Check the part’s retained shape before setting its height.");
+  const target: V3 = [piece.position[0], piece.position[1] + requested - start.min[1], piece.position[2]];
+  const moving = Math.abs(target[1] - piece.position[1]) > EPS;
+  const slide = moving ? createWoodSlide(source, piece) : null;
+  if (moving && wood(piece) && !slide)
+    throw Error("Check this part’s starting position and wood overlaps before setting its height.");
+  const placed = slide?.(target);
+  const position = placed?.position ?? (moving ? target : piece.position);
+  if (!vec.safeParse(position).success) throw Error("The part’s position would be outside the editor’s range.");
+  const travel = position[1] - piece.position[1];
+  return {
+    source, part: { ...piece, position }, requested,
+    startBottom: start.min[1], bottom: start.min[1] + travel, top: start.max[1] + travel,
+    stop: placed?.stop ? woodSlideStopLabel(source, placed.stop) : "",
+    changed: Math.abs(travel) > EPS,
+  };
+}
+
+export type PartElevationPreview = ReturnType<typeof previewPartElevation>;
 
 /** Prepare a rigid translation that stops at the first external wood face. */
 export function createWoodGroupSlide(

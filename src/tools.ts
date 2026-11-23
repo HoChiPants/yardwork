@@ -4,8 +4,17 @@ import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorAdhesive } from "./subfloorReference";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
-import { topPlateSealReviews } from "./topPlateSeal";
+import { drywallPlateSealReviews } from "./topPlateSeal";
+import { casingSealReviews } from "./casingSeal";
+import { reviewCountertopSeals } from "./countertopSeal";
+import { countertopSealant } from "./countertopSealReference";
+import { reviewCabinetDoors } from "./cabinetDoors";
+import { offcutCutRows } from "./offcutCutGuide";
+import { reviewFloorStop } from "./doorFloorStop";
+import { doorHardwareRole } from "./doorHardwareReference";
+import { trimSealant } from "./trimSealantReference";
 import { bottomPlateSealant, quartCartridgeGun } from "./bottomPlateSealReference";
+import { reviewPipeAirSeals } from "./pipeAirSeal";
 import { openingSilicone } from "./openingAirSealReference";
 import { reviewOpeningFlashings } from "./openingFlashing";
 import { isPexPipe, pexCutter, pexInstallation } from "./wallWaterReference";
@@ -21,9 +30,11 @@ import { flashingKnife, flexWrap } from "./openingFlashingReference";
 import { drywallInstallation, isDrywall } from "./drywallReference";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { concreteAnchor } from "./concreteAnchorReference";
-import { isBatt, isHardware, material, type Project } from "./model";
+import { isBatt, isHardware, material, type Material, type Project } from "./model";
 import { hardwareForJoint, inspectCutStock } from "./engine";
+import { checkProductBinding, findRetailerProduct } from "./retailerCatalog";
 import { toolCapabilities, type ToolCapability } from "./toolCapabilities";
+import { drywallScrewScope, drywallScrewTool } from "./drywallReference";
 import { attachmentReviews } from "./attachments";
 import { restraintReviews } from "./restraints";
 import { fastenerReviews } from "./fastenings";
@@ -272,6 +283,21 @@ const definitions: Record<
     review: "Check that the gun seats the delivered cartridge. Use a blunt tool for the backing rod and check access at the shims and corners.",
     referenceUrls: [openingSilicone.specification],
   },
+  "apply-pipe-sealant": {
+    name: "Seal a pipe opening with a 10.1 fl oz cartridge gun",
+    review: "Check access around the pipe. Have a finishing tool and, for backed joints, a blunt tool to seat the rod.",
+    referenceUrls: [openingSilicone.specification],
+  },
+  "apply-trim-sealant": {
+    name: "Apply trim sealant with a 10.1 fl oz cartridge gun",
+    review: "Check the cartridge fit. Cut the tip to the selected bead size and test color and tooling on matching scrap.",
+    referenceUrls: [trimSealant.specification],
+  },
+  "apply-countertop-sealant": {
+    name: "Tool a countertop bead with a 10.1 fl oz cartridge gun",
+    review: "Check the cartridge fit, use a nozzle cutter and seal punch, and test the bead on matching scrap. Seat any backing using a blunt tool.",
+    referenceUrls: [countertopSealant.specification],
+  },
   "pilot-bit-1-16": {
     name: "Review a 1/16 in pilot bit",
     review:
@@ -334,7 +360,7 @@ const definitions: Record<
   "drive-quarter-hex": {
     name: "Review a ¼ in hex connector-screw driver accessory",
     review:
-      "The SD9112 reference specifies a ¼ in hex head. Review the actual matching socket/driver accessory, head seating, exposed reach and access separately from the powered or manual screw-driving function. A listed included driver is not ownership or a checked tool selection; no fit, torque or connector capacity is approved.",
+      "The reviewed Simpson SD screws have a ¼ in hex head. Check whether your screw box includes a matching accessory, then verify head seating, exposed reach and access with your driver. Review the exact connector's screw schedule separately.",
     referenceUrls: ["https://www.strongtie.com/strongdrive_exteriorwoodscrews/sd_screw/p/strong-drive-sd-connector-screw"],
   },
   "drive-screw": {
@@ -454,7 +480,57 @@ export function toolChecklist(
     )
       row.sources.push(source);
   };
+  const addConnectorDriver = (stock: Material | undefined, source: ToolProcessSource) => {
+    if (!stock?.connectorFastener || stock.fastenerType !== "screw" || !stock.productReference) return;
+    const product = findRetailerProduct(stock.productReference);
+    if (product?.profile.drive !== "1/4 in hex" || !checkProductBinding(stock, product).compatible) return;
+    add("drive-quarter-hex", {
+      ...source,
+      reason: `${source.reason} ${product.manufacturerPartNumber} specifies a ¼ in hex head.`,
+    }, "conditional", "Match the ¼ in hex accessory to the delivered screws and check clearance at the connector.");
+  };
   const pieces = project.pieces.filter((piece) => !piece.offcut);
+  const splits = new Map(project.history.flatMap(({ id, offcutCut }) =>
+    offcutCut?.looseSplit && !offcutCut.releasedAt ? [[id, offcutCut] as const] : []));
+  if (splits.size) for (const row of offcutCutRows(project)) {
+    const split = splits.get(row.id);
+    if (split && !row.issues.length)
+      add(split.cuts[0].kind === "crosscut" ? "wood-crosscut" : "wood-rip",
+        { kind: "piece", id: split.targetId, reason: row.title }, "required");
+  }
+  for (const section of project.sections.filter(({ generator }) => generator?.doorUnit?.hardware)) {
+    const hardware = pieces.find(({ id, designRole }) => section.pieceIds.includes(id) && doorHardwareRole(designRole));
+    if (hardware) add("drive-screw", { kind: "piece", id: hardware.id, reason: `Fit the door hardware in ${section.name}.` },
+      "conditional", "Match the screwdriver and bore preparation to the delivered hardware.");
+  }
+  for (const section of project.sections.filter(({ cabinetDoors }) => cabinetDoors)) {
+    const fit = reviewCabinetDoors(project, section);
+    if (fit.issue || !("leaves" in fit) || !fit.leaves.length) continue;
+    for (const capability of ["drill-pilot", "drive-screw"] as const)
+      add(capability, { kind: "piece", id: fit.leaves[0].id, reason: "Mount the flush cabinet hinges." },
+        "conditional", "Transfer the marks from the actual hinges. Verify mounting surface, screw reach and the appropriate bit.");
+    if (fit.pulls.length) {
+      const pull = { kind: "piece" as const, id: fit.pulls[0].id, reason: "Fit the vertical cabinet pulls." };
+      add("drive-screw", pull, "conditional", "Liberty specifies a #2 Phillips screwdriver. Verify the included screw reach through the installed door.");
+    }
+  }
+  for (const section of project.sections.filter(({ doorFloorStop }) => doorFloorStop)) {
+    const stop = reviewFloorStop(project, section);
+    if (stop.issue || !("piece" in stop) || !stop.piece) continue;
+    for (const capability of ["drill-pilot", "drive-screw"] as const)
+      add(capability, { kind: "piece", id: stop.piece.id, reason: `Position and fit ${section.name}.` },
+        "conditional", "Confirm the marked position, then match bits and driver to the actual floor substrate and supplied hardware.");
+  }
+  for (const section of project.sections.filter(({ wallDrywall }) => wallDrywall)) {
+    const firstPanel = pieces.find(({ id }) => section.pieceIds.includes(id));
+    if (firstPanel) add("drive-screw", { kind: "piece", id: firstPanel.id, reason: `${section.name} · ${drywallScrewTool}` },
+      "conditional", drywallScrewScope);
+  }
+  for (const section of project.sections.filter(({ doorCasing }) => doorCasing)) {
+    const trim = pieces.find(({ id }) => section.pieceIds.includes(id));
+    if (trim) add("drive-nail", { kind: "piece", id: trim.id, reason: `Fit and fasten ${section.name}.` },
+      "conditional", "Match the trim nails and driving tool to the actual jamb and framing backing.");
+  }
   const construction = pieces.filter((piece) => !isHardware(piece.material));
   const lining = construction.find((piece) => piece.material === cedarbrookLining.materialId);
   if (lining)
@@ -481,8 +557,19 @@ export function toolChecklist(
   }
   for (const id of subfloorHandNails)
     add("drive-nail", { kind: "piece", id, reason: "Hand-drive the reviewed 8C1 common nails during sheet installation." });
-  for (const { record, problem, title } of [...bottomPlateSealReviews(project), ...topPlateSealReviews(project)]) {
+  for (const { record, problem, title } of [...bottomPlateSealReviews(project), ...drywallPlateSealReviews(project)]) {
     if (!problem) add("apply-quart-sealant", { kind: "piece", id: record.plateId, reason: title });
+  }
+  for (const { section, estimate } of casingSealReviews(project)) {
+    const piece = section.pieceIds[0];
+    if (estimate && piece)
+      add("apply-trim-sealant", { kind: "piece", id: piece, reason: `Apply the marked finish beads for ${section.name}.` });
+  }
+  for (const { plan, preview } of reviewPipeAirSeals(project)) {
+    if (preview) add("apply-pipe-sealant", { kind: "piece", id: plan.partId, reason: "Tool the continuous seal around the supported pipe." });
+  }
+  for (const { plan, preview } of reviewCountertopSeals(project)) {
+    if (preview) add("apply-countertop-sealant", { kind: "piece", id: plan.topId, reason: "Tool the marked countertop splash seal after fitting the surfaces." });
   }
   for (const { panelId, planCurrent } of subfloorAdhesiveReviews(project)) {
     if (planCurrent) add("apply-quart-sealant", { kind: "piece", id: panelId,
@@ -1135,20 +1222,20 @@ export function toolChecklist(
   };
   for (const joint of project.joints) {
     const a = project.pieces.find((piece) => piece.id === joint.a),
-      b = project.pieces.find((piece) => piece.id === joint.b);
+      b = project.pieces.find((piece) => piece.id === joint.b),
+      hardware = hardwareForJoint(joint);
     const source: ToolProcessSource = {
       kind: "joint",
       id: joint.id,
       reason: `Install ${joint.quantity} ${joint.kind} item(s) at ${a?.name ?? "missing part"} → ${b?.name ?? "missing part"}.`,
     };
     fastening(source, joint.kind, "required");
-    if (
-      hardwareForJoint(joint)?.id === "connector-screw" ||
-      hardwareForJoint(joint)?.connectorFastener
-    )
+    if (hardware?.id === "connector-screw" || hardware?.connectorFastener)
       add("connector-install", source);
+    if (joint.material) addConnectorDriver(hardware, source);
   }
   for (const piece of pieces.filter((p) => isHardware(p.material))) {
+    const stock = material(piece.material);
     const source: ToolProcessSource = {
       kind: "piece",
       id: piece.id,
@@ -1156,17 +1243,17 @@ export function toolChecklist(
     };
     fastening(
       source,
-      material(piece.material).stockKind === "connector"
+      stock.stockKind === "connector"
         ? "bracket"
         : piece.material === "nail" ||
-            material(piece.material).fastenerType === "nail"
+            stock.fastenerType === "nail"
           ? "nail"
           : "screw",
       "conditional",
     );
     if (
       piece.material === "connector-screw" ||
-      material(piece.material).connectorFastener
+      stock.connectorFastener
     )
       add(
         "connector-install",
@@ -1174,6 +1261,7 @@ export function toolChecklist(
         "conditional",
         "Confirm the exact connector and its installation instructions.",
       );
+    addConnectorDriver(stock, source);
   }
   for (const requirement of requirements.values()) {
     if ((requirement.capability === "drill-pilot" || requirement.capability === "connector-install") &&

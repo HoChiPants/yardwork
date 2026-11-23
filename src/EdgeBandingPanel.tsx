@@ -4,6 +4,10 @@ import {
   addMissingEdgeBanding,
   bandingKey,
   bandingStatus,
+  canModelBanding,
+  finishedPanelFit,
+  finishedPanelFitLine,
+  measuredBandingSequence,
   edgeBandingEdges,
   edgeBandingFinding,
   edgeBandingLines,
@@ -22,9 +26,11 @@ import {
   edgeBandingScope,
   type EdgeBandingProductId,
 } from "./edgeBandingReference";
-import { edgeBandingTrim } from "./edgeBandingSchema";
+import { edgeBandingTrim, measuredBandingThickness } from "./edgeBandingSchema";
 import { formatStockLength } from "./measurement";
+import type { MotionPreview } from "./mechanismMotion";
 import type { Project } from "./model";
+import { proposalMotionChanges } from "./motionImpact";
 
 function RollOrder({ group }: { group: EdgeBandingReview[number] }) {
   const { rolls, issues } = edgeBandingLines(group);
@@ -51,13 +57,18 @@ function RollOrder({ group }: { group: EdgeBandingReview[number] }) {
   );
 }
 
-export function PrintEdgeBanding({ groups }: { groups: EdgeBandingReview }) {
+export function PrintEdgeBanding({ groups, project }: { groups: EdgeBandingReview; project: Project }) {
+  const fit = useMemo(() => finishedPanelFit(project), [project]);
   if (!groups.length) return null;
   return (
     <section className="edge-banding-print">
       <h2>{edgeBandingTitle}</h2>
       <p>{edgeBandingScope}</p>
       <p>{edgeBandingSequence}</p>
+      {fit.length > 0 && <>
+        <p>{measuredBandingSequence}</p>
+        <ul>{fit.map((row) => <li key={row.piece.id}>{finishedPanelFitLine(row)}</li>)}</ul>
+      </>}
       {groups.map((group) => {
         const stock = edgeBandingProducts[group.productId];
         return (
@@ -79,11 +90,13 @@ export function EdgeBandingPanel({
   project,
   shown,
   onShow,
+  onShowMotion,
   onChange,
 }: {
   project: Project;
   shown: BandingEdge | null;
   onShow: (edge: BandingEdge | null) => void;
+  onShowMotion: (preview: MotionPreview | null) => void;
   onChange: (project: Project) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -92,8 +105,13 @@ export function EdgeBandingPanel({
   );
   const [partId, setPartId] = useState("");
   const [trim, setTrim] = useState(NaN);
+  const [modelFinish, setModelFinish] = useState(false);
+  const [installedThickness, setInstalledThickness] = useState(NaN);
   const [keys, setKeys] = useState<Set<string>>(new Set());
+  const savedCount = project.edgeBanding?.length ?? 0;
   const [error, setError] = useState("");
+  const [motionReview, setMotionReview] = useState<{ source: Project; changes: ReturnType<typeof proposalMotionChanges> }>();
+  const visibleMotionReview = motionReview?.source === project ? motionReview : undefined;
   const edges = useMemo(
     () => (open ? edgeBandingEdges(project) : []),
     [open, project],
@@ -102,6 +120,7 @@ export function EdgeBandingPanel({
     () => (open ? reviewEdgeBanding(project, edges) : []),
     [open, project, edges],
   );
+  const fit = useMemo(() => open ? finishedPanelFit(project) : [], [open, project]);
   const panels = [...new Set(edges.map(({ pieceId }) => pieceId))];
   const selected = panels.includes(partId) ? partId : panels[0];
   const stock = edgeBandingProducts[productId];
@@ -116,18 +135,43 @@ export function EdgeBandingPanel({
       status(edge) === "ready" &&
       !alreadySaved.has(bandingKey(edge)),
   );
+  const unsupported = modelFinish && draft.some(({ pieceId }) => {
+    const piece = project.pieces.find(({ id }) => id === pieceId);
+    return !piece || !canModelBanding(piece);
+  });
   const ready =
     edgeBandingTrim.safeParse(trim).success &&
+    (!modelFinish || measuredBandingThickness.safeParse(installedThickness).success) &&
+    !unsupported &&
     draft.length > 0 &&
     draft.length === keys.size &&
     draft.every((edge) => status(edge) === "ready");
-  const toggle = (key: string, checked: boolean) =>
+  function clearMotionReview() {
+    if (!motionReview) return;
+    setMotionReview(undefined);
+    onShowMotion(null);
+  }
+  function toggle(key: string, checked: boolean) {
+    clearMotionReview();
     setKeys((current) => {
       const next = new Set(current);
       if (checked) next.add(key);
       else next.delete(key);
       return next;
     });
+  }
+  function draftEdges() {
+    return saveEdgeBanding(project, keys, productId, trim, modelFinish ? installedThickness : undefined);
+  }
+  function reviewMotion() {
+    clearMotionReview();
+    setError("");
+    try {
+      setMotionReview({ source: project, changes: proposalMotionChanges(project, draftEdges()) });
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : "Check the edge banding measurements.");
+    }
+  }
   const apply = (edit: () => Project) => {
     setError("");
     try {
@@ -146,10 +190,14 @@ export function EdgeBandingPanel({
     <details
       className="field-section"
       id="edge-banding-plan"
-      onToggle={(event) => setOpen(event.currentTarget.open)}
+      onToggle={(event) => {
+        const expanded = event.currentTarget.open;
+        setOpen(expanded);
+        if (!expanded) clearMotionReview();
+      }}
     >
       <summary>
-        {edgeBandingTitle} · {project.edgeBanding?.length ?? 0} saved edges
+        {edgeBandingTitle} · {savedCount} saved {savedCount === 1 ? "edge" : "edges"}
       </summary>
       {open && (
         <>
@@ -168,9 +216,10 @@ export function EdgeBandingPanel({
                 Edge banding roll
                 <select
                   value={productId}
-                  onChange={(event) =>
-                    setProductId(event.target.value as EdgeBandingProductId)
-                  }
+                  onChange={(event) => {
+                    clearMotionReview();
+                    setProductId(event.target.value as EdgeBandingProductId);
+                  }}
                 >
                   {edgeBandingProductIds.map((id) => (
                     <option key={id} value={id}>
@@ -189,8 +238,18 @@ export function EdgeBandingPanel({
                 min={0}
                 max={edgeBandingMaxLength}
                 value={trim}
-                onChange={setTrim}
+                onChange={(value) => { clearMotionReview(); setTrim(value); }}
               />
+              <label className="checkbox-field">
+                <input type="checkbox" checked={modelFinish}
+                  onChange={({ currentTarget }) => { clearMotionReview(); setModelFinish(currentTarget.checked); }} />
+                Include measured thickness in fit and movement
+              </label>
+              {modelFinish && <LengthInput label="Installed veneer thickness" min={0.001} max={0.125}
+                value={installedThickness} onChange={(value) => { clearMotionReview(); setInstalledThickness(value); }} />}
+              {modelFinish && <p className="small-note">
+                Measure the buildup on matching scrap after applying and trimming the veneer. Use the measured fit on rectangular panels.
+              </p>}
               <label className="field">
                 Panel to edge
                 <select
@@ -260,17 +319,19 @@ export function EdgeBandingPanel({
                 type="button"
                 className="button secondary full"
                 disabled={!fronts.length}
-                onClick={() =>
+                onClick={() => {
+                  clearMotionReview();
                   setKeys(
                     (current) =>
                       new Set([...current, ...fronts.map(bandingKey)]),
-                  )
-                }
+                  );
+                }}
               >
                 Select available front edges (+Z)
               </button>
             </>
           )}
+          {unsupported && <p className="small-note">Choose rectangular panels without through-cuts to include measured finish thickness.</p>}
           {keys.size > 0 && (
             <>
               <details>
@@ -292,26 +353,52 @@ export function EdgeBandingPanel({
                 <button
                   type="button"
                   className="text-button"
-                  onClick={() => setKeys(new Set())}
+                  onClick={() => { clearMotionReview(); setKeys(new Set()); }}
                 >
                   Clear selection
                 </button>
               </details>
+              {modelFinish && !!project.motionPlans?.length && (
+                <button type="button" className="button secondary full" disabled={!ready} onClick={reviewMotion}>
+                  Check finished movement
+                </button>
+              )}
+              {visibleMotionReview && (
+                <section aria-label="Finished movement">
+                  <p className="small-note" role="status">{visibleMotionReview.changes.length
+                    ? "The proposed finish adds or worsens findings in the saved motion tests."
+                    : "No new or worse findings in the saved motion tests."}</p>
+                  {visibleMotionReview.changes.map(({ id, label, detail, show }) => (
+                    <div className="attachment-plan" key={id}>
+                      <strong>{label}</strong>
+                      <p className="small-note">{detail}</p>
+                      {show && <button type="button" className="text-button" onClick={() => onShowMotion(show())}>
+                        Show in 3D
+                      </button>}
+                    </div>
+                  ))}
+                </section>
+              )}
               <button
                 type="button"
                 className="button primary full"
                 disabled={!ready}
                 onClick={() => {
-                  if (
-                    apply(() => saveEdgeBanding(project, keys, productId, trim))
-                  )
+                  if (apply(draftEdges)) {
+                    clearMotionReview();
                     setKeys(new Set());
+                  }
                 }}
               >
                 Save {keys.size} {keys.size === 1 ? "edge" : "edges"}
               </button>
             </>
           )}
+          {fit.length > 0 && <details>
+            <summary>Finished panel sizes and fit</summary>
+            <p className="small-note">{measuredBandingSequence}</p>
+            <ul>{fit.map((row) => <li key={row.piece.id}>{finishedPanelFitLine(row)}</li>)}</ul>
+          </details>}
           {groups.map((group) => (
             <details key={group.productId}>
               <summary>

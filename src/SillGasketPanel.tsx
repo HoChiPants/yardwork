@@ -3,10 +3,10 @@ import { LengthInput } from "./LengthInput";
 import { formatPreciseInches, formatStockLength } from "./measurement";
 import type { Piece, Project } from "./model";
 import { partLabel } from "./partLabels";
-import { sillGasketBuildingGuide, sillGasketInstructions, sillGasketListing, sillGasketScope } from "./sillGasketReference";
+import { sillGasketBuildingGuide, sillGasketInstructions, sillGasketListing, sillGasketPiercingNote, sillGasketScope } from "./sillGasketReference";
 import type { SillGasketMeasurements } from "./sillGasketSchema";
 import {
-  addMissingSillGasketRolls, removeSillGasket, reviewSillGaskets,
+  addMissingSillGasketRolls, removeSillGasket, reviewSillGaskets, sillGasketMarkText,
   saveSillGasket, sillPlateFootprint,
 } from "./sillGaskets";
 
@@ -48,15 +48,17 @@ function SillMeasurements({ part, saved, onSave }: {
   );
 }
 
-export function SillGasketPanel({ project, review, shownId, onShow, onChange }: {
+export function SillGasketPanel({ project, review, shownId, initiallyOpen, initialPartId, onShow, onChange }: {
   project: Project;
   review: ReturnType<typeof reviewSillGaskets>;
   shownId: string | null;
+  initiallyOpen?: boolean;
+  initialPartId?: string;
   onShow: (id: string | null) => void;
   onChange: (project: Project) => void;
 }) {
   const plates = useMemo(() => project.pieces.filter(sillPlateFootprint), [project]);
-  const [partId, setPartId] = useState("");
+  const [partId, setPartId] = useState(initialPartId ?? "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const part = plates.find(({ id }) => id === partId);
@@ -75,7 +77,7 @@ export function SillGasketPanel({ project, review, shownId, onShow, onChange }: 
   }
   const missing = review.groups.some(({ rolls, selected }) => rolls.length > selected);
   return (
-    <details className="field-section">
+    <details className="field-section" id="sill-gasket-planner" open={initiallyOpen || undefined}>
       <summary>Plan sill gaskets</summary>
       <p className="small-note">{sillGasketScope}</p>
       <label className="field">
@@ -95,12 +97,21 @@ export function SillGasketPanel({ project, review, shownId, onShow, onChange }: 
       {message && <p role="status" className="small-note">{message}</p>}
       {review.rows.length > 0 && (
         <ul aria-label="Measured sill gasket runs">
-          {review.rows.map(({ plan, title, issues, length, outline }) => (
+          {review.rows.map(({ plan, title, issues, length, outline, marks }) => (
             <li key={plan.partId}>
               <strong>{title}</strong>
               <p className="small-note">{issues.length
                 ? `Needs review. ${issues.join(" ")}`
                 : `One ${formatStockLength(length!)} strip before setting the plate.`}</p>
+              {!issues.length && marks.length > 0 && (
+                <details>
+                  <summary>Modeled bolt-hole marks ({marks.length})</summary>
+                  <p className="small-note">{sillGasketPiercingNote}</p>
+                  <ol aria-label="Modeled bolt-hole marks">
+                    {marks.map((mark) => <li key={`${mark.fromStart}/${mark.fromEdge}`}>{sillGasketMarkText(mark)}</li>)}
+                  </ol>
+                </details>
+              )}
               {outline && <button className="text-button" type="button"
                 onClick={() => onShow(shownId === plan.partId ? null : plan.partId)}>
                 {shownId === plan.partId ? "Hide gasket footprint" : "Show gasket footprint"}

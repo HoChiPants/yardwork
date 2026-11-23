@@ -6,6 +6,7 @@ import {
   bandingKey,
   bandingStatus,
   edgeBandingEdges,
+  finishedPanelFit,
   removeEdgeBanding,
   reviewEdgeBanding,
   saveEdgeBanding,
@@ -22,6 +23,8 @@ import { addSupply, recordSupplyInventory } from "../src/supplies";
 import { selectedToolsForProject } from "../src/toolGuide";
 import { edgeTrimmer } from "../src/edgeBandingReference";
 import { toolChecklist } from "../src/tools";
+import { runMotionTest, saveMotionPlan } from "../src/mechanismMotion";
+import { proposalMotionChanges } from "../src/motionImpact";
 
 const narrow = "edgemate-5032270",
   wide = "pureedge-902028";
@@ -210,4 +213,30 @@ test("exact veneer rolls use Home Depot snapshots and shopping handoff without d
   const checklist = toolChecklist(checked, selectedToolsForProject(checked).tools);
   assert.equal(checklist.requirements.find(({ capability }) => capability === "trim-edge-banding")?.status, "supported");
   assert.equal(checklist.requirements.find(({ capability }) => capability === "apply-edge-banding")?.status, "unknown");
+});
+
+test("a measured fixed edge stops an otherwise clear slide while the core cut and parked pieces stay separate", () => {
+  const seed = blank();
+  const step = seed.steps[0].id;
+  const fixed = { ...part("Fixed shelf", "plywood", [18, 0.75, 10], [0, 10, 0], step, "Cabinet"), stockLengthAxis: 0 as const };
+  const moving = part("Passing tray lip", "plywood", [12, 0.75, 0.75], [-20, 10, 5.39], step, "Tray");
+  const { project, plan } = saveMotionPlan({ ...seed, pieces: [fixed, moving] }, {
+    label: "Passing tray", memberIds: [moving.id], mechanism: { kind: "slide", axis: [1, 0, 0], travel: 18 },
+  });
+  assert.equal(runMotionTest(project, plan).review!.playbackLimit(0, 18).travel, 18);
+  const edge = bandingKey({ pieceId: fixed.id, face: "+Z" });
+  const banded = saveEdgeBanding(project, new Set([edge]), narrow, 0.5, 0.046875);
+  const checked = runMotionTest(banded, plan).review!;
+  assert.match(proposalMotionChanges(project, banded)[0]?.detail ?? "", /Passing tray lip.*Fixed shelf/);
+  const limit = checked.playbackLimit(0, 18);
+  assert(limit.travel < 18 && limit.inspectAt !== undefined);
+  const pose = checked.preview(limit.travel, limit.inspectAt);
+  assert(pose.interferenceIds.includes(fixed.id));
+  assert.deepEqual(pose.pieces.map(({ id }) => id), [moving.id]);
+  assert.equal(pose.finishedFixedPieces?.[0].size[2], 10.046875);
+  assert.equal(finishedPanelFit(banded)[0].model.size[2], 10.046875);
+  assert.deepEqual(banded.pieces[0].size, fixed.size);
+  const recut = { ...banded, pieces: [{ ...fixed, size: [18, 0.75, 9] as typeof fixed.size }, moving] };
+  assert.equal(reviewEdgeBanding(recut)[0].rows[0].state, "changed");
+  assert.equal(runMotionTest(recut, plan).review!.playbackLimit(0, 18).travel, 18);
 });

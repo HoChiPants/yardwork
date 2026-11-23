@@ -4,9 +4,14 @@ import {
   referencedFamily,
   ambiguousShelfReference,
   closetMeasurements,
+  doorMeasurements,
   requestedShelfCount,
   namedMeasurement,
   normalizeIdeaText,
+  requestedModule,
+  requestedSeatFeatures,
+  requestedSeatingSections,
+  trimPreservationClause,
   type BuildFamily,
 } from "../src/ideaEdits";
 import type { IdeaPlan, PlannerRequest } from "../src/planning";
@@ -43,8 +48,8 @@ function clarify(intent: ModelIntent, question: string): PreparedIntentEdits {
   };
 }
 function changeText(prompt: string) {
-  return normalizeIdeaText(prompt)
-    .split(/[.;\n]/)
+  return trimPreservationClause(normalizeIdeaText(prompt).trim().replace(/[.!?]+$/, ""))
+    .split(/\.(?=\s|$)|[;\n]/)
     .map((clause) =>
       clause.replace(
         /^\s*(?:keep|preserve|retain|leave)\b[\s\S]*?\b(?:and|but)\s+(?=(?:increase|decrease|make|set|change|remove|add)\b)/,
@@ -113,27 +118,14 @@ export function prepareIntentEdits(
       postOnly: false,
       prompt: request.prompt,
     };
-  const numbered = raw.match(
-      /\b(?:section|compartment|module)\s*#?\s*(\d{1,2})\b(?!\s*(?:feet|foot|ft|inches|inch|in|[′'″"]))/,
-    ),
-    names = previous.modules
-      .map((m, i) => (raw.includes(m.name.toLowerCase()) ? i : -1))
-      .filter((i) => i >= 0);
+  const selected = requestedModule(previous, text);
   let targets: number[];
-  if (numbered) {
-    const index = Number(numbered[1]) - 1;
-    if (index < 0 || index >= previous.modules.length)
-      return clarify(
-        source,
-        "That section is not in the previous proposal. Select or name an existing section.",
-      );
-    targets = [index];
-  } else if (names.length === 1) targets = names;
-  else if (names.length > 1)
+  if (selected === "ambiguous")
     return clarify(
       source,
-      "Several section names match. Select the specific section to change.",
+      "Name or number one section. Left, right and middle refer to a single straight run.",
     );
+  if (selected !== undefined) targets = [selected];
   else if (rawFamily) {
     targets = previous.modules
       .map((m, i) => (m.kind === rawFamily ? i : -1))
@@ -152,17 +144,6 @@ export function prepareIntentEdits(
     return clarify(
       source,
       "Which existing section or family should change? The mixed proposal is retained.",
-    );
-  if (
-    !numbered &&
-    !names.length &&
-    /\b(?:left|right|middle|first|second|third|last)\s+(?:section|seat|bench|cabinet|module)\b/.test(
-      raw,
-    )
-  )
-    return clarify(
-      source,
-      "Select the section by name or number so this localized edit does not change other items.",
     );
   const family =
       rawFamily ??
@@ -200,6 +181,7 @@ export function prepareIntentEdits(
   if (targets.length === 1) intent.targetSection = targets[0] + 1;
   let reducerFields = false;
   const closet = family === "closet-insert" ? closetMeasurements(text) : null;
+  const opening = family === "greenhouse" || family === "sauna" ? doorMeasurements(text) : null;
   if (closet) {
     for (const [key, fact] of Object.entries(closet.facts) as [keyof typeof closet.facts, ReturnType<typeof namedMeasurement>][]) {
       if (!fact) continue;
@@ -215,8 +197,10 @@ export function prepareIntentEdits(
     keyof typeof dimensionLabels,
     string,
   ][]) {
-    const fact = namedMeasurement(
-      closet?.envelope ?? text,
+    const fact = opening && (key === "doorWidth" || key === "doorHeight")
+      ? opening.facts[key]
+      : namedMeasurement(
+      closet?.envelope ?? opening?.envelope ?? text,
       labels,
       ["width", "depth", "height"].includes(key)
         ? /(?:door|roof|back|tower|shelf|bench)\s*$/
@@ -236,38 +220,24 @@ export function prepareIntentEdits(
     intent[key] = fact.inches;
     reducerFields = true;
   }
-  const count = text.match(
-    /\b(\d{1,2})[ -]*(?:sections?|compartments?|modules?)\b/,
-  );
+  const count = requestedSeatingSections(text);
   if (count) {
-    const n = Number(count[1]);
+    const n = count.count;
     if (n < 1 || n > 12)
       return clarify(source, "Choose one to twelve seating sections.");
     intent.sectionCount = n;
     reducerFields = true;
   }
-  const noStorage = /\b(?:no|without|remove)\s+(?:the\s+)?storage\b/.test(text),
-    hasStorage = /\bstorage\b|closed off|space underneath/.test(text),
-    noLid =
-      /\b(?:no|without|remove)\s+(?:an?\s+)?(?:opening\s+|openable\s+)?(?:seat\s+)?lids?\b/.test(
-        text,
-      ),
-    hasLid =
-      /\b(?:openable|opening|hinged|lift[ -]?up)\s+(?:seat\s+)?lids?\b|\bseats?\b.{0,25}\bopen\b/.test(
-        text,
-      );
-  if (hasStorage) {
+  const { noStorage, wantsStorage, noLid, wantsLid, noBack } = requestedSeatFeatures(text);
+  if (wantsStorage || noStorage) {
     intent.storage = !noStorage;
     reducerFields = true;
   }
-  if (noLid || hasLid) {
+  if (noLid || wantsLid) {
     intent.openingLid = !noLid;
     reducerFields = true;
   }
   const back = namedMeasurement(text, "back height|backrest height"),
-    noBack = /\b(?:no|without|remove)\s+(?:a\s+)?back\b|\bbackless\b/.test(
-      text,
-    ),
     addBack = /\b(?:wood(?:en)?|with(?: a)?|add(?: a)?)\s+back\b/.test(text);
   if (back) {
     if (back.inches === null)
@@ -325,7 +295,9 @@ export function prepareIntentEdits(
     mode: "revise",
     targets,
     postOnly,
-    prompt: `${family ?? ""}. ${targets.length === 1 ? `section ${targets[0] + 1}. ` : ""}${text}`,
+    prompt: previous.structures.some((structure) => structure.kind === family)
+      ? text
+      : `${family ?? ""}. ${targets.length === 1 ? `section ${targets[0] + 1}. ` : ""}${text}`,
   };
 }
 function changedQuestions(candidate: IdeaPlan, previous: IdeaPlan) {

@@ -28,6 +28,17 @@ const trimSeamSchema = trimSeamInputSchema.extend({
   contactSignature: z.string().min(1).max(600),
 });
 
+export const glueFacesInputSchema = z.strictObject({
+  faceIds: z.array(z.string().min(1).max(160)).min(1).max(64)
+    .refine((ids) => new Set(ids).size === ids.length, "Choose each glue face once."),
+  coat: z.enum(["first", "second", "both"]),
+  extraPercent: z.number().finite().min(0).max(100),
+});
+export type GlueFacesInput = z.infer<typeof glueFacesInputSchema>;
+const glueFacesSchema = glueFacesInputSchema.extend({
+  contactSignature: z.string().min(1).max(600),
+});
+
 export const woodJointMethod = z.enum(["glue", "fitted", "sealant", "intentional-contact"]);
 export type WoodJointMethod = z.infer<typeof woodJointMethod>;
 
@@ -38,8 +49,10 @@ export const woodJointDecisionSchema = z.strictObject({
   note: z.string().trim().min(1, "Record the detail you want to carry into the guide.").max(400),
   contactSignature: z.string().min(1).max(600),
   trimSeam: trimSeamSchema.optional(),
+  glueFaces: glueFacesSchema.optional(),
 }).refine(({ firstId, secondId }) => firstId < secondId, "Choose two distinct members in canonical order.").refine(({ trimSeam, method }) => !trimSeam || method === "sealant",
-  "Only a sealant joint can carry a trim seam plan.");
+  "Only a sealant joint can carry a trim seam plan.")
+  .refine(({ glueFaces, method }) => !glueFaces || method === "glue", "Only a glue joint can carry coated faces.");
 
 export type WoodJointDecision = z.infer<typeof woodJointDecisionSchema>;
 

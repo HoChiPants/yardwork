@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { commandSchema, parsePrompt, projectSchema } from "./model";
-import { localIdeaPlan, localPlacementPlan, plannerRequestSchema } from "./planning";
-import { localRelativeResizePlan } from "./relativeIdeaResize";
+import { localIdeaPlan, plannerRequestSchema, workspacePlanningResult } from "./planning";
 import { PROJECT_FORMAT_VERSION, projectFormatProblem } from "./projectVersion";
 
 const libraryName = "yardwork-browser-library-v1";
@@ -109,14 +108,10 @@ export async function browserWorkshopRequest(url: string, options?: RequestInit)
     if (path === "/api/workshop-backup" && method === "GET") return await workshopArchive();
     if (path === "/api/planner" && method === "POST") {
       const request = plannerRequestSchema.parse(body());
-      const placement = localPlacementPlan(request);
-      const resize = placement ? null : localRelativeResizePlan(request);
-      return Response.json({
-        plan: placement ?? resize ?? localIdeaPlan(request),
-        provider: placement ? "Workspace placement" : resize ? "Workspace dimensions" : "Local planning presets",
-        message: placement ? "Review the requested moves before applying." :
-          resize ? "Review the resize and resulting fit before applying." :
-          "Rule-based starter layouts. Review the dimensions and design details.",
+      return Response.json(workspacePlanningResult(request) ?? {
+        plan: localIdeaPlan(request),
+        provider: "Local planning presets",
+        message: "Rule-based starter layouts. Review the dimensions and design details.",
       });
     }
     if (path === "/api/assistant" && method === "POST") {

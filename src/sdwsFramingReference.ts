@@ -43,6 +43,18 @@ export const sdwsFramingPacks = [
 
 export type SdwsFramingPack = (typeof sdwsFramingPacks)[number];
 
+/** IAPMO UES ER-192, Tables 26 and 39. These are separate load cases. */
+export function sdwsReceiverDistanceCases(productId: string) {
+  const pack = sdwsFramingPacks.find((item) => item.productId === productId);
+  if (!pack) return [];
+  const short = pack.evaluatedModel === "SDWS16212";
+  return [
+    { label: "Load parallel to grain", edge: short ? 0.5 : 1, end: short ? 2 : 3 },
+    { label: "Load perpendicular to grain", edge: 1, end: short ? 3.5 : 4 },
+    { label: "Withdrawal only", edge: 0.875, end: 2.25 },
+  ];
+}
+
 export function sdwsFramingName(pack: SdwsFramingPack) {
   return `Simpson SDWS Framing · ${pack.lengthLabel} · ${pack.packCount}-screw box`;
 }

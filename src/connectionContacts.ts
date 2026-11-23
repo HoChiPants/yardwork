@@ -178,6 +178,16 @@ export function faceContactPatch(a: WoodFace, b: WoodFace) {
     : null;
 }
 
+/** Coplanar retained-surface patches, including separate fragments around openings. */
+export function touchingWoodPatches(first: Piece, second: Piece) {
+  const a = prepare(first), b = prepare(second);
+  if (first.id === second.id || !a.solid || !b.solid || solidOverlap(a.solid, b.solid, EPS)) return [];
+  return a.faces.flatMap((face) => b.faces.flatMap((mate) => {
+    const patch = faceContactPatch(face, mate);
+    return patch ? [{ ...patch, normal: face.normal }] : [];
+  }));
+}
+
 /** Contact between a panel's retained underside and the top face of other active wood. */
 export function woodBearingSurfaces(
   project: Project,

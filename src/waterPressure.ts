@@ -281,3 +281,26 @@ export function waterPressureObservations({ scope, ...test }: WaterPressureTest)
 }
 
 export const waterPressureGuideStep = "Record the field water test for the installed section and review the dated results before concealing the lines. Confirm inspection and release with the authority responsible for the work.";
+
+export function waterPressureReviewStep(project: Project) {
+  const reviews = project.steps.filter(({ generated }) => generated?.kind === "water-pressure-review");
+  return reviews.find(({ generated }) => generated?.planId === project.id) ?? (reviews.length === 1 ? reviews[0] : undefined);
+}
+
+export function waterRoughInLinings(project: Project) {
+  const walls = new Set(project.waterRuns?.map(({ sectionId }) => sectionId));
+  const active = new Set(project.pieces.filter(({ offcut }) => !offcut).map(({ id }) => id));
+  return project.sections.flatMap(({ id, name, wallDrywall, pieceIds }) =>
+    wallDrywall && walls.has(wallDrywall.wallId) && pieceIds.some((partId) => active.has(partId))
+      ? [{ id, name, wallId: wallDrywall.wallId, pieceIds }]
+      : []);
+}
+
+export function waterPressureGuideScope(project: Project) {
+  const linings = waterRoughInLinings(project);
+  return {
+    lines: project.waterRuns?.map(({ id }) => id),
+    fittings: project.waterFittings?.map(({ id }) => id),
+    ...(linings.length && { linings: linings.map(({ id, name }) => [id, name]) }),
+  };
+}

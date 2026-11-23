@@ -1,3 +1,5 @@
+import type { GlueFaceMarker } from "./woodGlueFaces";
+import { finishedPanel, measuredBandingByPanel } from "./edgeBanding";
 import type { FloorRegisterPreview } from "./floorRegister";
 import type { previewRoundDuct } from "./roundDuct";
 import type { previewRoundDuctElbow } from "./roundDuctElbow";
@@ -42,7 +44,8 @@ import type { DryerDuctLayout } from "./dryerExhaustSchema";
 import { clipBox, triangulateSolid } from "./cutProfiles";
 import { pieceThroughOpenings, throughOpeningTriangles } from "./throughOpenings";
 import { alignNearbyFaces, surfacePlacement } from "./editing";
-import { createWoodGroupSlide, createWoodSlide, placeWood, woodSlideStopLabel } from "./placement";
+import { createWoodSlide, placeWood, woodSlideStopLabel } from "./placement";
+import { createSectionWoodSlide, type SectionTranslationPreview } from "./sectionTranslation";
 import { movingSectionIds, snapSectionOrigin } from "./sections";
 import { liftDistanceInches } from "./editorMotion";
 import { composeRotation } from "./spatial";
@@ -64,6 +67,8 @@ import { PlumbingVentMarkers } from "./PlumbingVentMarkers";
 import { ventLayoutBounds } from "./plumbingVentLayout";
 import type { PlumbingVentLayout } from "./plumbingVentSchema";
 import { CheckAreaMarkers } from "./CheckAreaMarkers";
+import { WoodSupportTraceGeometry } from "./WoodSupportTraceGeometry";
+import type { WoodSupportTrace } from "./woodSupport";
 import { AttachmentMarkers } from "./AttachmentMarkers";
 import { RestraintMarkers } from "./RestraintMarkers";
 import { DriverAccessMarker } from "./DriverAccessMarker";
@@ -78,6 +83,8 @@ import { visibleStagePieces, visibleStockPieces } from "./sceneVisibility";
 import type { MotionPreview } from "./mechanismMotion";
 import { lidAxisSegment, reviewLidTravel, type LidPreview } from "./lidMotion";
 import { formatMeasurement, formatPreciseInches, measureBetween } from "./measurement";
+import { partLabel } from "./partLabels";
+import type { WorkspaceDimensionAnchor } from "./model";
 import {
   material,
   type Piece,
@@ -93,13 +100,14 @@ export type SceneProps = {
   shownSiteClearanceId?: string | null;
   shownFoundation?: ReturnType<typeof reviewGreenhouseFoundation>;
   shownTrimSeam?: TrimSeamMarker;
+  shownGlueFace?: GlueFaceMarker;
   shownSubfloor?: SubfloorReview["layout"];
   shownSubfloorJoint?: SubfloorJoint;
   shownSubfloorAdhesive?: SubfloorAdhesiveReview;
   shownSubfloorFasteners?: SubfloorFasteningReview;
   shownSubfloorJoists?: SubfloorJoistReview;
-  shownPlateSeal?: { top?: boolean; start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
-  shownSillGasket?: { points: V3[]; needsReview: boolean };
+  shownPlateSeal?: { drywallFace?: "top" | "bottom"; start: V3; outdated: boolean; runs: { points: [V3, V3]; problem: string }[] };
+  shownSillGasket?: { points: V3[]; marks: V3[][]; needsReview: boolean };
   shownRimSeal?: ReadonlyArray<{ id: string; outline: V3[]; edgeOutline?: V3[] }>;
   shownRoofValley?: [V3, V3];
   floorRegister?: FloorRegisterPreview;
@@ -124,6 +132,7 @@ export type SceneProps = {
   focusedMotion?: boolean;
   readOnly?: boolean;
   onSelect: (id: string) => void;
+  groupPartIds?: ReadonlySet<string>;
   onMove: (id: string, position: V3, rotation: V3) => void;
   selectedSectionId: string | null;
   onSectionMove: (id: string, origin: V3, deltaRotation: V3, previewed?: boolean) => void;
@@ -134,9 +143,13 @@ export type SceneProps = {
   fittedStockPreview?: FittedStockPreview | null;
   fittedStockFaces?: { first: FittedFaceRef | null; second: FittedFaceRef | null };
   baseRailPreview?: Piece | null;
+  facePlacementPreview?: Piece | null;
+  partElevationPreview?: Piece | null;
+  sectionTranslationPreview?: SectionTranslationPreview | null;
+  woodSupportTrace?: WoodSupportTrace | null;
   guidePartFocus?: { pieceId: string; label: string; isolated: boolean };
-  measurement?: { a: V3 | null; b: V3 | null };
-  onMeasurePoint?: (point: V3) => void;
+  measurement?: { a: V3 | null; b: V3 | null; label?: string };
+  onMeasurePoint?: (point: V3, anchor?: WorkspaceDimensionAnchor) => void;
   wallTrace?: { a: WallTracePoint | null; b: WallTracePoint | null; outline?: WallTracePoint[]; footprints: V3[][]; blocked: boolean };
   outlineReferenceLines?: Project["planLines"];
   onWallTracePoint?: (point: V3) => void;
@@ -370,6 +383,7 @@ function PartMesh({
   stepIndex,
   texture,
   onPointerDown,
+  groupPicking = false,
   measuring = false,
   onMeasurePoint,
   fastenerPicking = false,
@@ -390,8 +404,9 @@ function PartMesh({
   stepIndex: number;
   texture: THREE.Texture;
   onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
+  groupPicking?: boolean;
   measuring?: boolean;
-  onMeasurePoint?: (point: V3) => void;
+  onMeasurePoint?: SceneProps["onMeasurePoint"];
   fastenerPicking?: boolean;
   onPickFastenerEntrance?: SceneProps["onPickFastenerEntrance"];
   fittedFacePicking?: boolean;
@@ -513,16 +528,19 @@ function PartMesh({
             return;
           }
           if (measuring) {
-            if (e.button === 0 && e.delta <= 4)
-              onMeasurePoint?.(e.point.toArray().map((v) => v * 12) as V3);
+            if (e.button === 0 && e.delta <= 4) {
+              const local = mesh.current?.worldToLocal(e.point.clone()).multiplyScalar(12).toArray() as V3 | undefined;
+              onMeasurePoint?.(e.point.clone().multiplyScalar(12).toArray() as V3, local ? { pieceId: piece.id, local } : undefined);
+            }
             return;
           }
+          if (groupPicking && (e.button !== 0 || e.delta > 4)) return;
           onSelect(piece.id);
         }}
         onPointerOver={(e) => {
           if (readOnly) return;
           e.stopPropagation();
-          document.body.style.cursor = measuring || fastenerPicking || fittedFacePicking ? "crosshair" : "grab";
+          document.body.style.cursor = groupPicking ? "pointer" : measuring || fastenerPicking || fittedFacePicking ? "crosshair" : "grab";
         }}
         onPointerOut={() => (document.body.style.cursor = "auto")}
       >
@@ -900,13 +918,14 @@ function PlacedPart({
       <PartMesh
         piece={p}
         sinkOutletDrop={p.material === sinkTrap.id ? props.project.sinkDrains?.find(({ bodyId }) => bodyId === p.id)?.outletDrop : undefined}
-        selected={selected}
+        selected={selected || (props.groupPartIds?.has(p.id) ?? false)}
         onSelect={props.onSelect}
         xray={props.xray}
         explode={props.mode !== "measure" && props.mode !== "fastener" && props.mode !== "fit-face" && props.explode && !selected}
         stepIndex={props.project.steps.findIndex((s) => s.id === p.stepId)}
         texture={texture}
-        onPointerDown={beginDrag}
+        onPointerDown={props.groupPartIds ? undefined : beginDrag}
+        groupPicking={!!props.groupPartIds}
         measuring={props.mode === "measure"}
         onMeasurePoint={props.onMeasurePoint}
         fastenerPicking={props.mode === "fastener"}
@@ -994,7 +1013,7 @@ function SectionGroup({
 }) {
   const group = useRef<THREE.Group>(null!);
   const contact = useRef<HTMLSpanElement>(null);
-  const slide = useRef<ReturnType<typeof createWoodGroupSlide>>(null);
+  const slide = useRef<ReturnType<typeof createSectionWoodSlide>>(null);
   const stopped = useRef(false);
   const translating = props.mode === "move" || props.mode === "lift";
   const invalidate = useThree((state) => state.invalidate);
@@ -1059,15 +1078,7 @@ function SectionGroup({
       onMouseDown={() => {
         stopped.current = false;
         if (!translating) return;
-        const ids = new Set(section.pieceIds);
-        const members = props.project.pieces.filter((piece) =>
-          ids.has(piece.id),
-        );
-        slide.current = createWoodGroupSlide(
-          props.project,
-          members,
-          section.origin,
-        );
+        slide.current = createSectionWoodSlide(props.project, section);
       }}
       onObjectChange={() => {
         const obj = group.current;
@@ -1178,6 +1189,7 @@ function CameraRig({
   motionBounds = null,
   siteBounds = null,
   drawingBounds = null,
+  detailBounds = null,
   framePieces,
   stockFrameKey,
 }: {
@@ -1189,6 +1201,7 @@ function CameraRig({
   motionBounds?: PerspectiveBounds | null;
   siteBounds?: PerspectiveBounds | null;
   drawingBounds?: PerspectiveBounds | null;
+  detailBounds?: PerspectiveBounds | null;
   framePieces: readonly Piece[];
   stockFrameKey: string;
 }) {
@@ -1228,6 +1241,10 @@ function CameraRig({
         : unionBounds([{ min: min as V3, max: max as V3 }, overlayBounds]);
       min = combined.min;
       max = combined.max;
+    }
+    if (detailBounds && !overlayBounds && !referenceView) {
+      min = detailBounds.min;
+      max = detailBounds.max;
     }
     const worldBounds = {
       min: min.map((n) => n / 12) as V3,
@@ -1285,6 +1302,7 @@ function CameraRig({
     motionBounds,
     siteBounds,
     drawingBounds,
+    detailBounds,
     stockFrameKey,
   ]);
   useFrame((_, dt) => {
@@ -1519,13 +1537,14 @@ function Measurement({
   gapMarker,
 }: {
   measurement: SceneProps["measurement"];
-  gapMarker?: { testId: string; label?: string };
+  gapMarker?: { testId: string; label?: string; highlightApproach?: boolean };
 }) {
   const a = measurement?.a,
     b = measurement?.b;
   if (!a) return null;
   const distance = b ? measureBetween(a, b).distance : 0;
-  const radius = gapMarker ? Math.min(0.045, distance / 48) : 0.045;
+  const radius = gapMarker && !gapMarker.highlightApproach ? Math.min(0.045, distance / 48) : 0.045;
+  const color = gapMarker?.highlightApproach ? "#bf6d12" : "#287c9b";
   const first = a.map((v) => v / 12) as V3;
   const second = b?.map((v) => v / 12) as V3;
   const midpoint = second
@@ -1536,13 +1555,13 @@ function Measurement({
       {[first, ...(second ? [second] : [])].map((point, i) => (
         <mesh key={i} position={point} renderOrder={1000} raycast={() => null}>
           <sphereGeometry args={[radius, 14, 10]} />
-          <meshBasicMaterial color="#287c9b" depthTest={false} />
+          <meshBasicMaterial color={color} depthTest={false} />
         </mesh>
       ))}
       {second && (
         <Line
           points={[first, second]}
-          color="#287c9b"
+          color={color}
           lineWidth={gapMarker ? 3 : 2}
           depthTest={false}
           renderOrder={1000}
@@ -1567,12 +1586,37 @@ function Measurement({
       >
         <span data-testid={gapMarker?.testId ?? "measurement-label"}>
           {gapMarker ? (gapMarker.label ?? `${formatPreciseInches(distance)} gap`)
-            : b ? formatMeasurement(distance) : "Start point · choose end point"}
+            : b ? [measurement?.label, formatMeasurement(distance)].filter(Boolean).join(" · ") : "Start point · choose end point"}
         </span>
       </Html>
     </group>
   );
 }
+function MotionApproachAxes({ project, pair }: { project: Project; pair: NonNullable<MotionPreview["focusPair"]> }) {
+  const axes: readonly [string, string, V3][] = [
+    ["X", "#ae3a31", [1, 0, 0]],
+    ["Y", "#36754b", [0, 1, 0]],
+    ["Z", "#265c99", [0, 0, 1]],
+  ];
+  return <>{project.pieces.filter(({ id }) => pair.includes(id)).map((piece) => {
+    const length = Math.min(8, Math.max(2, Math.max(...piece.size) / 4)) / 12;
+    return <group key={piece.id} position={piece.position.map((value) => value / 12) as V3} rotation={piece.rotation}>
+      <Html center position={[0, 0, 0]} style={{ pointerEvents: "none" }}>
+        <span data-testid="motion-approach-axes" className="site-clearance-marker">{partLabel(project, piece.id)}</span>
+      </Html>
+      {axes.map(([axis, color, direction]) => {
+        const tip = direction.map((value) => value * length) as V3;
+        return <group key={axis}>
+          <Line points={[[0, 0, 0], tip]} color={color} lineWidth={3} depthTest={false} renderOrder={20} raycast={() => null} />
+          <Html center position={tip} style={{ pointerEvents: "none", color, fontWeight: 700, background: "white", borderRadius: 3, padding: "0 3px" }}>
+            {axis}
+          </Html>
+        </group>;
+      })}
+    </group>;
+  })}</>;
+}
+
 function WallTraceOverlay({ a, b, outline, footprints, blocked }: NonNullable<SceneProps["wallTrace"]>) {
   const points = [a, b].flatMap((point) => point ? [[point[0] / 12, 0.02, point[1] / 12] as V3] : []);
   const color = blocked ? "#b6402b" : "#1c6b63";
@@ -1591,6 +1635,7 @@ function WallTraceOverlay({ a, b, outline, footprints, blocked }: NonNullable<Sc
 }
 function World(props: SceneProps) {
   const renderer = useThree((state) => state.gl);
+  const proposedPart = props.partElevationPreview ?? props.facePlacementPreview;
   const texture = useMemo(woodTexture, []);
   useEffect(() => () => texture.dispose(), [texture]);
   const vent = props.shownPlumbingVentLayout;
@@ -1630,6 +1675,21 @@ function World(props: SceneProps) {
   );
   const grouped = section ? movingSectionIds(props.project, section) : new Set<string>();
   const markedRun = props.shownTrimSeam ?? props.shownBandingEdge ?? props.shownProfileRun;
+  const closedMark = props.shownTrimSeam?.closed ? props.shownTrimSeam : null;
+  const detailBounds = useMemo(() => {
+    const elevationPart = props.partElevationPreview;
+    if (elevationPart) {
+      const before = props.project.pieces.find(({ id }) => id === elevationPart.id);
+      const destination = bounds(elevationPart);
+      return before ? unionBounds([bounds(before), destination]) : destination;
+    }
+    if (!closedMark) return null;
+    const points = closedMark.segments.flatMap(({ points }) => points);
+    return {
+      min: [0, 1, 2].map((axis) => Math.min(...points.map((point) => point[axis]))) as V3,
+      max: [0, 1, 2].map((axis) => Math.max(...points.map((point) => point[axis]))) as V3,
+    };
+  }, [closedMark, props.partElevationPreview, props.project.pieces]);
   return (
     <>
       <color attach="background" args={["#eeeee5"]} />
@@ -1696,6 +1756,9 @@ function World(props: SceneProps) {
       {props.shownCheckArea && !props.explode && props.stage === null && (
         <CheckAreaMarkers area={props.shownCheckArea} />
       )}
+      {props.woodSupportTrace && !props.explode && props.stage === null && (
+        <WoodSupportTraceGeometry trace={props.woodSupportTrace} />
+      )}
       {!props.focusedMotion && (props.lidPreview?.shownSiteFaceId ? (
         <SiteClearanceMarkers project={props.project} id={props.lidPreview.shownSiteFaceId}
           shortfall={props.lidPreview.siteFaceHits?.includes(props.lidPreview.shownSiteFaceId)} />
@@ -1724,11 +1787,13 @@ function World(props: SceneProps) {
         <group>
           {props.shownPlateSeal.runs.map(({ points, problem }, index) =>
             <Line key={index} points={points.map((point) => point.map((n) => n / 12) as V3)}
-              color={problem || props.shownPlateSeal?.outdated ? "#ba4c2b" : "#35748c"} lineWidth={4} depthTest={false} raycast={() => null} />)}
+              color={problem || props.shownPlateSeal?.outdated ? "#ba4c2b" : "#35748c"} lineWidth={4} depthTest={false} depthWrite={false} renderOrder={12} raycast={() => null} />)}
           <Html center position={props.shownPlateSeal.start.map((n, i) => (n + (i === 1 ? 1 : 0)) / 12) as V3}
             zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
-            <span className="site-clearance-marker" data-testid={props.shownPlateSeal.top ? "top-plate-seam-start" : "bottom-plate-seam-start"}>
-              Bead start · {props.shownPlateSeal.outdated ? "Review changed seam" : props.shownPlateSeal.top ? "Top plate air seal" : "Bottom plate air seal"}
+            <span className="site-clearance-marker" data-testid={props.shownPlateSeal.drywallFace === "top" ? "top-plate-seam-start"
+              : props.shownPlateSeal.drywallFace === "bottom" ? "drywall-bottom-plate-seam-start" : "bottom-plate-seam-start"}>
+              Bead start · {props.shownPlateSeal.outdated ? "Review changed seam" : props.shownPlateSeal.drywallFace === "top" ? "Top plate air seal"
+                : props.shownPlateSeal.drywallFace === "bottom" ? "Drywall-to-bottom-plate seal" : "Bottom plate air seal"}
             </span>
           </Html>
         </group>
@@ -1806,10 +1871,19 @@ function World(props: SceneProps) {
         <group>
           <Line points={props.shownSillGasket.points.map((point) => point.map((n) => n / 12) as V3)}
             color={props.shownSillGasket.needsReview ? "#ba4c2b" : "#35748c"} lineWidth={3} depthTest={false} raycast={() => null} />
+          {!!props.shownSillGasket.marks.length && (
+            <Line points={props.shownSillGasket.points.slice(0, 2).map((point) => point.map((n) => n / 12) as V3)}
+              color="#a85c20" lineWidth={3} depthTest={false} raycast={() => null} />
+          )}
+          {props.shownSillGasket.marks.map((ring, index) => (
+            <Line key={index} points={ring.map((point) => point.map((n) => n / 12) as V3)}
+              color="#a85c20" lineWidth={2} depthTest={false} raycast={() => null} />
+          ))}
           <Html center position={props.shownSillGasket.points[0].map((n) => n / 12) as V3}
             zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
             <span className="site-clearance-marker" data-testid="sill-gasket-marker">
               {props.shownSillGasket.needsReview ? "Sill gasket · Needs review" : "Sill gasket footprint"}
+              {!!props.shownSillGasket.marks.length && ` · Start · ${props.shownSillGasket.marks.length} bore marks`}
             </span>
           </Html>
         </group>
@@ -1873,26 +1947,38 @@ function World(props: SceneProps) {
       {props.shownSaunaVentilation && !props.explode && props.stage === null && !props.motionPreview && !props.lidPreview && (
         <SaunaVentilationMarkers review={props.shownSaunaVentilation} />
       )}
+      {props.shownGlueFace && !props.explode && props.stage === null && !props.lidPreview && !props.motionPreview && (
+        <>
+          {props.shownGlueFace.outlines.map((outline, i) => <Line key={i}
+            points={[...outline, outline[0]].map((point) => point.map((n) => n / 12) as V3)}
+            color="#258c80" lineWidth={2.5} depthTest={false} depthWrite={false} renderOrder={12} raycast={() => null} />)}
+          <Html position={props.shownGlueFace.center.map((n) => n / 12) as V3} style={{ pointerEvents: "none" }}>
+            <span className="site-clearance-marker" data-testid="glue-face-marker">{props.shownGlueFace.label}</span>
+          </Html>
+        </>
+      )}
       {markedRun && !props.explode && props.stage === null && !props.motionPreview && !props.lidPreview && (
         <group>
-          {(props.shownTrimSeam?.segments ?? [{ points: markedRun.points, open: false }]).map(({ points, open }, i) =>
+          {(props.shownTrimSeam?.segments ?? [{ points: markedRun.points, open: false, cover: undefined }]).map(({ points, open, cover }, i) =>
             <Line key={i} points={points.map((point) => point.map((v) => v / 12) as V3)}
-              color={open ? "#b75b22" : "#2382a5"} dashed={open} dashSize={0.045} gapSize={0.03}
-              lineWidth={4} depthTest={false} raycast={() => null} />,
+              color={cover === "blocked" ? "#b8412b" : cover === "later" ? "#8055b2" : open ? "#b75b22" : "#2382a5"}
+              dashed={open} dashSize={closedMark ? 0.02 : 0.045} gapSize={closedMark ? 0.015 : 0.03}
+              lineWidth={cover ? 6 : 4} depthTest={false} depthWrite={false} renderOrder={12} raycast={() => null} />,
           )}
-          {props.shownTrimSeam && (
+          {props.shownTrimSeam && !props.shownTrimSeam.closed && (
             <mesh position={markedRun.points[0].map((v) => v / 12) as V3} renderOrder={9} raycast={() => null}>
               <sphereGeometry args={[0.022, 12, 8]} />
               <meshBasicMaterial color="#195b73" depthTest={false} depthWrite={false} />
             </mesh>
           )}
           <Html center position={markedRun.points[0].map((v, i) =>
-            props.shownTrimSeam
+            props.shownTrimSeam && !closedMark
               ? v / 12 + (i === 1 ? 0.08 : 0)
               : (v + markedRun.points[1][i]) / 24) as V3}
             zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
-            <span className="site-clearance-marker" data-testid={props.shownTrimSeam ? "trim-seam-marker" : props.shownBandingEdge ? "edge-banding-marker" : "sunlite-profile-marker"}>
-              {props.shownTrimSeam && <><strong data-testid="trim-seam-start">Start</strong>{" · "}</>}
+            <span className="site-clearance-marker" style={closedMark ? { position: "relative", top: "-45px" } : undefined}
+              data-testid={props.shownTrimSeam ? "trim-seam-marker" : props.shownBandingEdge ? "edge-banding-marker" : "sunlite-profile-marker"}>
+              {props.shownTrimSeam && !props.shownTrimSeam.closed && <><strong data-testid="trim-seam-start">Start</strong>{" · "}</>}
               {markedRun.label}
             </span>
           </Html>
@@ -1914,6 +2000,28 @@ function World(props: SceneProps) {
           <Html center position={props.baseRailPreview.position.map((value) => value / 12) as V3}
             zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
             <span className="fitted-stock-ghost-label" data-testid="base-rail-preview">Proposed rail position</span>
+          </Html>
+        </group>
+      )}
+      {proposedPart && !props.explode && props.stage === null && (
+        <group>
+          <StockGhost piece={proposedPart} />
+          <Html center position={proposedPart.position.map((value) => value / 12) as V3}
+            zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
+            <span className="fitted-stock-ghost-label" data-testid={props.partElevationPreview ? "part-elevation-preview" : "wood-face-placement-preview"}
+              data-position={JSON.stringify(proposedPart.position)}>{props.partElevationPreview ? "Proposed height" : "Proposed placement"}</span>
+          </Html>
+        </group>
+      )}
+      {props.sectionTranslationPreview && !props.explode && props.stage === null && (
+        <group>
+          {props.sectionTranslationPreview.parts.map((piece) => <StockGhost key={piece.id} piece={piece} />)}
+          <Html center position={props.sectionTranslationPreview.position.map((value) => value / 12) as V3}
+            style={{ pointerEvents: "none" }}>
+            <span className="fitted-stock-ghost-label" data-testid="section-translation-preview"
+              data-position={JSON.stringify(props.sectionTranslationPreview.position)}>
+              {props.sectionTranslationPreview.stop || "Proposed section position"}
+            </span>
           </Html>
         </group>
       )}
@@ -1981,7 +2089,7 @@ function World(props: SceneProps) {
           onSelectPart={props.onSelectAttachmentPart ?? props.onSelect}
         />
       )}
-      {props.mode === "measure" && (
+      {props.measurement && !props.readOnly && (
         <Measurement measurement={props.measurement} />
       )}
       {props.focusedMotion && props.motionPreview?.gapEndpoints && (
@@ -1989,6 +2097,13 @@ function World(props: SceneProps) {
           a: props.motionPreview.gapEndpoints[0],
           b: props.motionPreview.gapEndpoints[1],
         }} />
+      )}
+      {props.motionPreview?.contactApproach && (
+        <Measurement gapMarker={{ testId: "motion-approach-marker", label: "Closest surfaces before contact", highlightApproach: true }}
+          measurement={{ a: props.motionPreview.contactApproach[0], b: props.motionPreview.contactApproach[1] }} />
+      )}
+      {props.motionPreview?.showApproachAxes && props.motionPreview.focusPair && (
+        <MotionApproachAxes project={props.project} pair={props.motionPreview.focusPair} />
       )}
       {props.mode === "trace-wall" && props.wallTrace && <WallTraceOverlay {...props.wallTrace} />}
       {section && (
@@ -2017,11 +2132,12 @@ function World(props: SceneProps) {
         view={props.view}
         project={props.project}
         onCamera={props.onCamera}
-        fitToView={props.fitToView}
+        fitToView={props.fitToView || !!props.partElevationPreview}
         animateView={props.animateView}
         motionBounds={props.motionBounds}
         siteBounds={siteBounds}
         drawingBounds={drawingBounds}
+        detailBounds={detailBounds}
         framePieces={framePieces}
         stockFrameKey={stockFrameKey}
       />
@@ -2031,6 +2147,8 @@ function World(props: SceneProps) {
 export function Scene(props: SceneProps) {
   const preview = props.lidPreview;
   const motion = props.motionPreview;
+  const showingLid = !!preview;
+  const lidBanding = useMemo(() => showingLid ? measuredBandingByPanel(props.project) : null, [props.project, showingLid]);
   // Stable through scrubbing: frame the full swing once on entry, then let
   // the user orbit freely. The shown pose never becomes saved project geometry.
   const motionBounds = useMemo(() => preview
@@ -2042,9 +2160,11 @@ export function Scene(props: SceneProps) {
   const posed = useMemo(() => {
     if (!motion && !preview) return null;
     const hidden = new Set(motion?.hiddenPieceIds);
-    const poses = new Map(motion?.pieces.map((piece) => [piece.id, piece]));
+    const poses = new Map([...(motion?.finishedFixedPieces ?? []), ...(motion?.pieces ?? [])]
+      .map((piece) => [piece.id, piece]));
     const pieces = props.project.pieces.filter((piece) => !hidden.has(piece.id))
-      .map((piece) => piece.id === preview?.piece.id ? preview.piece : poses.get(piece.id) ?? piece);
+      .map((piece) => piece.id === preview?.piece.id ? preview.piece : poses.get(piece.id) ??
+        (lidBanding ? finishedPanel(piece, lidBanding) : piece));
     if (motion?.draftGeometry) {
       const committedIds = new Set(props.project.pieces.map(({ id }) => id));
       pieces.push(...motion.pieces.filter(({ id }) => !committedIds.has(id)));
@@ -2054,7 +2174,7 @@ export function Scene(props: SceneProps) {
     return pair.length === 2
       ? { pieces: pair, pairBounds: unionBounds(pair.map(bounds)) }
       : { pieces, pairBounds: null };
-  }, [props.project, motion, preview]);
+  }, [props.project, motion, preview, lidBanding]);
   const shown: SceneProps = preview || motion ? {
     ...props,
     project: {
@@ -2094,7 +2214,7 @@ export function Scene(props: SceneProps) {
         </div>
       }
       onPointerMissed={() => {
-        if (shown.readOnly) return;
+        if (shown.readOnly || shown.groupPartIds) return;
         if (props.mode !== "screw" && props.mode !== "measure" && props.mode !== "fastener" && props.mode !== "fit-face" && props.mode !== "trace-wall")
           props.onSelect("");
       }}

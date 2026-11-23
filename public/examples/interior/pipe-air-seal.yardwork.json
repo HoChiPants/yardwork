@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 162,
+  "id": "0543d010-c17e-4374-8a95-24a3a7c115a9",
+  "name": "Subfloor pipe air seal practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "pipeAirSeals": [
+    {
+      "id": "dc58b8df-a7e2-4f56-a01c-5e3fcd033b4e",
+      "partId": "df78443a-6015-4a92-a36b-0996a90acd70",
+      "openingKey": "[1,[6,-6]]",
+      "side": "positive",
+      "pipeDiameter": 2.375,
+      "offset": [
+        0.03125,
+        0
+      ],
+      "cavityDepth": 0.75,
+      "rodRecess": 0.25,
+      "dryFit": true,
+      "session": "Pipe air sealing",
+      "signature": "binding-v1-cd61aff2d6e5b327"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "backerRodOffcuts": [
+    {
+      "label": "3/8 in rod remnant",
+      "productId": "frost-king-c21h",
+      "length": 18,
+      "id": "465480d8-fbc2-40b3-a3da-57e78e5caf6c"
+    }
+  ],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T02:32:09.486Z",
+  "pieces": [
+    {
+      "id": "df78443a-6015-4a92-a36b-0996a90acd70",
+      "name": "Plywood subfloor practice panel",
+      "material": "plywood",
+      "size": [
+        36,
+        0.75,
+        24
+      ],
+      "position": [
+        0,
+        0.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "24721c6d-2731-4aa5-b9fa-14115c4d8725",
+      "assembly": "Practice panel",
+      "offcut": false,
+      "cutPlanes": [],
+      "roundOpenings": [
+        {
+          "axis": 1,
+          "center": [
+            6,
+            -6
+          ],
+          "diameter": 3
+        }
+      ],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "24721c6d-2731-4aa5-b9fa-14115c4d8725",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}

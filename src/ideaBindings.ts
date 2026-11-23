@@ -13,6 +13,7 @@ import { bounds, bom, validate, projectPricingCoverage } from "./engine";
 import { reconcileNarrative } from "./ideaNarrative";
 import { supplyRows } from "./supplies";
 import {
+  bindingHash,
   stableValue,
   currentBindingFingerprint,
   entryPartIds,
@@ -25,6 +26,7 @@ import { persistLidPose, siteFaceLidShortfall, transformRecordedLidMotion } from
 import { clearanceAxis, reviewSiteClearance } from "./siteClearance";
 import { prepareCollisionSolid, solidOverlap } from "./solidCollision";
 import { releasePlannedCutSources, untouchedPlannedCutSources } from "./plannedCutSources";
+import { movingSections, motionsUsingParts } from "./sectionAttachments";
 export type IdeaRevisionOptions = {
   entryIds?: string[];
   allowRebuild?: boolean;
@@ -36,6 +38,8 @@ export type IdeaImpact = {
   affectedConnections: number;
   affectedFastenerPlans: number;
   affectedHingePlans: number;
+  affectedMotionPlans: number;
+  movedAttachedParts: number;
   manualEdits: number;
   missingRoles: number;
   offcuts: number;
@@ -50,6 +54,7 @@ export type IdeaImpact = {
   affectedFastenerPlanIds: string[];
   affectedHingePlanIds: string[];
   retainedOffcutIds: string[];
+  replannedPartIds: string[];
 };
 function binding(project: Project, id: string) {
   const found = project.ideaBindings.find((b) => b.id === id);
@@ -116,7 +121,14 @@ export function bindingPlan(
   );
 }
 function token(project: Project, b: IdeaBinding) {
-  return `${b.id}:${b.revision}:${currentBindingFingerprint(project, b)}`;
+  const sectionIds = new Set(b.entries.flatMap((entry) => entry.sections.map(({ sectionId }) => sectionId)));
+  const roots = project.sections.filter(({ id }) => sectionIds.has(id));
+  const mounted = movingSections(project, roots).pieceIds;
+  const own = new Set(roots.flatMap(({ pieceIds }) => pieceIds));
+  const carried = project.pieces.filter(({ id }) => mounted.has(id) && !own.has(id));
+  const plans = motionsUsingParts(project, mounted);
+  const context = carried.length || plans.length ? `:${bindingHash({ carried, plans })}` : "";
+  return `${b.id}:${b.revision}:${currentBindingFingerprint(project, b)}${context}`;
 }
 export function bindingToken(project: Project, id: string) {
   return token(project, binding(project, id));
@@ -141,9 +153,15 @@ function signature(piece: Piece, pose: IdeaEntry["pose"]) {
 function expectedEntry(entry: IdeaEntry) {
   return generateIdeaEntry(blank(), entry.spec, entry.pose);
 }
-function inspectEntry(project: Project, entry: IdeaEntry, uncutSources?: ReadonlyMap<string, readonly Piece[]>) {
+const towerShelf = (piece: Piece) => /^tower-shelf-[1-6]$/.test(piece.designRole ?? "");
+
+function inspectEntry(project: Project, entry: IdeaEntry, uncutSources?: ReadonlyMap<string, readonly Piece[]>,
+  includes?: (piece: Piece) => boolean) {
   const expected = expectedEntry(entry),
-    actualIds = entryPartIds(project, entry),
+    memberIds = entryPartIds(project, entry),
+    actualIds = includes
+      ? new Set(project.pieces.filter((piece) => memberIds.has(piece.id) && includes(piece)).map(({ id }) => id))
+      : memberIds,
     manualPartIds: string[] = [],
     missingRoleNames: string[] = [];
   let manualEdits = 0;
@@ -160,14 +178,14 @@ function inspectEntry(project: Project, entry: IdeaEntry, uncutSources?: Readonl
       ),
       mapping = entry.sections.find((m) => m.role === role),
       actualSection = project.sections.find((s) => s.id === mapping?.sectionId);
-    if (expectedSection && !actualSection) missingRoleNames.push(role);
     const want = expected.project.pieces.filter((p) =>
-        expectedSection?.pieceIds.includes(p.id),
+        expectedSection?.pieceIds.includes(p.id) && (!includes || includes(p)),
       ),
       actual = project.pieces.filter((p) =>
-        actualSection?.pieceIds.includes(p.id),
+        actualSection?.pieceIds.includes(p.id) && (!includes || includes(p)),
       ),
       counts = new Map<string, number>();
+    if (expectedSection && !actualSection && (!includes || want.length)) missingRoleNames.push(role);
     for (const p of want) {
       const key = signature(p, entry.pose);
       counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -260,29 +278,48 @@ function geometrySpec(spec: BoundSpec) {
     { origin: _o, yaw: _y, ...parameters } = structure.parameters;
   return { type: spec.type, structure: { ...structure, parameters } };
 }
-function rigidEntry(
+
+function isClosetShelfCountChange(project: Project, old: IdeaEntry, fresh: IdeaEntry) {
+  if (old.spec.type !== "structure" || fresh.spec.type !== "structure") return false;
+  const before = old.spec.structure, after = fresh.spec.structure;
+  if (before.kind !== "closet-insert" || after.kind !== "closet-insert" ||
+      before.parameters.shelfCount === after.parameters.shelfCount ||
+      stableValue(old.pose) !== stableValue(fresh.pose)) return false;
+  const normalized: BoundSpec = { type: "structure", structure: {
+    ...after, parameters: { ...after.parameters, shelfCount: before.parameters.shelfCount },
+  } };
+  if (stableValue(geometrySpec(old.spec)) !== stableValue(geometrySpec(normalized))) return false;
+  const mapping = old.sections.find(({ role }) => role === "casework-panels");
+  const section = project.sections.find(({ id }) => id === mapping?.sectionId);
+  const roles = new Set(project.pieces.filter((piece) =>
+    section?.pieceIds.includes(piece.id) && towerShelf(piece)).map(({ designRole }) => designRole));
+  // Legacy projects without identified tower shelves keep the ordinary rebuild review.
+  return roles.size === before.parameters.shelfCount &&
+    Array.from({ length: before.parameters.shelfCount }, (_, index) => `tower-shelf-${index + 1}`)
+      .every((role) => roles.has(role));
+}
+function moveDesignSections(
   project: Project,
-  entry: IdeaEntry,
+  { pieceIds, sections }: ReturnType<typeof movingSections>,
+  previous: IdeaEntry["pose"],
   pose: IdeaEntry["pose"],
 ): Project {
-  const ids = entryPartIds(project, entry),
-    sections = new Set(entry.sections.map((m) => m.sectionId)),
-    delta = composeRotation(
-      pose.rotation,
-      inverseRotation(entry.pose.rotation),
-    ),
-    point = (p: V3) =>
-      rotate(p.map((v, i) => v - entry.pose.origin[i]) as V3, delta).map(
-        (v, i) => v + pose.origin[i],
-      ) as V3;
+  const translating = pose.rotation.every((angle, axis) => angle === previous.rotation[axis]);
+  const delta: V3 = translating ? [0, 0, 0] : composeRotation(pose.rotation, inverseRotation(previous.rotation));
+  const offset = pose.origin.map((value, axis) => value - previous.origin[axis]);
+  const point = (p: V3) => translating
+    ? p.map((value, axis) => value + offset[axis]) as V3
+    : rotate(p.map((value, axis) => value - previous.origin[axis]) as V3, delta)
+      .map((value, axis) => value + pose.origin[axis]) as V3;
+  const orientation = (rotation: V3) => translating ? rotation : composeRotation(delta, rotation);
   return {
     ...project,
     pieces: project.pieces.map((p) =>
-      ids.has(p.id)
+      pieceIds.has(p.id)
         ? {
             ...p,
             position: point(p.position),
-            rotation: composeRotation(delta, p.rotation),
+            rotation: orientation(p.rotation),
           }
         : p,
     ),
@@ -291,13 +328,13 @@ function rigidEntry(
         ? {
             ...s,
             origin: point(s.origin),
-            rotation: composeRotation(delta, s.rotation),
+            rotation: orientation(s.rotation),
             ...(s.recordedLidMotion ? { recordedLidMotion: transformRecordedLidMotion(s.recordedLidMotion, point, delta) } : {}),
             recipe: s.recipe
               ? {
                   ...s.recipe,
                   position: point(s.origin),
-                  yaw: yaw(composeRotation(delta, s.rotation)),
+                  yaw: yaw(orientation(s.rotation)),
                 }
               : null,
           }
@@ -594,6 +631,7 @@ export function previewIdeaRevision(
   }
   let next = structuredClone(project);
   const destructive: IdeaEntry[] = [],
+    shelfOnly = new Set<string>(),
     updated = new Map<string, IdeaEntry>(),
     impact: IdeaImpact = {
       replacedParts: 0,
@@ -602,6 +640,8 @@ export function previewIdeaRevision(
       affectedConnections: 0,
       affectedFastenerPlans: 0,
       affectedHingePlans: 0,
+    affectedMotionPlans: 0,
+    movedAttachedParts: 0,
       manualEdits: 0,
       missingRoles: 0,
       offcuts: 0,
@@ -616,6 +656,7 @@ export function previewIdeaRevision(
       affectedFastenerPlanIds: [],
       affectedHingePlanIds: [],
       retainedOffcutIds: [],
+      replannedPartIds: [],
     };
   for (const old of selected) {
     const fresh = incoming.get(old.id);
@@ -628,6 +669,7 @@ export function previewIdeaRevision(
       stableValue(geometrySpec(old.spec)) !==
       stableValue(geometrySpec(fresh.spec))
     ) {
+      if (isClosetShelfCountChange(project, old, fresh)) shelfOnly.add(old.id);
       destructive.push(old);
       updated.set(old.id, fresh);
       continue;
@@ -638,7 +680,14 @@ export function previewIdeaRevision(
         old.spec.recipe.lidOpen !== fresh.spec.recipe.lidOpen,
       pose = stableValue(old.pose) !== stableValue(fresh.pose);
     if (lid) next = lidEntry(next, old, fresh);
-    if (pose) next = rigidEntry(next, old, fresh.pose);
+    if (pose) {
+      const sectionIds = new Set(old.sections.map(({ sectionId }) => sectionId));
+      const roots = next.sections.filter(({ id }) => sectionIds.has(id));
+      const own = new Set(roots.flatMap(({ pieceIds }) => pieceIds));
+      const moving = movingSections(next, roots);
+      impact.movedAttachedParts += [...moving.pieceIds].filter((id) => !own.has(id)).length;
+      next = moveDesignSections(next, moving, old.pose, fresh.pose);
+    }
     if (lid || pose) {
       impact.changedEntries++;
       impact.changed = true;
@@ -661,11 +710,16 @@ export function previewIdeaRevision(
   const removedIds = new Set<string>(),
     archiveIds = new Set<string>(),
     retained = new Set<string>();
+  const protectedStockParts = new Set<string>();
   const pristine = destructive.length ? untouchedPlannedCutSources(project) : undefined;
   for (const old of destructive) {
     if (old.sections.some((mapping) => project.sections.some((s) => s.id === mapping.sectionId && s.recordedLidMotion)))
       throw Error("Close the measured lid before rebuilding or removing that saved idea section.");
-    const review = inspectEntry(project, old, pristine);
+    const onlyShelves = shelfOnly.has(old.id);
+    const review = inspectEntry(project, old, pristine, onlyShelves ? towerShelf : undefined);
+    if (onlyShelves)
+      for (const pid of entryPartIds(project, old))
+        if (!review.actualIds.has(pid)) protectedStockParts.add(pid);
     impact.manualEdits += review.manualEdits;
     impact.missingRoles += review.missingRoleNames.length;
     impact.manualPartIds.push(...review.manualPartIds);
@@ -689,21 +743,25 @@ export function previewIdeaRevision(
   impact.affectedFastenerPlans = impact.affectedFastenerPlanIds.length;
   impact.affectedHingePlanIds = project.lidHingePlans.filter((plan) => removedIds.has(plan.moving.pieceId) || removedIds.has(plan.fixed.pieceId)).map((plan) => plan.id);
   impact.affectedHingePlans = impact.affectedHingePlanIds.length;
+  impact.affectedMotionPlans = motionsUsingParts(project, removedIds).length;
   if (pristine?.size && next.plannedCutSources) {
     const manualIds = new Set(impact.manualPartIds);
+    const designIds = new Set(b.entries.flatMap((entry) => [...entryPartIds(project, entry)]));
     const release = next.plannedCutSources.filter((plan) => {
       const group = pristine.get(plan.sourceId);
       return group?.some((piece) => removedIds.has(piece.id)) &&
-        group.every((piece) => !manualIds.has(piece.id) && (piece.offcut || removedIds.has(piece.id)));
+        group.every((piece) => !manualIds.has(piece.id) && !protectedStockParts.has(piece.id) &&
+          (piece.offcut || designIds.has(piece.id)));
     });
     if (release.length) {
       const released = releasePlannedCutSources(next, release.map(({ sourceId }) => sourceId));
       next = released.project;
       impact.releasedStockUnits = release.length;
       for (const { sourceId } of release)
-        for (const { id } of pristine.get(sourceId)!) {
+        for (const { id, offcut } of pristine.get(sourceId)!) {
           archiveIds.delete(id);
           retained.delete(id);
+          if (!offcut && !removedIds.has(id)) impact.replannedPartIds.push(id);
         }
       for (const { id } of released.restored) retained.add(id);
     }
@@ -712,7 +770,7 @@ export function previewIdeaRevision(
   impact.retainedOffcutIds = [...retained];
   impact.offcuts = retained.size;
   const removedSections = new Set(
-    destructive.flatMap((e) => e.sections.map((m) => m.sectionId)),
+    destructive.filter((e) => !shelfOnly.has(e.id)).flatMap((e) => e.sections.map((m) => m.sectionId)),
   );
   next = {
     ...next,
@@ -728,6 +786,19 @@ export function previewIdeaRevision(
     const g = generateIdeaEntry(blank(), entry.spec, entry.pose),
       idMap = new Map<string, string>(),
       stepMap = new Map<string, string>();
+    if (old && shelfOnly.has(old.id)) {
+      const sectionId = old.sections.find(({ role }) => role === "casework-panels")!.sectionId;
+      const section = next.sections.find(({ id }) => id === sectionId)!;
+      const former = project.pieces.find((piece) => section.pieceIds.includes(piece.id) && towerShelf(piece))!;
+      const shelves = g.project.pieces.filter(towerShelf).map((piece) => ({ ...piece, stepId: former.stepId }));
+      next.pieces.push(...shelves);
+      next.sections = next.sections.map((current) => current.id === sectionId ? {
+        ...current,
+        pieceIds: [...current.pieceIds.filter((id) => !removedIds.has(id)), ...shelves.map(({ id }) => id)],
+      } : current);
+      impact.newParts += shelves.length;
+      return { ...entry, sections: old.sections, generatedNotes: g.notes };
+    }
     for (const mapping of g.sections) {
       const oldMap = old?.sections.find((m) => m.role === mapping.role),
         oldSection = project.sections.find((s) => s.id === oldMap?.sectionId),
@@ -859,18 +930,17 @@ export function previewIdeaRevision(
   );
   const affectedEntryIds = new Set([...managed, ...added.map((e) => e.id)]);
   const parsed = projectSchema.parse(next),
-    affected = new Set(
-      parsed.ideaBindings
-        .find((x) => x.id === id)
-        ?.entries.filter((e) => affectedEntryIds.has(e.id))
-        .flatMap((e) => [...entryPartIds(parsed, e)]) ?? [],
-    ),
+    scopedSections = new Set(parsed.ideaBindings
+      .find((x) => x.id === id)?.entries.filter((e) => affectedEntryIds.has(e.id))
+      .flatMap((entry) => entry.sections.map(({ sectionId }) => sectionId))),
+    affected = movingSections(parsed, parsed.sections.filter(({ id }) => scopedSections.has(id))).pieceIds,
     requiresRebuild =
       impact.manualEdits > 0 ||
       impact.missingRoles > 0 ||
       impact.removedConnections > 0 ||
       impact.affectedFastenerPlans > 0 ||
       impact.affectedHingePlans > 0 ||
+      impact.affectedMotionPlans > 0 ||
       archiveIds.size > 0;
   return {
     ...candidateIdeaPreview(parsed, affected),
@@ -893,21 +963,24 @@ export function fitDesignToSiteClearance(project: Project, clearanceId: string, 
   if (requiredOffset <= 1e-7) return project;
   const offset = plane.side.startsWith("+") ? -requiredOffset : requiredOffset;
   const axis = clearanceAxis(plane.side);
-  const moved = new Set(design.entries.flatMap((entry) => [...entryPartIds(project, entry)]));
-  let next = project;
+  const sectionIds = new Set(design.entries.flatMap((entry) => entry.sections.map(({ sectionId }) => sectionId)));
+  const moving = movingSections(project, project.sections.filter(({ id }) => sectionIds.has(id)));
+  const shift: V3 = [0, 0, 0];
+  shift[axis] = offset;
+  const next = moveDesignSections(project, moving,
+    { origin: [0, 0, 0], rotation: [0, 0, 0] }, { origin: shift, rotation: [0, 0, 0] });
   const entries = design.entries.map((entry) => {
     const origin: V3 = [...entry.pose.origin];
     origin[axis] += offset;
     const pose = { ...entry.pose, origin };
-    next = rigidEntry(next, entry, pose);
     return withIdentity({ ...entry, pose });
   });
   const zone = project.workZone;
   const fixedSolids = next.pieces
-    .filter((piece) => !piece.offcut && !moved.has(piece.id))
+    .filter((piece) => !piece.offcut && !moving.pieceIds.has(piece.id))
     .map(prepareCollisionSolid);
   for (const piece of next.pieces) {
-    if (!moved.has(piece.id) || piece.offcut) continue;
+    if (!moving.pieceIds.has(piece.id) || piece.offcut) continue;
     if (zone) {
       const { min, max } = bounds(piece);
       if (min[0] < -zone.width / 2 - .001 || max[0] > zone.width / 2 + .001 ||
@@ -980,7 +1053,7 @@ export function acceptIdeaRevisionPreview(
     throw Error("This revision reduces a measured site clearance below its minimum.");
   if (preview.requiresRebuild && !allowRebuild)
     throw Error(
-      "This revision replaces custom edits, recorded stock or connections. Review the impact and explicitly allow the rebuild before applying.",
+      "This revision affects custom edits, recorded stock, connections or saved movement references. Review the impact and explicitly allow the rebuild before applying.",
     );
   return preview.project;
 }

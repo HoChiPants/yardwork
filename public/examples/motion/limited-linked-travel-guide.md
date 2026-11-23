@@ -51,6 +51,17 @@ The current layouts have no listed stock conflicts.
 - Cabinet door · Full travel together · Modeled interference · P006 against P008 near 38.94°.
 - Cabinet door · Door 70° and tray 8.5 in · No modeled clearance findings along the tested travel.
 - Cabinet door · Door only to 70° · No modeled clearance findings along the tested travel.
+- Cabinet door · Door first, full travel · No modeled clearance findings along the tested travel.
+- Cabinet door · Tray first, full travel · Modeled interference · P007 against P006 near Pull-out tray · 5.63 in.
+- Cabinet door · Tray first, full travel · Modeled interference · P010 against P006 near Pull-out tray · 5.63 in.
+- Cabinet door · Tray first, full travel · Modeled interference · P008 against P006 near Pull-out tray · 6.38 in.
+- Cabinet door · Tray first, full travel · Modeled interference · P009 against P006 near Pull-out tray · 6.38 in.
+- Cabinet door · Tray first, full travel · Modeled interference · P011 against P006 near Pull-out tray · 16.64 in.
+- Cabinet door · Tray first, full travel · Modeled interference · P006 against P007 near Cabinet door · 0°.
+- Cabinet door · Tray first, full travel · Modeled interference · P006 against P011 near Cabinet door · 0°.
+- Cabinet door · Tray first, full travel · Modeled interference · P006 against P009 near Cabinet door · 3.63°.
+- Cabinet door · Tray first, full travel · Modeled interference · P006 against P008 near Cabinet door · 13.01°.
+- Cabinet door · Tray first, full travel · Modeled interference · P006 against P010 near Cabinet door · 65.1°.
 - Pull-out tray · Modeled interference · P007 against P006 near 5.63 in.
 - Pull-out tray · Modeled interference · P010 against P006 near 5.63 in.
 - Pull-out tray · Modeled interference · P008 against P006 near 6.38 in.
@@ -302,16 +313,39 @@ Review how each touching pair is held in the build. Some contacts are intended t
 - Modeled interference · P006 against P007 near 34.19°.
 - Modeled interference · P006 against P010 near 34.19°.
 - Modeled interference · P006 against P008 near 38.94°.
+- Opening pauses near 34.17° for a close pass between P006 and P010.
+- Closing pauses near 83.01° for contact between P006 and P010.
+- Closing approach at 83.07° · Approximate local marks from modeled part centers (in) · P006 (X 4.406, Y -1.25, Z -0.375) · P010 (X -4, Y -1.5, Z 0.375).
 - Named clearance test · Door 70° and tray 8.5 in · moves with Pull-out tray · Test targets · Cabinet door 70°, Pull-out tray 8.5 in.
 - No modeled part interference found along the travel.
 - Named clearance test · Door only to 70° · Test targets · Cabinet door 70°.
 - No modeled part interference found along the travel.
+- Named clearance test · Door first, full travel · opens in order: Cabinet door → Pull-out tray. Closing reverses the order.
+- No modeled part interference found along the travel.
+- Named clearance test · Tray first, full travel · opens in order: Pull-out tray → Cabinet door. Closing reverses the order.
+- Modeled interference · P007 against P006 near Pull-out tray · 5.63 in.
+- Modeled interference · P010 against P006 near Pull-out tray · 5.63 in.
+- Modeled interference · P008 against P006 near Pull-out tray · 6.38 in.
+- Modeled interference · P009 against P006 near Pull-out tray · 6.38 in.
+- Modeled interference · P011 against P006 near Pull-out tray · 16.64 in.
+- Modeled interference · P006 against P007 near Cabinet door · 0°.
+- Modeled interference · P006 against P011 near Cabinet door · 0°.
+- Modeled interference · P006 against P009 near Cabinet door · 3.63°.
+- Modeled interference · P006 against P008 near Cabinet door · 13.01°.
+- Modeled interference · P006 against P010 near Cabinet door · 65.1°.
+- Opening pauses near Pull-out tray · 5.63 in for contact between P010 and P006.
+- Opening approach at Pull-out tray · 5.62 in · Approximate local marks from modeled part centers (in) · P010 (X -4, Y -1.5, Z 0.375) · P006 (X -4, Y -1.25, Z -0.375).
+- Closing pauses near Cabinet door · 83.84° for contact between P006 and P010.
+- Closing approach at Cabinet door · 83.88° · Approximate local marks from modeled part centers (in) · P006 (X 5.772, Y 1.75, Z -0.375) · P010 (X -4, Y 1.5, Z 0.375).
 - Pull-out tray · Straight slide · 18 in · P007, P008, P009, P010, P011.
 - Modeled interference · P007 against P006 near 5.63 in.
 - Modeled interference · P010 against P006 near 5.63 in.
 - Modeled interference · P008 against P006 near 6.38 in.
 - Modeled interference · P009 against P006 near 6.38 in.
 - Modeled interference · P011 against P006 near 16.64 in.
+- Opening pauses near 5.63 in for contact between P010 and P006.
+- Opening approach at 5.62 in · Approximate local marks from modeled part centers (in) · P010 (X -4, Y -1.5, Z 0.375) · P006 (X -4, Y -1.25, Z -0.375).
+- Closing pauses near 18 in for contact between P007 and P006.
 
 ## Connection intent review
 

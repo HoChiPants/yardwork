@@ -14,6 +14,7 @@ import {
   type FittedStockPreview,
 } from "./fittedStock";
 import { formatPreciseInches } from "./measurement";
+import { pieceThroughOpenings, throughOpeningTriangles } from "./throughOpenings";
 
 const feet = (point: V3) => point.map((value) => value / 12) as V3;
 
@@ -56,7 +57,10 @@ function SelectedFace({ vertices, color }: { vertices: V3[]; color: string }) {
 
 export function StockGhost({ piece }: { piece: Piece }) {
   const { geometry, outline } = useMemo(() => {
-    const triangles = triangulateSolid(clipBox(piece.size, piece.cutPlanes));
+    const openings = pieceThroughOpenings(piece);
+    const triangles = openings.length
+      ? throughOpeningTriangles(piece.size, openings)
+      : triangulateSolid(clipBox(piece.size, piece.cutPlanes));
     const geometry = new BufferGeometry();
     geometry.setAttribute(
       "position",

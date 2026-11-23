@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   BufferGeometry,
@@ -9,7 +10,10 @@ import {
   Vector3,
 } from "three";
 import { blank, part, projectSchema, type V3 } from "../src/model";
-import { cutPiece } from "../src/engine";
+import { bom, cutPiece, guideMarkdown } from "../src/engine";
+import { recordOpeningCutout } from "../src/openingCutouts";
+import { planOffcutReuse } from "../src/offcutReusePlan";
+import { inspectCutStock } from "../src/cutStock";
 import { surfacePlacement } from "../src/editing";
 import { reviewWoodSupport } from "../src/woodSupport";
 import { cutInstructions, cutInstructionsText } from "../src/cutInstructions";
@@ -25,6 +29,30 @@ import {
 } from "../src/throughOpeningCuts";
 import { reviewMotion, saveMotionPlan } from "../src/mechanismMotion";
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
+
+test("a measured rectangular cutout can supply another part without counting the same opening twice", () => {
+  const fixture = new URL("../public/examples/cut-pool/cabinet-access-cutout.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(readFileSync(fixture, "utf8")));
+  const [panel, testBlank] = project.pieces;
+  assert.throws(() => recordOpeningCutout(project, panel.id, 0, 14.125, 11), /within the saved opening/);
+  const recorded = recordOpeningCutout(project, panel.id, 0, 12.5, 10.5);
+  const [entry] = recorded.openingCutoutRecords!;
+  assert.deepEqual(recorded.pieces[0], panel);
+  assert.notEqual(entry.sourceId, panel.cutStock?.id);
+  assert.ok(recorded.onHandCutSources?.includes(entry.sourceId));
+  const stock = planOffcutReuse(recorded, [entry.offcutId]);
+  assert.deepEqual(stock.assignments.map(({ partId }) => partId), [testBlank.id]);
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(stock.project)));
+  assert.equal(bom(reopened).find(({ id }) => id === panel.material)?.quantity, 0);
+  assert.equal(inspectCutStock(reopened).invalid.length, 0);
+  assert.match(guideMarkdown(reopened), /Complete the opening and confirm the measured cutout before using this blank\. Origin · P001/);
+
+  const changed = editThroughOpening(reopened, panel.id, "rectangularOpenings", 0, {
+    axis: 1, fromEdges: [9, 6], spans: [14, 12],
+  });
+  assert.throws(() => recordOpeningCutout(changed, panel.id, 0, 12, 10), /already supplied a recorded cutout/);
+  assert.match(guideMarkdown(changed), /Use the previously measured cutout stock\. Earlier opening · P001/);
+});
 
 const shape = "rectangularOpenings";
 function panelProject(size: V3, position: V3, name = "Panel") {

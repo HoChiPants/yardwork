@@ -7,6 +7,7 @@ import {
 } from "./edgeBandingReference";
 import {
   edgeBandingSchema,
+  measuredBandingThickness,
   type EdgeBandingEntry,
   type EdgeBandingFace,
 } from "./edgeBandingSchema";
@@ -65,14 +66,15 @@ export type BandingEdge = {
 export function edgeBandingEdges(
   project: Project,
   keys?: ReadonlySet<string>,
+  checkCoverage = true,
 ): BandingEdge[] {
   const panels = project.pieces.filter(isBandingPanel);
   if (!panels.length) return [];
-  const solids = project.pieces.flatMap((piece) => {
+  const solids = checkCoverage ? project.pieces.flatMap((piece) => {
     if (piece.offcut || !material(piece.material).wood) return [];
     const solid = prepareCollisionSolid(piece);
     return solid ? [{ piece, solid }] : [];
-  });
+  }) : [];
   const labels = new Map(
     ensurePartLabels(project).partLabels.map(({ partId, label }) => [
       partId,
@@ -137,15 +139,9 @@ export function edgeBandingEdges(
       probeSize[side] = neighborProbe;
       const probeCenter = [...center] as V3;
       probeCenter[side] += (sign * neighborProbe) / 2;
-      const probe = prepareCollisionBox(
-        probeSize,
-        world(probeCenter, piece),
-        piece.rotation,
-      );
-      const covering = solids.find(
-        ({ piece: neighbor, solid }) =>
-          neighbor.id !== piece.id && solidOverlap(probe, solid, eps),
-      );
+      const probe = checkCoverage ? prepareCollisionBox(probeSize, world(probeCenter, piece), piece.rotation) : undefined;
+      const covering = probe && solids.find(({ piece: neighbor, solid }) =>
+        neighbor.id !== piece.id && solidOverlap(probe, solid, eps));
       return [
         {
           pieceId: piece.id,
@@ -168,6 +164,64 @@ export function edgeBandingEdges(
   });
 }
 
+export function canModelBanding(piece: Piece) {
+  return isBandingPanel(piece) && !piece.cutPlanes.length && !pieceThroughOpenings(piece).length;
+}
+
+type PanelBuildUp = { low: V3; high: V3 };
+export function measuredBandingByPanel(project: Project, edges?: BandingEdge[]) {
+  const buildup = new Map<string, PanelBuildUp>();
+  const measured = project.edgeBanding?.filter(({ installedThickness }) => installedThickness !== undefined) ?? [];
+  if (!measured.length) return buildup;
+  const panels = new Map(project.pieces.filter(canModelBanding).map((piece) => [piece.id, piece]));
+  const measuredKeys = new Set(measured.map(bandingKey));
+  const current = new Map((edges ?? edgeBandingEdges(project, measuredKeys, false)).map((edge) => [bandingKey(edge), edge]));
+  for (const entry of measured) {
+    const edge = current.get(bandingKey(entry));
+    if (!edge || edge.fingerprint !== entry.fingerprint || !panels.has(entry.pieceId)) continue;
+    const profile = buildup.get(entry.pieceId) ?? { low: [0, 0, 0], high: [0, 0, 0] };
+    const axis = "XYZ".indexOf(entry.face[1]);
+    (entry.face[0] === "+" ? profile.high : profile.low)[axis] = entry.installedThickness!;
+    buildup.set(entry.pieceId, profile);
+  }
+  return buildup;
+}
+
+export function finishedPanel(piece: Piece, profiles: ReadonlyMap<string, PanelBuildUp>): Piece {
+  const profile = profiles.get(piece.id);
+  if (!profile) return piece;
+  const shift = rotate(profile.high.map((n, i) => (n - profile.low[i]) / 2) as V3, piece.rotation);
+  return { ...piece,
+    size: piece.size.map((n, i) => n + profile.high[i] + profile.low[i]) as V3,
+    position: piece.position.map((n, i) => n + shift[i]) as V3,
+  };
+}
+
+/** Band the lower local axis first, then let the final edges cover those ends. */
+function cornerAllowance(edge: BandingEdge, measured: ReadonlyMap<string, PanelBuildUp>) {
+  const panel = measured.get(edge.pieceId);
+  if (!panel) return 0;
+  const axis = "XYZ".indexOf(edge.face[1]);
+  const adjacent = axes.find((i) => i < axis && panel.high[i] + panel.low[i] > 0);
+  return adjacent === undefined ? 0 : panel.high[adjacent] + panel.low[adjacent];
+}
+
+export function finishedPanelFit(project: Project) {
+  const measured = measuredBandingByPanel(project);
+  if (!measured.size) return [];
+  const panels = project.pieces.flatMap((piece) => {
+    if (piece.offcut) return [];
+    const model = finishedPanel(piece, measured);
+    const solid = prepareCollisionSolid(model);
+    return solid ? [{ piece, model, solid }] : [];
+  });
+  return panels.filter(({ piece }) => measured.has(piece.id)).map(({ piece, model, solid }) => ({
+    piece, model,
+    contacts: panels.filter((other) => other.piece.id !== piece.id && solidOverlap(solid, other.solid, 0.01))
+      .map(({ piece }) => piece.name),
+  }));
+}
+
 export const edgeBandingFinding = {
   ready: "Ready",
   missing: "Edge missing or no longer straight",
@@ -175,6 +229,7 @@ export const edgeBandingFinding = {
   covered: "Another wood part covers this edge",
   narrow: "Banding is narrower than the panel edge",
   long: "Strip exceeds one continuous roll",
+  profile: "Recheck measured thickness on the changed panel profile",
 };
 
 export function bandingStatus(
@@ -197,22 +252,28 @@ export function reviewEdgeBanding(project: Project, edges?: BandingEdge[]) {
       (edge) => [bandingKey(edge), edge],
     ),
   );
+  const measured = measuredBandingByPanel(project, [...current.values()]);
+  const panels = new Map(project.pieces.map((piece) => [piece.id, piece]));
   return edgeBandingProductIds.flatMap((productId) => {
     const saved = entries.filter((entry) => entry.productId === productId);
     if (!saved.length) return [];
     const rows = saved.map((entry) => {
       const edge = current.get(bandingKey(entry));
+      const corner = edge && entry.installedThickness !== undefined ? cornerAllowance(edge, measured) : 0;
+      const panel = panels.get(entry.pieceId);
       const state: keyof typeof edgeBandingFinding = !edge
         ? "missing"
         : edge.fingerprint !== entry.fingerprint
           ? "changed"
-          : bandingStatus(edge, productId, entry.trim);
-      return { entry, edge, state, label: edge?.label ?? entry.label };
+          : entry.installedThickness !== undefined && (!panel || !canModelBanding(panel))
+            ? "profile"
+            : bandingStatus(edge, productId, entry.trim + corner);
+      return { entry, edge, corner, state, label: edge?.label ?? entry.label };
     });
     const rolls = packRuns(
-      rows.flatMap(({ entry, edge, state }) =>
+      rows.flatMap(({ entry, edge, corner, state }) =>
         state === "ready" && edge
-          ? [{ edge, length: edge.length + entry.trim, trim: entry.trim }]
+          ? [{ edge, length: edge.length + entry.trim + corner, trim: entry.trim, corner, installedThickness: entry.installedThickness }]
           : [],
       ),
       edgeBandingProducts[productId].length,
@@ -241,34 +302,48 @@ export function saveEdgeBanding(
   keys: ReadonlySet<string>,
   productId: EdgeBandingProductId,
   trim: number,
+  installedThickness?: number,
 ) {
+  if (installedThickness !== undefined) measuredBandingThickness.parse(installedThickness);
   if (!keys.size) return project;
   const current = edgeBandingEdges(project, keys);
   if (current.length !== keys.size)
     throw Error("An edge changed. Review the current selection.");
+  const panels = new Map(project.pieces.map((piece) => [piece.id, piece]));
   const entries = current.map((edge): EdgeBandingEntry => {
+    const panel = panels.get(edge.pieceId);
+    if (installedThickness !== undefined && (!panel || !canModelBanding(panel)))
+      throw Error(`${edge.label} needs a rectangular panel without through-cuts for the measured fit preview.`);
     const state = bandingStatus(edge, productId, trim);
     if (state !== "ready")
       throw Error(`${edge.label} · ${edgeBandingFinding[state]}.`);
     const { pieceId, face, fingerprint, label } = edge;
-    return { pieceId, face, fingerprint, label, productId, trim };
+    return { pieceId, face, fingerprint, label, productId, trim,
+      ...(installedThickness !== undefined && { installedThickness }) };
   });
-  return {
+  const next = {
     ...project,
+    guideFingerprint: null,
     edgeBanding: edgeBandingSchema.parse([
-      ...(project.edgeBanding ?? []).filter(
-        (item) => !keys.has(bandingKey(item)),
-      ),
+      ...(project.edgeBanding ?? []).filter((item) => !keys.has(bandingKey(item))),
       ...entries,
     ]),
   };
+  if (installedThickness !== undefined) {
+    const measured = measuredBandingByPanel(next);
+    for (const edge of current) {
+      if (bandingStatus(edge, productId, trim + cornerAllowance(edge, measured)) !== "ready")
+        throw Error(`${edge.label} exceeds the roll after allowing for its finished corner.`);
+    }
+  }
+  return next;
 }
 
 export function removeEdgeBanding(project: Project, key: string): Project {
   const { edgeBanding, ...rest } = project;
   const next = edgeBanding?.filter((entry) => bandingKey(entry) !== key);
   if (next?.length === edgeBanding?.length) return project;
-  return next?.length ? { ...rest, edgeBanding: next } : rest;
+  return next?.length ? { ...rest, guideFingerprint: null, edgeBanding: next } : { ...rest, guideFingerprint: null };
 }
 
 export function addMissingEdgeBanding(
@@ -299,8 +374,8 @@ export function edgeBandingLines(group: EdgeBandingReview[number]) {
     rolls: group.rolls.map(({ left, runs }, index) => ({
       label: `Roll ${index + 1} · ${formatStockLength(left)} left`,
       strips: runs.map(
-        ({ edge, length, trim }) =>
-          `${edge.label} · Cut ${formatStockLength(length)} · ${formatStockLength(edge.length)} edge + ${formatStockLength(trim)} trim.`,
+        ({ edge, length, trim, corner, installedThickness }) =>
+          `${edge.label} · Cut ${formatStockLength(length)} · ${formatStockLength(edge.length)} edge${corner ? ` + ${formatStockLength(corner)} to cover the banded ends` : ""} + ${formatStockLength(trim)} trim.${installedThickness === undefined ? "" : ` Installed thickness ${formatStockLength(installedThickness)}.`}`,
       ),
     })),
   };
@@ -308,6 +383,14 @@ export function edgeBandingLines(group: EdgeBandingReview[number]) {
 
 export const edgeBandingSequence =
   "Label and dry-fit the cut panels first. Cut the marked strips, apply and press them with the tools specified for the delivered veneer, then let them cool before trimming flush. Check fit again before fastening.";
+
+export const measuredBandingSequence =
+  "For corners with measured thickness, apply the strips on the lower local axis first. For example, cover local X edges before local Y edges. The second pair covers the finished ends of the first pair.";
+
+export function finishedPanelFitLine({ piece, model, contacts }: ReturnType<typeof finishedPanelFit>[number]) {
+  const size = (part: Piece) => part.size.map(formatStockLength).join(" × ");
+  return `${piece.name} · Cut ${size(piece)} · Finished ${size(model)}.${contacts.length ? ` Current pose overlaps ${contacts.join(", ")}.` : ""}`;
+}
 
 export function edgeBandingMarkdown(project: Project) {
   const groups = reviewEdgeBanding(project);
@@ -322,6 +405,11 @@ export function edgeBandingMarkdown(project: Project) {
     edgeBandingScope,
     "",
     edgeBandingSequence,
+    ...(project.edgeBanding?.some(({ installedThickness }) => installedThickness !== undefined) ? [
+      "",
+      measuredBandingSequence,
+      ...finishedPanelFit(project).map((panel) => `- ${escape(finishedPanelFitLine(panel))}`),
+    ] : []),
     ...groups.flatMap((group) => {
       const stock = edgeBandingProducts[group.productId];
       const { review, issues, rolls } = edgeBandingLines(group);

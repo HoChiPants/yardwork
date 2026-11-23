@@ -1,6 +1,7 @@
 import type { Project } from "./model";
 import { fastenerReviews } from "./fastenings";
 import { partLabel } from "./partLabels";
+import { fastenerDistanceCaseText } from "./fastenerEntryDistances";
 
 const cell = (value: unknown) => {
   if (typeof value === "number")
@@ -23,6 +24,8 @@ export function fastenerScheduleCsv(project: Project) {
     "Entered pilot diameter (in)", "Deepest pilot-drill-tip depth (in)",
     "User measurement basis", "Measured at", "Review issues", "Scope",
     "Recorded reference reviews", "Latest historical review at", "Latest historical review basis", "History scope",
+    "Head-side center-to-edge (in)", "Head-side center-to-end (in)", "Receiver center-to-edge (in)", "Receiver center-to-end (in)",
+    "Receiver distance comparisons (ER-192 Tables 26 and 39)",
   ]];
   for (const review of fastenerReviews(project))
     for (const item of review.locations) {
@@ -30,7 +33,8 @@ export function fastenerScheduleCsv(project: Project) {
         candidate = item.includedInDemand && item.state !== "stale" && item.state !== "conflict",
         local = candidate ? item.location.entranceLocal : null,
         drive = candidate ? item.location.driveLocal : null,
-        world = candidate ? item.entranceWorld : null;
+        world = candidate ? item.entranceWorld : null,
+        distances = candidate ? item.entryDistances : undefined;
       rows.push([
         p.label, p.name, `${p.label}/${item.location.label}`, item.location.name, p.productId, item.state,
         item.includedInDemand ? "yes (provisional)" : "no",
@@ -54,6 +58,9 @@ export function fastenerScheduleCsv(project: Project) {
         p.referenceHistory.at(-1)?.at ?? null,
         p.referenceHistory.at(-1)?.basis ?? null,
         "Historical provenance only. A recorded review is not necessarily the active mapping after Undo; earlier drilling values are retained only in editable JSON.",
+        distances?.head?.edge ?? null, distances?.head?.end ?? null,
+        distances?.receiver?.edge ?? null, distances?.receiver?.end ?? null,
+        distances?.receiverCases?.map(fastenerDistanceCaseText).join(" ") ?? null,
       ]);
     }
   return rows.map((row) => row.map(cell).join(",")).join("\r\n") + "\r\n";

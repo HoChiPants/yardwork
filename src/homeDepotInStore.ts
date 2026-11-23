@@ -1,44 +1,102 @@
 import { homeDepotShoppingList, type HomeDepotPurchaseItem } from "./handoff";
+import { homeDepotStockMatch } from "./handoffPurchases";
 import {
   homeDepotPickupKey,
   homeDepotPickupRecordLimit,
   type HomeDepotPickupRecord,
 } from "./homeDepotPickupSchema";
-import type { Project } from "./model";
+import { inventorySchema, type Project } from "./model";
 import { purchaseUnitLabel } from "./purchaseUnits";
+import { freshStoreCheck } from "./storeSnapshotTime";
+import { supplyInventorySchema } from "./supplySchema";
 import {
   storeAisleLabel,
   storeProductLocationText,
 } from "./storeProductLocation";
 
 export type PickupTarget = Omit<HomeDepotPickupRecord, "picked">;
-type StoreRow = HomeDepotPurchaseItem & { picked: number; remaining: number };
+type Snapshot = NonNullable<HomeDepotPurchaseItem["snapshot"]>;
+type PickupProgress = {
+  picked: number;
+  pickedElsewhere: number;
+  targetHere: number;
+  editLimit: number;
+  remaining: number;
+};
+type StoreRow = HomeDepotPurchaseItem & PickupProgress & {
+  availability: ReturnType<typeof snapshotCoverage>;
+};
 type StoreGroup = { key: string; title: string; rows: StoreRow[] };
 const sort = new Intl.Collator("en-US", { numeric: true, sensitivity: "base" });
 const aisleKey = (aisle: string) =>
   aisle.toLowerCase().replace(/^0+(?=\d)/, "");
 const clean = (text: string) => text.replace(/[\r\n\t]+/g, " ").trim();
 
+function snapshotCoverage(quantity: number, snapshot: HomeDepotPurchaseItem["snapshot"]) {
+  if (!quantity) return { state: "picked" } as const;
+  if (!snapshot) return { state: "unchecked" } as const;
+  if (snapshot.available < quantity) return { state: "short", units: quantity - snapshot.available } as const;
+  return { state: "covered" } as const;
+}
+
+function pickupProgress(project: Project, item: HomeDepotPurchaseItem): PickupProgress {
+  let picked = 0;
+  let pickedElsewhere = 0;
+  for (const row of project.homeDepotPickup ?? []) {
+    if (row.productId !== item.productId) continue;
+    if (row.store === project.store && row.zip === project.zip) picked = row.picked;
+    else pickedElsewhere += row.picked;
+  }
+  const targetHere = Math.max(0, item.quantity - pickedElsewhere);
+  // Allow existing pickup records to be corrected after the cut list shrinks.
+  const editLimit = Math.max(picked, targetHere);
+  return { picked, pickedElsewhere, targetHere, editLimit, remaining: Math.max(0, targetHere - picked) };
+}
+
+/** Compare recent observations for the exact remaining products at each store. */
+export function compareHomeDepotStores(project: Project, items: readonly HomeDepotPurchaseItem[], now = Date.now()) {
+  const itemKey = (kind: string, id: string, productId: string) => JSON.stringify([kind, id, productId]);
+  const quantities = new Map(items.map((item) => {
+    const { remaining } = pickupProgress(project, item);
+    return [itemKey(item.source.kind, item.source.id, item.productId), remaining] as const;
+  }));
+  const observations = new Map<string, Map<string, Snapshot>>();
+  if (project.store) observations.set(project.store, new Map());
+  function add(key: string, row: Snapshot & { store: string; zip: string }) {
+    if (!quantities.has(key) || !row.store.trim() || row.zip !== project.zip || !freshStoreCheck(row.checkedAt, now)) return;
+    const store = observations.get(row.store) ?? new Map<string, Snapshot>();
+    const old = store.get(key);
+    if (!old || Date.parse(row.checkedAt) > Date.parse(old.checkedAt)) store.set(key, row);
+    observations.set(row.store, store);
+  }
+  for (const row of project.inventory) {
+    if ((row.retailer ?? "home-depot") !== "home-depot" || !inventorySchema.safeParse(row).success) continue;
+    const { snapshot } = homeDepotStockMatch({ id: row.material, inventory: row });
+    if (snapshot) add(itemKey("stock", row.material, row.internetNumber), snapshot);
+  }
+  for (const row of project.supplyInventory) {
+    if (row.retailer !== "home-depot" || !supplyInventorySchema.safeParse(row).success) continue;
+    add(itemKey("supply", row.productId, row.retailerProductId), row);
+  }
+  return [...observations].map(([store, rows]) => {
+    const coverage = { covered: 0, short: 0, unchecked: 0 };
+    for (const [key, remaining] of quantities) {
+      const { state } = snapshotCoverage(remaining, rows.get(key));
+      if (state !== "picked") coverage[state]++;
+    }
+    return { store, ...coverage };
+  }).sort((a, b) => Number(b.store === project.store) - Number(a.store === project.store) ||
+    b.covered - a.covered || sort.compare(a.store, b.store));
+}
+
 export function homeDepotStoreList(
   project: Project,
   items: readonly HomeDepotPurchaseItem[],
 ) {
-  const { store, zip } = project;
-  const picked = new Map(
-    (project.homeDepotPickup ?? []).map((row) => [
-      homeDepotPickupKey(row),
-      row.picked,
-    ]),
-  );
   const rows = items
     .map((item): StoreRow => {
-      const count = Math.min(
-        item.quantity,
-        picked.get(
-          homeDepotPickupKey({ store, zip, productId: item.productId }),
-        ) ?? 0,
-      );
-      return { ...item, picked: count, remaining: item.quantity - count };
+      const progress = pickupProgress(project, item);
+      return { ...item, ...progress, availability: snapshotCoverage(progress.remaining, item.snapshot) };
     })
     .sort((a, b) => {
       const first = a.snapshot?.location,
@@ -73,6 +131,7 @@ export function homeDepotStoreList(
     groups: [...groups.values()],
     pickedLines: rows.filter(({ remaining }) => remaining === 0).length,
     totalLines: rows.length,
+    stockChecks: rows.filter(({ availability }) => availability.state === "short" || availability.state === "unchecked").length,
   };
 }
 
@@ -93,15 +152,12 @@ export function recordHomeDepotPickup(
   );
   if (!item)
     throw Error("This product changed. Reopen the shopping checklist.");
-  if (!Number.isSafeInteger(picked) || picked < 0 || picked > item.quantity)
-    throw Error(`Enter a whole quantity from 0 to ${item.quantity}.`);
+  const progress = pickupProgress(project, item);
+  if (!Number.isSafeInteger(picked) || picked < 0 || picked > progress.editLimit)
+    throw Error(`Enter a whole quantity from 0 to ${progress.editLimit}.`);
   const existing = project.homeDepotPickup ?? [];
   const key = homeDepotPickupKey(target);
-  if (
-    (existing.find((row) => homeDepotPickupKey(row) === key)?.picked ?? 0) ===
-    picked
-  )
-    return project;
+  if (progress.picked === picked) return project;
   const next = existing.filter((row) => homeDepotPickupKey(row) !== key);
   if (picked > 0) {
     if (next.length >= homeDepotPickupRecordLimit)
@@ -133,15 +189,21 @@ export function homeDepotStoreChecklist(
             url,
             snapshot,
             picked,
+            pickedElsewhere,
             remaining,
+            availability,
           }) => [
             `[${remaining ? " " : "x"}] ${quantity} ${unit} · ${clean(name)} · Internet #${productId}`,
-            `    ${picked} picked · ${remaining} remaining${snapshot?.location ? ` · ${storeProductLocationText(snapshot.location)}` : ""}`,
+            `    ${picked + pickedElsewhere} picked · ${remaining} remaining${snapshot?.location ? ` · ${storeProductLocationText(snapshot.location)}` : ""}`,
+            ...(pickedElsewhere ? [`    ${picked} picked here · ${pickedElsewhere} picked elsewhere`] : []),
             ...(snapshot
               ? [
                   `    ${snapshot.available} ${purchaseUnitLabel("unit", snapshot.available)} in snapshot · checked ${snapshot.checkedAt}`,
                 ]
               : []),
+            ...(availability.state === "short"
+              ? [`    Short by ${availability.units} in snapshot`]
+              : availability.state === "unchecked" ? ["    No recent store snapshot"] : []),
             `    ${url}`,
           ],
         ),

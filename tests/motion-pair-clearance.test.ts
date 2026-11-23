@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
+import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
 import { bom, guideMarkdown } from "../src/engine";
 import { blank, part, projectSchema } from "../src/model";
 import { motionGapSearch, motionReviewLines, runMotionTest, saveMotionPlan, saveMotionTestScenario } from "../src/mechanismMotion";
@@ -60,6 +61,47 @@ test("pair clearance and solid contact stop at whichever limit playback would re
   assert.ok(closing.travel > 7);
   assert.equal(closing.clearanceStop?.requirement, clearance);
   assert.deepEqual(review.preview(closing.travel, closing.inspectAt).obstacleNames, []);
+});
+
+test("different minimum gaps stop opening and closing first in the same drawer test", () => {
+  const { project, plan, clearance, lip } = drawerScene();
+  const trim = part("Near trim", "plywood", [2, 2, 1], [0, 6.0625, 3], project.steps[0].id, "Cabinet");
+  const additional = { ...clearance, otherId: trim.id };
+  project.pieces.push(trim);
+  const legacy = projectSchema.parse({ ...project, schemaVersion: 136 });
+  const test = { held: [], clearance, additionalClearances: [additional] };
+  const withScenario = saveMotionTestScenario(legacy, plan.id, "Two trim gaps", test).project;
+  const reopened = projectSchema.parse(JSON.parse(JSON.stringify(withScenario)));
+  const setup = reopened.motionPlans![0].testScenarios![0].setup;
+  assert.deepEqual(setup, test);
+  const review = runMotionTest(reopened, reopened.motionPlans![0], setup).review!;
+  assert.deepEqual(review.clearances?.map(({ result }) => result.status), ["short", "short"]);
+  assert.equal(review.hits.length, 0);
+  const opens = review.playbackLimit(0, 12);
+  const closes = review.playbackLimit(12, 0);
+  assert.deepEqual(opens.clearanceStop?.requirement, additional);
+  assert.deepEqual(closes.clearanceStop?.requirement, clearance);
+  assert.ok(opens.travel > 1.39 && opens.travel < 1.4);
+  assert.ok(closes.travel > 7.6 && closes.travel < 7.62);
+  const guide = guideMarkdown(reopened);
+  assert.match(guide, /Opening pauses near 1\.39 in for the minimum gap between P001 and P003/);
+  assert.match(guide, /Closing pauses near 7\.61 in for the minimum gap between P001 and P002/);
+  assert.throws(() => saveMotionTestScenario(legacy, plan.id, "Duplicate",
+    { ...test, additionalClearances: [{ ...clearance, movingId: lip.id, otherId: clearance.movingId }] }),
+    /Each minimum gap must check a different pair/);
+  const changed = { ...reopened, pieces: reopened.pieces.filter(({ id }) => id !== trim.id) };
+  const stale = runMotionTest(changed, plan, setup).review!;
+  assert.equal(stale.playbackLimit(0, 12).travel, 0);
+  assert.equal(stale.clearances?.[1].result.status, "needs-review");
+
+  const mixed = saveMotionTestScenario(reopened, plan.id, "Near trim first", {
+    ...test, clearance: { ...clearance, minimum: 0.05 },
+  }).project;
+  const question = buildQuestion('Check motion for "Drawer"');
+  assert.ok(question);
+  const answer = answerBuildQuestion(mixed, question, []);
+  const row = answer.rows?.find(({ title }) => title === "Near trim first");
+  assert.match(row?.detail ?? "", /P001 and P003 · Shortfall/);
 });
 
 test("a swinging door finds the closest pose during the second leg of a sequence", async () => {

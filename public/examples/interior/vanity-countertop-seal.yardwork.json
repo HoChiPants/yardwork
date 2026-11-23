@@ -1,0 +1,352 @@
+{
+  "schemaVersion": 158,
+  "id": "e3005787-2da9-4e65-91e9-738d0d90687f",
+  "name": "Vanity countertop splash seal",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "countertopSeals": [
+    {
+      "id": "2b4c7587-d6dc-4360-a144-c1295fcab912",
+      "topId": "277d0c15-3958-4588-9cd3-981e2adb92db",
+      "wallId": "2defa4c8-bbf1-4112-9f6b-cb1815079f98",
+      "edge": "-Z",
+      "session": "Vanity finish",
+      "spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "kind": "corner",
+          "width": 0.1875
+        },
+        {
+          "start": 10,
+          "end": 40,
+          "kind": "corner",
+          "width": 0.375,
+          "coverage": 18
+        },
+        {
+          "start": 40,
+          "end": 64,
+          "kind": "leave-open"
+        },
+        {
+          "start": 64,
+          "end": 72,
+          "kind": "backed",
+          "width": 0.57,
+          "cavityDepth": 1.125,
+          "rodId": "frost-king-c23h",
+          "dryFit": true,
+          "coverage": 14
+        }
+      ],
+      "signature": "binding-v1-6a984d539dc2135d"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "backerRodOffcuts": [
+    {
+      "label": "5/8 in rod remnant",
+      "productId": "frost-king-c23h",
+      "length": 30,
+      "id": "a7d9aeb6-b72d-4ae0-9b86-db70dd5e668a"
+    }
+  ],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "277d0c15-3958-4588-9cd3-981e2adb92db",
+      "label": "P001"
+    },
+    {
+      "partId": "2defa4c8-bbf1-4112-9f6b-cb1815079f98",
+      "label": "P002"
+    },
+    {
+      "partId": "948f1404-10fc-4754-bd78-63c00a9af145",
+      "label": "P003"
+    },
+    {
+      "partId": "a6602794-bc91-4d91-a49c-c9d62a2652f0",
+      "label": "P004"
+    },
+    {
+      "partId": "7dbf48f2-da98-4acc-ad99-5f8e68880f5a",
+      "label": "P005"
+    },
+    {
+      "partId": "426558ee-8c20-4f98-adde-0dbb4b755632",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T01:30:58.429Z",
+  "pieces": [
+    {
+      "id": "277d0c15-3958-4588-9cd3-981e2adb92db",
+      "name": "Vanity hevea worktop",
+      "material": "hd-hevea-worktop-74",
+      "size": [
+        72,
+        1.5,
+        25
+      ],
+      "position": [
+        0,
+        35.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "446f62a8-3f01-44e0-98fc-a3dd9cd10125",
+      "assembly": "Vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "0083fbbd-9ec3-4813-87d7-e2154eabb31e",
+        "size": [
+          74,
+          1.5,
+          25
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "2defa4c8-bbf1-4112-9f6b-cb1815079f98",
+      "name": "Finished wall panel",
+      "material": "hd-usg-drywall-half-8",
+      "size": [
+        96,
+        0.5,
+        48
+      ],
+      "position": [
+        -0.0015277492506275542,
+        37,
+        -13.094995331920874
+      ],
+      "rotation": [
+        1.5707963267948963,
+        0,
+        -0.0061110350382843764
+      ],
+      "stepId": "446f62a8-3f01-44e0-98fc-a3dd9cd10125",
+      "assembly": "Room",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "948f1404-10fc-4754-bd78-63c00a9af145",
+      "name": "Existing access trim",
+      "material": "plytanium-703",
+      "size": [
+        24,
+        1,
+        0.35
+      ],
+      "position": [
+        16,
+        36.25,
+        -12.65
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "446f62a8-3f01-44e0-98fc-a3dd9cd10125",
+      "assembly": "Room",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a6602794-bc91-4d91-a49c-c9d62a2652f0",
+      "name": "Vanity supporting side",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        34.5,
+        22
+      ],
+      "position": [
+        -30,
+        17.25,
+        0.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "446f62a8-3f01-44e0-98fc-a3dd9cd10125",
+      "assembly": "Vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "7dbf48f2-da98-4acc-ad99-5f8e68880f5a",
+      "name": "Vanity supporting side",
+      "material": "plytanium-703",
+      "size": [
+        0.703,
+        34.5,
+        22
+      ],
+      "position": [
+        30,
+        17.25,
+        0.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "446f62a8-3f01-44e0-98fc-a3dd9cd10125",
+      "assembly": "Vanity",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "426558ee-8c20-4f98-adde-0dbb4b755632",
+      "name": "Offcut · Vanity hevea worktop",
+      "material": "hd-hevea-worktop-74",
+      "size": [
+        1.875,
+        1.5,
+        25
+      ],
+      "position": [
+        37.0625,
+        35.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "446f62a8-3f01-44e0-98fc-a3dd9cd10125",
+      "assembly": "Vanity",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": {
+        "id": "0083fbbd-9ec3-4813-87d7-e2154eabb31e",
+        "size": [
+          74,
+          1.5,
+          25
+        ],
+        "offset": [
+          72.125,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "446f62a8-3f01-44e0-98fc-a3dd9cd10125",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice vanity with a slightly skewed finished wall. The middle range behind the existing access trim is reserved for separate detailing. The backed run uses practice dry-fit and trial coverage readings; verify the actual installed wet-area finish and the worktop’s movement allowance.",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": [
+    {
+      "id": "8bcb2ad6-6667-4d22-ab98-2bc8b3667c9c",
+      "at": "2026-11-23T01:30:58.432Z",
+      "stepId": "446f62a8-3f01-44e0-98fc-a3dd9cd10125",
+      "message": "Planned straight cuts for P001 · Vanity hevea worktop.",
+      "offcutCut": {
+        "sourceId": "0083fbbd-9ec3-4813-87d7-e2154eabb31e",
+        "inputId": "277d0c15-3958-4588-9cd3-981e2adb92db",
+        "targetId": "277d0c15-3958-4588-9cd3-981e2adb92db",
+        "retainedTrim": {
+          "inputRegionSize": [
+            74,
+            1.5,
+            25
+          ]
+        },
+        "inputSize": [
+          1.5,
+          25,
+          74
+        ],
+        "result": {
+          "size": [
+            72,
+            1.5,
+            25
+          ],
+          "sourceSize": [
+            74,
+            1.5,
+            25
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 72
+          }
+        ],
+        "remnants": [
+          {
+            "id": "426558ee-8c20-4f98-adde-0dbb4b755632",
+            "size": [
+              1.5,
+              25,
+              1.875
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

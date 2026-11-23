@@ -191,7 +191,7 @@ test("SD tools distinguish current quarter-hex accessory, driver function and co
   assert.ok(
     accessory.sources.some((source) => source.kind === "connector-plan"),
   );
-  assert.match(accessory.review, /included driver is not ownership/);
+  assert.match(accessory.review, /Check whether your screw box includes a matching accessory/);
   assert.equal(
     rows.find((row) => row.capability === "drive-screw")!.status,
     "unknown",

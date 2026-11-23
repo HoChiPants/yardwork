@@ -8,6 +8,8 @@ import { sillGaskets } from "../src/sillGasketReference";
 import type { SillGasketMeasurements } from "../src/sillGasketSchema";
 import { supplyRows } from "../src/supplies";
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
+import { answerBuildQuestion, buildQuestion } from "../src/buildQuestions";
+import { partLabel } from "../src/partLabels";
 
 const measurements: SillGasketMeasurements = {
   substrate: "concrete", top: 0, supportLength: 96,
@@ -50,6 +52,39 @@ test("a measured short, narrow or offset foundation remains a review item", () =
   const stud = project.pieces.find((piece) => /stud/.test(piece.name))!;
   assert.equal(sillPlateFootprint(stud), null);
   assert.throws(() => saveSillGasket(project, stud.id, measurements), /horizontal rectangular/);
+});
+
+test("through-bolt bores map to the same sill-local marks on a rotated plate", () => {
+  const project = blank("Drilled sill");
+  const plate = part("Drilled sill plate", "stud", [96, 1.5, 3.5], [30, 0.75, 10], project.steps[0].id, "Foundation", [0, Math.PI / 2, 0]);
+  plate.roundOpenings = [
+    { axis: 1, center: [0.5, 24], diameter: 0.625 },
+    { axis: 1, center: [0, -24], diameter: 0.625 },
+  ];
+  project.pieces = [plate];
+  const plan = saveSillGasket(project, plate.id, measurements);
+  const row = reviewSillGaskets(plan).rows[0];
+  assert.deepEqual(row.issues, []);
+  assert.deepEqual(row.marks.map(({ fromStart, fromEdge, diameter }) => [fromStart, fromEdge, diameter]), [
+    [24, 1.75, 0.625], [72, 2.25, 0.625],
+  ]);
+  assert.ok(row.marks[0].center.every((value, axis) => Math.abs(value - [30, 0, 34][axis]) < 1e-6));
+  const guide = guideMarkdown(plan);
+  assert.match(guide, /Transfer the actual anchor locations on site/);
+  assert.match(guide, /Bore 1 · 2 ft along from Start · 1\.75 in from the marked edge · wood bore Ø 0\.625 in/);
+  assert.match(guide, /Use scissors or a utility knife to cut the strip/);
+
+  const question = buildQuestion(`How do I seal the sill plate on concrete for ${partLabel(plan, plate.id)}?`)!;
+  const answer = answerBuildQuestion(plan, question, []);
+  assert.equal(answer.title, "Sill gasket layout");
+  assert.equal(answer.rows?.length, 2);
+  assert.deepEqual(answer.link?.action, { kind: "sill-gasket", partId: plate.id });
+
+  const edited = { ...plan, pieces: [{ ...plate, roundOpenings: [{ axis: 1 as const, center: [1.7, -24] as [number, number], diameter: 0.625 }] }] };
+  const changed = reviewSillGaskets(edited).rows[0];
+  assert.match(changed.issues.join(" "), /The sill changed.+round opening reaches the edge/);
+  assert.equal(changed.marks.length, 0);
+  assert.equal(reviewSillGaskets(edited).groups.length, 0);
 });
 
 test("rolls use the correct width, reuse length across runs, and add only missing packs", () => {

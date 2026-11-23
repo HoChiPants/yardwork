@@ -1,6 +1,48 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Locator } from "@playwright/test";
 import { CURRENT_DRAFT_KEY } from "../../src/drafts";
+import { projectSchema } from "../../src/model";
+
+test("a plain language framed wall opens an editable cut preview from a blank project", async ({ page }) => {
+  await page.goto("./");
+  const modelRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && /\/api\/(planner|assistant)$/.test(request.url()))
+      modelRequests.push(request.url());
+  });
+  await page.getByRole("button", { name: "Plan an idea", exact: true }).first().click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Describe your idea", exact: true }).fill(
+    "Give me a framed wall eight feet wide and six feet six inches tall, studs twenty-four inches on center.",
+  );
+  await dialog.getByRole("button", { name: "Explore idea", exact: true }).click();
+  const answer = dialog.getByRole("region", { name: "Framed wall layout" });
+  await expect(answer).toContainText("8 ft wide by 78 in high. 2 × 4 framing at 24 in on center.");
+  await answer.getByRole("button", { name: "Preview framed wall", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const settings = page.getByRole("region", { name: "Trace wall settings" });
+  const readDraft = async () => {
+    const draft = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "null"), CURRENT_DRAFT_KEY);
+    return draft ? projectSchema.parse(draft.project) : null;
+  };
+  await expect(settings.getByLabel("Wall run preview")).toHaveText("8 ft · 1 panel · 7 parts");
+  expect(await readDraft()).toBeNull();
+  await expect(settings.getByRole("combobox", { name: "Stud spacing" })).toHaveValue("24");
+  await settings.getByText(/new boards for this run/).click();
+  await expect(settings.getByText(/Wall 1 · stud 1 75 in/)).toBeVisible();
+  await settings.getByRole("button", { name: "Add traced wall", exact: true }).click();
+  await expect.poll(async () => (await readDraft())?.sections[0]?.generator).toMatchObject({
+    type: "wall", width: 96, height: 78, spacing: 24, wallStock: "hd-kdht-2x4-8",
+  });
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: /^Build guide Markdown/ }).click();
+  const guide = await readFile((await (await download).path())!, "utf8");
+  expect(guide).toContain("## Stock cut order");
+  expect(guide).toContain("Wall 1 · stud 1");
+  expect(guide).toContain("75 in");
+  expect(modelRequests).toEqual([]);
+});
 
 async function clickFloor(canvas: Locator, world: [number, number, number]) {
   const position = await canvas.evaluate((element, point) => {

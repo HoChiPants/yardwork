@@ -1,0 +1,980 @@
+{
+  "schemaVersion": 155,
+  "cabinetBacking": [
+    {
+      "id": "8db967db-5450-4032-9b72-769615bcc8cd",
+      "input": {
+        "wallId": "da637131-c059-4405-9893-fa6d73e5e6cf",
+        "face": "front",
+        "height": 54,
+        "offsets": [
+          16,
+          24,
+          28,
+          40,
+          56
+        ],
+        "stock": "two-six"
+      },
+      "receivers": [
+        "eacea7ad-cf4a-4964-b59b-905cbc009234",
+        "a2d1f01b-2361-48ce-8c55-91f9b66f3ffd",
+        "a2d1f01b-2361-48ce-8c55-91f9b66f3ffd",
+        "7ff65f13-6576-48ec-8954-54c0e0af4f31",
+        "7bca9c53-4c03-48f1-8635-e822b14005b8"
+      ],
+      "blocks": [
+        {
+          "id": "a2d1f01b-2361-48ce-8c55-91f9b66f3ffd",
+          "first": "eacea7ad-cf4a-4964-b59b-905cbc009234",
+          "second": "beb92c97-1f0a-47dd-93b4-2b5f3fcae40c"
+        },
+        {
+          "id": "7ff65f13-6576-48ec-8954-54c0e0af4f31",
+          "first": "beb92c97-1f0a-47dd-93b4-2b5f3fcae40c",
+          "second": "019e732f-01c8-4257-bc12-ac2634cca6ec"
+        },
+        {
+          "id": "7bca9c53-4c03-48f1-8635-e822b14005b8",
+          "first": "019e732f-01c8-4257-bc12-ac2634cca6ec",
+          "second": "c277d810-07bc-4c21-bdca-9e809ca348c9"
+        }
+      ],
+      "fastening": {
+        "measurements": {
+          "seatedLength": 2.5,
+          "stack": 0.875,
+          "diameter": 0.1875,
+          "minimumDepth": 1.5,
+          "excludedTip": 0.125
+        },
+        "finishAtMarks": [
+          [
+            {
+              "id": "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+              "from": 0,
+              "to": 0.5
+            }
+          ],
+          [
+            {
+              "id": "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+              "from": 0,
+              "to": 0.5
+            }
+          ],
+          [
+            {
+              "id": "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+              "from": 0,
+              "to": 0.5
+            }
+          ],
+          [
+            {
+              "id": "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+              "from": 0,
+              "to": 0.5
+            }
+          ],
+          [
+            {
+              "id": "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+              "from": 0,
+              "to": 0.5
+            }
+          ]
+        ]
+      }
+    }
+  ],
+  "id": "04d93076-0d0b-46e4-a488-b367ff2f4591",
+  "name": "Kitchen cabinet screw reach practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "39b7548a-a971-42f8-83fe-6d2627208389"
+  ],
+  "plannedCutSources": [
+    {
+      "sourceId": "c33e547e-7eba-4b1e-bd3a-fd59107ae0ff",
+      "fingerprint": "binding-v1-24905f7bdaafe158",
+      "historyIds": [
+        "83cb2115-6ef4-4833-a135-98107856cc5a",
+        "0a759343-7d4b-488a-8cb6-50101171ced5",
+        "27bbef32-8e71-4d17-96ae-4a3f4128f79d"
+      ]
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "11a0d5db-a370-4729-8ce4-b310cbd0cf1b",
+      "label": "P001"
+    },
+    {
+      "partId": "405e35bb-9cfa-402d-8935-c900553ec759",
+      "label": "P002"
+    },
+    {
+      "partId": "6ec88c54-6360-4010-aeec-d6547ed5329c",
+      "label": "P003"
+    },
+    {
+      "partId": "eacea7ad-cf4a-4964-b59b-905cbc009234",
+      "label": "P004"
+    },
+    {
+      "partId": "beb92c97-1f0a-47dd-93b4-2b5f3fcae40c",
+      "label": "P005"
+    },
+    {
+      "partId": "019e732f-01c8-4257-bc12-ac2634cca6ec",
+      "label": "P006"
+    },
+    {
+      "partId": "c277d810-07bc-4c21-bdca-9e809ca348c9",
+      "label": "P007"
+    },
+    {
+      "partId": "be25a3e2-ce48-4d2b-b9c2-de9eb6586788",
+      "label": "P008"
+    },
+    {
+      "partId": "49de508b-ae87-428b-910d-d87e829a353e",
+      "label": "P009"
+    },
+    {
+      "partId": "960e2949-ba0e-4df6-81bc-8928cb633d83",
+      "label": "O001"
+    },
+    {
+      "partId": "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+      "label": "P010"
+    },
+    {
+      "partId": "e88534a6-8760-443f-84e7-a84af89aa0a1",
+      "label": "P011"
+    },
+    {
+      "partId": "eec5d14b-ac45-40a3-aa71-5ba01cf29581",
+      "label": "P012"
+    },
+    {
+      "partId": "a2d1f01b-2361-48ce-8c55-91f9b66f3ffd",
+      "label": "P013"
+    },
+    {
+      "partId": "7ff65f13-6576-48ec-8954-54c0e0af4f31",
+      "label": "P014"
+    },
+    {
+      "partId": "7bca9c53-4c03-48f1-8635-e822b14005b8",
+      "label": "P015"
+    },
+    {
+      "partId": "bce33bfe-fd94-43a7-ac92-a43ba36e37b0",
+      "label": "O002"
+    },
+    {
+      "partId": "dd93ef8e-ad3e-44e8-a446-a43d720cec72",
+      "label": "O003"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T00:40:02.784Z",
+  "pieces": [
+    {
+      "id": "11a0d5db-a370-4729-8ce4-b310cbd0cf1b",
+      "name": "Wall 1 · bottom plate",
+      "material": "stud",
+      "size": [
+        96,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "405e35bb-9cfa-402d-8935-c900553ec759",
+      "name": "Wall 1 · top plate",
+      "material": "stud",
+      "size": [
+        96,
+        1.5,
+        3.5
+      ],
+      "position": [
+        0,
+        95.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "6ec88c54-6360-4010-aeec-d6547ed5329c",
+      "name": "Wall 1 · stud 1",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -47.25,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "eacea7ad-cf4a-4964-b59b-905cbc009234",
+      "name": "Wall 1 · stud 2",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -32,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "beb92c97-1f0a-47dd-93b4-2b5f3fcae40c",
+      "name": "Wall 1 · stud 3",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        -16,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "019e732f-01c8-4257-bc12-ac2634cca6ec",
+      "name": "Wall 1 · stud 4",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        0,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c277d810-07bc-4c21-bdca-9e809ca348c9",
+      "name": "Wall 1 · stud 5",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        16,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "be25a3e2-ce48-4d2b-b9c2-de9eb6586788",
+      "name": "Wall 1 · stud 6",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        32,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "49de508b-ae87-428b-910d-d87e829a353e",
+      "name": "Wall 1 · stud 7",
+      "material": "stud",
+      "size": [
+        1.5,
+        93,
+        3.5
+      ],
+      "position": [
+        47.25,
+        48,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+      "name": "Drywall row 1 panel 1",
+      "material": "hd-usg-drywall-half-8",
+      "size": [
+        96,
+        0.5,
+        48
+      ],
+      "position": [
+        0,
+        72,
+        2
+      ],
+      "rotation": [
+        1.5707963267948963,
+        0,
+        0
+      ],
+      "stepId": "03c6f598-0a16-48d9-b28a-efdb0eda85b3",
+      "assembly": "Drywall · front · Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "e88534a6-8760-443f-84e7-a84af89aa0a1",
+      "name": "Drywall row 2 panel 1",
+      "material": "hd-usg-drywall-half-8",
+      "size": [
+        96,
+        0.5,
+        47.5
+      ],
+      "position": [
+        0,
+        24.25,
+        2
+      ],
+      "rotation": [
+        1.5707963267948963,
+        0,
+        0
+      ],
+      "stepId": "03c6f598-0a16-48d9-b28a-efdb0eda85b3",
+      "assembly": "Drywall · front · Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "eec5d14b-ac45-40a3-aa71-5ba01cf29581",
+      "name": "Practice pipe behind the backing",
+      "material": "hd-pex-u860w10",
+      "size": [
+        0.625,
+        72,
+        0.625
+      ],
+      "position": [
+        -24,
+        37.5,
+        -0.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "365f8aa9-4b4b-47ac-a2df-0317be12dcc2",
+      "assembly": "",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "a2d1f01b-2361-48ce-8c55-91f9b66f3ffd",
+      "name": "Cabinet backing",
+      "material": "two-six",
+      "size": [
+        1.5,
+        14.5,
+        5.5
+      ],
+      "position": [
+        -24,
+        54,
+        1
+      ],
+      "rotation": [
+        -1.5707963267948963,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "dbb40bfc-b7c1-4488-ada1-f2fdc72ead4d",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "39b7548a-a971-42f8-83fe-6d2627208389",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          20,
+          5.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "7ff65f13-6576-48ec-8954-54c0e0af4f31",
+      "name": "Cabinet backing",
+      "material": "two-six",
+      "size": [
+        1.5,
+        14.5,
+        5.5
+      ],
+      "position": [
+        -8,
+        54,
+        1
+      ],
+      "rotation": [
+        -1.5707963267948963,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "dbb40bfc-b7c1-4488-ada1-f2fdc72ead4d",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "c33e547e-7eba-4b1e-bd3a-fd59107ae0ff",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          96,
+          5.5
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "7bca9c53-4c03-48f1-8635-e822b14005b8",
+      "name": "Cabinet backing",
+      "material": "two-six",
+      "size": [
+        1.5,
+        14.5,
+        5.5
+      ],
+      "position": [
+        8,
+        54,
+        1
+      ],
+      "rotation": [
+        -1.5707963267948963,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "dbb40bfc-b7c1-4488-ada1-f2fdc72ead4d",
+      "assembly": "Wall 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "c33e547e-7eba-4b1e-bd3a-fd59107ae0ff",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          96,
+          5.5
+        ],
+        "offset": [
+          0,
+          14.625,
+          0
+        ]
+      }
+    },
+    {
+      "id": "bce33bfe-fd94-43a7-ac92-a43ba36e37b0",
+      "name": "Offcut · 20 in framing remnant",
+      "material": "two-six",
+      "size": [
+        5.5,
+        1.5,
+        5.375
+      ],
+      "position": [
+        0,
+        0.75,
+        7.3125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "e0c69571-85b7-4273-ae3b-7241198931f0",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "39b7548a-a971-42f8-83fe-6d2627208389",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          5.5,
+          1.5,
+          20
+        ],
+        "offset": [
+          0,
+          0,
+          14.625
+        ]
+      }
+    },
+    {
+      "id": "dd93ef8e-ad3e-44e8-a446-a43d720cec72",
+      "name": "Offcut · 2 × 6 framing lumber · board remnant 1",
+      "material": "two-six",
+      "size": [
+        1.5,
+        66.75,
+        5.5
+      ],
+      "position": [
+        47.375000000000014,
+        54,
+        1
+      ],
+      "rotation": [
+        -1.5707963267948963,
+        0,
+        -1.5707963267948963
+      ],
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "c33e547e-7eba-4b1e-bd3a-fd59107ae0ff",
+        "sourceAxes": [
+          0,
+          2,
+          1
+        ],
+        "size": [
+          1.5,
+          96,
+          5.5
+        ],
+        "offset": [
+          0,
+          29.25,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "e0c69571-85b7-4273-ae3b-7241198931f0",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "04d93076-0d0b-46e4-a488-b367ff2f4591",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-dac9ea7a",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "title": "Frame a 8′ × 8′ wall",
+      "notes": "Generated concept. Review connections, support, bracing, and stock dimensions.",
+      "complete": false
+    },
+    {
+      "id": "6ec0693f-edf4-48a0-b344-ef6ca657c9b2",
+      "title": "Assemble Wall 1",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "da637131-c059-4405-9893-fa6d73e5e6cf",
+        "stageKey": "section",
+        "memberIds": [
+          "019e732f-01c8-4257-bc12-ac2634cca6ec",
+          "11a0d5db-a370-4729-8ce4-b310cbd0cf1b",
+          "405e35bb-9cfa-402d-8935-c900553ec759",
+          "49de508b-ae87-428b-910d-d87e829a353e",
+          "6ec88c54-6360-4010-aeec-d6547ed5329c",
+          "be25a3e2-ce48-4d2b-b9c2-de9eb6586788",
+          "beb92c97-1f0a-47dd-93b4-2b5f3fcae40c",
+          "c277d810-07bc-4c21-bdca-9e809ca348c9",
+          "eacea7ad-cf4a-4964-b59b-905cbc009234"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-9be295c2",
+        "title": "Assemble Wall 1"
+      }
+    },
+    {
+      "id": "dbb40bfc-b7c1-4488-ada1-f2fdc72ead4d",
+      "title": "Fit cabinet backing in Wall 1",
+      "notes": "Match the labeled crosscuts and fit the blocks flush to the chosen wall face. See Wall cabinet backing for the mounting marks. Before closing the wall, confirm the cabinet maker’s mounting locations, the delivered framing, concealed services, and the specified attachment of blocking and cabinets. These measurements check fit and mark locations in the model.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "8db967db-5450-4032-9b72-769615bcc8cd",
+        "stageKey": "cabinet-backing",
+        "memberIds": [
+          "7bca9c53-4c03-48f1-8635-e822b14005b8",
+          "7ff65f13-6576-48ec-8954-54c0e0af4f31",
+          "a2d1f01b-2361-48ce-8c55-91f9b66f3ffd"
+        ],
+        "notes": "Match the labeled crosscuts and fit the blocks flush to the chosen wall face. See Wall cabinet backing for the mounting marks. Before closing the wall, confirm the cabinet maker’s mounting locations, the delivered framing, concealed services, and the specified attachment of blocking and cabinets. These measurements check fit and mark locations in the model.",
+        "fingerprint": "phase-v1-2315d681",
+        "title": "Fit cabinet backing in Wall 1"
+      }
+    },
+    {
+      "id": "03c6f598-0a16-48d9-b28a-efdb0eda85b3",
+      "title": "Hang Drywall · front · Wall 1",
+      "notes": "The source wall or fitted sheets changed. Recheck the measured opening, depth, backing and panel positions before cutting.\nHang this drywall face after checking concealed services and any required rough-in review. Check perimeter backing, opening backing and sheet-edge support in the actual wall. Hang the upper row first and confirm fastener and joint placement against the assembly requirements.\nKeep sound rectangular sheet trims for another panel. Opening waste stays out of the Cut pool unless measured and added separately.\nInstallation reference · https://www.usg.com/content/dam/USG/pdpmovedocuments/sheetrock-gypsum-panels-installation-guide-en-J371.pdf",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "d8d56ee1-f96a-4d6f-a5bf-3c38265f9fa1",
+        "stageKey": "hang-drywall",
+        "memberIds": [
+          "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+          "e88534a6-8760-443f-84e7-a84af89aa0a1"
+        ],
+        "notes": "The source wall or fitted sheets changed. Recheck the measured opening, depth, backing and panel positions before cutting.\nHang this drywall face after checking concealed services and any required rough-in review. Check perimeter backing, opening backing and sheet-edge support in the actual wall. Hang the upper row first and confirm fastener and joint placement against the assembly requirements.\nKeep sound rectangular sheet trims for another panel. Opening waste stays out of the Cut pool unless measured and added separately.\nInstallation reference · https://www.usg.com/content/dam/USG/pdpmovedocuments/sheetrock-gypsum-panels-installation-guide-en-J371.pdf",
+        "fingerprint": "phase-v1-52bd4c84",
+        "title": "Hang Drywall · front · Wall 1"
+      }
+    },
+    {
+      "id": "365f8aa9-4b4b-47ac-a2df-0317be12dcc2",
+      "title": "Review loose parts",
+      "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "04d93076-0d0b-46e4-a488-b367ff2f4591",
+        "stageKey": "loose-parts",
+        "memberIds": [
+          "eec5d14b-ac45-40a3-aa71-5ba01cf29581"
+        ],
+        "notes": "Review and dry-fit these listed actual parts. Their assembly label does not establish a build family, joinery or construction sequence. Check supporting contacts and clamp/tool access. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-dcde4748",
+        "title": "Review loose parts"
+      }
+    },
+    {
+      "id": "0ec04165-d2ab-4eed-b4d8-11208b771f94",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "04d93076-0d0b-46e4-a488-b367ff2f4591",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-67217f8b",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice measurements for a comparison at a centered stud and behind thin blocking. The entered depth and tip allowance illustrate the model; confirm the actual cabinet, hardware and installed wall before using a detail.",
+  "sections": [
+    {
+      "id": "da637131-c059-4405-9893-fa6d73e5e6cf",
+      "name": "Wall 1",
+      "pieceIds": [
+        "11a0d5db-a370-4729-8ce4-b310cbd0cf1b",
+        "405e35bb-9cfa-402d-8935-c900553ec759",
+        "6ec88c54-6360-4010-aeec-d6547ed5329c",
+        "eacea7ad-cf4a-4964-b59b-905cbc009234",
+        "beb92c97-1f0a-47dd-93b4-2b5f3fcae40c",
+        "019e732f-01c8-4257-bc12-ac2634cca6ec",
+        "c277d810-07bc-4c21-bdca-9e809ca348c9",
+        "be25a3e2-ce48-4d2b-b9c2-de9eb6586788",
+        "49de508b-ae87-428b-910d-d87e829a353e",
+        "a2d1f01b-2361-48ce-8c55-91f9b66f3ffd",
+        "7ff65f13-6576-48ec-8954-54c0e0af4f31",
+        "7bca9c53-4c03-48f1-8635-e822b14005b8"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": {
+        "type": "wall",
+        "width": 96,
+        "height": 96,
+        "depth": 48,
+        "spacing": 16
+      },
+      "recipe": null
+    },
+    {
+      "id": "d8d56ee1-f96a-4d6f-a5bf-3c38265f9fa1",
+      "name": "Drywall · front · Wall 1",
+      "pieceIds": [
+        "4d75aa1a-7299-4007-b056-d842cff9c2c7",
+        "e88534a6-8760-443f-84e7-a84af89aa0a1"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null,
+      "wallDrywall": {
+        "wallId": "da637131-c059-4405-9893-fa6d73e5e6cf",
+        "side": "front",
+        "layoutKey": "binding-v1-b5eddcec95333e1a"
+      }
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": "design-v3-5f6d4477",
+  "history": [
+    {
+      "id": "b453f1db-0680-4358-8ab1-4f5003154c97",
+      "at": "2026-11-23T00:50:48.030Z",
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "message": "Assigned O001 · Offcut · 20 in framing remnant to P013 · Cabinet backing.",
+      "offcutCut": {
+        "sourceId": "39b7548a-a971-42f8-83fe-6d2627208389",
+        "inputId": "960e2949-ba0e-4df6-81bc-8928cb633d83",
+        "targetId": "a2d1f01b-2361-48ce-8c55-91f9b66f3ffd",
+        "inputSize": [
+          1.5,
+          5.5,
+          20
+        ],
+        "result": {
+          "size": [
+            1.5,
+            5.5,
+            14.5
+          ],
+          "sourceSize": [
+            1.5,
+            5.5,
+            20
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "inputName": "Offcut · 20 in framing remnant",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 14.5
+          }
+        ],
+        "remnants": [
+          {
+            "id": "bce33bfe-fd94-43a7-ac92-a43ba36e37b0",
+            "size": [
+              1.5,
+              5.5,
+              5.375
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "83cb2115-6ef4-4833-a135-98107856cc5a",
+      "at": "2026-11-23T00:50:48.038Z",
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "message": "Recorded one 2 × 6 framing lumber board for 2 parts starting with P014. Added 1 rectangular offcut to the Cut pool."
+    },
+    {
+      "id": "0a759343-7d4b-488a-8cb6-50101171ced5",
+      "at": "2026-11-23T00:50:48.038Z",
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "message": "Stock cut order for P014 · 1. Crosscut 14.5 in from the current end for P014 · Cabinet backing."
+    },
+    {
+      "id": "27bbef32-8e71-4d17-96ae-4a3f4128f79d",
+      "at": "2026-11-23T00:50:48.038Z",
+      "stepId": "a3fd9321-c30d-4481-969a-1997fafde89e",
+      "message": "Stock cut order for P014 · 2. Crosscut 14.5 in from the current end for P015 · Cabinet backing."
+    }
+  ]
+}

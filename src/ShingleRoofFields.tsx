@@ -14,6 +14,7 @@ import {
   roofPitchText,
 } from "./shingleRoof";
 import { gafRoofShingle } from "./shingleRoofReference";
+import { roofDeckSpacingLimits, roofDeckSpacingReference } from "./roofDeckSpacing";
 import { ShingleRoofEdgeFields } from "./ShingleRoofEdgeFields";
 import { DripEdgeEstimate, DripEdgeFields } from "./DripEdgeFields";
 import {
@@ -360,6 +361,18 @@ export function ShingleRoofEstimate({
           Selected deck faces overlap. Review the areas before estimating
           shingles.
         </p>
+      )}
+      {review.deckSpacing.modeled > 0 && (
+        <section className="section-description" aria-label="Roof deck joint spacing">
+          <strong>Roof deck joint spacing</strong>
+          {!!review.deckSpacing.joints.length && <p className="small-note">
+            {review.deckSpacing.joints.length} {review.deckSpacing.joints.length === 1 ? "joint measured" : "joints measured"}. Select a joint in Checks to see the gap in 3D. Orange segments mark fastener lines that lack modeled framing.
+          </p>}
+          {roofDeckSpacingLimits(review.deckSpacing).map((line) => <p key={line} className="small-note">{line}</p>)}
+          <p className="small-note">{roofDeckSpacingReference.scope}</p>
+          {review.deckSpacing.joints.some(({ backing }) => backing) && <p className="small-note">{roofDeckSpacingReference.backingScope}</p>}
+          <p className="small-note"><a href={roofDeckSpacingReference.url} target="_blank" rel="noreferrer">{roofDeckSpacingReference.title}</a></p>
+        </section>
       )}
       {plan.productId && (
         <>

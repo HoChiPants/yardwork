@@ -68,11 +68,11 @@ test("the five study presets produce exact Home Depot stock, full purchase units
   for (const record of Object.values(homeDepotFraming)) {
     const stock = material(record.materialId);
     currentOffer(record);
-    assert.ok(
-      structureMaterialChoices(record.role).some(
-        (choice) => choice.materialId === stock.id,
-      ),
-    );
+    if ("role" in record) {
+      assert.ok(structureMaterialChoices(record.role).some((choice) => choice.materialId === stock.id));
+    } else {
+      assert.equal(stock.placementOnly, true);
+    }
     assert.ok(
       !structureMaterialChoices("saunaBenchFrame").some(
         (choice) => choice.materialId === stock.id,
@@ -129,7 +129,7 @@ test("long greenhouse cuts select distinct frame, base and ridge lengths and kee
   const long = homeDepotStudyStock(baseline, {});
   assert.equal(
     long.ridgeLumber?.materialId,
-    homeDepotFraming.ridge12.materialId,
+    homeDepotFraming.ridge10.materialId,
   );
   assert.equal(
     long.frameLumber?.materialId,
@@ -146,7 +146,7 @@ test("long greenhouse cuts select distinct frame, base and ridge lengths and kee
   assert.equal(ridge.size[2], 108);
   const list = bom(project);
   const ridgeRow = list.find(
-    ({ id }) => id === homeDepotFraming.ridge12.materialId,
+    ({ id }) => id === homeDepotFraming.ridge10.materialId,
   )!;
   assert.equal(ridgeRow.quantity, 1);
   assert.equal(ridgeRow.oversize, 0);
@@ -158,7 +158,7 @@ test("long greenhouse cuts select distinct frame, base and ridge lengths and kee
   const guide = guideMarkdown(project);
   for (const record of [
     homeDepotFraming.stud10,
-    homeDepotFraming.ridge12,
+    homeDepotFraming.ridge10,
     greenhouseBaseTimber12,
   ])
     assert.ok(guide.includes(record.listing));
@@ -180,6 +180,8 @@ test("long greenhouse cuts select distinct frame, base and ridge lengths and kee
     bom(conflict.project).find(({ id }) => id === shorter.materialId)?.oversize,
     1,
   );
+  const deeper = createBuildStudy("greenhouse", { ...p, depth: 132 });
+  assert.equal(homeDepotStudyStock(deeper, {}).ridgeLumber?.materialId, homeDepotFraming.ridge12.materialId);
 });
 
 test("framing fit uses cut geometry, including clear sauna dimensions and lengths beyond listed stock", () => {

@@ -1,0 +1,1531 @@
+{
+  "schemaVersion": 161,
+  "id": "ae2fbc36-896a-4d49-a3d9-065c88e58444",
+  "name": "Three-drawer balance practice",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [
+    {
+      "id": "b1da93c9-5c93-45a6-aaf6-342e6e418052",
+      "productId": "accuride-t46322g16",
+      "quantity": 3,
+      "purpose": "Cabinet drawer slide pairs",
+      "note": "Confirm the delivered slides and mounting screw fit before drilling."
+    }
+  ],
+  "drawerBalancePlans": [
+    {
+      "input": {
+        "sectionId": "7a83c0b6-4b45-47b2-99aa-f7d7999bc5cf",
+        "loadedWeight": 80,
+        "closedSetback": 5,
+        "drawers": [
+          {
+            "motionId": "66863b52-0c77-44b4-81b4-9628f1b83839",
+            "weight": 18,
+            "extension": 16
+          },
+          {
+            "motionId": "6757cf77-de36-4610-9d0e-a6423032fa8f",
+            "weight": 18,
+            "extension": 16
+          },
+          {
+            "motionId": "20505fc0-ce5c-40aa-bcee-fe39f9c3fc70",
+            "weight": 18,
+            "extension": 16
+          }
+        ]
+      },
+      "geometryKey": "binding-v1-96757f7c88749283"
+    }
+  ],
+  "motionPlans": [
+    {
+      "label": "Cabinet drawer 1",
+      "memberIds": [
+        "3a6a9cd7-09cf-4cd5-b4a9-4e55a5dd8f46",
+        "854d45df-a125-4615-b115-d851558c76f0",
+        "0cc1eac4-ecd3-4a31-b03f-3f188a048cb6",
+        "74fae7cc-b53b-4a34-bd25-a1251dde5157",
+        "43ed3e77-9b10-415f-bda8-4191ef89a349",
+        "ac378ca4-6e93-4fab-b611-d8adb74f6497",
+        "3c41bdfd-7802-47dd-bf2c-2c42c107646b"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "travel": 16,
+        "drawerSlide": {
+          "productId": "accuride-t46322g16",
+          "cabinetLeft": "973e1c77-1ab8-480c-8d5e-43eafb0efd33",
+          "drawerLeft": "3a6a9cd7-09cf-4cd5-b4a9-4e55a5dd8f46",
+          "drawerRight": "854d45df-a125-4615-b115-d851558c76f0",
+          "cabinetRight": "72275f2c-4f1c-4234-8296-647f71d9eadd"
+        }
+      },
+      "id": "66863b52-0c77-44b4-81b4-9628f1b83839"
+    },
+    {
+      "label": "Cabinet drawer 2",
+      "memberIds": [
+        "9f078a3c-77ae-49cd-bd0e-cd0ea78ff45a",
+        "01705126-29fb-4ac4-ae33-decd21b7892f",
+        "0a6f3549-606f-41dd-bedb-958be5e11403",
+        "d6871767-2b4c-4b29-a832-3eaf996a25b4",
+        "b06a2818-4467-43ee-b7f1-3294b5e53243",
+        "c8f3ed51-dd32-41c5-8a19-0a0f6c741b2f",
+        "b8e29560-a3e4-4291-83a5-c72012b4d80e"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "travel": 16,
+        "drawerSlide": {
+          "productId": "accuride-t46322g16",
+          "cabinetLeft": "973e1c77-1ab8-480c-8d5e-43eafb0efd33",
+          "drawerLeft": "9f078a3c-77ae-49cd-bd0e-cd0ea78ff45a",
+          "drawerRight": "01705126-29fb-4ac4-ae33-decd21b7892f",
+          "cabinetRight": "72275f2c-4f1c-4234-8296-647f71d9eadd"
+        }
+      },
+      "id": "6757cf77-de36-4610-9d0e-a6423032fa8f"
+    },
+    {
+      "label": "Cabinet drawer 3",
+      "memberIds": [
+        "f64ee418-a354-4b8f-a3f7-a8dc373e11e1",
+        "b04d67fe-c67d-41ee-8429-5a531f788f65",
+        "b3d63838-1fa6-4135-b13b-2a0f15343dcc",
+        "2c641d51-1168-45b0-ad1c-05119d7a29e4",
+        "5e4c2db5-0af7-430a-8d2b-fed8836898c1",
+        "f6725a3f-9c87-4505-8301-8bce42c9eddb",
+        "0c2ec80f-3495-4c4c-8194-cf523ab1906c"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "travel": 16,
+        "drawerSlide": {
+          "productId": "accuride-t46322g16",
+          "cabinetLeft": "973e1c77-1ab8-480c-8d5e-43eafb0efd33",
+          "drawerLeft": "f64ee418-a354-4b8f-a3f7-a8dc373e11e1",
+          "drawerRight": "b04d67fe-c67d-41ee-8429-5a531f788f65",
+          "cabinetRight": "72275f2c-4f1c-4234-8296-647f71d9eadd"
+        }
+      },
+      "id": "20505fc0-ce5c-40aa-bcee-fe39f9c3fc70"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "769d911b-0b55-4c11-81f4-f89b86c2891a",
+      "label": "P001"
+    },
+    {
+      "partId": "8c66f399-0612-467b-a4a6-8e55daf3da72",
+      "label": "P002"
+    },
+    {
+      "partId": "39601f39-4f71-4ae7-ad08-cc280f15922f",
+      "label": "P003"
+    },
+    {
+      "partId": "233fadcb-e8ef-4204-8b50-fd977b5e86b2",
+      "label": "P004"
+    },
+    {
+      "partId": "a7dd1206-2df8-4bf7-b89f-19e11c166456",
+      "label": "P005"
+    },
+    {
+      "partId": "2c48970d-cda4-4285-9605-db667c4fb472",
+      "label": "P006"
+    },
+    {
+      "partId": "d6323426-28a4-423b-9795-b2c49d648294",
+      "label": "P007"
+    },
+    {
+      "partId": "d791ca52-4d52-44af-9de5-193e97a7eb04",
+      "label": "P008"
+    },
+    {
+      "partId": "2bc7a7dc-1120-41d7-87f2-ffcd8042a83a",
+      "label": "P009"
+    },
+    {
+      "partId": "973e1c77-1ab8-480c-8d5e-43eafb0efd33",
+      "label": "P010"
+    },
+    {
+      "partId": "72275f2c-4f1c-4234-8296-647f71d9eadd",
+      "label": "P011"
+    },
+    {
+      "partId": "daede500-4044-4d8c-bc04-24e73f2033aa",
+      "label": "P012"
+    },
+    {
+      "partId": "3a6a9cd7-09cf-4cd5-b4a9-4e55a5dd8f46",
+      "label": "P013"
+    },
+    {
+      "partId": "854d45df-a125-4615-b115-d851558c76f0",
+      "label": "P014"
+    },
+    {
+      "partId": "0cc1eac4-ecd3-4a31-b03f-3f188a048cb6",
+      "label": "P015"
+    },
+    {
+      "partId": "74fae7cc-b53b-4a34-bd25-a1251dde5157",
+      "label": "P016"
+    },
+    {
+      "partId": "43ed3e77-9b10-415f-bda8-4191ef89a349",
+      "label": "P017"
+    },
+    {
+      "partId": "ac378ca4-6e93-4fab-b611-d8adb74f6497",
+      "label": "P018"
+    },
+    {
+      "partId": "3c41bdfd-7802-47dd-bf2c-2c42c107646b",
+      "label": "P019"
+    },
+    {
+      "partId": "9f078a3c-77ae-49cd-bd0e-cd0ea78ff45a",
+      "label": "P020"
+    },
+    {
+      "partId": "01705126-29fb-4ac4-ae33-decd21b7892f",
+      "label": "P021"
+    },
+    {
+      "partId": "0a6f3549-606f-41dd-bedb-958be5e11403",
+      "label": "P022"
+    },
+    {
+      "partId": "d6871767-2b4c-4b29-a832-3eaf996a25b4",
+      "label": "P023"
+    },
+    {
+      "partId": "b06a2818-4467-43ee-b7f1-3294b5e53243",
+      "label": "P024"
+    },
+    {
+      "partId": "c8f3ed51-dd32-41c5-8a19-0a0f6c741b2f",
+      "label": "P025"
+    },
+    {
+      "partId": "b8e29560-a3e4-4291-83a5-c72012b4d80e",
+      "label": "P026"
+    },
+    {
+      "partId": "f64ee418-a354-4b8f-a3f7-a8dc373e11e1",
+      "label": "P027"
+    },
+    {
+      "partId": "b04d67fe-c67d-41ee-8429-5a531f788f65",
+      "label": "P028"
+    },
+    {
+      "partId": "b3d63838-1fa6-4135-b13b-2a0f15343dcc",
+      "label": "P029"
+    },
+    {
+      "partId": "2c641d51-1168-45b0-ad1c-05119d7a29e4",
+      "label": "P030"
+    },
+    {
+      "partId": "5e4c2db5-0af7-430a-8d2b-fed8836898c1",
+      "label": "P031"
+    },
+    {
+      "partId": "f6725a3f-9c87-4505-8301-8bce42c9eddb",
+      "label": "P032"
+    },
+    {
+      "partId": "0c2ec80f-3495-4c4c-8194-cf523ab1906c",
+      "label": "P033"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T02:21:38.666Z",
+  "pieces": [
+    {
+      "id": "769d911b-0b55-4c11-81f4-f89b86c2891a",
+      "name": "Drawer cabinet · leg",
+      "material": "stud",
+      "size": [
+        1.5,
+        31.75,
+        3.5
+      ],
+      "position": [
+        -9.25,
+        15.875,
+        -11.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "assembly": "Drawer cabinet",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "8c66f399-0612-467b-a4a6-8e55daf3da72",
+      "name": "Drawer cabinet · leg",
+      "material": "stud",
+      "size": [
+        1.5,
+        31.75,
+        3.5
+      ],
+      "position": [
+        -9.25,
+        15.875,
+        11.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "assembly": "Drawer cabinet",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "39601f39-4f71-4ae7-ad08-cc280f15922f",
+      "name": "Drawer cabinet · leg",
+      "material": "stud",
+      "size": [
+        1.5,
+        31.75,
+        3.5
+      ],
+      "position": [
+        9.25,
+        15.875,
+        -11.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "assembly": "Drawer cabinet",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "233fadcb-e8ef-4204-8b50-fd977b5e86b2",
+      "name": "Drawer cabinet · leg",
+      "material": "stud",
+      "size": [
+        1.5,
+        31.75,
+        3.5
+      ],
+      "position": [
+        9.25,
+        15.875,
+        11.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "assembly": "Drawer cabinet",
+      "designRole": "leg",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "a7dd1206-2df8-4bf7-b89f-19e11c166456",
+      "name": "Drawer cabinet · top rail",
+      "material": "stud",
+      "size": [
+        20,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        33.5,
+        -12.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "assembly": "Drawer cabinet",
+      "designRole": "top-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2c48970d-cda4-4285-9605-db667c4fb472",
+      "name": "Drawer cabinet · top rail",
+      "material": "stud",
+      "size": [
+        20,
+        3.5,
+        1.5
+      ],
+      "position": [
+        0,
+        33.5,
+        12.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "assembly": "Drawer cabinet",
+      "designRole": "top-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d6323426-28a4-423b-9795-b2c49d648294",
+      "name": "Drawer cabinet · top cross rail",
+      "material": "stud",
+      "size": [
+        1.5,
+        3.5,
+        23
+      ],
+      "position": [
+        -9.25,
+        33.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "assembly": "Drawer cabinet",
+      "designRole": "top-cross-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "d791ca52-4d52-44af-9de5-193e97a7eb04",
+      "name": "Drawer cabinet · top cross rail",
+      "material": "stud",
+      "size": [
+        1.5,
+        3.5,
+        23
+      ],
+      "position": [
+        9.25,
+        33.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "assembly": "Drawer cabinet",
+      "designRole": "top-cross-rail",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "2bc7a7dc-1120-41d7-87f2-ffcd8042a83a",
+      "name": "Drawer cabinet · top",
+      "material": "plywood",
+      "size": [
+        20,
+        0.75,
+        26
+      ],
+      "position": [
+        0,
+        35.625,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "9590a79d-7026-4cc5-9f6b-d8227b62d2bb",
+      "assembly": "Drawer cabinet",
+      "designRole": "top",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "973e1c77-1ab8-480c-8d5e-43eafb0efd33",
+      "name": "Drawer cabinet · left infill",
+      "material": "plywood",
+      "size": [
+        0.75,
+        31.75,
+        19
+      ],
+      "position": [
+        -8.125,
+        15.875,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1c91e1e6-c0e9-4343-b4a6-e7ef4ec86078",
+      "assembly": "Drawer cabinet",
+      "designRole": "left-infill",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "72275f2c-4f1c-4234-8296-647f71d9eadd",
+      "name": "Drawer cabinet · right infill",
+      "material": "plywood",
+      "size": [
+        0.75,
+        31.75,
+        19
+      ],
+      "position": [
+        8.125,
+        15.875,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1c91e1e6-c0e9-4343-b4a6-e7ef4ec86078",
+      "assembly": "Drawer cabinet",
+      "designRole": "right-infill",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "daede500-4044-4d8c-bc04-24e73f2033aa",
+      "name": "Drawer cabinet · back infill",
+      "material": "plywood",
+      "size": [
+        15.5,
+        31.75,
+        0.75
+      ],
+      "position": [
+        0,
+        15.875,
+        -9.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "1c91e1e6-c0e9-4343-b4a6-e7ef4ec86078",
+      "assembly": "Drawer cabinet",
+      "designRole": "back-infill",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "3a6a9cd7-09cf-4cd5-b4a9-4e55a5dd8f46",
+      "name": "Cabinet drawer 1 · left side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        4.25,
+        16
+      ],
+      "position": [
+        -6.859375,
+        29.375,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "512220a9-b4da-4de9-a3a2-df3a54d5a0b8",
+      "assembly": "Cabinet drawer 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "854d45df-a125-4615-b115-d851558c76f0",
+      "name": "Cabinet drawer 1 · right side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        4.25,
+        16
+      ],
+      "position": [
+        6.859375,
+        29.375,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "512220a9-b4da-4de9-a3a2-df3a54d5a0b8",
+      "assembly": "Cabinet drawer 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "0cc1eac4-ecd3-4a31-b03f-3f188a048cb6",
+      "name": "Cabinet drawer 1 · box front",
+      "material": "plywood",
+      "size": [
+        12.96875,
+        4.25,
+        0.75
+      ],
+      "position": [
+        0,
+        29.375,
+        8.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "512220a9-b4da-4de9-a3a2-df3a54d5a0b8",
+      "assembly": "Cabinet drawer 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "74fae7cc-b53b-4a34-bd25-a1251dde5157",
+      "name": "Cabinet drawer 1 · box back",
+      "material": "plywood",
+      "size": [
+        12.96875,
+        4.25,
+        0.75
+      ],
+      "position": [
+        0,
+        29.375,
+        -6.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "512220a9-b4da-4de9-a3a2-df3a54d5a0b8",
+      "assembly": "Cabinet drawer 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "43ed3e77-9b10-415f-bda8-4191ef89a349",
+      "name": "Cabinet drawer 1 · bottom",
+      "material": "plywood",
+      "size": [
+        14.46875,
+        0.75,
+        16
+      ],
+      "position": [
+        0,
+        26.875,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "512220a9-b4da-4de9-a3a2-df3a54d5a0b8",
+      "assembly": "Cabinet drawer 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "ac378ca4-6e93-4fab-b611-d8adb74f6497",
+      "name": "Cabinet drawer 1 · finished front",
+      "material": "plywood",
+      "size": [
+        15.25,
+        5,
+        0.75
+      ],
+      "position": [
+        0,
+        29,
+        9.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "512220a9-b4da-4de9-a3a2-df3a54d5a0b8",
+      "assembly": "Cabinet drawer 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "3c41bdfd-7802-47dd-bf2c-2c42c107646b",
+      "name": "Cabinet drawer 1 · bar pull",
+      "material": "hd-liberty-p01012-pc-c",
+      "size": [
+        5.32,
+        0.4724,
+        1.3
+      ],
+      "position": [
+        0,
+        29,
+        10.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "512220a9-b4da-4de9-a3a2-df3a54d5a0b8",
+      "assembly": "Cabinet drawer 1",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "9f078a3c-77ae-49cd-bd0e-cd0ea78ff45a",
+      "name": "Cabinet drawer 2 · left side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        4.25,
+        16
+      ],
+      "position": [
+        -6.859375,
+        24.125,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2b18ca12-c77e-48cc-9fa9-1f42cc614ece",
+      "assembly": "Cabinet drawer 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "01705126-29fb-4ac4-ae33-decd21b7892f",
+      "name": "Cabinet drawer 2 · right side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        4.25,
+        16
+      ],
+      "position": [
+        6.859375,
+        24.125,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2b18ca12-c77e-48cc-9fa9-1f42cc614ece",
+      "assembly": "Cabinet drawer 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "0a6f3549-606f-41dd-bedb-958be5e11403",
+      "name": "Cabinet drawer 2 · box front",
+      "material": "plywood",
+      "size": [
+        12.96875,
+        4.25,
+        0.75
+      ],
+      "position": [
+        0,
+        24.125,
+        8.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2b18ca12-c77e-48cc-9fa9-1f42cc614ece",
+      "assembly": "Cabinet drawer 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "d6871767-2b4c-4b29-a832-3eaf996a25b4",
+      "name": "Cabinet drawer 2 · box back",
+      "material": "plywood",
+      "size": [
+        12.96875,
+        4.25,
+        0.75
+      ],
+      "position": [
+        0,
+        24.125,
+        -6.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2b18ca12-c77e-48cc-9fa9-1f42cc614ece",
+      "assembly": "Cabinet drawer 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "b06a2818-4467-43ee-b7f1-3294b5e53243",
+      "name": "Cabinet drawer 2 · bottom",
+      "material": "plywood",
+      "size": [
+        14.46875,
+        0.75,
+        16
+      ],
+      "position": [
+        0,
+        21.625,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2b18ca12-c77e-48cc-9fa9-1f42cc614ece",
+      "assembly": "Cabinet drawer 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "c8f3ed51-dd32-41c5-8a19-0a0f6c741b2f",
+      "name": "Cabinet drawer 2 · finished front",
+      "material": "plywood",
+      "size": [
+        15.25,
+        5,
+        0.75
+      ],
+      "position": [
+        0,
+        23.75,
+        9.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2b18ca12-c77e-48cc-9fa9-1f42cc614ece",
+      "assembly": "Cabinet drawer 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "b8e29560-a3e4-4291-83a5-c72012b4d80e",
+      "name": "Cabinet drawer 2 · bar pull",
+      "material": "hd-liberty-p01012-pc-c",
+      "size": [
+        5.32,
+        0.4724,
+        1.3
+      ],
+      "position": [
+        0,
+        23.75,
+        10.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "2b18ca12-c77e-48cc-9fa9-1f42cc614ece",
+      "assembly": "Cabinet drawer 2",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "f64ee418-a354-4b8f-a3f7-a8dc373e11e1",
+      "name": "Cabinet drawer 3 · left side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        4.25,
+        16
+      ],
+      "position": [
+        -6.859375,
+        18.875,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5a5a4973-675d-4cc6-8607-4fc03bdaef42",
+      "assembly": "Cabinet drawer 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "b04d67fe-c67d-41ee-8429-5a531f788f65",
+      "name": "Cabinet drawer 3 · right side",
+      "material": "plywood",
+      "size": [
+        0.75,
+        4.25,
+        16
+      ],
+      "position": [
+        6.859375,
+        18.875,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5a5a4973-675d-4cc6-8607-4fc03bdaef42",
+      "assembly": "Cabinet drawer 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "b3d63838-1fa6-4135-b13b-2a0f15343dcc",
+      "name": "Cabinet drawer 3 · box front",
+      "material": "plywood",
+      "size": [
+        12.96875,
+        4.25,
+        0.75
+      ],
+      "position": [
+        0,
+        18.875,
+        8.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5a5a4973-675d-4cc6-8607-4fc03bdaef42",
+      "assembly": "Cabinet drawer 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "2c641d51-1168-45b0-ad1c-05119d7a29e4",
+      "name": "Cabinet drawer 3 · box back",
+      "material": "plywood",
+      "size": [
+        12.96875,
+        4.25,
+        0.75
+      ],
+      "position": [
+        0,
+        18.875,
+        -6.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5a5a4973-675d-4cc6-8607-4fc03bdaef42",
+      "assembly": "Cabinet drawer 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "5e4c2db5-0af7-430a-8d2b-fed8836898c1",
+      "name": "Cabinet drawer 3 · bottom",
+      "material": "plywood",
+      "size": [
+        14.46875,
+        0.75,
+        16
+      ],
+      "position": [
+        0,
+        16.375,
+        0.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5a5a4973-675d-4cc6-8607-4fc03bdaef42",
+      "assembly": "Cabinet drawer 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": null
+    },
+    {
+      "id": "f6725a3f-9c87-4505-8301-8bce42c9eddb",
+      "name": "Cabinet drawer 3 · finished front",
+      "material": "plywood",
+      "size": [
+        15.25,
+        5,
+        0.75
+      ],
+      "position": [
+        0,
+        18.5,
+        9.125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5a5a4973-675d-4cc6-8607-4fc03bdaef42",
+      "assembly": "Cabinet drawer 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 0,
+      "cutStock": null
+    },
+    {
+      "id": "0c2ec80f-3495-4c4c-8194-cf523ab1906c",
+      "name": "Cabinet drawer 3 · bar pull",
+      "material": "hd-liberty-p01012-pc-c",
+      "size": [
+        5.32,
+        0.4724,
+        1.3
+      ],
+      "position": [
+        0,
+        18.5,
+        10.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "5a5a4973-675d-4cc6-8607-4fc03bdaef42",
+      "assembly": "Cabinet drawer 3",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    }
+  ],
+  "steps": [
+    {
+      "id": "1f06fac9-dce9-4a48-8ee5-59fdfdf3c55e",
+      "title": "Prepare the space and cut list",
+      "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+      "complete": false,
+      "generated": {
+        "kind": "project-preparation",
+        "planId": "ae2fbc36-896a-4d49-a3d9-065c88e58444",
+        "notes": "Measure the available space and check clearances before cutting.\nReview the shopping list and actual stock dimensions. Label parts, allow for the ⅛ in saw kerf, and dry-fit before fastening. Recorded cuts and retained offcuts appear in this guide.",
+        "fingerprint": "phase-v1-ef7dfe4",
+        "title": "Prepare the space and cut list"
+      }
+    },
+    {
+      "id": "f604d4ad-d6ee-4486-89d6-e8f4e4c4bdf0",
+      "title": "Assemble Drawer cabinet",
+      "notes": "Level and square the cabinet, then secure the cabinet frame to suitable structural backing before loading the drawers. Confirm rails, front gaps and fastener reach using the delivered hardware.",
+      "complete": false
+    },
+    {
+      "id": "7e19a6b3-954e-4044-a173-cfed9510e201",
+      "title": "Drawer cabinet: Dry-fit the frame",
+      "notes": "Dry-fit the listed legs and rails. Clamp and check square, supporting contacts and access to the selected fixing locations. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "84e7a4a2-d158-4f31-8426-10d62965b61e",
+        "stageKey": "frame",
+        "memberIds": [
+          "233fadcb-e8ef-4204-8b50-fd977b5e86b2",
+          "2c48970d-cda4-4285-9605-db667c4fb472",
+          "39601f39-4f71-4ae7-ad08-cc280f15922f",
+          "769d911b-0b55-4c11-81f4-f89b86c2891a",
+          "8c66f399-0612-467b-a4a6-8e55daf3da72",
+          "a7dd1206-2df8-4bf7-b89f-19e11c166456",
+          "d6323426-28a4-423b-9795-b2c49d648294",
+          "d791ca52-4d52-44af-9de5-193e97a7eb04"
+        ],
+        "notes": "Dry-fit the listed legs and rails. Clamp and check square, supporting contacts and access to the selected fixing locations. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-b3cb0f52",
+        "title": "Drawer cabinet: Dry-fit the frame"
+      }
+    },
+    {
+      "id": "1c91e1e6-c0e9-4343-b4a6-e7ef4ec86078",
+      "title": "Drawer cabinet: Fit infill and interior shelves",
+      "notes": "Dry-fit the listed infill and interior shelves while the frame remains accessible. Check actual shelf levels, fit and tool access. Review support and drilling plans for each shelf before placement. Only explicitly planned holes and supports are documented; other support details remain unresolved.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "84e7a4a2-d158-4f31-8426-10d62965b61e",
+        "stageKey": "infill-shelves",
+        "memberIds": [
+          "72275f2c-4f1c-4234-8296-647f71d9eadd",
+          "973e1c77-1ab8-480c-8d5e-43eafb0efd33",
+          "daede500-4044-4d8c-bc04-24e73f2033aa"
+        ],
+        "notes": "Dry-fit the listed infill and interior shelves while the frame remains accessible. Check actual shelf levels, fit and tool access. Review support and drilling plans for each shelf before placement. Only explicitly planned holes and supports are documented; other support details remain unresolved.",
+        "fingerprint": "phase-v1-feb2621b",
+        "title": "Drawer cabinet: Fit infill and interior shelves"
+      }
+    },
+    {
+      "id": "9590a79d-7026-4cc5-9f6b-d8227b62d2bb",
+      "title": "Drawer cabinet: Fit the top",
+      "notes": "Dry-fit the listed top, seat or back panels on their actual supporting frame. Check alignment, contact and clearance; retain access for the recorded joints before final attachment.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "84e7a4a2-d158-4f31-8426-10d62965b61e",
+        "stageKey": "top-seat-back",
+        "memberIds": [
+          "2bc7a7dc-1120-41d7-87f2-ffcd8042a83a"
+        ],
+        "notes": "Dry-fit the listed top, seat or back panels on their actual supporting frame. Check alignment, contact and clearance; retain access for the recorded joints before final attachment.",
+        "fingerprint": "phase-v1-b9deae7a",
+        "title": "Drawer cabinet: Fit the top"
+      }
+    },
+    {
+      "id": "9dcc1ede-f055-4743-86ae-95b4bdfc18a9",
+      "title": "Cabinet drawer 2 · Cut and fit",
+      "notes": "Dry-fit the five panels square with the front and back between the sides and the bottom under the walls. Confirm the 0.51563 in side gap on each side against the delivered slides. Check mounting faces, screw length and bottom attachment before drilling. Fit the finished front after the drawer is on its slides. Check the 0.125 in side reveals in the actual opening. Center the 96 mm Liberty bar pull on the finished front. Mark the holes with the delivered pull or its template, and verify screw reach through every front layer before drilling. The motion check includes the pull's full clearance envelope. Check the installed pull, hand access and surrounding trim. The front stack measures 1.5 in. The supplied 1 in screws cannot reach through it. Confirm the thread and required reach before choosing longer screws.",
+      "complete": false
+    },
+    {
+      "id": "2b18ca12-c77e-48cc-9fa9-1f42cc614ece",
+      "title": "Assemble Cabinet drawer 2",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "27c719f7-9dd3-4f68-92dc-7daffe2699ee",
+        "stageKey": "section",
+        "memberIds": [
+          "01705126-29fb-4ac4-ae33-decd21b7892f",
+          "0a6f3549-606f-41dd-bedb-958be5e11403",
+          "9f078a3c-77ae-49cd-bd0e-cd0ea78ff45a",
+          "b06a2818-4467-43ee-b7f1-3294b5e53243",
+          "b8e29560-a3e4-4291-83a5-c72012b4d80e",
+          "c8f3ed51-dd32-41c5-8a19-0a0f6c741b2f",
+          "d6871767-2b4c-4b29-a832-3eaf996a25b4"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-59d32fae",
+        "title": "Assemble Cabinet drawer 2"
+      }
+    },
+    {
+      "id": "538ca1cb-1ad4-46d8-b8ca-c23d4a25d23e",
+      "title": "Cabinet drawer 1 · Cut and fit",
+      "notes": "Dry-fit the five panels square with the front and back between the sides and the bottom under the walls. Confirm the 0.51563 in side gap on each side against the delivered slides. Check mounting faces, screw length and bottom attachment before drilling. Fit the finished front after the drawer is on its slides. Check the 0.125 in side reveals in the actual opening. Center the 96 mm Liberty bar pull on the finished front. Mark the holes with the delivered pull or its template, and verify screw reach through every front layer before drilling. The motion check includes the pull's full clearance envelope. Check the installed pull, hand access and surrounding trim. The front stack measures 1.5 in. The supplied 1 in screws cannot reach through it. Confirm the thread and required reach before choosing longer screws.",
+      "complete": false
+    },
+    {
+      "id": "512220a9-b4da-4de9-a3a2-df3a54d5a0b8",
+      "title": "Assemble Cabinet drawer 1",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "70cea19f-0961-4a97-a4c9-3285c9f76daf",
+        "stageKey": "section",
+        "memberIds": [
+          "0cc1eac4-ecd3-4a31-b03f-3f188a048cb6",
+          "3a6a9cd7-09cf-4cd5-b4a9-4e55a5dd8f46",
+          "3c41bdfd-7802-47dd-bf2c-2c42c107646b",
+          "43ed3e77-9b10-415f-bda8-4191ef89a349",
+          "74fae7cc-b53b-4a34-bd25-a1251dde5157",
+          "854d45df-a125-4615-b115-d851558c76f0",
+          "ac378ca4-6e93-4fab-b611-d8adb74f6497"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-a8e42513",
+        "title": "Assemble Cabinet drawer 1"
+      }
+    },
+    {
+      "id": "116c88b9-1957-4a54-9e60-a750500498ab",
+      "title": "Cabinet drawer 3 · Cut and fit",
+      "notes": "Dry-fit the five panels square with the front and back between the sides and the bottom under the walls. Confirm the 0.51563 in side gap on each side against the delivered slides. Check mounting faces, screw length and bottom attachment before drilling. Fit the finished front after the drawer is on its slides. Check the 0.125 in side reveals in the actual opening. Center the 96 mm Liberty bar pull on the finished front. Mark the holes with the delivered pull or its template, and verify screw reach through every front layer before drilling. The motion check includes the pull's full clearance envelope. Check the installed pull, hand access and surrounding trim. The front stack measures 1.5 in. The supplied 1 in screws cannot reach through it. Confirm the thread and required reach before choosing longer screws.",
+      "complete": false
+    },
+    {
+      "id": "5a5a4973-675d-4cc6-8607-4fc03bdaef42",
+      "title": "Assemble Cabinet drawer 3",
+      "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+      "complete": false,
+      "generated": {
+        "kind": "assembly-stage",
+        "planId": "8c1e2856-85d4-401d-961a-9cf405c6328e",
+        "stageKey": "section",
+        "memberIds": [
+          "0c2ec80f-3495-4c4c-8194-cf523ab1906c",
+          "2c641d51-1168-45b0-ad1c-05119d7a29e4",
+          "5e4c2db5-0af7-430a-8d2b-fed8836898c1",
+          "b04d67fe-c67d-41ee-8429-5a531f788f65",
+          "b3d63838-1fa6-4135-b13b-2a0f15343dcc",
+          "f64ee418-a354-4b8f-a3f7-a8dc373e11e1",
+          "f6725a3f-9c87-4505-8301-8bce42c9eddb"
+        ],
+        "notes": "Dry-fit the listed actual parts in this declared section. Check orientation, supporting contacts, square and clamp/tool access. The section has no typed assembly-stage identity, so confirm its construction order. Review the recorded connection schedule; unspecified joints still need fastening details.",
+        "fingerprint": "phase-v1-388ffee3",
+        "title": "Assemble Cabinet drawer 3"
+      }
+    },
+    {
+      "id": "a721d991-f249-4646-a8f0-522eff1322ee",
+      "title": "Review connections and finish",
+      "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+      "complete": false,
+      "generated": {
+        "kind": "project-finish",
+        "planId": "ae2fbc36-896a-4d49-a3d9-065c88e58444",
+        "notes": "Check every intended joint, bracing, anchorage, edges and clearances. Resolve outstanding planning findings and verify loads, materials and connection details before use. Unspecified hardware is not inferred as installed.",
+        "fingerprint": "phase-v1-bf31e563",
+        "title": "Review connections and finish"
+      }
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice cabinet with a hypothetical loaded weight of 80 lb, a closed balance point 5 in behind the front floor contact, and three 18 lb loaded drawers. Use the numbers to compare movement in the model. The cabinet and its floor conditions require their own physical review.\n\nPlanning review — Cabinet design\n1 cabinet. Closed body footprint in workspace X × Z: 20 × 26 in.",
+  "sections": [
+    {
+      "id": "7a83c0b6-4b45-47b2-99aa-f7d7999bc5cf",
+      "name": "Drawer cabinet",
+      "pieceIds": [
+        "769d911b-0b55-4c11-81f4-f89b86c2891a",
+        "8c66f399-0612-467b-a4a6-8e55daf3da72",
+        "39601f39-4f71-4ae7-ad08-cc280f15922f",
+        "233fadcb-e8ef-4204-8b50-fd977b5e86b2",
+        "a7dd1206-2df8-4bf7-b89f-19e11c166456",
+        "2c48970d-cda4-4285-9605-db667c4fb472",
+        "d6323426-28a4-423b-9795-b2c49d648294",
+        "d791ca52-4d52-44af-9de5-193e97a7eb04",
+        "2bc7a7dc-1120-41d7-87f2-ffcd8042a83a",
+        "973e1c77-1ab8-480c-8d5e-43eafb0efd33",
+        "72275f2c-4f1c-4234-8296-647f71d9eadd",
+        "daede500-4044-4d8c-bc04-24e73f2033aa"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": {
+        "entryId": "84e7a4a2-d158-4f31-8426-10d62965b61e",
+        "kind": "cabinet",
+        "name": "Drawer cabinet",
+        "width": 20,
+        "height": 36,
+        "depth": 26,
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "frameMaterial": "stud",
+        "panelMaterial": "plywood",
+        "backHeight": 0,
+        "levels": 1,
+        "storage": false,
+        "openingLid": false,
+        "lidOpen": false
+      }
+    },
+    {
+      "id": "70cea19f-0961-4a97-a4c9-3285c9f76daf",
+      "name": "Cabinet drawer 1",
+      "pieceIds": [
+        "3a6a9cd7-09cf-4cd5-b4a9-4e55a5dd8f46",
+        "854d45df-a125-4615-b115-d851558c76f0",
+        "0cc1eac4-ecd3-4a31-b03f-3f188a048cb6",
+        "74fae7cc-b53b-4a34-bd25-a1251dde5157",
+        "43ed3e77-9b10-415f-bda8-4191ef89a349",
+        "ac378ca4-6e93-4fab-b611-d8adb74f6497",
+        "3c41bdfd-7802-47dd-bf2c-2c42c107646b"
+      ],
+      "origin": [
+        0,
+        29,
+        1.7750000000000004
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "27c719f7-9dd3-4f68-92dc-7daffe2699ee",
+      "name": "Cabinet drawer 2",
+      "pieceIds": [
+        "9f078a3c-77ae-49cd-bd0e-cd0ea78ff45a",
+        "01705126-29fb-4ac4-ae33-decd21b7892f",
+        "0a6f3549-606f-41dd-bedb-958be5e11403",
+        "d6871767-2b4c-4b29-a832-3eaf996a25b4",
+        "b06a2818-4467-43ee-b7f1-3294b5e53243",
+        "c8f3ed51-dd32-41c5-8a19-0a0f6c741b2f",
+        "b8e29560-a3e4-4291-83a5-c72012b4d80e"
+      ],
+      "origin": [
+        0,
+        23.75,
+        1.7750000000000004
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "8c1e2856-85d4-401d-961a-9cf405c6328e",
+      "name": "Cabinet drawer 3",
+      "pieceIds": [
+        "f64ee418-a354-4b8f-a3f7-a8dc373e11e1",
+        "b04d67fe-c67d-41ee-8429-5a531f788f65",
+        "b3d63838-1fa6-4135-b13b-2a0f15343dcc",
+        "2c641d51-1168-45b0-ad1c-05119d7a29e4",
+        "5e4c2db5-0af7-430a-8d2b-fed8836898c1",
+        "f6725a3f-9c87-4505-8301-8bce42c9eddb",
+        "0c2ec80f-3495-4c4c-8194-cf523ab1906c"
+      ],
+      "origin": [
+        0,
+        18.5,
+        1.7750000000000004
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    }
+  ],
+  "ideaBindings": [
+    {
+      "version": 1,
+      "id": "90adf834-bcd7-4aef-8f7d-5c210ec4b1ca",
+      "revision": 1,
+      "currentFingerprint": "binding-v1-7855fd0763f8239d",
+      "reviewBlock": "Planning review — Cabinet design\n1 cabinet. Closed body footprint in workspace X × Z: 20 × 26 in.",
+      "generatedNotes": "",
+      "title": "Cabinet design",
+      "summary": "1 cabinet. Closed body footprint in workspace X × Z: 20 × 26 in.",
+      "assumptions": [],
+      "questions": [],
+      "suggestions": [],
+      "entries": [
+        {
+          "id": "84e7a4a2-d158-4f31-8426-10d62965b61e",
+          "spec": {
+            "type": "furniture",
+            "recipe": {
+              "entryId": "84e7a4a2-d158-4f31-8426-10d62965b61e",
+              "kind": "cabinet",
+              "name": "Drawer cabinet",
+              "width": 20,
+              "height": 36,
+              "depth": 26,
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "yaw": 0,
+              "frameMaterial": "stud",
+              "panelMaterial": "plywood",
+              "backHeight": 0,
+              "levels": 1,
+              "storage": false,
+              "openingLid": false,
+              "lidOpen": false
+            }
+          },
+          "generatedNotes": "",
+          "pose": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          "sections": [
+            {
+              "role": "body",
+              "sectionId": "7a83c0b6-4b45-47b2-99aa-f7d7999bc5cf",
+              "stepId": "f604d4ad-d6ee-4486-89d6-e8f4e4c4bdf0"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workZone": null,
+  "guideFingerprint": "design-v3-b9a0088c",
+  "history": []
+}

@@ -6,6 +6,7 @@ import { partLabel } from "./partLabels";
 import { formatPreciseInches } from "./measurement";
 import { fastenerPurchaseSummary } from "./fastenerPurchases";
 import type { FastenerPartRef } from "./fasteningSchema";
+import { fastenerDistanceCaseText, fastenerEntryDistanceText } from "./fastenerEntryDistances";
 
 const inches = (value: number | null) =>
   value === null ? "PENDING" : formatPreciseInches(value);
@@ -21,13 +22,17 @@ export function fastenerPreparationNotes(project: Project, planId: string, cache
   const review = cachedReview ?? fastenerReviews(project).find((r) => r.plan.id === planId);
   if (!review) return "The fastening plan is no longer present. Review retained instructions.";
   const product = getWoodFastenerProduct(review.plan.productId);
+  const issues = [
+    ...review.issues.filter(({ code }) => code === "receiver-distance-short"),
+    ...review.issues,
+  ];
   return [
     `Plan ${review.plan.label}: ${line(review.plan.name)} — ${review.state}; ${review.activePointCount} provisional screw locations, ${review.plan.locations.length - review.activePointCount} excluded.`,
     `${partLabel(project, review.plan.head.pieceId)} → ${partLabel(project, review.plan.receiver.pieceId)}; ${product?.name ?? review.plan.productId}.`,
     "Use the labeled Wood-fastener locations appendix and separate CSV. Entrance coordinates use the actual head-side member's local center origin; direction components are a unit vector in that same frame. Measure and transfer the datum before cutting or driving.",
     "Nominal screw length is not a seating-depth setting. Record the proposed entrance-surface-to-tip depth after seating, actual pilot diameter and deepest pilot-drill-tip depth with user basis/date. Full-bore depth, thread engagement, countersink, edge/grain requirements and driver access need separate review.",
     "Stale or conflicting locations are excluded; pending values are not released drilling instructions. A centerline review does not prove installation, joint strength or code compliance.",
-    ...[...new Set(review.issues.map((issue) => issue.message))]
+    ...[...new Set(issues.map((issue) => issue.message))]
       .slice(0, 4)
       .map((issue) => `Review: ${line(issue).slice(0, 240)}`),
   ].join("\n");
@@ -73,6 +78,15 @@ export function fastenerGuideText(project: Project, includeTitle = true, markdow
           `  Candidate world entrance (in): ${vector(item.entranceWorld)}; head exit ${inches(item.headExitDepth)}; receiver entry ${inches(item.receiverEnterDepth)}; receiver exit ${inches(item.receiverExitDepth)}; gap ${inches(item.gap)}.`,
           `  Candidate tip (in): ${vector(item.tipWorld)}; receiver tip-path penetration ${inches(item.penetration)}. This is not thread engagement.`,
         );
+      if (usable && item.entryDistances) {
+        const { head, receiver, receiverCases } = item.entryDistances;
+        if (head) text.push(`  ${fastenerEntryDistanceText("Head-side", head)}`);
+        if (receiver) text.push(`  ${fastenerEntryDistanceText("Receiver", receiver)}`);
+        if (receiverCases) text.push(
+          "  ER-192 Tables 26 and 39 · Compare the receiver distances for the applicable load case. Verify the actual members, fastener spacing and installation.",
+          ...receiverCases.map((row) => `  ${fastenerDistanceCaseText(row)}`),
+        );
+      }
       text.push(...item.issues.map((issue) => `  Review: ${user(issue.message)}`));
     }
     text.push(...review.issues.map((issue) => `Review: ${user(issue.message)}`));

@@ -5,6 +5,7 @@ import { material, type Piece, type V3 } from "./model";
 export const numericalTolerance = 1e-7;
 // Model contact tolerance in inches. The profile still has to be field fitted.
 const contactTolerance = 0.01;
+const normalTolerance = Math.sqrt(2 * numericalTolerance);
 export type GlazingBackingSegment = [V3, V3];
 type Interval = [number, number];
 const vector = (point: V3) => new Vector3(...point);
@@ -47,12 +48,13 @@ function contactInterval(
   start: Vector3,
   end: Vector3,
   normal: Vector3,
+  match: { distance: number; normal: number } = { distance: contactTolerance, normal: normalTolerance },
 ): Interval | null {
   const { outward, point, edges } = evidence;
   if (
-    outward.dot(normal) < 1 - numericalTolerance ||
-    Math.abs(outward.dot(start.clone().sub(point))) > contactTolerance ||
-    Math.abs(outward.dot(end.clone().sub(point))) > contactTolerance
+    outward.distanceTo(normal) > match.normal ||
+    Math.abs(outward.dot(start.clone().sub(point))) > match.distance ||
+    Math.abs(outward.dot(end.clone().sub(point))) > match.distance
   )
     return null;
 
@@ -101,15 +103,15 @@ export function projectedBackingIntervals(
   });
 }
 
-function uncovered(intervals: Interval[], length: number) {
+function uncovered(intervals: Interval[], length: number, distanceTolerance: number) {
   const gaps: Interval[] = [];
   let covered = 0;
   for (const [from, to] of intervals.sort((a, b) => a[0] - b[0])) {
-    if ((from - covered) * length > contactTolerance)
+    if ((from - covered) * length > distanceTolerance)
       gaps.push([covered, from]);
     covered = Math.max(covered, to);
   }
-  if ((1 - covered) * length > contactTolerance) gaps.push([covered, 1]);
+  if ((1 - covered) * length > distanceTolerance) gaps.push([covered, 1]);
   return gaps;
 }
 
@@ -118,16 +120,17 @@ export function glazingBackingGaps(
   contact: GlazingBackingSegment,
   visible: GlazingBackingSegment,
   outward: V3,
+  match: { distance: number; normal: number } = { distance: contactTolerance, normal: normalTolerance },
 ) {
   const [start, end] = contact.map(vector);
   const normal = vector(outward);
   const length = start.distanceTo(end);
   const intervals = backing.flatMap((face) => {
-    const interval = contactInterval(face, start, end, normal);
+    const interval = contactInterval(face, start, end, normal, match);
     return interval ? [interval] : [];
   });
   const [a, b] = visible.map(vector);
-  return uncovered(intervals, length).map(([from, to]) => ({
+  return uncovered(intervals, length, match.distance).map(([from, to]) => ({
     length: (to - from) * length,
     points: [
       a.clone().lerp(b, from).toArray(),

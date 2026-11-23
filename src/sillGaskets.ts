@@ -6,19 +6,18 @@ import {
   sillGasketMeasurementsSchema, sillGasketPlansSchema,
   type SillGasketMeasurements, type SillGasketPlan,
 } from "./sillGasketSchema";
-import { sillGasketRollLength, sillGaskets } from "./sillGasketReference";
+import { sillGasketCuttingTools, sillGasketPiercingNote, sillGasketRollLength, sillGaskets } from "./sillGasketReference";
 import { rotate } from "./spatial";
 import { stockAxes } from "./stockAxes";
 import { packRuns } from "./stockRunPacking";
 import { addSupply } from "./supplies";
-import { pieceThroughOpenings } from "./throughOpenings";
+import { openingAxes, pieceThroughOpenings } from "./throughOpenings";
 
 const fitTolerance = 0.001;
 
 export function sillPlateFootprint(piece: Piece) {
   const stock = material(piece.material);
-  if (piece.offcut || !stock.wood || stock.stockKind !== "linear" ||
-      piece.cutPlanes.length || pieceThroughOpenings(piece).length)
+  if (piece.offcut || !stock.wood || stock.stockKind !== "linear" || piece.cutPlanes.length)
     return null;
   const { length, width, thickness } = stockAxes(piece, piece.cutStock?.size ?? piece.size);
   const direction = (axis: number) => rotate([0, 1, 2].map((i) => Number(i === axis)) as V3, piece.rotation);
@@ -28,7 +27,7 @@ export function sillPlateFootprint(piece: Piece) {
   return {
     length: piece.size[length], width: piece.size[width],
     bottom: piece.position[1] - piece.size[thickness] / 2,
-    across, along,
+    across, along, widthAxis: width, lengthAxis: length, boreAxis: thickness,
   };
 }
 
@@ -40,7 +39,7 @@ export function reviewSillGasket(piece: Piece | undefined, plan: SillGasketPlan)
   const footprint = piece && sillPlateFootprint(piece);
   const issues: string[] = [];
   if (!piece || !footprint)
-    return { issues: ["The selected horizontal wood sill is unavailable."], length: null, product: undefined, outline: undefined };
+    return { issues: ["The selected horizontal wood sill is unavailable."], length: null, product: undefined, outline: undefined, marks: [] };
   const { measured } = plan;
   if (plan.signature !== signature(piece))
     issues.push("The sill changed. Remeasure the support under this footprint.");
@@ -67,9 +66,34 @@ export function reviewSillGasket(piece: Piece | undefined, plan: SillGasketPlan)
     piece.position[2] + along * footprint.along[2] + across * footprint.across[2],
   ];
   const half = footprint.length / 2, edge = (product?.width ?? footprint.width) / 2;
+  const marks = [];
+  for (const opening of pieceThroughOpenings(piece)) {
+    if (!("diameter" in opening) || opening.axis !== footprint.boreAxis || opening.source) {
+      issues.push("The sill has a through-cut outside the bolt-hole detail. Review how to seal that opening on site.");
+      continue;
+    }
+    const axes = openingAxes(opening.axis);
+    const along = opening.center[axes[0] === footprint.lengthAxis ? 0 : 1];
+    const across = opening.center[axes[0] === footprint.widthAxis ? 0 : 1];
+    const radius = opening.diameter / 2;
+    if (Math.abs(along) + radius >= half - fitTolerance ||
+        Math.abs(across) + radius >= footprint.width / 2 - fitTolerance) {
+      issues.push("A round opening reaches the edge of the sill. Review the gasket at this opening.");
+      continue;
+    }
+    marks.push({
+      fromStart: half + along, fromEdge: edge + across, diameter: opening.diameter,
+      center: point(along, across),
+      ring: Array.from({ length: 33 }, (_, index) => {
+        const angle = index * Math.PI * 2 / 32;
+        return point(along + radius * Math.cos(angle), across + radius * Math.sin(angle));
+      }),
+    });
+  }
   return {
-    issues, length, product,
+    issues: [...new Set(issues)], length, product,
     outline: [point(-half, -edge), point(half, -edge), point(half, edge), point(-half, edge), point(-half, -edge)],
+    marks: marks.sort((a, b) => a.fromStart - b.fromStart || a.fromEdge - b.fromEdge),
   };
 }
 
@@ -126,13 +150,23 @@ export function addMissingSillGasketRolls(project: Project) {
 
 export function sillGasketGuideLines(review: ReturnType<typeof reviewSillGaskets>) {
   return [
-    ...review.rows.map(({ title, step, plan, length, issues }) => [
+    ...review.rows.flatMap(({ title, step, plan, length, issues, marks }) => [[
       title,
       step ? `Before step ${step}` : "",
       `${plan.measured.substrate} · top ${formatPreciseInches(plan.measured.top)} · ${formatStockLength(plan.measured.supportLength)} continuous support · ${formatPreciseInches(plan.measured.supportWidth)} wide · center offset ${formatPreciseInches(plan.measured.centerOffset)}`,
       issues.length ? `Needs review. ${issues.join(" ")}` : `Cut ${formatStockLength(length!)} including ${formatPreciseInches(plan.measured.allowance)} for overlaps and trimming.`,
-    ].filter(Boolean).join(" · ")),
+    ].filter(Boolean).join(" · "), ...(!issues.length && marks.length ? [
+      `${title} · ${sillGasketPiercingNote}`,
+      ...marks.map((mark, index) => `${title} · Bore ${index + 1} · ${sillGasketMarkText(mark)}`),
+    ] : [])]),
+    ...(review.groups.length ? [sillGasketCuttingTools] : []),
     ...review.groups.flatMap(({ product, rolls }) => rolls.map(({ runs, left }, i) =>
       `${formatPreciseInches(product.width)} gasket · Roll ${i + 1} · ${runs.map(({ title, length }) => `${title}, ${formatStockLength(length)}`).join(" · ")} · ${formatStockLength(left)} remaining.`)),
   ];
+}
+
+export function sillGasketMarkText({ fromStart, fromEdge, diameter }: {
+  fromStart: number; fromEdge: number; diameter: number;
+}) {
+  return `${formatStockLength(fromStart)} along from Start · ${formatPreciseInches(fromEdge)} from the marked edge · wood bore Ø ${formatPreciseInches(diameter)}`;
 }

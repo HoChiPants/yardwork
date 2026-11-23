@@ -1,5 +1,5 @@
 import { clipBox } from "./cutProfiles";
-import { entryPartIds } from "./ideaBindingState";
+import { movingSections } from "./sectionAttachments";
 import { formatPreciseInches } from "./measurement";
 import { isHardware, type Piece, type Project, type V3 } from "./model";
 import { partLabel } from "./partLabels";
@@ -83,11 +83,8 @@ export function siteClearanceMembers(project: Project, plane: SiteClearance) {
   const binding = project.ideaBindings.find(
     (entry) => entry.id === plane.bindingId,
   );
-  const ids = wholeProject
-    ? null
-    : new Set(
-        binding?.entries.flatMap((entry) => [...entryPartIds(project, entry)]),
-      );
+  const sectionIds = new Set(binding?.entries.flatMap((entry) => entry.sections.map(({ sectionId }) => sectionId)));
+  const ids = wholeProject ? null : movingSections(project, project.sections.filter(({ id }) => sectionIds.has(id))).pieceIds;
   const pieces = project.pieces.filter(
     (piece) =>
       (ids === null || ids.has(piece.id)) &&

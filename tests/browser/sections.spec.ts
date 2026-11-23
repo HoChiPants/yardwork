@@ -605,4 +605,13 @@ test("a framed wall stops flush on an external beam and keeps all member offsets
   await expect(
     page.getByRole("spinbutton", { name: "Section Y", exact: true }),
   ).toHaveValue("5");
+  const bottom = page.getByRole("spinbutton", { name: "Bottom above floor", exact: true });
+  await expect(bottom).toHaveValue("5");
+  await bottom.fill("18.375");
+  await page.getByRole("button", { name: "Set height", exact: true }).click();
+  await expect(page.getByRole("spinbutton", { name: "Section Y", exact: true })).toHaveValue("18.375");
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await page.getByRole("button", { name: "Sections", exact: true }).click();
+  await page.getByRole("combobox", { name: "Current section", exact: true }).selectOption(id);
+  await expect(page.getByRole("spinbutton", { name: "Section Y", exact: true })).toHaveValue("5");
 });

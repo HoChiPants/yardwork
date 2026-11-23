@@ -1,0 +1,53 @@
+.backing-elevation {
+  margin-block: 0.75rem;
+  width: 100%;
+}
+
+.backing-wall {
+  background: #f4eee1;
+  border: 1px solid #ab9074;
+  border-block-width: 3px;
+  max-height: 240px;
+  min-height: 90px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.backing-wall span {
+  position: absolute;
+}
+
+.backing-opening {
+  background: #fdfbf6;
+  border: 1px dashed #816b54;
+}
+
+.backing-stud {
+  background: #c5a37e;
+}
+
+.backing-block {
+  background: #9b4c20;
+}
+
+.backing-row {
+  border-top: 1px dashed #684931;
+  inset-inline: 0;
+}
+
+.backing-mark {
+  background: #182b36;
+  border: 1px solid white;
+  border-radius: 50%;
+  height: 9px;
+  translate: -50% 50%;
+  width: 9px;
+}
+
+.backing-labels {
+  display: flex;
+  font-size: 0.75rem;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}

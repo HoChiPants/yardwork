@@ -2,7 +2,7 @@ import { addFramingLumber } from "../helpers/materialPlacement";
 import { CURRENT_DRAFT_KEY, PREVIOUS_DRAFT_KEY } from "../../src/drafts";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { part, projectSchema, uid, type Project } from "../../src/model";
+import { blank, part, projectSchema, uid, type Project } from "../../src/model";
 import { guideIsCurrent } from "../../src/guide";
 import { bounds } from "../../src/engine";
 import { cedarbrookLining as cedar } from "../../src/saunaLiningReference";
@@ -21,6 +21,7 @@ import { harviaKit } from "../../src/saunaHeaterReference";
 import { reviewSunliteTape } from "../../src/sunliteTapePlan";
 import { sunliteTapeProductId } from "../../src/sunliteTapeSchema";
 import { edgeBandingEdges } from "../../src/edgeBanding";
+import { saveMotionPlan } from "../../src/mechanismMotion";
 
 test("the Home Depot sauna package checks body placement and exports the correct package with review notes", async ({ page }, info) => {
   await page.goto("/");
@@ -335,6 +336,51 @@ for (const [family, edges, rolls] of [
     expect(saved.pieces).toEqual(sample.pieces);
   });
 }
+
+test("measured veneer previews finish movement before the edge is saved", async ({ page }) => {
+  const seed = blank("Finished drawer clearance");
+  const step = seed.steps[0].id;
+  const shelf = { ...part("Fixed shelf", "plywood", [18, 0.75, 10], [0, 10, 0], step, "Cabinet"), stockLengthAxis: 0 as const };
+  const lip = part("Passing tray lip", "plywood", [12, 0.75, 0.75], [-20, 10, 5.39], step, "Tray");
+  const { project } = saveMotionPlan({ ...seed, pieces: [shelf, lip] }, {
+    label: "Passing tray", memberIds: [lip.id], mechanism: { kind: "slide", axis: [1, 0, 0], travel: 18 },
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Import a plan", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "finished-drawer-clearance.yardwork.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const panel = page.locator("#edge-banding-plan");
+  const summary = panel.locator(":scope > summary");
+  await summary.click();
+  await panel.getByRole("combobox", { name: "Panel to edge", exact: true }).selectOption(shelf.id);
+  await panel.getByRole("checkbox", { name: /Local \+Z ·/ }).check();
+  await panel.getByRole("spinbutton", { name: "Total strip trim", exact: true }).fill("0.5");
+  await panel.getByRole("checkbox", { name: "Include measured thickness in fit and movement", exact: true }).check();
+  const thickness = panel.getByRole("spinbutton", { name: "Installed veneer thickness", exact: true });
+  const check = panel.getByRole("button", { name: "Check finished movement", exact: true });
+  const outcome = panel.getByRole("region", { name: "Finished movement", exact: true });
+  await thickness.fill("0.046875");
+  await check.click();
+  await expect(outcome).toContainText(/Modeled interference.*Passing tray lip.*Fixed shelf/);
+  expect((await draft(page))!.edgeBanding ?? []).toHaveLength(0);
+  await outcome.getByRole("button", { name: "Show in 3D", exact: true }).click();
+  await expect(page.getByTestId("motion-preview-label")).toContainText(/Passing tray.*Fixed shelf/);
+  await page.getByRole("button", { name: "Return to edge banding", exact: true }).click();
+  await thickness.fill("0.005");
+  await expect(outcome).toHaveCount(0);
+  await expect(page.getByTestId("motion-preview-label")).toHaveCount(0);
+  await check.click();
+  await expect(outcome).toContainText("No new or worse findings in the saved motion tests.");
+  await panel.getByRole("button", { name: "Save 1 edge", exact: true }).click();
+  await expect(summary).toContainText("1 saved edge");
+  await expect.poll(async () => (await draft(page))?.edgeBanding?.[0].installedThickness).toBe(0.005);
+  const finished = (await draft(page))!;
+  expect(finished.pieces.map(({ size }) => size)).toEqual(project.pieces.map(({ size }) => size));
+});
 
 test("a reviewed greenhouse base carries its exact timber cuts and a matching store snapshot to the Home Depot list", async ({ page }) => {
   await page.goto("/");

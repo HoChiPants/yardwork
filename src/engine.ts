@@ -1,4 +1,10 @@
+import { modeledGlueMarkdown } from "./woodGlueFaces";
 import { trimSealant } from "./trimSealantReference";
+import { casingSealLines } from "./casingSeal";
+import { pipeAirSealGuideLines, pipeAirSealReference, pipeAirSealScope, reviewPipeAirSeals } from "./pipeAirSeal";
+import { openingSilicone } from "./openingAirSealReference";
+import { countertopSealGuideLines, reviewCountertopSeals } from "./countertopSeal";
+import { countertopSealScope, countertopSealant } from "./countertopSealReference";
 import { subfloorJointLine, subfloorReport, subfloorReviews, uniqueSubfloorJoints } from "./subfloor";
 import { subfloorAdhesiveReport, subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorFasteningReport, subfloorFasteningReviews } from "./subfloorFastening";
@@ -6,10 +12,13 @@ import { subfloorJoistReport, subfloorJoistReviews } from "./subfloorJoists";
 import { floorJoistReference } from "./floorJoistReference";
 import { subfloorAdhesive, subfloorJointReference, subfloorNails, subfloorReference } from "./subfloorReference";
 import { bottomPlateSealGuide, bottomPlateSealReviews } from "./bottomPlateSeal";
-import { topPlateSealFieldGuide, topPlateSealGuide, topPlateSealReviews } from "./topPlateSeal";
+import { drywallPlateDetails, drywallPlateSealReviews, topPlateSealFieldGuide, topPlateSealGuide } from "./topPlateSeal";
+import type { DrywallPlateFace } from "./topPlateSealSchema";
 import { bottomPlateSealant } from "./bottomPlateSealReference";
 import { drawingReferenceDescription } from "./drawingReference";
 import { caseworkTipUpGuideLines, reviewCaseworkTipUp } from "./caseworkTipUp";
+import { drawerBalanceGuideLines, drawerBalanceReference, drawerBalanceScope, drawerBalanceText, drawerBalanceTitle, previewDrawerBalance } from "./drawerBalance";
+import { installationRouteGuideLines, installationRouteReference, reviewInstallationRoute } from "./installationRoute";
 import { buildPreparation, buildPreparationMarkdown } from "./buildPreparation";
 import { reviewModeledWoodContacts } from "./modeledWoodContacts";
 import { trimBackerRodCutPlan, trimBackerRodGuideLines, trimSealantGuideLines, trimSeamPurchaseSummary, woodJointDecisionEntries, woodJointDecisionLine, woodJointDecisionScope } from "./woodJointDecisions";
@@ -19,12 +28,16 @@ import { openingFlashingGuideLines, reviewGeneratedWindowWalls, reviewOpeningFla
 import { nonbearingHeaderSource, windowFramingSource, windowWallScope } from "./windowWall";
 import { flexWrap, openingAirSealGuide, openingFlashingScope } from "./openingFlashingReference";
 import { sillGasketBuildingGuide, sillGasketInstructions, sillGasketScope } from "./sillGasketReference";
-import { offcutCutOrderMarkdown, offcutCutRows } from "./offcutCutGuide";
-import { plannedStockCutOrders, plannedStockCutOrdersMarkdown } from "./plannedCutSources";
+import { offcutCutOrderMarkdown, offcutCutRows, unavailableOffcutLines } from "./offcutCutGuide";
+import { offcutAvailability } from "./offcutAvailability";
+import { plannedStockCutOrders, plannedStockCutOrdersMarkdown, recordedStockCutOrdersMarkdown, recordedStockCutOrderView } from "./plannedCutSources";
 import { beamSource, reviewShelfSag, shelfSagGuideLines, shelfSagScope, shelfSagSummary, stiffnessSource } from "./shelfSag";
+import { reviewFittedShelfDividers, shelfDividerGuideLines, shelfDividerReference } from "./shelfDivider";
 import { homeDepotShoppingList } from "./handoff";
 import { stockCutSequences } from "./stockCutSequence";
-import { isDrywall } from "./drywallReference";
+import { drywallInstallation, drywallJointTape, drywallScrews, drywallSpecification, isDrywall } from "./drywallReference";
+import { drywallJointTapeReport } from "./wallDrywallJoints";
+import { drywallScrewReport } from "./wallDrywallScrews";
 import { reviewSunliteMounts, sunliteMountLines, sunliteMountScope } from "./sunliteMounts";
 import { sunliteFastener } from "./sunliteFastenerReference";
 import { reviewGreenhouseVentBacking, ventBackingGuideLines, ventBackingScope, ventBackingSource, ventBackingSummary } from "./greenhouseVentBacking";
@@ -68,9 +81,10 @@ import { pieceThroughOpenings, shiftedThroughOpenings, throughOpeningPrisms, thr
 import { prepareCollisionSolid, solidOverlap } from "./solidCollision";
 import { orientedStockSize, stockAxes } from "./stockAxes";
 import { cutInstructions, cutInstructionsText } from "./cutInstructions";
+import { stockPreparationByStep, stepStockMarkdown } from "./stepStockPreparation";
 import { stockCutSequenceMarkdown } from "./stockCutSequence";
 import { reviewWoodSupport, woodSupportGuideLines, woodSupportScope } from "./woodSupport";
-import { bearingConnectionGuideLines, bearingConnections, bearingConnectionScope } from "./bearingConnections";
+import { bearingConnectionGuideLines, bearingConnections, bearingConnectionScope, fittedSupportBlockJoints } from "./bearingConnections";
 import { purchaseCount } from "./purchaseUnits";
 import { freshStoreCheck } from "./storeSnapshotTime";
 import { suppliesMarkdown, supplyRows, formatSupplyContent } from "./supplies";
@@ -87,6 +101,7 @@ import { sinkTrap, sinkDrainReferences } from "./sinkDrainReference";
 import { maxFittingInstructions, maxInsertionChart, waterFittingProducts } from "./waterFittingReference";
 import { pexInstallation, pipeProtectionSource, studBoreSource } from "./wallWaterReference";
 import { reviewShingleRoof, roofAreaText, roofPitchText } from "./shingleRoof";
+import { roofDeckBackingDetail, roofDeckEndDetail, roofDeckEndTitle, roofDeckJointDetail, roofDeckJointLabel, roofDeckJointName } from "./roofDeckSpacing";
 import { saunaHeaterMarkdown, saunaHeaterReview } from "./saunaHeaters";
 import { saunaVentilationMarkdown, saunaVentilationReview, saunaVentOpeningsReview } from "./saunaVentilation";
 import { liningBackingText, saunaLiningBacking, saunaLiningGuideLines, saunaLiningScope, saunaLiningSources, saunaLiningTools } from "./saunaLiningBacking";
@@ -110,6 +125,10 @@ import { profileNames, reviewSunliteProfiles, sunliteProfileMarkdown } from "./s
 import { sunliteFluteDrainage, sunliteGuideMarkdown } from "./sunliteTakeoff";
 import { sunliteTapeMarkdown } from "./sunliteTapePlan";
 import { edgeBandingMarkdown } from "./edgeBanding";
+import { scribeFillerGuideLines, scribeFillerReviews, scribeFillerTitle, scribeInstallation, scribeScope } from "./scribeFiller";
+import { furnitureBraceGuideLines, furnitureBraceReference, furnitureBraceReviews, furnitureBraceScope, furnitureBraceTitle } from "./furnitureBrace";
+import { cabinetBackingGuideLines, cabinetBackingReference, cabinetBackingReviews, cabinetBackingScope, cabinetBackingTitle } from "./cabinetBacking";
+import { cabinetScrewLocationText, cabinetScrewReference } from "./cabinetScrewReach";
 import { coldRetentionText, sunliteThermalMarkdown, sunliteThermalReview, thermalAxisText } from "./sunliteThermal";
 import {
   reviewSunliteRoofBacking, roofBackingGuideLines, roofBackingScope,
@@ -127,6 +146,7 @@ import { reviewRoofValleys, roofValleyGuideLines } from "./roofValleys";
 import { valleyKey } from "./roofValleySchema";
 import { valleyFieldGuide, valleyScope, weatherWatch } from "./roofValleyReference";
 import { floorRegisterGuideLines, floorRegisterReviews } from "./floorRegister";
+import { openingCutoutGuideLines, openingCutoutInstructions, openingCutoutReference, openingCutoutTitle } from "./openingCutouts";
 import { floorRegisterBoot, floorRegisterScope } from "./floorRegisterReference";
 import { roundDuctGuideLines, roundDuctTakeoff } from "./roundDuct";
 import { roundDuctElbowGuideLines, roundDuctElbowReviews } from "./roundDuctElbow";
@@ -145,6 +165,7 @@ import { attachmentReviews } from "./attachments";
 import { attachmentGuideMarkdown } from "./attachmentGuide";
 import { ensurePartLabels, partLabel } from "./partLabels";
 import { formatPreciseInches } from "./measurement";
+import { workspaceDimensionsMarkdown } from "./workspaceDimensions";
 import { attachmentPurchaseSummaries, attachmentPinProductId } from "./attachmentPurchases";
 import { restraintReviews } from "./restraints";
 import { restraintPurchaseSummary } from "./restraintPurchases";
@@ -152,7 +173,7 @@ import { restraintGuideMarkdown } from "./restraintGuide";
 import { projectNotesMarkdown } from "./projectNotes";
 import { fastenerReviews } from "./fastenings";
 import { fastenerPurchaseSummary } from "./fastenerPurchases";
-import { reviewDriverAccess } from "./fastenerAccess";
+import { driverAccessOrderName, reviewDriverAccess, type DriverAccessLocation } from "./fastenerAccess";
 import { fastenerGuideMarkdown } from "./fastenerGuide";
 import { hingePurchaseAllocations, lidHingeReviews } from "./hinges";
 import { hingePurchaseSummary } from "./hingePurchases";
@@ -682,22 +703,76 @@ export type Finding = {
   attachmentPlanId?: string;
   restraintPlanId?: string;
   fastenerPlanId?: string;
+  driverApproach?: DriverAccessLocation;
   hingePlanId?: string;
   openingFlashingSillId?: string;
+  braceSectionId?: string;
+  cabinetBackingPlanId?: string;
+  installationRouteId?: string;
+  drawerBalanceSectionId?: string;
+  countertopSealId?: string;
+  pipeAirSealId?: string;
+  drywallPlateSeal?: { id: string; face: DrywallPlateFace };
   area?: {
     outlines: V3[][];
     boundaries?: V3[][];
     lines?: [V3, V3][];
     referenceLines?: [V3, V3][];
-    kind?: "glazing-hole-layout" | "vent-sash-gap" | "roof-seam-gap" | "wall-batt-gap" | "panel-bearing" | "panel-floor-bearing" | "seat-span" | "shelf-span" | "rafter-eave" | "rafter-ridge" | "eave-block-preview" | "roof-plane" | "shelf-divider-preview" | "support-block-preview" | "subfloor-block-preview" | "field-treatment";
+    kind?: "glazing-hole-layout" | "vent-sash-gap" | "roof-seam-gap" | "wall-batt-gap" | "panel-bearing" | "panel-floor-bearing" | "seat-span" | "shelf-span" | "rafter-eave" | "rafter-ridge" | "eave-block-preview" | "roof-plane" | "roof-deck-joint" | "roof-deck-end" | "shelf-divider-preview" | "support-block-preview" | "subfloor-block-preview" | "field-treatment";
     label: string;
     labelPoint: V3;
     tone?: "reference";
   };
   connectionScope?: {memberIds:string[];title:string;ownerId?:string;stageKey?:string;roofEntryId?:string;baseEntryId?:string};
 };
+export function driverAccessFindings(project: Project, reviews?: ReturnType<typeof fastenerReviews>): Finding[] {
+  if (!project.fastenerPlans.some(({ driverAccess }) => driverAccess)) return [];
+  return reviewDriverAccess(project, reviews ?? fastenerReviews(project)).flatMap(({ review, locations }) => {
+    const issues = locations.filter(({ state }) => state !== "clear");
+    if (!issues.length) return [];
+    const first = issues.find(({ state }) => state === "blocked") ?? issues[0];
+    return [{
+      id: `driver-access-${review.plan.id}`,
+      severity: "warning" as const,
+      title: `${first.label} · ${review.plan.name}`,
+      detail: `${driverAccessOrderName[first.order]} · ${first.detail}${issues.length > 1 ? ` ${issues.length - 1} more to review in this screw plan.` : ""}`,
+      pieceId: review.plan.head.pieceId,
+      fastenerPlanId: review.plan.id,
+      driverApproach: first,
+    }];
+  });
+}
 export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Finding[] {
   const findings: Finding[] = [];
+  for (const { plan, issue, fastening } of cabinetBackingReviews(p)) {
+    if (issue) findings.push({ id: `cabinet-backing-${plan.id}`, title: "Wall cabinet backing needs review",
+      severity: "warning", detail: issue, pieceIds: [...new Set(plan.receivers)], cabinetBackingPlanId: plan.id });
+    const screwIssues = fastening?.locations.filter(({ issues }) => issues.length) ?? [];
+    if (screwIssues.length) findings.push({ id: `cabinet-screw-${plan.id}`, title: "Cabinet screw reach needs review",
+      severity: "warning", detail: screwIssues.map((row) => cabinetScrewLocationText(p, row)).join(" "),
+      pieceIds: [...new Set(screwIssues.map(({ receiver }) => receiver))], cabinetBackingPlanId: plan.id });
+  }
+  for (const { plan, issue } of reviewPipeAirSeals(p)) {
+    if (issue) findings.push({ id: `pipe-air-seal-${plan.id}`, title: "Pipe air seal needs review", severity: "warning",
+      detail: issue, pieceIds: [plan.partId], pipeAirSealId: plan.id });
+  }
+  for (const { plan, issue } of reviewCountertopSeals(p)) {
+    if (issue) findings.push({ id: `countertop-seal-${plan.id}`, title: "Countertop splash seam needs review", severity: "warning",
+      detail: issue, pieceIds: [plan.topId, plan.wallId], countertopSealId: plan.id });
+  }
+  const braces = furnitureBraceReviews(p);
+  for (const { record, label, issue } of braces) {
+    if (issue) findings.push({
+      id: `brace-fit-${record.partId}`, title: `${label} needs review`, severity: "warning",
+      detail: issue, pieceId: record.partId,
+    });
+  }
+  for (const { record, label, issue } of scribeFillerReviews(p)) {
+    if (issue) findings.push({
+      id: `scribe-filler-${record.partId}`, title: label, severity: "warning",
+      detail: issue, pieceId: record.partId,
+    });
+  }
   for (const row of reviewGeneratedWindowWalls(p)) {
     if (!row.ready) findings.push({
       id: `window-wall-${row.section.id}`, title: `Window framing needs review · ${row.section.name}`,
@@ -960,12 +1035,13 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       ...(layout && { pieceId: record.plateId }),
     });
   }
-  for (const { record, title, layout, problem } of topPlateSealReviews(p)) {
+  for (const { record, title, layout, problem, face } of drywallPlateSealReviews(p)) {
     if (problem) {
       const interruption = layout?.runs.find((run) => run.problem)?.problem;
-      findings.push({ id: `top-plate-${record.id}`, severity: "warning",
-        title: `Review top plate air seal · ${title}`,
+      findings.push({ id: `${face === "top" ? "top-plate" : "drywall-bottom-plate"}-${record.id}`, severity: "warning",
+        title: `Review ${face === "top" ? "top plate air seal" : "drywall-to-bottom-plate seal"} · ${title}`,
         detail: [problem, interruption].filter(Boolean).join(" "),
+        drywallPlateSeal: { id: record.id, face },
         ...(layout && { pieceId: record.plateId }),
       });
     }
@@ -1025,6 +1101,43 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       }
       if (review.overlaps) findings.push({ id: "shingle-roof-overlap", severity: "warning", title: "Review overlapping roof areas",
         detail: "Two selected deck surfaces overlap on the same plane. Review the roof area selection before estimating shingles." });
+      for (const joint of review.deckSpacing.joints) {
+        const title = `Roof deck joint · ${roofDeckJointName(p, joint)}`;
+        const label = `${title} · ${roofDeckJointLabel(joint)}`;
+        const unsupported = joint.backing?.flatMap(({ gaps }) => gaps.map(({ points }) => points)) ?? [];
+        const clear = joint.state === "match" && joint.backing && !unsupported.length;
+        findings.push({
+          id: joint.id,
+          severity: clear ? "info" : "warning",
+          title,
+          detail: `${roofDeckJointDetail(joint)} ${roofDeckBackingDetail(p, joint)}`,
+          pieceIds: joint.pieceIds,
+          area: {
+            kind: "roof-deck-joint", outlines: [], lines: unsupported,
+            referenceLines: joint.edges, label,
+            ...(clear ? { tone: "reference" } : {}),
+            labelPoint: joint.line[0].map((value, axis) => (value + joint.line[1][axis]) / 2) as V3,
+          },
+        });
+      }
+      for (const end of review.deckSpacing.ends) {
+        const title = roofDeckEndTitle(p, end);
+        const lines = [...end.bearingGaps, ...end.fastenerGaps].map(({ points }) => points);
+        findings.push({ id: end.id, severity: lines.length ? "warning" : "info", title, detail: roofDeckEndDetail(end),
+          pieceIds: [end.pieceId],
+          area: {
+            kind: "roof-deck-end", outlines: [], lines, referenceLines: [end.edge], label: title,
+            ...(!lines.length ? { tone: "reference" } : {}),
+            labelPoint: end.edge[0].map((value, axis) => (value + end.edge[1][axis]) / 2) as V3,
+          },
+        });
+      }
+      for (const pieceId of review.deckSpacing.ambiguousEnds) {
+        findings.push({ id: `roof-deck-end-axis-${pieceId}`, severity: "info", pieceId,
+          title: `Set roof deck stock axis · ${partLabel(p, pieceId)}`,
+          detail: "Set the stock length axis to match the panel stamp so the two deck ends can be checked.",
+        });
+      }
     }
   }
   for (const plan of p.motionPlans ?? []) {
@@ -1160,6 +1273,11 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       pieceId: plan.latchId,
     });
   }
+  for (const plan of p.installationRoutes ?? []) {
+    const route = reviewInstallationRoute(p, plan);
+    if (route.state !== "clear") findings.push({ id: `installation-route-${plan.id}`, title: `${plan.name} needs review`, severity: "warning",
+      detail: route.detail, installationRouteId: plan.id });
+  }
   for (const plan of p.caseworkTipUpPlans ?? []) {
     const report = reviewCaseworkTipUp(p, plan);
     if (report.state !== "clear") findings.push({
@@ -1167,6 +1285,20 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       severity: "warning",
       title: `${report.name} · Review tip-up clearance`,
       detail: report.detail,
+    });
+  }
+  for (const { input, geometryKey } of p.drawerBalancePlans ?? []) {
+    let detail: string | undefined;
+    try {
+      const report = previewDrawerBalance(p, input, geometryKey);
+      const balance = report.crossing === undefined ? undefined : `At requested openings · ${drawerBalanceText(report.combined).toLowerCase()}.`;
+      detail = [balance, report.travelMessage].filter(Boolean).join(" ");
+    } catch (cause) {
+      detail = cause instanceof Error ? cause.message : "Review the saved balance estimate.";
+    }
+    if (detail) findings.push({
+      id: `drawer-balance-${input.sectionId}`, severity: "warning", title: "Review drawer balance",
+      detail, drawerBalanceSectionId: input.sectionId,
     });
   }
   for (const bench of saunaBenchReviews(p))
@@ -1390,6 +1522,11 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
         label: `${label} · Longest support span`, labelPoint: row.center,
       } : undefined,
     });
+  }
+  for (const { plan, current } of reviewFittedShelfDividers(p, panelReviews, woodSupport)) {
+    if (!current) findings.push({ id: `shelf-divider-${plan.dividerId}`, title: "Shelf divider fit needs review",
+      detail: "Check the marked offset, full-depth shelf contact and bearing on the recorded base before using the divider plan.",
+      severity: "warning", pieceId: plan.shelfId, pieceIds: [plan.shelfId, plan.dividerId] });
   }
   const connections = connectionCoverage(p,{fasteners:fastenerReviewCache,hinges:hingeReviewCache,attachments:attachmentReviewCache,restraints:restraintReviewCache});
   for (const base of greenhouseBaseConnections(p, connections.intents)) {
@@ -1677,11 +1814,15 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
         const panels = members.filter(
           (piece) => material(piece.material).stockKind === "sheet",
         ).length;
+        const fitted = braces.filter(({ ownerId, contacts }) => ownerId === section.id && contacts).length;
+        const braceDetail = fitted ? `${fitted} fitted diagonal ${fitted === 1 ? "brace has" : "braces have"} modeled contact at both posts. Review the attachment at each end.`
+          : "Consider a designed diagonal brace or appropriately attached back/side panel.";
         findings.push({
           id: `furniture-frame-${section.id}`,
           severity: "warning",
           title: `Review lateral bracing and frame joints · ${section.name}`,
-          detail: `${section.name} has ${uprights} upright members and ${rails} horizontal rails. Review the corner joints and how sideways forces reach the floor. Consider a designed diagonal brace or appropriately attached back/side panel. ${panels ? `${panels} panel(s) are present, but a seat or back panel's presence alone does not establish effective bracing.` : "No sheet panels are recorded in this section."} Joint capacity, panel fastening, and tipping resistance need design review.`,
+          detail: `${section.name} has ${uprights} upright members and ${rails} horizontal rails. Review the corner joints and how sideways forces reach the floor. ${braceDetail} ${panels ? `${panels} panel(s) are present, but a seat or back panel's presence alone does not establish effective bracing.` : "No sheet panels are recorded in this section."} Joint capacity, panel fastening, and tipping resistance need design review.`,
+          braceSectionId: section.id,
           pieceId: frame[0].id,
         });
       }
@@ -1693,13 +1834,14 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
           piece.id === id && material(piece.material).stockKind === "sheet",
       ),
     );
-    const hasDiagonal = section.pieceIds.some((id) =>
-      active.some(
-        (piece) =>
-          piece.id === id &&
-          piece.rotation.some((angle) => Math.abs(Math.sin(angle * 2)) > 0.1),
-      ),
-    );
+    const hasDiagonal = members.some((piece) => {
+      const stock = material(piece.material);
+      if (!stock.wood || stock.stockKind !== "linear") return false;
+      const direction: V3 = [0, 0, 0];
+      direction[stockAxes(piece, piece.cutStock?.size ?? piece.size).length] = 1;
+      const vertical = Math.abs(rotate(direction, piece.rotation)[1]);
+      return vertical > 0.1 && vertical < 0.9;
+    });
     if (!hasPanel && !hasDiagonal)
       findings.push({
         id: `racking-${section.id}`,
@@ -1890,19 +2032,7 @@ export function validate(p: Project, woodSupport = reviewWoodSupport(p)): Findin
       fastenerPlanId: review.plan.id,
     });
   }
-  for (const { review, locations } of reviewDriverAccess(p, fastenerReviewCache)) {
-    const issues = locations.filter((row) => row.state !== "clear");
-    if (!issues.length) continue;
-    const first = issues.find((row) => row.state === "blocked") ?? issues[0];
-    findings.push({
-      id: `driver-access-${review.plan.id}`,
-      severity: "warning",
-      title: `${review.plan.label} · Review driver clearance`,
-      detail: `${first.label} · ${first.detail}${issues.length > 1 ? ` ${issues.length - 1} other approaches to review.` : ""}`,
-      pieceId: review.plan.head.pieceId,
-      fastenerPlanId: review.plan.id,
-    });
-  }
+  findings.push(...driverAccessFindings(p, fastenerReviewCache));
   for (const row of fastenerPurchaseSummary(p).products)
     if (row.shortfallPacks)
       findings.push({
@@ -2076,7 +2206,8 @@ export function guideHomeDepotStock(project: Project, rows: readonly BomRow[]) {
     return offer ? [{ id: row.id, stock, quantity: row.quantity, offer }] : [];
   });
 }
-export function guideMarkdown(p: Project) {
+// Keep the archived guide layout available while workshop exports put stock ahead of assembly.
+export function guideMarkdown(p: Project, { workshopOrder = false }: { workshopOrder?: boolean } = {}) {
   p = ensurePartLabels(p);
   const materialRows = bom(p);
   const supplierRows = materialRows.filter((row) => row.quantity > 0 && row.supplier);
@@ -2084,12 +2215,15 @@ export function guideMarkdown(p: Project) {
   const onHand = stockOnHand(materialRows);
   const lineage = inspectCutStock(p);
   const savedStockOrders = plannedStockCutOrders(p, lineage);
-  const savedStockStepIds = new Set(savedStockOrders.flatMap(({ stepIds }) => stepIds));
+  const recordedStockOrders = (p.recordedStockCutOrders ?? []).map(recordedStockCutOrderView);
+  const savedStockStepIds = new Set([...savedStockOrders, ...recordedStockOrders].flatMap(({ stepIds }) => stepIds));
   const connections = connectionCoverage(p);
   const motionReviews = projectMotionReviews(p);
   const motions = motionReviewLines(p, motionReviews);
   const saunaSeating = saunaBenchGuideLines(p);
   const caseworkTipUp = caseworkTipUpGuideLines(p);
+  const drawerBalance = drawerBalanceGuideLines(p);
+  const installRoutes = installationRouteGuideLines(p);
   const saunaBenchTravel = saunaBenchTravelGuideLines(p);
   const saunaWalls = saunaWallGuideLines(p);
   const saunaCeiling = saunaCeilingGuideLines(p);
@@ -2102,12 +2236,16 @@ export function guideMarkdown(p: Project) {
   const woodSupportReview = reviewWoodSupport(p);
   const panelBearing = panelBearingGuideLines(p, panelReviews, woodSupportReview);
   const shelfSag = shelfSagGuideLines(p, panelReviews);
+  const shelfDividers = shelfDividerGuideLines(p, panelReviews);
   const woodSupport = woodSupportGuideLines(p, woodSupportReview);
   const bearingReview = bearingConnections(p, woodSupportReview, connections);
   const bearingJoints = bearingConnectionGuideLines(p, bearingReview, connections);
   const woodJointDetails = woodJointDecisionEntries(p);
   const trimBacking = trimBackerRodCutPlan(p, woodJointDetails);
   const trimSealantSchedule = trimSealantGuideLines(trimSeamPurchaseSummary(p, woodJointDetails));
+  const casingSeams = casingSealLines(p);
+  const countertopSeams = countertopSealGuideLines(p);
+  const pipeAirSeals = pipeAirSealGuideLines(p);
   const roofBearing = reviewGreenhouseRafterBearing(p);
   const rafterBearing = rafterBearingGuideLines(p, roofBearing);
   const roofAttachments = greenhouseRoofAttachmentLines(p, greenhouseRoofAttachments(p, connections.intents, roofBearing));
@@ -2122,6 +2260,10 @@ export function guideMarkdown(p: Project) {
   const roofValleys = roofValleyGuideLines(p);
   const roofVentFlashings = roofVentFlashingGuideLines(p);
   const floorRegisters = floorRegisterGuideLines(p);
+  const recoveredOpeningCutouts = openingCutoutGuideLines(p);
+  const scribeFillers = scribeFillerGuideLines(p);
+  const furnitureBraces = furnitureBraceGuideLines(p);
+  const cabinetBacking = cabinetBackingGuideLines(p);
   const roundDucts = roundDuctGuideLines(p);
   const roundDuctElbows = roundDuctElbowGuideLines(p);
   const ductSeal = roundDuctSealGuidance(p);
@@ -2135,18 +2277,25 @@ export function guideMarkdown(p: Project) {
   const doorSeals = greenhouseDoorSealGuideLines(p);
   const latch = greenhouseLatchGuideLines(p);
   const supplies = supplyRows(p);
+  const stockSequences = stockCutSequences(p, materialRows);
+  const offcutRows = offcutCutRows(p, lineage, savedStockOrders);
+  const stepStock = workshopOrder
+    ? stockPreparationByStep(p, materialRows, stockSequences, lineage, savedStockOrders, offcutRows)
+    : undefined;
+  const stockOrderMarkdown = stockCutSequenceMarkdown(p, materialRows, stockSequences);
   const preparation = buildPreparation(p, {
     stock: materialRows,
     supplies,
-    sequences: stockCutSequences(p, materialRows),
+    sequences: stockSequences,
     connections,
     woodContacts: reviewModeledWoodContacts(p, connections, bearingReview, woodJointDetails),
+    supportBlockJoints: fittedSupportBlockJoints(p, woodSupportReview, bearingReview, woodJointDetails),
     findings: validate(p, woodSupportReview),
     motions: motionReviews,
     lids: projectLidTravelChecks(p),
     handoff: p.retailer === "lowes" ? undefined : homeDepotShoppingList(p, materialRows, supplies),
   });
-  const plannedSources = new Set(p.plannedCutSources?.map(({ sourceId }) => sourceId));
+  const stockAvailability = offcutAvailability(p);
   const describePiece = (x: Piece) => {
     const m = material(x.material);
     const instructions = m.cuttable || pieceThroughOpenings(x).length
@@ -2163,7 +2312,7 @@ export function guideMarkdown(p: Project) {
           .map((line) => `  - ${line}`)
           .join("\n")
       : "";
-    const pending = x.offcut && x.cutStock && plannedSources.has(x.cutStock.id) ? " · Expected after cutting" : "";
+    const pending = x.offcut && stockAvailability(x) === "expected" ? " · Expected after cutting" : "";
     return `- ${partLabel(p, x.id)} · ${x.name}: ${x.size.map(formatPreciseInches).join(" × ")} (${m.name})${pending}${instructions ? `\n${instructions}` : ""}`;
   };
   const offcuts = p.pieces.filter(
@@ -2176,9 +2325,15 @@ export function guideMarkdown(p: Project) {
       ? `## Drawing reference\n\n${drawingReferenceDescription(p.drawingReference)}. Use the calibrated workspace for layout.\n\n`
       : "") +
     "Geometric planning only. Verify engineering, code, connections, and site conditions before construction.\n\n" +
+    workspaceDimensionsMarkdown(p) +
     buildPreparationMarkdown(preparation) +
     plannedStockCutOrdersMarkdown(savedStockOrders) +
-    offcutCutOrderMarkdown(offcutCutRows(p, lineage, savedStockOrders)) +
+    recordedStockCutOrdersMarkdown(recordedStockOrders) +
+    (workshopOrder ? stockOrderMarkdown + "\n" : "") +
+    offcutCutOrderMarkdown(offcutRows, unavailableOffcutLines(p)) +
+    (recoveredOpeningCutouts.length ? `\n\n## ${openingCutoutTitle}\n\n${openingCutoutInstructions}\n\n` +
+      recoveredOpeningCutouts.map((line) => "- " + line).join("\n") +
+      `\n\n[Makita jigsaw instructions for internal cutouts](${openingCutoutReference})\n` : "") +
     ((p.siteClearances ?? []).length
       ? "## Measured site clearances\n\n" +
         p.siteClearances!.map((plane) => `- ${plane.label.replace(/\r?\n/g, " ")} · ${siteClearanceText(p, reviewSiteClearance(p, plane))}`).join("\n") +
@@ -2247,6 +2402,7 @@ export function guideMarkdown(p: Project) {
       .map(
         (s, i) =>
           `## ${i + 1}. ${s.title}${s.complete ? " [complete]" : ""}\n\n${s.notes}\n\n` +
+          stepStockMarkdown(stepStock?.get(s.id)) +
           p.pieces
             .filter((x) => x.stepId === s.id && !x.offcut)
             .map(describePiece)
@@ -2273,7 +2429,7 @@ export function guideMarkdown(p: Project) {
       ? "\n\n## Recorded offcuts\n\nModeled remnants; review dimensions, profiles and source lineage before reuse.\n\n" +
         offcuts.map(describePiece).join("\n")
       : "") +
-    stockCutSequenceMarkdown(p, materialRows) +
+    (workshopOrder ? "" : stockOrderMarkdown) +
     bindingGuideMarkdown(p) +
     rollGuideMarkdown(p) +
     (materialRows.some((row) => row.id === cedarbrookFoil.materialId)
@@ -2306,6 +2462,9 @@ export function guideMarkdown(p: Project) {
       shelfSag.map((line) => "- " +
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       `\n\n[Panel stiffness reference](${stiffnessSource}) · [Bending formula](${beamSource})\n` : "") +
+    (shelfDividers.length ? "\n\n## Fitted shelf dividers\n\n" + shelfDividers.map((line) => "- " +
+      line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
+      `\n\n[Kreg bookcase example with offset dividers](${shelfDividerReference})\n` : "") +
     (woodSupport.length ? "\n\n## Wood contact to floor\n\n" + woodSupportScope + "\n\n" +
       woodSupport.map((line) => "- " +
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
@@ -2318,11 +2477,12 @@ export function guideMarkdown(p: Project) {
       woodJointDetails.map((entry) => "- " +
         woodJointDecisionLine(entry).replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       "\n" : "") +
+    modeledGlueMarkdown(p) +
     (trimSealantSchedule.length ? "\n\n## Trim sealant work sessions\n\n" +
       trimSealantSchedule.map((line) => "- " +
         line.replace(/[\r\n]/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[DAP application and coverage](${trimSealant.specification})\n` : "") +
-    (trimBacking.length ? `\n\n## ${trimBacking.some(({ hasAirSeal }) => hasAirSeal) ? "Backer rod cut plan" : "Trim backer rod cut plan"}\n\n` + trimBackerRodScope + "\n\n" +
+    (trimBacking.length ? `\n\n## ${trimBacking.some(({ hasAirSeal, hasPipeSeal }) => hasAirSeal || hasPipeSeal) ? "Backer rod cut plan" : "Trim backer rod cut plan"}\n\n` + trimBackerRodScope + "\n\n" +
       trimBackerRodGuideLines(trimBacking).map((line) => "- " +
         line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
       `\n\n[Frost King instructions](${trimBackerRodInstructions}) · ${trimBacking.map(({ product }) =>
@@ -2344,6 +2504,17 @@ export function guideMarkdown(p: Project) {
     sunliteProfileMarkdown(p) +
     sunliteTapeMarkdown(p) +
     edgeBandingMarkdown(p) +
+    (scribeFillers.length ? `\n\n## ${scribeFillerTitle}\n\n${scribeScope}\n\n` +
+      scribeFillers.map((line) => "- " + line).join("\n") +
+      `\n\n[Cabinet filler installation guide](${scribeInstallation})\n` : "") +
+    (furnitureBraces.length ? `\n\n## ${furnitureBraceTitle}\n\n${furnitureBraceScope}\n\n` +
+      furnitureBraces.map((line) => "- " + line).join("\n") +
+      `\n\n[Kreg example of documented furniture angle stretchers](${furnitureBraceReference})\n` : "") +
+    (cabinetBacking.length ? `\n\n## ${cabinetBackingTitle}\n\n${cabinetBackingScope}\n\n` +
+      cabinetBacking.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
+      `\n\n[IKEA ENHET wall preparation guide](${cabinetBackingReference})\n` +
+      (p.cabinetBacking?.some(({ fastening }) => fastening)
+        ? `\n[IKEA ENHET wall cabinet installation guide](${cabinetScrewReference})\n` : "") : "") +
     rodFitMarkdown(p) +
     saunaHeaterMarkdown(p) +
     saunaVentilationMarkdown(p) +
@@ -2362,9 +2533,21 @@ export function guideMarkdown(p: Project) {
       `\n\n[Cedarbrook pedestal bench assembly instructions](${cedarbrookBenchInstructions})\n\n` : "") +
     (caseworkTipUp.length ? "\n\n## Casework tip-up and placement\n\n" +
       caseworkTipUp.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
+    (drawerBalance.length ? `\n\n## ${drawerBalanceTitle}\n\n${drawerBalanceScope} [CPSC furniture stability guidance](${drawerBalanceReference}).\n\n` +
+      drawerBalance.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
+    (installRoutes.length ? "\n\n## Carry and installation routes\n\n" +
+      installRoutes.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
+      `\n\n[Cabinet installation reference](${installationRouteReference})\n` : "") +
     (saunaBenchTravel.length ? "\n\n## Sauna bench carry-in\n\n" +
       saunaBenchTravel.map((line) => "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     projectCodeMarkdown(p) +
+    (casingSeams.length ? `\n\n## Door casing finish seams\n\n${casingSeams.map((line) => `- ${line}`).join("\n")}\n\n[DAP application and coverage](${trimSealant.specification})\n` : "") +
+    (countertopSeams.length ? `\n\n## Countertop splash seals\n\n${countertopSealScope}\n\n` + countertopSeams.map((line) => "- " +
+      line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
+      `\n\n[GE sealant instructions](${countertopSealant.specification})\n` : "") +
+    (pipeAirSeals.length ? `\n\n## Pipe air seals\n\n${pipeAirSealScope}\n\n` + pipeAirSeals.map((line) => "- " +
+      line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
+      `\n\n[PNNL pipe air sealing](${pipeAirSealReference}) · [DAP application and coverage](${openingSilicone.specification})\n` : "") +
     (roofValleys.length ? `\n\n## Roof valley membrane cuts\n\n${valleyScope}\n\n[GAF installation instructions](${weatherWatch.instructions}) · [PNNL roof valley guidance](${valleyFieldGuide})\n\n` +
       roofValleys.map((line) => "- " + line.replace(/[\r\n]/g, " ")).join("\n") + "\n" : "") +
     (roofVentFlashings.length ? `\n\n## Roof vent flashing\n\n${roofVentFlashingScope}\n\n[Oatey installation guidance](${oateyRoofVentBoot.installation}) · [PNNL roof penetration guidance](${oateyRoofVentBoot.integration})\n\n` +
@@ -2403,6 +2586,12 @@ export function guideMarkdown(p: Project) {
       subfloorFasteningReport(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[APA fastening schedule](${subfloorReference.specification}) · [Grip-Rite specifications](${subfloorNails.specification})\n` : "") +
+    (p.sections.some(({ wallDrywall }) => wallDrywall) ? "\n\n## Drywall screws and backing\n\n" +
+      drywallScrewReport(p).map((line) => `- ${line}`).join("\n") +
+      `\n\n[USG panel specifications](${drywallSpecification}) · [USG installation guide](${drywallInstallation}) · [Grip-Rite specifications](${drywallScrews.specification})\n` : "") +
+    (p.sections.some(({ wallDrywall }) => wallDrywall) ? "\n\n## Drywall joint tape\n\n" +
+      drywallJointTapeReport(p).map((line) => "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\*_{}\[\]<>|]/g, "\\$&")).join("\n") +
+      "\n\n[USG finishing instructions](" + drywallInstallation + ") · [USG paper tape specifications](" + drywallJointTape.specification + ")\n" : "") +
     (p.subfloorJoistPlans?.length ? "\n\n## Joist bearing and span\n\n" +
       subfloorJoistReport(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
@@ -2415,6 +2604,10 @@ export function guideMarkdown(p: Project) {
       topPlateSealGuide(p).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +
       `\n\n[PNNL drywall-to-top-plate guidance](${topPlateSealFieldGuide}) · [OSI instructions](${bottomPlateSealant.specification})\n` : "") +
+    (p.drywallBottomPlateSeals?.length ? "\n\n## Drywall-to-bottom-plate seals\n\n" +
+      topPlateSealGuide(p, "bottom").map((line) =>
+        "- " + line.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ")).join("\n") +
+      `\n\n[Wall-to-floor air barrier detail](${drywallPlateDetails.bottom.fieldGuide}) · [OSI instructions](${bottomPlateSealant.specification})\n` : "") +
     (p.sinkDrains?.length ? "\n\n## Sink drains and wall-tube cuts\n\n" +
       p.sinkDrains.flatMap((record) => sinkDrainGuide(p, record)).map((line) =>
         "- " + line.replace(/[\r\n]+/g, " ").replace(/[\\`*_{}\[\]<>|]/g, "\\$&")).join("\n") +

@@ -18,7 +18,8 @@ The current layouts have no listed stock conflicts.
 
 ### Motion and clearance
 
-- Cabinet door · Modeled interference · P001 against P002 near 32.76°.
+- Cabinet door · Motion alone · Modeled interference · P001 against P002 near 32.76°.
+- Cabinet door · Shorter cabinet opening · No modeled clearance findings along the tested travel.
 
 ### Shopping and availability
 
@@ -102,7 +103,10 @@ Checks follow positive-area wood contact down to the modeled floor. Review the a
 ## Motion and clearance
 
 - Cabinet door · Hinged swing · 90° · P001.
+- Test with other motions at their saved positions
 - Modeled interference · P001 against P002 near 32.76°.
+- Named clearance test · Shorter cabinet opening · Test targets · Cabinet door 32°.
+- No modeled part interference found along the travel.
 
 ## Connection intent review
 

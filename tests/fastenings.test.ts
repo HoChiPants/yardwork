@@ -25,6 +25,9 @@ import { fastenerPlanSchema } from "../src/fasteningSchema";
 import { getWoodFastenerProduct } from "../src/fastenerProducts";
 import { composeRotation, rotate } from "../src/spatial";
 import { createBuildStudy } from "../src/buildFixtures";
+import { fastenerGuideText } from "../src/fastenerGuide";
+import { fastenerPurchaseSummary } from "../src/fastenerPurchases";
+import { fastenerScheduleCsv } from "../src/fastenerCsv";
 const now = Date.parse("2026-11-17T10:00:00Z");
 const near = (actual: number | null, expected: number) =>
   assert.ok(
@@ -71,6 +74,69 @@ function plan(p: Project, depth: number | null = 1.2) {
 function review(p: Project, intent = plan(p)) {
   return fastenerReviews(saveFastenerPlan(p, intent), now)[0];
 }
+
+test("measured crossing paths exclude both screw locations and identify the shared member", () => {
+  let p = blank("Crossed cabinet screw paths");
+  const step = p.steps[0].id;
+  const side = part("Side panel", "plywood", [0.75, 4, 2], [1.375, 2, 0], step, "Cabinet");
+  const back = part("Back panel", "plywood", [2, 4, 0.75], [0, 2, 1.375], step, "Cabinet");
+  const block = part("Corner block", "post", [2, 4, 2], [0, 2, 0], step, "Cabinet");
+  p.pieces = [side, back, block];
+  for (const [head, entry, drive] of [
+    [side, [0.375, 0, 0], [-1, 0, 0]],
+    [back, [0, 0, 0.375], [0, 0, -1]],
+  ] satisfies [typeof side, V3, V3][]) {
+    const intent = addFastenerLocation(makeFastenerPlan(p, head.id, block.id));
+    intent.locations[0].entranceLocal = entry;
+    intent.locations[0].driveLocal = drive;
+    intent.measurements = {
+      ...intent.measurements, surfaceToTipDepth: 2.25, basis: "Synthetic dry-fit measurement",
+      measuredAt: "2026-11-17T09:00:00Z",
+    };
+    p = saveFastenerPlan(p, intent);
+  }
+  const result = fastenerReviews(p, now);
+  assert.deepEqual(result.map(({ state, activePointCount }) => [state, activePointCount]), [["conflict", 0], ["conflict", 0]]);
+  for (const [index, { locations: [location] }] of result.entries()) {
+    const issue = location.issues.find(({ code }) => code === "crossing-fastener-path");
+    assert.ok(issue);
+    assert.ok(issue.message.includes(index === 0 ? "W002/F001" : "W001/F001"));
+    assert.deepEqual(issue.pieceIds, [block.id]);
+  }
+  assert.match(fastenerGuideText(p), /centerline crosses W002\/F001/);
+  assert.match(fastenerGuideText(p), /Coordinates and depths withheld/);
+  assert.match(fastenerScheduleCsv(p), /centerline crosses W001\/F001/);
+  assert.equal(fastenerPurchaseSummary(p).products.find(({ excludedLocations }) => excludedLocations)?.plannedScrews, 0);
+
+  const rotation: V3 = [0.2, 0.45, 0.12];
+  const moved = { ...p, pieces: p.pieces.map((piece) => ({
+    ...piece, rotation, position: rotate(piece.position, rotation).map((v) => v + 10) as V3,
+  })) };
+  assert.ok(fastenerReviews(moved, now).every(({ state, issues }) =>
+    state === "conflict" && issues.some(({ code }) => code === "crossing-fastener-path")));
+
+  const short = structuredClone(p.fastenerPlans[0]);
+  short.measurements.surfaceToTipDepth = 1.5;
+  const cleared = saveFastenerPlan(p, short);
+  assert.ok(fastenerReviews(cleared, now).every(({ state, activePointCount }) => state === "path-reviewed" && activePointCount === 1));
+});
+
+test("entered pilot widths can conflict even when the screw centerlines are separate", () => {
+  const p = fixture(0);
+  const withPilot = addFastenerLocation(plan(p));
+  withPilot.locations[1].entranceLocal = [0.09, 0, 0.703 / 2];
+  withPilot.locations[1].driveLocal = [0, 0, -1];
+  withPilot.measurements.pilotDiameter = 0.125;
+  withPilot.measurements.pilotDepth = 1.1;
+  const overlapped = review(p, withPilot);
+  assert.equal(overlapped.activePointCount, 0);
+  assert.ok(overlapped.locations.every(({ issues }) => issues.some(({ code }) => code === "overlapping-pilot-path")));
+  withPilot.locations[1].entranceLocal[0] = 0.25;
+  assert.equal(review(p, withPilot).activePointCount, 2);
+  withPilot.locations[1].entranceLocal[0] = 0.09;
+  withPilot.measurements.pilotDepth = null;
+  assert.equal(review(p, withPilot).activePointCount, 2);
+});
 
 test("centered entry uses the actual patch and leaves all measurements pending on angled stock", () => {
   const p = fixture(0);

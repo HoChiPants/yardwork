@@ -14,10 +14,11 @@ import type { HingeReview } from "./hinges";
 import type { AttachmentReview } from "./attachments";
 import type { RestraintReview } from "./restraints";
 import { connectorReviews, type ConnectorReview } from "./connectors";
+import { formatGlueArea, modeledGluePlan } from "./woodGlueFaces";
 
 /** Evidence about saved intent only. No state represents installed or load-approved work. */
 export type ConnectionIntentKind =
-  "legacy-joint" | "wood-fastener" | "lid-hinge" | "shelf-pin" | "restraint" | "angle-connector";
+  "legacy-joint" | "wood-fastener" | "lid-hinge" | "shelf-pin" | "restraint" | "angle-connector" | "wood-glue";
 export type ConnectionPurpose =
   "assembly" | "lid-mounting" | "shelf-support" | "external-restraint";
 export type ConnectionIntentState =
@@ -360,6 +361,15 @@ export function connectionCoverage(
         });
       }
     }
+    append(row);
+  }
+  for (const { entry, detail, issue } of modeledGluePlan(project)?.rows ?? []) {
+    const row = base("wood-glue", "assembly", entry.id, null, "Glue faces", entry.title, entry.memberIds);
+    row.state = detail ? "geometry-reviewed" : entry.status === "current" ? "conflict" : "stale";
+    row.sourceState = detail ? `${formatGlueArea(detail.area)} selected for nonstructural glue` : "needs-review";
+    row.explicitLocationCount = detail?.faces.length ?? 0;
+    row.stepId = project.steps[entry.stage - 1]?.id ?? null;
+    if (issue) row.issues = [{ code: "glue-faces-review", message: issue, pieceIds: entry.memberIds }];
     append(row);
   }
   const fasteners = new Map(

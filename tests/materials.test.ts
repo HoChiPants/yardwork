@@ -304,7 +304,7 @@ test("handoff counts cut boards and retained offcuts as stock and makes excluded
 
 test("framing references add real purchase identities to the five saved build examples without counting store inventory", () => {
   const expected = {
-    greenhouse: ["338861827", "100083274"],
+    greenhouse: ["338861827", "334216730"],
     sauna: ["338861827"],
     "storage-banquette": ["338861827"],
     shelves: [],

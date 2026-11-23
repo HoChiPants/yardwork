@@ -689,6 +689,8 @@ Review how each touching pair is held in the build. Some contacts are intended t
 - Island pullout · Straight slide · 12 in · P051.
 - Possible interference · P051 against P054 near 6.11 in based on the part envelope.
 - Possible interference · P051 against P056 near 9.91 in based on the part envelope.
+- Opening pauses near 6.11 in for possible contact between P051 and P054.
+- Closing pauses near 12 in for possible contact between P051 and P056.
 
 ## Connection intent review
 

@@ -7,16 +7,17 @@ import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import { test } from "node:test";
 import { answerConnectionQuestion, connectionQuestion } from "../src/connectionQuestions";
 import { addHomeDepotPurchaseNeed, homeDepotPurchaseNeeds } from "../src/handoffPurchases";
-import { estimateModeledTrimSeam, modeledTrimSeamEdges, trimSeamMarker } from "../src/trimSeamGeometry";
+import { estimateModeledTrimSeam, modeledTrimSeamEdges, trimSeamCovers, trimSeamMarker } from "../src/trimSeamGeometry";
 import { trimSealant } from "../src/trimSealantReference";
+import { backerRodAllocationKey, removeBackerRodOffcut, saveBackerRodOffcut } from "../src/trimBackerRodOffcuts";
 import { bearingConnections } from "../src/bearingConnections";
 import { connectionCoverage } from "../src/connectionCoverage";
 import { guideMarkdown } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
-import { applyCommand, parsePrompt, blank, part, projectSchema, type Project, type V3 } from "../src/model";
+import { applyCommand, parsePrompt, blank, part, projectSchema, uid, type Project, type V3 } from "../src/model";
 import { reviewModeledWoodContacts } from "../src/modeledWoodContacts";
 import { composeRotation, rotate } from "../src/spatial";
-import { clearWoodJointDecision, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimSeamPurchaseSummary, woodJointDecisionEntries } from "../src/woodJointDecisions";
+import { clearWoodJointDecision, recordBackerRodCuts, saveTrimSeam, saveWoodJointDecision, trimBackerRodCutPlan, trimSeamPurchaseSummary, woodJointDecisionEntries } from "../src/woodJointDecisions";
 import { reviewWoodSupport } from "../src/woodSupport";
 
 function aJoint(gap = 0) {
@@ -189,6 +190,43 @@ test("trim interruptions and fitted backing follow the same edge datum through g
   assert.doesNotMatch(guideMarkdown(edited), /Trim backer rod cut plan/);
 });
 
+test("a cover across a trim seam changes the estimate and the guide as installation order changes", () => {
+  const { project, panel, rail } = aJoint(5 / 16);
+  const detail = saveWoodJointDecision(project, panel.id, rail.id, "sealant", "Seal before fitting the face trim.");
+  const byId = (id: string) => project.pieces.find((piece) => piece.id === id)!;
+  const { firstId, secondId } = detail.woodJointDecisions![0];
+  const first = byId(firstId), second = byId(secondId);
+  const edge = modeledTrimSeamEdges(first, second)!.edges.find(({ length }) => length === 4)!;
+  const [a, b] = edge.points;
+  const position = a.map((n, i) => n + 1.5 / edge.length * (b[i] - n)) as V3;
+  const later = { id: uid(), title: "Fit the face trim", notes: "", complete: false };
+  const cover = part("Face trim cover", "plywood", [0.5, 1, 0.125], position, project.steps[0].id, "Trim");
+  const input = {
+    edgeIds: [edge.id], gapWidth: 5 / 16, gapDepth: 1 / 4,
+    fieldCoverageFeet: 20, backerRodId: "frost-king-c21h" as const,
+  };
+  const clear = saveTrimSeam(detail, firstId, secondId, input);
+  const blocked = projectSchema.parse({ ...clear, pieces: [...clear.pieces, cover], steps: [...clear.steps, later] });
+  const covers = trimSeamCovers(blocked, first, second, [edge]);
+  assert.deepEqual(covers.map(({ start, end, later }) => [Math.round(start), Math.round(end), later]), [[1, 2, false]]);
+  assert.equal(trimSeamMarker(edge, "Preview", [], covers).segments.at(-1)?.cover, "blocked");
+  assert.throws(() => saveTrimSeam(blocked, firstId, secondId, input), /Face trim cover covers the seam 1 in to 2 in/);
+  assert.equal(trimSeamPurchaseSummary(blocked)?.review, 1);
+  assert.equal(trimBackerRodCutPlan(blocked).length, 0);
+
+  const access = saveTrimSeam(blocked, firstId, secondId, { ...input, openSpans: [{ edgeId: edge.id, start: 1, end: 2 }] });
+  assert.equal(woodJointDecisionEntries(access)[0].trimSeam?.estimate?.lengthInches, 3);
+  const scheduled = { ...blocked, pieces: [...clear.pieces, { ...cover, stepId: later.id }] };
+  const ready = saveTrimSeam(scheduled, firstId, secondId, input);
+  assert.equal(trimSeamPurchaseSummary(ready)?.length, "4 in");
+  assert.match(guideMarkdown(ready), /Seal 1 in to 2 in from Start before Step 2 installs Face trim cover/);
+
+  const slotted = { ...cover, rectangularOpenings: [{ axis: 2 as const, center: [0, 0] as [number, number], spans: [0.25, 0.5] as [number, number] }] };
+  const slotProject = projectSchema.parse({ ...blocked, pieces: [...clear.pieces, slotted] });
+  const aroundSlot = trimSeamCovers(slotProject, first, second, [edge]);
+  assert.deepEqual(aroundSlot.map(({ start, end }) => [start, end].map((n) => Number(n.toFixed(3)))), [[1, 1.25], [1.75, 2]]);
+});
+
 test("trim takeoff rejects invalid ranges and backing mismatches while fitting separate cuts onto a roll", () => {
   const { project, panel, rail } = aJoint(5 / 16);
   const shape = modeledTrimSeamEdges(panel, rail)!;
@@ -244,6 +282,25 @@ test("measured trim and opening backing share the same exact rod roll and purcha
   const need = homeDepotPurchaseNeeds(saved).find(({ id }) => id === "frost-king-c21h");
   assert.equal(need?.missing, 1);
   assert.ok(need?.canAdd);
+
+  const reused = saveBackerRodOffcut(saved, {
+    label: "Window and trim tail", productId: "frost-king-c21h", length: 180,
+  });
+  const [shared] = trimBackerRodCutPlan(reused);
+  assert.deepEqual(shared.rolls, []);
+  assert.equal(shared.offcuts[0].runs.length, 5);
+  assert.equal(shared.offcuts[0].left, 9);
+  assert.equal(homeDepotPurchaseNeeds(reused).some(({ id }) => id === "frost-king-c21h"), false);
+  assert.match(guideMarkdown(reused), /Offcut Window and trim tail[\s\S]+Keep 9 in/);
+  const picked = shared.offcuts[0];
+  const recorded = projectSchema.parse(recordBackerRodCuts(reused, picked.source.id,
+    backerRodAllocationKey(picked.source, picked.runs), { length: 8.5, label: "Window backing remainder" }));
+  const [after] = trimBackerRodCutPlan(recorded);
+  assert.equal(after.hasAirSeal, true);
+  assert.equal(after.completed[0].changed, 0);
+  assert.equal(after.completed[0].record.cuts.filter(({ kind }) => kind === "opening").length, 4);
+  assert.equal(after.offcuts.length + after.rolls.length, 0);
+  assert.equal(recorded.backerRodOffcuts?.[0].length, 8.5);
 });
 
 test("trim sessions reserve separate cartridges while sharing matching work, cuts and trial scraps", () => {
@@ -282,4 +339,61 @@ test("trim sessions reserve separate cartridges while sharing matching work, cut
   assert.equal(trimSeamPurchaseSummary(changed)?.review, 1);
   assert.equal(homeDepotPurchaseNeeds(changed).find(({ id }) => id === trimSealant.id)?.missing, 1);
   assert.match(answerBuildQuestion(changed, question, []).detail, /1 seam needs a fresh fit review/);
+});
+
+test("matching backer rod tails supply whole runs after save and reopen", () => {
+  const sample = (name: string) => readFileSync(new URL(`../public/examples/air-sealing/trim-rod-offcuts${name}`, import.meta.url), "utf8");
+  const saved = projectSchema.parse(JSON.parse(sample(".yardwork.json")));
+  const [plan] = trimBackerRodCutPlan(saved);
+  assert.deepEqual(plan.rolls, []);
+  assert.deepEqual(plan.offcuts.map(({ source, runs, left }) => [source.label, runs.map(({ length }) => length), left]), [
+    ["Short closet tail", [6], 8], ["Long closet tail", [24], 4],
+  ]);
+  assert.ok(saved.backerRodOffcuts?.some(({ productId }) => productId === "frost-king-c22h"));
+  assert.equal(homeDepotPurchaseNeeds(saved).some(({ id }) => id === "frost-king-c21h"), false);
+  assert.equal(guideMarkdown(saved), sample("-guide.md"));
+
+  const [short, long] = saved.backerRodOffcuts!;
+  const trimmed = saveBackerRodOffcut(saved, { label: long.label, productId: long.productId, length: 22 }, long.id);
+  assert.equal(trimBackerRodCutPlan(trimmed)[0].rolls[0].runs[0].length, 24);
+  const removed = removeBackerRodOffcut(trimmed, short.id);
+  assert.equal(removed.backerRodOffcuts?.length, 2);
+  assert.throws(() => saveBackerRodOffcut(saved, {
+    label: short.label.toUpperCase(), productId: "frost-king-c21h", length: 10,
+  }), /own label/);
+  const answer = answerBuildQuestion(saved, buildQuestion("Can I reuse my backer rod offcuts?")!, []);
+  assert.match(answer.detail, /2 matching offcuts.+0 new rolls/);
+  assert.deepEqual(answer.rows?.map(({ title }) => title), ["Short closet tail", "Long closet tail"]);
+});
+
+test("recorded backer rod use frees only the measured remainder and holds changed runs for a new cut", () => {
+  const practice = (stem: string, extension: string) =>
+    readFileSync(new URL(`../public/examples/air-sealing/${stem}${extension}`, import.meta.url), "utf8");
+  const base = projectSchema.parse(JSON.parse(practice("trim-rod-offcuts", ".yardwork.json")));
+  const allocation = trimBackerRodCutPlan(base)[0].offcuts.find(({ source }) => source.label === "Long closet tail")!;
+  const key = backerRodAllocationKey(allocation.source, allocation.runs);
+  const record = () => recordBackerRodCuts(base, allocation.source.id, key, { length: 3.75, label: "Measured closet remainder" });
+  assert.throws(() => recordBackerRodCuts(base, allocation.source.id, "stale"), /planned cuts changed/);
+  assert.throws(() => recordBackerRodCuts(base, allocation.source.id, key, { length: 4.01, label: "Too long" }), /within the unused length/);
+  const saved = projectSchema.parse(JSON.parse(JSON.stringify(record())));
+  assert.ok(!saved.backerRodOffcuts?.some(({ id }) => id === allocation.source.id));
+  assert.throws(() => projectSchema.parse({ ...saved, backerRodOffcuts: base.backerRodOffcuts }), /cannot also be available stock/);
+  assert.throws(() => recordBackerRodCuts(saved, allocation.source.id, key), /planned cuts changed/);
+  assert.equal(saved.backerRodCutRecords?.[0].remnant?.length, 3.75);
+
+  const worked = projectSchema.parse(JSON.parse(practice("trim-rod-recorded", ".yardwork.json")));
+  const [plan] = trimBackerRodCutPlan(worked);
+  assert.equal(plan.completed[0].changed, 0);
+  assert.equal(plan.completed[0].record.cuts[0].length, 24);
+  assert.deepEqual(plan.offcuts.map(({ source, runs, left }) => [source.label, runs[0].length, left]), [["Measured closet remainder", 3, 0.75]]);
+  assert.equal(guideMarkdown(worked), practice("trim-rod-recorded", "-guide.md"));
+
+  const detail = worked.woodJointDecisions!.find(({ trimSeam }) => trimSeam?.session === "Closet trim")!;
+  const { contactSignature: _contact, ...seam } = detail.trimSeam!;
+  const changed = saveTrimSeam(worked, detail.firstId, detail.secondId,
+    { ...seam, openSpans: [{ ...seam.openSpans![0], end: 9 }] });
+  const [revised] = trimBackerRodCutPlan(changed);
+  assert.equal(revised.completed[0].changed, 1);
+  assert.equal(revised.rolls[0].runs[0].length, 23);
+  assert.match(guideMarkdown(changed), /1 run has changed or been removed since this cut was recorded/);
 });

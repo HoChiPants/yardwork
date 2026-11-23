@@ -6,6 +6,7 @@ import {
   type V3,
 } from "./model";
 import { composeRotation, inverseRotation, rotate } from "./spatial";
+import { finishedPanel, measuredBandingByPanel } from "./edgeBanding";
 import { reviewMotionPath } from "./mechanismMotion";
 import { LID_OPEN_ANGLE_DEGREES } from "./motionConstants";
 import { prepareCollisionSolid, solidOverlap } from "./solidCollision";
@@ -276,14 +277,16 @@ export function lidPreview(
   sectionId: string,
   angle: number,
 ): LidPreview {
-  const result = pose(context(project, sectionId), angle);
+  const poseValue = pose(context(project, sectionId), angle);
+  const banding = measuredBandingByPanel(project);
+  const result = { ...poseValue, piece: finishedPanel(poseValue.piece, banding) };
   const solid = prepareCollisionSolid(result.piece)!;
   return {
     ...withSiteFaces(result, lidSiteFaces(project, sectionId)),
     interferenceIds: project.pieces
       .filter((piece) => {
         if (piece.id === result.piece.id || piece.offcut) return false;
-        const other = obstacleSolid(piece);
+        const other = obstacleSolid(finishedPanel(piece, banding));
         return other && solidOverlap(solid, other);
       })
       .map((piece) => piece.id),
@@ -345,7 +348,7 @@ function sweepSiteClearances(
 ) {
   const planes = lidSiteFaces(project, ctx.section.id);
   return planes.length
-    ? sweepLidSiteFaces(pose(ctx, 0).piece, ctx.pivot, ctx.axis, travel, planes)
+    ? sweepLidSiteFaces(finishedPanel(pose(ctx, 0).piece, measuredBandingByPanel(project)), ctx.pivot, ctx.axis, travel, planes)
     : [];
 }
 
@@ -376,7 +379,7 @@ export function siteFaceLidShortfall(project: Project, plane: SiteClearance) {
   for (const section of lids) {
     const ctx = context(project, section.id);
     const [result] = sweepLidSiteFaces(
-      pose(ctx, 0).piece,
+      finishedPanel(pose(ctx, 0).piece, measuredBandingByPanel(project)),
       ctx.pivot,
       ctx.axis,
       configuredLidTravel(project, section.id),
@@ -407,6 +410,11 @@ export function reviewLidTravel(
     pivot: ctx.pivot,
     travel,
   });
+  const banding = measuredBandingByPanel(project);
+  const finishedPose = (angle: number) => {
+    const result = pose(ctx, angle, travel);
+    return { ...result, piece: finishedPanel(result.piece, banding) };
+  };
   const siteClearances = sweepSiteClearances(project, ctx, travel);
   const siteFaces = siteClearances.map(({ plane }) => plane);
   const shortFaces = siteClearances
@@ -440,7 +448,7 @@ export function reviewLidTravel(
     playbackLimit(from: number, to: number) {
       const limit = path.playbackLimit(from, to);
       if (from === limit.travel || !shortFaces.length) return limit;
-      const start = pose(ctx, from, travel);
+      const start = finishedPose(from);
       if (withSiteFaces(start, shortFaces).siteFaceHits?.length)
         return { travel: from, inspectAt: from };
 
@@ -470,9 +478,8 @@ export function reviewLidTravel(
       };
     },
     preview(angle: number, inspectAt = angle): LidPreview {
-      const result = pose(ctx, angle, travel);
-      const inspected =
-        inspectAt === angle ? result : pose(ctx, inspectAt, travel);
+      const result = finishedPose(angle);
+      const inspected = inspectAt === angle ? result : finishedPose(inspectAt);
       const site = withSiteFaces(inspected, siteFaces);
       const status = path.preview(angle, inspectAt);
       return {

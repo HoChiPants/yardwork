@@ -2,11 +2,34 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { addMeasuredOffcut } from "../src/measuredOffcuts";
 import { applyCommand, blank, projectSchema } from "../src/model";
-import { emptyWallTrace, reviewWallTrace, snapWallTracePoint, type WallTrace } from "../src/wallTrace";
+import { emptyWallTrace, reviewWallTrace, snapWallTracePoint, wallTraceFromDimensions, type WallTrace } from "../src/wallTrace";
+import { buildQuestion } from "../src/buildQuestions";
 import { pieceOverlap } from "../src/solidCollision";
 
 const trace = (settings: Partial<WallTrace> = {}): WallTrace => ({
   ...emptyWallTrace(), a: [0, 0], b: [96, 0], ...settings,
+});
+
+test("a dimensioned partition request seeds real framing without changing the work zone or existing layout", () => {
+  const project = blank();
+  const question = buildQuestion("Build a 10 by 8 ft interior partition using 2x6 and 12 in o.c.");
+  assert.ok(question?.kind === "framed-wall" && "dimensions" in question.request);
+  assert.deepEqual(question.request.dimensions, { width: 120, height: 96, spacing: 12, lumber: "2x6" });
+  const initial = wallTraceFromDimensions(project, question.request.dimensions);
+  const result = reviewWallTrace(project, initial);
+  assert.deepEqual(result.lengths, [120]);
+  assert.ok(result.added.every((piece) => piece.material === "hd-spf-2x6-10" && piece.size.includes(5.5)));
+  assert.equal(result.row?.oversize, 0);
+  assert.deepEqual(project.pieces, []);
+  const longer = reviewWallTrace(project, wallTraceFromDimensions(project, { ...question.request.dimensions, width: 240 }));
+  assert.deepEqual(longer.lengths, [144, 96]);
+  const alongside = reviewWallTrace(result.candidate, wallTraceFromDimensions(result.candidate, question.request.dimensions));
+  assert.deepEqual(alongside.obstructions, []);
+  assert.deepEqual(alongside.candidate.sections[0], result.candidate.sections[0]);
+  const exterior = buildQuestion("Build an exterior wall 8 ft wide and 6 ft tall.");
+  assert.ok(exterior?.kind === "framed-wall" && "issue" in exterior.request);
+  assert.equal(buildQuestion("Build a cabinet against the wall"), null);
+  assert.equal(buildQuestion("Build a wall with a window")?.kind, "window-wall");
 });
 
 test("trace picking snaps to the exact DXF endpoint, line projection or inch grid", () => {

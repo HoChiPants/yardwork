@@ -46,6 +46,8 @@ import {
 import { FastenerContactRowFields } from "./FastenerContactRowFields";
 import { FastenerEntryComparison } from "./FastenerEntryComparison";
 import { FastenerRepeatPanel } from "./FastenerRepeatPanel";
+import { fastenerDistanceCaseText, fastenerEntryDistanceText } from "./fastenerEntryDistances";
+import { sdwsFramingReview } from "./sdwsFramingReference";
 
 export type FastenersPanelProps = {
   project: Project;
@@ -448,6 +450,7 @@ function PathValues({
 }: {
   point: ReviewedFastenerLocation | undefined;
 }) {
+  const distances = point?.entryDistances;
   return (
     <div className="small-note" data-testid="fastener-path-values">
       <p>
@@ -476,6 +479,18 @@ function PathValues({
         <dt>Available receiver depth</dt>
         <dd>{dimension(point?.availableReceiverDepth)}</dd>
       </dl>
+      {distances && <details data-testid="fastener-entry-distances">
+        <summary>Entry edge and end distances</summary>
+        {distances.head && <p>{fastenerEntryDistanceText("Head-side", distances.head)}</p>}
+        {distances.receiver && <p>{fastenerEntryDistanceText("Receiver", distances.receiver)}</p>}
+        {distances.receiverCases && <>
+          <ul>
+            {distances.receiverCases.map((row) => <li key={row.label}>{fastenerDistanceCaseText(row)}</li>)}
+          </ul>
+          <p>Choose the load case and verify the wood grade, spacing and installation for the actual joint. <a
+            href={`${sdwsFramingReview.report}#page=24`} target="_blank" rel="noreferrer">ER-192 Tables 26 and 39</a></p>
+        </>}
+      </details>}
       <p>
         Head exit world: {coordinates(point?.headExitWorld ?? null)} in.
         <br />

@@ -4,12 +4,14 @@ import { material, type Project } from "./model";
 import { partLabel } from "./partLabels";
 import { formatPreciseInches } from "./measurement";
 import { BanquetteConstructionReview } from "./BanquetteConstructionReview";
+import { CaseworkFastenerRows } from "./CaseworkFastenerRowsPanel";
+import { caseworkFastenerBodies, type CaseworkFastenerPreview } from "./caseworkFastenerRows";
 import { GreenhouseConnectionsPanel } from "./GreenhouseConnectionsPanel";
 import { GreenhouseBasePanel, type GreenhouseRailAdjustment } from "./GreenhouseBasePanel";
 import { BearingConnectionsPanel } from "./BearingConnectionsPanel";
 import { FloorBaseConnectionsPanel } from "./FloorBaseConnectionsPanel";
 import type { FloorHangerPlan } from "./floorHangerSchema";
-import type { BearingConnectionReview } from "./bearingConnections";
+import type { BearingConnectionReview, FittedSupportBlockJointReview } from "./bearingConnections";
 import { modeledWoodContactDetail, modeledWoodContactScope, type ModeledWoodContact, type ModeledWoodContactReview } from "./modeledWoodContacts";
 import { TrimSeamPanel } from "./TrimSeamPanel";
 import type { TrimSeamMarker } from "./trimSeamGeometry";
@@ -34,6 +36,7 @@ import {
 } from "./GuideConnections";
 
 export type ConnectionReviewPanelProps = {
+  supportBlock?: FittedSupportBlockJointReview;
   project: Project;
   scope: ConnectionReviewScope;
   bearingReview: BearingConnectionReview;
@@ -59,6 +62,7 @@ export type ConnectionReviewPanelProps = {
   constructionEntryId?: string;
   onConstructionEntryChange?: (id: string) => void;
   onReviewIntent: (intent: ConnectionIntent) => void;
+  onSaveCaseworkRows?: (preview: CaseworkFastenerPreview) => void;
   baseRailAdjustment?: GreenhouseRailAdjustment;
   onMeasureFoundation?: () => void;
 };
@@ -81,6 +85,7 @@ export function ConnectionReviewPanel({
   project,
   scope,
   bearingReview,
+  supportBlock,
   onSaveBearingDecision,
   onClearBearingDecision,
   onSaveHangers,
@@ -103,6 +108,7 @@ export function ConnectionReviewPanel({
   constructionEntryId,
   onConstructionEntryChange,
   onReviewIntent,
+  onSaveCaseworkRows,
   baseRailAdjustment,
   onMeasureFoundation,
 }: ConnectionReviewPanelProps) {
@@ -186,6 +192,10 @@ export function ConnectionReviewPanel({
     excludedCount = parts.filter(
       (part) => part.excludedIntentIds.length,
     ).length;
+  const caseworkBodies = useMemo(() => {
+    if (!context.coverage || (!globalScope && liveStage?.key !== "carcass")) return [];
+    return caseworkFastenerBodies(project, context.coverage.intents, globalScope ? undefined : liveStage?.ownerId);
+  }, [context, project, globalScope, liveStage]);
   useEffect(() => {
     setAnchorId(memberIds.length === 1 ? memberIds[0] : "");
     setFirstId("");
@@ -353,6 +363,8 @@ export function ConnectionReviewPanel({
           ))}
         </div>
       )}
+      {!!caseworkBodies.length && onSaveCaseworkRows && <CaseworkFastenerRows project={project} bodies={caseworkBodies}
+        onReview={onReviewIntent} onApply={onSaveCaseworkRows} />}
       <BanquetteConstructionReview project={project} memberIds={memberIds} ownerId={scope.ownerId}
         focusedEntryId={constructionEntryId} onEntryChange={onConstructionEntryChange}
         onReviewPlan={(kind, id) => { const intent = context.coverage?.intents.find((row) => row.kind === kind && row.planId === id); if (intent) onReviewIntent(intent); }}
@@ -378,6 +390,8 @@ export function ConnectionReviewPanel({
         pairs={globalScope ? bearingReview.pairs : bearingReview.pairs.filter(({ top, base }) => memberSet.has(top.id) || memberSet.has(base.id))}
         withoutContact={globalScope ? bearingReview.withoutContact : bearingReview.withoutContact.filter(({ topId, baseId }) => memberSet.has(topId) || memberSet.has(baseId))}
         focused={!!scope.bearingPartId}
+        siteNote={supportBlock?.siteNote}
+        onPlanConnector={supportBlock?.fit ? onPlanConnectorPair : undefined}
         onPlan={planPair}
         onReview={onReviewIntent}
         onSaveDecision={onSaveBearingDecision}

@@ -56,21 +56,27 @@ export function MaterialLibrary({ category, search, onPreview, onPlace }: {
     });
   }
   useEffect(() => {
-    function cancel(event: KeyboardEvent) {
+    function abortDrag() {
       const active = drag.current;
-      if (event.key !== "Escape" || active?.action !== "place") return;
-      event.preventDefault();
-      event.stopPropagation();
+      if (!active) return;
       drag.current = null;
       pointer.current = null;
       stopPreviewFrame();
       if (active.tile.hasPointerCapture(active.pointer)) active.tile.releasePointerCapture(active.pointer);
       setGhost(null);
-      preview.current(null);
+      if (active.action === "place") preview.current(null);
+    }
+    function cancel(event: KeyboardEvent) {
+      if (event.key !== "Escape" || drag.current?.action !== "place") return;
+      event.preventDefault();
+      event.stopPropagation();
+      abortDrag();
     }
     window.addEventListener("keydown", cancel, true);
+    window.addEventListener("blur", abortDrag);
     return () => {
       window.removeEventListener("keydown", cancel, true);
+      window.removeEventListener("blur", abortDrag);
       stopPreviewFrame();
       if (drag.current?.action === "place") preview.current(null);
     };

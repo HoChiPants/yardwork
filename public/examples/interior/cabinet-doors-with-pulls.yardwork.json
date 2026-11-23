@@ -1,0 +1,855 @@
+{
+  "schemaVersion": 159,
+  "id": "eb581211-ec87-4220-8e96-94031eae713e",
+  "name": "Cabinet doors around a neighboring lip",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "d9e221b1-fbba-4e96-af20-bac38d60537a"
+  ],
+  "edgeBanding": [
+    {
+      "pieceId": "394060f3-ca62-45ed-9454-61ebef490d01",
+      "face": "-X",
+      "productId": "edgemate-5032270",
+      "fingerprint": "binding-v1-817f41aa946f2386",
+      "label": "P006 · Cabinet door · left · local -X",
+      "trim": 0.5,
+      "installedThickness": 0.046875
+    },
+    {
+      "pieceId": "394060f3-ca62-45ed-9454-61ebef490d01",
+      "face": "+X",
+      "productId": "edgemate-5032270",
+      "fingerprint": "binding-v1-989561e9ffa0a05c",
+      "label": "P006 · Cabinet door · left · local +X",
+      "trim": 0.5,
+      "installedThickness": 0.046875
+    },
+    {
+      "pieceId": "394060f3-ca62-45ed-9454-61ebef490d01",
+      "face": "-Y",
+      "productId": "edgemate-5032270",
+      "fingerprint": "binding-v1-079d20334e29e83b",
+      "label": "P006 · Cabinet door · left · local -Y",
+      "trim": 0.5,
+      "installedThickness": 0.046875
+    },
+    {
+      "pieceId": "394060f3-ca62-45ed-9454-61ebef490d01",
+      "face": "+Y",
+      "productId": "edgemate-5032270",
+      "fingerprint": "binding-v1-d51f3db47ea13f41",
+      "label": "P006 · Cabinet door · left · local +Y",
+      "trim": 0.5,
+      "installedThickness": 0.046875
+    },
+    {
+      "pieceId": "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+      "face": "-X",
+      "productId": "edgemate-5032270",
+      "fingerprint": "binding-v1-817f41aa946f2386",
+      "label": "P007 · Cabinet door · right · local -X",
+      "trim": 0.5,
+      "installedThickness": 0.046875
+    },
+    {
+      "pieceId": "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+      "face": "+X",
+      "productId": "edgemate-5032270",
+      "fingerprint": "binding-v1-989561e9ffa0a05c",
+      "label": "P007 · Cabinet door · right · local +X",
+      "trim": 0.5,
+      "installedThickness": 0.046875
+    },
+    {
+      "pieceId": "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+      "face": "-Y",
+      "productId": "edgemate-5032270",
+      "fingerprint": "binding-v1-079d20334e29e83b",
+      "label": "P007 · Cabinet door · right · local -Y",
+      "trim": 0.5,
+      "installedThickness": 0.046875
+    },
+    {
+      "pieceId": "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+      "face": "+Y",
+      "productId": "edgemate-5032270",
+      "fingerprint": "binding-v1-d51f3db47ea13f41",
+      "label": "P007 · Cabinet door · right · local +Y",
+      "trim": 0.5,
+      "installedThickness": 0.046875
+    }
+  ],
+  "motionPlans": [
+    {
+      "label": "Cabinet door · left",
+      "memberIds": [
+        "394060f3-ca62-45ed-9454-61ebef490d01",
+        "58d00936-6ff5-4519-b211-2953d5c644b1"
+      ],
+      "mechanism": {
+        "kind": "hinge",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "pivot": [
+          -6.484375,
+          0,
+          0.4765
+        ],
+        "travel": 90
+      },
+      "id": "e20ec609-70b6-4086-9048-489fe28635c5",
+      "testScenarios": [
+        {
+          "id": "82a72552-c20e-4a02-8f71-7bed6415291b",
+          "name": "Both cabinet doors together",
+          "setup": {
+            "linkedId": "b5b3d0d1-9164-4e03-aa67-38436fa41aec",
+            "held": []
+          }
+        },
+        {
+          "id": "b74c246f-6e02-44de-bf21-96320c8d0d97",
+          "name": "Left cabinet door first",
+          "setup": {
+            "linkedId": "b5b3d0d1-9164-4e03-aa67-38436fa41aec",
+            "openingOrder": "selected-first",
+            "held": []
+          }
+        },
+        {
+          "id": "02803e61-daa9-44de-abe0-d67f69288c68",
+          "name": "Right cabinet door first",
+          "setup": {
+            "linkedId": "b5b3d0d1-9164-4e03-aa67-38436fa41aec",
+            "openingOrder": "companion-first",
+            "held": []
+          }
+        }
+      ]
+    },
+    {
+      "label": "Cabinet door · right",
+      "memberIds": [
+        "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+        "20e6dfd8-5f77-485f-a7c2-923af15aa981"
+      ],
+      "mechanism": {
+        "kind": "hinge",
+        "axis": [
+          0,
+          -1,
+          0
+        ],
+        "pivot": [
+          6.484375,
+          0,
+          0.4765
+        ],
+        "travel": 90
+      },
+      "id": "b5b3d0d1-9164-4e03-aa67-38436fa41aec"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "0f7f0a05-cb14-49ab-953b-be99aa340781",
+      "label": "P001"
+    },
+    {
+      "partId": "cc611530-31f6-4d94-884c-84c701bbd08c",
+      "label": "P002"
+    },
+    {
+      "partId": "26e554ee-7a30-46e6-9429-ebffcc2574a5",
+      "label": "P003"
+    },
+    {
+      "partId": "c97c737f-353a-4995-be75-265b731fbf48",
+      "label": "P004"
+    },
+    {
+      "partId": "febf9258-8bfd-4919-a798-189c141daa90",
+      "label": "P005"
+    },
+    {
+      "partId": "c278a962-ad19-4d17-818b-e1e8e8e35b51",
+      "label": "O001"
+    },
+    {
+      "partId": "394060f3-ca62-45ed-9454-61ebef490d01",
+      "label": "P006"
+    },
+    {
+      "partId": "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+      "label": "P007"
+    },
+    {
+      "partId": "58d00936-6ff5-4519-b211-2953d5c644b1",
+      "label": "P008"
+    },
+    {
+      "partId": "20e6dfd8-5f77-485f-a7c2-923af15aa981",
+      "label": "P009"
+    },
+    {
+      "partId": "c02c4976-77f2-4ac9-8ae7-351746d34b21",
+      "label": "O002"
+    },
+    {
+      "partId": "cbfbd9c5-8b51-4533-beb0-674b9a9b8a63",
+      "label": "O003"
+    },
+    {
+      "partId": "c7e07af6-61a2-4d5c-bec2-841c4806812e",
+      "label": "O004"
+    },
+    {
+      "partId": "fafada46-eae9-45e9-b0bf-bc9ba8a0b871",
+      "label": "O005"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T01:41:28.500Z",
+  "pieces": [
+    {
+      "id": "0f7f0a05-cb14-49ab-953b-be99aa340781",
+      "name": "Left face-frame stile",
+      "material": "hd-pine-1x4",
+      "size": [
+        3.5,
+        30,
+        0.75
+      ],
+      "position": [
+        -14.75,
+        15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "assembly": "Cabinet face frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "cc611530-31f6-4d94-884c-84c701bbd08c",
+      "name": "Right face-frame stile",
+      "material": "hd-pine-1x4",
+      "size": [
+        3.5,
+        30,
+        0.75
+      ],
+      "position": [
+        14.75,
+        15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "assembly": "Cabinet face frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "26e554ee-7a30-46e6-9429-ebffcc2574a5",
+      "name": "Bottom face-frame rail",
+      "material": "hd-pine-1x4",
+      "size": [
+        26,
+        3.5,
+        0.75
+      ],
+      "position": [
+        0,
+        1.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "assembly": "Cabinet face frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "c97c737f-353a-4995-be75-265b731fbf48",
+      "name": "Top face-frame rail",
+      "material": "hd-pine-1x4",
+      "size": [
+        26,
+        3.5,
+        0.75
+      ],
+      "position": [
+        0,
+        28.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "assembly": "Cabinet face frame",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "febf9258-8bfd-4919-a798-189c141daa90",
+      "name": "Existing adjacent cabinet lip",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        0.5,
+        2,
+        0.5
+      ],
+      "position": [
+        -13.8,
+        7.625,
+        11.9
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "assembly": "Existing nearby obstruction",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "394060f3-ca62-45ed-9454-61ebef490d01",
+      "name": "Cabinet door · left",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        12.75,
+        22.65625,
+        0.703
+      ],
+      "position": [
+        -6.453125,
+        15,
+        0.02350000000000002
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7f32f4ab-edbe-41eb-b880-6308c7073d1e",
+      "assembly": "Inset cabinet doors",
+      "designRole": "cabinet-inset-door-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "d9e221b1-fbba-4e96-af20-bac38d60537a",
+        "sourceAxes": [
+          2,
+          0,
+          1
+        ],
+        "size": [
+          15,
+          48,
+          0.703
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+      "name": "Cabinet door · right",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        12.75,
+        22.65625,
+        0.703
+      ],
+      "position": [
+        6.453125,
+        15,
+        0.02350000000000002
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "7f32f4ab-edbe-41eb-b880-6308c7073d1e",
+      "assembly": "Inset cabinet doors",
+      "designRole": "cabinet-inset-door-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": {
+        "id": "d9e221b1-fbba-4e96-af20-bac38d60537a",
+        "sourceAxes": [
+          2,
+          0,
+          1
+        ],
+        "size": [
+          15,
+          48,
+          0.703
+        ],
+        "offset": [
+          0,
+          22.78125,
+          0
+        ]
+      }
+    },
+    {
+      "id": "58d00936-6ff5-4519-b211-2953d5c644b1",
+      "name": "Cabinet pull · left",
+      "material": "hd-liberty-p01012-pc-c",
+      "size": [
+        5.32,
+        0.4724,
+        1.3
+      ],
+      "position": [
+        -4.03125,
+        7.625,
+        1.025
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948963
+      ],
+      "stepId": "7f32f4ab-edbe-41eb-b880-6308c7073d1e",
+      "assembly": "Inset cabinet doors",
+      "designRole": "cabinet-inset-pull-left",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "20e6dfd8-5f77-485f-a7c2-923af15aa981",
+      "name": "Cabinet pull · right",
+      "material": "hd-liberty-p01012-pc-c",
+      "size": [
+        5.32,
+        0.4724,
+        1.3
+      ],
+      "position": [
+        4.03125,
+        7.625,
+        1.025
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5707963267948963
+      ],
+      "stepId": "7f32f4ab-edbe-41eb-b880-6308c7073d1e",
+      "assembly": "Inset cabinet doors",
+      "designRole": "cabinet-inset-pull-right",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": null,
+      "cutStock": null
+    },
+    {
+      "id": "cbfbd9c5-8b51-4533-beb0-674b9a9b8a63",
+      "name": "Offcut · Birch remnant",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        2.125,
+        0.703,
+        22.65625
+      ],
+      "position": [
+        6.4375,
+        0.3515,
+        -12.671875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "d9e221b1-fbba-4e96-af20-bac38d60537a",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          15,
+          0.703,
+          48
+        ],
+        "offset": [
+          12.875,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "c7e07af6-61a2-4d5c-bec2-841c4806812e",
+      "name": "Offcut · Birch remnant",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        15,
+        0.703,
+        2.4375
+      ],
+      "position": [
+        0,
+        0.3515,
+        22.78125
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "d9e221b1-fbba-4e96-af20-bac38d60537a",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          15,
+          0.703,
+          48
+        ],
+        "offset": [
+          0,
+          0,
+          45.5625
+        ]
+      }
+    },
+    {
+      "id": "fafada46-eae9-45e9-b0bf-bc9ba8a0b871",
+      "name": "Offcut · Birch remnant",
+      "material": "hd-purebond-birch-703",
+      "size": [
+        2.125,
+        0.703,
+        22.65625
+      ],
+      "position": [
+        6.4375,
+        0.3515,
+        10.109375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "d9e221b1-fbba-4e96-af20-bac38d60537a",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          15,
+          0.703,
+          48
+        ],
+        "offset": [
+          12.875,
+          0,
+          22.78125
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "32c42947-f1cf-44eb-8911-6fb35c9ca3d8",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    },
+    {
+      "id": "7f32f4ab-edbe-41eb-b880-6308c7073d1e",
+      "title": "Fit inset cabinet doors",
+      "notes": "",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "Practice inset cabinet doors. A pull 1.5 in from the free edge catches the neighboring lip during the model swing. The fitted plan moves both pull centers to 4 in from the free edge. The measured birch offcut supplies both doors. Confirm the opening and hardware on site.",
+  "sections": [
+    {
+      "id": "69d0e7bf-6b5b-4e12-9a32-036b6cffbd55",
+      "name": "Cabinet face frame",
+      "pieceIds": [
+        "0f7f0a05-cb14-49ab-953b-be99aa340781",
+        "cc611530-31f6-4d94-884c-84c701bbd08c",
+        "26e554ee-7a30-46e6-9429-ebffcc2574a5",
+        "c97c737f-353a-4995-be75-265b731fbf48"
+      ],
+      "origin": [
+        0,
+        15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null
+    },
+    {
+      "id": "609549c2-e520-4af3-b653-009821fbd506",
+      "name": "Inset cabinet doors",
+      "pieceIds": [
+        "394060f3-ca62-45ed-9454-61ebef490d01",
+        "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+        "58d00936-6ff5-4519-b211-2953d5c644b1",
+        "20e6dfd8-5f77-485f-a7c2-923af15aa981"
+      ],
+      "origin": [
+        0,
+        3.5,
+        0.375
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "generator": null,
+      "recipe": null,
+      "cabinetDoors": {
+        "frameIds": [
+          "0f7f0a05-cb14-49ab-953b-be99aa340781",
+          "cc611530-31f6-4d94-884c-84c701bbd08c",
+          "26e554ee-7a30-46e6-9429-ebffcc2574a5",
+          "c97c737f-353a-4995-be75-265b731fbf48"
+        ],
+        "leaves": "pair",
+        "stock": "hd-purebond-birch-703",
+        "outerGap": 0.125,
+        "centerGap": 0.0625,
+        "angle": 90,
+        "pinTowardFrame": 0.0625,
+        "pinForward": 0.125,
+        "hingesPerLeaf": 2,
+        "hingeEnd": 2,
+        "hinge": "liberty-h09000c-bl-c5",
+        "pull": {
+          "inset": 4,
+          "height": 4,
+          "datum": "bottom"
+        },
+        "banding": {
+          "productId": "edgemate-5032270",
+          "trim": 0.5,
+          "thickness": 0.046875
+        }
+      }
+    }
+  ],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": [
+    {
+      "id": "30788614-3864-4754-900c-3e8b53d9a547",
+      "at": "2026-11-23T01:41:28.549Z",
+      "stepId": "7f32f4ab-edbe-41eb-b880-6308c7073d1e",
+      "message": "Assigned O001 · Offcut · Birch remnant to P006 · Cabinet door · left.",
+      "offcutCut": {
+        "sourceId": "d9e221b1-fbba-4e96-af20-bac38d60537a",
+        "inputId": "c278a962-ad19-4d17-818b-e1e8e8e35b51",
+        "targetId": "394060f3-ca62-45ed-9454-61ebef490d01",
+        "inputSize": [
+          0.703,
+          15,
+          48
+        ],
+        "result": {
+          "size": [
+            0.703,
+            12.75,
+            22.65625
+          ],
+          "sourceSize": [
+            0.703,
+            15,
+            48
+          ],
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "inputName": "Offcut · Birch remnant",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 22.65625
+          },
+          {
+            "kind": "rip",
+            "size": 12.75
+          }
+        ],
+        "remnants": [
+          {
+            "id": "c02c4976-77f2-4ac9-8ae7-351746d34b21",
+            "size": [
+              0.703,
+              15,
+              25.21875
+            ]
+          },
+          {
+            "id": "cbfbd9c5-8b51-4533-beb0-674b9a9b8a63",
+            "size": [
+              0.703,
+              2.125,
+              22.65625
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "6ca7886f-30fb-4c5b-b878-d5232d6abec6",
+      "at": "2026-11-23T01:41:28.551Z",
+      "stepId": "7f32f4ab-edbe-41eb-b880-6308c7073d1e",
+      "message": "Assigned O002 · Offcut · Birch remnant to P007 · Cabinet door · right.",
+      "offcutCut": {
+        "sourceId": "d9e221b1-fbba-4e96-af20-bac38d60537a",
+        "inputId": "c02c4976-77f2-4ac9-8ae7-351746d34b21",
+        "targetId": "ce9b6fc5-6464-4a11-9b74-6dccb23c50ec",
+        "inputSize": [
+          0.703,
+          15,
+          25.21875
+        ],
+        "result": {
+          "size": [
+            0.703,
+            12.75,
+            22.65625
+          ],
+          "sourceSize": [
+            0.703,
+            15,
+            48
+          ],
+          "offset": [
+            0,
+            0,
+            22.78125
+          ]
+        },
+        "inputName": "Offcut · Birch remnant",
+        "cuts": [
+          {
+            "kind": "crosscut",
+            "size": 22.65625
+          },
+          {
+            "kind": "rip",
+            "size": 12.75
+          }
+        ],
+        "remnants": [
+          {
+            "id": "c7e07af6-61a2-4d5c-bec2-841c4806812e",
+            "size": [
+              0.703,
+              15,
+              2.4375
+            ]
+          },
+          {
+            "id": "fafada46-eae9-45e9-b0bf-bc9ba8a0b871",
+            "size": [
+              0.703,
+              2.125,
+              22.65625
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

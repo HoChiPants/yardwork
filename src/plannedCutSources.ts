@@ -8,8 +8,11 @@ import { ensurePartLabels, partLabel } from "./partLabels";
 const savedCutPrefix = "Stock cut order for ";
 const savedCutStep = /^Stock cut order for ([PO]\d+) · ([1-9]\d*)\. (.+)$/s;
 export const plannedStockCutOrderTitle = "Planned stock cuts";
+export const recordedStockCutOrderTitle = "Recorded stock cuts";
+export const plannedStockCutOrderContext = "Use the saved board or sheet order before cutting any offcuts it supplies.";
+export const recordedStockCutOrderContext = "Original cut orders for recorded physical stock. Later cuts from these sources are listed separately.";
 
-export type PlannedStockCutOrder = {
+export type StockCutOrderView = {
   sourceId: string;
   anchorLabel?: string;
   title: string;
@@ -17,14 +20,29 @@ export type PlannedStockCutOrder = {
   bladeAllowance?: string;
   steps: string[];
   stepIds: string[];
+  status?: string;
   issue?: string;
   review?: string;
 };
+export type RecordedStockCutOrder = NonNullable<Project["recordedStockCutOrders"]>[number];
+
+export function recordedStockCutOrderView(order: RecordedStockCutOrder): StockCutOrderView {
+  return {
+    sourceId: order.sourceId,
+    anchorLabel: order.anchorLabel,
+    title: `${order.anchorLabel} · ${material(order.materialId).name}`,
+    size: order.sourceSize.slice().reverse().map(formatStockLength).join(" × "),
+    bladeAllowance: `Saved cutting allowance · ${formatStockLength(order.cuttingAllowance)} per cut.`,
+    steps: order.steps.map(({ instruction }) => instruction),
+    stepIds: order.steps.map(({ id }) => id),
+    status: order.completedAt ? `Cuts marked complete · ${order.completedAt.slice(0, 10)}.` : "Recorded stock layout.",
+  };
+}
 
 export function plannedStockCutOrders(
   project: Project,
   inspection?: ReturnType<typeof inspectCutStock>,
-): PlannedStockCutOrder[] {
+): StockCutOrderView[] {
   if (!project.plannedCutSources?.length) return [];
   const { groups, valid } = inspection ?? inspectCutStock(project);
   const history = new Map(project.history.map((entry) => [entry.id, entry]));
@@ -62,17 +80,18 @@ export function plannedStockCutOrders(
   });
 }
 
-export function plannedStockCutOrdersMarkdown(orders: readonly PlannedStockCutOrder[]) {
+function stockCutOrdersMarkdown(orders: readonly StockCutOrderView[], title: string, context: string) {
   if (!orders.length) return "";
   const line = (value: string) => value.replace(/[\\`*_{}\[\]<>|]/g, "\\$&").replace(/[\r\n]/g, " ");
   return [
-    `## ${plannedStockCutOrderTitle}`,
+    `## ${title}`,
     "",
-    "Use the saved board or sheet order before cutting any offcuts it supplies.",
+    context,
     "",
     ...orders.flatMap((order) => [
       `### ${line(order.title)}`,
       "",
+      ...(order.status ? [order.status, ""] : []),
       ...(order.size ? [`Starting stock · ${order.size} (length × width × thickness).`, ""] : []),
       ...(order.bladeAllowance ? [order.bladeAllowance, ""] : []),
       ...(order.issue ? [`**Review needed.** ${order.issue}`] : [
@@ -83,6 +102,14 @@ export function plannedStockCutOrdersMarkdown(orders: readonly PlannedStockCutOr
     ]),
     "",
   ].join("\n");
+}
+
+export function plannedStockCutOrdersMarkdown(orders: readonly StockCutOrderView[]) {
+  return stockCutOrdersMarkdown(orders, plannedStockCutOrderTitle, plannedStockCutOrderContext);
+}
+
+export function recordedStockCutOrdersMarkdown(orders: readonly StockCutOrderView[]) {
+  return stockCutOrdersMarkdown(orders, recordedStockCutOrderTitle, recordedStockCutOrderContext);
 }
 
 export function cutPlanFingerprint(pieces: readonly Piece[]) {
@@ -134,11 +161,32 @@ function keepOtherCutPlans(project: Project, sourceIds: ReadonlySet<string>): Pr
   };
 }
 
-export function completePlannedCutSource(project: Project, sourceId: string) {
-  if (!project.plannedCutSources?.some((plan) => plan.sourceId === sourceId))
-    throw Error("This stock source has no pending cut plan.");
+export function completeStockCutSource(project: Project, sourceId: string) {
+  const recorded = project.recordedStockCutOrders ?? [];
+  const existing = recorded.find((order) => order.sourceId === sourceId);
+  if (existing?.completedAt) return project;
   const owned = setCutSourceOnHand(project, sourceId, true);
-  return projectSchema.parse(keepOtherCutPlans(owned, new Set([sourceId])));
+  const completedAt = new Date().toISOString();
+  if (existing) return projectSchema.parse({
+    ...owned,
+    recordedStockCutOrders: recorded.map((order) => order === existing ? { ...order, completedAt } : order),
+    guideFingerprint: null,
+  });
+  const inspection = inspectCutStock(project);
+  const order = plannedStockCutOrders(project, inspection).find((entry) => entry.sourceId === sourceId);
+  const anchor = inspection.groups.get(sourceId)?.[0];
+  if (!order?.anchorLabel || order.issue || !anchor || !order.steps.length)
+    throw Error("Review the saved cut order before marking these cuts complete.");
+  const receipt: RecordedStockCutOrder = {
+    sourceId, materialId: anchor.material, anchorLabel: order.anchorLabel,
+    sourceSize: cutSourceRegion(anchor).sourceSize, cuttingAllowance: pieceCutKerf(anchor),
+    recordedAt: completedAt, completedAt,
+    steps: order.steps.map((instruction, i) => ({ instruction, id: order.stepIds[i] })),
+  };
+  return projectSchema.parse({
+    ...keepOtherCutPlans(owned, new Set([sourceId])),
+    recordedStockCutOrders: [...recorded, receipt],
+  });
 }
 
 export function releasePlannedCutSources(project: Project, sourceIds: readonly string[]) {

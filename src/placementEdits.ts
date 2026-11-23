@@ -3,6 +3,7 @@ import {
   namedMeasurement,
   normalizeIdeaText,
   referencedFamily,
+  requestedModule,
 } from "./ideaEdits";
 import type { V3 } from "./model";
 import {
@@ -74,13 +75,8 @@ function parsePlacement(clause: string): Placement | null {
 
 function targetsFor(plan: IdeaPlan, raw: string): Target[] {
   const target = raw.trim().replace(/^the\s+/, "");
-  const numbered = target.match(
-    /^(?:section|module|compartment)\s*#?\s*(\d+)$/,
-  );
-  if (numbered) {
-    const index = Number(numbered[1]) - 1;
-    return plan.modules[index] ? [{ index, type: "module" }] : [];
-  }
+  const selected = requestedModule(plan, target);
+  if (selected !== undefined) return selected === "ambiguous" ? [] : [{ index: selected, type: "module" }];
   const entries: { target: Target; name: string; family: string }[] = [
     ...plan.modules.map((module, index) => ({
       target: { index, type: "module" as const },

@@ -48,7 +48,11 @@ export function DoorwayPanel({ project, initialSectionId, onApply }: {
 
 function DoorwayEdit({ project, section, onApply }: { project: Project; section: Section; onApply: (preview: DoorPreview) => void }) {
   const command = section.generator!;
-  const [opening, setOpening] = useState<DoorOpening>(command.doorOpening ?? { width: 32, height: 82 });
+  const window = command.windowOpening;
+  const side = (window?.offset ?? 0) >= 0 ? -1 : 1;
+  const [opening, setOpening] = useState<DoorOpening>(command.doorOpening ?? {
+    width: 32, height: 82, ...(window && { offset: side * (command.width / 2 - 4.5 - 16) }),
+  });
   const [unit, setUnit] = useState<DoorUnit>(command.doorUnit ?? blankUnit);
   const [fitted, setFitted] = useState(!!command.doorUnit);
   const [reuse, setReuse] = useState(true);

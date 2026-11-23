@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { LengthInput } from "./LengthInput";
 import { materialFamilyVariants, materialPlacementOptions, type MaterialGroup } from "./materialGroups";
 import { plannedCutKerf, type inspectCutStock } from "./cutStock";
@@ -8,13 +8,27 @@ import { fittingBoardOffcuts } from "./offcutAssignment";
 import { partLabel } from "./partLabels";
 import { stockSplitState } from "./packing";
 import { compareRepeatedBoardCuts, maxRepeatedBoards } from "./repeatedBoardCuts";
+import { isFloorDimension, previewBoardAlongDimension } from "./dimensionBoardPlacement";
 
 export type BoardPlacement =
   | { kind: "offcut"; id: string; length: number; stockLengthAxis: Piece["stockLengthAxis"] }
   | { kind: "stock-cut"; length: number; quantity?: number };
-export type MaterialOrientation = "upright" | "flat";
+export type MaterialOrientation = "upright" | "flat" | "flat-depth" | "along-mark";
 
-export function MaterialPlacement({ group, project, inspection, position = [0, 0, 0], finishedLength, measuredLength, offcutId, initialQuantity = 1, initialStock, onPreview, onPlace }: {
+// These three positions keep the board's original local cut axes.
+export const boardPlacementPositions = {
+  upright: { rotation: [0, 0, 0], section: [0, 2], length: 1, columns: 0, rows: 2 },
+  flat: { rotation: [0, 0, Math.PI / 2], section: [1, 2], length: 0, columns: 2, rows: 0 },
+  "flat-depth": { rotation: [0, Math.PI / 2, Math.PI / 2], section: [1, 0], length: 2, columns: 0, rows: 2 },
+} satisfies Record<Exclude<MaterialOrientation, "along-mark">, {
+  rotation: V3;
+  section: [0 | 1, 0 | 2];
+  length: 0 | 1 | 2;
+  columns: 0 | 2;
+  rows: 0 | 2;
+}>;
+
+export function MaterialPlacement({ group, project, inspection, position = [0, 0, 0], finishedLength, measuredLength, offcutId, initialQuantity = 1, initialStock, dimensionSource, onPreview, onPlace }: {
   group: MaterialGroup;
   project: Project;
   inspection: ReturnType<typeof inspectCutStock>;
@@ -24,6 +38,14 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   offcutId?: string;
   initialQuantity?: number;
   initialStock?: MaterialId;
+  dimensionSource?: {
+    name: string;
+    length: number;
+    a: V3;
+    b: V3;
+    groups: readonly MaterialGroup[];
+    onGroupChange: (id: string) => void;
+  };
   onPreview: (id: MaterialId | null, placement?: BoardPlacement, orientation?: MaterialOrientation) => void;
   onPlace: (id: MaterialId, placement?: BoardPlacement, orientation?: MaterialOrientation) => void;
 }) {
@@ -37,13 +59,12 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   const zone = project.workZone;
   const [x, y, z] = position;
   const canChooseOrientation = canCutToLength && preferred.size[1] === Math.max(...preferred.size);
-  const flat = orientation === "flat";
-  const freeWidth = zone ? zone.width - 2 * Math.abs(x) : 0;
-  const freeDepth = zone ? zone.depth - 2 * Math.abs(z) : 0;
-  const freeHeight = zone ? zone.height - y : 0;
-  const zoneClearance = zone && canChooseOrientation && y >= 0 &&
-    freeDepth >= preferred.size[2] && (flat ? freeHeight : freeWidth) >= preferred.size[0]
-    ? flat ? freeWidth : freeHeight : 0;
+  const along = orientation === "along-mark";
+  const axes = along ? boardPlacementPositions.upright : boardPlacementPositions[orientation];
+  const free = zone && [zone.width - 2 * Math.abs(x), zone.height - y, zone.depth - 2 * Math.abs(z)];
+  const zoneClearance = free && canChooseOrientation && !along && y >= 0 &&
+    free[axes.section[0]] >= preferred.size[0] && free[axes.section[1]] >= preferred.size[2]
+    ? free[axes.length] : 0;
   const kerf = plannedCutKerf(project, choice.id);
   const fits = (length: number, id: MaterialId, finished: number) => {
     const state = stockSplitState(length, finished, plannedCutKerf(project, id));
@@ -52,13 +73,13 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   const validLength = needed >= 0.125;
   const shortestFor = (length: number) => options.find(({ id, value }) => fits(value, id, length));
   const shortest = validLength ? shortestFor(needed) : undefined;
-  const quantity = validLength ? Number(count) : 1;
+  const quantity = validLength && !along ? Number(count) : 1;
   const validQuantity = Number.isInteger(quantity) && quantity >= 1 && quantity <= maxRepeatedBoards;
   const repeated = quantity > 1 && validQuantity;
   const repeats = repeated ? compareRepeatedBoardCuts(project, options, needed, quantity) : [];
   const batch = repeats.find(({ id }) => id === choice.id);
   const recommendedBatch = repeats[0];
-  const enough = validQuantity && (Number.isNaN(needed) || (validLength && fits(choice.value, choice.id, needed)));
+  const enough = validQuantity && ((!dimensionSource && Number.isNaN(needed)) || (validLength && fits(choice.value, choice.id, needed)));
   const zoneStock = zoneClearance >= 0.125 && zoneClearance < choice.value && Number.isNaN(needed)
     ? shortestFor(zoneClearance) : undefined;
   const planCut = canCutToLength && validLength && validQuantity &&
@@ -76,16 +97,44 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
   const previewOffcut = remnant?.piece.id;
   const previewStock = remnant?.piece.material ?? choice.id;
   const previewAxis = remnant?.stockLengthAxis;
+  const marks = dimensionSource;
+  const issues = useMemo(() => {
+    if (!along || !marks || !validLength) return {};
+    const check = (id: MaterialId) => {
+      try {
+        previewBoardAlongDimension(project, marks, id, needed);
+      } catch (problem) {
+        return problem instanceof Error ? problem.message : "Review the placement along the saved dimension.";
+      }
+    };
+    const stock = enough || previewStock === choice.id ? check(choice.id) : undefined;
+    return { stock, preview: previewStock === choice.id ? stock : check(previewStock) };
+  }, [along, marks, validLength, project, needed, enough, choice.id, previewStock]);
+  const showPreview = validQuantity && (!along || (validLength && !issues.preview && (enough || !!previewOffcut)));
   useLayoutEffect(() => {
     const placement = previewOffcut && previewAxis !== undefined
       ? { kind: "offcut", id: previewOffcut, length: needed, stockLengthAxis: previewAxis } as const
       : planCut ? { kind: "stock-cut", length: needed, quantity } as const : undefined;
-    onPreview(validQuantity ? previewStock : null, placement, orientation);
+    onPreview(showPreview ? previewStock : null, placement, orientation);
     return () => onPreview(null);
-  }, [needed, onPreview, orientation, planCut, previewAxis, previewOffcut, previewStock, quantity, validQuantity]);
+  }, [needed, onPreview, orientation, planCut, previewAxis, previewOffcut, previewStock, quantity, showPreview]);
   const place = (id: MaterialId, placement?: BoardPlacement) => onPlace(id, placement, orientation);
   return <>
     <h2 id="modal-title">{group.name}</h2>
+    {dimensionSource && <>
+      <p className="small-note">Saved dimension · {dimensionSource.name} · {formatStockLength(dimensionSource.length)}</p>
+      <label className="field">Lumber for saved dimension
+        <select value={group.id} onChange={(event) => {
+          const next = dimensionSource.groups.find(({ id }) => id === event.target.value);
+          if (!next) return;
+          select(materialPlacementOptions(next).preferred.id);
+          selectOffcut(undefined);
+          dimensionSource.onGroupChange(next.id);
+        }}>
+          {dimensionSource.groups.map((choice) => <option key={choice.id} value={choice.id}>{choice.name}</option>)}
+        </select>
+      </label>
+    </>}
     <div className="placement-options">
       {options.length > 1 ? <fieldset className="stock-size-options">
         <legend>{label}</legend>
@@ -94,25 +143,36 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
             onChange={() => select(option.id)} /><span>{option.label}</span>
         </label>)}
       </fieldset> : <p className="single-stock-size">{choice.label}{label === "Stock length" ? " stock" : ""}</p>}
-      {canChooseOrientation && <fieldset className="stock-size-options stock-orientation">
+      {(canChooseOrientation || marks) && <fieldset className="stock-size-options stock-orientation">
         <legend>Position</legend>
-        <button type="button" aria-pressed={orientation === "upright"} onClick={() => setOrientation("upright")}>Stand up</button>
-        <button type="button" aria-pressed={orientation === "flat"} onClick={() => setOrientation("flat")}>Lay flat</button>
+        <button type="button" aria-pressed={orientation === "upright"} onClick={() => setOrientation("upright")}>
+          {canChooseOrientation ? "Stand up" : "Place freely"}
+        </button>
+        {canChooseOrientation && <>
+          <button type="button" aria-pressed={orientation === "flat"} onClick={() => setOrientation("flat")}>Lay flat</button>
+          <button type="button" aria-pressed={orientation === "flat-depth"} onClick={() => setOrientation("flat-depth")}>Lay front to back</button>
+        </>}
+        {marks && <button type="button" aria-pressed={along} onClick={() => setOrientation("along-mark")}>Along saved mark</button>}
       </fieldset>}
     </div>
     {canCutToLength && <div className="stock-length-check">
-      <LengthInput label="Finished length (optional)" ariaLabel="Needed finished length" value={needed}
+      <LengthInput label={dimensionSource ? "Finished length" : "Finished length (optional)"} ariaLabel="Needed finished length" value={needed}
         defaultUnit={preferredLengthUnit(finishedLength ?? measuredLength ?? zoneClearance)} onChange={setNeeded} />
-      {validLength && !offcutId && <label className="field stock-cut-quantity">
+      {along && marks && validLength && (enough || remnant) && <p role="status">
+        {issues.preview ?? (isFloorDimension(marks)
+          ? "The board lies flat along the floor mark."
+          : "The board’s end centers align along the mark. Any extra space is split between the ends.")}
+      </p>}
+      {validLength && !along && !offcutId && <label className="field stock-cut-quantity">
         Pieces at this length
         <input type="number" min="1" max={maxRepeatedBoards} step="1" value={count}
           onChange={(event) => setCount(event.target.value)} />
       </label>}
       {!validQuantity && <p role="status">Choose 1 to {maxRepeatedBoards} whole pieces.</p>}
-      {measuredLength !== undefined && <button type="button" className="text-button use-measured-length"
-        onClick={() => setNeeded(measuredLength)}>Use measured span ({formatStockLength(measuredLength)})</button>}
+      {measuredLength !== undefined && (!dimensionSource || needed !== measuredLength) && <button type="button" className="text-button use-measured-length"
+        onClick={() => setNeeded(measuredLength)}>{dimensionSource ? "Use saved dimension" : "Use measured span"} ({formatStockLength(measuredLength)})</button>}
       {zoneStock && <div>
-        <p className="small-note">{choice.label} is {flat ? "longer" : "taller"} than the available space.{zoneStock.value < choice.value &&
+        <p className="small-note">{choice.label} is {orientation === "upright" ? "taller" : "longer"} than the available space.{zoneStock.value < choice.value &&
           ` A cut from ${zoneStock.label} stock can fit.`}</p>
         <button type="button" className="text-button use-measured-length"
           onClick={() => setNeeded(zoneClearance)}>Use work zone clearance ({formatStockLength(zoneClearance)})</button>
@@ -151,9 +211,9 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
             <strong>{partLabel(project, remnant.piece.id)}</strong> from Cut pool · {formatStockLength(remnant.available[2])}
             {remnant.sourceCutPending ? " · Expected offcut" : remnant.onHand && " · On hand"}
           </p>
-          {remnant.sourceCutPending && <p>Complete the source stock cut order first.</p>}
+          {remnant.sourceCutPending && <p>Complete the cuts that produce this offcut first.</p>}
           {!!remnant.operations.length && <p>{remnant.operations.map(({ text }) => text).join(" · ")}</p>}
-          <button type="button" className="button primary"
+          <button type="button" className="button primary" disabled={!!issues.preview}
             onClick={() => place(remnant.piece.material, {
               kind: "offcut",
               id: remnant.piece.id,
@@ -182,12 +242,12 @@ export function MaterialPlacement({ group, project, inspection, position = [0, 0
         Crosscut to {formatStockLength(needed)} with a {formatStockLength(kerf)} blade allowance.
         {leftover > 1e-8 ? ` Expected offcut · ${formatStockLength(leftover)}.` : " The blade uses the remaining length."}
       </p>
-      <button type="button" className={`button ${remnant ? "secondary" : "primary"}`}
+      <button type="button" className={`button ${remnant ? "secondary" : "primary"}`} disabled={!!issues.stock}
         onClick={() => place(choice.id, { kind: "stock-cut", length: needed })}>
         {remnant ? "Plan cut from new stock" : "Plan cut and place"}
       </button>
     </div>}
-    {!planCut && <button type="button" disabled={!enough || repeated} className={`button ${remnant ? "secondary" : "primary"}`}
+    {!planCut && <button type="button" disabled={!enough || repeated || !!issues.stock} className={`button ${remnant ? "secondary" : "primary"}`}
       onClick={() => place(choice.id)}>
       {remnant ? "Place new stock" : "Place material"}
     </button>}

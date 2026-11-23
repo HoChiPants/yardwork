@@ -33,12 +33,18 @@ import {
   normalizeIdeaText,
   retainWithQuestion,
   requestsBanquetteReturn,
+  requestedSeatFeatures,
+  requestedSeatingSections,
+  inlineSeatRunWidth,
   widthAppliesToEach,
 } from "./ideaEdits";
 import { localStructureIdea } from "./structureIdeas";
 import { groundUnsupportedPlan } from "./unsupportedIntent";
 import { carryPlacementQuestions, refinePlacement } from "./placementEdits";
-import { localRelativeResizePlan } from "./relativeIdeaResize";
+import { localDimensionEditPlan } from "./relativeIdeaResize";
+import { localSeatLayoutPlan } from "./seatLayoutEdits";
+import { localSeatFeaturePlan } from "./seatFeatureEdits";
+import { assembleCompoundIdea, componentRequest, compoundIdeaRequest } from "./compositeIdea";
 
 function placeLocalPlan(plan: IdeaPlan, request: PlannerRequest): IdeaPlan {
   if (!plan.modules.length || !request.existingSections?.length) return plan;
@@ -88,7 +94,7 @@ function placeLocalPlan(plan: IdeaPlan, request: PlannerRequest): IdeaPlan {
 
 export function localPlacementPlan(request: PlannerRequest): IdeaPlan | null {
   const proposed = refinePlacement(request, (revision) =>
-    localRelativeResizePlan(revision) ?? localSupportedIdeaPlan(revision));
+    localSeatLayoutPlan(revision) ?? localSeatFeaturePlan(revision) ?? localDimensionEditPlan(revision) ?? localSupportedIdeaPlan(revision));
   if (!proposed) return null;
   return ideaPlanSchema.parse(
     carryPlacementQuestions(
@@ -98,14 +104,46 @@ export function localPlacementPlan(request: PlannerRequest): IdeaPlan | null {
   );
 }
 
+export function workspacePlanningResult(request: PlannerRequest) {
+  if (compoundIdeaRequest(request)) return null;
+  const shelves = editCaseworkShelfCount(request.previousPlan, request.prompt, true);
+  if (shelves) return {
+    plan: ideaPlanSchema.parse(groundUnsupportedPlan(request, shelves) ?? shelves),
+    provider: "Workspace revisions",
+    message: "Review the adjusted shelf layout before applying.",
+  };
+  const placement = localPlacementPlan(request);
+  if (placement) return {
+    plan: placement, provider: "Workspace placement",
+    message: "Review the requested moves and remaining questions before applying.",
+  };
+  const seatLayout = localSeatLayoutPlan(request);
+  if (seatLayout) return {
+    plan: seatLayout, provider: "Workspace revisions",
+    message: "Review the revised banquette placement before applying.",
+  };
+  const seatFeatures = localSeatFeaturePlan(request);
+  if (seatFeatures) return {
+    plan: seatFeatures, provider: "Workspace revisions",
+    message: "Review the requested seat changes and resulting fit before applying.",
+  };
+  const resize = localDimensionEditPlan(request);
+  return resize ? {
+    plan: resize, provider: "Workspace dimensions",
+    message: "Review the requested dimensions and resulting fit before applying.",
+  } : null;
+}
+
 /** Local presets are deliberately disclosed, not represented as language-model inference. */
 export function localIdeaPlan(request: PlannerRequest): IdeaPlan {
+  const compound = compoundIdeaRequest(request);
+  if (compound) return assembleCompoundIdea(request, compound,
+    compound.components.map((_, index) => localIdeaPlan(componentRequest(request, compound, index))));
+
   const boundary = groundUnsupportedPlan(request);
   if (boundary) return ideaPlanSchema.parse(boundary);
-  const placement = localPlacementPlan(request);
-  if (placement) return placement;
-  const resize = localRelativeResizePlan(request);
-  if (resize) return resize;
+  const workspace = workspacePlanningResult(request);
+  if (workspace) return workspace.plan;
   const proposed = { ...localSupportedIdeaPlan(request) };
   delete proposed.placementChanges;
   return ideaPlanSchema.parse(
@@ -179,7 +217,7 @@ function localSupportedIdeaPlan(request: PlannerRequest): IdeaPlan {
         prompt:
           family === "casework-shelves" &&
           mentionedFamily(text) !== "casework-shelves"
-            ? `Casework shelves. ${text}`
+            ? request.prompt.replace(/\bbookcases?\b/i, (noun) => `plywood ${noun}`)
             : request.prompt,
         previousPlan: undefined,
         existingSections: occupied,
@@ -299,7 +337,12 @@ function localSupportedIdeaPlan(request: PlannerRequest): IdeaPlan {
     : undefined;
   const lShape =
     kind === "bench" && requestsBanquetteReturn(text);
-  const suppliedW = named("wide|width|long|length|along the back") ?? pairW;
+  const seating = kind === "bench" ? requestedSeatingSections(text) : undefined;
+  const sectionCount = seating?.count ?? 1;
+  const widthLabels = "wide|width|long|length|along the back";
+  const suppliedW = (seating?.raw ? namedMeasurement(text.replace(seating.raw, " "), widthLabels)?.inches ?? undefined
+    : named(widthLabels)) ?? pairW ?? (kind === "bench" ? inlineSeatRunWidth(text) : undefined);
+  const seatedWidth = seating?.widthEach === undefined ? undefined : seating.widthEach * sectionCount;
   const suppliedD =
     named("deep|depth|seat depth") ?? (!lShape ? pairD : undefined);
   const suppliedH = named("seat height|high|height|tall") ?? undefined;
@@ -311,7 +354,7 @@ function localSupportedIdeaPlan(request: PlannerRequest): IdeaPlan {
     height: kind === "bench" ? 18 : kind === "shelf" ? 60 : 36,
   };
   const width =
-      suppliedW ?? Math.min(zone?.width ?? defaults.width, defaults.width),
+      seatedWidth ?? suppliedW ?? Math.min(zone?.width ?? defaults.width, defaults.width),
     depth =
       suppliedD ?? Math.min(zone?.depth ?? defaults.depth, defaults.depth),
     height =
@@ -319,7 +362,7 @@ function localSupportedIdeaPlan(request: PlannerRequest): IdeaPlan {
   const assumptions: string[] = [
     "This is an editable layout concept. Joinery, load capacity, bracing, anchoring, and finished tolerances still need design.",
   ];
-  if (suppliedW === undefined)
+  if (suppliedW === undefined && seatedWidth === undefined)
     assumptions.push(
       `Provisional width: ${width} in. Replace it with your measured space.`,
     );
@@ -331,29 +374,21 @@ function localSupportedIdeaPlan(request: PlannerRequest): IdeaPlan {
     assumptions.push(
       `Provisional ${kind === "bench" ? "finished seat" : "overall"} height: ${height} in. Confirm before cutting.`,
     );
-  const backHeight =
-    kind === "bench" &&
-    !/\b(backless|(?:no|without)(?: a)? back)\b|wall.{0,32}(?:as|be)(?: the| a)? back/.test(
-      text,
-    )
-      ? 16
-      : 0;
+  const seat = kind === "bench" ? requestedSeatFeatures(text) : null;
+  const backHeight = seat && !seat.noBack ? 16 : 0;
   if (backHeight)
     assumptions.push(
       "The optional back panel is a provisional 16 in above the seat, with no cushion or recline allowance.",
     );
-  const openingLid =
-    kind === "bench" &&
-    /\b(?:openable|opening|hinged|lift[ -]?up)\s+(?:seat\s+)?lids?\b|\b(?:lids?|seats?|tops?)\b.{0,28}\bopen\b/.test(
-      text,
-    );
-  const storage =
-    kind === "bench" &&
-    (openingLid || /\bstorage\b|closed off|space underneath/.test(text));
-  const sectionMatch = text.match(
-    /\b(\d{1,2})[ -]*(?:sections?|compartments?|modules?)\b/,
-  );
-  const sectionCount = sectionMatch ? Number(sectionMatch[1]) : 1;
+  const openingLid = !!seat?.wantsLid;
+  const storage = !!seat && !seat.noStorage && (openingLid || seat.wantsStorage);
+  if (seat?.noStorage && openingLid)
+    return ideaPlanSchema.parse({
+      title: "Confirm the seat design",
+      summary: "The seat layout needs a compatible top and base.",
+      assumptions, suggestions: [], modules: [],
+      questions: ["Should the opening lid cover enclosed storage, or are you planning a different hinged top?"],
+    });
   if (kind === "bench" && (sectionCount < 1 || sectionCount > 12))
     return ideaPlanSchema.parse({
       title: "Banquette section count",
@@ -365,6 +400,14 @@ function localSupportedIdeaPlan(request: PlannerRequest): IdeaPlan {
       ],
       suggestions: [],
       modules: [],
+    });
+  if (seatedWidth !== undefined && (lShape || (suppliedW !== undefined && Math.abs(suppliedW - seatedWidth) > 0.001)))
+    return ideaPlanSchema.parse({
+      title: "Confirm the banquette widths",
+      summary: "Review how the sections fit inside the requested footprint.",
+      assumptions, suggestions: [], modules: [],
+      questions: [lShape ? "Give the measured width of each run for the individually sized corner seats."
+        : "The overall width and individual seat widths disagree. Which measurement should take priority?"],
     });
   if (storage)
     assumptions.push(
@@ -437,9 +480,9 @@ function localSupportedIdeaPlan(request: PlannerRequest): IdeaPlan {
   if (kind === "bench" && sectionCount > 1) {
     if (!lShape) {
       const each =
-        widthAppliesToEach(text) && suppliedW !== undefined
+        seating?.widthEach ?? (widthAppliesToEach(text) && suppliedW !== undefined
           ? width
-          : width / sectionCount;
+          : width / sectionCount);
       const overall = each * sectionCount;
       modules.splice(
         0,

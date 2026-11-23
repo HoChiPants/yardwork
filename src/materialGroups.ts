@@ -6,6 +6,7 @@ import { drywallStock } from "./drywallReference";
 import { isPexPipe, pexPipes, type PexPipeId } from "./wallWaterReference";
 import { isWaterFitting, waterFittingProduct } from "./waterFittingReference";
 import { isWaterSupport, waterSupportProducts } from "./waterSupportReference";
+import { sdConnectorScrews } from "./simpsonConnectorReference";
 const families: {
   id: string;
   name: string;
@@ -27,8 +28,14 @@ const families: {
   {
     id: "framing-2x6",
     name: "2 × 6 framing lumber",
-    ids: ["two-six", "lowes-syp-2x6", "hd-spf-2x6-8", "hd-spf-2x6-12"],
+    ids: ["two-six", "lowes-syp-2x6", "hd-spf-2x6-8", "hd-spf-2x6-10", "hd-spf-2x6-12"],
     preferred: "two-six",
+  },
+  {
+    id: "framing-2x8",
+    name: "2 × 8 framing lumber",
+    ids: ["two-eight", "hd-syp-2x8-10", "hd-syp-2x8-12"],
+    preferred: "two-eight",
   },
   {
     id: "framing-2x12",
@@ -92,8 +99,8 @@ const families: {
   },
   {
     id: "connector-screws",
-    name: "1½ in connector screws",
-    ids: ["sd9112r100", "connector-screw"],
+    name: "Connector screws",
+    ids: ["sd9112r100", "connector-screw", ...sdConnectorScrews.map(({ id }) => id)],
     preferred: "sd9112r100",
   },
   {
@@ -248,6 +255,17 @@ function pipeSize(id: MaterialId) {
 
 export function materialPlacementOptions(group: MaterialGroup) {
   const preferred = material(group.preferred);
+  if (group.id === "connector-screws") {
+    const options = [
+      { id: "sd9112r100" as const, value: 1.5, label: "#9 × 1½ in" },
+      ...sdConnectorScrews.map(({ id, length, label }) => ({ id, value: length, label })),
+    ];
+    const matching = options.filter(({ id }) => group.variants.some((variant) => variant.id === id));
+    return {
+      preferred: matching.length === 1 ? material(matching[0].id) : preferred,
+      canCutToLength: false, chooseSize: true, label: "Screw size", options,
+    };
+  }
   const isPipeSize = !!pipeSize(preferred.id);
   const isThickness = group.id === "birch-plywood";
   const dimension = (stock: Material) => pipeSize(stock.id)?.value ??
@@ -276,6 +294,11 @@ export function materialPlacementOptions(group: MaterialGroup) {
 }
 
 export function materialPlacementName(group: MaterialGroup, id: MaterialId) {
+  if (group.id === "connector-screws") return materialStockDisplayName(id);
   const size = pipeSize(id);
   return size ? `${group.name} · ${size.label}` : group.name;
+}
+
+export function lumberCutGroups() {
+  return groupedMaterials("Lumber").filter((group) => materialPlacementOptions(group).canCutToLength);
 }

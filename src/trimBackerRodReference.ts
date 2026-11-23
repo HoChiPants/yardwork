@@ -22,6 +22,15 @@ export const trimBackerRods = [
     storeSku: "855671",
     listing: "https://www.homedepot.com/p/100159362",
   },
+  {
+    id: "frost-king-c23h",
+    name: "Frost King C23H 5/8 in backer rod",
+    model: "C23H",
+    diameter: 5 / 8,
+    internetNumber: "202262332",
+    storeSku: "226918",
+    listing: "https://www.homedepot.com/p/202262332",
+  },
 ] as const;
 
 export const trimBackerRodScope =

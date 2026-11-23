@@ -1,10 +1,13 @@
 import { PROJECT_FORMAT_VERSION } from "../src/projectVersion";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { endCutPlane } from "../src/cutProfiles";
 import { guideMarkdown } from "../src/engine";
 import { generateBuildGuide, guideIsCurrent } from "../src/guide";
 import {
+  inspectMotionApproach,
+  motionDirectionStops,
   motionPivotPreset,
   motionReviewHasLimits,
   motionReviewTravel,
@@ -18,6 +21,8 @@ import {
   saveMotionPlan,
   saveMotionTestScenario,
   saveMotionTestSetup,
+  shorterMotionTrial,
+  trialMotionOpeningOrder,
 } from "../src/mechanismMotion";
 import {
   blank,
@@ -31,9 +36,118 @@ import { applyIdeaPlan, localIdeaPlan } from "../src/planning";
 import { partLabel } from "../src/partLabels";
 import { migrateLegacyProject } from "../src/projectVersion";
 import { rotate } from "../src/spatial";
+import { findClearMotionOffset, prepareMotionOffsetTrial } from "../src/motionObstacleOffset";
 
 const near = (actual: number, expected: number) =>
   assert.ok(Math.abs(actual - expected) < 1e-7, `${actual} ≠ ${expected}`);
+
+test("a held door collision prevents drawer playback and appears in its saved guide", () => {
+  const base = blank("Drawer beside a held door");
+  const drawer = panel(base, "Drawer", [4, 4, 4], [0, 10, -2]);
+  const door = panel(base, "Door", [12, 12, 0.75], [30, 12, 0]);
+  const handle = panel(base, "Attached handle", [2, 2, 1], [33, 12, 0]);
+  const trim = panel(base, "Wall trim", [1, 8, 2], [24, 12, -6]);
+  const slide = saveMotionPlan({ ...base, pieces: [drawer, door, handle, trim] }, {
+    label: drawer.name, memberIds: [drawer.id],
+    mechanism: { kind: "slide", axis: [1, 0, 0], travel: 16 },
+  });
+  const swing = saveMotionPlan(slide.project, {
+    label: door.name, memberIds: [door.id, handle.id],
+    mechanism: { kind: "hinge", axis: [0, -1, 0], pivot: [24, 12, 0], travel: 90 },
+  });
+  const closed = reviewMotion(swing.project, slide.plan, [{ plan: swing.plan, travel: 0 }]);
+  assert.deepEqual(closed.hits, []);
+  const setup = { held: [{ motionId: swing.plan.id, percent: 100 }] };
+  const saved = saveMotionTestSetup(swing.project, slide.plan.id, setup);
+  const result = runMotionTest(saved, slide.plan, setup);
+  assert.ok(result.review);
+  const { review } = result;
+  assert.deepEqual(review.hits.map(({ movingId, obstacleId, held }) => [movingId, obstacleId, held]),
+    [[door.id, trim.id, true]]);
+  for (const [from, to] of [[0, 16], [16, 0]]) {
+    const stop = review.playbackLimit(from, to);
+    assert.equal(stop.travel, from);
+    assert.equal(stop.inspectAt, from);
+    assert.deepEqual(stop.contact, { movingId: door.id, obstacleId: trim.id, kind: "solid", held: true });
+    assert.deepEqual(review.preview(from).interferenceIds, [door.id, trim.id]);
+  }
+  assert.match(guideMarkdown(saved), /Interference at held position · P002 against P004/);
+  assert.deepEqual(saved.pieces, swing.project.pieces);
+
+  const workZone = { width: 100, depth: 16, height: 48 };
+  const room = { ...saved, pieces: saved.pieces.filter(({ id }) => id !== trim.id), workZone };
+  const zone = reviewMotion(room, slide.plan, [{ plan: swing.plan, travel: 90 }]);
+  assert.deepEqual(zone.hits, []);
+  assert.ok(zone.zone.some(({ movingId, label, held }) => movingId === door.id && label === "rear" && held));
+  assert.ok(zone.preview(0).outsideZoneFaces.includes("rear"));
+  assert.equal(zone.playbackLimit(0, 16).inspectAt, 0);
+
+  const face = {
+    id: uid(), bindingId: null, label: "Measured wall behind the cabinet",
+    side: "-Z" as const, coordinate: -13, top: 20, minimum: 2,
+  };
+  const site = reviewMotion({ ...room, workZone: null, siteClearances: [face] },
+    slide.plan, [{ plan: swing.plan, travel: 90 }]);
+  assert.deepEqual(site.siteFindings.map(({ movingId, held }) => [movingId, held]), [[door.id, true]]);
+  assert.equal(site.playbackLimit(0, 16).siteFaceId, face.id);
+  assert.deepEqual(site.preview(0).siteFaceHits, [face.id]);
+
+  const tray = panel(base, "Spare tray", [1, 2, 2], [30, 12, -6]);
+  const other = saveMotionPlan({ ...room, workZone: null, pieces: [...room.pieces, tray] }, {
+    label: tray.name, memberIds: [tray.id],
+    mechanism: { kind: "slide", axis: [-1, 0, 0], travel: 6 },
+  });
+  const together = reviewMotion(other.project, slide.plan, [
+    { plan: swing.plan, travel: 90 }, { plan: other.plan, travel: 6 },
+  ]);
+  assert.deepEqual(together.hits.map(({ movingId, obstacleId, held }) => [movingId, obstacleId, held]),
+    [[door.id, tray.id, true]]);
+});
+
+test("a shorter trial stops before an obstruction between otherwise clear endpoints", () => {
+  const fixture = new URL("../public/examples/motion/door-trim-swing.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(migrateLegacyProject(JSON.parse(readFileSync(fixture, "utf8"))));
+  const plan = project.motionPlans![0];
+  const before = structuredClone(project);
+  const { review } = runMotionTest(project, plan);
+  assert.ok(review);
+  assert.ok(review.playbackLimit(0, 90).travel > 32 && review.playbackLimit(0, 90).travel < 33);
+  const trial = shorterMotionTrial(project, review);
+  assert.ok(trial?.result.review);
+  assert.deepEqual(trial.setup.sequenceTargets, { selected: { kind: "hinge", travel: 32 } });
+  for (const [from, to] of [[0, 32], [32, 0]]) {
+    const stop = trial.result.review.playbackLimit(from, to);
+    assert.equal(stop.travel, to);
+    assert.equal(stop.inspectAt, undefined);
+  }
+  assert.equal(shorterMotionTrial(project, trial.result.review, trial.setup), undefined);
+  assert.deepEqual(project, before);
+});
+
+test("an obstruction offset keeps the full swing and honors the required gap", async () => {
+  const fixture = new URL("../public/examples/motion/door-trim-swing.yardwork.json", import.meta.url);
+  const project = projectSchema.parse(JSON.parse(readFileSync(fixture, "utf8")));
+  const [door, trim] = project.pieces;
+  const [plan] = project.motionPlans!;
+  const original = structuredClone(project);
+  const setup = { held: [], clearance: { movingId: door.id, otherId: trim.id, minimum: 0.125 } };
+  const check = prepareMotionOffsetTrial(project, plan, setup, trim.id);
+  assert.equal(check(0, 0.125)?.clear, false);
+  const trial = await findClearMotionOffset(check, 0, 2, new AbortController().signal);
+  assert.ok(trial?.clear);
+  assert.equal(trial.distance, 0.25);
+  assert.equal(trial.part.position[0], trim.position[0] + 0.25);
+  assert.equal(trial.review.clearance?.result.status, "met");
+  assert.equal(trial.review.playbackLimit(0, 90).travel, 90);
+  assert.equal(trial.review.playbackLimit(90, 0).travel, 0);
+  assert.deepEqual(trial.project.motionPlans, original.motionPlans);
+  assert.deepEqual(project, original);
+  const bounded = prepareMotionOffsetTrial({ ...project, workZone: { width: 50, height: 40, depth: 50 } }, plan, setup, trim.id);
+  assert.equal(bounded(0, 6), null);
+  const parkedTrim = saveMotionPlan(project, { label: "Trim slide", memberIds: [trim.id],
+    mechanism: { kind: "slide", axis: [1, 0, 0], travel: 2 } });
+  assert.throws(() => prepareMotionOffsetTrial(parkedTrim.project, plan, setup, trim.id), /separate fixed wood part/);
+});
 
 function panel(project: Project, name: string, size: V3, position: V3) {
   return part(
@@ -425,6 +539,19 @@ test("opening order checks both motions with the correct held poses and reverses
   assert.ok(reversed.review.playbackLimit(0, 100).travel < 50);
   assert.match(motionTestFindings(reopened, reversed)[0].detail, /near Pull-out drawer · .+ in/);
 
+  const targets = { selected: { kind: "slide" as const, travel: 16 }, companion: { kind: "hinge" as const, travel: 80 } };
+  const limited = { ...setup, sequenceTargets: targets };
+  const first = trialMotionOpeningOrder(reopened, selected, limited, "companion-first");
+  assert.equal(first.clear, true);
+  const last = trialMotionOpeningOrder(reopened, selected, limited, "selected-first");
+  assert.equal(last.clear, false);
+  assert.deepEqual(last.opening?.contact, { movingId: drawer.id, obstacleId: door.id, kind: "solid" });
+  assert.deepEqual(last.closing?.contact, { movingId: door.id, obstacleId: drawer.id, kind: "solid" });
+  const together = trialMotionOpeningOrder(reopened, selected, limited);
+  assert.equal(together.setup.openingOrder, undefined);
+  for (const trial of [first, last, together]) assert.deepEqual(trial.setup.sequenceTargets, targets);
+  assert.equal(JSON.stringify(reopened), snapshot);
+
   const stop = panel(base, "Counter overhang", [1, 2, 0.5], [5, 10, 14]);
   const blocked = { ...reopened, pieces: [...reopened.pieces, stop] };
   const blockedResult = runMotionTest(blocked, selected, setup);
@@ -432,6 +559,9 @@ test("opening order checks both motions with the correct held poses and reverses
   const open = blockedResult.review.playbackLimit(0, 100);
   assert.equal(open.phase, 1);
   assert.ok(open.travel > 50 && open.travel < 100);
+  const approach = blockedResult.review.contactApproach(open);
+  assert.ok(approach && approach.travel > 50 && approach.travel < open.inspectAt!);
+  assert.ok(approach.gap > 0 && approach.gap < 0.001);
   assert.equal(blockedResult.review.preview(open.travel).interferenceIds.length, 0);
   assert.deepEqual(blockedResult.review.preview(open.travel, open.inspectAt, undefined, open.phase).interferenceIds, [drawer.id, stop.id]);
   assert.throws(() => saveMotionTestSetup(reopened, selected.id, { held: [], openingOrder: "companion-first" }));
@@ -684,12 +814,37 @@ test("hinge playback stops at a brief trim obstruction from either direction", (
   assert.ok(result.preview(closing.inspectAt).interferenceIds.includes(trim.id));
   assert.deepEqual(result.preview(opening.travel).interferenceIds, []);
   assert.deepEqual(result.preview(closing.travel).interferenceIds, []);
+  const openingWitness = result.contactApproach(opening);
+  const closingWitness = result.contactApproach(closing);
+  assert.ok(openingWitness && closingWitness);
+  assert.ok(openingWitness.travel < opening.inspectAt && closingWitness.travel > closing.inspectAt);
+  for (const { endpoints, gap, localMarks, travel } of [openingWitness, closingWitness]) {
+    assert.ok(gap > 0 && gap < 0.001);
+    const pose = result.preview(travel);
+    assert.deepEqual(pose.interferenceIds, []);
+    assert.ok(endpoints.every(([x, y, z]) => Math.abs(x - trim.position[0]) < 1 &&
+      Math.abs(y - trim.position[1]) < 2 && Math.abs(z - trim.position[2]) < 1));
+    for (const [index, piece] of [pose.pieces[0], trim].entries()) {
+      const offset = rotate(localMarks[index], piece.rotation);
+      endpoints[index].forEach((world, axis) => near(world, offset[axis] + piece.position[axis]));
+    }
+  }
+  const shown = inspectMotionApproach(result, closing, { planId: reopened.motionPlans![0].id });
+  assert.deepEqual(shown.focusPair, [door.id, trim.id]);
+  assert.deepEqual(shown.contactApproach, closingWitness.endpoints);
+  assert.equal(result.contactApproach(result.playbackLimit(opening.inspectAt, 90)), undefined);
   assert.deepEqual(result.preview(0).pieces, [door]);
+  const guide = guideMarkdown(reopened);
+  for (const direction of ["Opening", "Closing"]) {
+    const row = guide.split("\n").find((line) => line.includes(direction + " approach at"));
+    assert.match(row ?? "", /Approximate local marks from modeled part centers \(in\) · P001 \(X .+, Y .+, Z .+\) · P002 \(X .+, Y .+, Z .+\)/);
+  }
 
   const clear = { ...reopened, pieces: [door, { ...trim, position: [trim.position[0] * 1.01, 18, trim.position[2] * 1.01] as V3 }] };
   const clearResult = reviewMotion(clear, reopened.motionPlans![0]);
   assert.equal(clearResult.playbackLimit(0, 90).travel, 90);
   assert.equal(clearResult.playbackLimit(90, 0).travel, 0);
+  assert.doesNotMatch(guideMarkdown(clear), /approach at/);
 });
 
 test("hinged travel checks interior work-zone extrema, including a swing with both endpoints inside", () => {
@@ -975,6 +1130,10 @@ test("playback finds different first obstructions with two independent parts hel
   assert.deepEqual(review.preview(30).interferenceIds, []);
   const open = review.playbackLimit(0, 30);
   const close = review.playbackLimit(30, 0);
+  assert.deepEqual(motionDirectionStops(review).map(({ direction, stop }) => [direction, stop.contact?.obstacleId]),
+    [["Opening", door.id], ["Closing", tray.id]]);
+  assert.deepEqual(review.playbackLimit(open.inspectAt!, 30).contact?.obstacleId, door.id);
+  assert.deepEqual(review.playbackLimit(close.inspectAt!, 0).contact?.obstacleId, tray.id);
   assert.deepEqual(
     review.preview(open.travel, open.inspectAt).interferenceIds,
     [drawer.id, door.id],

@@ -1,10 +1,15 @@
+import { glueFaceSequence, modeledGluePlan } from "./woodGlueFaces";
 import { subfloorJointLine, subfloorReviews } from "./subfloor";
 import { subfloorAdhesiveReviews } from "./subfloorAdhesive";
 import { subfloorAdhesiveInstallation, subfloorNailSchedules } from "./subfloorReference";
 import { subfloorFasteningReviews } from "./subfloorFastening";
 import { subfloorJoistReviews } from "./subfloorJoists";
 import { bottomPlateSealReviews } from "./bottomPlateSeal";
-import { topPlateSealReviews } from "./topPlateSeal";
+import { drywallPlateGuidePanels, drywallPlateSealReviews } from "./topPlateSeal";
+import { casingSealReviews } from "./casingSeal";
+import { pipeAirSealApplication, reviewPipeAirSeals } from "./pipeAirSeal";
+import { openingSilicone } from "./openingAirSealReference";
+import { trimSealant } from "./trimSealantReference";
 import {
   projectSchema,
   step,
@@ -29,7 +34,8 @@ import type { LidHingePlan } from "./hingeSchema";
 import { connectorReviews, type ConnectorReview } from "./connectors";
 import { connectorPreparationNotes } from "./connectorGuide";
 import { connectorPhysicalIntent } from "./connectorIntent";
-import { waterPressureGuideStep } from "./waterPressure";
+import { waterPressureGuideScope, waterPressureGuideStep, waterPressureReviewStep } from "./waterPressure";
+import { windowFlashingPhaseKinds, windowFlashingSchedule } from "./windowFlashingGuide";
 import { waterRunStageKey } from "./wallWater";
 import { waterFittingStageKey } from "./waterFittings";
 
@@ -98,11 +104,18 @@ function preparationScope(project: Project) {
     ...(project.subfloorJoistPlans?.length ? { subfloorJoistPlans: project.subfloorJoistPlans } : {}),
     ...(project.bottomPlateSeals?.length ? { bottomPlateSeals: project.bottomPlateSeals } : {}),
     ...(project.topPlateSeals?.length ? { topPlateSeals: project.topPlateSeals } : {}),
+    ...(project.drywallBottomPlateSeals?.length ? { drywallBottomPlateSeals: project.drywallBottomPlateSeals } : {}),
     ...(project.rimAirSeals?.length ? { rimAirSeals: project.rimAirSeals } : {}),
     ...rimFoamGuideScope(project),
     ...(project.roofValleys?.length ? { roofValleys: project.roofValleys } : {}),
     ...(project.roofVentFlashings?.length ? { roofVentFlashings: project.roofVentFlashings } : {}),
     ...(project.floorRegisterPlans?.length ? { floorRegisterPlans: project.floorRegisterPlans } : {}),
+    ...(project.openingCutoutRecords?.length ? { openingCutoutRecords: project.openingCutoutRecords } : {}),
+    ...(project.scribeFillers?.length ? { scribeFillers: project.scribeFillers } : {}),
+    ...(project.furnitureBraces?.length ? { furnitureBraces: project.furnitureBraces } : {}),
+    ...(project.shelfDividerPlans?.length ? { shelfDividerPlans: project.shelfDividerPlans } : {}),
+    ...(project.shelfSagPlans?.length ? { shelfSagPlans: project.shelfSagPlans } : {}),
+    ...(project.cabinetBacking?.length ? { cabinetBacking: project.cabinetBacking } : {}),
     ...(project.roundDuctRuns?.length ? { roundDuctRuns: project.roundDuctRuns } : {}),
     ...(project.roundDuctOffcuts?.length ? { roundDuctOffcuts: project.roundDuctOffcuts } : {}),
     ...(project.roundDuctElbows?.length ? { roundDuctElbows: project.roundDuctElbows } : {}),
@@ -110,6 +123,10 @@ function preparationScope(project: Project) {
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),
+    ...(project.drawerBalancePlans?.length ? { drawerBalancePlans: project.drawerBalancePlans } : {}),
+    ...(project.installationRoutes?.length ? { installationRoutes: project.installationRoutes } : {}),
+    ...(project.pipeAirSeals?.length ? { pipeAirSeals: project.pipeAirSeals } : {}),
+    ...(project.countertopSeals?.length ? { countertopSeals: project.countertopSeals } : {}),
     ...(project.saunaBenchTravelPlans?.length ? { saunaBenchTravelPlans: project.saunaBenchTravelPlans } : {}),
     ...(project.saunaHeaterPlans?.length ? { saunaHeaterPlans: project.saunaHeaterPlans } : {}),
     ...(project.saunaVentilationPlans?.length ? { saunaVentilationPlans: project.saunaVentilationPlans } : {}),
@@ -127,12 +144,23 @@ function preparationScope(project: Project) {
 function fastenerDesign(plan: FastenerPlan) {
   return fastenerPhysicalIntent(plan);
 }
-function fastenerReviewInputs(project: Project, review: ReturnType<typeof fastenerReviews>[number]) {
+function fastenerReviewInputs(
+  project: Project,
+  review: ReturnType<typeof fastenerReviews>[number],
+  savedFingerprint?: string,
+) {
   const related = new Set([...review.issues, ...review.locations.flatMap((location) => location.issues)].flatMap((issue) => issue.pieceIds ?? []));
-  return {
+  const scope = {
     ...review,
     plan: fastenerDesign(review.plan),
+    locations: review.locations.map(({ entryDistances: _distances, ...location }) => location),
     relatedParts: project.pieces.filter((piece) => related.has(piece.id)).map(physical),
+  };
+  // Preserve checks saved while the print-only path dimensions were included in the hash.
+  if (savedFingerprint && fingerprint("phase-v1", scope) === savedFingerprint) return scope;
+  return {
+    ...scope,
+    locations: scope.locations.map(({ pathDimensions: _dimensions, ...location }) => location),
   };
 }
 function connectorReviewInputs(project: Project, review: ConnectorReview) {
@@ -221,6 +249,9 @@ function designInputs(project: Project) {
     ...(project.siteClearances?.length ? { siteClearances: project.siteClearances } : {}),
     ...(project.greenhouseFoundations?.length ? { greenhouseFoundations: project.greenhouseFoundations } : {}),
     ...(project.motionPlans?.length ? { motionPlans: project.motionPlans } : {}),
+    ...(project.pipeAirSeals?.length ? { pipeAirSeals: project.pipeAirSeals } : {}),
+    ...(project.countertopSeals?.length ? { countertopSeals: project.countertopSeals } : {}),
+    ...(project.installationRoutes?.length ? { installationRoutes: project.installationRoutes } : {}),
     ...(project.drawerSlideMounts?.length ? { drawerSlideMounts: project.drawerSlideMounts } : {}),
     ...(project.greenhouseDoorSeals?.length ? { greenhouseDoorSeals: project.greenhouseDoorSeals } : {}),
     ...(project.openingFlashings?.length ? { openingFlashings: project.openingFlashings } : {}),
@@ -228,6 +259,7 @@ function designInputs(project: Project) {
     ...(project.waterPressureTests?.length ? { waterPressureTests: project.waterPressureTests } : {}),
     ...(project.greenhouseLatchPlans?.length ? { greenhouseLatchPlans: project.greenhouseLatchPlans } : {}),
     ...(project.caseworkTipUpPlans?.length ? { caseworkTipUpPlans: project.caseworkTipUpPlans } : {}),
+    ...(project.drawerBalancePlans?.length ? { drawerBalancePlans: project.drawerBalancePlans } : {}),
     ...(project.saunaBenchTravelPlans?.length ? { saunaBenchTravelPlans: project.saunaBenchTravelPlans } : {}),
     ...(project.saunaHeaterPlans?.length ? { saunaHeaterPlans: project.saunaHeaterPlans } : {}),
     ...(project.saunaVentilationPlans?.length ? { saunaVentilationPlans: project.saunaVentilationPlans } : {}),
@@ -238,6 +270,7 @@ function designInputs(project: Project) {
     ...(project.sunliteMounts?.length ? { sunliteMounts: project.sunliteMounts } : {}),
     ...(project.tubeCutPlans?.length ? { tubeCutPlans: project.tubeCutPlans } : {}),
     ...(project.plannedCutSources?.length ? { plannedCutSources: project.plannedCutSources.map(({ sourceId }) => sourceId) } : {}),
+    ...(project.recordedStockCutOrders?.length ? { recordedStockCutOrders: project.recordedStockCutOrders.map(({ sourceId, completedAt }) => [sourceId, completedAt]) } : {}),
     ...(project.woodKerfs ? { woodKerfs: project.woodKerfs } : {}),
     partLabels: project.partLabels,
     attachmentPlans: project.attachmentPlans,
@@ -247,6 +280,9 @@ function designInputs(project: Project) {
     ...(project.hingeStockSources.length ? { hingeStockSources: project.hingeStockSources.map((source) => ({ id: source.id, physicalFingerprint: sourceFingerprint(source) })) } : {}),
     ...(project.connectorPlans.length ? { connectorPlans: project.connectorPlans.map(connectorPhysicalIntent) } : {}),
     ...(project.bearingDecisions?.length ? { bearingDecisions: project.bearingDecisions } : {}),
+    ...(project.shelfDividerPlans?.length ? { shelfDividerPlans: project.shelfDividerPlans } : {}),
+    ...(project.shelfSagPlans?.length ? { shelfSagPlans: project.shelfSagPlans } : {}),
+    ...(project.cabinetBacking?.length ? { cabinetBacking: project.cabinetBacking } : {}),
     ...(project.woodJointDecisions?.length ? { woodJointDecisions: project.woodJointDecisions } : {}),
     tools: project.toolSelections,
     supplies: project.supplies,
@@ -267,8 +303,16 @@ export function designFingerprint(project: Project) {
 }
 export function guideIsCurrent(project: Project) {
   if (project.guideFingerprint !== designFingerprint(project)) return false;
-  if (project.waterRuns?.length && !project.steps.some((step) => step.generated?.kind === "water-pressure-review"))
-    return false;
+  if (project.waterRuns?.length) {
+    const review = waterPressureReviewStep(project);
+    const scope = waterPressureGuideScope(project);
+    if (!review || (scope.linings && review.generated?.fingerprint !== fingerprint("phase-v1", scope))) return false;
+  }
+  if (project.pipeAirSeals?.some(({ id }) => !project.steps.some(({ generated }) =>
+    generated?.kind === "pipe-air-seal" && generated.planId === id))) return false;
+  if (project.openingFlashings?.some(({ members, measurements }) => measurements.unit === "window" &&
+    windowFlashingPhaseKinds.some((kind) => !project.steps.some(({ generated }) =>
+      generated?.kind === kind && generated.planId === members.sill)))) return false;
   // Source facts and time-based measurement eligibility can change without editing project bytes.
   // Compare the same derived preparation scope used by generation, preserving older physical hashes.
   if (project.fastenerPlans.length) {
@@ -276,7 +320,8 @@ export function guideIsCurrent(project: Project) {
     for (const plan of project.fastenerPlans) {
       const review = reviews.get(plan.id)!,
         preparation = project.steps.find((step) => step.generated?.kind === "wood-fastener-preparation" && step.generated.planId === plan.id);
-      if (preparation?.generated?.fingerprint !== fingerprint("phase-v1", fastenerReviewInputs(project, review))) return false;
+      const saved = preparation?.generated?.fingerprint;
+      if (saved !== fingerprint("phase-v1", fastenerReviewInputs(project, review, saved))) return false;
     }
   }
   if (project.lidHingePlans.length) {
@@ -493,10 +538,15 @@ export function generateBuildGuide(input: Project): Project {
     pieceSteps = new Map<string, string>(),
     historyRemap = new Map<string, string>(),
     oldById = new Map(project.steps.map((s) => [s.id, s]));
-  const topPlateReviews = topPlateSealReviews(project);
-  const drywallIds = new Set(topPlateReviews.flatMap(({ layout }) =>
-    layout?.runs.flatMap(({ panelId }) => panelId ? [panelId] : []) ?? [],
-  ));
+  const plateFaceReviews = drywallPlateSealReviews(project);
+  const { linings: sealedLinings, standalone: drywallIds, stageKey: drywallStageKey } =
+    drywallPlateGuidePanels(project, plateFaceReviews);
+  const sealedWallIds = new Set(sealedLinings.map(({ wallDrywall }) => wallDrywall!.wallId));
+  const sealedLiningIds = new Set(sealedLinings.map(({ id }) => id));
+  const sealedCasingIds = new Set(project.sections.flatMap(({ id, doorCasing }) =>
+    doorCasing && sealedWallIds.has(doorCasing.wallId) ? [id] : []));
+  const sealedFloorStopIds = new Set(project.sections.flatMap(({ id, doorFloorStop }) =>
+    doorFloorStop && sealedWallIds.has(doorFloorStop.wallId) ? [id] : []));
   type Meta = NonNullable<Step["generated"]>;
   function addPhase(
     title: string,
@@ -579,6 +629,7 @@ export function generateBuildGuide(input: Project): Project {
         ? `Confirm the available space: ${project.workZone.width} × ${project.workZone.depth} × ${project.workZone.height} in (width × depth × height).`
         : "Measure the available space and check clearances before cutting.",
       ...(project.siteClearances?.length ? ["Confirm the measured site faces and minimum gaps in the clearance schedule before cutting."] : []),
+      ...(project.installationRoutes?.length ? ["Measure the opening and turn space for each saved installation route. Review which parts go on after placement before assembling the units to be carried."] : []),
       ...(project.greenhouseFoundations?.length ? ["Confirm the greenhouse foundation measurements and resolve base-rail fit findings before cutting."] : []),
       ...(project.greenhouseFoundations?.some(({ anchors }) => anchors?.locations.length) ? ["Review the specified anchor detail, drill marks and tool access before assembling the greenhouse walls."] : []),
       ...(project.sunliteMounts?.some(({ holes }) => holes.length) ? ["Check the SUNLITE drill schedule against the final cut panels, backing and site mounting detail."] : []),
@@ -609,24 +660,56 @@ export function generateBuildGuide(input: Project): Project {
       { kind: "restraint-preparation", planId: review.plan.id },
       review,
     );
-  for (const review of fastenerReviewCache)
+  for (const review of fastenerReviewCache) {
+    const saved = project.steps.find(({ generated }) => generated?.kind === "wood-fastener-preparation" &&
+      generated.planId === review.plan.id)?.generated?.fingerprint;
     addPhase(
       `Review wood-fastener locations: ${review.plan.name.replace(/[\r\n\t]+/g, " ")}`.slice(0, 120),
       fastenerPreparationNotes(project, review.plan.id, review),
       { kind: "wood-fastener-preparation", planId: review.plan.id },
-      fastenerReviewInputs(project, review),
+      fastenerReviewInputs(project, review, saved),
     );
+  }
   for (const review of connectorReviewCache)
     addPhase(`Review A21Z connector ${review.plan.label}: ${review.plan.name.replace(/[\r\n\t]+/g, " ")}`.slice(0, 120),
       connectorPreparationNotes(project, review.plan.id, review),
       { kind: "connector-preparation", planId: review.plan.id }, connectorReviewInputs(project, review));
   const assemblyStart = steps.length;
+  const pendingWindows = new Map(windowFlashingSchedule(project).map((row) => [row.plan.members.sill, row]));
+  const windowCoverIds = new Set([...pendingWindows.values()].flatMap(({ covers }) => covers.flatMap(({ pieceIds }) => pieceIds)));
+  function addWindowFlashingPhases(waitForFraming: boolean) {
+    for (const [id, row] of pendingWindows) {
+      if (waitForFraming && !row.memberIds.every((member) => pieceSteps.has(member))) continue;
+      for (const { kind, title, notes } of row.phases)
+        addPhase(title.slice(0, 120), notes, { kind, planId: id },
+          { plan: row.plan, signature: row.result?.frame.signature, notes });
+      pendingWindows.delete(id);
+    }
+  }
+  const pendingPipeSeals = new Map(reviewPipeAirSeals(project).map((review) => [review.plan.id, review]));
+  function addPipeSealPhases(hostIds: ReadonlySet<string> | undefined) {
+    for (const [id, { plan, preview, issue }] of pendingPipeSeals) {
+      if (hostIds && !hostIds.has(plan.partId)) continue;
+      const name = partLabel(project, plan.partId);
+      const notes = preview
+        ? `${preview.label} · ${plan.side} face · ${plan.session}. Verify the pipe is fitted and supported, and keep this opening accessible until the seal can be inspected. Use ${openingSilicone.name}. ${pipeAirSealApplication(preview)}`
+        : `${issue ?? "Check the saved measurements."} Keep the opening accessible until this seal is reviewed.`;
+      addPhase(preview ? `Air-seal pipe at ${name}` : `Review pipe seal at ${name}`, notes,
+        { kind: "pipe-air-seal", planId: id }, { plan, issue, signature: preview?.signature });
+      pendingPipeSeals.delete(id);
+    }
+  }
   const addedHinges = new Set<string>();
   const lastWaterStage = stages.filter(({ key }) => key === waterRunStageKey || key === waterFittingStageKey).at(-1);
   function addWaterPhase() {
-    addPhase("Review water test before concealment", waterPressureGuideStep,
+    const scope = waterPressureGuideScope(project);
+    const linings = scope.linings ?? [];
+    const names = linings.slice(0, 8).map(([, name]) => name);
+    if (linings.length > names.length) names.push(`${linings.length - names.length} other wall linings`);
+    const hold = names.length ? ` Keep the rough-in accessible before hanging ${names.join(", ")}.` : "";
+    addPhase("Review water test before concealment", waterPressureGuideStep + hold,
       { kind: "water-pressure-review", planId: project.id },
-      { lines: project.waterRuns?.map(({ id }) => id), fittings: project.waterFittings?.map(({ id }) => id) });
+      scope, waterPressureReviewStep(project));
   }
   const addHingePhase = (review: HingeReview) => {
     addPhase(`Review lid hinge ${review.plan.label}: ${review.plan.name.replace(/[\r\n\t]+/g, " ")}`.slice(0, 120),
@@ -637,11 +720,14 @@ export function generateBuildGuide(input: Project): Project {
   const adhesiveByPanel = new Map(subfloorAdhesiveReviews(project).map((review) => [review.panelId, review]));
   const fasteningByPanel = new Map(subfloorFasteningReviews(project).map((review) => [review.panelId, review]));
   const joistsById = new Map(subfloorJoistReviews(project).flatMap(({ rows }) => rows.map((row) => [row.id, row] as const)));
-  for (const original of stages) {
+  const glue = modeledGluePlan(project);
+  const includedGlue = new Set<string>();
+  const casingSeals = new Map(casingSealReviews(project).map((row) => [row.section.id, row]));
+  function addAssemblyStage(original: AssemblyStage) {
     const stage = drywallIds.size
       ? { ...original, memberIds: original.memberIds.filter((id) => !drywallIds.has(id)) }
       : original;
-    if (!stage.memberIds.length) continue;
+    if (!stage.memberIds.length) return;
     // Typed storage stages place shell/frame before the actual lid. Legacy
     // combined stages retain an explicit dry-fit instruction in the hinge phase.
     for (const review of hingeReviewCache)
@@ -670,18 +756,26 @@ export function generateBuildGuide(input: Project): Project {
     const joistNotes = joists.length
       ? [`Confirm the receiving supports and end bearing for ${joists.map(({ id }) => partLabel(project, id)).join(", ")} before covering the framing. Resolve the findings in the joist bearing and span schedule.`]
       : [];
+    const glueRows = glue?.ready.filter(({ entry }) =>
+      !includedGlue.has(entry.id) && entry.memberIds.some((id) => stage.memberIds.includes(id)) &&
+      entry.memberIds.every((id) => stage.memberIds.includes(id) || pieceSteps.has(id))) ?? [];
+    for (const { entry } of glueRows) includedGlue.add(entry.id);
+    const glueNotes = glueRows.length
+      ? [`${glueFaceSequence} Use the Measured glue faces table for the ${glueRows.length} ${glueRows.length === 1 ? "joint" : "joints"} assigned to this step.`]
+      : [];
     const scope = stageScope(project, stage, fastenerReviewCache, hingeReviewCache, connectorReviewCache);
     const phase = addPhase(
       stage.title,
-      [stage.notes, ...joistNotes, ...adhesiveNotes, ...fasteningNotes].join(" "),
+      [stage.notes, ...joistNotes, ...adhesiveNotes, ...fasteningNotes, ...glueNotes].join(" "),
       {
         kind: "assembly-stage",
         planId: stage.ownerId,
         stageKey: stage.key,
         memberIds: stage.memberIds,
       },
-      adhesive.length || fastening.length || joists.length ? {
+      adhesive.length || fastening.length || joists.length || glueRows.length ? {
         stage: scope,
+        ...(glueRows.length ? { glue: glueRows.map(({ entry, input, area }) => [entry.id, entry.decision.contactSignature, input, area]) } : {}),
         adhesive: adhesive.map(({ panelId, planCurrent, layout }) => ({ panelId, planCurrent, contact: layout?.signature })),
         ...(fastening.length ? { fastening: fastening.map(({ panelId, current, signature }) => ({ panelId, current, signature })) } : {}),
         ...(joists.length ? { joists: joists.map(({ id, clear, ends, issue, limit }) => ({ id, clear, ends, issue, limit })) } : {}),
@@ -692,33 +786,29 @@ export function generateBuildGuide(input: Project): Project {
         throw Error("The assembly guide assigned a part more than once.");
       pieceSteps.set(id, phase.id);
     }
+    const casingSeal = stage.key === "fit-door-casing" ? casingSeals.get(stage.ownerId) : undefined;
+    if (casingSeal) {
+      const { section, estimate, issue } = casingSeal;
+      addPhase(`Seal and finish ${section.name}`.slice(0, 120),
+        issue ?? `Apply the measured finish bead at the marked casing-to-wall seams. Keep the excluded spans open. See Door casing finish seams for the exact marks. ${trimSealant.finishSteps}`,
+        { kind: "casing-finish-seal", planId: section.id }, { plan: section.doorCasing?.seal, signature: estimate?.signature, issue });
+    }
     if (original === lastWaterStage) addWaterPhase();
+    if (pendingPipeSeals.size) addPipeSealPhases(new Set(stage.memberIds));
+    if (pendingWindows.size) addWindowFlashingPhases(true);
   }
+  const afterSeal = stages.filter(({ key, ownerId, memberIds }) =>
+    (key === "hang-drywall" && (sealedLiningIds.has(ownerId) || memberIds.some((id) => windowCoverIds.has(id)))) ||
+    ((key === "fit-door" || key === "fit-door-hardware") && sealedWallIds.has(ownerId)) ||
+    (key === "fit-door-casing" && sealedCasingIds.has(ownerId)) ||
+    (key === "fit-floor-door-stop" && sealedFloorStopIds.has(ownerId)));
+  const deferred = new Set(afterSeal);
+  for (const stage of stages) if (!deferred.has(stage)) addAssemblyStage(stage);
   for (const review of hingeReviewCache)
     if (!addedHinges.has(review.plan.id)) addHingePhase(review);
   if (!lastWaterStage && project.waterRuns?.length) addWaterPhase();
-  for (const review of topPlateReviews) {
-    addPhase(`Air-seal ${review.title}`.slice(0, 120),
-      review.problem || "Apply the bead on the marked plate face. Keep it continuous as you hang the adjoining drywall.",
-      { kind: "top-plate-air-seal", planId: review.record.id }, { plan: review.record, layout: review.layout?.signature });
-  }
-  if (drywallIds.size) {
-    const memberIds = [...drywallIds];
-    const phase = addPhase("Hang drywall at the top plates",
-      "Check that the marked beads are intact as the panels are fitted. Verify panel orientation, supported seams and fastening in the field.",
-      { kind: "assembly-stage", planId: project.id, stageKey: "drywall-after-top-plate-sealing", memberIds },
-      memberIds);
-    for (const id of drywallIds) pieceSteps.set(id, phase.id);
-  }
-  const active = project.pieces.filter((p) => !p.offcut);
-  if (
-    pieceSteps.size !== active.length ||
-    active.some((p) => !pieceSteps.has(p.id))
-  )
-    throw Error(
-      "The assembly guide must cover every active part exactly once.",
-    );
-  for (const { panelId, layout, problem } of subfloorReviews(project)) {
+  addWindowFlashingPhases(false);
+  function addSubfloorSupportPhase({ panelId, layout, problem }: ReturnType<typeof subfloorReviews>[number]) {
     const name = layout?.piece.name ?? "subfloor panel";
     const joints = layout?.joints.map((joint) => subfloorJointLine(project, joint)) ?? [];
     const support = problem || layout?.issues.join(" ") || "Confirm the delivered panel stamp, joint gaps and framing. Review the modeled bearing and fastening layout in the subfloor schedule before covering the deck.";
@@ -727,11 +817,51 @@ export function generateBuildGuide(input: Project): Project {
       { kind: "subfloor-support-review", planId: panelId },
       { problem, issues: layout?.issues, nails: layout?.nails, supports: layout?.supportIds, ...(joints.length && { joints }) });
   }
-  for (const review of bottomPlateSealReviews(project)) {
+  function addPlateToSubfloorSeal(review: ReturnType<typeof bottomPlateSealReviews>[number]) {
     addPhase(`Air-seal ${review.title}`.slice(0, 120),
       review.problem || "Prepare the marked plate and subfloor and run the recorded bead before covering the seam. Review every interruption and adjoining air-barrier transition in the build guide.",
       { kind: "bottom-plate-air-seal", planId: review.record.id }, { plan: review.record, layout: review.layout?.signature });
   }
+  const subfloorChecks = subfloorReviews(project);
+  const plateToSubfloorReviews = bottomPlateSealReviews(project);
+  const lowerFaces = new Set(plateFaceReviews.filter(({ face }) => face === "bottom")
+    .map(({ record }) => `${record.plateId}/${record.side}`));
+  const earlyPlateToSubfloor = new Set(plateToSubfloorReviews.filter(({ record }) =>
+    lowerFaces.has(`${record.plateId}/${record.side}`)));
+  const underSealPanels = new Set([...earlyPlateToSubfloor].flatMap(({ layout }) =>
+    layout?.runs.flatMap(({ panelId }) => panelId ? [panelId] : []) ?? []));
+  for (const check of subfloorChecks) if (underSealPanels.has(check.panelId)) addSubfloorSupportPhase(check);
+  for (const review of earlyPlateToSubfloor) addPlateToSubfloorSeal(review);
+  for (const review of plateFaceReviews) {
+    const bottom = review.face === "bottom";
+    addPhase(bottom ? `Air-seal drywall at ${review.title}`.slice(0, 120) : `Air-seal ${review.title}`.slice(0, 120),
+      review.problem || (bottom
+        ? "Dry-fit the lower drywall edge. Apply the continuous bead to the marked plate face and seat the panel before the sealant skins over. Verify the adjoining floor air seal."
+        : "Apply the bead on the marked plate face. Keep it continuous as you hang the adjoining drywall."),
+      { kind: bottom ? "drywall-bottom-plate-air-seal" : "top-plate-air-seal", planId: review.record.id },
+      { plan: review.record, layout: review.layout?.signature });
+  }
+  if (drywallIds.size) {
+    const memberIds = [...drywallIds];
+    const phase = addPhase(lowerFaces.size ? "Hang drywall at the sealed plates" : "Hang drywall at the top plates",
+      "Check that the marked beads are intact as the panels are fitted. Verify panel orientation, supported seams and fastening in the field.",
+      { kind: "assembly-stage", planId: project.id, stageKey: drywallStageKey, memberIds },
+      memberIds);
+    for (const id of drywallIds) pieceSteps.set(id, phase.id);
+    if (pendingPipeSeals.size) addPipeSealPhases(drywallIds);
+  }
+  for (const stage of afterSeal) addAssemblyStage(stage);
+  const active = project.pieces.filter((p) => !p.offcut);
+  if (
+    pieceSteps.size !== active.length ||
+    active.some((p) => !pieceSteps.has(p.id))
+  )
+    throw Error(
+      "The assembly guide must cover every active part exactly once.",
+    );
+  for (const check of subfloorChecks) if (!underSealPanels.has(check.panelId)) addSubfloorSupportPhase(check);
+  for (const review of plateToSubfloorReviews) if (!earlyPlateToSubfloor.has(review)) addPlateToSubfloorSeal(review);
+  addPipeSealPhases(undefined);
   const previousFinish = project.steps.find(
     (s) =>
       !s.generated &&
@@ -740,7 +870,8 @@ export function generateBuildGuide(input: Project): Project {
   );
   const finish = addPhase(
     "Review connections and finish",
-    finishNotes,
+    finishNotes + (project.countertopSeals?.length
+      ? " After fitting the worktop and finished wall, check the marked splash seal runs and fit their backing before tooling the bead. Review how any open ranges will be finished." : ""),
     { kind: "project-finish", planId: project.id },
     {
       design: designInputs(project),

@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 152,
+  "id": "b6443ee9-97eb-434c-9e31-76a88e064947",
+  "name": "Cabinet wall filler beside a sliding door",
+  "kind": "custom",
+  "retailer": "home-depot",
+  "toolSelections": [],
+  "supplies": [],
+  "onHandCutSources": [
+    "f8b0035a-1f84-45e3-9d83-1b88d982c681"
+  ],
+  "motionPlans": [
+    {
+      "label": "Adjacent sliding door",
+      "memberIds": [
+        "4fe533be-de91-49f3-8bf3-8116c5108fda"
+      ],
+      "mechanism": {
+        "kind": "slide",
+        "axis": [
+          -1,
+          0,
+          0
+        ],
+        "travel": 3.25
+      },
+      "id": "92b05d36-b6dc-417e-ba69-c66ea26db51b"
+    }
+  ],
+  "attachmentPlans": [],
+  "restraintPlans": [],
+  "fastenerPlans": [],
+  "lidHingePlans": [],
+  "hingeStockSources": [],
+  "connectorPlans": [],
+  "connectorPlanLabels": [],
+  "hingePlanLabels": [],
+  "fastenerPlanLabels": [],
+  "partLabels": [
+    {
+      "partId": "6d9710b8-3329-46ff-8b86-7698b4f18d78",
+      "label": "P001"
+    },
+    {
+      "partId": "4fe533be-de91-49f3-8bf3-8116c5108fda",
+      "label": "P002"
+    },
+    {
+      "partId": "86e47547-7865-44be-8b65-964d2ee5d3b6",
+      "label": "O001"
+    }
+  ],
+  "supplyInventory": [],
+  "zip": "84121",
+  "store": "",
+  "updatedAt": "2026-11-23T00:16:03.355Z",
+  "pieces": [
+    {
+      "id": "6d9710b8-3329-46ff-8b86-7698b4f18d78",
+      "name": "Cabinet right end",
+      "material": "plywood",
+      "size": [
+        0.75,
+        30,
+        14
+      ],
+      "position": [
+        0,
+        15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d0edb753-9ed5-492a-8a1f-45408ec1adfe",
+      "assembly": "Cabinet",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "4fe533be-de91-49f3-8bf3-8116c5108fda",
+      "name": "Adjacent sliding door",
+      "material": "plywood",
+      "size": [
+        22,
+        24,
+        0.75
+      ],
+      "position": [
+        15,
+        12,
+        6.625
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d0edb753-9ed5-492a-8a1f-45408ec1adfe",
+      "assembly": "Sliding door",
+      "offcut": false,
+      "cutPlanes": [],
+      "stockLengthAxis": 1,
+      "cutStock": null
+    },
+    {
+      "id": "86e47547-7865-44be-8b65-964d2ee5d3b6",
+      "name": "Offcut · Pine trim from the cabinet installation",
+      "material": "hd-select-pine-1x3-8",
+      "size": [
+        2.25,
+        0.75,
+        36
+      ],
+      "position": [
+        0,
+        0.375,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "stepId": "d0edb753-9ed5-492a-8a1f-45408ec1adfe",
+      "assembly": "",
+      "offcut": true,
+      "cutPlanes": [],
+      "stockLengthAxis": 2,
+      "cutStock": {
+        "id": "f8b0035a-1f84-45e3-9d83-1b88d982c681",
+        "sourceAxes": [
+          1,
+          0,
+          2
+        ],
+        "size": [
+          2.25,
+          0.75,
+          36
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "d0edb753-9ed5-492a-8a1f-45408ec1adfe",
+      "title": "Lay out your project",
+      "notes": "Establish the site, dimensions, and constraints before placing parts.",
+      "complete": false
+    }
+  ],
+  "joints": [],
+  "inventory": [],
+  "planLines": [],
+  "notes": "",
+  "sections": [],
+  "ideaBindings": [],
+  "workZone": null,
+  "guideFingerprint": null,
+  "history": []
+}
